@@ -14,7 +14,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(2);
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치'];
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의'];
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes(prev => 
@@ -154,7 +154,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                     {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {questionTypes.map((type) => (
                     <label 
                       key={type} 
