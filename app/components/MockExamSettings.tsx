@@ -150,9 +150,16 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     // 선택된 번호의 총 문항 수 계산 (번호 수 × 모의고사 수 × 문제 유형 수 × 유형별 문항 수)
     const totalQuestions = selectedSections.length * selectedExams.length * selectedTypes.length * questionsPerType;
     
-    // 가격 계산 (100문항 이상 시 할인 적용)
-    const pricePerQuestion = totalQuestions >= 100 ? 60 : 80;
-    const totalPrice = totalQuestions * pricePerQuestion;
+    // 가격 계산 (퍼센트 할인 적용)
+    const basePrice = totalQuestions * 80;
+    let discountRate = 0;
+    if (totalQuestions >= 200) {
+      discountRate = 0.2; // 20% 할인
+    } else if (totalQuestions >= 100) {
+      discountRate = 0.1; // 10% 할인
+    }
+    const discountAmount = basePrice * discountRate;
+    const totalPrice = basePrice - discountAmount;
     const isDiscounted = totalQuestions >= 100;
 
     const selectedNumberNames = selectedSections.map(numberId => 
@@ -174,18 +181,23 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 6. 총 문항 수
 : ${totalQuestions}문항
 7. 가격
-: ${totalPrice.toLocaleString()}원 (총 ${totalQuestions}문항 × ${pricePerQuestion}원${isDiscounted ? ' - 100문항 이상 할인 적용' : ''})`;
+: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${discountAmount.toLocaleString()}원)` : ''}`;
 
     onOrderGenerate(orderText);
   };
 
   // 가격 계산 (번호 수 × 모의고사 수 × 문제 유형 수 × 유형별 문항 수)
   const totalQuestions = selectedSections.length * selectedExams.length * selectedTypes.length * questionsPerType;
-  const pricePerQuestion = totalQuestions >= 100 ? 60 : 80;
-  const totalPrice = totalQuestions * pricePerQuestion;
+  const basePrice = totalQuestions * 80;
+  let discountRate = 0;
+  if (totalQuestions >= 200) {
+    discountRate = 0.2; // 20% 할인
+  } else if (totalQuestions >= 100) {
+    discountRate = 0.1; // 10% 할인
+  }
+  const discountAmount = basePrice * discountRate;
+  const totalPrice = basePrice - discountAmount;
   const isDiscounted = totalQuestions >= 100;
-  const originalPrice = totalQuestions * 80;
-  const savings = originalPrice - totalPrice;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
@@ -296,7 +308,8 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                 </div>
                 <div className="text-sm text-blue-700">
                   • 기본: 문항당 80원<br/>
-                  • 100문항 이상: 문항당 60원 <span className="font-medium text-green-600">(20원 할인!)</span>
+                  • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
+                  • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                 </div>
               </div>
 
@@ -443,25 +456,39 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-black">문항당 가격:</span>
+                        <span className="text-black">기본 가격:</span>
                         <span className="font-medium text-black">
-                          {isDiscounted && <span className="line-through text-gray-400 mr-2">80원</span>}
-                          {pricePerQuestion}원
-                          {isDiscounted && <span className="text-green-600 text-xs ml-1">(20원 할인!)</span>}
+                          {totalQuestions} × 80원 = {basePrice.toLocaleString()}원
                         </span>
                       </div>
+                      {isDiscounted && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-black">할인율:</span>
+                          <span className="font-medium text-green-600">
+                            {(discountRate * 100)}% 할인
+                          </span>
+                        </div>
+                      )}
+                      {isDiscounted && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-black">할인 금액:</span>
+                          <span className="font-medium text-green-600">
+                            -{discountAmount.toLocaleString()}원
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-black">총 가격:</span>
                         <div className="text-right">
                           {isDiscounted ? (
                             <>
                               <div className="line-through text-gray-400 text-sm">
-                                {originalPrice.toLocaleString()}원
+                                {basePrice.toLocaleString()}원
                               </div>
                               <div className="font-bold text-2xl text-red-600">
                                 {totalPrice.toLocaleString()}원 
                                 <span className="text-green-600 text-sm ml-2">
-                                  ({savings.toLocaleString()}원 할인)
+                                  ({(discountRate * 100)}% 할인)
                                 </span>
                               </div>
                             </>
