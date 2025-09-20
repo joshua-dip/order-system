@@ -497,7 +497,7 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
                 <div className="text-xs font-medium mb-2">💰 할인 안내</div>
                 <div className="text-xs leading-relaxed">
                   • 기본: 문항당 80원<br/>
-                  • 100문항 이상: 문항당 50원 <span className="text-yellow-300 font-medium">(30원 할인!)</span>
+                  • 100문항 이상: 문항당 60원 <span className="text-yellow-300 font-medium">(20원 할인!)</span>
                 </div>
                 <div className="absolute -top-1 right-3 w-2 h-2 bg-gray-800 transform rotate-45"></div>
               </div>

@@ -42,7 +42,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     const totalQuestions = selectedTypes.length * questionsPerType * selectedLessons.length;
     
     // 가격 계산 (100문항 이상 시 할인 적용)
-    const pricePerQuestion = totalQuestions >= 100 ? 50 : 80;
+    const pricePerQuestion = totalQuestions >= 100 ? 60 : 80;
     const totalPrice = totalQuestions * pricePerQuestion;
     const isDiscounted = totalQuestions >= 100;
     
@@ -62,7 +62,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
 
   // 가격 계산 (문제 유형 수 × 유형별 문항 수 × 선택한 지문 수)
   const totalQuestions = selectedTypes.length * questionsPerType * selectedLessons.length;
-  const pricePerQuestion = totalQuestions >= 100 ? 50 : 80;
+  const pricePerQuestion = totalQuestions >= 100 ? 60 : 80;
   const totalPrice = totalQuestions * pricePerQuestion;
   const isDiscounted = totalQuestions >= 100;
   const originalPrice = totalQuestions * 80;
@@ -135,7 +135,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                 </div>
                 <div className="text-sm text-blue-700">
                   • 기본: 문항당 80원<br/>
-                  • 100문항 이상: 문항당 50원 <span className="font-medium text-green-600">(30원 할인!)</span>
+                  • 100문항 이상: 문항당 60원 <span className="font-medium text-green-600">(20원 할인!)</span>
                 </div>
               </div>
 
@@ -230,7 +230,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                         <span className="font-medium text-black">
                           {isDiscounted && <span className="line-through text-gray-400 mr-2">80원</span>}
                           {pricePerQuestion}원
-                          {isDiscounted && <span className="text-green-600 text-xs ml-1">(30원 할인!)</span>}
+                          {isDiscounted && <span className="text-green-600 text-xs ml-1">(20원 할인!)</span>}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
