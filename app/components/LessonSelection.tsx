@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import textbooksData from '../data/converted_data.json';
 
 interface LessonSelectionProps {
   selectedTextbook: string;
@@ -40,42 +39,57 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSe
 
   // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
-    if (selectedTextbook && textbooksData[selectedTextbook as keyof typeof textbooksData]) {
-      const textbookData = textbooksData[selectedTextbook as keyof typeof textbooksData] as TextbookStructure;
-      
-      // 다양한 구조에 대응하기 위한 안전한 접근
-      let actualData: TextbookContent | null = null;
-      
-      // Sheet1 구조 시도
-      if (textbookData.Sheet1?.부교재?.[selectedTextbook]) {
-        actualData = textbookData.Sheet1.부교재[selectedTextbook];
-      }
-      // 지문 데이터 구조 시도  
-      else if (textbookData['지문 데이터']?.부교재?.[selectedTextbook]) {
-        actualData = textbookData['지문 데이터'].부교재[selectedTextbook];
-      }
-      // 직접 부교재 구조 시도
-      else if (textbookData.부교재?.[selectedTextbook]) {
-        actualData = textbookData.부교재[selectedTextbook];
-      }
-      
-      if (actualData) {
-        const groups: {[key: string]: string[]} = {};
+    const loadTextbookData = async () => {
+      try {
+        // 동적으로 큰 JSON 파일 로드
+        const { default: textbooksData } = await import('../data/converted_data.json');
         
-        Object.keys(actualData).forEach(lessonKey => {
-          const lessonData = actualData![lessonKey];
-          if (Array.isArray(lessonData)) {
-            groups[lessonKey] = [];
-            lessonData.forEach((item: LessonItem) => {
-              // item.번호가 이미 "1번" 형태이므로 그대로 사용
-              const lessonItem = `${lessonKey} ${item.번호}`;
-              groups[lessonKey].push(lessonItem);
-            });
+        if (selectedTextbook && textbooksData[selectedTextbook as keyof typeof textbooksData]) {
+          const textbookData = textbooksData[selectedTextbook as keyof typeof textbooksData] as TextbookStructure;
+          
+          // 다양한 구조에 대응하기 위한 안전한 접근
+          let actualData: TextbookContent | null = null;
+          
+          // Sheet1 구조 시도
+          if (textbookData.Sheet1?.부교재?.[selectedTextbook]) {
+            actualData = textbookData.Sheet1.부교재[selectedTextbook];
           }
-        });
-        
-        setLessonGroups(groups);
+          // 지문 데이터 구조 시도  
+          else if (textbookData['지문 데이터']?.부교재?.[selectedTextbook]) {
+            actualData = textbookData['지문 데이터'].부교재[selectedTextbook];
+          }
+          // 직접 부교재 구조 시도
+          else if (textbookData.부교재?.[selectedTextbook]) {
+            actualData = textbookData.부교재[selectedTextbook];
+          }
+          
+          if (actualData) {
+            const groups: {[key: string]: string[]} = {};
+            
+            Object.keys(actualData).forEach(lessonKey => {
+              const lessonData = actualData![lessonKey];
+              if (Array.isArray(lessonData)) {
+                groups[lessonKey] = [];
+                lessonData.forEach((item: LessonItem) => {
+                  // item.번호가 이미 "1번" 형태이므로 그대로 사용
+                  const lessonItem = `${lessonKey} ${item.번호}`;
+                  groups[lessonKey].push(lessonItem);
+                });
+              }
+            });
+            
+            setLessonGroups(groups);
+          }
+        }
+      } catch (error) {
+        console.error('교재 데이터 로딩 실패:', error);
+        // 오류 발생 시 빈 그룹으로 설정
+        setLessonGroups({});
       }
+    };
+
+    if (selectedTextbook) {
+      loadTextbookData();
     }
   }, [selectedTextbook]);
 

@@ -1,7 +1,52 @@
 'use client';
 
 import { useState } from 'react';
-import mockExamsData from '../data/mock-exams.json';
+// 모의고사 데이터를 컴포넌트 외부에 정의하여 재생성 방지
+const MOCK_EXAMS_DATA = {
+  "고1모의고사": [
+    "고1_2025_09월(인천시)",
+    "고1_2025_06월(부산시)",
+    "고1_2025_03월(서울시)",
+    "고1_2024_10월(경기도)",
+    "고1_2024_09월(인천시)",
+    "고1_2024_06월(부산시)",
+    "고1_2024_03월(서울시)",
+    "고1_2023_11월(경기도)[12월시행]",
+    "고1_2023_09월(인천시)",
+    "고1_2023_06월(부산시)"
+  ],
+  "고2모의고사": [
+    "고2_2025_09월(인천시)",
+    "고2_2025_06월(부산시)",
+    "고2_2025_03월(서울시)",
+    "고2_2024_10월(경기도)",
+    "고2_2024_09월(인천시)",
+    "고2_2024_06월(부산시)",
+    "고2_2024_03월(서울시)",
+    "고2_2023_11월(경기도)[12월시행]",
+    "고2_2023_09월(인천시)",
+    "고2_2023_06월(부산시)"
+  ],
+  "고3모의고사": [
+    "고3_2025_09월(평가원)",
+    "고3_2025_07월(인천시)",
+    "고3_2025_06월(평가원)",
+    "고3_2025_05월(경기도)",
+    "고3_2025_03월(서울시)",
+    "고3_2024_10월(서울시)",
+    "고3_2024_09월(평가원)",
+    "고3_2024_07월(인천시)",
+    "고3_2024_06월(평가원)",
+    "고3_2024_05월(경기도)"
+  ],
+  "대수능": [
+    "수능_2024_11월_2025수능(평가원)",
+    "수능_2023_11월_2024수능(평가원)",
+    "수능_2022_11월_2023수능(평가원)",
+    "수능_2021_11월_2022수능(평가원)",
+    "수능_2020_12월_2021수능(평가원)"
+  ]
+} as const;
 
 interface MockExamSettingsProps {
   onOrderGenerate: (orderText: string) => void;
@@ -12,16 +57,26 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [selectedGrade, setSelectedGrade] = useState<string>('');
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [selectedSections, setSelectedSections] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(2);
 
-  // 모의고사 고정 구성
-  const examSections = [
-    { id: '18-40', name: '18~40번', description: '독해 문항 (23문항)' },
-    { id: '41-42', name: '41~42번', description: '장문 독해 (2문항)' },
-    { id: '43-45', name: '43~45번', description: '장문 독해 (3문항)' }
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의'];
+
+  // 모의고사 번호별 구성
+  const examNumbers = [
+    // 18번부터 40번까지 개별 번호
+    ...Array.from({ length: 23 }, (_, i) => ({
+      id: `${18 + i}`,
+      name: `${18 + i}번`,
+      questionCount: 1
+    })),
+    // 41~42번 (하나의 지문)
+    { id: '41-42', name: '41~42번', questionCount: 1 },
+    // 43~45번 (하나의 지문)  
+    { id: '43-45', name: '43~45번', questionCount: 1 }
   ];
 
-  const grades = Object.keys(mockExamsData);
+  const grades = Object.keys(MOCK_EXAMS_DATA);
 
   const handleExamChange = (exam: string) => {
     setSelectedExams(prev => 
@@ -33,7 +88,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 
   const handleAllExamsToggle = () => {
     if (selectedGrade) {
-      const gradeExams = mockExamsData[selectedGrade as keyof typeof mockExamsData];
+      const gradeExams = MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA];
       if (selectedExams.length === gradeExams.length) {
         setSelectedExams([]);
       } else {
@@ -42,19 +97,35 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     }
   };
 
-  const handleSectionChange = (sectionId: string) => {
+  const handleNumberChange = (numberId: string) => {
     setSelectedSections(prev => 
-      prev.includes(sectionId) 
-        ? prev.filter(s => s !== sectionId)
-        : [...prev, sectionId]
+      prev.includes(numberId) 
+        ? prev.filter(s => s !== numberId)
+        : [...prev, numberId]
     );
   };
 
-  const handleAllSectionsToggle = () => {
-    if (selectedSections.length === examSections.length) {
+  const handleAllNumbersToggle = () => {
+    if (selectedSections.length === examNumbers.length) {
       setSelectedSections([]);
     } else {
-      setSelectedSections(examSections.map(section => section.id));
+      setSelectedSections(examNumbers.map(number => number.id));
+    }
+  };
+
+  const handleTypeChange = (type: string) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const handleAllTypesToggle = () => {
+    if (selectedTypes.length === questionTypes.length) {
+      setSelectedTypes([]);
+    } else {
+      setSelectedTypes([...questionTypes]);
     }
   };
 
@@ -68,32 +139,24 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       return;
     }
     if (selectedSections.length === 0) {
-      alert('문항 구간을 선택해주세요.');
+      alert('문항 번호를 선택해주세요.');
+      return;
+    }
+    if (selectedTypes.length === 0) {
+      alert('문제 유형을 선택해주세요.');
       return;
     }
 
-    // 선택된 구간의 총 문항 수 계산
-    const getTotalQuestions = () => {
-      let sectionTotal = 0;
-      selectedSections.forEach(sectionId => {
-        switch(sectionId) {
-          case '18-40': sectionTotal += 23; break;
-          case '41-42': sectionTotal += 2; break;
-          case '43-45': sectionTotal += 3; break;
-        }
-      });
-      return sectionTotal * selectedExams.length * questionsPerType;
-    };
-
-    const totalQuestions = getTotalQuestions();
+    // 선택된 번호의 총 문항 수 계산 (번호 수 × 모의고사 수 × 문제 유형 수 × 유형별 문항 수)
+    const totalQuestions = selectedSections.length * selectedExams.length * selectedTypes.length * questionsPerType;
     
     // 가격 계산 (100문항 이상 시 할인 적용)
     const pricePerQuestion = totalQuestions >= 100 ? 50 : 80;
     const totalPrice = totalQuestions * pricePerQuestion;
     const isDiscounted = totalQuestions >= 100;
 
-    const selectedSectionNames = selectedSections.map(sectionId => 
-      examSections.find(section => section.id === sectionId)?.name
+    const selectedNumberNames = selectedSections.map(numberId => 
+      examNumbers.find(number => number.id === numberId)?.name
     ).join(', ');
     
     const orderText = `모의고사 주문서
@@ -102,32 +165,22 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 : ${selectedGrade}
 2. 선택된 모의고사
 : ${selectedExams.join(', ')}
-3. 선택된 구간
-: ${selectedSectionNames}
-4. 구간별 문항 수
+3. 선택된 문항 번호
+: ${selectedNumberNames}
+4. 문제 유형
+: ${selectedTypes.join(', ')}
+5. 번호별 문항 수
 : ${questionsPerType}문항씩
-5. 총 문항 수
+6. 총 문항 수
 : ${totalQuestions}문항
-6. 가격
+7. 가격
 : ${totalPrice.toLocaleString()}원 (총 ${totalQuestions}문항 × ${pricePerQuestion}원${isDiscounted ? ' - 100문항 이상 할인 적용' : ''})`;
 
     onOrderGenerate(orderText);
   };
 
-  // 가격 계산
-  const getTotalQuestions = () => {
-    let sectionTotal = 0;
-    selectedSections.forEach(sectionId => {
-      switch(sectionId) {
-        case '18-40': sectionTotal += 23; break;
-        case '41-42': sectionTotal += 2; break;
-        case '43-45': sectionTotal += 3; break;
-      }
-    });
-    return sectionTotal * selectedExams.length * questionsPerType;
-  };
-
-  const totalQuestions = getTotalQuestions();
+  // 가격 계산 (번호 수 × 모의고사 수 × 문제 유형 수 × 유형별 문항 수)
+  const totalQuestions = selectedSections.length * selectedExams.length * selectedTypes.length * questionsPerType;
   const pricePerQuestion = totalQuestions >= 100 ? 50 : 80;
   const totalPrice = totalQuestions * pricePerQuestion;
   const isDiscounted = totalQuestions >= 100;
@@ -202,17 +255,17 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                     <button
                       onClick={handleAllExamsToggle}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        selectedExams.length === mockExamsData[selectedGrade as keyof typeof mockExamsData].length
+                        selectedExams.length === MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA].length
                           ? 'bg-red-100 text-black hover:bg-red-200'
                           : 'bg-blue-100 text-black hover:bg-blue-200'
                       }`}
                     >
-                      {selectedExams.length === mockExamsData[selectedGrade as keyof typeof mockExamsData].length ? '전체 해제' : '전체 선택'}
+                      {selectedExams.length === MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA].length ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
                   <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                     <div className="space-y-2">
-                      {mockExamsData[selectedGrade as keyof typeof mockExamsData].map((exam) => (
+                      {MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA].map((exam) => (
                         <label 
                           key={exam} 
                           className={`flex items-center space-x-3 p-2 rounded cursor-pointer transition-all hover:bg-gray-50 ${
@@ -247,43 +300,82 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                 </div>
               </div>
 
-              {/* 문항 구간 선택 */}
+              {/* 문항 번호 선택 */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-lg font-medium text-black">모의고사 구간 선택</h4>
+                  <h4 className="text-lg font-medium text-black">문항 번호 선택</h4>
                   <button
-                    onClick={handleAllSectionsToggle}
+                    onClick={handleAllNumbersToggle}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      selectedSections.length === examSections.length
+                      selectedSections.length === examNumbers.length
                         ? 'bg-red-100 text-black hover:bg-red-200'
                         : 'bg-blue-100 text-black hover:bg-blue-200'
                     }`}
                   >
-                    {selectedSections.length === examSections.length ? '전체 해제' : '전체 선택'}
+                    {selectedSections.length === examNumbers.length ? '전체 해제' : '전체 선택'}
                   </button>
                 </div>
-                <div className="space-y-3">
-                  {examSections.map((section) => (
+                
+                {/* 모든 문항 번호 선택 */}
+                <div>
+                  <h5 className="text-md font-medium text-gray-700 mb-2">문항 번호 선택</h5>
+                  <div className="border border-gray-200 rounded-lg p-3 max-h-60 overflow-y-auto">
+                    <div className="grid grid-cols-5 gap-2">
+                      {examNumbers.map((number) => (
+                        <label 
+                          key={number.id} 
+                          className={`flex items-center justify-center p-2 border rounded cursor-pointer transition-all hover:shadow-sm ${
+                            selectedSections.includes(number.id)
+                              ? 'border-blue-500 bg-blue-50 text-blue-800'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSections.includes(number.id)}
+                            onChange={() => handleNumberChange(number.id)}
+                            className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-blue-500 mr-1"
+                          />
+                          <span className="text-xs text-black font-medium">{number.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 문제 유형 선택 */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-lg font-medium text-black">문제 유형 선택</h4>
+                  <button
+                    onClick={handleAllTypesToggle}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      selectedTypes.length === questionTypes.length
+                        ? 'bg-red-100 text-black hover:bg-red-200'
+                        : 'bg-blue-100 text-black hover:bg-blue-200'
+                    }`}
+                  >
+                    {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {questionTypes.map((type) => (
                     <label 
-                      key={section.id} 
-                      className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                        selectedSections.includes(section.id)
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-300 hover:border-gray-400'
+                      key={type} 
+                      className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                        selectedTypes.includes(type)
+                          ? 'border-blue-500 bg-blue-50 text-black'
+                          : 'border-gray-300 hover:border-gray-400 text-black'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedSections.includes(section.id)}
-                          onChange={() => handleSectionChange(section.id)}
-                          className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                        <div>
-                          <span className="font-bold text-black text-lg">{section.name}</span>
-                          <p className="text-sm text-gray-600">{section.description}</p>
-                        </div>
-                      </div>
+                      <input
+                        type="checkbox"
+                        checked={selectedTypes.includes(type)}
+                        onChange={() => handleTypeChange(type)}
+                        className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                      />
+                      <span className="font-medium text-black">{type}</span>
                     </label>
                   ))}
                 </div>
@@ -291,7 +383,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 
               {/* 문제 개수 설정 */}
               <div className="mb-6">
-                <h4 className="text-lg font-medium mb-3 text-black">구간별 문제 개수</h4>
+                <h4 className="text-lg font-medium mb-3 text-black">번호별 문제 개수</h4>
                 <div className="flex items-center space-x-4">
                   <select
                     value={questionsPerType}
@@ -305,7 +397,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                   <span className="text-black text-lg">문항씩</span>
                 </div>
                 <p className="text-sm text-black mt-2">
-                  각 구간별로 <strong>{questionsPerType}개</strong>의 문항이 출제됩니다
+                  각 번호/지문별로 <strong>{questionsPerType}개</strong>의 문항이 출제됩니다
                 </p>
               </div>
             </div>
@@ -314,7 +406,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-xl font-bold text-black mb-4">주문 미리보기</h3>
               
-              {selectedGrade && selectedExams.length > 0 && selectedSections.length > 0 ? (
+              {selectedGrade && selectedExams.length > 0 && selectedSections.length > 0 && selectedTypes.length > 0 ? (
                 <div className="space-y-4">
                   <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
                     <div className="space-y-2 text-sm">
@@ -327,11 +419,15 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                         <span className="font-medium text-black">{selectedExams.length}개</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-black">선택된 구간:</span>
+                        <span className="text-black">선택된 번호/지문:</span>
                         <span className="font-medium text-black">{selectedSections.length}개</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-black">구간별 문항 수:</span>
+                        <span className="text-black">문제 유형:</span>
+                        <span className="font-medium text-black">{selectedTypes.join(', ')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-black">번호별 문항 수:</span>
                         <span className="font-medium text-black">{questionsPerType}개</span>
                       </div>
                       <hr className="my-3 border-gray-300" />
@@ -343,11 +439,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                           </span>
                         </div>
                         <div className="text-xs text-gray-600 text-right">
-                          {selectedSections.map(sectionId => {
-                            const section = examSections.find(s => s.id === sectionId);
-                            const count = sectionId === '18-40' ? 23 : sectionId === '41-42' ? 2 : 3;
-                            return `${section?.name}(${count}개)`;
-                          }).join(' + ')} × {selectedExams.length}개 모의고사 × {questionsPerType}개
+                          {selectedSections.length}개 번호/지문 × {selectedExams.length}개 모의고사 × {selectedTypes.length}개 유형 × {questionsPerType}개 문항
                         </div>
                       </div>
                       <div className="flex justify-between items-center">

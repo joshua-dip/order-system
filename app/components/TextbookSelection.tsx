@@ -1,6 +1,6 @@
 'use client';
 
-import textbooksData from '../data/converted_data.json';
+import { useState, useEffect } from 'react';
 
 interface TextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
@@ -8,7 +8,26 @@ interface TextbookSelectionProps {
 }
 
 const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelectionProps) => {
-  const textbooks = Object.keys(textbooksData);
+  const [showTextbooks, setShowTextbooks] = useState(false);
+  const [textbooks, setTextbooks] = useState<string[]>([]);
+
+  // 부교재 목록을 동적으로 로드
+  useEffect(() => {
+    const loadTextbooks = async () => {
+      try {
+        const { default: textbooksData } = await import('../data/converted_data.json');
+        setTextbooks(Object.keys(textbooksData));
+      } catch (error) {
+        console.error('교재 데이터 로딩 실패:', error);
+        // 폴백으로 샘플 데이터 사용
+        setTextbooks(["능률김성곤_5과", "천재이재영_6과", "비상홍민표_7과"]);
+      }
+    };
+
+    if (showTextbooks) {
+      loadTextbooks();
+    }
+  }, [showTextbooks]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
@@ -72,7 +91,10 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelec
             </div>
 
             {/* 부교재 */}
-            <div className="bg-white rounded-xl shadow-md p-8 border-2 border-gray-200">
+            <div 
+              onClick={() => setShowTextbooks(true)}
+              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 p-8 border-2 border-transparent hover:border-green-500"
+            >
               <div className="text-center">
                 <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-3xl font-bold">📚</span>
@@ -89,31 +111,41 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelec
           </div>
         </div>
 
-        {/* 부교재 목록 */}
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">부교재 목록</h2>
-          <div className="space-y-4">
-            {textbooks.map((textbook) => (
-              <div
-                key={textbook}
-                onClick={() => onTextbookSelect(textbook)}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02] p-6 border-2 border-transparent hover:border-green-500"
+        {/* 부교재 목록 (조건부 표시) */}
+        {showTextbooks && (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">부교재 목록</h2>
+              <button
+                onClick={() => setShowTextbooks(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                      {textbook}
-                    </h3>
-                    <p className="text-sm text-gray-500">클릭하여 선택하기</p>
-                  </div>
-                  <div className="text-green-500 text-xl font-bold ml-4">
-                    →
+                ← 돌아가기
+              </button>
+            </div>
+            <div className="space-y-4">
+              {textbooks.map((textbook) => (
+                <div
+                  key={textbook}
+                  onClick={() => onTextbookSelect(textbook)}
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02] p-6 border-2 border-transparent hover:border-green-500"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                        {textbook}
+                      </h3>
+                      <p className="text-sm text-gray-500">클릭하여 선택하기</p>
+                    </div>
+                    <div className="text-green-500 text-xl font-bold ml-4">
+                      →
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 안내 메시지 */}
         <div className="text-center mt-12">
