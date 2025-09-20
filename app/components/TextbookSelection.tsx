@@ -37,9 +37,14 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelec
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             주문 유형 선택
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-lg mb-4">
             모의고사 또는 부교재를 선택해주세요
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-md mx-auto">
+            <p className="text-blue-700 text-sm">
+              💡 교재를 선택하면 해당 교재의 강과 번호를 선택할 수 있습니다
+            </p>
+          </div>
         </div>
 
         {/* 진행 단계 표시 */}
@@ -115,7 +120,12 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelec
         {showTextbooks && (
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">부교재 목록</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">부교재 목록</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  (목록에 없는 교재가 있다면 문의해주세요)
+                </p>
+              </div>
               <button
                 onClick={() => setShowTextbooks(false)}
                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
@@ -147,10 +157,36 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelec
           </div>
         )}
 
-        {/* 안내 메시지 */}
-        <div className="text-center mt-12">
+        {/* 문의 정보 */}
+        <div className="text-center mt-12 space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">📞 문의하기</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">카카오톡 오픈채팅</p>
+                <a 
+                  href="https://open.kakao.com/o/sHuV7wSh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-yellow-400 text-gray-800 px-4 py-2 rounded-lg hover:bg-yellow-500 transition-colors font-medium"
+                >
+                  💬 카톡 문의하기
+                </a>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">전화 문의</p>
+                <a 
+                  href="tel:01079270806"
+                  className="text-blue-600 font-medium hover:text-blue-800"
+                >
+                  📱 010-7927-0806
+                </a>
+              </div>
+            </div>
+          </div>
+          
           <p className="text-gray-500 text-sm">
-            💡 교재를 선택하면 해당 교재의 강과 번호를 선택할 수 있습니다
+            목록에 없는 교재나 특별한 요청사항이 있으시면 언제든 문의해주세요
           </p>
         </div>
       </div>
