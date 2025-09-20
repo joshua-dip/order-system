@@ -4,19 +4,28 @@ import { useState } from 'react';
 import TextbookSelection from './components/TextbookSelection';
 import LessonSelection from './components/LessonSelection';
 import QuestionSettings from './components/QuestionSettings';
+import MockExamSettings from './components/MockExamSettings';
 import OrderDisplay from './components/OrderDisplay';
 
-type PageStep = 'textbook' | 'lessons' | 'questions' | 'order';
+type PageStep = 'selection' | 'textbook' | 'lessons' | 'questions' | 'mockexam' | 'order';
+type OrderType = 'textbook' | 'mockexam';
 
 export default function Home() {
-  const [currentStep, setCurrentStep] = useState<PageStep>('textbook');
+  const [currentStep, setCurrentStep] = useState<PageStep>('selection');
+  const [orderType, setOrderType] = useState<OrderType>('textbook');
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
 
   const handleTextbookSelect = (textbook: string) => {
     setSelectedTextbook(textbook);
+    setOrderType('textbook');
     setCurrentStep('lessons');
+  };
+
+  const handleMockExamSelect = () => {
+    setOrderType('mockexam');
+    setCurrentStep('mockexam');
   };
 
   const handleLessonsSelect = (lessons: string[]) => {
@@ -27,6 +36,13 @@ export default function Home() {
   const handleOrderGenerate = (orderText: string) => {
     setGeneratedOrder(orderText);
     setCurrentStep('order');
+  };
+
+  const handleBackToSelection = () => {
+    setCurrentStep('selection');
+    setOrderType('textbook');
+    setSelectedTextbook('');
+    setSelectedLessons([]);
   };
 
   const handleBackToTextbook = () => {
@@ -41,29 +57,44 @@ export default function Home() {
 
   const handleClearOrder = () => {
     setGeneratedOrder('');
-    setCurrentStep('textbook');
+    setCurrentStep('selection');
+    setOrderType('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
   };
 
   const handleNewOrder = () => {
     setGeneratedOrder('');
-    setCurrentStep('textbook');
+    setCurrentStep('selection');
+    setOrderType('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
   };
 
   // 현재 단계에 따라 컴포넌트 렌더링
   switch (currentStep) {
-    case 'textbook':
-      return <TextbookSelection onTextbookSelect={handleTextbookSelect} />;
+    case 'selection':
+      return (
+        <TextbookSelection 
+          onTextbookSelect={handleTextbookSelect}
+          onMockExamSelect={handleMockExamSelect}
+        />
+      );
+    
+    case 'mockexam':
+      return (
+        <MockExamSettings
+          onOrderGenerate={handleOrderGenerate}
+          onBack={handleBackToSelection}
+        />
+      );
     
     case 'lessons':
       return (
         <LessonSelection 
           selectedTextbook={selectedTextbook}
           onLessonsSelect={handleLessonsSelect}
-          onBack={handleBackToTextbook}
+          onBack={handleBackToSelection}
         />
       );
     
@@ -74,7 +105,7 @@ export default function Home() {
           selectedLessons={selectedLessons}
           onOrderGenerate={handleOrderGenerate}
           onBack={handleBackToLessons}
-          onBackToTextbook={handleBackToTextbook}
+          onBackToTextbook={handleBackToSelection}
         />
       );
     
@@ -97,13 +128,13 @@ export default function Home() {
               <div className="flex items-center justify-between">
                 <div 
                   className="flex flex-col items-center cursor-pointer group"
-                  onClick={handleBackToTextbook}
-                  title="교재 선택으로 돌아가기"
+                  onClick={handleBackToSelection}
+                  title="유형 선택으로 돌아가기"
                 >
                   <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
                     ✓
                   </div>
-                  <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">교재 선택</span>
+                  <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">유형 선택</span>
                 </div>
                 <div className="flex-1 h-1 bg-green-600 mx-4"></div>
                 <div 
@@ -148,6 +179,11 @@ export default function Home() {
       );
     
     default:
-      return <TextbookSelection onTextbookSelect={handleTextbookSelect} />;
+      return (
+        <TextbookSelection 
+          onTextbookSelect={handleTextbookSelect}
+          onMockExamSelect={handleMockExamSelect}
+        />
+      );
   }
 }

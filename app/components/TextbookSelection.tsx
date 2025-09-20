@@ -4,9 +4,10 @@ import textbooksData from '../data/converted_data.json';
 
 interface TextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
+  onMockExamSelect: () => void;
 }
 
-const TextbookSelection = ({ onTextbookSelect }: TextbookSelectionProps) => {
+const TextbookSelection = ({ onTextbookSelect, onMockExamSelect }: TextbookSelectionProps) => {
   const textbooks = Object.keys(textbooksData);
 
   return (
@@ -15,10 +16,10 @@ const TextbookSelection = ({ onTextbookSelect }: TextbookSelectionProps) => {
         {/* 헤더 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            📚 교재 선택
+            주문 유형 선택
           </h1>
           <p className="text-gray-600 text-lg">
-            주문할 교재를 선택해주세요
+            모의고사 또는 부교재를 선택해주세요
           </p>
         </div>
 
@@ -48,14 +49,55 @@ const TextbookSelection = ({ onTextbookSelect }: TextbookSelectionProps) => {
           </div>
         </div>
 
-        {/* 교재 목록 */}
+        {/* 주문 유형 선택 */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 모의고사 */}
+            <div
+              onClick={onMockExamSelect}
+              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 p-8 border-2 border-transparent hover:border-blue-500"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl font-bold">📝</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">모의고사</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  18~40번, 41~42번, 43~45번
+                </p>
+                <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm">
+                  정해진 문항 구성
+                </div>
+              </div>
+            </div>
+
+            {/* 부교재 */}
+            <div className="bg-white rounded-xl shadow-md p-8 border-2 border-gray-200">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl font-bold">📚</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">부교재</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  교재별 맞춤 문항 선택
+                </p>
+                <div className="bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm">
+                  교재 선택 후 진행
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 부교재 목록 */}
         <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">부교재 목록</h2>
           <div className="space-y-4">
             {textbooks.map((textbook) => (
               <div
                 key={textbook}
                 onClick={() => onTextbookSelect(textbook)}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02] p-6 border-2 border-transparent hover:border-blue-500"
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02] p-6 border-2 border-transparent hover:border-green-500"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -64,7 +106,7 @@ const TextbookSelection = ({ onTextbookSelect }: TextbookSelectionProps) => {
                     </h3>
                     <p className="text-sm text-gray-500">클릭하여 선택하기</p>
                   </div>
-                  <div className="text-blue-500 text-xl font-bold ml-4">
+                  <div className="text-green-500 text-xl font-bold ml-4">
                     →
                   </div>
                 </div>
