@@ -91,12 +91,14 @@ export default function Home() {
 
   const handleBackToWorkbookTextbook = () => {
     setCurrentStep('workbook_textbook');
+    setOrderType('workbook');
     setSelectedLessons([]);
     setSelectedWorkbookTypes([]);
   };
 
   const handleBackToWorkbookLessons = () => {
     setCurrentStep('workbook_lessons');
+    setOrderType('workbook');
     setSelectedWorkbookTypes([]);
   };
 
