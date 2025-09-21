@@ -6,6 +6,7 @@ interface LessonSelectionProps {
   selectedTextbook: string;
   onLessonsSelect: (lessons: string[]) => void;
   onBack: () => void;
+  onTextbookSelect?: (textbook: string) => void;
 }
 
 interface LessonItem {
@@ -32,10 +33,12 @@ interface TextbookStructure {
   };
 }
 
-const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSelectionProps) => {
+const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect }: LessonSelectionProps) => {
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
+  const [textbooks, setTextbooks] = useState<string[]>([]);
+  const [showTextbookList, setShowTextbookList] = useState(false);
 
   // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
@@ -43,6 +46,18 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSe
       try {
         // 동적으로 큰 JSON 파일 로드
         const { default: textbooksData } = await import('../data/converted_data.json');
+        
+        // 부교재 목록을 보여주는 경우
+        if (selectedTextbook === '부교재_목록') {
+          setTextbooks(Object.keys(textbooksData));
+          setShowTextbookList(true);
+          return;
+        }
+        
+        // 실제 교재가 선택된 경우 목록 숨기기
+        if (selectedTextbook !== '부교재_목록') {
+          setShowTextbookList(false);
+        }
         
         if (selectedTextbook && textbooksData[selectedTextbook as keyof typeof textbooksData]) {
           const textbookData = textbooksData[selectedTextbook as keyof typeof textbooksData] as TextbookStructure;
@@ -132,20 +147,25 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSe
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            📖 강과 번호 선택
+          <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
+            {showTextbookList ? '부교재 선택' : '강과 번호 선택'}
           </h1>
-          <p className="text-gray-600 text-lg">
-            {selectedTextbook}
+          <p className="text-lg" style={{ color: '#888B8D' }}>
+            {showTextbookList ? '부교재를 선택해주세요' : selectedTextbook}
           </p>
+          {showTextbookList && (
+            <p className="text-sm mt-2" style={{ color: '#888B8D' }}>
+              (목록에 없는 교재가 필요하시다면 문의해주세요)
+            </p>
+          )}
         </div>
 
         {/* 진행 단계 표시 */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-6">
           <div className="flex items-center justify-between">
             <div 
               className="flex flex-col items-center cursor-pointer group"
@@ -174,6 +194,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSe
           </div>
         </div>
 
+
         {/* 선택된 강 개수 표시 */}
         {selectedLessons.length > 0 && (
           <div className="max-w-4xl mx-auto mb-6">
@@ -183,18 +204,47 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSe
           </div>
         )}
 
-        {/* 강과 번호 선택 */}
+        {/* 교재 목록 또는 강과 번호 선택 */}
         <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="mb-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-                <p className="text-blue-700 text-sm">
-                  <strong>💡 사용법:</strong> 왼쪽을 클릭하면 강 전체 선택, 오른쪽 + 버튼을 클릭하면 개별 번호 선택이 가능해요!
-                </p>
-              </div>
+          {showTextbookList ? (
+            /* 부교재 목록 */
+            <div className="space-y-4">
+              {textbooks.map((textbook) => (
+                <div
+                  key={textbook}
+                  onClick={() => {
+                    if (onTextbookSelect) {
+                      onTextbookSelect(textbook);
+                      setShowTextbookList(false);
+                    }
+                  }}
+                  className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02] p-6 border-2 hover:border-opacity-80"
+                  style={{ backgroundColor: '#13294B', borderColor: '#13294B' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {textbook}
+                      </h3>
+                      <p className="text-sm text-white opacity-80">선택하기</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              {selectedTextbook !== '부교재_목록' && (
+                <>
+                  <div className="mb-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                      <p className="text-blue-700 text-sm">
+                        <strong>사용법:</strong> 왼쪽을 클릭하면 강 전체 선택, 오른쪽 + 버튼을 클릭하면 개별 번호 선택이 가능해요!
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="space-y-3">
+                  <div className="space-y-3">
               {Object.keys(lessonGroups).map((lessonKey) => {
                 const groupLessons = lessonGroups[lessonKey];
                 const allSelected = groupLessons.every(lesson => selectedLessons.includes(lesson));
@@ -270,19 +320,15 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack }: LessonSe
                   </div>
                 );
               })}
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+          )}
         </div>
 
         {/* 네비게이션 버튼 */}
-        <div className="max-w-4xl mx-auto flex justify-between">
-          <button
-            onClick={onBack}
-            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-          >
-            ← 이전 단계
-          </button>
-          
+        <div className="max-w-4xl mx-auto flex justify-end">
           <button
             onClick={handleNext}
             disabled={selectedLessons.length === 0}

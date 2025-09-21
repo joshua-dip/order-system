@@ -13,6 +13,7 @@ interface QuestionSettingsProps {
 const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, onBack, onBackToTextbook }: QuestionSettingsProps) => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(2);
+  const [email, setEmail] = useState<string>('');
 
   const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의'];
 
@@ -37,6 +38,17 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
       alert('문제 유형을 선택해주세요.');
       return;
     }
+    if (!email.trim()) {
+      alert('이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('올바른 이메일 주소를 입력해주세요.');
+      return;
+    }
 
     // 총 문제 수 계산 (문제 유형 수 × 유형별 문항 수 × 선택한 지문 수)
     const totalQuestions = selectedTypes.length * questionsPerType * selectedLessons.length;
@@ -54,6 +66,8 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     const isDiscounted = totalQuestions >= 100;
     
     const orderText = `교재: ${selectedTextbook}
+
+자료 받으실 이메일 주소: ${email.trim()}
 
 1. 필요하신 강과 번호
 : ${selectedLessons.join(', ')}
@@ -81,20 +95,20 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
   const isDiscounted = totalQuestions >= 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
             문제 설정
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-lg" style={{ color: '#888B8D' }}>
             문제 유형과 개수를 선택해주세요
           </p>
         </div>
 
         {/* 진행 단계 표시 */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-6">
           <div className="flex items-center justify-between">
             <div 
               className="flex flex-col items-center cursor-pointer group"
@@ -208,6 +222,24 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                   각 문제 유형별로 <strong>{questionsPerType}개</strong>의 문항이 출제됩니다
                 </p>
               </div>
+
+              {/* 이메일 주소 입력 */}
+              <div className="mb-6">
+                <h4 className="text-lg font-medium mb-3 text-black">
+                  자료 받으실 이메일 주소 <span className="text-red-500">*</span>
+                </h4>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-black focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                  required
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  완성된 부교재 변형문제 자료를 받으실 이메일 주소를 입력해주세요
+                </p>
+              </div>
             </div>
 
             {/* 오른쪽: 가격 미리보기 */}
@@ -305,15 +337,6 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
           </div>
         </div>
 
-        {/* 네비게이션 버튼 */}
-        <div className="max-w-4xl mx-auto mt-8 flex justify-between">
-          <button
-            onClick={onBack}
-            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-          >
-            ← 이전 단계
-          </button>
-        </div>
       </div>
     </div>
   );

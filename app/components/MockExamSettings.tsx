@@ -1,52 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-// 모의고사 데이터를 컴포넌트 외부에 정의하여 재생성 방지
-const MOCK_EXAMS_DATA = {
-  "고1모의고사": [
-    "고1_2025_09월(인천시)",
-    "고1_2025_06월(부산시)",
-    "고1_2025_03월(서울시)",
-    "고1_2024_10월(경기도)",
-    "고1_2024_09월(인천시)",
-    "고1_2024_06월(부산시)",
-    "고1_2024_03월(서울시)",
-    "고1_2023_11월(경기도)[12월시행]",
-    "고1_2023_09월(인천시)",
-    "고1_2023_06월(부산시)"
-  ],
-  "고2모의고사": [
-    "고2_2025_09월(인천시)",
-    "고2_2025_06월(부산시)",
-    "고2_2025_03월(서울시)",
-    "고2_2024_10월(경기도)",
-    "고2_2024_09월(인천시)",
-    "고2_2024_06월(부산시)",
-    "고2_2024_03월(서울시)",
-    "고2_2023_11월(경기도)[12월시행]",
-    "고2_2023_09월(인천시)",
-    "고2_2023_06월(부산시)"
-  ],
-  "고3모의고사": [
-    "고3_2025_09월(평가원)",
-    "고3_2025_07월(인천시)",
-    "고3_2025_06월(평가원)",
-    "고3_2025_05월(경기도)",
-    "고3_2025_03월(서울시)",
-    "고3_2024_10월(서울시)",
-    "고3_2024_09월(평가원)",
-    "고3_2024_07월(인천시)",
-    "고3_2024_06월(평가원)",
-    "고3_2024_05월(경기도)"
-  ],
-  "대수능": [
-    "수능_2024_11월_2025수능(평가원)",
-    "수능_2023_11월_2024수능(평가원)",
-    "수능_2022_11월_2023수능(평가원)",
-    "수능_2021_11월_2022수능(평가원)",
-    "수능_2020_12월_2021수능(평가원)"
-  ]
-} as const;
+import { useState, useEffect } from 'react';
 
 interface MockExamSettingsProps {
   onOrderGenerate: (orderText: string) => void;
@@ -59,6 +13,25 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [selectedSections, setSelectedSections] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(2);
+  const [email, setEmail] = useState<string>('');
+  const [mockExamsData, setMockExamsData] = useState<Record<string, string[]>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMockExamsData = async () => {
+      try {
+        const mockExamData = await import('../data/mock-exams.json');
+        setMockExamsData(mockExamData.default);
+      } catch (error) {
+        console.error('모의고사 데이터 로드 실패:', error);
+        setMockExamsData({});
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMockExamsData();
+  }, []);
 
   const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의'];
 
@@ -76,7 +49,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     { id: '43-45', name: '43~45번', questionCount: 1 }
   ];
 
-  const grades = Object.keys(MOCK_EXAMS_DATA);
+  const grades = Object.keys(mockExamsData);
 
   const handleExamChange = (exam: string) => {
     setSelectedExams(prev => 
@@ -87,8 +60,8 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   };
 
   const handleAllExamsToggle = () => {
-    if (selectedGrade) {
-      const gradeExams = MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA];
+    if (selectedGrade && mockExamsData[selectedGrade]) {
+      const gradeExams = mockExamsData[selectedGrade];
       if (selectedExams.length === gradeExams.length) {
         setSelectedExams([]);
       } else {
@@ -146,6 +119,17 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       alert('문제 유형을 선택해주세요.');
       return;
     }
+    if (!email.trim()) {
+      alert('이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('올바른 이메일 주소를 입력해주세요.');
+      return;
+    }
 
     // 선택된 번호의 총 문항 수 계산 (번호 수 × 모의고사 수 × 문제 유형 수 × 유형별 문항 수)
     const totalQuestions = selectedSections.length * selectedExams.length * selectedTypes.length * questionsPerType;
@@ -167,6 +151,8 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     ).join(', ');
     
     const orderText = `모의고사 주문서
+
+자료 받으실 이메일 주소: ${email.trim()}
 
 1. 학년/유형
 : ${selectedGrade}
@@ -200,20 +186,20 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const isDiscounted = totalQuestions >= 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
             모의고사 설정
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-lg" style={{ color: '#888B8D' }}>
             모의고사 구간과 문항 수를 선택해주세요
           </p>
         </div>
 
         {/* 진행 단계 표시 */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-6">
           <div className="flex items-center justify-between">
             <div 
               className="flex flex-col items-center cursor-pointer group"
@@ -236,6 +222,12 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         </div>
 
         <div className="max-w-4xl mx-auto">
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">모의고사 데이터를 불러오는 중...</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 왼쪽: 설정 */}
             <div className="bg-white rounded-xl shadow-md p-6">
@@ -267,17 +259,17 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                     <button
                       onClick={handleAllExamsToggle}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        selectedExams.length === MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA].length
+                        selectedExams.length === (mockExamsData[selectedGrade]?.length || 0)
                           ? 'bg-red-100 text-black hover:bg-red-200'
                           : 'bg-blue-100 text-black hover:bg-blue-200'
                       }`}
                     >
-                      {selectedExams.length === MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA].length ? '전체 해제' : '전체 선택'}
+                      {selectedExams.length === (mockExamsData[selectedGrade]?.length || 0) ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
                   <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                     <div className="space-y-2">
-                      {MOCK_EXAMS_DATA[selectedGrade as keyof typeof MOCK_EXAMS_DATA].map((exam) => (
+                      {(mockExamsData[selectedGrade] || []).map((exam) => (
                         <label 
                           key={exam} 
                           className={`flex items-center space-x-3 p-2 rounded cursor-pointer transition-all hover:bg-gray-50 ${
@@ -413,6 +405,24 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                   각 번호/지문별로 <strong>{questionsPerType}개</strong>의 문항이 출제됩니다
                 </p>
               </div>
+
+              {/* 이메일 주소 입력 */}
+              <div className="mb-6">
+                <h4 className="text-lg font-medium mb-3 text-black">
+                  자료 받으실 이메일 주소 <span className="text-red-500">*</span>
+                </h4>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-black focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                  required
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  완성된 모의고사 자료를 받으실 이메일 주소를 입력해주세요
+                </p>
+              </div>
             </div>
 
             {/* 오른쪽: 가격 미리보기 */}
@@ -520,17 +530,9 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
               )}
             </div>
           </div>
+          )}
         </div>
 
-        {/* 네비게이션 버튼 */}
-        <div className="max-w-4xl mx-auto mt-8 flex justify-between">
-          <button
-            onClick={onBack}
-            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-          >
-            ← 이전 단계
-          </button>
-        </div>
       </div>
     </div>
   );
