@@ -86,7 +86,11 @@ export default function Home() {
   };
 
   const handleBackToLessons = () => {
-    setCurrentStep('lessons');
+    if (orderType === 'workbook') {
+      setCurrentStep('workbook_lessons');
+    } else {
+      setCurrentStep('lessons');
+    }
   };
 
   const handleBackToWorkbookTextbook = () => {
