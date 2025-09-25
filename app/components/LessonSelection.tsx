@@ -223,44 +223,27 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
               {textbooks.map((textbook) => (
                 <div
                   key={textbook}
-                  className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] p-6 border-2 hover:border-opacity-80"
-                  style={{ backgroundColor: '#13294B', borderColor: '#13294B' }}
+                  className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 border border-gray-200 bg-white hover:bg-gray-50"
                 >
                   <div className="flex items-center justify-between">
-                    <div 
-                      className="flex-1 cursor-pointer"
-                      onClick={() => {
-                        if (onTextbookSelect) {
-                          onTextbookSelect(textbook);
-                          setShowTextbookList(false);
-                        }
-                      }}
-                    >
-                      <h3 className="text-lg font-semibold text-white mb-2">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-800 mb-1">
                         {textbook}
                       </h3>
                     </div>
                     
-                    {/* 교재 확인 버튼 */}
-                    <div className="ml-4 flex flex-col gap-2">
+                    {/* 버튼들 */}
+                    <div className="ml-4 flex items-center gap-2">
                       {textbookLinks[textbook] && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             window.open(textbookLinks[textbook].kyoboUrl, '_blank');
                           }}
-                          className="group relative px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg flex items-center justify-center transition-all duration-300 border border-white border-opacity-30"
+                          className="group relative px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200"
                           title={`${textbookLinks[textbook].description} - YES24에서 확인`}
                         >
-                          <span className="text-white text-xs font-medium">교재 확인</span>
-                          
-                          {/* 툴팁 */}
-                          <div className="absolute bottom-12 right-0 w-48 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-                            <div className="font-medium mb-1">교재 정보 확인</div>
-                            <div className="text-gray-300">{textbookLinks[textbook].description}</div>
-                            <div className="text-blue-300 mt-1">YES24에서 보기</div>
-                            <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-800 transform rotate-45"></div>
-                          </div>
+                          ⓘ 확인
                         </button>
                       )}
                       
@@ -271,9 +254,10 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                             setShowTextbookList(false);
                           }
                         }}
-                        className="px-3 py-2 bg-white bg-opacity-90 hover:bg-white rounded-lg transition-all duration-300"
+                        className="px-3 py-1 text-white rounded text-xs font-medium hover:opacity-90 transition-all duration-200"
+                        style={{ backgroundColor: '#13294B' }}
                       >
-                        <span className="text-gray-800 text-xs font-medium">선택하기</span>
+                        선택
                       </button>
                     </div>
                   </div>
