@@ -75,7 +75,9 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
 : ${selectedTypes.join(', ')}
 3. 유형별로 필요한 문제수
 : ${questionsPerType}문항씩
-4. 가격
+4. 총 문항 수
+: ${totalQuestions}문항
+5. 가격
 : ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${discountAmount.toLocaleString()}원)` : ''}`;
 
     onOrderGenerate(orderText);
