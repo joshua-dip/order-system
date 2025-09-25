@@ -39,6 +39,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
   const [textbooks, setTextbooks] = useState<string[]>([]);
   const [showTextbookList, setShowTextbookList] = useState(false);
+  const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
 
   // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
@@ -51,6 +52,16 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         if (selectedTextbook === '부교재_목록') {
           setTextbooks(Object.keys(textbooksData));
           setShowTextbookList(true);
+          
+          // 교보문고 링크 데이터 로드
+          try {
+            const linksData = await import('../data/textbook-links.json');
+            setTextbookLinks(linksData.default);
+          } catch (error) {
+            console.error('교보문고 링크 데이터 로드 실패:', error);
+            setTextbookLinks({});
+          }
+          
           return;
         }
         
@@ -212,22 +223,48 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
               {textbooks.map((textbook) => (
                 <div
                   key={textbook}
-                  onClick={() => {
-                    if (onTextbookSelect) {
-                      onTextbookSelect(textbook);
-                      setShowTextbookList(false);
-                    }
-                  }}
-                  className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02] p-6 border-2 hover:border-opacity-80"
+                  className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] p-6 border-2 hover:border-opacity-80"
                   style={{ backgroundColor: '#13294B', borderColor: '#13294B' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => {
+                        if (onTextbookSelect) {
+                          onTextbookSelect(textbook);
+                          setShowTextbookList(false);
+                        }
+                      }}
+                    >
                       <h3 className="text-lg font-semibold text-white mb-1">
                         {textbook}
                       </h3>
                       <p className="text-sm text-white opacity-80">선택하기</p>
                     </div>
+                    
+                    {/* 교보문고 링크 인포 버튼 */}
+                    {textbookLinks[textbook] && (
+                      <div className="ml-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(textbookLinks[textbook].kyoboUrl, '_blank');
+                          }}
+                          className="group relative w-8 h-8 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition-all duration-300"
+                          title={`${textbookLinks[textbook].description} - 교보문고에서 확인`}
+                        >
+                          <span className="text-white text-sm font-bold">ⓘ</span>
+                          
+                          {/* 툴팁 */}
+                          <div className="absolute bottom-10 right-0 w-48 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                            <div className="font-medium mb-1">교재 정보 확인</div>
+                            <div className="text-gray-300">{textbookLinks[textbook].description}</div>
+                            <div className="text-blue-300 mt-1">교보문고에서 보기</div>
+                            <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-800 transform rotate-45"></div>
+                          </div>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

@@ -10,6 +10,7 @@ interface WorkbookTextbookSelectionProps {
 const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextbookSelectionProps) => {
   const [workbookTextbooks, setWorkbookTextbooks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
 
   useEffect(() => {
     const loadTextbooks = async () => {
@@ -17,6 +18,15 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
         // 부교재 데이터만 로드
         const convertedData = await import('../data/converted_data.json');
         const textbookNames = Object.keys(convertedData.default as Record<string, unknown>);
+        
+        // 교보문고 링크 데이터 로드
+        try {
+          const linksData = await import('../data/textbook-links.json');
+          setTextbookLinks(linksData.default);
+        } catch (error) {
+          console.error('교보문고 링크 데이터 로드 실패:', error);
+          setTextbookLinks({});
+        }
         
         setWorkbookTextbooks(textbookNames);
       } catch (error) {
@@ -97,28 +107,54 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                 <p className="text-gray-600">워크북 제작에 사용할 부교재를 선택해주세요</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workbookTextbooks.slice(0, 12).map((textbook) => (
-                  <div
-                    key={textbook}
-                    onClick={() => onTextbookSelect(textbook)}
-                    className="group relative bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-blue-300 overflow-hidden"
-                  >
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ backgroundColor: '#00A9E0' }}></div>
-                    <div className="relative z-10 p-4">
-                      <div className="text-center">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:bg-white group-hover:bg-opacity-20" style={{ backgroundColor: '#00A9E0' }}>
-                          <span className="text-lg font-bold text-white">📚</span>
-                        </div>
-                        <h3 className="text-sm font-bold text-gray-800 group-hover:text-white transition-colors duration-300 mb-2 line-clamp-2">
-                          {textbook}
-                        </h3>
-                        <div className="inline-block px-3 py-1 rounded text-xs font-medium transition-all duration-300 border border-gray-300 text-gray-700 group-hover:border-white group-hover:text-white">
-                          선택하기
+                  {workbookTextbooks.slice(0, 12).map((textbook) => (
+                    <div
+                      key={textbook}
+                      className="group relative bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ backgroundColor: '#00A9E0' }}></div>
+                      <div className="relative z-10 p-4">
+                        <div className="text-center">
+                          {/* 교보문고 인포 버튼 */}
+                          {textbookLinks[textbook] && (
+                            <div className="absolute top-2 right-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(textbookLinks[textbook].kyoboUrl, '_blank');
+                                }}
+                                className="group-info relative w-6 h-6 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center transition-all duration-300 z-20"
+                                title={`${textbookLinks[textbook].description} - 교보문고에서 확인`}
+                              >
+                                <span className="text-white text-xs font-bold">ⓘ</span>
+                                
+                                {/* 툴팁 */}
+                                <div className="absolute top-8 right-0 w-40 bg-gray-800 text-white text-xs rounded-lg p-2 opacity-0 group-info-hover:opacity-100 transition-opacity pointer-events-none">
+                                  <div className="font-medium">교보문고에서 확인</div>
+                                  <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-800 transform rotate-45"></div>
+                                </div>
+                              </button>
+                            </div>
+                          )}
+                          
+                          <div 
+                            className="cursor-pointer"
+                            onClick={() => onTextbookSelect(textbook)}
+                          >
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:bg-white group-hover:bg-opacity-20" style={{ backgroundColor: '#00A9E0' }}>
+                              <span className="text-lg font-bold text-white">📚</span>
+                            </div>
+                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-white transition-colors duration-300 mb-2 line-clamp-2">
+                              {textbook}
+                            </h3>
+                            <div className="inline-block px-3 py-1 rounded text-xs font-medium transition-all duration-300 border border-gray-300 text-gray-700 group-hover:border-white group-hover:text-white">
+                              선택하기
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
                 {workbookTextbooks.length > 12 && (
                   <div
                     onClick={() => onTextbookSelect('부교재_목록')}
