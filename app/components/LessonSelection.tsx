@@ -236,35 +236,46 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         }
                       }}
                     >
-                      <h3 className="text-lg font-semibold text-white mb-1">
+                      <h3 className="text-lg font-semibold text-white mb-2">
                         {textbook}
                       </h3>
-                      <p className="text-sm text-white opacity-80">선택하기</p>
                     </div>
                     
-                    {/* 교보문고 링크 인포 버튼 */}
-                    {textbookLinks[textbook] && (
-                      <div className="ml-4">
+                    {/* 교재 확인 버튼 */}
+                    <div className="ml-4 flex flex-col gap-2">
+                      {textbookLinks[textbook] && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             window.open(textbookLinks[textbook].kyoboUrl, '_blank');
                           }}
-                          className="group relative w-8 h-8 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition-all duration-300"
-                          title={`${textbookLinks[textbook].description} - 교보문고에서 확인`}
+                          className="group relative px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg flex items-center justify-center transition-all duration-300 border border-white border-opacity-30"
+                          title={`${textbookLinks[textbook].description} - YES24에서 확인`}
                         >
-                          <span className="text-white text-sm font-bold">ⓘ</span>
+                          <span className="text-white text-xs font-medium">교재 확인</span>
                           
                           {/* 툴팁 */}
-                          <div className="absolute bottom-10 right-0 w-48 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                          <div className="absolute bottom-12 right-0 w-48 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
                             <div className="font-medium mb-1">교재 정보 확인</div>
                             <div className="text-gray-300">{textbookLinks[textbook].description}</div>
-                            <div className="text-blue-300 mt-1">교보문고에서 보기</div>
+                            <div className="text-blue-300 mt-1">YES24에서 보기</div>
                             <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-800 transform rotate-45"></div>
                           </div>
                         </button>
-                      </div>
-                    )}
+                      )}
+                      
+                      <button
+                        onClick={() => {
+                          if (onTextbookSelect) {
+                            onTextbookSelect(textbook);
+                            setShowTextbookList(false);
+                          }
+                        }}
+                        className="px-3 py-2 bg-white bg-opacity-90 hover:bg-white rounded-lg transition-all duration-300"
+                      >
+                        <span className="text-gray-800 text-xs font-medium">선택하기</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

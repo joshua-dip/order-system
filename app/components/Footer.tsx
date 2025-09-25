@@ -5,10 +5,7 @@ const Footer = () => {
     <footer className="py-4 mt-auto" style={{ backgroundColor: '#F5C6CB', color: '#333' }}>
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-          {/* 회사 정보 */}
-          <div className="flex items-center">
-            <h3 className="text-lg font-bold">고미조슈아</h3>
-          </div>
+
 
           {/* 문의 정보 */}
           <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4">
@@ -46,7 +43,7 @@ const Footer = () => {
         {/* 저작권 */}
         <div className="border-t border-gray-400 mt-4 pt-4">
           <div className="text-center text-xs text-gray-600">
-            <p>© 2025 (주)DipThink. All rights reserved.</p>
+            <p>© 2025 고미조슈아. All rights reserved.</p>
           </div>
         </div>
       </div>

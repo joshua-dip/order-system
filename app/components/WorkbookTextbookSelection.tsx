@@ -115,40 +115,41 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ backgroundColor: '#00A9E0' }}></div>
                       <div className="relative z-10 p-4">
                         <div className="text-center">
-                          {/* 교보문고 인포 버튼 */}
-                          {textbookLinks[textbook] && (
-                            <div className="absolute top-2 right-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(textbookLinks[textbook].kyoboUrl, '_blank');
-                                }}
-                                className="group-info relative w-6 h-6 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center transition-all duration-300 z-20"
-                                title={`${textbookLinks[textbook].description} - 교보문고에서 확인`}
-                              >
-                                <span className="text-white text-xs font-bold">ⓘ</span>
-                                
-                                {/* 툴팁 */}
-                                <div className="absolute top-8 right-0 w-40 bg-gray-800 text-white text-xs rounded-lg p-2 opacity-0 group-info-hover:opacity-100 transition-opacity pointer-events-none">
-                                  <div className="font-medium">교보문고에서 확인</div>
-                                  <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-800 transform rotate-45"></div>
-                                </div>
-                              </button>
-                            </div>
-                          )}
-                          
                           <div 
-                            className="cursor-pointer"
+                            className="cursor-pointer text-center"
                             onClick={() => onTextbookSelect(textbook)}
                           >
                             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:bg-white group-hover:bg-opacity-20" style={{ backgroundColor: '#00A9E0' }}>
                               <span className="text-lg font-bold text-white">📚</span>
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-white transition-colors duration-300 mb-2 line-clamp-2">
+                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-white transition-colors duration-300 mb-3 line-clamp-2">
                               {textbook}
                             </h3>
-                            <div className="inline-block px-3 py-1 rounded text-xs font-medium transition-all duration-300 border border-gray-300 text-gray-700 group-hover:border-white group-hover:text-white">
-                              선택하기
+                            
+                            {/* 버튼들 */}
+                            <div className="flex flex-col gap-2">
+                              {textbookLinks[textbook] && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(textbookLinks[textbook].kyoboUrl, '_blank');
+                                  }}
+                                  className="group-info relative px-3 py-2 bg-gray-600 hover:bg-gray-700 rounded text-xs font-medium text-white transition-all duration-300"
+                                  title={`${textbookLinks[textbook].description} - YES24에서 확인`}
+                                >
+                                  📖 교재 확인
+                                  
+                                  {/* 툴팁 */}
+                                  <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 w-40 bg-gray-800 text-white text-xs rounded-lg p-2 opacity-0 group-info-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    <div className="font-medium text-center">YES24에서 확인</div>
+                                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                                  </div>
+                                </button>
+                              )}
+                              
+                              <div className="inline-block px-3 py-1 rounded text-xs font-medium transition-all duration-300 border border-gray-300 text-gray-700 group-hover:border-white group-hover:text-white">
+                                선택하기
+                              </div>
                             </div>
                           </div>
                         </div>
