@@ -42,7 +42,7 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치'];
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법'];
 
 
   // 선택된 교재에 따라 강과 번호 목록 업데이트

@@ -15,7 +15,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
   const [questionsPerType, setQuestionsPerType] = useState<number>(2);
   const [email, setEmail] = useState<string>('');
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의'];
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법'];
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes(prev => 
