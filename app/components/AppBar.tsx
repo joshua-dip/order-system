@@ -26,10 +26,25 @@ const AppBar = ({ title = "변형문제 주문서 작성 시스템", showBackBut
             {showBackButton && onBackClick && (
               <button
                 onClick={onBackClick}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors text-white"
                 title="이전 페이지"
               >
-                <span className="text-xl">←</span>
+                <svg 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6"
+                >
+                  <path 
+                    d="M15 18L9 12L15 6" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             )}
           </div>

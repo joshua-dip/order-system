@@ -1,5 +1,7 @@
 'use client';
 
+import AppBar from './AppBar';
+
 
 interface TextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
@@ -10,7 +12,9 @@ interface TextbookSelectionProps {
 const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelect }: TextbookSelectionProps) => {
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
+    <>
+      <AppBar />
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
@@ -100,6 +104,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AppBar from './AppBar';
 
 interface MockExamSettingsProps {
   onOrderGenerate: (orderText: string) => void;
@@ -16,15 +17,21 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [email, setEmail] = useState<string>('');
   const [mockExamsData, setMockExamsData] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
+  const [questionSamples, setQuestionSamples] = useState<Record<string, {blogUrl: string, description: string, sampleTitle: string}>>({});
 
   useEffect(() => {
     const loadMockExamsData = async () => {
       try {
         const mockExamData = await import('../data/mock-exams.json');
         setMockExamsData(mockExamData.default);
+        
+        // 문제 샘플 데이터 로드
+        const samplesData = await import('../data/question-samples.json');
+        setQuestionSamples(samplesData.default);
       } catch (error) {
-        console.error('모의고사 데이터 로드 실패:', error);
+        console.error('데이터 로드 실패:', error);
         setMockExamsData({});
+        setQuestionSamples({});
       } finally {
         setLoading(false);
       }
@@ -186,7 +193,13 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const isDiscounted = totalQuestions >= 100;
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
+    <>
+      <AppBar 
+        showBackButton={true} 
+        onBackClick={onBack}
+        title="모의고사 변형문제 설정"
+      />
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
@@ -364,24 +377,40 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
                     {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {questionTypes.map((type) => (
-                    <label 
+                    <div 
                       key={type} 
-                      className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                      className={`p-3 border-2 rounded-lg transition-all hover:shadow-md ${
                         selectedTypes.includes(type)
-                          ? 'border-blue-500 bg-blue-50 text-black'
-                          : 'border-gray-300 hover:border-gray-400 text-black'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedTypes.includes(type)}
-                        onChange={() => handleTypeChange(type)}
-                        className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                      />
-                      <span className="font-medium text-black">{type}</span>
-                    </label>
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center space-x-3 cursor-pointer flex-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedTypes.includes(type)}
+                            onChange={() => handleTypeChange(type)}
+                            className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <span className="font-medium text-black">{type}</span>
+                        </label>
+                        
+                        {/* 샘플 확인 버튼 */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open('https://blog.naver.com/englishcloud_', '_blank');
+                          }}
+                          className="ml-2 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200"
+                          title="블로그에서 샘플 확인"
+                        >
+                          📝 샘플
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -535,6 +564,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 
       </div>
     </div>
+    </>
   );
 };
 

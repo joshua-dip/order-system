@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AppBar from './AppBar';
 
 interface LessonSelectionProps {
   selectedTextbook: string;
@@ -38,6 +39,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
   const [textbooks, setTextbooks] = useState<string[]>([]);
+  const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showTextbookList, setShowTextbookList] = useState(false);
   const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
 
@@ -50,7 +53,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         
         // 부교재 목록을 보여주는 경우
         if (selectedTextbook === '부교재_목록') {
-          setTextbooks(Object.keys(textbooksData));
+          const textbookList = Object.keys(textbooksData);
+          setTextbooks(textbookList);
+          setFilteredTextbooks(textbookList);
           setShowTextbookList(true);
           
           // 교보문고 링크 데이터 로드
@@ -119,6 +124,18 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     }
   }, [selectedTextbook]);
 
+  // 검색 필터링 로직
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredTextbooks(textbooks);
+    } else {
+      const filtered = textbooks.filter(textbook =>
+        textbook.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredTextbooks(filtered);
+    }
+  }, [searchTerm, textbooks]);
+
   const handleLessonChange = (lesson: string) => {
     setSelectedLessons(prev => 
       prev.includes(lesson) 
@@ -158,7 +175,13 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   };
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
+    <>
+      <AppBar 
+        showBackButton={true} 
+        onBackClick={onBack}
+        title={showTextbookList ? "부교재 선택" : "강과 번호 선택"}
+      />
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
@@ -219,8 +242,59 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         <div className="max-w-4xl mx-auto mb-8">
           {showTextbookList ? (
             /* 부교재 목록 */
-            <div className="space-y-4">
-              {textbooks.map((textbook) => (
+            <div>
+              {/* 검색 입력 필드 */}
+              <div className="max-w-md mx-auto mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="교재명으로 검색..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-gray-700 placeholder-gray-400"
+                  />
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {searchTerm && (
+                  <div className="mt-2 text-sm text-gray-600 text-center">
+                    {filteredTextbooks.length}개의 교재가 검색되었습니다
+                  </div>
+                )}
+              </div>
+
+              {filteredTextbooks.length === 0 && searchTerm ? (
+                <div className="text-center py-16">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-600 mb-2">검색 결과가 없습니다</h3>
+                  <p className="text-gray-500 mb-4">&apos;{searchTerm}&apos;에 해당하는 교재를 찾을 수 없습니다</p>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    전체 교재 보기
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredTextbooks.map((textbook) => (
                 <div
                   key={textbook}
                   onClick={() => {
@@ -257,6 +331,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                   </div>
                 </div>
               ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow-md p-6">
@@ -369,6 +445,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         </div>
       </div>
     </div>
+    </>
   );
 };
 
