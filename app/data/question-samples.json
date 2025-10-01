@@ -1,41 +1,41 @@
 {
   "주제": {
-    "blogUrl": "https://your-blog.com/question-samples/topic",
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026149385",
     "description": "주제 추론 문제 샘플",
     "sampleTitle": "글의 주제를 추론하는 문제"
   },
   "제목": {
-    "blogUrl": "https://your-blog.com/question-samples/title", 
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026150826", 
     "description": "제목 추론 문제 샘플",
     "sampleTitle": "글의 제목을 추론하는 문제"
   },
   "주장": {
-    "blogUrl": "https://your-blog.com/question-samples/claim",
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026150097",
     "description": "주장 추론 문제 샘플", 
     "sampleTitle": "필자의 주장을 파악하는 문제"
   },
   "일치": {
-    "blogUrl": "https://your-blog.com/question-samples/match",
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026151625",
     "description": "내용 일치 문제 샘플",
     "sampleTitle": "글의 내용과 일치하는 것을 찾는 문제"
   },
   "불일치": {
-    "blogUrl": "https://your-blog.com/question-samples/mismatch", 
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026152279", 
     "description": "내용 불일치 문제 샘플",
     "sampleTitle": "글의 내용과 일치하지 않는 것을 찾는 문제"
   },
   "빈칸": {
-    "blogUrl": "https://your-blog.com/question-samples/blank",
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026140431",
     "description": "빈칸 추론 문제 샘플",
     "sampleTitle": "빈칸에 들어갈 말을 추론하는 문제"
   },
   "함의": {
-    "blogUrl": "https://your-blog.com/question-samples/implication",
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026153645",
     "description": "함축 의미 문제 샘플", 
     "sampleTitle": "글에서 암시하는 바를 추론하는 문제"
   },
   "어법": {
-    "blogUrl": "https://your-blog.com/question-samples/grammar",
+    "blogUrl": "https://blog.naver.com/englishcloud_/224026180009",
     "description": "어법 문제 샘플",
     "sampleTitle": "문법적으로 올바른 것을 찾는 문제"
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
@@ -21,6 +21,7 @@ const WorkbookTypeSelection = ({
 }: WorkbookTypeSelectionProps) => {
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
   const [email, setEmail] = useState<string>('');
+  const [totalTextCount, setTotalTextCount] = useState<number>(0);
 
   // 워크북 패키지들
   const workbookPackages = [
@@ -52,6 +53,45 @@ const WorkbookTypeSelection = ({
       subTypes: ['낱말배열연습']
     }
   ];
+
+  // 선택된 강들에서 실제 지문 개수 계산
+  useEffect(() => {
+    const calculateTextCount = async () => {
+      try {
+        const convertedData = await import('../data/converted_data.json');
+        const textbookData = (convertedData.default as Record<string, unknown>)[selectedTextbook];
+        
+        if (textbookData && typeof textbookData === 'object') {
+          const sheet1 = (textbookData as Record<string, unknown>).Sheet1;
+          if (sheet1 && typeof sheet1 === 'object') {
+            const 부교재 = (sheet1 as Record<string, unknown>).부교재;
+            if (부교재 && typeof 부교재 === 'object') {
+              const textbookInfo = (부교재 as Record<string, unknown>)[selectedTextbook];
+              if (textbookInfo && typeof textbookInfo === 'object') {
+                let totalCount = 0;
+                
+                selectedLessons.forEach(lessonName => {
+                  const lessonData = (textbookInfo as Record<string, unknown>)[lessonName];
+                  if (Array.isArray(lessonData)) {
+                    totalCount += lessonData.length;
+                  }
+                });
+                
+                setTotalTextCount(totalCount);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('지문 개수 계산 실패:', error);
+        setTotalTextCount(0);
+      }
+    };
+
+    if (selectedTextbook && selectedLessons.length > 0) {
+      calculateTextCount();
+    }
+  }, [selectedTextbook, selectedLessons]);
 
   const handlePackageChange = (packageId: string) => {
     setSelectedPackages(prev => {
@@ -108,9 +148,9 @@ const WorkbookTypeSelection = ({
     ).filter(Boolean);
 
     
-    // 가격 계산 (지문당 가격 × 선택된 강 수)
+    // 가격 계산 (지문당 가격 × 실제 지문 수)
     const totalPrice = selectedPackageDetails.reduce((sum, pkg) => {
-      return sum + (pkg!.price * selectedLessons.length);
+      return sum + (pkg!.price * totalTextCount);
     }, 0);
 
     // 할인 없음 - 기본 가격 그대로
@@ -128,8 +168,8 @@ const WorkbookTypeSelection = ({
 2. 선택된 워크북 패키지
 : ${selectedPackageDetails.map(pkg => pkg!.name).join(', ')}
 
-3. 총 강 수
-: ${selectedLessons.length}강
+3. 총 지문 수
+: ${totalTextCount}지문 (${selectedLessons.length}강)
 
 4. 패키지별 세부 내용
 ${selectedPackageDetails.map(pkg => 
@@ -140,7 +180,7 @@ ${selectedPackageDetails.map(pkg =>
 
 5. 가격 계산
 ${selectedPackageDetails.map(pkg => 
-`   • ${pkg!.name}: ${pkg!.price}원 × ${selectedLessons.length}강 = ${(pkg!.price * selectedLessons.length).toLocaleString()}원`
+`   • ${pkg!.name}: ${pkg!.price}원 × ${totalTextCount}지문 = ${(pkg!.price * totalTextCount).toLocaleString()}원`
 ).join('\n')}
    
    총 금액: ${finalPrice.toLocaleString()}원
@@ -156,7 +196,7 @@ ${selectedPackageDetails.map(pkg =>
   ).filter(Boolean);
   
   const basePricePreview = selectedPackageDetailsPreview.reduce((sum, pkg) => {
-    return sum + (pkg!.price * selectedLessons.length);
+    return sum + (pkg!.price * totalTextCount);
   }, 0);
   
   // 할인 없음 - 기본 가격 그대로
@@ -244,9 +284,9 @@ ${selectedPackageDetails.map(pkg =>
                     <span className="text-white font-semibold">워크북 가격 안내</span>
                   </div>
                   <div className="text-sm text-white">
-                    • 빈칸쓰기 패키지: 강당 300원<br/>
-                    • 빈칸쓰기 키워드: 강당 100원<br/>
-                    • 낱말배열: 강당 100원
+                    • 빈칸쓰기 패키지: 지문당 300원<br/>
+                    • 빈칸쓰기 키워드: 지문당 100원<br/>
+                    • 낱말배열: 지문당 100원
                   </div>
                 </div>
               </div>
@@ -377,6 +417,10 @@ ${selectedPackageDetails.map(pkg =>
                         <span className="font-medium text-black">{selectedLessons.length}개</span>
                       </div>
                       <div className="flex justify-between">
+                        <span className="text-black">총 지문 수:</span>
+                        <span className="font-medium text-green-600">{totalTextCount}지문</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-black">선택된 패키지:</span>
                         <span className="font-medium text-black">{selectedPackages.length}개</span>
                       </div>
@@ -389,7 +433,7 @@ ${selectedPackageDetails.map(pkg =>
                             <div className="flex justify-between items-center">
                               <span className="text-black text-xs">{pkg!.name}</span>
                               <span className="text-green-600 text-xs font-medium">
-                                {pkg!.price}원 × {selectedLessons.length}강 = {(pkg!.price * selectedLessons.length).toLocaleString()}원
+                                {pkg!.price}원 × {totalTextCount}지문 = {(pkg!.price * totalTextCount).toLocaleString()}원
                               </span>
                             </div>
                           </div>
@@ -400,13 +444,13 @@ ${selectedPackageDetails.map(pkg =>
                       
                       <div className="flex flex-col space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-black">총 강 수:</span>
+                          <span className="text-black">총 지문 수:</span>
                           <span className="font-bold text-lg text-black">
-                            {selectedLessons.length}강
+                            {totalTextCount}지문
                           </span>
                         </div>
                         <div className="text-xs text-gray-600 text-right">
-                          {selectedPackages.length}개 패키지 × {selectedLessons.length}강
+                          {selectedPackages.length}개 패키지 × {totalTextCount}지문
                         </div>
                       </div>
                       
