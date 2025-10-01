@@ -228,16 +228,18 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                         </label>
                         
                         {/* 샘플 확인 버튼 */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open('https://blog.naver.com/englishcloud_', '_blank');
-                          }}
-                          className="ml-2 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200"
-                          title="블로그에서 샘플 확인"
-                        >
-                          📝 샘플
-                        </button>
+                        {questionSamples[type] && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(questionSamples[type].blogUrl, '_blank');
+                            }}
+                            className="ml-2 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200"
+                            title={`${questionSamples[type].sampleTitle} - 블로그에서 샘플 확인`}
+                          >
+                            📝 샘플
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
