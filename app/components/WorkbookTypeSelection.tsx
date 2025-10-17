@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import convertedData from '../data/converted_data.json';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
@@ -22,6 +23,9 @@ const WorkbookTypeSelection = ({
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
   const [email, setEmail] = useState<string>('');
   const [totalTextCount, setTotalTextCount] = useState<number>(0);
+  
+  // 모의고사 여부 확인
+  const isMockExam = selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_');
 
   // 워크북 패키지들
   const workbookPackages = [
@@ -72,26 +76,31 @@ const WorkbookTypeSelection = ({
   useEffect(() => {
     const calculateTextCount = async () => {
       try {
-        const convertedData = await import('../data/converted_data.json');
-        const textbookData = (convertedData.default as Record<string, unknown>)[selectedTextbook];
-        
-        if (textbookData && typeof textbookData === 'object') {
-          const sheet1 = (textbookData as Record<string, unknown>).Sheet1;
-          if (sheet1 && typeof sheet1 === 'object') {
-            const 부교재 = (sheet1 as Record<string, unknown>).부교재;
-            if (부교재 && typeof 부교재 === 'object') {
-              const textbookInfo = (부교재 as Record<string, unknown>)[selectedTextbook];
-              if (textbookInfo && typeof textbookInfo === 'object') {
-                let totalCount = 0;
-                
-                selectedLessons.forEach(lessonName => {
-                  const lessonData = (textbookInfo as Record<string, unknown>)[lessonName];
-                  if (Array.isArray(lessonData)) {
-                    totalCount += lessonData.length;
-                  }
-                });
-                
-                setTotalTextCount(totalCount);
+        if (isMockExam) {
+          // 모의고사는 선택된 번호 개수가 지문 개수
+          setTotalTextCount(selectedLessons.length);
+        } else {
+          // 부교재 지문 개수 계산
+          const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
+          
+          if (textbookData && typeof textbookData === 'object') {
+            const sheet1 = (textbookData as Record<string, unknown>).Sheet1;
+            if (sheet1 && typeof sheet1 === 'object') {
+              const 부교재 = (sheet1 as Record<string, unknown>).부교재;
+              if (부교재 && typeof 부교재 === 'object') {
+                const textbookInfo = (부교재 as Record<string, unknown>)[selectedTextbook];
+                if (textbookInfo && typeof textbookInfo === 'object') {
+                  let totalCount = 0;
+                  
+                  selectedLessons.forEach(lessonName => {
+                    const lessonData = (textbookInfo as Record<string, unknown>)[lessonName];
+                    if (Array.isArray(lessonData)) {
+                      totalCount += lessonData.length;
+                    }
+                  });
+                  
+                  setTotalTextCount(totalCount);
+                }
               }
             }
           }
@@ -102,10 +111,12 @@ const WorkbookTypeSelection = ({
       }
     };
 
-    if (selectedTextbook && selectedLessons.length > 0) {
-      calculateTextCount();
+    if (selectedTextbook) {
+      if (isMockExam || selectedLessons.length > 0) {
+        calculateTextCount();
+      }
     }
-  }, [selectedTextbook, selectedLessons]);
+  }, [selectedTextbook, selectedLessons, isMockExam]);
 
   const handlePackageChange = (packageId: string) => {
     setSelectedPackages(prev => {
@@ -188,15 +199,19 @@ const WorkbookTypeSelection = ({
 자료 받으실 이메일 주소: ${email.trim()}
 
 교재: ${selectedTextbook}
+${isMockExam ? `
+1. 선택된 번호 (${selectedLessons.length}개)
+: ${selectedLessons.join('번, ')}번
 
-1. 선택된 강
+` : `
+1. 선택된 강 (${selectedLessons.length}개)
 : ${selectedLessons.join(', ')}
 
-2. 선택된 워크북 패키지
+`}2. 선택된 워크북 패키지
 : ${selectedPackageDetails.map(pkg => pkg!.name).join(', ')}
 
 3. 총 지문 수
-: ${totalTextCount}지문 (${selectedLessons.length}강)
+: ${totalTextCount}지문
 
 4. 패키지별 세부 내용
 ${selectedPackageDetails.map(pkg => 
@@ -282,21 +297,25 @@ ${selectedPackageDetails.map(pkg =>
               </div>
               <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">교재 선택</span>
             </div>
-            <div className="flex-1 h-1 bg-green-600 mx-4"></div>
-            <div 
-              className="flex flex-col items-center cursor-pointer group"
-              onClick={onBackToLessons}
-              title="강 선택으로 돌아가기"
-            >
-              <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
-                ✓
-              </div>
-              <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">강 선택</span>
-            </div>
+            {!isMockExam && (
+              <>
+                <div className="flex-1 h-1 bg-green-600 mx-4"></div>
+                <div 
+                  className="flex flex-col items-center cursor-pointer group"
+                  onClick={onBackToLessons}
+                  title="강 선택으로 돌아가기"
+                >
+                  <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
+                    ✓
+                  </div>
+                  <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">강 선택</span>
+                </div>
+              </>
+            )}
             <div className="flex-1 h-1 mx-4" style={{ backgroundColor: '#00A9E0' }}></div>
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: '#00A9E0' }}>
-                4
+                {isMockExam ? '3' : '4'}
               </div>
               <span className="text-xs mt-1 font-medium" style={{ color: '#00A9E0' }}>워크북 유형</span>
             </div>

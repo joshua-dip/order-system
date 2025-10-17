@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import convertedData from '../data/converted_data.json';
 
 interface WorkbookLessonSelectionProps {
   selectedTextbook: string;
@@ -18,8 +19,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
     const loadLessonsForTextbook = async () => {
       try {
         // 부교재의 경우 converted_data.json에서 데이터 로드
-        const convertedData = await import('../data/converted_data.json');
-        const textbookData = (convertedData.default as Record<string, unknown>)[selectedTextbook];
+        const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
         
         if (textbookData && typeof textbookData === 'object') {
           // Sheet1 > 부교재 > 교재명 구조에서 강 번호 추출

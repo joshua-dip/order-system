@@ -7,11 +7,12 @@ import QuestionSettings from './components/QuestionSettings';
 import MockExamSettings from './components/MockExamSettings';
 import WorkbookTextbookSelection from './components/WorkbookTextbookSelection';
 import WorkbookLessonSelection from './components/WorkbookLessonSelection';
+import WorkbookMockExamNumberSelection from './components/WorkbookMockExamNumberSelection';
 import WorkbookTypeSelection from './components/WorkbookTypeSelection';
 import OrderDisplay from './components/OrderDisplay';
 import AppBar from './components/AppBar';
 
-type PageStep = 'selection' | 'textbook' | 'lessons' | 'questions' | 'mockexam' | 'workbook_textbook' | 'workbook_lessons' | 'workbook_types' | 'order';
+type PageStep = 'selection' | 'textbook' | 'lessons' | 'questions' | 'mockexam' | 'workbook_textbook' | 'workbook_lessons' | 'workbook_mockexam_numbers' | 'workbook_types' | 'order';
 type OrderType = 'textbook' | 'mockexam' | 'workbook';
 
 export default function Home() {
@@ -46,9 +47,19 @@ export default function Home() {
     if (textbook === '워크북_목록') {
       // 워크북 교재 목록 표시 로직 (나중에 구현)
       setCurrentStep('workbook_textbook');
+    } else if (textbook.startsWith('고1_') || textbook.startsWith('고2_') || textbook.startsWith('고3_')) {
+      // 모의고사는 번호 선택 단계로
+      setCurrentStep('workbook_mockexam_numbers');
     } else {
+      // 부교재는 강 선택 단계로
       setCurrentStep('workbook_lessons');
     }
+  };
+
+  const handleWorkbookMockExamNumbersSelect = (numbers: string[]) => {
+    // 번호를 "강" 형태로 변환하여 저장
+    setSelectedLessons(numbers);
+    setCurrentStep('workbook_types');
   };
 
   const handleWorkbookLessonsSelect = (lessons: string[]) => {
@@ -102,7 +113,12 @@ export default function Home() {
   };
 
   const handleBackToWorkbookLessons = () => {
-    setCurrentStep('workbook_lessons');
+    // 모의고사인지 확인
+    if (selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_')) {
+      setCurrentStep('workbook_mockexam_numbers');
+    } else {
+      setCurrentStep('workbook_lessons');
+    }
     setOrderType('workbook');
     setSelectedWorkbookTypes([]);
   };
@@ -157,6 +173,16 @@ export default function Home() {
         <WorkbookLessonSelection
           selectedTextbook={selectedTextbook}
           onLessonsSelect={handleWorkbookLessonsSelect}
+          onBack={handleBackToSelection}
+          onBackToTextbook={handleBackToWorkbookTextbook}
+        />
+      );
+
+    case 'workbook_mockexam_numbers':
+      return (
+        <WorkbookMockExamNumberSelection
+          selectedExam={selectedTextbook}
+          onNumbersSelect={handleWorkbookMockExamNumbersSelect}
           onBack={handleBackToSelection}
           onBackToTextbook={handleBackToWorkbookTextbook}
         />

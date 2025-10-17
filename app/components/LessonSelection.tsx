@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
+import textbooksData from '../data/converted_data.json';
 
 interface LessonSelectionProps {
   selectedTextbook: string;
@@ -48,9 +49,6 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   useEffect(() => {
     const loadTextbookData = async () => {
       try {
-        // 동적으로 큰 JSON 파일 로드
-        const { default: textbooksData } = await import('../data/converted_data.json');
-        
         // 부교재 목록을 보여주는 경우
         if (selectedTextbook === '부교재_목록') {
           const textbookList = Object.keys(textbooksData);
