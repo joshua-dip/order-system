@@ -51,6 +51,20 @@ const WorkbookTypeSelection = ({
       description: '낱말 순서 배열 연습',
       price: 100,
       subTypes: ['낱말배열연습']
+    },
+    {
+      id: 'lecture_material',
+      name: '강의용자료/수업용자료',
+      description: '원문과 해석 자료',
+      price: 200,
+      subTypes: ['원문과 해석 자료']
+    },
+    {
+      id: 'one_line_interpretation',
+      name: '한줄해석/해석쓰기/영작하기',
+      description: '한줄해석/해석쓰기/영작하기 자료',
+      price: 300,
+      subTypes: ['한줄해석/해석쓰기/영작하기 자료']
     }
   ];
 
@@ -153,8 +167,21 @@ const WorkbookTypeSelection = ({
       return sum + (pkg!.price * totalTextCount);
     }, 0);
 
-    // 할인 없음 - 기본 가격 그대로
-    const finalPrice = totalPrice;
+    // 할인 계산
+    let discountRate = 0;
+    let discountAmount = 0;
+    
+    if (totalTextCount >= 100) {
+      discountRate = 20;
+    } else if (totalTextCount >= 50) {
+      discountRate = 10;
+    }
+    
+    if (discountRate > 0) {
+      discountAmount = Math.floor(totalPrice * discountRate / 100);
+    }
+    
+    const finalPrice = totalPrice - discountAmount;
     
     const orderText = `워크북 주문서
 
@@ -183,7 +210,10 @@ ${selectedPackageDetails.map(pkg =>
 `   • ${pkg!.name}: ${pkg!.price}원 × ${totalTextCount}지문 = ${(pkg!.price * totalTextCount).toLocaleString()}원`
 ).join('\n')}
    
-   총 금액: ${finalPrice.toLocaleString()}원
+   기본 금액: ${totalPrice.toLocaleString()}원${discountRate > 0 ? `
+   할인 적용: ${discountRate}% 할인 (-${discountAmount.toLocaleString()}원)
+   최종 금액: ${finalPrice.toLocaleString()}원` : `
+   최종 금액: ${finalPrice.toLocaleString()}원`}
 
 `;
 
@@ -199,8 +229,21 @@ ${selectedPackageDetails.map(pkg =>
     return sum + (pkg!.price * totalTextCount);
   }, 0);
   
-  // 할인 없음 - 기본 가격 그대로
-  const totalPricePreview = basePricePreview;
+  // 할인 계산 (미리보기용)
+  let discountRatePreview = 0;
+  let discountAmountPreview = 0;
+  
+  if (totalTextCount >= 100) {
+    discountRatePreview = 20;
+  } else if (totalTextCount >= 50) {
+    discountRatePreview = 10;
+  }
+  
+  if (discountRatePreview > 0) {
+    discountAmountPreview = Math.floor(basePricePreview * discountRatePreview / 100);
+  }
+  
+  const totalPricePreview = basePricePreview - discountAmountPreview;
 
   return (
     <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
@@ -287,6 +330,31 @@ ${selectedPackageDetails.map(pkg =>
                     • 빈칸쓰기 패키지: 지문당 300원<br/>
                     • 빈칸쓰기 키워드: 지문당 100원<br/>
                     • 낱말배열: 지문당 100원
+                  </div>
+                </div>
+                
+                {/* 할인 정보 */}
+                <div className="p-4 rounded-lg border-2" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }}>
+                  <div className="flex items-center mb-2">
+                    <span className="text-white font-semibold">🎉 할인 혜택</span>
+                  </div>
+                  <div className="text-sm text-white">
+                    • 50지문 이상: <strong>10% 할인</strong><br/>
+                    • 100지문 이상: <strong>20% 할인</strong><br/>
+                    {totalTextCount > 0 && (
+                      <div className="mt-2 pt-2 border-t border-white border-opacity-30">
+                        현재 선택: <strong>{totalTextCount}지문</strong>
+                        {totalTextCount >= 100 ? (
+                          <span className="block text-yellow-200 font-bold">✨ 20% 할인 적용!</span>
+                        ) : totalTextCount >= 50 ? (
+                          <span className="block text-yellow-200 font-bold">✨ 10% 할인 적용!</span>
+                        ) : (
+                          <span className="block text-white opacity-75">
+                            {50 - totalTextCount}지문 더 선택하면 10% 할인!
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -454,12 +522,39 @@ ${selectedPackageDetails.map(pkg =>
                         </div>
                       </div>
                       
+                      {/* 할인 정보 표시 */}
+                      {discountRatePreview > 0 && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-black">기본 금액:</span>
+                            <span className="text-gray-600 line-through">
+                              {basePricePreview.toLocaleString()}원
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-600 font-medium">
+                              🎉 {discountRatePreview}% 할인:
+                            </span>
+                            <span className="text-green-600 font-medium">
+                              -{discountAmountPreview.toLocaleString()}원
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      
                       <div className="flex justify-between items-center">
-                        <span className="text-black">총 가격:</span>
+                        <span className="text-black font-medium">
+                          {discountRatePreview > 0 ? '할인 적용 가격:' : '총 가격:'}
+                        </span>
                         <div className="text-right">
-                          <div className="font-bold text-2xl text-black">
+                          <div className={`font-bold text-2xl ${discountRatePreview > 0 ? 'text-green-600' : 'text-black'}`}>
                             {totalPricePreview.toLocaleString()}원
                           </div>
+                          {discountRatePreview > 0 && (
+                            <div className="text-xs text-green-600 font-medium">
+                              {discountRatePreview}% 할인 적용됨
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

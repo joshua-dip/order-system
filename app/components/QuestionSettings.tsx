@@ -32,7 +32,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     loadQuestionSamples();
   }, []);
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법'];
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법', '순서', '삽입', '요약'];
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes(prev => 
