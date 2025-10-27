@@ -7,7 +7,7 @@ interface AppBarProps {
   onHomeClick?: () => void;
 }
 
-const AppBar = ({ title = "변형문제 주문서 작성 시스템", showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
+const AppBar = ({ title = "커스터마이징 서비스", showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
   
   const handleHomeClick = () => {
     if (onHomeClick) {

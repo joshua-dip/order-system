@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "주문서 제작 시스템",
-  description: "모의고사 및 부교재 주문서 자동 생성",
+  title: "커스터마이징 서비스",
+  description: "맞춤형 문제 제작 및 주문서 자동 생성",
 };
 
 export default function RootLayout({
