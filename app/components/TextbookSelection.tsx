@@ -29,7 +29,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
         {/* 주문 유형 선택 */}
         <div className="max-w-6xl mx-auto mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* 모의고사 변형문제 주문 */}
             <div
               onClick={onMockExamSelect}
@@ -91,6 +91,29 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
                   <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
                     빈칸쓰기,  낱말배열 등<br/>
                     카테고리별 문제 구성
+                  </p>
+                  <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
+                    선택하기
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 번호별 교재 제작하기 */}
+            <div
+              onClick={() => window.location.href = '/order-num'}
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#F5C6CB' }}></div>
+              <div className="relative z-10 p-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-all duration-500 group-hover:bg-white group-hover:bg-opacity-20" style={{ backgroundColor: '#F5C6CB' }}>
+                    <span className="text-2xl font-bold text-white">🎯</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 group-hover:text-white transition-colors duration-500 mb-3">번호별 교재 제작하기</h3>
+                  <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
+                    모의고사 번호별<br/>
+                    맞춤 교재 구성
                   </p>
                   <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
                     선택하기

@@ -60,15 +60,17 @@ const WorkbookTypeSelection = ({
       id: 'lecture_material',
       name: '강의용자료/수업용자료',
       description: '원문과 해석 자료',
-      price: 200,
-      subTypes: ['원문과 해석 자료']
+      price: isMockExam ? 0 : 200,
+      subTypes: ['원문과 해석 자료'],
+      isFree: isMockExam
     },
     {
       id: 'one_line_interpretation',
       name: '한줄해석/해석쓰기/영작하기',
       description: '한줄해석/해석쓰기/영작하기 자료',
-      price: 300,
-      subTypes: ['한줄해석/해석쓰기/영작하기 자료']
+      price: isMockExam ? 0 : 300,
+      subTypes: ['한줄해석/해석쓰기/영작하기 자료'],
+      isFree: isMockExam
     }
   ];
 
@@ -155,6 +157,21 @@ const WorkbookTypeSelection = ({
       alert('워크북 패키지를 선택해주세요.');
       return;
     }
+    
+    // 선택된 패키지들의 정보 수집
+    const selectedPackageDetails = selectedPackages.map(packageId => 
+      workbookPackages.find(pkg => pkg.id === packageId)
+    ).filter(Boolean);
+
+    // 무료 자료만 선택된 경우 체크 (모의고사일 때만)
+    if (isMockExam) {
+      const hasOnlyFreeItems = selectedPackageDetails.every(pkg => pkg!.price === 0);
+      if (hasOnlyFreeItems) {
+        alert('무료 자료만으로는 주문서를 작성할 수 없습니다.\n유료 자료를 함께 선택해주세요.');
+        return;
+      }
+    }
+    
     if (!email.trim()) {
       alert('이메일 주소를 입력해주세요.');
       return;
@@ -166,11 +183,6 @@ const WorkbookTypeSelection = ({
       alert('올바른 이메일 주소를 입력해주세요.');
       return;
     }
-
-    // 선택된 패키지들의 정보 수집
-    const selectedPackageDetails = selectedPackages.map(packageId => 
-      workbookPackages.find(pkg => pkg.id === packageId)
-    ).filter(Boolean);
 
     
     // 가격 계산 (지문당 가격 × 실제 지문 수)
@@ -437,9 +449,14 @@ ${selectedPackageDetails.map(pkg =>
                                   (키워드 선택됨)
                                 </span>
                               )}
+                              {pkg.price === 0 && (
+                                <span className="text-xs font-normal ml-2 px-2 py-1 bg-green-100 text-green-700 rounded">
+                                  무료
+                                </span>
+                              )}
                             </span>
-                            <span className={`font-bold text-lg ${isDisabled ? 'text-gray-400' : isSelected ? 'text-white' : 'text-green-600'}`}>
-                              지문당 {pkg.price}원
+                            <span className={`font-bold text-lg ${isDisabled ? 'text-gray-400' : isSelected ? 'text-white' : pkg.price === 0 ? 'text-blue-600' : 'text-green-600'}`}>
+                              {pkg.price === 0 ? '무료' : `지문당 ${pkg.price}원`}
                             </span>
                           </div>
                           <p className={`text-sm mb-2 ${isDisabled ? 'text-gray-400' : isSelected ? 'text-white opacity-90' : 'text-gray-600'}`}>
@@ -518,9 +535,14 @@ ${selectedPackageDetails.map(pkg =>
                         {selectedPackageDetailsPreview.map(pkg => (
                           <div key={pkg!.id} className="pl-2 border-l-2 border-blue-200">
                             <div className="flex justify-between items-center">
-                              <span className="text-black text-xs">{pkg!.name}</span>
-                              <span className="text-green-600 text-xs font-medium">
-                                {pkg!.price}원 × {totalTextCount}지문 = {(pkg!.price * totalTextCount).toLocaleString()}원
+                              <span className="text-black text-xs">
+                                {pkg!.name}
+                                {pkg!.price === 0 && (
+                                  <span className="ml-1 text-xs text-green-600">(무료)</span>
+                                )}
+                              </span>
+                              <span className={`text-xs font-medium ${pkg!.price === 0 ? 'text-blue-600' : 'text-green-600'}`}>
+                                {pkg!.price === 0 ? '무료' : `${pkg!.price}원 × ${totalTextCount}지문 = ${(pkg!.price * totalTextCount).toLocaleString()}원`}
                               </span>
                             </div>
                           </div>
