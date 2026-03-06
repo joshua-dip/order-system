@@ -1,82 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import TextbookSelection from './components/TextbookSelection';
-import LessonSelection from './components/LessonSelection';
-import QuestionSettings from './components/QuestionSettings';
-import MockExamSettings from './components/MockExamSettings';
-import WorkbookTextbookSelection from './components/WorkbookTextbookSelection';
-import WorkbookLessonSelection from './components/WorkbookLessonSelection';
-import WorkbookMockExamNumberSelection from './components/WorkbookMockExamNumberSelection';
-import WorkbookTypeSelection from './components/WorkbookTypeSelection';
-import OrderDisplay from './components/OrderDisplay';
-import AppBar from './components/AppBar';
+import { useRouter } from 'next/navigation';
+import WorkbookTextbookSelection from '../components/WorkbookTextbookSelection';
+import WorkbookLessonSelection from '../components/WorkbookLessonSelection';
+import WorkbookMockExamNumberSelection from '../components/WorkbookMockExamNumberSelection';
+import WorkbookTypeSelection from '../components/WorkbookTypeSelection';
+import OrderDisplay from '../components/OrderDisplay';
+import AppBar from '../components/AppBar';
 import { saveOrderToDb } from '@/lib/orders';
 
-type PageStep = 'selection' | 'textbook' | 'lessons' | 'questions' | 'mockexam' | 'workbook_textbook' | 'workbook_lessons' | 'workbook_mockexam_numbers' | 'workbook_types' | 'order';
-type OrderType = 'textbook' | 'mockexam' | 'workbook';
+type PageStep = 'textbook' | 'lessons' | 'mockexam_numbers' | 'types' | 'order';
 
-export default function Home() {
-  const [currentStep, setCurrentStep] = useState<PageStep>('selection');
-  const [orderType, setOrderType] = useState<OrderType>('textbook');
+export default function WorkbookPage() {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<PageStep>('textbook');
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
-  const [selectedWorkbookTypes, setSelectedWorkbookTypes] = useState<string[]>([]);
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
 
   const handleTextbookSelect = (textbook: string) => {
     setSelectedTextbook(textbook);
-    setOrderType('textbook');
-    if (currentStep === 'selection') {
-      setCurrentStep('lessons');
-    }
-    // 이미 lessons 페이지에 있다면 상태만 업데이트
-  };
-
-  const handleMockExamSelect = () => {
-    setOrderType('mockexam');
-    setCurrentStep('mockexam');
-  };
-
-  const handleWorkbookSelect = () => {
-    setOrderType('workbook');
-    setCurrentStep('workbook_textbook');
-  };
-
-  const handleWorkbookTextbookSelect = (textbook: string) => {
-    setSelectedTextbook(textbook);
-    if (textbook === '워크북_목록') {
-      // 워크북 교재 목록 표시 로직 (나중에 구현)
-      setCurrentStep('workbook_textbook');
-    } else if (textbook.startsWith('고1_') || textbook.startsWith('고2_') || textbook.startsWith('고3_')) {
+    
+    // 모의고사인지 부교재인지 구분
+    if (textbook.startsWith('고1_') || textbook.startsWith('고2_') || textbook.startsWith('고3_')) {
       // 모의고사는 번호 선택 단계로
-      setCurrentStep('workbook_mockexam_numbers');
+      setCurrentStep('mockexam_numbers');
     } else {
       // 부교재는 강 선택 단계로
-      setCurrentStep('workbook_lessons');
+      setCurrentStep('lessons');
     }
   };
-
-  const handleWorkbookMockExamNumbersSelect = (numbers: string[]) => {
-    // 번호를 "강" 형태로 변환하여 저장
-    setSelectedLessons(numbers);
-    setCurrentStep('workbook_types');
-  };
-
-  const handleWorkbookLessonsSelect = (lessons: string[]) => {
-    setSelectedLessons(lessons);
-    setCurrentStep('workbook_types');
-  };
-
-  const handleWorkbookTypesSelect = (types: string[]) => {
-    setSelectedWorkbookTypes(types);
-    // 주문서 생성은 WorkbookTypeSettings에서 처리
-  };
-
 
   const handleLessonsSelect = (lessons: string[]) => {
     setSelectedLessons(lessons);
-    setCurrentStep('questions');
+    setCurrentStep('types');
+  };
+
+  const handleMockExamNumbersSelect = (numbers: string[]) => {
+    setSelectedLessons(numbers);
+    setCurrentStep('types');
   };
 
   const handleOrderGenerate = (orderText: string) => {
@@ -85,12 +48,8 @@ export default function Home() {
     saveOrderToDb(orderText).catch((err) => console.error('주문 DB 저장 실패:', err));
   };
 
-  const handleBackToSelection = () => {
-    setCurrentStep('selection');
-    setOrderType('textbook');
-    setSelectedTextbook('');
-    setSelectedLessons([]);
-    setSelectedWorkbookTypes([]);
+  const handleBackToHome = () => {
+    router.push('/');
   };
 
   const handleBackToTextbook = () => {
@@ -100,127 +59,67 @@ export default function Home() {
   };
 
   const handleBackToLessons = () => {
-    if (orderType === 'workbook') {
-      setCurrentStep('workbook_lessons');
+    // 모의고사인지 확인
+    if (selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_')) {
+      setCurrentStep('mockexam_numbers');
     } else {
       setCurrentStep('lessons');
     }
   };
 
-  const handleBackToWorkbookTextbook = () => {
-    setCurrentStep('workbook_textbook');
-    setOrderType('workbook');
-    setSelectedLessons([]);
-    setSelectedWorkbookTypes([]);
-  };
-
-  const handleBackToWorkbookLessons = () => {
-    // 모의고사인지 확인
-    if (selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_')) {
-      setCurrentStep('workbook_mockexam_numbers');
-    } else {
-      setCurrentStep('workbook_lessons');
-    }
-    setOrderType('workbook');
-    setSelectedWorkbookTypes([]);
-  };
-
   const handleClearOrder = () => {
     setGeneratedOrder('');
-    setCurrentStep('selection');
-    setOrderType('textbook');
+    setCurrentStep('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
-    setSelectedWorkbookTypes([]);
   };
 
   const handleNewOrder = () => {
     setGeneratedOrder('');
-    setCurrentStep('selection');
-    setOrderType('textbook');
+    setCurrentStep('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
-    setSelectedWorkbookTypes([]);
   };
 
   // 현재 단계에 따라 컴포넌트 렌더링
   switch (currentStep) {
-    case 'selection':
-      return (
-        <TextbookSelection 
-          onTextbookSelect={handleTextbookSelect}
-          onMockExamSelect={handleMockExamSelect}
-          onWorkbookSelect={handleWorkbookSelect}
-        />
-      );
-    
-    case 'mockexam':
-      return (
-        <MockExamSettings
-          onOrderGenerate={handleOrderGenerate}
-          onBack={handleBackToSelection}
-        />
-      );
-    
-    case 'workbook_textbook':
+    case 'textbook':
       return (
         <WorkbookTextbookSelection
-          onTextbookSelect={handleWorkbookTextbookSelect}
-          onBack={handleBackToSelection}
+          onTextbookSelect={handleTextbookSelect}
+          onBack={handleBackToHome}
         />
       );
-
-    case 'workbook_lessons':
+    
+    case 'lessons':
       return (
         <WorkbookLessonSelection
           selectedTextbook={selectedTextbook}
-          onLessonsSelect={handleWorkbookLessonsSelect}
-          onBack={handleBackToSelection}
-          onBackToTextbook={handleBackToWorkbookTextbook}
+          onLessonsSelect={handleLessonsSelect}
+          onBack={handleBackToHome}
+          onBackToTextbook={handleBackToTextbook}
         />
       );
-
-    case 'workbook_mockexam_numbers':
+    
+    case 'mockexam_numbers':
       return (
         <WorkbookMockExamNumberSelection
           selectedExam={selectedTextbook}
-          onNumbersSelect={handleWorkbookMockExamNumbersSelect}
-          onBack={handleBackToSelection}
-          onBackToTextbook={handleBackToWorkbookTextbook}
+          onNumbersSelect={handleMockExamNumbersSelect}
+          onBack={handleBackToHome}
+          onBackToTextbook={handleBackToTextbook}
         />
       );
-
-    case 'workbook_types':
+    
+    case 'types':
       return (
         <WorkbookTypeSelection
           selectedTextbook={selectedTextbook}
           selectedLessons={selectedLessons}
           onOrderGenerate={handleOrderGenerate}
-          onBack={handleBackToSelection}
-          onBackToTextbook={handleBackToWorkbookTextbook}
-          onBackToLessons={handleBackToWorkbookLessons}
-        />
-      );
-    
-    
-    case 'lessons':
-      return (
-        <LessonSelection 
-          selectedTextbook={selectedTextbook}
-          onLessonsSelect={handleLessonsSelect}
-          onBack={handleBackToSelection}
-          onTextbookSelect={handleTextbookSelect}
-        />
-      );
-    
-    case 'questions':
-      return (
-        <QuestionSettings
-          selectedTextbook={selectedTextbook}
-          selectedLessons={selectedLessons}
-          onOrderGenerate={handleOrderGenerate}
-          onBack={handleBackToLessons}
-          onBackToTextbook={handleBackToSelection}
+          onBack={handleBackToHome}
+          onBackToTextbook={handleBackToTextbook}
+          onBackToLessons={handleBackToLessons}
         />
       );
     
@@ -249,7 +148,7 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div 
                     className="flex flex-col items-center cursor-pointer group"
-                    onClick={handleBackToSelection}
+                    onClick={handleBackToHome}
                     title="유형 선택으로 돌아가기"
                   >
                     <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
@@ -260,20 +159,31 @@ export default function Home() {
                   <div className="flex-1 h-1 bg-green-600 mx-4"></div>
                   <div 
                     className="flex flex-col items-center cursor-pointer group"
-                    onClick={handleBackToLessons}
-                    title="강과 번호 선택으로 돌아가기"
+                    onClick={handleBackToTextbook}
+                    title="교재 선택으로 돌아가기"
                   >
                     <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
                       ✓
                     </div>
-                    <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">강과 번호</span>
+                    <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">교재 선택</span>
+                  </div>
+                  <div className="flex-1 h-1 bg-green-600 mx-4"></div>
+                  <div 
+                    className="flex flex-col items-center cursor-pointer group"
+                    onClick={handleBackToLessons}
+                    title="강/번호 선택으로 돌아가기"
+                  >
+                    <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
+                      ✓
+                    </div>
+                    <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">강/번호</span>
                   </div>
                   <div className="flex-1 h-1 bg-green-600 mx-4"></div>
                   <div className="flex flex-col items-center">
                     <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                       ✓
                     </div>
-                    <span className="text-xs mt-1 text-green-600 font-medium">문제 설정</span>
+                    <span className="text-xs mt-1 text-green-600 font-medium">워크북 유형</span>
                   </div>
                 </div>
               </div>
@@ -324,11 +234,11 @@ export default function Home() {
     
     default:
       return (
-        <TextbookSelection 
+        <WorkbookTextbookSelection
           onTextbookSelect={handleTextbookSelect}
-          onMockExamSelect={handleMockExamSelect}
-          onWorkbookSelect={handleWorkbookSelect}
+          onBack={handleBackToHome}
         />
       );
   }
 }
+

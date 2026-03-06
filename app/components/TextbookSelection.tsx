@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import AppBar from './AppBar';
 
 
@@ -10,6 +11,19 @@ interface TextbookSelectionProps {
 }
 
 const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelect }: TextbookSelectionProps) => {
+  const router = useRouter();
+
+  const handleMockExamClick = () => {
+    router.push('/mockexam');
+  };
+
+  const handleTextbookClick = () => {
+    router.push('/textbook');
+  };
+
+  const handleWorkbookClick = () => {
+    router.push('/workbook');
+  };
 
   return (
     <>
@@ -32,7 +46,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* 모의고사 변형문제 주문 */}
             <div
-              onClick={onMockExamSelect}
+              onClick={handleMockExamClick}
               className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#13294B' }}></div>
@@ -55,7 +69,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
             {/* 부교재 변형문제 주문 */}
             <div
-              onClick={() => onTextbookSelect('부교재_목록')}
+              onClick={handleTextbookClick}
               className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#13294B' }}></div>
@@ -78,7 +92,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
             {/* 워크북 주문 */}
             <div
-              onClick={onWorkbookSelect}
+              onClick={handleWorkbookClick}
               className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#00A9E0' }}></div>

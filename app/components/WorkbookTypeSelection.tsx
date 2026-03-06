@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AppBar from './AppBar';
 import convertedData from '../data/converted_data.json';
 
 interface WorkbookTypeSelectionProps {
@@ -88,19 +89,21 @@ const WorkbookTypeSelection = ({
           if (textbookData && typeof textbookData === 'object') {
             const sheet1 = (textbookData as Record<string, unknown>).Sheet1;
             if (sheet1 && typeof sheet1 === 'object') {
-              const 부교재 = (sheet1 as Record<string, unknown>).부교재;
+              const 부교재 = (sheet1 as Record<string, unknown>).부교재 as Record<string, unknown> | undefined;
               if (부교재 && typeof 부교재 === 'object') {
-                const textbookInfo = (부교재 as Record<string, unknown>)[selectedTextbook];
+                let textbookInfo = 부교재[selectedTextbook];
+                if (!textbookInfo && Object.keys(부교재).length > 0) {
+                  textbookInfo = 부교재[Object.keys(부교재)[0]];
+                }
                 if (textbookInfo && typeof textbookInfo === 'object') {
+                  const textbookInfoRecord = textbookInfo as Record<string, unknown>;
                   let totalCount = 0;
-                  
                   selectedLessons.forEach(lessonName => {
-                    const lessonData = (textbookInfo as Record<string, unknown>)[lessonName];
+                    const lessonData = textbookInfoRecord[lessonName];
                     if (Array.isArray(lessonData)) {
                       totalCount += lessonData.length;
                     }
                   });
-                  
                   setTotalTextCount(totalCount);
                 }
               }
@@ -273,8 +276,14 @@ ${selectedPackageDetails.map(pkg =>
   const totalPricePreview = basePricePreview - discountAmountPreview;
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
-      <div className="container mx-auto px-4">
+    <>
+      <AppBar 
+        showBackButton={true} 
+        onBackClick={onBack}
+        title="워크북 유형 선택"
+      />
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
+        <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
@@ -631,6 +640,7 @@ ${selectedPackageDetails.map(pkg =>
         </div>
       </div>
     </div>
+    </>
   );
 };
 

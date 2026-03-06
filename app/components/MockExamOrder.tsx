@@ -50,21 +50,17 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
     if (selectedTextbook && textbooksData[selectedTextbook as keyof typeof textbooksData]) {
       const textbookData = textbooksData[selectedTextbook as keyof typeof textbooksData] as TextbookStructure;
       
-      // 다양한 구조에 대응하기 위한 안전한 접근
+      // 다양한 구조에 대응 (내부 키가 교재명(버전) 등으로 다를 수 있음)
       let actualData: TextbookContent | null = null;
-      
-      // Sheet1 구조 시도
-      if (textbookData.Sheet1?.부교재?.[selectedTextbook]) {
-        actualData = textbookData.Sheet1.부교재[selectedTextbook];
-      }
-      // 지문 데이터 구조 시도  
-      else if (textbookData['지문 데이터']?.부교재?.[selectedTextbook]) {
-        actualData = textbookData['지문 데이터'].부교재[selectedTextbook];
-      }
-      // 직접 부교재 구조 시도
-      else if (textbookData.부교재?.[selectedTextbook]) {
-        actualData = textbookData.부교재[selectedTextbook];
-      }
+      const pickFirstIfSingle = (sub: Record<string, TextbookContent> | undefined) => {
+        if (!sub) return null;
+        if (sub[selectedTextbook]) return sub[selectedTextbook];
+        const keys = Object.keys(sub);
+        return keys.length > 0 ? sub[keys[0]] : null;
+      };
+      actualData = pickFirstIfSingle(textbookData.Sheet1?.부교재)
+        ?? pickFirstIfSingle(textbookData['지문 데이터']?.부교재)
+        ?? pickFirstIfSingle(textbookData.부교재);
       
       if (actualData) {
         const groups: {[key: string]: string[]} = {};

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AppBar from './AppBar';
 import convertedData from '../data/converted_data.json';
 
 interface WorkbookLessonSelectionProps {
@@ -25,17 +26,19 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
           // Sheet1 > 부교재 > 교재명 구조에서 강 번호 추출
           const sheet1 = (textbookData as Record<string, unknown>).Sheet1;
           if (sheet1 && typeof sheet1 === 'object') {
-            const 부교재 = (sheet1 as Record<string, unknown>).부교재;
+            const 부교재 = (sheet1 as Record<string, unknown>).부교재 as Record<string, unknown> | undefined;
             if (부교재 && typeof 부교재 === 'object') {
-              const textbookInfo = (부교재 as Record<string, unknown>)[selectedTextbook];
+              let textbookInfo = 부교재[selectedTextbook];
+              if (!textbookInfo && Object.keys(부교재).length > 0) {
+                textbookInfo = 부교재[Object.keys(부교재)[0]];
+              }
               if (textbookInfo && typeof textbookInfo === 'object') {
-                const lessonNames = Object.keys(textbookInfo);
+                const textbookInfoRecord = textbookInfo as Record<string, unknown>;
+                const lessonNames = Object.keys(textbookInfoRecord);
                 setAvailableLessons(lessonNames);
-                
-                // 각 강의 지문 수 계산
                 const textCounts: Record<string, number> = {};
                 lessonNames.forEach(lessonName => {
-                  const lessonData = (textbookInfo as Record<string, unknown>)[lessonName];
+                  const lessonData = textbookInfoRecord[lessonName];
                   if (Array.isArray(lessonData)) {
                     textCounts[lessonName] = lessonData.length;
                   }
@@ -83,8 +86,14 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
   };
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
-      <div className="container mx-auto px-4">
+    <>
+      <AppBar 
+        showBackButton={true} 
+        onBackClick={onBack}
+        title="워크북 강 선택"
+      />
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
+        <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
@@ -262,6 +271,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import NumberBasedProduction from '../components/NumberBasedProduction';
+import { useRouter } from 'next/navigation';
+import MockExamSettings from '../components/MockExamSettings';
 import OrderDisplay from '../components/OrderDisplay';
 import AppBar from '../components/AppBar';
 import { saveOrderToDb } from '@/lib/orders';
 
-export default function OrderNumPage() {
+export default function MockExamPage() {
+  const router = useRouter();
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
   const [showOrder, setShowOrder] = useState(false);
 
@@ -16,16 +18,18 @@ export default function OrderNumPage() {
     saveOrderToDb(orderText).catch((err) => console.error('주문 DB 저장 실패:', err));
   };
 
-  const handleBackToOrder = () => {
-    setShowOrder(false);
+  const handleBack = () => {
+    router.push('/');
+  };
+
+  const handleClearOrder = () => {
     setGeneratedOrder('');
+    setShowOrder(false);
   };
 
   const handleNewOrder = () => {
-    setShowOrder(false);
     setGeneratedOrder('');
-    // 페이지 새로고침
-    window.location.href = '/order-num';
+    setShowOrder(false);
   };
 
   if (showOrder) {
@@ -33,11 +37,12 @@ export default function OrderNumPage() {
       <>
         <AppBar 
           showBackButton={true} 
-          onBackClick={handleBackToOrder}
+          onBackClick={handleNewOrder}
           title="주문서 완성"
         />
         <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
           <div className="container mx-auto px-4">
+            {/* 헤더 */}
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
                 주문서 완성
@@ -47,12 +52,48 @@ export default function OrderNumPage() {
               </p>
             </div>
 
+            {/* 진행 단계 표시 */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="flex items-center justify-between">
+                <div 
+                  className="flex flex-col items-center cursor-pointer group"
+                  onClick={handleBack}
+                  title="유형 선택으로 돌아가기"
+                >
+                  <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
+                    ✓
+                  </div>
+                  <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">유형 선택</span>
+                </div>
+                <div className="flex-1 h-1 bg-green-600 mx-4"></div>
+                <div 
+                  className="flex flex-col items-center cursor-pointer group"
+                  onClick={handleNewOrder}
+                  title="모의고사 설정으로 돌아가기"
+                >
+                  <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
+                    ✓
+                  </div>
+                  <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">모의고사 설정</span>
+                </div>
+                <div className="flex-1 h-1 bg-green-600 mx-4"></div>
+                <div className="flex flex-col items-center">
+                  <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    ✓
+                  </div>
+                  <span className="text-xs mt-1 text-green-600 font-medium">주문서 완성</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 주문서 표시 */}
             <div className="max-w-2xl mx-auto">
               <OrderDisplay 
                 orderText={generatedOrder} 
-                onClear={handleNewOrder}
+                onClear={handleClearOrder}
               />
               
+              {/* 액션 버튼들 */}
               <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={handleNewOrder}
@@ -90,6 +131,11 @@ export default function OrderNumPage() {
     );
   }
 
-  return <NumberBasedProduction onBack={() => window.location.href = '/'} onOrderGenerate={handleOrderGenerate} />;
+  return (
+    <MockExamSettings 
+      onOrderGenerate={handleOrderGenerate} 
+      onBack={handleBack} 
+    />
+  );
 }
 
