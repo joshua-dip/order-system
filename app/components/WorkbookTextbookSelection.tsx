@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import convertedData from '../data/converted_data.json';
 import mockExamsData from '../data/mock-exams.json';
+import { groupTextbooksByRevised } from '@/lib/textbookSort';
 
 interface WorkbookTextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
@@ -270,39 +271,66 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredTextbooks.map((textbook) => (
-                    <div
-                      key={textbook}
-                      onClick={() => onTextbookSelect(textbook)}
-                      className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3 border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-1">
-                            {textbook}
-                          </h3>
-                          <p className="text-xs text-gray-500">클릭하여 선택</p>
+                <div className="space-y-8">
+                  {(() => {
+                    const { revised, other } = groupTextbooksByRevised(filteredTextbooks);
+                    const renderCard = (textbook: string) => (
+                      <div
+                        key={textbook}
+                        onClick={() => onTextbookSelect(textbook)}
+                        className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3 border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-1">
+                              {textbook}
+                            </h3>
+                            <p className="text-xs text-gray-500">클릭하여 선택</p>
+                          </div>
+                          {textbookLinks[textbook]?.kyoboUrl && (
+                            <div className="ml-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(textbookLinks[textbook].kyoboUrl, '_blank');
+                                }}
+                                className="group relative px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded text-xs text-blue-700 hover:text-blue-800 transition-all duration-200 font-medium"
+                                title={`${textbookLinks[textbook].description} - YES24에서 확인`}
+                              >
+                                📖 교재 확인
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* 교재 확인 버튼 */}
-                        {textbookLinks[textbook] && (
-                          <div className="ml-3">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(textbookLinks[textbook].kyoboUrl, '_blank');
-                              }}
-                              className="group relative px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded text-xs text-blue-700 hover:text-blue-800 transition-all duration-200 font-medium"
-                              title={`${textbookLinks[textbook].description} - YES24에서 확인`}
-                            >
-                              📖 교재 확인
-                            </button>
+                      </div>
+                    );
+                    return (
+                      <>
+                        {revised.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-blue-200">
+                              개정판
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {revised.map(renderCard)}
+                            </div>
                           </div>
                         )}
-                      </div>
-                    </div>
-                  ))}
+                        {other.length > 0 && (
+                          <div>
+                            {revised.length > 0 && (
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">
+                                기타 교재
+                              </h3>
+                            )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {other.map(renderCard)}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
                 </>
