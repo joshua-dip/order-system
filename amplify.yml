@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        # Amplify 호스팅 환경 변수를 Next.js API/SSR에서 사용하려면
+        # 빌드 전에 .env.production 에 써야 합니다.
+        - env | grep -e MONGODB_URI >> .env.production || true
+        - env | grep -e AUTH_SECRET >> .env.production || true
+        - env | grep -e NEXT_PUBLIC_ >> .env.production || true
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
