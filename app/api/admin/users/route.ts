@@ -2,6 +2,42 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME } from '@/lib/auth';
 
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    if (!token) {
+      return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+    }
+    const payload = await verifyToken(token);
+    if (!payload || payload.role !== 'admin') {
+      return NextResponse.json({ error: '관리자만 이용할 수 있습니다.' }, { status: 403 });
+    }
+
+    const db = await getDb('gomijoshua');
+    const list = await db
+      .collection('users')
+      .find({ role: 'user' }, { projection: { passwordHash: 0 } })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const users = list.map((u) => ({
+      id: u._id.toString(),
+      loginId: u.loginId,
+      name: u.name ?? u.loginId,
+      email: u.email ?? '',
+      createdAt: u.createdAt,
+    }));
+
+    return NextResponse.json({ users });
+  } catch (err) {
+    console.error('관리자 계정 목록 조회 실패:', err);
+    return NextResponse.json(
+      { error: '목록 조회 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get(COOKIE_NAME)?.value;
