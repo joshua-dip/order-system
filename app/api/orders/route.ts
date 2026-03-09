@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { notifySlackOrder } from '@/lib/slack';
+import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
 const COLLECTION = 'orders';
 
@@ -15,20 +17,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = await getDb('lyceum');
+    let loginId: string | null = null;
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload) loginId = payload.loginId;
+    }
+
+    const db = await getDb('gomijoshua');
     const collection = db.collection(COLLECTION);
 
     const doc = {
       orderText,
       createdAt: new Date(),
       source: 'gomijoshua',
+      status: 'pending',
+      ...(loginId && { loginId }),
     };
 
     const result = await collection.insertOne(doc);
+    const orderId = result.insertedId.toString();
+
+    notifySlackOrder(orderText, orderId).catch((e) =>
+      console.error('Slack 알림 실패:', e)
+    );
 
     return NextResponse.json({
       ok: true,
-      id: result.insertedId.toString(),
+      id: orderId,
     });
   } catch (err) {
     console.error('주문 저장 실패:', err);

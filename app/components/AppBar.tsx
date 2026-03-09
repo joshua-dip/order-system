@@ -1,5 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 interface AppBarProps {
   title?: string;
   showBackButton?: boolean;
@@ -7,8 +11,29 @@ interface AppBarProps {
   onHomeClick?: () => void;
 }
 
+interface AuthUser {
+  loginId: string;
+  role: string;
+  name: string;
+}
+
 const AppBar = ({ title = "커스터마이징 서비스", showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
-  
+  const router = useRouter();
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/');
+    router.refresh();
+  };
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => data.user && setUser(data.user))
+      .catch(() => {});
+  }, []);
+
   const handleHomeClick = () => {
     if (onHomeClick) {
       onHomeClick();
@@ -61,7 +86,45 @@ const AppBar = ({ title = "커스터마이징 서비스", showBackButton = false
 
           {/* 우측 메뉴 */}
           <div className="flex items-center space-x-4">
-            {/* 문의 버튼 */}
+            {user ? (
+              <>
+                {user.role === 'admin' ? (
+                  <Link
+                    href="/admin"
+                    className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                    style={{ backgroundColor: 'transparent', color: 'white' }}
+                  >
+                    <span>{user.name || user.loginId}</span>
+                    <span className="opacity-80">관리자</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/my"
+                    className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                    style={{ backgroundColor: 'transparent', color: 'white' }}
+                  >
+                    <span>{user.name || user.loginId}</span>
+                    <span className="opacity-80">내정보</span>
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden md:flex items-center px-3 py-2 rounded-lg hover:opacity-90 hover:bg-white hover:bg-opacity-10 transition-all text-sm font-medium border border-white border-opacity-30"
+                  style={{ color: 'white' }}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                style={{ backgroundColor: 'transparent', color: 'white' }}
+              >
+                <span>로그인</span>
+              </Link>
+            )}
             <a
               href="https://open.kakao.com/o/sHuV7wSh"
               target="_blank"
@@ -84,9 +147,34 @@ const AppBar = ({ title = "커스터마이징 서비스", showBackButton = false
               </svg>
               <span>문의하기</span>
             </a>
-            
-            {/* 모바일 메뉴 */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center space-x-2">
+              {user ? (
+                <>
+                  <Link
+                    href={user.role === 'admin' ? '/admin' : '/my'}
+                    className="flex items-center px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                    style={{ backgroundColor: 'transparent', color: 'white' }}
+                  >
+                    {user.role === 'admin' ? '관리자' : (user.name || user.loginId)}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center px-3 py-2 rounded-lg hover:opacity-90 hover:bg-white hover:bg-opacity-10 transition-all text-sm font-medium border border-white border-opacity-30"
+                    style={{ color: 'white' }}
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                  style={{ backgroundColor: 'transparent', color: 'white' }}
+                >
+                  로그인
+                </Link>
+              )}
               <a
                 href="https://open.kakao.com/o/sHuV7wSh"
                 target="_blank"

@@ -1,19 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import NumberBasedProduction from '../components/NumberBasedProduction';
 import OrderDisplay from '../components/OrderDisplay';
 import AppBar from '../components/AppBar';
 import { saveOrderToDb } from '@/lib/orders';
 
 export default function OrderNumPage() {
+  const router = useRouter();
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
   const [showOrder, setShowOrder] = useState(false);
 
   const handleOrderGenerate = (orderText: string) => {
-    setGeneratedOrder(orderText);
-    setShowOrder(true);
-    saveOrderToDb(orderText).catch((err) => console.error('주문 DB 저장 실패:', err));
+    saveOrderToDb(orderText).then((res) => {
+      if (res.ok && res.id) {
+        router.push('/order/done?id=' + res.id);
+      } else {
+        setGeneratedOrder(orderText);
+        setShowOrder(true);
+      }
+    });
   };
 
   const handleBackToOrder = () => {

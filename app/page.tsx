@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import TextbookSelection from './components/TextbookSelection';
 import LessonSelection from './components/LessonSelection';
 import QuestionSettings from './components/QuestionSettings';
@@ -17,6 +18,7 @@ type PageStep = 'selection' | 'textbook' | 'lessons' | 'questions' | 'mockexam' 
 type OrderType = 'textbook' | 'mockexam' | 'workbook';
 
 export default function Home() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<PageStep>('selection');
   const [orderType, setOrderType] = useState<OrderType>('textbook');
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
@@ -80,9 +82,14 @@ export default function Home() {
   };
 
   const handleOrderGenerate = (orderText: string) => {
-    setGeneratedOrder(orderText);
-    setCurrentStep('order');
-    saveOrderToDb(orderText).catch((err) => console.error('주문 DB 저장 실패:', err));
+    saveOrderToDb(orderText).then((res) => {
+      if (res.ok && res.id) {
+        router.push('/order/done?id=' + res.id);
+      } else {
+        setGeneratedOrder(orderText);
+        setCurrentStep('order');
+      }
+    });
   };
 
   const handleBackToSelection = () => {

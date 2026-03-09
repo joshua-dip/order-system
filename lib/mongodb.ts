@@ -18,7 +18,7 @@ function getClientPromise(): Promise<MongoClient> {
 
 let clientPromise: Promise<MongoClient> | undefined;
 
-export async function getDb(dbName: string = 'lyceum'): Promise<Db> {
+export async function getDb(dbName: string = 'gomijoshua'): Promise<Db> {
   if (!clientPromise) clientPromise = getClientPromise();
   const client = await clientPromise;
   return client.db(dbName);

@@ -13,9 +13,14 @@ export default function MockExamPage() {
   const [showOrder, setShowOrder] = useState(false);
 
   const handleOrderGenerate = (orderText: string) => {
-    setGeneratedOrder(orderText);
-    setShowOrder(true);
-    saveOrderToDb(orderText).catch((err) => console.error('주문 DB 저장 실패:', err));
+    saveOrderToDb(orderText).then((res) => {
+      if (res.ok && res.id) {
+        router.push('/order/done?id=' + res.id);
+      } else {
+        setGeneratedOrder(orderText);
+        setShowOrder(true);
+      }
+    });
   };
 
   const handleBack = () => {

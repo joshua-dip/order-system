@@ -1,8 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppBar from './AppBar';
-
 
 interface TextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
@@ -12,6 +12,14 @@ interface TextbookSelectionProps {
 
 const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelect }: TextbookSelectionProps) => {
   const router = useRouter();
+  const [isMember, setIsMember] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => setIsMember(!!data?.user))
+      .catch(() => setIsMember(false));
+  }, []);
 
   const handleMockExamClick = () => {
     router.push('/mockexam');
@@ -23,6 +31,14 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
   const handleWorkbookClick = () => {
     router.push('/workbook');
+  };
+
+  const handleAnalysisClick = () => {
+    router.push('/analysis');
+  };
+
+  const handleEssayClick = () => {
+    router.push('/essay');
   };
 
   return (
@@ -43,7 +59,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
         {/* 주문 유형 선택 */}
         <div className="max-w-6xl mx-auto mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* 모의고사 변형문제 주문 */}
             <div
               onClick={handleMockExamClick}
@@ -115,7 +131,7 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
 
             {/* 번호별 교재 제작하기 */}
             <div
-              onClick={() => window.location.href = '/order-num'}
+              onClick={() => router.push('/order-num')}
               className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#F5C6CB' }}></div>
@@ -128,6 +144,58 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
                   <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
                     모의고사 번호별<br/>
                     맞춤 교재 구성
+                  </p>
+                  <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
+                    선택하기
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 분석지 주문제작 - 회원 전용 (비회원 클릭 시 회원가입 문의 안내) */}
+            <div
+              onClick={handleAnalysisClick}
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#2D5016' }}></div>
+              <div className="relative z-10 p-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-all duration-500 group-hover:bg-white group-hover:bg-opacity-20" style={{ backgroundColor: '#2D5016' }}>
+                    <span className="text-2xl font-bold text-white">📊</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 group-hover:text-white transition-colors duration-500 mb-3">분석지 주문제작</h3>
+                  <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
+                    {isMember === false ? (
+                      <>회원 전용 메뉴입니다.<br/>회원가입 문의하러 가기</>
+                    ) : (
+                      <>맞춤 분석지<br/>주문·제작 신청</>
+                    )}
+                  </p>
+                  <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
+                    선택하기
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 서술형문제 주문제작 - 회원 전용 (비회원 클릭 시 회원가입 문의 안내) */}
+            <div
+              onClick={handleEssayClick}
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#5C4033' }}></div>
+              <div className="relative z-10 p-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-all duration-500 group-hover:bg-white group-hover:bg-opacity-20" style={{ backgroundColor: '#5C4033' }}>
+                    <span className="text-2xl font-bold text-white">✍️</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 group-hover:text-white transition-colors duration-500 mb-3">서술형문제 주문제작</h3>
+                  <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
+                    {isMember === false ? (
+                      <>회원 전용 메뉴입니다.<br/>회원가입 문의하러 가기</>
+                    ) : (
+                      <>서술형·논술형<br/>맞춤 제작 신청</>
+                    )}
                   </p>
                   <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
                     선택하기
