@@ -3,6 +3,17 @@ import { getDb } from '@/lib/mongodb';
 import { comparePassword, createToken, COOKIE_NAME } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+  if (!process.env.MONGODB_URI) {
+    console.error('로그인 실패: MONGODB_URI 환경 변수가 없습니다.');
+    return NextResponse.json(
+      {
+        error:
+          '데이터베이스 설정이 없습니다. 배포 환경에 MONGODB_URI 환경 변수를 추가한 뒤 재배포해 주세요.',
+      },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await request.json();
     const loginId = typeof body?.loginId === 'string' ? body.loginId.trim() : '';
@@ -48,7 +59,26 @@ export async function POST(request: NextRequest) {
     });
     return res;
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error('로그인 실패:', err);
+
+    const isDbError =
+      message.includes('MONGODB_URI') ||
+      message.includes('Mongo') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('ENOTFOUND') ||
+      message.includes('connection');
+
+    if (isDbError) {
+      return NextResponse.json(
+        {
+          error:
+            '데이터베이스에 연결할 수 없습니다. MONGODB_URI와 네트워크(방화벽·IP 허용)를 확인해 주세요.',
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: '로그인 처리 중 오류가 발생했습니다.' },
       { status: 500 }

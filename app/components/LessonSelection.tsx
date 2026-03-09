@@ -162,6 +162,17 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     );
   };
 
+  const allLessonItems = Object.keys(lessonGroups).flatMap(key => lessonGroups[key] || []);
+  const allSelected = allLessonItems.length > 0 && selectedLessons.length === allLessonItems.length;
+
+  const handleAllToggle = () => {
+    if (allSelected) {
+      setSelectedLessons([]);
+    } else {
+      setSelectedLessons([...allLessonItems]);
+    }
+  };
+
   const handleNext = () => {
     if (selectedLessons.length === 0) {
       alert('강과 번호를 선택해주세요.');
@@ -362,11 +373,18 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
               {selectedTextbook !== '부교재_목록' && (
                 <>
                   <div className="mb-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                       <p className="text-blue-700 text-sm">
                         <strong>사용법:</strong> 왼쪽을 클릭하면 강 전체 선택, 오른쪽 + 버튼을 클릭하면 개별 번호 선택이 가능해요!
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleAllToggle}
+                      className="w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors mb-4 border-2 border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {allSelected ? '전체 해제' : '전체 선택 (모든 강·번호)'}
+                    </button>
                   </div>
 
                   <div className="space-y-3">
