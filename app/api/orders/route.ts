@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { notifySlackOrder } from '@/lib/slack';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { createOrderFolder, isDropboxConfigured } from '@/lib/dropbox';
 
 const COLLECTION = 'orders';
 
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     let loginId: string | null = null;
+    let userName: string = '';
     const token = request.cookies.get(COOKIE_NAME)?.value;
     if (token) {
       const payload = await verifyToken(token);
@@ -26,6 +28,12 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb('gomijoshua');
     const collection = db.collection(COLLECTION);
+
+    // 회원이면 이름 조회
+    if (loginId) {
+      const userDoc = await db.collection('users').findOne({ loginId }, { projection: { name: 1 } });
+      userName = (userDoc?.name as string) || loginId;
+    }
 
     // GJ-YYYYMMDD-NNN 형식 주문번호 생성
     const now = new Date();
@@ -53,6 +61,13 @@ export async function POST(request: NextRequest) {
     notifySlackOrder(orderText, orderId).catch((e) =>
       console.error('Slack 알림 실패:', e)
     );
+
+    // 드롭박스 폴더 자동 생성 (회원 주문이고 환경 변수가 설정된 경우)
+    if (loginId && isDropboxConfigured()) {
+      createOrderFolder({ loginId, name: userName, orderNumber })
+        .then((folderPath) => console.log('Dropbox 폴더 생성:', folderPath))
+        .catch((e) => console.error('Dropbox 폴더 생성 실패:', e));
+    }
 
     return NextResponse.json({
       ok: true,
