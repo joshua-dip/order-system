@@ -302,7 +302,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
               ) : (
                 <div className="space-y-6">
                   {(() => {
-                    const { revised, other } = groupTextbooksByRevised(filteredTextbooks);
+                    const { ebs, revised, other } = groupTextbooksByRevised(filteredTextbooks);
                     const renderCard = (textbook: string) => (
                       <div
                         key={textbook}
@@ -340,6 +340,16 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                     );
                     return (
                       <>
+                        {ebs.length > 0 && (
+                          <div>
+                            <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-emerald-200">
+                              EBS
+                            </h3>
+                            <div className="space-y-4">
+                              {ebs.map(renderCard)}
+                            </div>
+                          </div>
+                        )}
                         {revised.length > 0 && (
                           <div>
                             <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-blue-200">
@@ -352,7 +362,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         )}
                         {other.length > 0 && (
                           <div>
-                            {revised.length > 0 && (
+                            {(ebs.length > 0 || revised.length > 0) && (
                               <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">
                                 기타 교재
                               </h3>

@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
       orderText: o.orderText,
       createdAt: o.createdAt,
       status: o.status || 'pending',
+      orderNumber: o.orderNumber ?? null,
+      fileUrl: o.fileUrl ?? null,
     }));
 
     return NextResponse.json({ orders: list });

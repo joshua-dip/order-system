@@ -17,6 +17,8 @@ interface MyOrder {
   orderText: string;
   createdAt: string;
   status: string;
+  orderNumber: string | null;
+  fileUrl: string | null;
 }
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
@@ -300,7 +302,12 @@ export default function MyPage() {
                     className="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
+                      <div>
+                        <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
+                        {order.orderNumber && (
+                          <span className="ml-2 text-xs font-mono text-gray-500">{order.orderNumber}</span>
+                        )}
+                      </div>
                       <span
                         className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                           order.status === 'cancelled'
@@ -320,6 +327,18 @@ export default function MyPage() {
                         {order.orderText.length > 300 ? '…' : ''}
                       </pre>
                     </Link>
+                    {order.fileUrl && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <a
+                          href={order.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                        >
+                          📥 자료 다운로드 (드롭박스)
+                        </a>
+                      </div>
+                    )}
                     {order.status === 'pending' && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <button

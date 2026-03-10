@@ -24,6 +24,8 @@ interface AdminOrder {
   status: string;
   statusLabel: string;
   loginId: string | null;
+  orderNumber: string | null;
+  fileUrl: string | null;
 }
 
 export default function AdminDashboardPage() {
@@ -51,6 +53,8 @@ export default function AdminDashboardPage() {
   const [userOrdersLoading, setUserOrdersLoading] = useState(false);
   const [recentOrders, setRecentOrders] = useState<AdminOrder[]>([]);
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(false);
+  const [fileUrlInputs, setFileUrlInputs] = useState<Record<string, string>>({});
+  const [fileUrlSavingId, setFileUrlSavingId] = useState<string | null>(null);
 
   const fetchUsers = useCallback(() => {
     setUsersLoading(true);
@@ -217,6 +221,31 @@ export default function AdminDashboardPage() {
       alert('요청 중 오류가 발생했습니다.');
     } finally {
       setResetPasswordLoadingId(null);
+    }
+  };
+
+  const handleSaveFileUrl = async (orderId: string, isRecentList = false) => {
+    const url = fileUrlInputs[orderId] ?? '';
+    setFileUrlSavingId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setFileUrl', fileUrl: url }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        const updater = (prev: AdminOrder[]) =>
+          prev.map((o) => (o.id === orderId ? { ...o, fileUrl: url } : o));
+        if (isRecentList) setRecentOrders(updater);
+        else setUserOrders(updater);
+      } else {
+        alert(data?.error || '저장에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setFileUrlSavingId(null);
     }
   };
 
@@ -406,38 +435,50 @@ export default function AdminDashboardPage() {
               ) : userOrders.length === 0 ? (
                 <p className="text-sm text-gray-500">주문 이력이 없습니다.</p>
               ) : (
-                <div className="overflow-y-auto flex-1 border border-gray-200 rounded-lg">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="py-2 px-2 text-left">주문일시</th>
-                        <th className="py-2 px-2 text-left">상태</th>
-                        <th className="py-2 px-2 text-left">보기</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {userOrders.map((o) => (
-                        <tr key={o.id} className="border-t border-gray-100">
-                          <td className="py-2 px-2 text-gray-600">{formatDateTime(o.createdAt)}</td>
-                          <td className="py-2 px-2">
-                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              {o.statusLabel}
-                            </span>
-                          </td>
-                          <td className="py-2 px-2">
-                            <a
-                              href={`/order/done?id=${o.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              주문서 보기
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="overflow-y-auto flex-1 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="p-2 space-y-3">
+                    {userOrders.map((o) => (
+                      <div key={o.id} className="border border-gray-200 rounded-xl p-3">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          {o.orderNumber && (
+                            <span className="font-mono text-sm font-semibold text-gray-800">{o.orderNumber}</span>
+                          )}
+                          <span className="text-xs text-gray-500">{formatDateTime(o.createdAt)}</span>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            {o.statusLabel}
+                          </span>
+                          <a
+                            href={`/order/done?id=${o.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs"
+                          >
+                            주문서 보기 →
+                          </a>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="url"
+                            placeholder="드롭박스 공유 링크"
+                            value={fileUrlInputs[o.id] ?? o.fileUrl ?? ''}
+                            onChange={(e) => setFileUrlInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                            className="flex-1 min-w-0 px-2 py-1 border border-gray-300 rounded-lg text-xs text-gray-900 placeholder:text-gray-400 bg-white focus:ring-2 focus:ring-indigo-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveFileUrl(o.id, false)}
+                            disabled={fileUrlSavingId === o.id}
+                            className="shrink-0 px-2 py-1 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium"
+                          >
+                            {fileUrlSavingId === o.id ? '…' : '저장'}
+                          </button>
+                          {o.fileUrl && (
+                            <a href={o.fileUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-xs shrink-0">확인</a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               <div className="mt-4">
@@ -518,40 +559,56 @@ export default function AdminDashboardPage() {
           ) : recentOrders.length === 0 ? (
             <p className="text-sm text-gray-500">최근 주문이 없습니다.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-600">
-                    <th className="py-2 pr-4">주문일시</th>
-                    <th className="py-2 pr-4">아이디</th>
-                    <th className="py-2 pr-4">상태</th>
-                    <th className="py-2">보기</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((o) => (
-                    <tr key={o.id} className="border-b border-gray-100">
-                      <td className="py-3 pr-4 text-gray-600">{formatDateTime(o.createdAt)}</td>
-                      <td className="py-3 pr-4 font-medium text-gray-900">{o.loginId || '—'}</td>
-                      <td className="py-3 pr-4">
-                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                          {o.statusLabel}
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <a
-                          href={`/order/done?id=${o.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          주문서 보기
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {recentOrders.map((o) => (
+                <div key={o.id} className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    {o.orderNumber && (
+                      <span className="font-mono text-sm font-semibold text-gray-800">{o.orderNumber}</span>
+                    )}
+                    <span className="text-xs text-gray-500">{formatDateTime(o.createdAt)}</span>
+                    <span className="text-xs font-medium text-gray-700">{o.loginId || '비회원'}</span>
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      {o.statusLabel}
+                    </span>
+                    <a
+                      href={`/order/done?id=${o.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-xs"
+                    >
+                      주문서 보기 →
+                    </a>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="url"
+                      placeholder="드롭박스 공유 링크 붙여넣기"
+                      value={fileUrlInputs[o.id] ?? o.fileUrl ?? ''}
+                      onChange={(e) => setFileUrlInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                      className="flex-1 min-w-0 px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveFileUrl(o.id, true)}
+                      disabled={fileUrlSavingId === o.id}
+                      className="shrink-0 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium"
+                    >
+                      {fileUrlSavingId === o.id ? '저장 중…' : '링크 저장'}
+                    </button>
+                    {o.fileUrl && (
+                      <a
+                        href={o.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 text-indigo-600 hover:underline text-xs"
+                      >
+                        확인
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

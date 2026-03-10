@@ -273,7 +273,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
               ) : (
                 <div className="space-y-8">
                   {(() => {
-                    const { revised, other } = groupTextbooksByRevised(filteredTextbooks);
+                    const { ebs, revised, other } = groupTextbooksByRevised(filteredTextbooks);
                     const renderCard = (textbook: string) => (
                       <div
                         key={textbook}
@@ -306,6 +306,16 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                     );
                     return (
                       <>
+                        {ebs.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-emerald-200">
+                              EBS
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {ebs.map(renderCard)}
+                            </div>
+                          </div>
+                        )}
                         {revised.length > 0 && (
                           <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-blue-200">
@@ -318,7 +328,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                         )}
                         {other.length > 0 && (
                           <div>
-                            {revised.length > 0 && (
+                            {(ebs.length > 0 || revised.length > 0) && (
                               <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">
                                 기타 교재
                               </h3>

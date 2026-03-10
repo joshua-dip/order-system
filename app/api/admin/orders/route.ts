@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
       status: o.status || 'pending',
       statusLabel: STATUS_LABELS[o.status || 'pending'] || o.status || '주문 접수',
       loginId: o.loginId ?? null,
+      orderNumber: o.orderNumber ?? null,
+      fileUrl: o.fileUrl ?? null,
     }));
 
     return NextResponse.json({ orders });

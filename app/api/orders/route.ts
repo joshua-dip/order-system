@@ -27,11 +27,23 @@ export async function POST(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const collection = db.collection(COLLECTION);
 
+    // GJ-YYYYMMDD-NNN 형식 주문번호 생성
+    const now = new Date();
+    const pad = (n: number, d = 2) => String(n).padStart(d, '0');
+    const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const todayCount = await collection.countDocuments({
+      createdAt: { $gte: dayStart, $lt: dayEnd },
+    });
+    const orderNumber = `GJ-${datePart}-${pad(todayCount + 1, 3)}`;
+
     const doc = {
       orderText,
-      createdAt: new Date(),
+      createdAt: now,
       source: 'gomijoshua',
       status: 'pending',
+      orderNumber,
       ...(loginId && { loginId }),
     };
 
@@ -45,6 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       id: orderId,
+      orderNumber,
     });
   } catch (err) {
     console.error('주문 저장 실패:', err);

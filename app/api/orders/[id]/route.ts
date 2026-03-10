@@ -29,6 +29,8 @@ export async function GET(
       orderText: order.orderText,
       createdAt: order.createdAt,
       status: order.status || 'pending',
+      orderNumber: order.orderNumber ?? null,
+      fileUrl: order.fileUrl ?? null,
     });
   } catch (err) {
     console.error('주문 조회 실패:', err);
@@ -47,6 +49,22 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
+
+    // 관리자: 드롭박스 링크 업데이트
+    if (body?.action === 'setFileUrl') {
+      const adminToken = request.cookies.get(COOKIE_NAME)?.value;
+      const adminPayload = adminToken ? await verifyToken(adminToken) : null;
+      if (!adminPayload || adminPayload.role !== 'admin') {
+        return NextResponse.json({ error: '관리자만 이용할 수 있습니다.' }, { status: 403 });
+      }
+      const db = await getDb('gomijoshua');
+      await db.collection(COLLECTION).updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { fileUrl: body.fileUrl ?? '' } }
+      );
+      return NextResponse.json({ ok: true });
+    }
+
     if (body?.action !== 'cancel') {
       return NextResponse.json({ error: 'action이 필요합니다.' }, { status: 400 });
     }

@@ -19,7 +19,7 @@ function OrderDoneContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
-  const [order, setOrder] = useState<{ orderText: string; status: string } | null>(null);
+  const [order, setOrder] = useState<{ orderText: string; status: string; orderNumber: string | null; fileUrl: string | null } | null>(null);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState('');
   const [user, setUser] = useState<{ loginId: string } | null>(null);
@@ -43,6 +43,8 @@ function OrderDoneContent() {
       setOrder({
         orderText: orderData.orderText,
         status: orderData.status || 'pending',
+        orderNumber: orderData.orderNumber ?? null,
+        fileUrl: orderData.fileUrl ?? null,
       });
       if (authData.user) setUser(authData.user);
     });
@@ -112,6 +114,11 @@ function OrderDoneContent() {
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">주문서가 접수되었습니다</h1>
             <p className="text-gray-600">아래 내용을 확인하시고 문의 시 참고해 주세요.</p>
+            {order.orderNumber && (
+              <p className="mt-2 text-sm text-gray-500">
+                주문번호: <span className="font-mono font-semibold text-gray-700">{order.orderNumber}</span>
+              </p>
+            )}
             <div
               className={`inline-block mt-3 px-4 py-2 rounded-lg text-sm font-medium ${
                 order.status === 'cancelled'
@@ -137,6 +144,23 @@ function OrderDoneContent() {
             orderText={order.orderText}
             onClear={() => router.push('/')}
           />
+
+          {order.fileUrl && (
+            <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-indigo-800">자료가 준비되었습니다</p>
+                <p className="text-xs text-indigo-600 mt-0.5">아래 버튼을 눌러 드롭박스에서 다운로드하세요.</p>
+              </div>
+              <a
+                href={order.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+              >
+                자료 다운로드
+              </a>
+            </div>
+          )}
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {order.status === 'pending' && (
