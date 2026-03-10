@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
-import convertedData from '../data/converted_data.json';
+import { useTextbooksData } from '@/lib/useTextbooksData';
 import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 
@@ -12,52 +12,34 @@ interface WorkbookTextbookSelectionProps {
 }
 
 const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextbookSelectionProps) => {
+  const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const [workbookTextbooks, setWorkbookTextbooks] = useState<string[]>([]);
   const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
   const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
   
-  // 모의고사 선택 상태
   const [selectedGrade, setSelectedGrade] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   
-  // 접기/펼치기 상태
   const [isTextbookExpanded, setIsTextbookExpanded] = useState<boolean>(true);
   const [isMockExamExpanded, setIsMockExamExpanded] = useState<boolean>(true);
 
   useEffect(() => {
-    const loadTextbooks = async () => {
-      try {
-        // 부교재 데이터만 로드
-        const textbookNames = Object.keys(convertedData as Record<string, unknown>);
-        
-        // 교보문고 링크 데이터 로드
-        try {
-          const linksData = await import('../data/textbook-links.json');
-          setTextbookLinks(linksData.default);
-        } catch (error) {
-          console.error('교보문고 링크 데이터 로드 실패:', error);
-          setTextbookLinks({});
-        }
-        
-        setWorkbookTextbooks(textbookNames);
-        setFilteredTextbooks(textbookNames);
-      } catch (error) {
-        console.error('교재 데이터 로드 실패:', error);
-        // 에러 시 빈 배열로 설정
-        setWorkbookTextbooks([]);
-        setFilteredTextbooks([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!convertedData) return;
+    const textbookNames = Object.keys(convertedData as Record<string, unknown>);
+    setWorkbookTextbooks(textbookNames);
+    setFilteredTextbooks(textbookNames);
+  }, [convertedData]);
 
-    loadTextbooks();
-  }, []);
+  useEffect(() => {
+    if (!convertedData) return;
+    import('../data/textbook-links.json')
+      .then((linksData) => setTextbookLinks(linksData.default))
+      .catch(() => setTextbookLinks({}));
+  }, [convertedData]);
 
   // 검색 필터링 로직
   useEffect(() => {
@@ -188,10 +170,14 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
 
         {/* 교재 선택 */}
         <div className="max-w-6xl mx-auto">
-          {loading ? (
+          {dataLoading ? (
             <div className="text-center py-16">
               <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">교재 목록을 불러오는 중...</p>
+            </div>
+          ) : dataError || !convertedData ? (
+            <div className="text-center py-16">
+              <p className="text-red-600">교재 데이터를 불러올 수 없습니다.</p>
             </div>
           ) : (
             <div>
@@ -349,7 +335,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
           )}
 
           {/* 모의고사 섹션 */}
-          {!loading && (
+          {!dataLoading && !dataError && convertedData && (
             <div className="mt-16">
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-3 mb-2">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
-import convertedData from '../data/converted_data.json';
+import { useTextbooksData } from '@/lib/useTextbooksData';
 
 interface WorkbookLessonSelectionProps {
   selectedTextbook: string;
@@ -12,14 +12,15 @@ interface WorkbookLessonSelectionProps {
 }
 
 const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onBackToTextbook }: WorkbookLessonSelectionProps) => {
+  const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [availableLessons, setAvailableLessons] = useState<string[]>([]);
   const [lessonTextCounts, setLessonTextCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
+    if (!convertedData) return;
     const loadLessonsForTextbook = async () => {
       try {
-        // 부교재의 경우 converted_data.json에서 데이터 로드
         const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
         
         if (textbookData && typeof textbookData === 'object') {
@@ -59,7 +60,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
     if (selectedTextbook) {
       loadLessonsForTextbook();
     }
-  }, [selectedTextbook]);
+  }, [selectedTextbook, convertedData]);
 
   const handleLessonToggle = (lesson: string) => {
     setSelectedLessons(prev => 
@@ -84,6 +85,27 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
     }
     onLessonsSelect(selectedLessons);
   };
+
+  if (dataLoading) {
+    return (
+      <>
+        <AppBar showBackButton={true} onBackClick={onBack} title="워크북 강 선택" />
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+          <p className="text-gray-600">교재 데이터를 불러오는 중...</p>
+        </div>
+      </>
+    );
+  }
+  if (dataError || !convertedData) {
+    return (
+      <>
+        <AppBar showBackButton={true} onBackClick={onBack} title="워크북 강 선택" />
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+          <p className="text-red-600">데이터를 불러올 수 없습니다.</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

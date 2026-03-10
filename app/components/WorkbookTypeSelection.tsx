@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
-import convertedData from '../data/converted_data.json';
+import { useTextbooksData } from '@/lib/useTextbooksData';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
   selectedLessons: string[];
-  onOrderGenerate: (orderText: string) => void;
+  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
   onBack: () => void;
   onBackToTextbook: () => void;
   onBackToLessons: () => void;
@@ -21,11 +21,11 @@ const WorkbookTypeSelection = ({
   onBackToTextbook, 
   onBackToLessons 
 }: WorkbookTypeSelectionProps) => {
+  const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
   const [email, setEmail] = useState<string>('');
   const [totalTextCount, setTotalTextCount] = useState<number>(0);
   
-  // 모의고사 여부 확인
   const isMockExam = selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_');
 
   // 워크북 패키지들
@@ -75,15 +75,13 @@ const WorkbookTypeSelection = ({
     }
   ];
 
-  // 선택된 강들에서 실제 지문 개수 계산
   useEffect(() => {
+    if (!convertedData) return;
     const calculateTextCount = async () => {
       try {
         if (isMockExam) {
-          // 모의고사는 선택된 번호 개수가 지문 개수
           setTotalTextCount(selectedLessons.length);
         } else {
-          // 부교재 지문 개수 계산
           const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
           
           if (textbookData && typeof textbookData === 'object') {
@@ -121,7 +119,7 @@ const WorkbookTypeSelection = ({
         calculateTextCount();
       }
     }
-  }, [selectedTextbook, selectedLessons, isMockExam]);
+  }, [selectedTextbook, selectedLessons, isMockExam, convertedData]);
 
   const handlePackageChange = (packageId: string) => {
     setSelectedPackages(prev => {
@@ -247,7 +245,7 @@ ${selectedPackageDetails.map(pkg =>
 
 `;
 
-    onOrderGenerate(orderText);
+    onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW');
   };
 
   // 가격 계산 (미리보기용)
@@ -274,6 +272,27 @@ ${selectedPackageDetails.map(pkg =>
   }
   
   const totalPricePreview = basePricePreview - discountAmountPreview;
+
+  if (dataLoading) {
+    return (
+      <>
+        <AppBar showBackButton={true} onBackClick={onBack} title="워크북 유형 선택" />
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+          <p className="text-gray-600">교재 데이터를 불러오는 중...</p>
+        </div>
+      </>
+    );
+  }
+  if (dataError || !convertedData) {
+    return (
+      <>
+        <AppBar showBackButton={true} onBackClick={onBack} title="워크북 유형 선택" />
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+          <p className="text-red-600">데이터를 불러올 수 없습니다.</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

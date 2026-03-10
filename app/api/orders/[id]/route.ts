@@ -31,6 +31,7 @@ export async function GET(
       status: order.status || 'pending',
       orderNumber: order.orderNumber ?? null,
       fileUrl: order.fileUrl ?? null,
+      loginId: order.loginId ?? null,
     });
   } catch (err) {
     console.error('주문 조회 실패:', err);
@@ -50,17 +51,49 @@ export async function PATCH(
 
     const body = await request.json().catch(() => ({}));
 
-    // 관리자: 드롭박스 링크 업데이트
+    const adminToken = request.cookies.get(COOKIE_NAME)?.value;
+    const adminPayload = adminToken ? await verifyToken(adminToken) : null;
+    const isAdmin = adminPayload?.role === 'admin';
+
     if (body?.action === 'setFileUrl') {
-      const adminToken = request.cookies.get(COOKIE_NAME)?.value;
-      const adminPayload = adminToken ? await verifyToken(adminToken) : null;
-      if (!adminPayload || adminPayload.role !== 'admin') {
+      if (!isAdmin) {
         return NextResponse.json({ error: '관리자만 이용할 수 있습니다.' }, { status: 403 });
       }
       const db = await getDb('gomijoshua');
       await db.collection(COLLECTION).updateOne(
         { _id: new ObjectId(id) },
         { $set: { fileUrl: body.fileUrl ?? '' } }
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    if (body?.action === 'setStatus' && isAdmin) {
+      const allowed = ['pending', 'accepted', 'payment_confirmed', 'in_progress', 'completed', 'cancelled'];
+      const newStatus = body?.status;
+      if (!newStatus || !allowed.includes(newStatus)) {
+        return NextResponse.json({ error: '유효한 상태가 아닙니다.' }, { status: 400 });
+      }
+      const db = await getDb('gomijoshua');
+      await db.collection(COLLECTION).updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { status: newStatus } }
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    if (body?.action === 'assignMember' && isAdmin) {
+      const assignLoginId = typeof body?.loginId === 'string' ? body.loginId.trim() : '';
+      if (!assignLoginId) {
+        return NextResponse.json({ error: '연결할 회원 아이디를 선택해주세요.' }, { status: 400 });
+      }
+      const db = await getDb('gomijoshua');
+      const user = await db.collection('users').findOne({ loginId: assignLoginId, role: 'user' });
+      if (!user) {
+        return NextResponse.json({ error: '일반 회원만 연결할 수 있습니다.' }, { status: 400 });
+      }
+      await db.collection(COLLECTION).updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { loginId: assignLoginId } }
       );
       return NextResponse.json({ ok: true });
     }
@@ -102,5 +135,34 @@ export async function PATCH(
   } catch (err) {
     console.error('주문 취소 실패:', err);
     return NextResponse.json({ error: '주문 취소에 실패했습니다.' }, { status: 500 });
+  }
+}
+
+/** 관리자 전용: 주문 문서 삭제 */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    if (!id || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
+    }
+
+    const adminToken = request.cookies.get(COOKIE_NAME)?.value;
+    const adminPayload = adminToken ? await verifyToken(adminToken) : null;
+    if (adminPayload?.role !== 'admin') {
+      return NextResponse.json({ error: '관리자만 삭제할 수 있습니다.' }, { status: 403 });
+    }
+
+    const db = await getDb('gomijoshua');
+    const result = await db.collection(COLLECTION).deleteOne({ _id: new ObjectId(id) });
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: '주문을 찾을 수 없습니다.' }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('주문 삭제 실패:', err);
+    return NextResponse.json({ error: '주문 삭제에 실패했습니다.' }, { status: 500 });
   }
 }

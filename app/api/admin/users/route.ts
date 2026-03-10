@@ -25,6 +25,9 @@ export async function GET(request: NextRequest) {
       loginId: u.loginId,
       name: u.name ?? u.loginId,
       email: u.email ?? '',
+      phone: u.phone ?? '',
+      dropboxFolderPath: u.dropboxFolderPath ?? '',
+      dropboxSharedLink: u.dropboxSharedLink ?? '',
       createdAt: u.createdAt,
     }));
 
@@ -54,6 +57,8 @@ export async function POST(request: NextRequest) {
     const loginId = typeof body?.loginId === 'string' ? body.loginId.trim() : '';
     const name = typeof body?.name === 'string' ? body.name.trim() : '';
     const email = typeof body?.email === 'string' ? body.email.trim() : '';
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : '';
+    const dropboxFolderPath = typeof body?.dropboxFolderPath === 'string' ? body.dropboxFolderPath.trim() : '';
 
     if (!loginId) {
       return NextResponse.json(
@@ -87,6 +92,8 @@ export async function POST(request: NextRequest) {
       passwordHash,
       name: name || loginId,
       email: email || '',
+      phone: phone || '',
+      dropboxFolderPath: dropboxFolderPath || '',
       role: 'user',
       createdAt: new Date(),
     });

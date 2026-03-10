@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { notifySlackOrder } from '@/lib/slack';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { createOrderFolder, isDropboxConfigured } from '@/lib/dropbox';
+import { createOrderFolder, uploadOrderTxt, isDropboxConfigured } from '@/lib/dropbox';
 
 const COLLECTION = 'orders';
 
@@ -18,6 +18,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 주문 접두어: 2글자 영문 (재료+제품). 미전달 또는 잘못된 값이면 'GJ' 사용
+    const rawPrefix = typeof body?.orderPrefix === 'string' ? body.orderPrefix.trim().toUpperCase() : '';
+    const orderPrefix = /^[A-Z]{2}$/.test(rawPrefix) ? rawPrefix : 'GJ';
+
     let loginId: string | null = null;
     let userName: string = '';
     const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -29,13 +33,21 @@ export async function POST(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const collection = db.collection(COLLECTION);
 
-    // 회원이면 이름 조회
+    // 회원이면 이름·드롭박스 경로·전화번호 조회
+    let userDropboxFolderPath: string | undefined;
+    let userPhone: string | undefined;
     if (loginId) {
-      const userDoc = await db.collection('users').findOne({ loginId }, { projection: { name: 1 } });
+      const userDoc = await db.collection('users').findOne(
+        { loginId },
+        { projection: { name: 1, dropboxFolderPath: 1, phone: 1 } }
+      );
       userName = (userDoc?.name as string) || loginId;
+      const path = userDoc?.dropboxFolderPath;
+      userDropboxFolderPath = typeof path === 'string' && path.trim() ? path.trim() : undefined;
+      userPhone = typeof userDoc?.phone === 'string' && userDoc.phone.trim() ? userDoc.phone.trim() : undefined;
     }
 
-    // GJ-YYYYMMDD-NNN 형식 주문번호 생성
+    // 접두어-YYYYMMDD-NNN 형식 주문번호 생성 (접두어: 재료+제품 2글자, 예: MV, BV, MW)
     const now = new Date();
     const pad = (n: number, d = 2) => String(n).padStart(d, '0');
     const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
@@ -44,7 +56,7 @@ export async function POST(request: NextRequest) {
     const todayCount = await collection.countDocuments({
       createdAt: { $gte: dayStart, $lt: dayEnd },
     });
-    const orderNumber = `GJ-${datePart}-${pad(todayCount + 1, 3)}`;
+    const orderNumber = `${orderPrefix}-${datePart}-${pad(todayCount + 1, 3)}`;
 
     const doc = {
       orderText,
@@ -62,11 +74,21 @@ export async function POST(request: NextRequest) {
       console.error('Slack 알림 실패:', e)
     );
 
-    // 드롭박스 폴더 자동 생성 (회원 주문이고 환경 변수가 설정된 경우)
+    // 드롭박스: 회원 주문이고 환경 변수 설정된 경우에만 폴더 생성 + 주문서 txt 업로드
     if (loginId && isDropboxConfigured()) {
-      createOrderFolder({ loginId, name: userName, orderNumber })
-        .then((folderPath) => console.log('Dropbox 폴더 생성:', folderPath))
-        .catch((e) => console.error('Dropbox 폴더 생성 실패:', e));
+      createOrderFolder({
+        loginId,
+        name: userName,
+        orderNumber,
+        userDropboxFolderPath,
+        phone: userPhone,
+      })
+        .then((folderPath) => {
+          console.log('Dropbox 폴더 생성:', folderPath);
+          return uploadOrderTxt(folderPath, orderNumber, orderText);
+        })
+        .then(() => console.log('Dropbox 주문서 업로드 완료'))
+        .catch((e) => console.error('Dropbox 실패:', e));
     }
 
     return NextResponse.json({

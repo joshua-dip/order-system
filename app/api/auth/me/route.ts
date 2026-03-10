@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(payload.sub) },
-      { projection: { loginId: 1, role: 1, name: 1, email: 1 } }
+      { projection: { loginId: 1, role: 1, name: 1, email: 1, dropboxFolderPath: 1, dropboxSharedLink: 1 } }
     );
     if (!user) {
       return NextResponse.json({ user: null }, { status: 200 });
@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
         role: user.role,
         name: user.name ?? user.loginId,
         email: user.email ?? '',
+        dropboxFolderPath: user.dropboxFolderPath ?? '',
+        dropboxSharedLink: user.dropboxSharedLink ?? '',
       },
     });
   } catch {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 
 interface MockExamSettingsProps {
-  onOrderGenerate: (orderText: string) => void;
+  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
   onBack: () => void;
 }
 
@@ -197,7 +197,7 @@ ${examDetails}
 5. 가격
 : ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${discountAmount.toLocaleString()}원)` : ''}`;
 
-    onOrderGenerate(orderText);
+    onOrderGenerate(orderText, 'MV');
   };
 
   // 가격 계산 (미리보기용)

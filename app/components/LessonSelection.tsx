@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
-import textbooksData from '../data/converted_data.json';
+import { useTextbooksData } from '@/lib/useTextbooksData';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 
 interface LessonSelectionProps {
@@ -37,6 +37,7 @@ interface TextbookStructure {
 }
 
 const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect }: LessonSelectionProps) => {
+  const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
@@ -48,6 +49,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
 
   // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
+    if (!textbooksData) return;
     const loadTextbookData = async () => {
       try {
         // 부교재 목록을 보여주는 경우
@@ -74,8 +76,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           setShowTextbookList(false);
         }
         
-        if (selectedTextbook && textbooksData[selectedTextbook as keyof typeof textbooksData]) {
-          const textbookData = textbooksData[selectedTextbook as keyof typeof textbooksData] as TextbookStructure;
+        if (selectedTextbook && textbooksData[selectedTextbook]) {
+          const textbookData = textbooksData[selectedTextbook] as TextbookStructure;
           
           // 다양한 구조에 대응하기 위한 안전한 접근 (내부 키가 교재명(버전) 등으로 다를 수 있음)
           let actualData: TextbookContent | null = null;
@@ -118,7 +120,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     if (selectedTextbook) {
       loadTextbookData();
     }
-  }, [selectedTextbook]);
+  }, [selectedTextbook, textbooksData]);
 
   // 검색 필터링 로직
   useEffect(() => {
@@ -180,6 +182,27 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     }
     onLessonsSelect(selectedLessons);
   };
+
+  if (dataLoading) {
+    return (
+      <>
+        <AppBar showBackButton={true} onBackClick={onBack} title="강과 번호 선택" />
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+          <p className="text-gray-600">교재 데이터를 불러오는 중...</p>
+        </div>
+      </>
+    );
+  }
+  if (dataError || !textbooksData) {
+    return (
+      <>
+        <AppBar showBackButton={true} onBackClick={onBack} title="강과 번호 선택" />
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+          <p className="text-red-600">데이터를 불러올 수 없습니다.</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

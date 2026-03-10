@@ -42,8 +42,8 @@ export default function WorkbookPage() {
     setCurrentStep('types');
   };
 
-  const handleOrderGenerate = (orderText: string) => {
-    saveOrderToDb(orderText).then((res) => {
+  const handleOrderGenerate = (orderText: string, orderPrefix?: string) => {
+    saveOrderToDb(orderText, orderPrefix).then((res) => {
       if (res.ok && res.id) {
         router.push('/order/done?id=' + res.id);
       } else {

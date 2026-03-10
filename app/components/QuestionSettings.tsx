@@ -6,7 +6,7 @@ import AppBar from './AppBar';
 interface QuestionSettingsProps {
   selectedTextbook: string;
   selectedLessons: string[];
-  onOrderGenerate: (orderText: string) => void;
+  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
   onBack: () => void;
   onBackToTextbook: () => void;
 }
@@ -97,7 +97,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
 5. 가격
 : ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${discountAmount.toLocaleString()}원)` : ''}`;
 
-    onOrderGenerate(orderText);
+    onOrderGenerate(orderText, 'BV');
   };
 
   // 가격 계산 (문제 유형 수 × 유형별 문항 수 × 선택한 지문 수)

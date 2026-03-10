@@ -12,8 +12,8 @@ export default function MockExamPage() {
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
   const [showOrder, setShowOrder] = useState(false);
 
-  const handleOrderGenerate = (orderText: string) => {
-    saveOrderToDb(orderText).then((res) => {
+  const handleOrderGenerate = (orderText: string, orderPrefix?: string) => {
+    saveOrderToDb(orderText, orderPrefix).then((res) => {
       if (res.ok && res.id) {
         router.push('/order/done?id=' + res.id);
       } else {

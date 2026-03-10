@@ -6,7 +6,7 @@ import mockExamsData from '../data/mock-exams.json';
 
 interface NumberBasedProductionProps {
   onBack: () => void;
-  onOrderGenerate?: (orderText: string) => void;
+  onOrderGenerate?: (orderText: string, orderPrefix?: string) => void;
 }
 
 interface MaterialItem {
@@ -255,7 +255,7 @@ ${materialOrder.map((matId, index) => {
 `;
 
     if (onOrderGenerate) {
-      onOrderGenerate(orderText);
+      onOrderGenerate(orderText, 'MV');
     }
   };
 

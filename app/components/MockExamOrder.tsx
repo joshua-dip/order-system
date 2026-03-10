@@ -1,14 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTextbooksData } from '@/lib/useTextbooksData';
 
 interface MockExamOrderProps {
-  onOrderGenerate: (orderText: string) => void;
+  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
 }
-
-
-
-import textbooksData from '../data/converted_data.json';
 
 interface LessonItem {
   번호: string;
@@ -35,6 +32,7 @@ interface TextbookStructure {
 }
 
 const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
+  const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -44,48 +42,45 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
 
   const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법'];
 
-
-  // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
-    if (selectedTextbook && textbooksData[selectedTextbook as keyof typeof textbooksData]) {
-      const textbookData = textbooksData[selectedTextbook as keyof typeof textbooksData] as TextbookStructure;
-      
-      // 다양한 구조에 대응 (내부 키가 교재명(버전) 등으로 다를 수 있음)
-      let actualData: TextbookContent | null = null;
-      const pickFirstIfSingle = (sub: Record<string, TextbookContent> | undefined) => {
-        if (!sub) return null;
-        if (sub[selectedTextbook]) return sub[selectedTextbook];
-        const keys = Object.keys(sub);
-        return keys.length > 0 ? sub[keys[0]] : null;
-      };
-      actualData = pickFirstIfSingle(textbookData.Sheet1?.부교재)
-        ?? pickFirstIfSingle(textbookData['지문 데이터']?.부교재)
-        ?? pickFirstIfSingle(textbookData.부교재);
-      
-      if (actualData) {
-        const groups: {[key: string]: string[]} = {};
-        
-        Object.keys(actualData).forEach(lessonKey => {
-          const lessonData = actualData![lessonKey];
-          if (Array.isArray(lessonData)) {
-            groups[lessonKey] = [];
-            lessonData.forEach((item: LessonItem) => {
-              const lessonItem = `${lessonKey} ${item.번호}`;
-              groups[lessonKey].push(lessonItem);
-            });
-          }
-        });
-        
-        setLessonGroups(groups);
-        setSelectedLessons([]); // 교재 변경 시 선택된 강 초기화
-        setExpandedLessons([]); // 확장 상태도 초기화
-      }
+    if (!textbooksData || !selectedTextbook || !textbooksData[selectedTextbook]) {
+      setLessonGroups({});
+      setSelectedLessons([]);
+      setExpandedLessons([]);
+      return;
+    }
+    const textbookData = textbooksData[selectedTextbook] as TextbookStructure;
+    let actualData: TextbookContent | null = null;
+    const pickFirstIfSingle = (sub: Record<string, TextbookContent> | undefined) => {
+      if (!sub) return null;
+      if (sub[selectedTextbook]) return sub[selectedTextbook];
+      const keys = Object.keys(sub);
+      return keys.length > 0 ? sub[keys[0]] : null;
+    };
+    actualData = pickFirstIfSingle(textbookData.Sheet1?.부교재)
+      ?? pickFirstIfSingle(textbookData['지문 데이터']?.부교재)
+      ?? pickFirstIfSingle(textbookData.부교재);
+
+    if (actualData) {
+      const groups: {[key: string]: string[]} = {};
+      Object.keys(actualData).forEach(lessonKey => {
+        const lessonData = actualData![lessonKey];
+        if (Array.isArray(lessonData)) {
+          groups[lessonKey] = [];
+          lessonData.forEach((item: LessonItem) => {
+            groups[lessonKey].push(`${lessonKey} ${item.번호}`);
+          });
+        }
+      });
+      setLessonGroups(groups);
+      setSelectedLessons([]);
+      setExpandedLessons([]);
     } else {
       setLessonGroups({});
       setSelectedLessons([]);
       setExpandedLessons([]);
     }
-  }, [selectedTextbook]);
+  }, [selectedTextbook, textbooksData]);
 
   const handleLessonChange = (lesson: string) => {
     setSelectedLessons(prev => 
@@ -171,7 +166,7 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
 4. 가격
 : ${totalPrice.toLocaleString()}원 (총 ${totalQuestions}문항 × ${pricePerQuestion}원${isDiscounted ? ' - 100문항 이상 할인 적용' : ''})`;
 
-    onOrderGenerate(orderText);
+    onOrderGenerate(orderText, 'MV');
   };
 
   // 진행 단계 계산
@@ -184,6 +179,21 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
 
   const currentStep = getProgressStep();
   const isCompleted = selectedTextbook && selectedLessons.length > 0 && selectedTypes.length > 0;
+
+  if (dataLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-8 text-center">
+        <p className="text-gray-600">교재 데이터를 불러오는 중...</p>
+      </div>
+    );
+  }
+  if (dataError || !textbooksData) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-8 text-center">
+        <p className="text-red-600">데이터를 불러올 수 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">

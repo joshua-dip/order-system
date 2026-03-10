@@ -42,11 +42,17 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const name = typeof body?.name === 'string' ? body.name.trim() : undefined;
     const email = typeof body?.email === 'string' ? body.email.trim() : undefined;
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : undefined;
+    const dropboxFolderPath = typeof body?.dropboxFolderPath === 'string' ? body.dropboxFolderPath.trim() : undefined;
+    const dropboxSharedLink = typeof body?.dropboxSharedLink === 'string' ? body.dropboxSharedLink.trim() : undefined;
     const resetPassword = body?.resetPassword === true;
 
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (email !== undefined) updates.email = email;
+    if (phone !== undefined) updates.phone = phone;
+    if (dropboxFolderPath !== undefined) updates.dropboxFolderPath = dropboxFolderPath;
+    if (dropboxSharedLink !== undefined) updates.dropboxSharedLink = dropboxSharedLink;
     if (resetPassword) {
       updates.passwordHash = await hashPassword(DEFAULT_PASSWORD);
     }
