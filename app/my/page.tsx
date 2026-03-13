@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppBar from '../components/AppBar';
@@ -11,7 +11,6 @@ interface AuthUser {
   name: string;
   email: string;
   dropboxFolderPath?: string;
-  /** 회원이 폴더 열기로 사용할 Dropbox 공유 링크 (관리자가 등록) */
   dropboxSharedLink?: string;
 }
 
@@ -55,6 +54,9 @@ function statusVariant(status: string): 'new' | 'making' | 'done' | 'cancel' {
   return 'new';
 }
 
+type TabKey = 'orders' | 'exam' | 'settings';
+type ExamSubTabKey = 'upload' | 'list';
+
 export default function MyPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -68,6 +70,37 @@ export default function MyPage() {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [pastExamSchool, setPastExamSchool] = useState('');
+  const [pastExamGrade, setPastExamGrade] = useState('');
+  const [pastExamYear, setPastExamYear] = useState('');
+  const [pastExamType, setPastExamType] = useState('');
+  const [pastExamScope, setPastExamScope] = useState('');
+  const [pastExamSubmitting, setPastExamSubmitting] = useState(false);
+  const [pastExamMessage, setPastExamMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [pastExamFiles, setPastExamFiles] = useState<FileList | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  interface PastExamUpload {
+    id: string;
+    school: string;
+    grade: string;
+    examYear: string;
+    examType: string;
+    examScope: string;
+    files: { originalName: string; fileIndex: number }[];
+    adminCategories?: string[];
+    createdAt: string;
+  }
+  const [pastExamUploads, setPastExamUploads] = useState<PastExamUpload[]>([]);
+  const [pastExamLoading, setPastExamLoading] = useState(false);
+  const [deletingUploadId, setDeletingUploadId] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<{ url: string; name: string; type: 'pdf' | 'image' } | null>(null);
+  const [examListExpanded, setExamListExpanded] = useState(false);
+  const [examSubTab, setExamSubTab] = useState<ExamSubTabKey>('upload');
+
+  const [activeTab, setActiveTab] = useState<TabKey>('orders');
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -90,6 +123,20 @@ export default function MyPage() {
       .then((res) => res.json())
       .then((data) => setOrders(data.orders || []))
       .catch(() => setOrders([]));
+  }, [user]);
+
+  const fetchPastExamUploads = () => {
+    setPastExamLoading(true);
+    fetch('/api/my/past-exam-upload')
+      .then((res) => res.json())
+      .then((data) => setPastExamUploads(data.uploads || []))
+      .catch(() => setPastExamUploads([]))
+      .finally(() => setPastExamLoading(false));
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    fetchPastExamUploads();
   }, [user]);
 
   const handleLogout = async () => {
@@ -179,11 +226,87 @@ export default function MyPage() {
     }
   };
 
+  const handleDeleteUpload = async (id: string) => {
+    if (!confirm('이 기출문제 업로드를 삭제하시겠습니까? 첨부 파일도 함께 삭제됩니다.')) return;
+    setDeletingUploadId(id);
+    try {
+      const res = await fetch('/api/my/past-exam-upload', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setPastExamUploads((prev) => prev.filter((u) => u.id !== id));
+      } else {
+        alert(data.error || '삭제에 실패했습니다.');
+      }
+    } catch {
+      alert('삭제 요청 중 오류가 발생했습니다.');
+    } finally {
+      setDeletingUploadId(null);
+    }
+  };
+
+  const handlePastExamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPastExamMessage(null);
+    setPastExamSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('school', pastExamSchool);
+      formData.append('grade', pastExamGrade);
+      formData.append('examYear', pastExamYear);
+      formData.append('examType', pastExamType);
+      formData.append('examScope', pastExamScope);
+      if (pastExamFiles?.length) {
+        for (let i = 0; i < pastExamFiles.length; i++) {
+          formData.append('files', pastExamFiles[i]);
+        }
+      }
+      const res = await fetch('/api/my/past-exam-upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setPastExamMessage({ type: 'success', text: '기출문제 업로드 정보 및 파일이 접수되었습니다.' });
+        setPastExamSchool('');
+        setPastExamGrade('');
+        setPastExamYear('');
+        setPastExamType('');
+        setPastExamScope('');
+        setPastExamFiles(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        fetchPastExamUploads();
+      } else {
+        setPastExamMessage({ type: 'error', text: data?.error || '저장에 실패했습니다.' });
+      }
+    } catch {
+      setPastExamMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setPastExamSubmitting(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    if (e.dataTransfer.files?.length) {
+      setPastExamFiles(e.dataTransfer.files);
+      if (fileInputRef.current) {
+        const dt = new DataTransfer();
+        Array.from(e.dataTransfer.files).forEach((f) => dt.items.add(f));
+        fileInputRef.current.files = dt.files;
+      }
+    }
+  };
+
   if (loading) {
     return (
       <>
         <AppBar title="페이퍼릭" />
-        <div className="min-h-screen flex items-center justify-center bg-[#f1f5f9] font-['Noto_Sans_KR',sans-serif]">
+        <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
           <div className="animate-spin w-10 h-10 border-4 border-[#2563eb] border-t-transparent rounded-full" />
         </div>
       </>
@@ -202,206 +325,594 @@ export default function MyPage() {
 
   const hasDropbox = !!user.dropboxFolderPath?.trim();
 
+  const getPreviewType = (name: string): 'pdf' | 'image' | null => {
+    const ext = name.toLowerCase().split('.').pop() || '';
+    if (ext === 'pdf') return 'pdf';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
+    return null;
+  };
+
+  const openPreview = (uploadId: string, fileIndex: number, fileName: string) => {
+    const type = getPreviewType(fileName);
+    if (!type) return;
+    const url = `/api/my/past-exam-upload/download?id=${uploadId}&fileIndex=${fileIndex}&inline=1`;
+    setPreviewFile({ url, name: fileName, type });
+  };
+
+  const tabs: { key: TabKey; label: string; icon: string; count?: number }[] = [
+    { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
+    { key: 'exam', label: '기출문제', icon: '📤' },
+    { key: 'settings', label: '내 정보', icon: '⚙️' },
+  ];
+
   return (
     <>
       <AppBar title="페이퍼릭" />
-      <div className="min-h-screen flex flex-col bg-[#f1f5f9] text-[#0f172a] font-['Noto_Sans_KR',sans-serif]">
-        <Link href="/" className="flex items-center gap-1.5 text-[#2563eb] text-[13px] font-medium py-3.5 px-7 hover:underline">
-          ← 메인 화면으로
-        </Link>
-
-        <div className="max-w-[900px] w-full mx-auto px-6 pb-16 flex-1 grid gap-3.5 grid-cols-1 md:grid-cols-2 grid-rows-auto" style={{ gridTemplateRows: 'auto auto auto' }}>
-          {/* ① 내 정보 */}
-          <section className="bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden">
-            <div className="p-5">
-              <div className="flex items-center gap-3.5 mb-4">
-                <div className="w-12 h-12 rounded-[13px] bg-gradient-to-br from-[#14213d] to-[#2563eb] flex items-center justify-center text-xl font-black text-white shrink-0">
-                  {(user.name || user.loginId).charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div className="text-[17px] font-extrabold tracking-tight">{user.name || user.loginId}</div>
-                  <div className="text-xs text-[#64748b] font-mono">{user.loginId}</div>
-                </div>
-              </div>
-              <div className="text-[11px] text-[#94a3b8] font-medium mb-1">이메일 주소</div>
-              <form onSubmit={handleSaveEmail} className="flex gap-2 items-center mb-3">
-                <input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className="flex-1 px-3 py-2.5 border border-[#e2e8f0] rounded-lg text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb]"
-                />
-                <button type="submit" disabled={emailSaving} className="px-4 py-2.5 bg-[#2563eb] text-white rounded-lg text-[13px] font-semibold shrink-0 hover:bg-[#3b82f6] disabled:opacity-70">
-                  {emailSaving ? '저장 중…' : '저장'}
-                </button>
-              </form>
-              {emailMessage && (
-                <p className={`text-sm mb-2 ${emailMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{emailMessage.text}</p>
-              )}
-              <div className="h-px bg-[#e2e8f0] my-3.5" />
-              <div className="text-xs font-bold text-[#64748b] mb-2.5 tracking-wide">비밀번호 변경</div>
-              <form onSubmit={handleChangePassword} className="grid grid-cols-2 gap-2 mb-2.5">
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="새 비밀번호"
-                  className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-[13px] outline-none focus:border-[#2563eb]"
-                  minLength={4}
-                  autoComplete="new-password"
-                />
-                <input
-                  type="password"
-                  value={newPasswordConfirm}
-                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                  placeholder="새 비밀번호 확인"
-                  className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-[13px] outline-none focus:border-[#2563eb]"
-                  minLength={4}
-                  autoComplete="new-password"
-                />
-              </form>
-              <div className="flex items-center gap-2 flex-wrap">
-                <button type="submit" disabled={passwordSaving} className="px-4 py-2 bg-[#14213d] text-white rounded-lg text-[13px] font-semibold hover:opacity-90 disabled:opacity-70">
-                  비밀번호 변경
-                </button>
-                <button type="button" onClick={handleLogout} className="px-3.5 py-2 text-[13px] text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-gray-50 ml-auto">
-                  로그아웃
-                </button>
-              </div>
-              {passwordMessage && (
-                <p className={`text-sm mt-2 ${passwordMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{passwordMessage.text}</p>
-              )}
-            </div>
-          </section>
-
-          {/* ② 내 Dropbox 폴더 */}
-          <section className="bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center gap-3">
-              <div className="w-10 h-10 rounded-[11px] bg-[rgba(0,97,255,0.07)] border border-[rgba(0,97,255,0.15)] flex items-center justify-center text-lg">
-                📦
+      <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] font-['Noto_Sans_KR',sans-serif]">
+        {/* 상단 헤더 */}
+        <div className="bg-white border-b border-[#e2e8f0]">
+          <div className="max-w-3xl mx-auto px-5 pt-5 pb-0">
+            <Link href="/" className="inline-flex items-center gap-1 text-[#2563eb] text-[13px] font-medium hover:underline mb-4">
+              ← 메인 화면으로
+            </Link>
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#14213d] to-[#2563eb] flex items-center justify-center text-2xl font-black text-white shrink-0">
+                {(user.name || user.loginId).charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold tracking-tight">내 Dropbox 폴더</div>
-                <div className="text-[11px] text-[#64748b]">주문 자료가 여기로 자동 전달돼요</div>
+                <div className="text-lg font-extrabold tracking-tight">{user.name || user.loginId}</div>
+                <div className="text-sm text-[#64748b]">{user.loginId}</div>
               </div>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${hasDropbox ? 'bg-[rgba(22,163,74,0.09)] text-[#16a34a] border border-[rgba(22,163,74,0.2)]' : 'bg-[rgba(217,119,6,0.09)] text-[#d97706] border border-[rgba(217,119,6,0.2)]'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${hasDropbox ? 'bg-[#16a34a]' : 'bg-[#d97706]'}`} />
-                {hasDropbox ? '연결됨' : '미설정'}
-              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-4 py-2 text-[13px] text-[#64748b] border border-[#e2e8f0] rounded-xl hover:bg-gray-50 shrink-0"
+              >
+                로그아웃
+              </button>
             </div>
-            <div className="p-4">
-              {hasDropbox ? (
-                <>
-                  <div className="flex items-center gap-2.5 p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl mb-3">
-                    <span className="text-base shrink-0">📁</span>
-                    <span className="flex-1 text-[13px] font-mono font-medium text-[#14213d] break-all">{user.dropboxFolderPath?.replace(/^\/+/, '')}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-xs text-[#94a3b8]">주문 완료 시 자료가 폴더로 전달돼요</span>
-                    <a href={user.dropboxSharedLink?.trim() || getDropboxFolderUrl(user.dropboxFolderPath!)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#0061ff] text-white rounded-lg text-[13px] font-bold hover:bg-[#0052d9] no-underline">
-                      🔗 폴더 열기
-                    </a>
-                  </div>
-                  {!user.dropboxSharedLink?.trim() && (
-                    <p className="text-[11px] text-[#94a3b8] mt-2">관리자가 Dropbox 폴더 공유 링크를 등록하면, 회원이 이 버튼으로 폴더를 열 수 있어요.</p>
-                  )}
-                </>
-              ) : (
-                <div className="p-5 text-center rounded-xl bg-[rgba(217,119,6,0.04)] border border-dashed border-[rgba(217,119,6,0.3)]">
-                  <div className="text-2xl mb-2">📂</div>
-                  <div className="text-[13px] font-semibold text-[#d97706] mb-1">Dropbox 폴더가 연결되지 않았어요</div>
-                  <div className="text-xs text-[#94a3b8]">관리자가 연결하면 주문 자료를 받을 수 있어요</div>
-                </div>
-              )}
-            </div>
-          </section>
 
-          {/* ③ 주문 내역 */}
-          <section className="bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden md:col-span-2">
-            <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-sm font-bold tracking-tight">내 주문·자료</span>
-              <span className="text-xs text-[#94a3b8]">제작 수락·입금 확인·제작 진행 상황을 확인할 수 있어요</span>
-            </div>
-            {orders.length === 0 ? (
-              <div className="py-14 px-6 text-center">
-                <div className="text-4xl mb-2">📋</div>
-                <p className="text-sm text-[#94a3b8]">아직 제출한 주문이 없습니다</p>
+            {/* Dropbox 상태 바 */}
+            {hasDropbox ? (
+              <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-[#f0f9ff] border border-[#bae6fd]">
+                <span className="text-base">📁</span>
+                <span className="flex-1 text-[13px] text-[#0369a1] font-medium truncate">{user.dropboxFolderPath?.replace(/^\/+/, '')}</span>
+                <a
+                  href={user.dropboxSharedLink?.trim() || getDropboxFolderUrl(user.dropboxFolderPath!)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0061ff] text-white rounded-lg text-[12px] font-bold hover:bg-[#0052d9] no-underline shrink-0"
+                >
+                  폴더 열기
+                </a>
               </div>
             ) : (
-              <ul>
-                {orders.map((order) => {
-                  const variant = statusVariant(order.status);
-                  const statusLabel = ORDER_STATUS_LABELS[order.status] || order.status;
-                  const canDownload = !!order.fileUrl;
-                  return (
-                    <li key={order.id} className="px-5 py-4 border-b border-[#e2e8f0] flex items-start gap-3.5 hover:bg-[#f8fafc] transition-colors last:border-b-0">
-                      <div className="px-2.5 py-1 bg-[#14213d] text-white rounded-md text-[11px] font-bold font-mono shrink-0 mt-0.5">
-                        {order.orderNumber || order.id.slice(-8)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-[#0f172a] truncate">{orderTitle(order.orderText)}</div>
-                        <div className="flex items-center gap-2 flex-wrap mt-1">
-                          <span className="text-xs text-[#94a3b8]">{formatDate(order.createdAt)}</span>
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                              variant === 'done' ? 'bg-[rgba(22,163,74,0.09)] text-[#16a34a]' :
-                              variant === 'making' ? 'bg-[rgba(217,119,6,0.09)] text-[#d97706]' :
-                              variant === 'cancel' ? 'bg-gray-100 text-gray-500' :
-                              'bg-[rgba(37,99,235,0.08)] text-[#2563eb]'
-                            }`}
-                          >
-                            {variant === 'done' && '✓ '}
-                            {variant === 'making' && '⏳ '}
-                            {variant === 'new' && '📋 '}
-                            {statusLabel}
-                          </span>
+              <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-[#fffbeb] border border-[#fde68a]">
+                <span className="text-base">📂</span>
+                <span className="flex-1 text-[13px] text-[#92400e]">Dropbox 폴더가 아직 연결되지 않았어요. 관리자에게 문의해 주세요.</span>
+              </div>
+            )}
+
+            {/* 탭 네비게이션 */}
+            <div className="flex gap-0 -mb-px">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold border-b-2 transition-colors ${
+                    activeTab === tab.key
+                      ? 'border-[#2563eb] text-[#2563eb]'
+                      : 'border-transparent text-[#94a3b8] hover:text-[#64748b]'
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      activeTab === tab.key ? 'bg-[#2563eb] text-white' : 'bg-[#e2e8f0] text-[#64748b]'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 탭 컨텐츠 */}
+        <div className="max-w-3xl mx-auto px-5 py-6">
+
+          {/* ━━ 주문 내역 탭 ━━ */}
+          {activeTab === 'orders' && (
+            <div>
+              {orders.length === 0 ? (
+                <div className="py-20 text-center">
+                  <div className="text-5xl mb-3 opacity-40">📋</div>
+                  <p className="text-sm text-[#94a3b8] mb-1">아직 제출한 주문이 없습니다</p>
+                  <Link href="/" className="text-[13px] text-[#2563eb] font-medium hover:underline">
+                    메인에서 주문하러 가기 →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {orders.map((order) => {
+                    const variant = statusVariant(order.status);
+                    const statusLabel = ORDER_STATUS_LABELS[order.status] || order.status;
+                    const canDownload = !!order.fileUrl;
+                    return (
+                      <div key={order.id} className="bg-white rounded-2xl border border-[#e2e8f0] p-4 hover:shadow-sm transition-shadow">
+                        <div className="flex items-start gap-3">
+                          <div className="px-2.5 py-1 bg-[#14213d] text-white rounded-lg text-[11px] font-bold font-mono shrink-0 mt-0.5">
+                            {order.orderNumber || order.id.slice(-8)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-[#0f172a] truncate mb-1.5">{orderTitle(order.orderText)}</div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-[#94a3b8]">{formatDate(order.createdAt)}</span>
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                                  variant === 'done' ? 'bg-[#dcfce7] text-[#16a34a]' :
+                                  variant === 'making' ? 'bg-[#fef3c7] text-[#d97706]' :
+                                  variant === 'cancel' ? 'bg-gray-100 text-gray-400' :
+                                  'bg-[#dbeafe] text-[#2563eb]'
+                                }`}
+                              >
+                                {variant === 'done' && '✓ '}
+                                {variant === 'making' && '⏳ '}
+                                {statusLabel}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <div className="flex gap-1.5">
-                          <Link href={`/order/done?id=${order.id}`} className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:border-[#3b82f6] hover:text-[#2563eb] no-underline">
-                            📄 주문서
+                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#f1f5f9]">
+                          <Link
+                            href={`/order/done?id=${order.id}`}
+                            className="flex-1 text-center py-2.5 border border-[#e2e8f0] rounded-xl text-xs font-semibold text-[#64748b] hover:border-[#3b82f6] hover:text-[#2563eb] no-underline transition-colors"
+                          >
+                            주문서 보기
                           </Link>
                           {canDownload ? (
-                            <a href={order.fileUrl!} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[rgba(0,97,255,0.07)] border border-[rgba(0,97,255,0.2)] text-[#0061ff] hover:bg-[rgba(0,97,255,0.13)] no-underline">
+                            <a
+                              href={order.fileUrl!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 text-center py-2.5 rounded-xl text-xs font-bold bg-[#2563eb] text-white hover:bg-[#1d4ed8] no-underline transition-colors"
+                            >
                               📦 자료 받기
                             </a>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[#e2e8f0] text-[#94a3b8] opacity-60 cursor-not-allowed">
-                              📦 자료 받기
+                            <span className="flex-1 text-center py-2.5 rounded-xl text-xs font-semibold border border-[#e2e8f0] text-[#c5cdd8] cursor-not-allowed">
+                              자료 준비 중
                             </span>
                           )}
+                          {order.status === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelOrder(order.id)}
+                              disabled={cancellingId === order.id}
+                              className="py-2.5 px-3 rounded-xl text-xs text-red-500 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                            >
+                              {cancellingId === order.id ? '취소 중…' : '취소'}
+                            </button>
+                          )}
                         </div>
-                        {order.status === 'pending' && (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelOrder(order.id)}
-                            disabled={cancellingId === order.id}
-                            className="text-xs text-red-600 hover:underline disabled:opacity-50"
-                          >
-                            {cancellingId === order.id ? '취소 중…' : '주문 취소'}
-                          </button>
-                        )}
                       </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* ④ 포인트 */}
-          <section className="bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden md:col-span-2">
-            <div className="px-5 py-4 border-b border-[#e2e8f0]">
-              <span className="text-sm font-bold tracking-tight">내 포인트</span>
+          {/* ━━ 기출문제 탭 (하위: 업로드 / 조회) ━━ */}
+          {activeTab === 'exam' && (
+            <div className="space-y-5">
+            {/* 기출 하위 메뉴 */}
+            <div className="flex gap-0 border-b border-[#e2e8f0] bg-white rounded-t-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setExamSubTab('upload')}
+                className={`flex-1 py-3 text-[13px] font-semibold transition-colors ${examSubTab === 'upload' ? 'text-[#2563eb] border-b-2 border-[#2563eb] bg-[#f8fafc]' : 'text-[#94a3b8] hover:text-[#64748b] bg-white'}`}
+              >
+                기출문제 업로드
+              </button>
+              <button
+                type="button"
+                onClick={() => setExamSubTab('list')}
+                className={`flex-1 py-3 text-[13px] font-semibold transition-colors ${examSubTab === 'list' ? 'text-[#2563eb] border-b-2 border-[#2563eb] bg-[#f8fafc]' : 'text-[#94a3b8] hover:text-[#64748b] bg-white'}`}
+              >
+                업로드한 기출문제 조회
+              </button>
             </div>
-            <div className="px-5 py-4 flex items-center gap-3.5">
-              <span className="text-[26px] font-black tracking-tight">0 <sub className="text-sm font-medium text-[#64748b] ml-0.5">P</sub></span>
-              <span className="px-3 py-1.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-full text-xs text-[#94a3b8]">포인트 충전·사용 기능은 준비 중입니다</span>
+
+            {examSubTab === 'upload' && (
+            <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#f1f5f9]">
+                <p className="text-sm font-bold text-[#0f172a]">기출문제 업로드</p>
+                <p className="text-[12px] text-[#94a3b8] mt-0.5">서술형 맞춤 제작에 사용할 기출문제를 등록해 주세요</p>
+              </div>
+              <form onSubmit={handlePastExamSubmit} className="p-5 space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="past-exam-school" className="block text-xs font-semibold text-[#475569] mb-1.5">학교</label>
+                    <input
+                      id="past-exam-school"
+                      type="text"
+                      value={pastExamSchool}
+                      onChange={(e) => setPastExamSchool(e.target.value)}
+                      placeholder="예: OO고등학교"
+                      className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="past-exam-grade" className="block text-xs font-semibold text-[#475569] mb-1.5">학년</label>
+                    <select
+                      id="past-exam-grade"
+                      value={pastExamGrade}
+                      onChange={(e) => setPastExamGrade(e.target.value)}
+                      className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)] bg-white"
+                      required
+                    >
+                      <option value="">선택하세요</option>
+                      <option value="고1">고1</option>
+                      <option value="고2">고2</option>
+                      <option value="고3">고3</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="past-exam-year" className="block text-xs font-semibold text-[#475569] mb-1.5">시험연도</label>
+                    <select
+                      id="past-exam-year"
+                      value={pastExamYear}
+                      onChange={(e) => setPastExamYear(e.target.value)}
+                      className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)] bg-white"
+                      required
+                    >
+                      <option value="">선택하세요</option>
+                      {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                        <option key={y} value={String(y)}>{y}년</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="past-exam-type" className="block text-xs font-semibold text-[#475569] mb-1.5">시험 종류</label>
+                    <select
+                      id="past-exam-type"
+                      value={pastExamType}
+                      onChange={(e) => setPastExamType(e.target.value)}
+                      className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)] bg-white"
+                      required
+                    >
+                      <option value="">선택하세요</option>
+                      <option value="1학기중간고사">1학기 중간고사</option>
+                      <option value="1학기기말고사">1학기 기말고사</option>
+                      <option value="2학기중간고사">2학기 중간고사</option>
+                      <option value="2학기기말고사">2학기 기말고사</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="past-exam-scope" className="block text-xs font-semibold text-[#475569] mb-1.5">시험범위</label>
+                  <textarea
+                    id="past-exam-scope"
+                    value={pastExamScope}
+                    onChange={(e) => setPastExamScope(e.target.value)}
+                    placeholder="시험범위를 자유롭게 입력해 주세요"
+                    rows={3}
+                    className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)] resize-y"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#475569] mb-1.5">기출문제 파일 첨부 (선택)</label>
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                    onDragLeave={() => setDragActive(false)}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative flex flex-col items-center justify-center py-8 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                      dragActive
+                        ? 'border-[#2563eb] bg-[#eff6ff]'
+                        : 'border-[#d1d5db] bg-[#fafafa] hover:border-[#93c5fd] hover:bg-[#f0f9ff]'
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.hwp,.hwpx"
+                      onChange={(e) => setPastExamFiles(e.target.files?.length ? e.target.files : null)}
+                      className="hidden"
+                    />
+                    <div className="text-3xl mb-2 opacity-50">📎</div>
+                    <p className="text-sm font-medium text-[#475569] mb-1">파일을 끌어다 놓거나 클릭하세요</p>
+                    <p className="text-[11px] text-[#94a3b8]">PDF, HWP, HWPX 또는 이미지 · 최대 5개 · 각 15MB 이하</p>
+                  </div>
+                  {pastExamFiles?.length ? (
+                    <div className="mt-3 space-y-1.5">
+                      {Array.from(pastExamFiles).map((f, i) => (
+                        <div key={i} className="flex items-center gap-2 px-3 py-2 bg-[#f1f5f9] rounded-lg text-[12px]">
+                          <span className="text-[#64748b]">📄</span>
+                          <span className="flex-1 truncate text-[#334155] font-medium">{f.name}</span>
+                          <span className="text-[#94a3b8] shrink-0">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                {pastExamMessage && (
+                  <div className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium ${
+                    pastExamMessage.type === 'success' ? 'bg-[#dcfce7] text-[#16a34a]' : 'bg-[#fef2f2] text-[#dc2626]'
+                  }`}>
+                    <span>{pastExamMessage.type === 'success' ? '✓' : '!'}</span>
+                    {pastExamMessage.text}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={pastExamSubmitting}
+                  className="w-full py-3.5 bg-[#16a34a] text-white rounded-xl text-sm font-bold hover:bg-[#15803d] disabled:opacity-70 transition-colors"
+                >
+                  {pastExamSubmitting ? '접수 중…' : '기출문제 업로드'}
+                </button>
+              </form>
             </div>
-          </section>
+            )}
+
+            {examSubTab === 'list' && (
+            <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#f1f5f9] flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-[#0f172a]">기출문제 조회</p>
+                  <p className="text-[12px] text-[#94a3b8] mt-0.5">내가 올린 기출문제 {pastExamUploads.length}건</p>
+                </div>
+              </div>
+              {pastExamLoading ? (
+                <div className="py-10 text-center">
+                  <div className="animate-spin w-6 h-6 border-3 border-[#2563eb] border-t-transparent rounded-full mx-auto" />
+                </div>
+              ) : pastExamUploads.length === 0 ? (
+                <div className="py-12 text-center">
+                  <div className="text-4xl mb-2 opacity-30">📋</div>
+                  <p className="text-sm text-[#94a3b8]">아직 올린 기출문제가 없습니다</p>
+                </div>
+              ) : (
+                <>
+                <div className="divide-y divide-[#f1f5f9]">
+                  {(examListExpanded ? pastExamUploads : pastExamUploads.slice(0, 3)).map((upload) => (
+                    <div key={upload.id} className="px-5 py-4 hover:bg-[#fafafa] transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-[#0f172a] mb-1">
+                            {upload.school} · {upload.grade} · {upload.examYear}년 {upload.examType}
+                          </div>
+                          {upload.examScope && (
+                            <p className="text-xs text-[#64748b] mb-1.5 line-clamp-2">시험범위: {upload.examScope}</p>
+                          )}
+                          {upload.adminCategories && upload.adminCategories.length > 0 ? (
+                            <div className="mb-1.5 flex flex-wrap items-center gap-1">
+                              <span className="text-[11px] text-[#16a34a] font-semibold">관리자 분류:</span>
+                              <span className="text-[11px] text-[#475569]">{upload.adminCategories.join(', ')}</span>
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-amber-600 font-medium mb-1.5">서술형 기출문제를 분석 중입니다.</p>
+                          )}
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="text-[11px] text-[#94a3b8]">{formatDate(upload.createdAt)}</span>
+                            {upload.files.length > 0 && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-[#64748b] bg-[#f1f5f9] px-2 py-0.5 rounded-full">
+                                📎 파일 {upload.files.length}개
+                              </span>
+                            )}
+                          </div>
+                          {upload.files.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                              {upload.files.map((f, i) => {
+                                const previewable = !!getPreviewType(f.originalName);
+                                return (
+                                  <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                                    <span className="text-[#94a3b8]">📄</span>
+                                    <a
+                                      href={`/api/my/past-exam-upload/download?id=${upload.id}&fileIndex=${f.fileIndex}`}
+                                      className="text-[#2563eb] hover:underline truncate no-underline flex-1 min-w-0"
+                                      download
+                                    >
+                                      {f.originalName}
+                                    </a>
+                                    {previewable && (
+                                      <button
+                                        type="button"
+                                        onClick={() => openPreview(upload.id, f.fileIndex, f.originalName)}
+                                        className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#475569] bg-[#f1f5f9] hover:bg-[#e2e8f0] transition-colors"
+                                      >
+                                        미리보기
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUpload(upload.id)}
+                          disabled={deletingUploadId === upload.id}
+                          className="shrink-0 px-3 py-2 rounded-xl text-xs text-red-500 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                        >
+                          {deletingUploadId === upload.id ? '삭제 중…' : '삭제'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {pastExamUploads.length > 3 && !examListExpanded && (
+                  <div className="px-5 py-4 border-t border-[#f1f5f9]">
+                    <button
+                      type="button"
+                      onClick={() => setExamListExpanded(true)}
+                      className="w-full py-2.5 rounded-xl border border-[#e2e8f0] text-[13px] font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-colors"
+                    >
+                      더보기 ({pastExamUploads.length - 3}건 더)
+                    </button>
+                  </div>
+                )}
+                {examListExpanded && pastExamUploads.length > 3 && (
+                  <div className="px-5 py-3 border-t border-[#f1f5f9]">
+                    <button
+                      type="button"
+                      onClick={() => setExamListExpanded(false)}
+                      className="text-[12px] text-[#94a3b8] hover:text-[#64748b]"
+                    >
+                      접기
+                    </button>
+                  </div>
+                )}
+                </>
+              )}
+            </div>
+            )}
+            </div>
+          )}
+
+          {/* ━━ 내 정보 탭 ━━ */}
+          {activeTab === 'settings' && (
+            <div className="space-y-4">
+              {/* 이메일 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <div className="text-sm font-bold text-[#0f172a] mb-3">이메일 주소</div>
+                <form onSubmit={handleSaveEmail} className="flex gap-2 items-center">
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="flex-1 px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                  />
+                  <button type="submit" disabled={emailSaving} className="px-5 py-3 bg-[#2563eb] text-white rounded-xl text-[13px] font-bold shrink-0 hover:bg-[#1d4ed8] disabled:opacity-70 transition-colors">
+                    {emailSaving ? '저장 중…' : '저장'}
+                  </button>
+                </form>
+                {emailMessage && (
+                  <p className={`text-sm mt-2 ${emailMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{emailMessage.text}</p>
+                )}
+              </div>
+
+              {/* 비밀번호 변경 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <div className="text-sm font-bold text-[#0f172a] mb-3">비밀번호 변경</div>
+                <form onSubmit={handleChangePassword} className="space-y-3">
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="새 비밀번호"
+                    className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                    minLength={4}
+                    autoComplete="new-password"
+                  />
+                  <input
+                    type="password"
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    placeholder="새 비밀번호 확인"
+                    className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                    minLength={4}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="submit"
+                    disabled={passwordSaving}
+                    className="w-full py-3 bg-[#14213d] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-70 transition-colors"
+                  >
+                    {passwordSaving ? '변경 중…' : '비밀번호 변경'}
+                  </button>
+                </form>
+                {passwordMessage && (
+                  <p className={`text-sm mt-2 ${passwordMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{passwordMessage.text}</p>
+                )}
+              </div>
+
+              {/* Dropbox 정보 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <div className="text-sm font-bold text-[#0f172a] mb-3">Dropbox 폴더</div>
+                {hasDropbox ? (
+                  <div className="flex items-center gap-3 p-3 bg-[#f0f9ff] border border-[#bae6fd] rounded-xl">
+                    <span className="text-lg">📁</span>
+                    <span className="flex-1 text-[13px] text-[#0369a1] font-mono font-medium break-all">{user.dropboxFolderPath?.replace(/^\/+/, '')}</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#16a34a]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" />연결됨
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 bg-[#fffbeb] border border-[#fde68a] rounded-xl">
+                    <span className="text-lg">📂</span>
+                    <span className="flex-1 text-[13px] text-[#92400e]">아직 연결되지 않았어요. 관리자에게 문의해 주세요.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 포인트 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <div className="text-sm font-bold text-[#0f172a] mb-3">내 포인트</div>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-black tracking-tight">0 <sub className="text-xs font-medium text-[#94a3b8]">P</sub></span>
+                  <span className="px-3 py-1.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-full text-[11px] text-[#94a3b8]">포인트 기능은 준비 중입니다</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* 미리보기 모달 */}
+      {previewFile && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setPreviewFile(null)}
+        >
+          <div
+            className="relative w-[95vw] max-w-4xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e2e8f0] shrink-0">
+              <span className="text-sm font-bold text-[#0f172a] flex-1 truncate">{previewFile.name}</span>
+              <a
+                href={previewFile.url.replace('&inline=1', '')}
+                download
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-[#2563eb] bg-[#eff6ff] hover:bg-[#dbeafe] no-underline transition-colors"
+              >
+                다운로드
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewFile(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:bg-[#f1f5f9] hover:text-[#0f172a] text-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-[#f1f5f9] flex items-center justify-center">
+              {previewFile.type === 'pdf' ? (
+                <iframe
+                  src={previewFile.url}
+                  className="w-full h-full border-0"
+                  title={previewFile.name}
+                />
+              ) : (
+                <img
+                  src={previewFile.url}
+                  alt={previewFile.name}
+                  className="max-w-full max-h-full object-contain p-4"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

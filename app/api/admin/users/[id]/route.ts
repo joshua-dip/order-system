@@ -46,6 +46,11 @@ export async function PATCH(
     const dropboxFolderPath = typeof body?.dropboxFolderPath === 'string' ? body.dropboxFolderPath.trim() : undefined;
     const dropboxSharedLink = typeof body?.dropboxSharedLink === 'string' ? body.dropboxSharedLink.trim() : undefined;
     const resetPassword = body?.resetPassword === true;
+    const canAccessAnalysis = body?.canAccessAnalysis === true || body?.canAccessAnalysis === false ? body.canAccessAnalysis : undefined;
+    const canAccessEssay = body?.canAccessEssay === true || body?.canAccessEssay === false ? body.canAccessEssay : undefined;
+    const allowedTextbooks = Array.isArray(body?.allowedTextbooks) ? body.allowedTextbooks : undefined;
+    const allowedTextbooksAnalysis = Array.isArray(body?.allowedTextbooksAnalysis) ? body.allowedTextbooksAnalysis : undefined;
+    const allowedTextbooksEssay = Array.isArray(body?.allowedTextbooksEssay) ? body.allowedTextbooksEssay : undefined;
 
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
@@ -53,6 +58,11 @@ export async function PATCH(
     if (phone !== undefined) updates.phone = phone;
     if (dropboxFolderPath !== undefined) updates.dropboxFolderPath = dropboxFolderPath;
     if (dropboxSharedLink !== undefined) updates.dropboxSharedLink = dropboxSharedLink;
+    if (canAccessAnalysis !== undefined) updates.canAccessAnalysis = canAccessAnalysis;
+    if (canAccessEssay !== undefined) updates.canAccessEssay = canAccessEssay;
+    if (allowedTextbooks !== undefined) updates.allowedTextbooks = allowedTextbooks;
+    if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;
+    if (allowedTextbooksEssay !== undefined) updates.allowedTextbooksEssay = allowedTextbooksEssay;
     if (resetPassword) {
       updates.passwordHash = await hashPassword(DEFAULT_PASSWORD);
     }

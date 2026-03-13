@@ -28,6 +28,11 @@ export async function GET(request: NextRequest) {
       phone: u.phone ?? '',
       dropboxFolderPath: u.dropboxFolderPath ?? '',
       dropboxSharedLink: u.dropboxSharedLink ?? '',
+      canAccessAnalysis: !!u.canAccessAnalysis,
+      canAccessEssay: !!u.canAccessEssay,
+      allowedTextbooks: Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
+      allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis) ? u.allowedTextbooksAnalysis : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
+      allowedTextbooksEssay: Array.isArray(u.allowedTextbooksEssay) ? u.allowedTextbooksEssay : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       createdAt: u.createdAt,
     }));
 
@@ -95,6 +100,11 @@ export async function POST(request: NextRequest) {
       phone: phone || '',
       dropboxFolderPath: dropboxFolderPath || '',
       role: 'user',
+      canAccessAnalysis: false,
+      canAccessEssay: false,
+      allowedTextbooks: [],
+      allowedTextbooksAnalysis: [],
+      allowedTextbooksEssay: [],
       createdAt: new Date(),
     });
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTextbooksData } from '@/lib/useTextbooksData';
+import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
 
 interface MockExamOrderProps {
   onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
@@ -33,6 +34,7 @@ interface TextbookStructure {
 
 const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
   const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
+  const currentUser = useCurrentUser();
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -255,7 +257,7 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
             }`}
           >
             <option value="">교재를 선택해주세요</option>
-            {Object.keys(textbooksData).map((textbookKey) => (
+            {filterTextbooksByAllowed(Object.keys(textbooksData), currentUser?.allowedTextbooks).map((textbookKey) => (
               <option key={textbookKey} value={textbookKey}>
                 {textbookKey}
               </option>

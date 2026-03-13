@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppBar from './AppBar';
 
+const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com';
+
 interface TextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
   onMockExamSelect: () => void;
@@ -12,13 +14,22 @@ interface TextbookSelectionProps {
 
 const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelect }: TextbookSelectionProps) => {
   const router = useRouter();
-  const [isMember, setIsMember] = useState<boolean | null>(null);
+  const [user, setUser] = useState<{ canAccessAnalysis: boolean; canAccessEssay: boolean } | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
-      .then((data) => setIsMember(!!data?.user))
-      .catch(() => setIsMember(false));
+      .then((data) => {
+        if (data?.user) {
+          setUser({
+            canAccessAnalysis: !!data.user.canAccessAnalysis,
+            canAccessEssay: !!data.user.canAccessEssay,
+          });
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => setUser(null));
   }, []);
 
   const handleMockExamClick = () => {
@@ -152,10 +163,10 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
               </div>
             </div>
 
-            {/* 분석지 주문제작 - 회원 전용 (비회원 클릭 시 회원가입 문의 안내) */}
+            {/* 분석지 주문제작 - 카드 항상 표시, 권한 없으면 클릭 불가 + 카톡 문의 안내 */}
             <div
-              onClick={handleAnalysisClick}
-              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
+              onClick={user !== null && user.canAccessAnalysis ? handleAnalysisClick : undefined}
+              className={`group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-500 ${user !== null && user.canAccessAnalysis ? 'hover:shadow-2xl cursor-pointer hover:border-gray-300' : 'cursor-default'}`}
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#2D5016' }}></div>
               <div className="relative z-10 p-8">
@@ -165,23 +176,35 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 group-hover:text-white transition-colors duration-500 mb-3">분석지 주문제작</h3>
                   <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
-                    {isMember === false ? (
-                      <>회원 전용 메뉴입니다.<br/>회원가입 문의하러 가기</>
-                    ) : (
+                    {user !== null && user.canAccessAnalysis ? (
                       <>맞춤 분석지<br/>주문·제작 신청</>
+                    ) : (
+                      <>해당 메뉴를 이용하려면<br/>회원 가입 문의(카톡 문의)를 통해 이용할 수 있습니다.</>
                     )}
                   </p>
-                  <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
-                    선택하기
-                  </div>
+                  {user !== null && user.canAccessAnalysis ? (
+                    <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
+                      선택하기
+                    </div>
+                  ) : (
+                    <a
+                      href={KAKAO_INQUIRY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border-2 bg-[#FEE500] border-[#FEE500] text-gray-800 hover:bg-[#FDD835] hover:border-[#FDD835] transition-colors"
+                    >
+                      카톡 문의하기
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* 서술형문제 주문제작 - 회원 전용 (비회원 클릭 시 회원가입 문의 안내) */}
+            {/* 서술형문제 주문제작 - 카드 항상 표시, 권한 없으면 클릭 불가 + 카톡 문의 안내 */}
             <div
-              onClick={handleEssayClick}
-              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
+              onClick={user !== null && user.canAccessEssay ? handleEssayClick : undefined}
+              className={`group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-500 ${user !== null && user.canAccessEssay ? 'hover:shadow-2xl cursor-pointer hover:border-gray-300' : 'cursor-default'}`}
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: '#5C4033' }}></div>
               <div className="relative z-10 p-8">
@@ -191,15 +214,27 @@ const TextbookSelection = ({ onTextbookSelect, onMockExamSelect, onWorkbookSelec
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 group-hover:text-white transition-colors duration-500 mb-3">서술형문제 주문제작</h3>
                   <p className="text-gray-600 group-hover:text-white group-hover:opacity-90 transition-all duration-500 text-sm mb-6 leading-relaxed">
-                    {isMember === false ? (
-                      <>회원 전용 메뉴입니다.<br/>회원가입 문의하러 가기</>
-                    ) : (
+                    {user !== null && user.canAccessEssay ? (
                       <>서술형·논술형<br/>맞춤 제작 신청</>
+                    ) : (
+                      <>해당 메뉴를 이용하려면<br/>회원 가입 문의(카톡 문의)를 통해 이용할 수 있습니다.</>
                     )}
                   </p>
-                  <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
-                    선택하기
-                  </div>
+                  {user !== null && user.canAccessEssay ? (
+                    <div className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500 border-2 text-gray-700 border-gray-300 group-hover:border-white group-hover:text-white">
+                      선택하기
+                    </div>
+                  ) : (
+                    <a
+                      href={KAKAO_INQUIRY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border-2 bg-[#FEE500] border-[#FEE500] text-gray-800 hover:bg-[#FDD835] hover:border-[#FDD835] transition-colors"
+                    >
+                      카톡 문의하기
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

@@ -38,6 +38,7 @@ interface TextbookStructure {
 
 const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect }: LessonSelectionProps) => {
   const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
+  const [defaultTextbooks, setDefaultTextbooks] = useState<string[]>([]);
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
@@ -47,14 +48,25 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [showTextbookList, setShowTextbookList] = useState(false);
   const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
 
+  useEffect(() => {
+    fetch('/api/settings/default-textbooks')
+      .then((res) => res.json())
+      .then((data) => setDefaultTextbooks(Array.isArray(data?.textbookKeys) ? data.textbookKeys : []))
+      .catch(() => setDefaultTextbooks([]));
+  }, []);
+
   // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
     if (!textbooksData) return;
     const loadTextbookData = async () => {
       try {
-        // 부교재 목록을 보여주는 경우
+        // 부교재 목록: 관리자가 설정한 기본 노출 교재만 표시 (비회원 포함). 미설정 시 전체 노출.
         if (selectedTextbook === '부교재_목록') {
-          const textbookList = Object.keys(textbooksData);
+          const allKeys = Object.keys(textbooksData);
+          const textbookList =
+            defaultTextbooks.length > 0
+              ? allKeys.filter((k) => defaultTextbooks.includes(k))
+              : allKeys;
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
           setShowTextbookList(true);
@@ -120,7 +132,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     if (selectedTextbook) {
       loadTextbookData();
     }
-  }, [selectedTextbook, textbooksData]);
+  }, [selectedTextbook, textbooksData, defaultTextbooks]);
 
   // 검색 필터링 로직
   useEffect(() => {

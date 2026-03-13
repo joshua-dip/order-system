@@ -14,4 +14,12 @@ export const ORDER_PREFIX = {
   BOOK_WORKBOOK: 'BW',
   /** EBS + 변형문제 (등 필요 시 추가) */
   EBS_VARIANT: 'EV',
+  /** 모의고사 + 분석지 */
+  MOCK_ANALYSIS: 'MA',
+  /** 부교재 + 분석지 */
+  BOOK_ANALYSIS: 'BA',
+  /** 모의고사 + 서술형 */
+  MOCK_ESSAY: 'MD',
+  /** 부교재 + 서술형 */
+  BOOK_ESSAY: 'BD',
 } as const;

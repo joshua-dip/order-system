@@ -58,6 +58,9 @@ ENV/
 ~$*.xlsx
 ~$*.xls
 
+# uploads (기출문제 등)
+/uploads
+
 # logs
 *.log
 watch.log
