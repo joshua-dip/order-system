@@ -9,7 +9,7 @@ import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
 import { saveOrderToDb } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 
-const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com';
+const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 const PRICE_PER_ITEM = 500; // 지문당 500원
 
 interface LessonItem {
