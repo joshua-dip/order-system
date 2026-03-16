@@ -8,11 +8,17 @@ const REVISED_PATTERN = /\(20(\d{2})\)/;
 
 const EBS_TEXTBOOKS = new Set([
   '2027수능특강 영어(2026)',
+  '2027수능특강 영어독해연습(2026)',
   '올림포스 영어독해 기본1(2024)',
   '올림포스 영어독해 기본2(2024)',
 ]);
 
 function isEbs(name: string): boolean {
+  return EBS_TEXTBOOKS.has(name);
+}
+
+/** EBS 교재 여부 (서술형 등에서 EBS 카테고리 분류용) */
+export function isEbsTextbook(name: string): boolean {
   return EBS_TEXTBOOKS.has(name);
 }
 

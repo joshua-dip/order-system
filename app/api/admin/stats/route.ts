@@ -21,10 +21,15 @@ export async function GET(request: NextRequest) {
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const [userOrderCounts, newMembersThisMonth, newOrdersThisWeek] = await Promise.all([
+    const [userOrderCounts, userLastOrderDates, newMembersThisMonth, newOrdersThisWeek] = await Promise.all([
       db.collection('orders').aggregate<{ _id: string; count: number }>([
         { $match: { loginId: { $exists: true, $ne: null } } },
         { $group: { _id: '$loginId', count: { $sum: 1 } } },
+      ]).toArray(),
+      db.collection('orders').aggregate<{ _id: string; lastAt: Date }>([
+        { $match: { loginId: { $exists: true, $ne: null } } },
+        { $sort: { createdAt: -1 } },
+        { $group: { _id: '$loginId', lastAt: { $first: '$createdAt' } } },
       ]).toArray(),
       db.collection('users').countDocuments({ role: 'user', createdAt: { $gte: startOfMonth } }),
       db.collection('orders').countDocuments({ createdAt: { $gte: startOfWeek } }),
@@ -35,8 +40,14 @@ export async function GET(request: NextRequest) {
       orderCountByLoginId[row._id] = row.count;
     });
 
+    const lastOrderDateByLoginId: Record<string, string> = {};
+    userLastOrderDates.forEach((row) => {
+      if (row.lastAt) lastOrderDateByLoginId[row._id] = typeof row.lastAt === 'string' ? row.lastAt : (row.lastAt as Date).toISOString();
+    });
+
     return NextResponse.json({
       orderCountByLoginId,
+      lastOrderDateByLoginId,
       newMembersThisMonth,
       newOrdersThisWeek,
       dropboxConfigured: isDropboxConfigured(),

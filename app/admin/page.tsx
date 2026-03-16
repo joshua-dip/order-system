@@ -15,6 +15,9 @@ interface EssayTypeItem {
   조건?: string;
   price?: number;
   order?: number;
+  enabled?: boolean;
+  common?: boolean;
+  exampleFile?: { originalName: string; savedPath?: string };
 }
 
 interface AdminUser {
@@ -35,6 +38,7 @@ interface ListUser {
   allowedTextbooks?: string[];
   allowedTextbooksAnalysis?: string[];
   allowedTextbooksEssay?: string[];
+  allowedEssayTypeIds?: string[];
   createdAt: string;
 }
 
@@ -89,7 +93,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<SectionType>('dashboard');
 
-  const [stats, setStats] = useState<{ orderCountByLoginId: Record<string, number>; newMembersThisMonth: number; newOrdersThisWeek: number; dropboxConfigured?: boolean } | null>(null);
+  const [stats, setStats] = useState<{ orderCountByLoginId: Record<string, number>; lastOrderDateByLoginId?: Record<string, string>; newMembersThisMonth: number; newOrdersThisWeek: number; dropboxConfigured?: boolean } | null>(null);
   const [loginId, setLoginId] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -123,6 +127,9 @@ export default function AdminDashboardPage() {
   const [selectedTextbooksForModal, setSelectedTextbooksForModal] = useState<string[]>([]);
   const [textbooksModalLoading, setTextbooksModalLoading] = useState(false);
   const [textbooksSavingId, setTextbooksSavingId] = useState<string | null>(null);
+  const [editingEssayTypesUserId, setEditingEssayTypesUserId] = useState<string | null>(null);
+  const [selectedEssayTypeIdsForModal, setSelectedEssayTypeIdsForModal] = useState<string[]>([]);
+  const [essayTypesSavingId, setEssayTypesSavingId] = useState<string | null>(null);
   const [ordersModalUser, setOrdersModalUser] = useState<ListUser | null>(null);
   const [userOrders, setUserOrders] = useState<AdminOrder[]>([]);
   const [userOrdersLoading, setUserOrdersLoading] = useState(false);
@@ -166,9 +173,19 @@ export default function AdminDashboardPage() {
   const [essayTypes, setEssayTypes] = useState<EssayTypeItem[]>([]);
   const [essayTypesLoading, setEssayTypesLoading] = useState(false);
   const [essayTypeModal, setEssayTypeModal] = useState<{ mode: 'add' } | { mode: 'edit'; item: EssayTypeItem } | null>(null);
-  const [essayTypeForm, setEssayTypeForm] = useState({ 대분류: '', 소분류: '', typeCode: '', 문제: '', 태그: '', 조건: '', price: '' });
+  const [essayTypeForm, setEssayTypeForm] = useState({ 대분류: '', 소분류: '', typeCode: '', 문제: '', 태그: '', 조건: '' });
   const [essayTypeSaving, setEssayTypeSaving] = useState(false);
   const [essayTypeDeletingId, setEssayTypeDeletingId] = useState<string | null>(null);
+  const [essayCategoryDeleting, setEssayCategoryDeleting] = useState<string | null>(null);
+  const [essayCategoryEditModal, setEssayCategoryEditModal] = useState<string | null>(null);
+  const [categoryNameDraft, setCategoryNameDraft] = useState('');
+  const [categoryNameSaving, setCategoryNameSaving] = useState(false);
+  const [essayExampleUploadingId, setEssayExampleUploadingId] = useState<string | null>(null);
+  const [essayExampleDeletingId, setEssayExampleDeletingId] = useState<string | null>(null);
+  const [modalExampleFile, setModalExampleFile] = useState<{ originalName: string } | null | undefined>(undefined);
+  const [essayTypeTogglingId, setEssayTypeTogglingId] = useState<string | null>(null);
+  const [categoryPriceDraft, setCategoryPriceDraft] = useState<Record<string, string>>({});
+  const [categoryPriceSaving, setCategoryPriceSaving] = useState<string | null>(null);
 
   const [recentOrders, setRecentOrders] = useState<AdminOrder[]>([]);
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(false);
@@ -225,14 +242,14 @@ export default function AdminDashboardPage() {
         return r.json();
       })
       .then((d) => {
-        if (d && d.orderCountByLoginId != null) setStats({ orderCountByLoginId: d.orderCountByLoginId || {}, newMembersThisMonth: d.newMembersThisMonth ?? 0, newOrdersThisWeek: d.newOrdersThisWeek ?? 0, dropboxConfigured: !!d.dropboxConfigured });
+        if (d && d.orderCountByLoginId != null) setStats({ orderCountByLoginId: d.orderCountByLoginId || {}, lastOrderDateByLoginId: d.lastOrderDateByLoginId || {}, newMembersThisMonth: d.newMembersThisMonth ?? 0, newOrdersThisWeek: d.newOrdersThisWeek ?? 0, dropboxConfigured: !!d.dropboxConfigured });
       })
       .catch(() => setStats(null));
   }, []);
 
   const fetchEssayTypes = useCallback(() => {
     setEssayTypesLoading(true);
-    fetch('/api/essay-types', { credentials: 'include' })
+    fetch('/api/admin/essay-types', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => setEssayTypes(Array.isArray(d?.types) ? d.types : []))
       .catch(() => setEssayTypes([]))
@@ -579,6 +596,37 @@ export default function AdminDashboardPage() {
       .finally(() => setTextbooksModalLoading(false));
   };
 
+  const openEssayTypesModal = (u: ListUser) => {
+    setEditingEssayTypesUserId(u.id);
+    setSelectedEssayTypeIdsForModal(Array.isArray(u.allowedEssayTypeIds) ? [...u.allowedEssayTypeIds] : []);
+    if (essayTypes.length === 0) fetchEssayTypes();
+  };
+
+  const saveAllowedEssayTypes = async () => {
+    if (!editingEssayTypesUserId) return;
+    setEssayTypesSavingId(editingEssayTypesUserId);
+    try {
+      const res = await fetch(`/api/admin/users/${editingEssayTypesUserId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allowedEssayTypeIds: selectedEssayTypeIdsForModal }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        const next = [...selectedEssayTypeIdsForModal];
+        setUsers((prev) => prev.map((u) => (u.id === editingEssayTypesUserId ? { ...u, allowedEssayTypeIds: next } : u)));
+        if (editUser?.id === editingEssayTypesUserId) setEditUser((prev) => (prev ? { ...prev, allowedEssayTypeIds: next } : null));
+        setEditingEssayTypesUserId(null);
+      } else {
+        alert(data?.error || '저장에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setEssayTypesSavingId(null);
+    }
+  };
+
   const saveAllowedTextbooks = async () => {
     if (!editingTextbooksUserId || !editingTextbooksMode) return;
     setTextbooksSavingId(editingTextbooksUserId);
@@ -609,8 +657,15 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const openEssayTypeAdd = () => {
-    setEssayTypeForm({ 대분류: '', 소분류: '', typeCode: '', 문제: '', 태그: '', 조건: '', price: '' });
+  const openEssayTypeAdd = (대분류Preset?: string) => {
+    setEssayTypeForm({
+      대분류: 대분류Preset ?? '',
+      소분류: '',
+      typeCode: '',
+      문제: '',
+      태그: '',
+      조건: '',
+    });
     setEssayTypeModal({ mode: 'add' });
   };
   const openEssayTypeEdit = (item: EssayTypeItem) => {
@@ -621,12 +676,12 @@ export default function AdminDashboardPage() {
       문제: item.문제 ?? '',
       태그: Array.isArray(item.태그) ? item.태그.join('\n') : '',
       조건: item.조건 ?? '',
-      price: item.price != null ? String(item.price) : '',
     });
+    setModalExampleFile(undefined);
     setEssayTypeModal({ mode: 'edit', item });
   };
   const saveEssayType = async () => {
-    const { 대분류, 소분류, typeCode, 문제, 태그, 조건, price } = essayTypeForm;
+    const { 대분류, 소분류, typeCode, 문제, 태그, 조건 } = essayTypeForm;
     if (!대분류.trim() || !소분류.trim()) {
       alert('대분류와 소분류를 입력해 주세요.');
       return;
@@ -634,7 +689,6 @@ export default function AdminDashboardPage() {
     setEssayTypeSaving(true);
     try {
       if (essayTypeModal?.mode === 'add') {
-        const priceNum = price.trim() === '' ? undefined : parseInt(price.trim(), 10);
         const res = await fetch('/api/admin/essay-types', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -645,7 +699,6 @@ export default function AdminDashboardPage() {
             문제: 문제.trim() || undefined,
             태그: 태그.split(/[\n,]+/).map((t) => t.trim()).filter(Boolean),
             조건: 조건.trim() || undefined,
-            price: typeof priceNum === 'number' && !Number.isNaN(priceNum) && priceNum >= 0 ? priceNum : undefined,
           }),
         });
         const data = await res.json();
@@ -656,7 +709,6 @@ export default function AdminDashboardPage() {
           alert(data?.error || '추가에 실패했습니다.');
         }
       } else if (essayTypeModal?.mode === 'edit') {
-        const priceNum = price.trim() === '' ? null : parseInt(price.trim(), 10);
         const res = await fetch(`/api/admin/essay-types/${essayTypeModal.item.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -667,7 +719,6 @@ export default function AdminDashboardPage() {
             문제: 문제.trim() || null,
             태그: 태그.split(/[\n,]+/).map((t) => t.trim()).filter(Boolean),
             조건: 조건.trim() || null,
-            price: priceNum === null ? null : (typeof priceNum === 'number' && !Number.isNaN(priceNum) && priceNum >= 0 ? priceNum : null),
           }),
         });
         const data = await res.json();
@@ -684,6 +735,119 @@ export default function AdminDashboardPage() {
       setEssayTypeSaving(false);
     }
   };
+
+  const uploadExampleFile = async (typeId: string, file: File) => {
+    setEssayExampleUploadingId(typeId);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`/api/admin/essay-types/${typeId}/example-file`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setModalExampleFile({ originalName: data.originalName ?? file.name });
+        setEssayTypes((prev) => prev.map((t) => (t.id === typeId ? { ...t, exampleFile: { originalName: data.originalName ?? file.name } } : t)));
+      } else {
+        alert(data?.error || '업로드에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setEssayExampleUploadingId(null);
+    }
+  };
+
+  const deleteExampleFile = async (typeId: string) => {
+    if (!confirm('예시 파일을 삭제할까요?')) return;
+    setEssayExampleDeletingId(typeId);
+    try {
+      const res = await fetch(`/api/admin/essay-types/${typeId}/example-file`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setModalExampleFile(null);
+        setEssayTypes((prev) => prev.map((t) => (t.id === typeId ? { ...t, exampleFile: undefined } : t)));
+      } else {
+        alert(data?.error || '삭제에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setEssayExampleDeletingId(null);
+    }
+  };
+
+  const setEssayTypeEnabled = async (id: string, enabled: boolean) => {
+    setEssayTypeTogglingId(id);
+    try {
+      const res = await fetch(`/api/admin/essay-types/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setEssayTypes((prev) => prev.map((t) => (t.id === id ? { ...t, enabled } : t)));
+      } else {
+        alert(data?.error || '노출 설정에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setEssayTypeTogglingId(null);
+    }
+  };
+
+  const saveCategoryPrice = async (대분류: string, priceInput: string | number) => {
+    const price = typeof priceInput === 'number' ? priceInput : parseInt(String(priceInput).replace(/\D/g, ''), 10);
+    if (Number.isNaN(price) || price < 0) {
+      alert('0 이상의 숫자를 입력해 주세요.');
+      return;
+    }
+    setCategoryPriceSaving(대분류);
+    try {
+      const res = await fetch('/api/admin/essay-types/category-price', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 대분류, price }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setCategoryPriceDraft((prev) => {
+          const next = { ...prev };
+          delete next[대분류];
+          return next;
+        });
+        fetchEssayTypes();
+      } else {
+        alert(data?.error || '가격 적용에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setCategoryPriceSaving(null);
+    }
+  };
+
+  const setEssayTypeCommon = async (id: string, common: boolean) => {
+    setEssayTypeTogglingId(id);
+    try {
+      const res = await fetch(`/api/admin/essay-types/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ common }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setEssayTypes((prev) => prev.map((t) => (t.id === id ? { ...t, common } : t)));
+      } else {
+        alert(data?.error || '공통유형 설정에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setEssayTypeTogglingId(null);
+    }
+  };
+
   const deleteEssayType = async (id: string) => {
     if (!confirm('이 유형을 삭제할까요? 기출 분류에 사용된 경우 표시에 영향을 줄 수 있습니다.')) return;
     setEssayTypeDeletingId(id);
@@ -700,6 +864,77 @@ export default function AdminDashboardPage() {
       alert('요청 중 오류가 발생했습니다.');
     } finally {
       setEssayTypeDeletingId(null);
+    }
+  };
+
+  const deleteEssayCategory = async (대분류: string) => {
+    if (!confirm(`"${대분류}" 대분류를 삭제할까요? 해당 대분류에 속한 모든 하위 유형이 함께 삭제되며 복구할 수 없습니다.`)) return;
+    setEssayCategoryDeleting(대분류);
+    try {
+      const res = await fetch(`/api/admin/essay-types?대분류=${encodeURIComponent(대분류)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        fetchEssayTypes();
+        if (essayTypeModal?.mode === 'edit' && essayTypeModal.item.대분류 === 대분류) setEssayTypeModal(null);
+        setCategoryPriceDraft((prev) => {
+          const next = { ...prev };
+          delete next[대분류];
+          return next;
+        });
+      } else {
+        alert(data?.error || '삭제에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setEssayCategoryDeleting(null);
+    }
+  };
+
+  const openEssayCategoryEdit = (대분류: string) => {
+    setEssayCategoryEditModal(대분류);
+    setCategoryNameDraft(대분류);
+  };
+  const saveEssayCategoryRename = async () => {
+    if (!essayCategoryEditModal) return;
+    const newName = categoryNameDraft.trim();
+    if (!newName) {
+      alert('변경할 대분류 이름을 입력해 주세요.');
+      return;
+    }
+    if (essayCategoryEditModal === newName) {
+      setEssayCategoryEditModal(null);
+      return;
+    }
+    setCategoryNameSaving(true);
+    try {
+      const res = await fetch('/api/admin/essay-types/category-price', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 대분류: essayCategoryEditModal, new대분류: newName }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setEssayCategoryEditModal(null);
+        setCategoryPriceDraft((prev) => {
+          const next = { ...prev };
+          if (prev[essayCategoryEditModal] !== undefined) {
+            next[newName] = prev[essayCategoryEditModal];
+            delete next[essayCategoryEditModal];
+          }
+          return next;
+        });
+        if (essayTypeModal?.mode === 'edit' && essayTypeModal.item.대분류 === essayCategoryEditModal) {
+          setEssayTypeForm((prev) => ({ ...prev, 대분류: newName }));
+        }
+        fetchEssayTypes();
+      } else {
+        alert(data?.error || '수정에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setCategoryNameSaving(false);
     }
   };
 
@@ -991,6 +1226,7 @@ export default function AdminDashboardPage() {
 
   const displayOrders = section === 'dashboard' ? recentOrders.slice(0, 8) : filteredOrders;
   const orderCountFor = (loginIdKey: string) => stats?.orderCountByLoginId?.[loginIdKey] ?? 0;
+  const lastOrderDateFor = (loginIdKey: string) => stats?.lastOrderDateByLoginId?.[loginIdKey] ?? null;
 
   const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }).replace(/\. /g, '.').replace('.', ' ');
 
@@ -1238,10 +1474,21 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayOrders.map((o) => (
+                    {displayOrders.map((o) => {
+                      const member = o.loginId ? users.find((u) => u.loginId === o.loginId) : null;
+                      return (
                       <tr key={o.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                         <td className="py-3 px-5 font-mono text-white">{o.orderNumber || '—'}</td>
-                        <td className="py-3 px-5 text-slate-300">{o.loginId || '비회원'}</td>
+                        <td className="py-3 px-5 text-slate-300">
+                          {o.loginId ? (
+                            <>
+                              <span className="text-white font-medium">{member?.name ?? '—'}</span>
+                              <span className="text-slate-500 text-xs ml-1">({o.loginId})</span>
+                            </>
+                          ) : (
+                            '비회원'
+                          )}
+                        </td>
                         <td className="py-3 px-5 text-slate-400 max-w-[200px] truncate" title={o.orderText?.slice(0, 200)}>
                           {o.orderText?.replace(/\s+/g, ' ').slice(0, 40) || '—'}
                           {(o.orderText?.length ?? 0) > 40 ? '…' : ''}
@@ -1277,7 +1524,7 @@ export default function AdminDashboardPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );})}
                   </tbody>
                 </table>
               </div>
@@ -1547,7 +1794,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={openEssayTypeAdd}
+                  onClick={() => openEssayTypeAdd()}
                   className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold hover:bg-cyan-500"
                 >
                   + 유형 추가
@@ -1567,9 +1814,56 @@ export default function AdminDashboardPage() {
                         acc[key].push(t);
                         return acc;
                       }, {});
-                      return Object.entries(by대분류).map(([대, items]) => (
+                      return Object.entries(by대분류).map(([대, items]) => {
+                        const firstPrice = items[0]?.price ?? '';
+                        const priceDisplay = categoryPriceDraft[대] !== undefined ? categoryPriceDraft[대] : String(firstPrice);
+                        return (
                         <div key={대} className="border border-slate-600 rounded-xl overflow-hidden">
-                          <div className="px-4 py-2 bg-slate-700/50 border-b border-slate-600 font-semibold text-white">{대}</div>
+                          <div className="px-4 py-2 bg-slate-700/50 border-b border-slate-600 flex flex-wrap items-center gap-3">
+                            <span className="font-semibold text-white">{대}</span>
+                            <span className="text-slate-400 text-xs">지문당 가격</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={priceDisplay}
+                              onChange={(e) => setCategoryPriceDraft((prev) => ({ ...prev, [대]: e.target.value }))}
+                              className="w-24 px-2 py-1 bg-slate-600 border border-slate-500 rounded text-white text-sm"
+                            />
+                            <span className="text-slate-500 text-xs">원</span>
+                            <button
+                              type="button"
+                              onClick={() => saveCategoryPrice(대, priceDisplay)}
+                              disabled={categoryPriceSaving === 대}
+                              className="px-2.5 py-1 bg-cyan-600 text-white rounded text-xs font-medium hover:bg-cyan-500 disabled:opacity-50"
+                            >
+                              {categoryPriceSaving === 대 ? '적용 중…' : '적용'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openEssayCategoryEdit(대)}
+                              title="대분류 이름 수정"
+                              className="px-2.5 py-1 rounded text-xs font-medium border border-slate-500 text-slate-300 hover:bg-slate-600"
+                            >
+                              수정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openEssayTypeAdd(대)}
+                              title="이 대분류에 소분류 추가"
+                              className="px-2.5 py-1 rounded text-xs font-medium border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                            >
+                              + 소분류
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteEssayCategory(대)}
+                              disabled={essayCategoryDeleting === 대}
+                              title="대분류 전체 삭제"
+                              className="ml-auto px-2.5 py-1 rounded text-xs font-medium border border-red-500/50 text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                            >
+                              {essayCategoryDeleting === 대 ? '삭제 중…' : '대분류 삭제'}
+                            </button>
+                          </div>
                           <div className="divide-y divide-slate-700">
                             {items.map((t) => (
                               <div key={t.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
@@ -1577,6 +1871,11 @@ export default function AdminDashboardPage() {
                                   <div className="flex items-center gap-2 flex-wrap">
                                     {t.typeCode && <span className="text-cyan-400 font-mono text-xs">{t.typeCode}</span>}
                                     <span className="text-slate-200 font-medium">{t.소분류}</span>
+                                    {t.exampleFile ? (
+                                      <span className="text-emerald-400 text-xs" title={`예시: ${t.exampleFile.originalName}`}>📎 예시 저장됨</span>
+                                    ) : (
+                                      <span className="text-slate-500 text-xs">예시 없음</span>
+                                    )}
                                   </div>
                                   {t.문제 && <p className="text-slate-400 text-xs mt-1 line-clamp-2">{t.문제}</p>}
                                   {t.태그?.length ? (
@@ -1587,9 +1886,28 @@ export default function AdminDashboardPage() {
                                     </p>
                                   ) : null}
                                   {t.조건 && <p className="text-slate-500 text-xs mt-1 line-clamp-1">&lt;조건&gt; {t.조건}</p>}
-                                  {t.price != null && <p className="text-cyan-400 text-xs mt-1 font-medium">{t.price.toLocaleString()}원</p>}
                                 </div>
-                                <div className="flex gap-2 shrink-0">
+                                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                                  <label className="flex items-center gap-1.5 cursor-pointer" title="모든 서술형 선생님에게 표시">
+                                    <input
+                                      type="checkbox"
+                                      checked={t.common === true}
+                                      onChange={() => setEssayTypeCommon(t.id, t.common !== true)}
+                                      disabled={essayTypeTogglingId === t.id}
+                                      className="rounded border-slate-500 bg-slate-700 text-amber-500 focus:ring-amber-500"
+                                    />
+                                    <span className="text-slate-400 text-xs whitespace-nowrap">공통유형</span>
+                                  </label>
+                                  <label className="flex items-center gap-1.5 cursor-pointer" title="선생님 주문서(서술형)에 이 유형 표시">
+                                    <input
+                                      type="checkbox"
+                                      checked={t.enabled !== false}
+                                      onChange={() => setEssayTypeEnabled(t.id, t.enabled === false)}
+                                      disabled={essayTypeTogglingId === t.id}
+                                      className="rounded border-slate-500 bg-slate-700 text-cyan-500 focus:ring-cyan-500"
+                                    />
+                                    <span className="text-slate-400 text-xs whitespace-nowrap">주문서 노출</span>
+                                  </label>
                                   <button type="button" onClick={() => openEssayTypeEdit(t)} className="px-3 py-1.5 rounded-lg border border-slate-500 text-slate-300 text-xs font-medium hover:bg-slate-700">수정</button>
                                   <button type="button" onClick={() => deleteEssayType(t.id)} disabled={essayTypeDeletingId === t.id} className="px-3 py-1.5 rounded-lg border border-red-500/50 text-red-400 text-xs font-medium hover:bg-red-500/10 disabled:opacity-50">삭제</button>
                                 </div>
@@ -1597,7 +1915,7 @@ export default function AdminDashboardPage() {
                             ))}
                           </div>
                         </div>
-                      ));
+                      );});
                     })()}
                   </div>
                 )}
@@ -1669,9 +1987,18 @@ export default function AdminDashboardPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-bold text-white text-[15px] tracking-tight truncate">{u.name || u.loginId}</p>
-                            <p className="text-slate-400 text-xs truncate mt-0.5">{u.email || u.loginId}</p>
-                            <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                            <p className="text-slate-400 text-xs truncate mt-0.5">{u.email || '—'}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">
+                              <span className="text-slate-500">아이디</span> <span className="text-slate-300 font-mono">{u.loginId || '—'}</span>
+                              {(u.phone != null && u.phone !== '') && (
+                                <> · <span className="text-slate-500">전화</span> <span className="text-slate-300">{u.phone}</span></>
+                              )}
+                            </p>
+                            <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
                               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400">주문 {orderCountFor(u.loginId)}건</span>
+                              {lastOrderDateFor(u.loginId) && (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDateTime(lastOrderDateFor(u.loginId)!)}>최근 주문 {daysAgo(lastOrderDateFor(u.loginId)!)}</span>
+                              )}
                               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDate(u.createdAt)}>{daysAgo(u.createdAt)} 가입</span>
                             </div>
                           </div>
@@ -1774,13 +2101,22 @@ export default function AdminDashboardPage() {
                                   </button>
                                 )}
                                 {u.canAccessEssay && (
-                                  <button
-                                    type="button"
-                                    onClick={() => openTextbooksModal(u, 'essay')}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-[#2e3248] text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
-                                  >
-                                    📘 서술형 교재 {((u.allowedTextbooksEssay?.length ?? u.allowedTextbooks?.length) ?? 0) > 0 ? `(${u.allowedTextbooksEssay?.length ?? u.allowedTextbooks?.length}개)` : ''}
-                                  </button>
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => openTextbooksModal(u, 'essay')}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-[#2e3248] text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                                    >
+                                      📘 서술형 교재 {((u.allowedTextbooksEssay?.length ?? u.allowedTextbooks?.length) ?? 0) > 0 ? `(${u.allowedTextbooksEssay?.length ?? u.allowedTextbooks?.length}개)` : ''}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openEssayTypesModal(u)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-[#2e3248] text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                                    >
+                                      📝 서술형 추가 유형 {(u.allowedEssayTypeIds?.length ?? 0) > 0 ? `(${u.allowedEssayTypeIds?.length}개)` : ''}
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -2320,6 +2656,96 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* 서술형 추가 배정 유형 모달 (공통유형이 아닌 유형만 선생님별 배정) */}
+      {editingEssayTypesUserId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col border border-slate-700">
+            <div className="p-4 border-b border-slate-700">
+              <h3 className="font-bold text-white">서술형 추가 배정 유형</h3>
+              <p className="text-slate-400 text-xs mt-1">공통유형이 아닌 유형만 선택해 이 회원에게 추가로 노출됩니다. 공통유형은 서술형 권한 있는 모든 선생님에게 자동 표시됩니다.</p>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              {(() => {
+                const assignableTypes = essayTypes.filter((t) => t.enabled !== false && !t.common);
+                if (assignableTypes.length === 0) {
+                  return <p className="text-slate-500 text-sm">배정 가능한 추가 유형이 없습니다. 서술형 유형 관리에서 공통유형이 아닌 유형을 추가·노출해 두세요.</p>;
+                }
+                const by대분류 = assignableTypes.reduce<Record<string, EssayTypeItem[]>>((acc, t) => {
+                  const key = t.대분류 || '(미분류)';
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(t);
+                  return acc;
+                }, {});
+                return (
+                  <div className="space-y-3">
+                    {Object.entries(by대분류).map(([대, items]) => (
+                      <div key={대}>
+                        <p className="text-slate-400 text-xs font-semibold mb-1.5">{대}</p>
+                        <div className="space-y-1">
+                          {items.map((t) => (
+                            <label key={t.id} className="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-700/50 cursor-pointer text-sm text-slate-200">
+                              <input
+                                type="checkbox"
+                                checked={selectedEssayTypeIdsForModal.includes(t.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) setSelectedEssayTypeIdsForModal((prev) => [...prev, t.id]);
+                                  else setSelectedEssayTypeIdsForModal((prev) => prev.filter((id) => id !== t.id));
+                                }}
+                                className="rounded border-slate-500 bg-slate-700 text-cyan-500"
+                              />
+                              <span className="truncate">{t.typeCode && `[${t.typeCode}] `}{t.소분류}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="p-4 border-t border-slate-700 flex justify-between">
+              <span className="text-slate-400 text-sm">{selectedEssayTypeIdsForModal.length}개 선택</span>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setEditingEssayTypesUserId(null)} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">취소</button>
+                <button type="button" onClick={saveAllowedEssayTypes} disabled={essayTypesSavingId === editingEssayTypesUserId} className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-500 disabled:opacity-50">{essayTypesSavingId === editingEssayTypesUserId ? '저장 중…' : '저장'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 대분류 이름 수정 모달 */}
+      {essayCategoryEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-800 rounded-xl shadow-xl max-w-md w-full border border-slate-700">
+            <div className="p-4 border-b border-slate-700">
+              <h3 className="font-bold text-white">대분류 이름 수정</h3>
+              <p className="text-slate-400 text-xs mt-1">해당 대분류에 속한 모든 유형의 이름이 함께 변경됩니다.</p>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-slate-400 text-xs font-medium mb-1">현재 대분류</label>
+                <p className="text-white font-medium">{essayCategoryEditModal}</p>
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs font-medium mb-1">변경할 대분류 이름</label>
+                <input
+                  type="text"
+                  value={categoryNameDraft}
+                  onChange={(e) => setCategoryNameDraft(e.target.value)}
+                  placeholder="예: 단어 배열 영작"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-slate-700 flex justify-end gap-2">
+              <button type="button" onClick={() => setEssayCategoryEditModal(null)} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">취소</button>
+              <button type="button" onClick={saveEssayCategoryRename} disabled={categoryNameSaving} className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-500 disabled:opacity-50">{categoryNameSaving ? '저장 중…' : '저장'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 서술형 유형 추가/수정 모달 */}
       {essayTypeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -2390,17 +2816,55 @@ export default function AdminDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-slate-400 text-xs font-medium mb-1">가격 (원)</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={essayTypeForm.price}
-                  onChange={(e) => setEssayTypeForm((f) => ({ ...f, price: e.target.value }))}
-                  placeholder="예: 500"
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500"
-                />
-                <p className="text-slate-500 text-[10px] mt-0.5">비워두면 가격 미설정 (주문 시 0원으로 합산)</p>
+                <label className="block text-slate-400 text-xs font-medium mb-1">예시 파일</label>
+                {essayTypeModal.mode === 'add' ? (
+                  <p className="text-slate-500 text-xs">저장 후 수정에서 예시 파일을 첨부할 수 있습니다.</p>
+                ) : (
+                  <>
+                    {(() => {
+                      const ef = modalExampleFile !== undefined ? modalExampleFile : essayTypeModal.item.exampleFile;
+                      return ef ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <a
+                            href={`/api/essay-types/example-file?typeId=${essayTypeModal.item.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 text-sm hover:underline"
+                          >
+                            📎 {ef.originalName}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => deleteExampleFile(essayTypeModal.item.id)}
+                            disabled={essayExampleDeletingId === essayTypeModal.item.id}
+                            className="text-red-400 text-xs hover:underline disabled:opacity-50"
+                          >
+                            {essayExampleDeletingId === essayTypeModal.item.id ? '삭제 중…' : '삭제'}
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-slate-500 text-xs mb-1">등록된 예시 파일 없음</p>
+                      );
+                    })()}
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.hwp,.hwpx,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) uploadExampleFile(essayTypeModal.item.id, f);
+                          e.target.value = '';
+                        }}
+                        disabled={essayExampleUploadingId === essayTypeModal.item.id}
+                        className="text-slate-400 text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-600 file:text-slate-200 file:text-xs"
+                      />
+                      {essayExampleUploadingId === essayTypeModal.item.id && <span className="text-slate-500 text-xs">업로드 중…</span>}
+                    </div>
+                    <p className="text-slate-500 text-[10px] mt-1">PDF, HWP, 워드, 이미지 등 (최대 15MB). 새 파일 업로드 시 기존 파일은 교체됩니다.</p>
+                  </>
+                )}
               </div>
+              <p className="text-slate-500 text-[10px]">가격은 상위 카테고리(대분류)에서 「지문당 가격」으로 설정합니다.</p>
             </div>
             <div className="p-4 border-t border-slate-700 flex justify-end gap-2">
               <button type="button" onClick={() => setEssayTypeModal(null)} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">취소</button>

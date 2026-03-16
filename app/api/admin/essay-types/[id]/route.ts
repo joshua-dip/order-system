@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
+import path from 'path';
+import fs from 'fs/promises';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+
+const UPLOAD_DIR = 'uploads/essay-type-examples';
 
 async function requireAdmin(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -42,6 +46,8 @@ export async function PUT(
     const 조건 = typeof body?.조건 === 'string' ? body.조건.trim() || null : undefined;
     const order = typeof body?.order === 'number' ? body.order : undefined;
     const price = body?.price !== undefined ? (typeof body.price === 'number' && body.price >= 0 ? body.price : null) : undefined;
+    const enabled = typeof body?.enabled === 'boolean' ? body.enabled : undefined;
+    const common = typeof body?.common === 'boolean' ? body.common : undefined;
 
     const updates: Record<string, unknown> = {};
     if (대분류 !== undefined) updates.대분류 = 대분류;
@@ -52,6 +58,8 @@ export async function PUT(
     if (조건 !== undefined) updates.조건 = 조건;
     if (price !== undefined) updates.price = price;
     if (order !== undefined) updates.order = order;
+    if (enabled !== undefined) updates.enabled = enabled;
+    if (common !== undefined) updates.common = common;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: '변경할 내용이 없습니다.' }, { status: 400 });
@@ -91,6 +99,10 @@ export async function DELETE(
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: '해당 유형을 찾을 수 없습니다.' }, { status: 404 });
     }
+    const rootDir = path.join(process.cwd(), UPLOAD_DIR, id);
+    try {
+      await fs.rm(rootDir, { recursive: true, force: true });
+    } catch { /* 폴더 없으면 무시 */ }
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('서술형 유형 삭제 실패:', err);

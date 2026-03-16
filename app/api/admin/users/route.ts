@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       allowedTextbooks: Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
       allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis) ? u.allowedTextbooksAnalysis : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       allowedTextbooksEssay: Array.isArray(u.allowedTextbooksEssay) ? u.allowedTextbooksEssay : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
+      allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
       createdAt: u.createdAt,
     }));
 

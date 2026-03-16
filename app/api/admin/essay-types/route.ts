@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb('gomijoshua');
     const list = await db.collection('essayTypes').find({}).sort({ 대분류: 1, order: 1, 소분류: 1 }).toArray();
-    const types = list.map((d: { _id: ObjectId; 대분류?: string; 소분류?: string; typeCode?: string; 문제?: string; 태그?: string[]; 조건?: string; price?: number; order?: number; createdAt?: Date }) => ({
+    const types = list.map((d: { _id: ObjectId; 대분류?: string; 소분류?: string; typeCode?: string; 문제?: string; 태그?: string[]; 조건?: string; price?: number; order?: number; enabled?: boolean; common?: boolean; exampleFile?: { originalName: string; savedPath: string }; createdAt?: Date }) => ({
       id: d._id.toString(),
       대분류: d.대분류 ?? '',
       소분류: d.소분류 ?? '',
@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
       조건: d.조건,
       price: typeof d.price === 'number' && d.price >= 0 ? d.price : undefined,
       order: d.order,
+      enabled: d.enabled !== false,
+      common: d.common === true,
+      exampleFile: d.exampleFile ? { originalName: d.exampleFile.originalName, savedPath: d.exampleFile.savedPath } : undefined,
       createdAt: d.createdAt?.toISOString?.(),
     }));
     types.sort((a: { 대분류: string; typeCode?: string; order?: number; 소분류: string }, b: { 대분류: string; typeCode?: string; order?: number; 소분류: string }) => {
@@ -89,6 +92,8 @@ export async function POST(request: NextRequest) {
       조건,
       price,
       order: order ?? maxOrder + 1,
+      enabled: true,
+      common: false,
       createdAt: new Date(),
     };
     const result = await coll.insertOne(doc);
@@ -100,5 +105,26 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('서술형 유형 추가 실패:', err);
     return NextResponse.json({ error: '추가에 실패했습니다.' }, { status: 500 });
+  }
+}
+
+/**
+ * 대분류 전체 삭제 (해당 대분류에 속한 모든 유형 삭제)
+ * DELETE /api/admin/essay-types?대분류=단어 배열 영작
+ */
+export async function DELETE(request: NextRequest) {
+  const { error } = await requireAdmin(request);
+  if (error) return error;
+  const 대분류 = request.nextUrl.searchParams.get('대분류')?.trim();
+  if (!대분류) {
+    return NextResponse.json({ error: '대분류를 지정해 주세요.' }, { status: 400 });
+  }
+  try {
+    const db = await getDb('gomijoshua');
+    const result = await db.collection('essayTypes').deleteMany({ 대분류 });
+    return NextResponse.json({ ok: true, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error('대분류 삭제 실패:', err);
+    return NextResponse.json({ error: '삭제에 실패했습니다.' }, { status: 500 });
   }
 }
