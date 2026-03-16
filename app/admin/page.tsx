@@ -202,6 +202,7 @@ export default function AdminDashboardPage() {
   const [assignLoginId, setAssignLoginId] = useState('');
   const [assignSavingId, setAssignSavingId] = useState<string | null>(null);
   const [deleteSavingId, setDeleteSavingId] = useState<string | null>(null);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [createOrderFolderId, setCreateOrderFolderId] = useState<string | null>(null);
   const [copiedLinkOrderId, setCopiedLinkOrderId] = useState<string | null>(null);
 
@@ -1072,6 +1073,26 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleDeleteOrderById = async (orderId: string) => {
+    if (!confirm('이 주문을 목록에서 삭제할까요? 삭제 후에는 복구할 수 없습니다.')) return;
+    setDeleteOrderId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE', credentials: 'include' });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setRecentOrders((prev) => prev.filter((o) => o.id !== orderId));
+        setUserOrders((prev) => prev.filter((o) => o.id !== orderId));
+        if (orderDetailModal?.id === orderId) setOrderDetailModal(null);
+      } else {
+        alert(data?.error || '삭제에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setDeleteOrderId(null);
+    }
+  };
+
   const handleSaveExamClassify = async () => {
     if (!examUploadForClassify) return;
     setClassifySavingId(examUploadForClassify.id);
@@ -1527,10 +1548,25 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-3 px-5 text-slate-500">—</td>
                         <td className="py-3 px-5">
-                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || 'bg-gray-100 text-gray-700'}`} title={o.statusLabel}>
-                            {o.statusLabel === '완료' ? '✓' : o.statusLabel === '제작 중' ? '◐' : '○'}
-                          </span>
-                          <span className="ml-1.5 text-slate-300 text-xs">{o.statusLabel}</span>
+                          {(o.status || 'pending') === 'cancelled' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOrderById(o.id)}
+                              disabled={!!deleteOrderId}
+                              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-red-400 text-xs disabled:opacity-50 cursor-pointer"
+                              title="클릭하면 주문 삭제"
+                            >
+                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${STATUS_BADGE_CLASS.cancelled}`}>○</span>
+                              {deleteOrderId === o.id ? '삭제 중…' : '취소됨'}
+                            </button>
+                          ) : (
+                            <>
+                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || 'bg-gray-100 text-gray-700'}`} title={o.statusLabel}>
+                                {o.statusLabel === '완료' ? '✓' : o.statusLabel === '제작 중' ? '◐' : '○'}
+                              </span>
+                              <span className="ml-1.5 text-slate-300 text-xs">{o.statusLabel}</span>
+                            </>
+                          )}
                         </td>
                         <td className="py-3 px-5">
                           <div className="flex flex-wrap items-center gap-2">
@@ -2355,7 +2391,15 @@ export default function AdminDashboardPage() {
                           <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="font-mono text-white hover:text-blue-300 hover:underline">{o.orderNumber || '—'}</a>
                         </td>
                         <td className="py-2 px-3 text-slate-400">{formatDateTime(o.createdAt)}</td>
-                        <td className="py-2 px-3"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || ''}`}>{o.statusLabel}</span></td>
+                        <td className="py-2 px-3">
+                          {(o.status || 'pending') === 'cancelled' ? (
+                            <button type="button" onClick={() => handleDeleteOrderById(o.id)} disabled={!!deleteOrderId} className="text-slate-500 hover:text-red-400 text-xs disabled:opacity-50">
+                              {deleteOrderId === o.id ? '삭제 중…' : '취소됨'}
+                            </button>
+                          ) : (
+                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || ''}`}>{o.statusLabel}</span>
+                          )}
+                        </td>
                         <td className="py-2 px-3">
                           <button type="button" onClick={() => { setOrdersModalUser(null); openOrderDetail(o); }} className="text-blue-400 hover:underline text-xs">관리</button>
                           {o.fileUrl ? (
