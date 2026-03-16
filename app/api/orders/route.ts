@@ -3,8 +3,12 @@ import { getDb } from '@/lib/mongodb';
 import { notifySlackOrder } from '@/lib/slack';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { createOrderFolder, uploadOrderTxt, isDropboxConfigured } from '@/lib/dropbox';
+import { ORDER_FOOTER_MESSAGE } from '@/lib/orders';
 
 const COLLECTION = 'orders';
+
+/** 회원 주문 시 주문서에 안내할 입금 계좌 */
+const MEMBER_DEPOSIT_ACCOUNT = '110493861106 신한은행 박준규(페이퍼릭)';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +26,8 @@ export async function POST(request: NextRequest) {
     const rawPrefix = typeof body?.orderPrefix === 'string' ? body.orderPrefix.trim().toUpperCase() : '';
     const orderPrefix = /^[A-Z]{2}$/.test(rawPrefix) ? rawPrefix : 'GJ';
 
+    const pointsUsed = typeof body?.pointsUsed === 'number' && body.pointsUsed >= 0 ? Math.floor(body.pointsUsed) : 0;
+
     let loginId: string | null = null;
     let userName: string = '';
     const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -32,19 +38,36 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb('gomijoshua');
     const collection = db.collection(COLLECTION);
+    const usersColl = db.collection('users');
 
-    // 회원이면 이름·드롭박스 경로·전화번호 조회
+    // 회원이면 이름·드롭박스 경로·전화번호·포인트 조회
     let userDropboxFolderPath: string | undefined;
     let userPhone: string | undefined;
     if (loginId) {
-      const userDoc = await db.collection('users').findOne(
+      const userDoc = await usersColl.findOne(
         { loginId },
-        { projection: { name: 1, dropboxFolderPath: 1, phone: 1 } }
+        { projection: { name: 1, dropboxFolderPath: 1, phone: 1, points: 1, _id: 1 } }
       );
       userName = (userDoc?.name as string) || loginId;
       const path = userDoc?.dropboxFolderPath;
       userDropboxFolderPath = typeof path === 'string' && path.trim() ? path.trim() : undefined;
       userPhone = typeof userDoc?.phone === 'string' && userDoc.phone.trim() ? userDoc.phone.trim() : undefined;
+
+      // 포인트 사용 시 차감
+      if (pointsUsed > 0 && userDoc) {
+        const docPoints = (userDoc as { points?: number }).points;
+        const currentPoints = typeof docPoints === 'number' && docPoints >= 0 ? docPoints : 0;
+        if (currentPoints < pointsUsed) {
+          return NextResponse.json(
+            { error: `보유 포인트(${currentPoints}P)가 부족합니다. 사용 요청: ${pointsUsed}P` },
+            { status: 400 }
+          );
+        }
+        await usersColl.updateOne(
+          { _id: userDoc._id },
+          { $inc: { points: -pointsUsed } }
+        );
+      }
     }
 
     // 접두어-YYYYMMDD-NNN 형식 주문번호 생성 (접두어: 재료+제품 2글자, 예: MV, BV, MW)
@@ -58,19 +81,34 @@ export async function POST(request: NextRequest) {
     });
     const orderNumber = `${orderPrefix}-${datePart}-${pad(todayCount + 1, 3)}`;
 
+    // 회원 주문 시 주문서 끝에 입금 계좌 안내 추가 (이미 포함되어 있으면 제외)
+    let finalOrderText = orderText;
+    if (loginId && !orderText.includes('입금 계좌') && !orderText.includes(MEMBER_DEPOSIT_ACCOUNT)) {
+      finalOrderText = `${orderText.trim()}
+
+[회원 입금 계좌]
+${MEMBER_DEPOSIT_ACCOUNT}`;
+    }
+    // 고객용 안내 문구 (회원/비회원 공통, 이미 포함돼 있으면 제외)
+    const footer = (ORDER_FOOTER_MESSAGE || '').trim();
+    if (footer && !finalOrderText.includes(footer.slice(0, 30))) {
+      finalOrderText = `${finalOrderText.trim()}\n\n${footer}`;
+    }
+
     const doc = {
-      orderText,
+      orderText: finalOrderText,
       createdAt: now,
       source: 'gomijoshua',
       status: 'pending',
       orderNumber,
       ...(loginId && { loginId }),
+      ...(pointsUsed > 0 && { pointsUsed }),
     };
 
     const result = await collection.insertOne(doc);
     const orderId = result.insertedId.toString();
 
-    notifySlackOrder(orderText, orderId).catch((e) =>
+    notifySlackOrder(finalOrderText, orderId).catch((e) =>
       console.error('Slack 알림 실패:', e)
     );
 
@@ -85,7 +123,7 @@ export async function POST(request: NextRequest) {
       })
         .then((folderPath) => {
           console.log('Dropbox 폴더 생성:', folderPath);
-          return uploadOrderTxt(folderPath, orderNumber, orderText);
+          return uploadOrderTxt(folderPath, orderNumber, finalOrderText);
         })
         .then(() => console.log('Dropbox 주문서 업로드 완료'))
         .catch((e) => console.error('Dropbox 실패:', e));

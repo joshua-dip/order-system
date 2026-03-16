@@ -8,7 +8,7 @@ import CategorySelector, { type CategoryItem } from '../components/CategorySelec
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { isEbsTextbook } from '@/lib/textbookSort';
-import { saveOrderToDb } from '@/lib/orders';
+import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 const MOCK_PASSAGE_KEY = '번호';
@@ -61,6 +61,7 @@ export default function EssayPage() {
   const [textbookTab, setTextbookTab] = useState<'EBS' | '모의고사' | '부교재'>('EBS');
   const [mockGrade, setMockGrade] = useState('');
   const [mockYear, setMockYear] = useState('');
+  const [pointsToUse, setPointsToUse] = useState(0);
 
   useEffect(() => {
     import('@/app/data/mock-exams.json')
@@ -193,7 +194,7 @@ export default function EssayPage() {
       .finally(() => setChecking(false));
   }, []);
 
-  // 업로드한 기출문제 목록 조회 (관리자 분류 유형으로 추천용)
+  // 업로드한 기출문제 목록 조회 (관리자 분류 유형으로 추천용) — 회원만
   useEffect(() => {
     if (!authorized || !hasAccess) {
       setPastExamUploads([]);
@@ -237,13 +238,13 @@ export default function EssayPage() {
     return Array.from(set);
   })();
 
+  // 서술형 유형 목록 — 비회원도 EBS·모의고사 주문용으로 조회 (공통 유형만 반환됨)
   useEffect(() => {
-    if (!authorized || !hasAccess) return;
     fetch('/api/essay-types', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => setEssayTypes(Array.isArray(d?.types) ? d.types : []))
       .catch(() => setEssayTypes([]));
-  }, [authorized, hasAccess]);
+  }, []);
 
   // 대분류가 하나뿐이면 자동 선택 (로드 시 1회)
   useEffect(() => {
@@ -253,6 +254,7 @@ export default function EssayPage() {
   }, [essayTypesGrouped]);
 
   const isMockExam = !!selectedTextbook && mockExamKeys.includes(selectedTextbook);
+  const canUse부교재 = authorized && hasAccess;
 
   // 교재 선택 시 지문(강·번호) 목록 로드
   useEffect(() => {
@@ -405,17 +407,34 @@ export default function EssayPage() {
           })()
         : '';
 
-    const orderText = `서술형 주문서
+    const userPoints = typeof currentUser?.points === 'number' && currentUser.points >= 0 ? currentUser.points : 0;
+    const effectivePointsUsed = Math.min(pointsToUse, userPoints, totalPrice);
+    const finalAmount = totalPrice - effectivePointsUsed;
+
+    let orderText = `서술형 주문서
 
 1. 대분류별 지문당 금액 및 선택 소분류:\n${orderLines.join('\n')}
 2. 선택 지문 수: ${passageCount}개${passageListSection}
 
-3. 지문당 합계: ${sumPerPassage.toLocaleString()}원 × ${passageCount}개 = 총 금액: ${totalPrice.toLocaleString()}원
-4. 교재: ${selectedTextbook}`;
+3. 지문당 합계: ${sumPerPassage.toLocaleString()}원 × ${passageCount}개 = 총 금액: ${totalPrice.toLocaleString()}원`;
+    if (effectivePointsUsed > 0) {
+      orderText += `
+
+4. 포인트 사용: ${effectivePointsUsed.toLocaleString()}원
+5. 입금하실 금액: ${finalAmount.toLocaleString()}원 (총 ${totalPrice.toLocaleString()}원 − 포인트 ${effectivePointsUsed.toLocaleString()}원)`;
+    }
+    orderText += `
+${effectivePointsUsed > 0 ? '6' : '4'}. 교재: ${selectedTextbook}`;
+    if (currentUser) {
+      orderText += `
+
+[회원 입금 계좌]
+${MEMBER_DEPOSIT_ACCOUNT}`;
+    }
 
     setSubmitting(true);
     try {
-      const res = await saveOrderToDb(orderText, prefix);
+      const res = await saveOrderToDb(orderText, prefix, effectivePointsUsed);
       if (res.ok && res.id) {
         router.push('/order/done?id=' + res.id);
       } else {
@@ -448,37 +467,7 @@ export default function EssayPage() {
             </Link>
           </p>
 
-          {!authorized ? (
-            <div className="text-center bg-white rounded-xl shadow p-8">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">서술형문제 주문제작</h1>
-              <p className="text-gray-600 mb-6">서술형문제 주문제작은 회원 전용 서비스입니다.</p>
-              <a
-                href={KAKAO_INQUIRY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#FEE500] text-gray-800 rounded-lg hover:bg-[#FDD835] transition-colors font-medium border border-gray-300"
-              >
-                회원가입 문의하러 가기
-              </a>
-              <p className="mt-6">
-                <Link href="/" className="text-sm text-gray-500 hover:underline">
-                  메인으로 돌아가기
-                </Link>
-              </p>
-            </div>
-          ) : !hasAccess ? (
-            <div className="text-center bg-white rounded-xl shadow p-8">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">서술형문제 주문제작</h1>
-              <p className="text-gray-600 mb-6">이 메뉴 이용 권한이 없습니다. 관리자에게 문의해 주세요.</p>
-              <Link
-                href="/"
-                className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                메인으로
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-[1fr,300px] gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr,300px] gap-6 items-start">
               {/* 메인: 주문 폼 */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="p-6 border-b bg-gray-50">
@@ -542,11 +531,12 @@ export default function EssayPage() {
                 {/* 2. 교재 선택 (EBS / 모의고사 / 부교재) */}
                 {dataLoading ? (
                   <p className="text-gray-500 text-sm">교재 목록 불러오는 중…</p>
-                ) : (ebsTextbooks.length + mockTextbooks.length + 부교재Textbooks.length) === 0 ? (
+                ) : (ebsTextbooks.length + mockTextbooks.length === 0 && (!canUse부교재 || 부교재Textbooks.length === 0)) ? (
                   <p className="text-gray-600 text-sm">선택 가능한 교재가 없습니다. 문의가 필요하시면 카카오톡으로 연락해 주세요.</p>
                 ) : (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">2. 교재 선택</label>
+                    <p className="text-xs text-gray-500 mb-2">EBS·모의고사는 누구나 이용 가능, 부교재는 로그인한 회원만 이용할 수 있습니다.</p>
 
                     {/* 탭 */}
                     <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-4 bg-gray-50">
@@ -661,7 +651,18 @@ export default function EssayPage() {
                     {/* 부교재 패널 */}
                     {textbookTab === '부교재' && (
                       <div className="space-y-3">
-                        {부교재Textbooks.length > 0 ? (
+                        {!canUse부교재 ? (
+                          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                            <p className="text-sm font-semibold text-amber-800 mb-2">부교재는 로그인한 회원만 이용할 수 있습니다.</p>
+                            <p className="text-xs text-amber-700 mb-4">EBS·모의고사는 비회원도 주문 가능합니다. 부교재를 이용하시려면 로그인해 주세요.</p>
+                            <Link
+                              href="/login?from=/essay"
+                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors no-underline"
+                            >
+                              로그인
+                            </Link>
+                          </div>
+                        ) : 부교재Textbooks.length > 0 ? (
                           <div className="grid grid-cols-2 gap-2">
                             {부교재Textbooks.map((key) => (
                               <button
@@ -842,6 +843,24 @@ export default function EssayPage() {
                           </ul>
                           <p className="mt-1 text-gray-700">지문당 합계: {sumPerPassage.toLocaleString()}원 × {passageCount}개 지문</p>
                           <p className="mt-0.5 text-blue-700 font-semibold">총 금액: {totalPrice.toLocaleString()}원</p>
+                          {currentUser && (currentUser.points ?? 0) > 0 && totalPrice > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <label className="block text-gray-700 font-medium mb-1">포인트 사용 (보유: {(currentUser.points ?? 0).toLocaleString()} P)</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={Math.min(currentUser.points ?? 0, totalPrice)}
+                                value={pointsToUse || ''}
+                                onChange={(e) => setPointsToUse(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                                placeholder="0"
+                                className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 text-sm"
+                              />
+                              <span className="ml-2 text-gray-500 text-sm">원</span>
+                              {pointsToUse > 0 && (
+                                <p className="mt-1.5 text-green-700 font-semibold">입금하실 금액: {(totalPrice - Math.min(pointsToUse, currentUser.points ?? 0, totalPrice)).toLocaleString()}원</p>
+                              )}
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -952,7 +971,6 @@ export default function EssayPage() {
                 </aside>
               )}
             </div>
-          )}
         </div>
       </div>
     </>

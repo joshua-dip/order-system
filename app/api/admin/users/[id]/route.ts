@@ -52,6 +52,8 @@ export async function PATCH(
     const allowedTextbooksAnalysis = Array.isArray(body?.allowedTextbooksAnalysis) ? body.allowedTextbooksAnalysis : undefined;
     const allowedTextbooksEssay = Array.isArray(body?.allowedTextbooksEssay) ? body.allowedTextbooksEssay : undefined;
     const allowedEssayTypeIds = Array.isArray(body?.allowedEssayTypeIds) ? body.allowedEssayTypeIds.filter((id: unknown) => typeof id === 'string') : undefined;
+    const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
+    const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
 
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
@@ -65,6 +67,12 @@ export async function PATCH(
     if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;
     if (allowedTextbooksEssay !== undefined) updates.allowedTextbooksEssay = allowedTextbooksEssay;
     if (allowedEssayTypeIds !== undefined) updates.allowedEssayTypeIds = allowedEssayTypeIds;
+    if (points !== undefined) updates.points = points;
+    if (addPoints !== undefined && addPoints > 0) {
+      const t = target as { points?: number };
+      const current = typeof t.points === 'number' && t.points >= 0 ? t.points : 0;
+      updates.points = current + addPoints;
+    }
     if (resetPassword) {
       updates.passwordHash = await hashPassword(DEFAULT_PASSWORD);
     }

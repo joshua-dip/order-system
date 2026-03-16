@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       loginId: o.loginId ?? null,
       orderNumber: o.orderNumber ?? null,
       fileUrl: o.fileUrl ?? null,
+      dropboxFolderCreated: !!(o as { dropboxFolderCreated?: boolean }).dropboxFolderCreated,
     }));
 
     return NextResponse.json({ orders });

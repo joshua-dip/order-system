@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis) ? u.allowedTextbooksAnalysis : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       allowedTextbooksEssay: Array.isArray(u.allowedTextbooksEssay) ? u.allowedTextbooksEssay : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
+      points: (() => { const p = (u as { points?: number }).points; return typeof p === 'number' && p >= 0 ? p : 0; })(),
       createdAt: u.createdAt,
     }));
 
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
       allowedTextbooks: [],
       allowedTextbooksAnalysis: [],
       allowedTextbooksEssay: [],
+      points: 0,
       createdAt: new Date(),
     });
 

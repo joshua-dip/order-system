@@ -64,6 +64,19 @@ function toApiPath(logicalPath: string): string {
   return logicalPath;
 }
 
+/** 경로에 쓸 수 없는 문자만 제거 (한글 등은 유지) */
+function safePathSegment(s: string): string {
+  return s.replace(/[/\\:*?"<>|]/g, '').trim() || '_';
+}
+
+/** Dropbox-API-Arg 헤더용: JSON에서 non-ASCII를 \uXXXX로 이스케이프해 헤더가 ByteString만 쓰이게 함 */
+function dropboxApiArgHeader(obj: Record<string, unknown>): string {
+  return JSON.stringify(obj).replace(/[\u0080-\uffff]/g, (c) => {
+    const code = c.charCodeAt(0);
+    return '\\u' + code.toString(16).padStart(4, '0');
+  });
+}
+
 /**
  * Dropbox에 폴더를 생성합니다. 이미 존재하면 무시합니다.
  * logicalPath는 우리가 저장하는 경로(/gomijoshua/...), API에는 앱 폴더 기준 상대 경로로 전달합니다.
@@ -101,10 +114,10 @@ async function createFolder(logicalPath: string): Promise<void> {
  */
 export async function createUserDropboxFolder(loginId: string, name: string, phone?: string): Promise<string> {
   const root = process.env.DROPBOX_ROOT_FOLDER ?? 'gomijoshua';
-  const safeName = name.replace(/[/\\:*?"<>|]/g, '').trim() || loginId;
+  const safeName = safePathSegment(name) || safePathSegment(loginId);
   const suffix = (typeof phone === 'string' && phone.trim())
-    ? phone.replace(/[/\\:*?"<>|]/g, '').replace(/\s/g, '').trim()
-    : loginId.replace(/[/\\:*?"<>|]/g, '').trim();
+    ? safePathSegment(phone.replace(/\s/g, ''))
+    : safePathSegment(loginId);
   const userFolder = `/${root}/${safeName}_${suffix}`;
   await createFolder(userFolder);
   return userFolder;
@@ -142,16 +155,30 @@ export async function createOrderFolder({
     return orderFolder;
   }
 
-  const safeName = name.replace(/[/\\:*?"<>|]/g, '').trim() || loginId;
+  const safeName = safePathSegment(name) || safePathSegment(loginId);
   const suffix = (typeof phone === 'string' && phone.trim())
-    ? phone.replace(/[/\\:*?"<>|]/g, '').replace(/\s/g, '').trim()
-    : loginId.replace(/[/\\:*?"<>|]/g, '').trim();
+    ? safePathSegment(phone.replace(/\s/g, ''))
+    : safePathSegment(loginId);
   const userFolder = `/${root}/${safeName}_${suffix}`;
   const orderFolder = `${userFolder}/${safeOrderNumber}`;
 
   await createFolder(userFolder);
   await createFolder(orderFolder);
 
+  return orderFolder;
+}
+
+/**
+ * 비회원 주문용 Dropbox 폴더를 생성합니다.
+ * 경로: /{root}/비회원/{주문번호}
+ */
+export async function createOrderFolderForGuest(orderNumber: string): Promise<string> {
+  const root = process.env.DROPBOX_ROOT_FOLDER ?? 'gomijoshua';
+  const safeOrderNumber = orderNumber.replace(/[/\\:*?"<>|]/g, '').trim() || 'unknown';
+  const guestBase = `/${root}/비회원`;
+  const orderFolder = `${guestBase}/${safeOrderNumber}`;
+  await createFolder(guestBase);
+  await createFolder(orderFolder);
   return orderFolder;
 }
 
@@ -169,18 +196,15 @@ export async function uploadOrderTxt(
   const fileName = `주문서_${orderNumber}.txt`;
   const filePathLogical = orderFolderPath.endsWith('/') ? `${orderFolderPath}${fileName}` : `${orderFolderPath}/${fileName}`;
   const filePathApi = toApiPath(filePathLogical) || `/${fileName}`;
-
+  const utf8Bytes = new TextEncoder().encode(orderText);
   const res = await fetch(`${DROPBOX_CONTENT_URL}/files/upload`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/octet-stream',
-      'Dropbox-API-Arg': JSON.stringify({
-        path: filePathApi,
-        mode: { '.tag': 'overwrite' },
-      }),
+      'Dropbox-API-Arg': dropboxApiArgHeader({ path: filePathApi, mode: { '.tag': 'overwrite' } }),
     },
-    body: Buffer.from(orderText, 'utf-8'),
+    body: utf8Bytes,
   });
 
   if (!res.ok) {

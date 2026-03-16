@@ -16,11 +16,12 @@ export async function GET(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(payload.sub) },
-      { projection: { loginId: 1, role: 1, name: 1, email: 1, dropboxFolderPath: 1, dropboxSharedLink: 1, canAccessAnalysis: 1, canAccessEssay: 1, allowedTextbooks: 1, allowedTextbooksAnalysis: 1, allowedTextbooksEssay: 1 } }
+      { projection: { loginId: 1, role: 1, name: 1, email: 1, dropboxFolderPath: 1, dropboxSharedLink: 1, canAccessAnalysis: 1, canAccessEssay: 1, allowedTextbooks: 1, allowedTextbooksAnalysis: 1, allowedTextbooksEssay: 1, points: 1 } }
     );
     if (!user) {
       return NextResponse.json({ user: null }, { status: 200 });
     }
+    const points = typeof user.points === 'number' && user.points >= 0 ? user.points : 0;
     return NextResponse.json({
       user: {
         loginId: user.loginId,
@@ -34,11 +35,12 @@ export async function GET(request: NextRequest) {
         allowedTextbooks: Array.isArray(user.allowedTextbooks) ? user.allowedTextbooks : [],
         allowedTextbooksAnalysis: Array.isArray(user.allowedTextbooksAnalysis) ? user.allowedTextbooksAnalysis : (Array.isArray(user.allowedTextbooks) ? user.allowedTextbooks : []),
         allowedTextbooksEssay: Array.isArray(user.allowedTextbooksEssay) ? user.allowedTextbooksEssay : (Array.isArray(user.allowedTextbooks) ? user.allowedTextbooks : []),
+        points,
       },
     });
-  } catch {
+    } catch {
     return NextResponse.json({
-      user: { loginId: payload.loginId, role: payload.role, name: payload.loginId, email: '', canAccessAnalysis: false, canAccessEssay: false, allowedTextbooks: [], allowedTextbooksAnalysis: [], allowedTextbooksEssay: [] },
+      user: { loginId: payload.loginId, role: payload.role, name: payload.loginId, email: '', canAccessAnalysis: false, canAccessEssay: false, allowedTextbooks: [], allowedTextbooksAnalysis: [], allowedTextbooksEssay: [], points: 0 },
     });
   }
 }

@@ -81,13 +81,12 @@ export async function GET(request: NextRequest) {
       canAccessEssay = !!user?.canAccessEssay;
       allowedEssayTypeIds = Array.isArray(user?.allowedEssayTypeIds) ? user.allowedEssayTypeIds : [];
     }
-    if (!canAccessEssay) {
-      return NextResponse.json({ types: [] });
-    }
+    // 비회원/권한 없음: 공통 유형만 반환 (EBS·모의고사 주문용). 회원(서술형 권한): 공통 + 배정 유형
     const allowedSet = new Set(allowedEssayTypeIds);
     list = list.filter((d: { common?: boolean; _id?: { toString: () => string } }) => {
+      const isCommon = (d as { common?: boolean }).common === true || (d as { common?: boolean }).common === undefined;
+      if (!canAccessEssay) return isCommon; // 비회원은 공통 유형만
       const idStr = d._id?.toString?.();
-      const isCommon = d.common === true || d.common === undefined; // 기존 문서(common 없음)는 공통으로 간주
       return isCommon || (idStr && allowedSet.has(idStr));
     });
 

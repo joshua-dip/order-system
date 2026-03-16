@@ -8,6 +8,7 @@ export interface CurrentUser {
   allowedTextbooksEssay: string[];
   canAccessAnalysis?: boolean;
   canAccessEssay?: boolean;
+  points?: number;
 }
 
 /**
@@ -23,12 +24,14 @@ export function useCurrentUser(): CurrentUser | null {
       .then((data) => {
         if (data?.user) {
           const at = Array.isArray(data.user.allowedTextbooks) ? data.user.allowedTextbooks : [];
+          const points = typeof data.user.points === 'number' && data.user.points >= 0 ? data.user.points : 0;
           setUser({
             allowedTextbooks: at,
             allowedTextbooksAnalysis: Array.isArray(data.user.allowedTextbooksAnalysis) ? data.user.allowedTextbooksAnalysis : at,
             allowedTextbooksEssay: Array.isArray(data.user.allowedTextbooksEssay) ? data.user.allowedTextbooksEssay : at,
             canAccessAnalysis: !!data.user.canAccessAnalysis,
             canAccessEssay: !!data.user.canAccessEssay,
+            points,
           });
         } else {
           setUser(null);

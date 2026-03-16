@@ -12,6 +12,7 @@ interface AuthUser {
   email: string;
   dropboxFolderPath?: string;
   dropboxSharedLink?: string;
+  points?: number;
 }
 
 interface MyOrder {
@@ -859,8 +860,8 @@ export default function MyPage() {
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="text-sm font-bold text-[#0f172a] mb-3">내 포인트</div>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-black tracking-tight">0 <sub className="text-xs font-medium text-[#94a3b8]">P</sub></span>
-                  <span className="px-3 py-1.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-full text-[11px] text-[#94a3b8]">포인트 기능은 준비 중입니다</span>
+                  <span className="text-2xl font-black tracking-tight">{(user.points ?? 0).toLocaleString()} <sub className="text-xs font-medium text-[#94a3b8]">P</sub></span>
+                  <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">주문 시 포인트 사용 가능</span>
                 </div>
               </div>
             </div>

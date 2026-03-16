@@ -39,6 +39,7 @@ interface ListUser {
   allowedTextbooksAnalysis?: string[];
   allowedTextbooksEssay?: string[];
   allowedEssayTypeIds?: string[];
+  points?: number;
   createdAt: string;
 }
 
@@ -51,6 +52,7 @@ interface AdminOrder {
   loginId: string | null;
   orderNumber: string | null;
   fileUrl: string | null;
+  dropboxFolderCreated?: boolean;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -111,6 +113,7 @@ export default function AdminDashboardPage() {
   const [editDropboxFolderPath, setEditDropboxFolderPath] = useState('');
   const [editDropboxSharedLink, setEditDropboxSharedLink] = useState('');
   const [editResetPassword, setEditResetPassword] = useState(false);
+  const [editPointsAdd, setEditPointsAdd] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [editMessage, setEditMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -199,6 +202,8 @@ export default function AdminDashboardPage() {
   const [assignLoginId, setAssignLoginId] = useState('');
   const [assignSavingId, setAssignSavingId] = useState<string | null>(null);
   const [deleteSavingId, setDeleteSavingId] = useState<string | null>(null);
+  const [createOrderFolderId, setCreateOrderFolderId] = useState<string | null>(null);
+  const [copiedLinkOrderId, setCopiedLinkOrderId] = useState<string | null>(null);
 
   const [dataError, setDataError] = useState<string | null>(null);
 
@@ -342,6 +347,7 @@ export default function AdminDashboardPage() {
     setEditDropboxFolderPath(u.dropboxFolderPath ?? '');
     setEditDropboxSharedLink(u.dropboxSharedLink ?? '');
     setEditResetPassword(false);
+    setEditPointsAdd('');
     setEditMessage(null);
   };
 
@@ -351,13 +357,15 @@ export default function AdminDashboardPage() {
     setEditMessage(null);
     setEditSaving(true);
     try {
-      const body: { name?: string; email?: string; phone?: string; dropboxFolderPath?: string; dropboxSharedLink?: string; resetPassword?: boolean } = {};
+      const body: { name?: string; email?: string; phone?: string; dropboxFolderPath?: string; dropboxSharedLink?: string; resetPassword?: boolean; addPoints?: number } = {};
       if (editName !== editUser.name) body.name = editName;
       if (editEmail !== editUser.email) body.email = editEmail;
       if (editPhone !== (editUser.phone ?? '')) body.phone = editPhone;
       if (editDropboxFolderPath !== (editUser.dropboxFolderPath ?? '')) body.dropboxFolderPath = editDropboxFolderPath;
       if (editDropboxSharedLink !== (editUser.dropboxSharedLink ?? '')) body.dropboxSharedLink = editDropboxSharedLink;
       if (editResetPassword) body.resetPassword = true;
+      const addPointsNum = editPointsAdd.trim() !== '' ? parseInt(editPointsAdd.trim(), 10) : NaN;
+      if (!Number.isNaN(addPointsNum) && addPointsNum > 0) body.addPoints = addPointsNum;
       if (Object.keys(body).length === 0) {
         setEditMessage({ type: 'error', text: '변경할 내용이 없습니다.' });
         setEditSaving(false);
@@ -951,6 +959,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch(`/api/orders/${orderDetailModal.id}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'setFileUrl', fileUrl: fileUrlInput }),
       });
@@ -976,6 +985,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch(`/api/orders/${orderDetailModal.id}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'setStatus', status: statusInput }),
       });
@@ -1002,6 +1012,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch(`/api/orders/${orderDetailModal.id}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'assignMember', loginId: assignLoginId.trim() }),
       });
@@ -1022,11 +1033,30 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleCreateOrderFolder = async (orderId: string) => {
+    setCreateOrderFolderId(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/create-dropbox-folder`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setMessage({ type: 'success', text: `폴더 생성 완료: ${data.folderPath}` });
+        setRecentOrders((prev) => prev.map((ord) => (ord.id === orderId ? { ...ord, dropboxFolderCreated: true } : ord)));
+        setUserOrders((prev) => prev.map((ord) => (ord.id === orderId ? { ...ord, dropboxFolderCreated: true } : ord)));
+      } else {
+        setMessage({ type: 'error', text: data?.error || '폴더 생성에 실패했습니다.' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setCreateOrderFolderId(null);
+    }
+  };
+
   const handleDeleteOrder = async () => {
     if (!orderDetailModal || !confirm('이 주문을 삭제할까요? 삭제 후에는 복구할 수 없습니다.')) return;
     setDeleteSavingId(orderDetailModal.id);
     try {
-      const res = await fetch(`/api/orders/${orderDetailModal.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/orders/${orderDetailModal.id}`, { method: 'DELETE', credentials: 'include' });
       const data = await res.json();
       if (res.ok && data.ok) {
         setRecentOrders((prev) => prev.filter((o) => o.id !== orderDetailModal.id));
@@ -1358,14 +1388,14 @@ export default function AdminDashboardPage() {
 
           {/* Red alert: 미처리 주문 */}
           {needLinkCount > 0 && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 flex items-center justify-between mb-6">
-              <span className="text-red-200 font-medium">
+            <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 flex items-center justify-between gap-4 mb-6">
+              <span className="text-red-200 font-medium flex-1 min-w-0">
                 미처리 주문 {needLinkCount}건이 있습니다 — 드롭박스 링크 등록이 필요해요
               </span>
               <button
                 type="button"
-                onClick={() => setSection('orders')}
-                className="text-red-200 hover:text-white font-medium text-sm"
+                onClick={() => { setSection('orders'); setOrderFilter('pending'); }}
+                className="flex-shrink-0 py-2 px-4 rounded-lg bg-red-500/30 hover:bg-red-500/50 border border-red-500/50 text-red-100 hover:text-white font-medium text-sm cursor-pointer transition-colors"
               >
                 바로가기 →
               </button>
@@ -1478,7 +1508,9 @@ export default function AdminDashboardPage() {
                       const member = o.loginId ? users.find((u) => u.loginId === o.loginId) : null;
                       return (
                       <tr key={o.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                        <td className="py-3 px-5 font-mono text-white">{o.orderNumber || '—'}</td>
+                        <td className="py-3 px-5">
+                          <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="font-mono text-white hover:text-blue-300 hover:underline">{o.orderNumber || '—'}</a>
+                        </td>
                         <td className="py-3 px-5 text-slate-300">
                           {o.loginId ? (
                             <>
@@ -1503,7 +1535,23 @@ export default function AdminDashboardPage() {
                         <td className="py-3 px-5">
                           <div className="flex flex-wrap items-center gap-2">
                             {o.fileUrl ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-400 text-xs font-medium">√ 링크 완료</span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (!o.fileUrl) return;
+                                  try {
+                                    await navigator.clipboard.writeText(o.fileUrl);
+                                    setCopiedLinkOrderId(o.id);
+                                    setTimeout(() => setCopiedLinkOrderId(null), 1500);
+                                  } catch {
+                                    setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs font-medium cursor-pointer"
+                                title="클릭하면 링크 복사"
+                              >
+                                {copiedLinkOrderId === o.id ? '✓ 복사됨' : '√ 링크 완료'}
+                              </button>
                             ) : (
                               <button
                                 type="button"
@@ -1513,6 +1561,25 @@ export default function AdminDashboardPage() {
                                 🔗 링크 등록
                               </button>
                             )}
+                            {o.fileUrl ? (
+                              <a href={o.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-medium" title="드롭박스 폴더 열기">
+                                📁 폴더 보기
+                              </a>
+                            ) : o.dropboxFolderCreated ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-500 text-xs font-medium" title="폴더 생성됨 · 링크 등록 시 폴더 보기 가능">
+                                ✓ 폴더 생성됨
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleCreateOrderFolder(o.id)}
+                                disabled={!!createOrderFolderId}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-500 hover:bg-slate-600 text-slate-300 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="주문번호로 Dropbox 폴더 생성"
+                              >
+                                {createOrderFolderId === o.id ? '생성 중…' : '📁 폴더 만들기'}
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => openOrderDetail(o)}
@@ -1520,7 +1587,6 @@ export default function AdminDashboardPage() {
                             >
                               상태 변경
                             </button>
-                            <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white text-xs">보기</a>
                           </div>
                         </td>
                       </tr>
@@ -1999,6 +2065,7 @@ export default function AdminDashboardPage() {
                               {lastOrderDateFor(u.loginId) && (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDateTime(lastOrderDateFor(u.loginId)!)}>최근 주문 {daysAgo(lastOrderDateFor(u.loginId)!)}</span>
                               )}
+                              <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400">{(u.points ?? 0).toLocaleString()} P</span>
                               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDate(u.createdAt)}>{daysAgo(u.createdAt)} 가입</span>
                             </div>
                           </div>
@@ -2217,7 +2284,7 @@ export default function AdminDashboardPage() {
             {!orderDetailModal.loginId && users.length > 0 && (
               <div className="mb-4 p-4 rounded-lg bg-slate-700/50 border border-slate-600">
                 <label className="block text-slate-300 text-sm font-medium mb-2">회원으로 연결 (가입 전 주문)</label>
-                <p className="text-slate-500 text-xs mb-2">이 주문을 회원 계정에 연결하면, 해당 회원이 내정보에서 주문 이력을 볼 수 있습니다.</p>
+                <p className="text-slate-500 text-xs mb-2">이 주문을 회원 계정에 연결하면, 해당 회원이 내정보에서 주문 이력을 볼 수 있습니다. 연결하지 않아도 아래에서 상태 변경·링크 저장이 가능합니다.</p>
                 <select
                   value={assignLoginId}
                   onChange={(e) => setAssignLoginId(e.target.value)}
@@ -2280,16 +2347,24 @@ export default function AdminDashboardPage() {
             ) : (
               <div className="overflow-y-auto flex-1 border border-slate-600 rounded-lg mt-2">
                 <table className="w-full text-sm">
-                  <thead><tr className="bg-slate-700/50 text-slate-400"><th className="text-left py-2 px-3">주문번호</th><th className="text-left py-2 px-3">일시</th><th className="text-left py-2 px-3">상태</th><th className="text-left py-2 px-3">보기</th></tr></thead>
+                  <thead><tr className="bg-slate-700/50 text-slate-400"><th className="text-left py-2 px-3">주문번호</th><th className="text-left py-2 px-3">일시</th><th className="text-left py-2 px-3">상태</th><th className="text-left py-2 px-3">관리</th></tr></thead>
                   <tbody>
                     {userOrders.map((o) => (
                       <tr key={o.id} className="border-t border-slate-700">
-                        <td className="py-2 px-3 font-mono text-white">{o.orderNumber || '—'}</td>
+                        <td className="py-2 px-3">
+                          <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="font-mono text-white hover:text-blue-300 hover:underline">{o.orderNumber || '—'}</a>
+                        </td>
                         <td className="py-2 px-3 text-slate-400">{formatDateTime(o.createdAt)}</td>
                         <td className="py-2 px-3"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || ''}`}>{o.statusLabel}</span></td>
                         <td className="py-2 px-3">
                           <button type="button" onClick={() => { setOrdersModalUser(null); openOrderDetail(o); }} className="text-blue-400 hover:underline text-xs">관리</button>
-                          <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-400 hover:underline text-xs">보기</a>
+                          {o.fileUrl ? (
+                            <a href={o.fileUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-cyan-400 hover:text-cyan-300 text-xs">폴더 보기</a>
+                          ) : o.dropboxFolderCreated ? (
+                            <span className="ml-2 text-slate-500 text-xs">폴더 생성됨</span>
+                          ) : (
+                            <button type="button" onClick={() => handleCreateOrderFolder(o.id)} disabled={!!createOrderFolderId} className="ml-2 text-slate-400 hover:text-white text-xs disabled:opacity-50">폴더 만들기</button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -2328,6 +2403,11 @@ export default function AdminDashboardPage() {
                 <label className="block text-slate-400 text-sm mb-1">Dropbox 공유 링크 (회원이 폴더 열 때 사용)</label>
                 <input type="url" value={editDropboxSharedLink} onChange={(e) => setEditDropboxSharedLink(e.target.value)} placeholder="https://www.dropbox.com/scl/fo/..." className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" />
                 <p className="text-xs text-slate-500 mt-1">폴더 공유 후 링크를 붙여넣으면 회원이 내 페이지에서 폴더 열기가 됩니다.</p>
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-1">포인트</label>
+                <p className="text-white text-sm mb-1">현재 보유: <strong>{(editUser.points ?? 0).toLocaleString()} P</strong></p>
+                <input type="number" min="0" step="1" value={editPointsAdd} onChange={(e) => setEditPointsAdd(e.target.value)} placeholder="추가 지급할 포인트 (숫자만)" className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" />
               </div>
               <label className="flex items-center gap-2 cursor-pointer text-slate-400 text-sm">
                 <input type="checkbox" checked={editResetPassword} onChange={(e) => setEditResetPassword(e.target.checked)} className="rounded border-slate-500 text-slate-600 bg-slate-700" />
