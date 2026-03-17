@@ -48,12 +48,25 @@ export async function PATCH(
     const resetPassword = body?.resetPassword === true;
     const canAccessAnalysis = body?.canAccessAnalysis === true || body?.canAccessAnalysis === false ? body.canAccessAnalysis : undefined;
     const canAccessEssay = body?.canAccessEssay === true || body?.canAccessEssay === false ? body.canAccessEssay : undefined;
+    const myFormatApproved = body?.myFormatApproved === true || body?.myFormatApproved === false ? body.myFormatApproved : undefined;
     const allowedTextbooks = Array.isArray(body?.allowedTextbooks) ? body.allowedTextbooks : undefined;
     const allowedTextbooksAnalysis = Array.isArray(body?.allowedTextbooksAnalysis) ? body.allowedTextbooksAnalysis : undefined;
     const allowedTextbooksEssay = Array.isArray(body?.allowedTextbooksEssay) ? body.allowedTextbooksEssay : undefined;
     const allowedEssayTypeIds = Array.isArray(body?.allowedEssayTypeIds) ? body.allowedEssayTypeIds.filter((id: unknown) => typeof id === 'string') : undefined;
     const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
     const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
+    const supplementaryNote = typeof body?.supplementaryNote === 'string' ? body.supplementaryNote.trim() : undefined;
+    const hasAnnualMemberSince = 'annualMemberSince' in body;
+    let annualMemberSinceValue: Date | null | undefined = undefined;
+    if (hasAnnualMemberSince) {
+      const v = body.annualMemberSince;
+      if (v === null || v === '' || (typeof v === 'string' && v.trim() === ''))
+        annualMemberSinceValue = null;
+      else if (typeof v === 'string') {
+        const d = new Date(v.trim());
+        annualMemberSinceValue = Number.isNaN(d.getTime()) ? undefined : d;
+      }
+    }
 
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
@@ -63,11 +76,14 @@ export async function PATCH(
     if (dropboxSharedLink !== undefined) updates.dropboxSharedLink = dropboxSharedLink;
     if (canAccessAnalysis !== undefined) updates.canAccessAnalysis = canAccessAnalysis;
     if (canAccessEssay !== undefined) updates.canAccessEssay = canAccessEssay;
+    if (myFormatApproved !== undefined) updates.myFormatApproved = myFormatApproved;
     if (allowedTextbooks !== undefined) updates.allowedTextbooks = allowedTextbooks;
     if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;
     if (allowedTextbooksEssay !== undefined) updates.allowedTextbooksEssay = allowedTextbooksEssay;
     if (allowedEssayTypeIds !== undefined) updates.allowedEssayTypeIds = allowedEssayTypeIds;
     if (points !== undefined) updates.points = points;
+    if (supplementaryNote !== undefined) updates.supplementaryNote = supplementaryNote;
+    if (hasAnnualMemberSince && annualMemberSinceValue !== undefined) updates.annualMemberSince = annualMemberSinceValue;
     if (addPoints !== undefined && addPoints > 0) {
       const t = target as { points?: number };
       const current = typeof t.points === 'number' && t.points >= 0 ? t.points : 0;

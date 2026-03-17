@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppBar from '../components/AppBar';
 
+const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
+
 interface AuthUser {
   loginId: string;
   role: string;
@@ -13,6 +15,7 @@ interface AuthUser {
   dropboxFolderPath?: string;
   dropboxSharedLink?: string;
   points?: number;
+  myFormatApproved?: boolean;
 }
 
 interface MyOrder {
@@ -55,8 +58,9 @@ function statusVariant(status: string): 'new' | 'making' | 'done' | 'cancel' {
   return 'new';
 }
 
-type TabKey = 'orders' | 'exam' | 'settings';
+type TabKey = 'orders' | 'exam' | 'myFormat' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
+type MyFormatType = '강의용자료' | '수업용자료';
 
 export default function MyPage() {
   const router = useRouter();
@@ -101,6 +105,17 @@ export default function MyPage() {
   const [examListExpanded, setExamListExpanded] = useState(false);
   const [examSubTab, setExamSubTab] = useState<ExamSubTabKey>('upload');
 
+  interface MyFormatUploadItem {
+    id: string;
+    files: { originalName: string; fileIndex: number }[];
+    createdAt: string;
+  }
+  const [myFormatByType, setMyFormatByType] = useState<Record<MyFormatType, MyFormatUploadItem[]>>({ 강의용자료: [], 수업용자료: [] });
+  const [myFormatLoading, setMyFormatLoading] = useState(false);
+  const [myFormatSubmitting, setMyFormatSubmitting] = useState<MyFormatType | null>(null);
+  const [myFormatMessage, setMyFormatMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [deletingMyFormatId, setDeletingMyFormatId] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
 
   useEffect(() => {
@@ -138,6 +153,20 @@ export default function MyPage() {
   useEffect(() => {
     if (!user) return;
     fetchPastExamUploads();
+  }, [user]);
+
+  const fetchMyFormatUploads = () => {
+    setMyFormatLoading(true);
+    fetch('/api/my/my-format-upload', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => setMyFormatByType(data.byType || { 강의용자료: [], 수업용자료: [] }))
+      .catch(() => setMyFormatByType({ 강의용자료: [], 수업용자료: [] }))
+      .finally(() => setMyFormatLoading(false));
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    fetchMyFormatUploads();
   }, [user]);
 
   const handleLogout = async () => {
@@ -340,9 +369,69 @@ export default function MyPage() {
     setPreviewFile({ url, name: fileName, type });
   };
 
+  const handleMyFormatSubmit = async (e: React.FormEvent<HTMLFormElement>, type: MyFormatType) => {
+    e.preventDefault();
+    setMyFormatMessage(null);
+    const form = e.currentTarget;
+    const fileInput = form.querySelector<HTMLInputElement>('input[type="file"]');
+    const files = fileInput?.files;
+    if (!files || files.length === 0) {
+      setMyFormatMessage({ type: 'error', text: 'hwp 또는 hwpx 파일을 선택해주세요.' });
+      return;
+    }
+    const allowed = ['.hwp', '.hwpx'];
+    for (let i = 0; i < files.length; i++) {
+      const ext = files[i].name.toLowerCase().slice(files[i].name.lastIndexOf('.'));
+      if (!allowed.includes(ext)) {
+        setMyFormatMessage({ type: 'error', text: 'hwp, hwpx 파일만 업로드 가능합니다.' });
+        return;
+      }
+    }
+    setMyFormatSubmitting(type);
+    try {
+      const formData = new FormData();
+      formData.set('type', type);
+      for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
+      const res = await fetch('/api/my/my-format-upload', { method: 'POST', credentials: 'include', body: formData });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setMyFormatMessage({ type: 'success', text: '업로드되었습니다.' });
+        fileInput.value = '';
+        fetchMyFormatUploads();
+      } else {
+        setMyFormatMessage({ type: 'error', text: data?.error || '업로드에 실패했습니다.' });
+      }
+    } catch {
+      setMyFormatMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setMyFormatSubmitting(null);
+    }
+  };
+
+  const handleDeleteMyFormat = async (id: string) => {
+    if (!confirm('이 업로드를 삭제하시겠습니까?')) return;
+    setDeletingMyFormatId(id);
+    try {
+      const res = await fetch('/api/my/my-format-upload', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) fetchMyFormatUploads();
+      else setMyFormatMessage({ type: 'error', text: data?.error || '삭제에 실패했습니다.' });
+    } catch {
+      setMyFormatMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setDeletingMyFormatId(null);
+    }
+  };
+
   const tabs: { key: TabKey; label: string; icon: string; count?: number }[] = [
     { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
     { key: 'exam', label: '기출문제', icon: '📤' },
+    { key: 'myFormat', label: '나의양식', icon: '📄' },
     { key: 'settings', label: '내 정보', icon: '⚙️' },
   ];
 
@@ -777,6 +866,102 @@ export default function MyPage() {
               )}
             </div>
             )}
+            </div>
+          )}
+
+          {/* ━━ 나의양식 탭 ━━ */}
+          {activeTab === 'myFormat' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <p className="text-sm font-bold text-[#0f172a] mb-2">맞춤형 자료 제작</p>
+                <p className="text-[13px] text-[#475569] mb-2">업로드하신 양식(hwp, hwpx)을 바탕으로 맞춤형 자료를 제작해 드립니다.</p>
+                <p className="text-[13px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">맞춤형 자료 제작을 이용하시려면 <strong>연회원비</strong> 결제가 필요합니다. 연회비 문의는 카카오톡으로 해 주세요.</p>
+                <ul className="text-[13px] text-[#475569] space-y-1.5 list-disc list-inside">
+                  <li><strong className="text-[#0f172a]">강의용자료</strong>: 영어 지문만 포함된 자료입니다.</li>
+                  <li><strong className="text-[#0f172a]">수업용자료</strong>: 영어 지문 + 한글 해석이 포함된 자료입니다.</li>
+                </ul>
+              </div>
+
+              {!user?.myFormatApproved ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                  <p className="text-sm font-bold text-amber-800 mb-2">업로드 이용 안내</p>
+                  <p className="text-[13px] text-amber-900 mb-3">나의양식 업로드는 <strong>관리자 승인 후</strong> 이용할 수 있습니다. 승인을 원하시면 카카오톡으로 문의해 주세요.</p>
+                  <a href={KAKAO_INQUIRY_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FEE500] text-[#191919] rounded-xl text-[13px] font-bold hover:opacity-90 no-underline">
+                    카카오톡 문의하기
+                  </a>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[12px] text-[#64748b]">hwp, hwpx 파일만 업로드 가능합니다. 강의용·수업용 유형별로 업로드해 주세요.</p>
+                  {myFormatMessage && (
+                    <p className={`text-sm ${myFormatMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{myFormatMessage.text}</p>
+                  )}
+
+              {(['강의용자료', '수업용자료'] as const).map((type) => (
+                <div key={type} className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+                  <div className="px-5 py-4 border-b border-[#f1f5f9] bg-[#f8fafc]">
+                    <h3 className="text-sm font-bold text-[#0f172a]">{type}</h3>
+                  </div>
+                  <div className="p-5 space-y-4">
+                    <form onSubmit={(e) => handleMyFormatSubmit(e, type)} className="flex flex-wrap items-end gap-3">
+                      <input type="hidden" name="type" value={type} />
+                      <label className="flex-1 min-w-[180px]">
+                        <span className="block text-xs font-semibold text-[#475569] mb-1.5">파일 선택 (hwp, hwpx)</span>
+                        <input
+                          type="file"
+                          accept=".hwp,.hwpx"
+                          multiple
+                          className="w-full px-3 py-2.5 border border-[#e2e8f0] rounded-xl text-[13px] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2563eb] file:text-white hover:file:bg-[#1d4ed8]"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        disabled={myFormatSubmitting === type}
+                        className="px-5 py-2.5 bg-[#2563eb] text-white rounded-xl text-[13px] font-bold hover:bg-[#1d4ed8] disabled:opacity-70 shrink-0"
+                      >
+                        {myFormatSubmitting === type ? '업로드 중…' : '업로드'}
+                      </button>
+                    </form>
+
+                    {myFormatLoading ? (
+                      <p className="text-sm text-[#94a3b8]">불러오는 중…</p>
+                    ) : myFormatByType[type].length === 0 ? (
+                      <p className="text-sm text-[#94a3b8]">업로드한 파일이 없습니다.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {myFormatByType[type].map((upload) => (
+                          <li key={upload.id} className="flex items-center justify-between gap-2 py-2 border-t border-[#f1f5f9] first:border-t-0 first:pt-0">
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[11px] text-[#94a3b8]">{formatDate(upload.createdAt)}</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {upload.files.map((f, i) => (
+                                  <a
+                                    key={i}
+                                    href={`/api/my/my-format-upload/download?id=${upload.id}&fileIndex=${f.fileIndex}`}
+                                    className="text-[13px] font-medium text-[#2563eb] hover:underline truncate max-w-[200px]"
+                                  >
+                                    📎 {f.originalName}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteMyFormat(upload.id)}
+                              disabled={deletingMyFormatId === upload.id}
+                              className="text-[12px] text-red-500 hover:text-red-600 disabled:opacity-50 shrink-0"
+                            >
+                              {deletingMyFormatId === upload.id ? '삭제 중…' : '삭제'}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              ))}
+                </>
+              )}
             </div>
           )}
 

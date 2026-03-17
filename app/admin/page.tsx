@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ESSAY_CATEGORIES } from '../data/essay-categories';
@@ -35,11 +35,14 @@ interface ListUser {
   dropboxSharedLink: string;
   canAccessAnalysis?: boolean;
   canAccessEssay?: boolean;
+  myFormatApproved?: boolean;
   allowedTextbooks?: string[];
   allowedTextbooksAnalysis?: string[];
   allowedTextbooksEssay?: string[];
   allowedEssayTypeIds?: string[];
   points?: number;
+  supplementaryNote?: string;
+  annualMemberSince?: string | null;
   createdAt: string;
 }
 
@@ -54,6 +57,27 @@ interface AdminOrder {
   fileUrl: string | null;
   dropboxFolderCreated?: boolean;
 }
+
+const MESSAGE_PRESETS: { id: string; label: string; getMessage: (u: ListUser) => string }[] = [
+  {
+    id: 'login',
+    label: '로그인 정보',
+    getMessage: (u) => `[로그인 정보]
+아이디: ${u.loginId || '—'}
+비밀번호: 123456
+
+분석지 제작, 서술형 주문, 워크북/모의고사 주문, 주문 내역 확인 등이 가능하며 추후 연회원들을 중심으로 서비스를 확장해 나갈 예정입니다^^
+비밀번호 변경: 로그인 후 우측 상단 메뉴 → 내정보에서 변경할 수 있습니다 :)`,
+  },
+  {
+    id: 'examUpload',
+    label: '시험지 업로드 안내',
+    getMessage: () => `선생님, 시험지(기출) 업로드 방법 안내드릴게요~
+
+로그인하시고 우측 상단 메뉴에서 [내정보] 들어가주시면, [기출문제] 탭에 [기출문제 업로드] 메뉴가 있어요. 여기서 시험지 파일을 올려주시면 주문 제작할 때 반영해 드립니다 :)
+궁금한 점 있으시면 편하게 연락 주세요!`,
+  },
+];
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '주문 접수',
@@ -112,12 +136,18 @@ export default function AdminDashboardPage() {
   const [editPhone, setEditPhone] = useState('');
   const [editDropboxFolderPath, setEditDropboxFolderPath] = useState('');
   const [editDropboxSharedLink, setEditDropboxSharedLink] = useState('');
+  const [editMyFormatApproved, setEditMyFormatApproved] = useState(false);
   const [editResetPassword, setEditResetPassword] = useState(false);
   const [editPointsAdd, setEditPointsAdd] = useState('');
+  const [editSupplementaryNote, setEditSupplementaryNote] = useState('');
+  const [editAnnualMemberSince, setEditAnnualMemberSince] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [editMessage, setEditMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
+  const [messagePopoverUserId, setMessagePopoverUserId] = useState<string | null>(null);
+  const [messageCopiedKey, setMessageCopiedKey] = useState<string | null>(null);
+  const messagePopoverRef = useRef<HTMLDivElement>(null);
   const [createDropboxFolderId, setCreateDropboxFolderId] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
   const [editingPathId, setEditingPathId] = useState<string | null>(null);
@@ -347,8 +377,11 @@ export default function AdminDashboardPage() {
     setEditPhone(u.phone ?? '');
     setEditDropboxFolderPath(u.dropboxFolderPath ?? '');
     setEditDropboxSharedLink(u.dropboxSharedLink ?? '');
+    setEditMyFormatApproved(!!u.myFormatApproved);
     setEditResetPassword(false);
     setEditPointsAdd('');
+    setEditSupplementaryNote(u.supplementaryNote ?? '');
+    setEditAnnualMemberSince(u.annualMemberSince ?? '');
     setEditMessage(null);
   };
 
@@ -358,12 +391,15 @@ export default function AdminDashboardPage() {
     setEditMessage(null);
     setEditSaving(true);
     try {
-      const body: { name?: string; email?: string; phone?: string; dropboxFolderPath?: string; dropboxSharedLink?: string; resetPassword?: boolean; addPoints?: number } = {};
+      const body: { name?: string; email?: string; phone?: string; dropboxFolderPath?: string; dropboxSharedLink?: string; myFormatApproved?: boolean; resetPassword?: boolean; addPoints?: number; supplementaryNote?: string; annualMemberSince?: string | null } = {};
       if (editName !== editUser.name) body.name = editName;
       if (editEmail !== editUser.email) body.email = editEmail;
       if (editPhone !== (editUser.phone ?? '')) body.phone = editPhone;
       if (editDropboxFolderPath !== (editUser.dropboxFolderPath ?? '')) body.dropboxFolderPath = editDropboxFolderPath;
       if (editDropboxSharedLink !== (editUser.dropboxSharedLink ?? '')) body.dropboxSharedLink = editDropboxSharedLink;
+      if (editMyFormatApproved !== !!editUser.myFormatApproved) body.myFormatApproved = editMyFormatApproved;
+      if (editSupplementaryNote !== (editUser.supplementaryNote ?? '')) body.supplementaryNote = editSupplementaryNote;
+      if (editAnnualMemberSince !== (editUser.annualMemberSince ?? '')) body.annualMemberSince = editAnnualMemberSince.trim() || null;
       if (editResetPassword) body.resetPassword = true;
       const addPointsNum = editPointsAdd.trim() !== '' ? parseInt(editPointsAdd.trim(), 10) : NaN;
       if (!Number.isNaN(addPointsNum) && addPointsNum > 0) body.addPoints = addPointsNum;
@@ -440,6 +476,16 @@ export default function AdminDashboardPage() {
     return `${diff}일 전`;
   };
 
+  const formatAnnualMemberValidity = (since: string | null | undefined) => {
+    if (!since || since.trim() === '') return null;
+    const start = new Date(since);
+    if (Number.isNaN(start.getTime())) return null;
+    const end = new Date(start);
+    end.setFullYear(end.getFullYear() + 1);
+    const fmt = (d: Date) => d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/,'');
+    return { label: `연회원 ~${fmt(end)}`, title: `유효기간: ${fmt(start)} ~ ${fmt(end)}` };
+  };
+
   const handleResetPassword = async (userId: string) => {
     if (!confirm('이 사용자의 비밀번호를 123456으로 초기화하시겠습니까?')) return;
     setResetPasswordLoadingId(userId);
@@ -458,6 +504,28 @@ export default function AdminDashboardPage() {
       setResetPasswordLoadingId(null);
     }
   };
+
+  const handleCopyMessage = (u: ListUser, messageId: string) => {
+    const preset = MESSAGE_PRESETS.find((p) => p.id === messageId);
+    if (!preset) return;
+    const text = preset.getMessage(u);
+    navigator.clipboard.writeText(text).then(() => {
+      setMessageCopiedKey(`${u.id}-${messageId}`);
+      setTimeout(() => setMessageCopiedKey(null), 2000);
+    }).catch(() => alert('클립보드 복사에 실패했습니다.'));
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (messagePopoverRef.current && !messagePopoverRef.current.contains(e.target as Node)) {
+        setMessagePopoverUserId(null);
+      }
+    };
+    if (messagePopoverUserId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [messagePopoverUserId]);
 
   const handleCreateDropboxFolder = async (u: ListUser) => {
     setCreateDropboxFolderId(u.id);
@@ -2097,6 +2165,11 @@ export default function AdminDashboardPage() {
                               )}
                             </p>
                             <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
+                              {formatAnnualMemberValidity(u.annualMemberSince) ? (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-500/15 text-violet-300 border border-violet-500/30" title={formatAnnualMemberValidity(u.annualMemberSince)!.title}>{formatAnnualMemberValidity(u.annualMemberSince)!.label}</span>
+                              ) : (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500">일반</span>
+                              )}
                               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400">주문 {orderCountFor(u.loginId)}건</span>
                               {lastOrderDateFor(u.loginId) && (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDateTime(lastOrderDateFor(u.loginId)!)}>최근 주문 {daysAgo(lastOrderDateFor(u.loginId)!)}</span>
@@ -2225,9 +2298,37 @@ export default function AdminDashboardPage() {
                             </div>
                           )}
                         </div>
-                        <div className="px-4 pb-3">
+                        {(u.supplementaryNote != null && u.supplementaryNote.trim() !== '') && (
+                          <div className="px-4 pb-2">
+                            <p className="text-[11px] text-slate-500 mb-0.5">부교재 사용</p>
+                            <p className="text-xs text-slate-300 whitespace-pre-wrap break-words">{u.supplementaryNote.trim()}</p>
+                          </div>
+                        )}
+                        <div className="px-4 pb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
                           <button type="button" onClick={() => openOrdersModal(u)} className="text-xs text-cyan-400 hover:underline bg-transparent border-0 cursor-pointer p-0">📋 주문 내역 보기 →</button>
-                          <span className="text-slate-600 text-xs mx-2">·</span>
+                          <span className="text-slate-600 text-xs">·</span>
+                          <div className="relative inline-block" ref={messagePopoverUserId === u.id ? messagePopoverRef : null}>
+                            <button type="button" onClick={() => setMessagePopoverUserId((prev) => (prev === u.id ? null : u.id))} className="text-xs text-slate-300 hover:underline bg-transparent border-0 cursor-pointer p-0">
+                              💬 메세지 복사
+                            </button>
+                            {messagePopoverUserId === u.id && (
+                              <div className="absolute left-0 bottom-full mb-1 z-10 min-w-[180px] rounded-lg border border-slate-600 bg-slate-800 shadow-xl py-1.5">
+                                <p className="px-3 py-1 text-[11px] text-slate-500 border-b border-slate-700 mb-1">안내 멘트 선택</p>
+                                {MESSAGE_PRESETS.map((preset) => (
+                                  <button
+                                    key={preset.id}
+                                    type="button"
+                                    onClick={() => handleCopyMessage(u, preset.id)}
+                                    className="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-700/80 flex items-center justify-between gap-2"
+                                  >
+                                    <span>{preset.label}</span>
+                                    {messageCopiedKey === `${u.id}-${preset.id}` && <span className="text-emerald-400 text-[10px]">✓ 복사됨</span>}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-slate-600 text-xs">·</span>
                           <button type="button" onClick={() => handleResetPassword(u.id)} disabled={resetPasswordLoadingId === u.id} className="text-xs text-amber-400 hover:underline bg-transparent border-0 cursor-pointer p-0 disabled:opacity-50">PW 초기화</button>
                         </div>
                       </div>
@@ -2424,9 +2525,10 @@ export default function AdminDashboardPage() {
       {/* Edit user modal */}
       {editUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-700">
-            <h3 className="font-bold text-white mb-4">계정 수정 — {editUser.loginId}</h3>
-            <form onSubmit={handleSaveEdit} className="space-y-4">
+          <div className="bg-slate-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-700">
+            <h3 className="font-bold text-white p-6 pb-0 shrink-0">계정 수정 — {editUser.loginId}</h3>
+            <form onSubmit={handleSaveEdit} className="flex flex-col flex-1 min-h-0 p-6">
+              <div className="space-y-4 overflow-y-auto flex-1 pr-1">
               <div>
                 <label className="block text-slate-400 text-sm mb-1">이름</label>
                 <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
@@ -2440,6 +2542,10 @@ export default function AdminDashboardPage() {
                 <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="01012345678 (폴더명에 사용)" className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
               </div>
               <div>
+                <label className="block text-slate-400 text-sm mb-1">부교재 사용 기록</label>
+                <textarea value={editSupplementaryNote} onChange={(e) => setEditSupplementaryNote(e.target.value)} placeholder="예: 수능특강, 완자 (공통이 아닌 부교재 주문 시 참고)" rows={2} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 resize-none" />
+              </div>
+              <div>
                 <label className="block text-slate-400 text-sm mb-1">드롭박스 폴더 경로</label>
                 <input type="text" value={editDropboxFolderPath} onChange={(e) => setEditDropboxFolderPath(e.target.value)} placeholder="/gomijoshua/이름_전화번호" className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-mono" />
               </div>
@@ -2449,16 +2555,31 @@ export default function AdminDashboardPage() {
                 <p className="text-xs text-slate-500 mt-1">폴더 공유 후 링크를 붙여넣으면 회원이 내 페이지에서 폴더 열기가 됩니다.</p>
               </div>
               <div>
+                <label className="block text-slate-400 text-sm mb-1">연회원</label>
+                <label className="flex items-center gap-2 cursor-pointer text-slate-300 text-sm mb-1.5">
+                  <input type="checkbox" checked={!!editAnnualMemberSince} onChange={(e) => { if (!e.target.checked) setEditAnnualMemberSince(''); else if (!editAnnualMemberSince) setEditAnnualMemberSince(new Date().toISOString().slice(0, 10)); }} className="rounded border-slate-500 text-slate-600 bg-slate-700" />
+                  연회원으로 설정 (등록일로부터 1년 유효)
+                </label>
+                {editAnnualMemberSince && (
+                  <input type="date" value={editAnnualMemberSince} onChange={(e) => setEditAnnualMemberSince(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
+                )}
+              </div>
+              <div>
                 <label className="block text-slate-400 text-sm mb-1">포인트</label>
                 <p className="text-white text-sm mb-1">현재 보유: <strong>{(editUser.points ?? 0).toLocaleString()} P</strong></p>
                 <input type="number" min="0" step="1" value={editPointsAdd} onChange={(e) => setEditPointsAdd(e.target.value)} placeholder="추가 지급할 포인트 (숫자만)" className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" />
               </div>
               <label className="flex items-center gap-2 cursor-pointer text-slate-400 text-sm">
+                <input type="checkbox" checked={editMyFormatApproved} onChange={(e) => setEditMyFormatApproved(e.target.checked)} className="rounded border-slate-500 text-slate-600 bg-slate-700" />
+                나의양식 업로드 승인 (내정보에서 hwp/hwpx 업로드 가능)
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-slate-400 text-sm">
                 <input type="checkbox" checked={editResetPassword} onChange={(e) => setEditResetPassword(e.target.checked)} className="rounded border-slate-500 text-slate-600 bg-slate-700" />
                 비밀번호 123456으로 초기화
               </label>
               {editMessage && <p className={`text-sm ${editMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>{editMessage.text}</p>}
-              <div className="flex gap-2 pt-2">
+              </div>
+              <div className="flex gap-2 pt-4 shrink-0">
                 <button type="submit" disabled={editSaving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-50">{editSaving ? '저장 중…' : '저장'}</button>
                 <button type="button" onClick={() => setEditUser(null)} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">취소</button>
               </div>

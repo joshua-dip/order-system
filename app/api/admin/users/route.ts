@@ -30,11 +30,19 @@ export async function GET(request: NextRequest) {
       dropboxSharedLink: u.dropboxSharedLink ?? '',
       canAccessAnalysis: !!u.canAccessAnalysis,
       canAccessEssay: !!u.canAccessEssay,
+      myFormatApproved: !!(u as { myFormatApproved?: boolean }).myFormatApproved,
       allowedTextbooks: Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
       allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis) ? u.allowedTextbooksAnalysis : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       allowedTextbooksEssay: Array.isArray(u.allowedTextbooksEssay) ? u.allowedTextbooksEssay : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
       points: (() => { const p = (u as { points?: number }).points; return typeof p === 'number' && p >= 0 ? p : 0; })(),
+      supplementaryNote: (() => { const s = (u as { supplementaryNote?: string }).supplementaryNote; return typeof s === 'string' ? s : ''; })(),
+      annualMemberSince: (() => {
+        const d = (u as { annualMemberSince?: Date }).annualMemberSince;
+        if (!d) return null;
+        const date = d instanceof Date ? d : new Date(d);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+      })(),
       createdAt: u.createdAt,
     }));
 
@@ -108,6 +116,7 @@ export async function POST(request: NextRequest) {
       allowedTextbooksAnalysis: [],
       allowedTextbooksEssay: [],
       points: 0,
+      supplementaryNote: '',
       createdAt: new Date(),
     });
 
