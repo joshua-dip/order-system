@@ -11,6 +11,7 @@
     "seed:testuser": "node scripts/seed-test-user.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "jose": "^6.2.0",
