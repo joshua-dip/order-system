@@ -34,6 +34,10 @@ export async function GET(request: NextRequest) {
       allowedTextbooks: Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
       allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis) ? u.allowedTextbooksAnalysis : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
       allowedTextbooksEssay: Array.isArray(u.allowedTextbooksEssay) ? u.allowedTextbooksEssay : (Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : []),
+      allowedTextbooksWorkbook: (() => {
+        const wb = (u as Record<string, unknown>).allowedTextbooksWorkbook;
+        return Array.isArray(wb) ? wb.filter((x): x is string => typeof x === 'string') : undefined;
+      })(),
       allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
       points: (() => { const p = (u as { points?: number }).points; return typeof p === 'number' && p >= 0 ? p : 0; })(),
       supplementaryNote: (() => { const s = (u as { supplementaryNote?: string }).supplementaryNote; return typeof s === 'string' ? s : ''; })(),

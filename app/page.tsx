@@ -81,8 +81,8 @@ export default function Home() {
     setCurrentStep('questions');
   };
 
-  const handleOrderGenerate = (orderText: string, orderPrefix?: string) => {
-    saveOrderToDb(orderText, orderPrefix).then((res) => {
+  const handleOrderGenerate = (orderText: string, orderPrefix?: string, extras?: { orderMeta?: Record<string, unknown> }) => {
+    saveOrderToDb(orderText, orderPrefix, undefined, extras?.orderMeta).then((res) => {
       if (res.ok && res.id) {
         router.push('/order/done?id=' + res.id);
       } else {

@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
     }
 
     const client = new Anthropic({ apiKey });
+    /** 콘솔(https://console.anthropic.com/)·.env.example 의 ANTHROPIC_SOLVE_MODEL 참고 */
+    const model =
+      (process.env.ANTHROPIC_SOLVE_MODEL && process.env.ANTHROPIC_SOLVE_MODEL.trim()) ||
+      'claude-sonnet-4-6';
 
     let prompt = '당신은 한국 수능 영어 전문가입니다. 아래 문제를 풀고 정답을 맞혀주세요.\n\n';
 
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
       '위 문제의 정답을 선택하고, 이유를 한국어로 간략히 설명해 주세요.\n반드시 "정답: [번호 또는 내용]" 형식으로 시작하세요.';
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model,
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
     });

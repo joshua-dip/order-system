@@ -95,6 +95,18 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
       finalOrderText = `${finalOrderText.trim()}\n\n${footer}`;
     }
 
+    // 구조화 메타(지문·유형 등): 회원/비회원 모두 저장 — 관리자 문제수 검증·재주문 옵션 등에 사용
+    let orderMeta: Record<string, unknown> | undefined;
+    const rawMeta = body?.orderMeta;
+    if (rawMeta != null && typeof rawMeta === 'object' && !Array.isArray(rawMeta)) {
+      try {
+        const s = JSON.stringify(rawMeta);
+        if (s.length <= 48_000) orderMeta = rawMeta as Record<string, unknown>;
+      } catch {
+        /* ignore */
+      }
+    }
+
     const doc = {
       orderText: finalOrderText,
       createdAt: now,
@@ -103,6 +115,7 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
       orderNumber,
       ...(loginId && { loginId }),
       ...(pointsUsed > 0 && { pointsUsed }),
+      ...(orderMeta && { orderMeta }),
     };
 
     const result = await collection.insertOne(doc);

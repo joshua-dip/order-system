@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import mockExamsData from '../data/mock-exams.json';
+import type { OrderGenerateExtras } from './MockExamSettings';
 
 interface NumberBasedProductionProps {
   onBack: () => void;
-  onOrderGenerate?: (orderText: string, orderPrefix?: string) => void;
+  onOrderGenerate?: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
 }
 
 interface MaterialItem {
@@ -26,8 +27,53 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [materialOrder, setMaterialOrder] = useState<string[]>([]);
   const [variantRound, setVariantRound] = useState<number>(1);
+  const [explanationVariantOrder, setExplanationVariantOrder] = useState(true);
+  const [explanationVariantInsertion, setExplanationVariantInsertion] = useState(true);
   const [email, setEmail] = useState<string>('');
   const [step, setStep] = useState<'select-exam' | 'select-numbers' | 'select-materials'>('select-exam');
+  const [isMember, setIsMember] = useState(false);
+  const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setIsMember(!!d?.user && d.user.role !== 'admin'))
+      .catch(() => setIsMember(false));
+  }, []);
+
+  const loadLatestOrderOptions = async () => {
+    setLoadingLatestOptions(true);
+    try {
+      const res = await fetch('/api/my/latest-order-options?flow=numberBased', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '불러오기에 실패했습니다.');
+        return;
+      }
+      const m = data.orderMeta as Record<string, unknown> | null;
+      if (!m || m.flow !== 'numberBased') {
+        alert('저장된 최근 번호별 교재 주문이 없습니다.');
+        return;
+      }
+      if (typeof m.selectedGrade === 'string') setSelectedGrade(m.selectedGrade);
+      if (typeof m.selectedYear === 'string') setSelectedYear(m.selectedYear);
+      if (typeof m.selectedMonth === 'string') setSelectedMonth(m.selectedMonth);
+      if (Array.isArray(m.selectedNumbers)) setSelectedNumbers(m.selectedNumbers.filter((x): x is string => typeof x === 'string'));
+      if (Array.isArray(m.selectedMaterials)) setSelectedMaterials(m.selectedMaterials.filter((x): x is string => typeof x === 'string'));
+      if (Array.isArray(m.materialOrder)) setMaterialOrder(m.materialOrder.filter((x): x is string => typeof x === 'string'));
+      if (typeof m.variantRound === 'number' && m.variantRound >= 1 && m.variantRound <= 3) setVariantRound(m.variantRound);
+      if (typeof m.explanationVariantOrder === 'boolean') setExplanationVariantOrder(m.explanationVariantOrder);
+      if (typeof m.explanationVariantInsertion === 'boolean') setExplanationVariantInsertion(m.explanationVariantInsertion);
+      if (typeof m.email === 'string' && m.email.trim()) setEmail(m.email.trim());
+      if (m.selectedGrade && m.selectedYear && m.selectedMonth) setStep('select-numbers');
+      if (Array.isArray(m.selectedNumbers) && m.selectedNumbers.length > 0) setStep('select-materials');
+      alert('최근 번호별 교재 옵션을 불러왔습니다.');
+    } finally {
+      setLoadingLatestOptions(false);
+    }
+  };
+
+  const ORDER_INSERT_MATERIAL_IDS = new Set(['variant_order', 'variant_insertion']);
 
   // 교재 구성 옵션
   const materials: MaterialItem[] = [
@@ -50,6 +96,12 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
     { id: 'variant_insertion', name: '변형문제_삽입', price: 100, description: '삽입 변형 문제' },
     { id: 'variant_summary', name: '변형문제_요약', price: 100, description: '요약 변형 문제' }
   ];
+
+  const getEffectiveUnitPrice = (matId: string) => {
+    if (matId === 'variant_order') return explanationVariantOrder ? 80 : 50;
+    if (matId === 'variant_insertion') return explanationVariantInsertion ? 80 : 50;
+    return materials.find((m) => m.id === matId)?.price ?? 0;
+  };
 
   // 모의고사 번호 (18번~45번)
   const examNumbers = [
@@ -219,8 +271,7 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
     }
 
     const totalPrice = selectedMaterials.reduce((sum, matId) => {
-      const material = materials.find(m => m.id === matId);
-      return sum + (material ? material.price * selectedNumbers.length : 0);
+      return sum + getEffectiveUnitPrice(matId) * selectedNumbers.length;
     }, 0);
 
     const examName = selectedGrade && selectedYear && selectedMonth 
@@ -240,10 +291,17 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
 ${materialOrder.map((matId, index) => {
   const material = materials.find(m => m.id === matId);
   if (!material) return '';
+  const unit = getEffectiveUnitPrice(matId);
   const roundInfo = isVariantProblem(matId) ? ` (${variantRound}회차)` : '';
-  return `   ${index + 1}. ${material.name}${roundInfo}
+  const siNote =
+    matId === 'variant_order'
+      ? ` (${explanationVariantOrder ? '해설 80원' : '미포함 50원'})`
+      : matId === 'variant_insertion'
+        ? ` (${explanationVariantInsertion ? '해설 80원' : '미포함 50원'})`
+        : '';
+  return `   ${index + 1}. ${material.name}${roundInfo}${siNote}
       - ${material.description}
-      - 가격: ${material.price}원 × ${selectedNumbers.length}개 = ${(material.price * selectedNumbers.length).toLocaleString()}원`;
+      - 가격: ${unit}원 × ${selectedNumbers.length}개 = ${(unit * selectedNumbers.length).toLocaleString()}원`;
 }).filter(Boolean).join('\n')}
 
 3. 가격 계산
@@ -254,8 +312,22 @@ ${materialOrder.map((matId, index) => {
 
 `;
 
+    const orderMeta = {
+      flow: 'numberBased',
+      version: 1,
+      selectedGrade,
+      selectedYear,
+      selectedMonth,
+      selectedNumbers,
+      selectedMaterials,
+      materialOrder,
+      variantRound,
+      explanationVariantOrder,
+      explanationVariantInsertion,
+      email: email.trim(),
+    };
     if (onOrderGenerate) {
-      onOrderGenerate(orderText, 'MV');
+      onOrderGenerate(orderText, 'MV', { orderMeta });
     }
   };
 
@@ -466,21 +538,36 @@ ${materialOrder.map((matId, index) => {
             {step !== 'select-numbers' && (
               <>
                 <div className="bg-white rounded-xl shadow-md p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                   <h2 className="text-2xl font-bold" style={{ color: '#101820' }}>
                     3단계: 교재 구성 선택 ({selectedMaterials.length}개)
                   </h2>
-                    <button
-                      onClick={handleAllMaterialsToggle}
-                      className="px-4 py-2 rounded-lg font-medium transition-colors text-sm"
-                      style={{ 
-                        backgroundColor: selectedMaterials.length === materials.length ? '#E8F5E9' : '#E3F2FD',
-                        color: selectedMaterials.length === materials.length ? '#2E7D32' : '#1976D2'
-                      }}
-                    >
-                      {selectedMaterials.length === materials.length ? '전체 해제' : '전체 선택'}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isMember && (
+                        <button
+                          type="button"
+                          onClick={loadLatestOrderOptions}
+                          disabled={loadingLatestOptions}
+                          className="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc] hover:bg-[#bae6fd] disabled:opacity-60"
+                        >
+                          {loadingLatestOptions ? '불러오는 중…' : '📥 최신 주문 옵션'}
+                        </button>
+                      )}
+                      <button
+                        onClick={handleAllMaterialsToggle}
+                        className="px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                        style={{ 
+                          backgroundColor: selectedMaterials.length === materials.length ? '#E8F5E9' : '#E3F2FD',
+                          color: selectedMaterials.length === materials.length ? '#2E7D32' : '#1976D2'
+                        }}
+                      >
+                        {selectedMaterials.length === materials.length ? '전체 해제' : '전체 선택'}
+                      </button>
+                    </div>
                   </div>
+                  {isMember && (
+                    <p className="text-[11px] text-gray-500 mb-2">회원 · 모의고사·번호·교재 구성까지 직전 주문과 동일하게 불러옵니다</p>
+                  )}
                   <p className="text-sm text-gray-600 mb-4">
                     교재 구성을 선택하세요. 순서를 조정할 수 있습니다.
                   </p>
@@ -494,26 +581,80 @@ ${materialOrder.map((matId, index) => {
                             : 'bg-gray-50 border-gray-200'
                         }`}
                       >
-                        <div className="flex items-center space-x-3 flex-1">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <input
                             type="checkbox"
                             checked={selectedMaterials.includes(material.id)}
                             onChange={() => handleMaterialChange(material.id)}
-                            className="w-5 h-5 text-blue-600 rounded"
+                            className="w-5 h-5 text-blue-600 rounded shrink-0"
                           />
-                          <div className="flex-1">
-                            <div className="font-medium" style={{ color: '#101820' }}>
-                              {material.name}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium" style={{ color: '#101820' }}>
+                                {material.name}
+                              </span>
+                              {ORDER_INSERT_MATERIAL_IDS.has(material.id) && selectedMaterials.includes(material.id) && (
+                                <div
+                                  className="flex rounded-lg border border-amber-300 bg-white overflow-hidden text-[11px] font-semibold"
+                                  role="group"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (material.id === 'variant_order') setExplanationVariantOrder(false);
+                                      else setExplanationVariantInsertion(false);
+                                    }}
+                                    className={`px-2 py-0.5 ${
+                                      material.id === 'variant_order'
+                                        ? !explanationVariantOrder
+                                          ? 'bg-amber-500 text-white'
+                                          : 'text-gray-600 hover:bg-amber-50'
+                                        : !explanationVariantInsertion
+                                          ? 'bg-amber-500 text-white'
+                                          : 'text-gray-600 hover:bg-amber-50'
+                                    }`}
+                                  >
+                                    미포함
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (material.id === 'variant_order') setExplanationVariantOrder(true);
+                                      else setExplanationVariantInsertion(true);
+                                    }}
+                                    className={`px-2 py-0.5 border-l border-amber-300 ${
+                                      material.id === 'variant_order'
+                                        ? explanationVariantOrder
+                                          ? 'bg-blue-600 text-white'
+                                          : 'text-gray-600 hover:bg-blue-50'
+                                        : explanationVariantInsertion
+                                          ? 'bg-blue-600 text-white'
+                                          : 'text-gray-600 hover:bg-blue-50'
+                                    }`}
+                                  >
+                                    해설
+                                  </button>
+                                </div>
+                              )}
                             </div>
                             <div className="text-sm text-gray-600">{material.description}</div>
                           </div>
                         </div>
                         
-                        <div className="text-right">
-                          <div className="font-semibold text-blue-600">{material.price}원</div>
+                        <div className="text-right shrink-0">
+                          <div className="font-semibold text-blue-600">
+                            {ORDER_INSERT_MATERIAL_IDS.has(material.id)
+                              ? `${getEffectiveUnitPrice(material.id)}원`
+                              : `${material.price}원`}
+                          </div>
+                          {ORDER_INSERT_MATERIAL_IDS.has(material.id) && selectedMaterials.includes(material.id) && (
+                            <div className="text-[10px] text-gray-500">50/80 전환</div>
+                          )}
                           {selectedNumbers.length > 0 && (
                             <div className="text-xs text-gray-500">
-                              총 {(material.price * selectedNumbers.length).toLocaleString()}원
+                              총 {(getEffectiveUnitPrice(material.id) * selectedNumbers.length).toLocaleString()}원
                             </div>
                           )}
                         </div>

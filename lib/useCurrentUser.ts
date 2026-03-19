@@ -6,6 +6,8 @@ export interface CurrentUser {
   allowedTextbooks: string[];
   allowedTextbooksAnalysis: string[];
   allowedTextbooksEssay: string[];
+  /** 워크북 부교재 전용. 없으면 allowedTextbooks 규칙과 동일 */
+  allowedTextbooksWorkbook?: string[];
   canAccessAnalysis?: boolean;
   canAccessEssay?: boolean;
   points?: number;
@@ -25,10 +27,12 @@ export function useCurrentUser(): CurrentUser | null {
         if (data?.user) {
           const at = Array.isArray(data.user.allowedTextbooks) ? data.user.allowedTextbooks : [];
           const points = typeof data.user.points === 'number' && data.user.points >= 0 ? data.user.points : 0;
+          const wb = data.user.allowedTextbooksWorkbook;
           setUser({
             allowedTextbooks: at,
             allowedTextbooksAnalysis: Array.isArray(data.user.allowedTextbooksAnalysis) ? data.user.allowedTextbooksAnalysis : at,
             allowedTextbooksEssay: Array.isArray(data.user.allowedTextbooksEssay) ? data.user.allowedTextbooksEssay : at,
+            ...(Array.isArray(wb) ? { allowedTextbooksWorkbook: wb } : {}),
             canAccessAnalysis: !!data.user.canAccessAnalysis,
             canAccessEssay: !!data.user.canAccessEssay,
             points,

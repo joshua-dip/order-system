@@ -38,11 +38,11 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [questionsPerType, setQuestionsPerType] = useState<number>(2);
+  const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법'];
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입'];
 
   useEffect(() => {
     if (!textbooksData || !selectedTextbook || !textbooksData[selectedTextbook]) {

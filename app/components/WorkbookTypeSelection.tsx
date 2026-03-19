@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
+import type { OrderGenerateExtras } from './MockExamSettings';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
   selectedLessons: string[];
-  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
+  onOrderGenerate: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
   onBack: () => void;
   onBackToTextbook: () => void;
   onBackToLessons: () => void;
@@ -25,8 +27,72 @@ const WorkbookTypeSelection = ({
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
   const [email, setEmail] = useState<string>('');
   const [totalTextCount, setTotalTextCount] = useState<number>(0);
-  
+  const [useCustomHwp, setUseCustomHwp] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [myFormatApproved, setMyFormatApproved] = useState(false);
+  const [formatCounts, setFormatCounts] = useState({ 강의용자료: 0, 수업용자료: 0, 변형문제: 0 });
+  const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+
   const isMockExam = selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_');
+
+  const refreshMyFormats = useCallback(() => {
+    fetch('/api/my/my-format-upload', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const bt = d.byType || {};
+        setFormatCounts({
+          강의용자료: Array.isArray(bt.강의용자료) ? bt.강의용자료.length : 0,
+          수업용자료: Array.isArray(bt.수업용자료) ? bt.수업용자료.length : 0,
+          변형문제: Array.isArray(bt.변형문제) ? bt.변형문제.length : 0,
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const u = d?.user;
+        setIsMember(!!u && u.role !== 'admin');
+        setMyFormatApproved(!!u?.myFormatApproved);
+        if (u?.myFormatApproved) refreshMyFormats();
+      })
+      .catch(() => setIsMember(false));
+  }, [refreshMyFormats]);
+
+  const needsLectureHwp = selectedPackages.includes('lecture_material');
+  const needsVariantHwp = selectedPackages.some((p) =>
+    ['blank_package', 'keyword_blank', 'word_arrangement', 'one_line_interpretation'].includes(p)
+  );
+
+  const loadLatestOrderOptions = async () => {
+    setLoadingLatestOptions(true);
+    try {
+      const res = await fetch('/api/my/latest-order-options?flow=workbook', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '불러오기에 실패했습니다.');
+        return;
+      }
+      const m = data.orderMeta as Record<string, unknown> | null;
+      if (!m || m.flow !== 'workbook') {
+        alert('저장된 최근 워크북 주문 옵션이 없습니다.');
+        return;
+      }
+      if (typeof m.isMockExam === 'boolean' && m.isMockExam !== isMockExam) {
+        if (!confirm('저장된 주문은 다른 교재 유형(모의고사/부교재)입니다. 패키지·이메일만 적용할까요?')) return;
+      }
+      if (Array.isArray(m.selectedPackages) && m.selectedPackages.length > 0) {
+        setSelectedPackages(m.selectedPackages.filter((x): x is string => typeof x === 'string'));
+      }
+      if (typeof m.email === 'string' && m.email.trim()) setEmail(m.email.trim());
+      if (typeof m.useCustomHwp === 'boolean') setUseCustomHwp(m.useCustomHwp);
+      alert('최근 워크북 주문 옵션을 불러왔습니다.');
+    } finally {
+      setLoadingLatestOptions(false);
+    }
+  };
 
   // 워크북 패키지들
   const workbookPackages = [
@@ -185,7 +251,27 @@ const WorkbookTypeSelection = ({
       return;
     }
 
-    
+    if (useCustomHwp) {
+      if (!myFormatApproved) {
+        alert(
+          '직접 쓰시는 HWP 양식으로도 제작 가능합니다.\n내정보 → 나의양식에서 해당 유형을 올리고 승인되면, 주문에서 맞춤 양식을 선택하실 수 있어요.'
+        );
+        return;
+      }
+      if (needsLectureHwp && (formatCounts.강의용자료 < 1 || formatCounts.수업용자료 < 1)) {
+        alert(
+          '강의용자료/수업용자료 패키지를 선택하셨습니다.\n내정보 → 나의양식에서 강의용·수업용 hwp를 각각 업로드한 뒤 다시 주문해 주세요.'
+        );
+        return;
+      }
+      if (needsVariantHwp && formatCounts.변형문제 < 1) {
+        alert(
+          '선택하신 워크북 유형은 변형문제 양식이 필요합니다.\n내정보 → 나의양식에서 「변형문제」 hwp를 업로드한 뒤 다시 주문해 주세요.'
+        );
+        return;
+      }
+    }
+
     // 가격 계산 (지문당 가격 × 실제 지문 수)
     const totalPrice = selectedPackageDetails.reduce((sum, pkg) => {
       return sum + (pkg!.price * totalTextCount);
@@ -243,9 +329,26 @@ ${selectedPackageDetails.map(pkg =>
    최종 금액: ${finalPrice.toLocaleString()}원` : `
    최종 금액: ${finalPrice.toLocaleString()}원`}
 
+${useCustomHwp ? `
+6. 커스텀 HWP 양식 사용
+   회원 나의양식에 등록한 양식 적용 요청
+   - 강의용자료 업로드: ${formatCounts.강의용자료}건
+   - 수업용자료 업로드: ${formatCounts.수업용자료}건
+   - 변형문제 양식 업로드: ${formatCounts.변형문제}건
+` : ''}
 `;
 
-    onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW');
+    const orderMeta = {
+      flow: 'workbook',
+      version: 1,
+      selectedTextbook,
+      selectedLessons,
+      selectedPackages,
+      email: email.trim(),
+      useCustomHwp,
+      isMockExam,
+    };
+    onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW', { orderMeta });
   };
 
   // 가격 계산 (미리보기용)
@@ -366,6 +469,67 @@ ${selectedPackageDetails.map(pkg =>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 왼쪽: 설정 */}
             <div className="bg-white rounded-xl shadow-md p-6">
+              {isMember && myFormatApproved && (
+                <div className="mb-6 p-4 rounded-xl border-2 border-[#0ea5e9] bg-sky-50">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                    <span className="font-bold text-[#0c4a6e]">커스텀 HWP 양식 사용</span>
+                    <div className="flex rounded-lg border border-amber-400 bg-white overflow-hidden text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setUseCustomHwp(false)}
+                        className={`px-3 py-2 ${!useCustomHwp ? 'bg-slate-600 text-white' : 'text-gray-600 hover:bg-slate-100'}`}
+                      >
+                        사용 안 함
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUseCustomHwp(true);
+                          refreshMyFormats();
+                        }}
+                        className={`px-3 py-2 border-l border-amber-400 ${useCustomHwp ? 'bg-[#0284c7] text-white' : 'text-gray-600 hover:bg-sky-100'}`}
+                      >
+                        사용
+                      </button>
+                    </div>
+                  </div>
+                  {useCustomHwp && (
+                    <div className="text-sm text-[#0f172a] space-y-2">
+                      <p className="text-[13px] text-[#334155]">
+                        내정보 → <strong>나의양식</strong>에 올린 hwp/hwpx로 맞춤 제작 요청합니다.
+                      </p>
+                      <ul className="text-[12px] text-[#475569] list-disc list-inside">
+                        <li>강의용·수업용 패키지 선택 시 → 강의용·수업용 각각 업로드 필요</li>
+                        <li>빈칸·낱말배열·한줄해석 등 선택 시 → <strong>변형문제</strong> 양식 업로드 필요</li>
+                      </ul>
+                      <div className="flex flex-wrap gap-3 text-[12px]">
+                        <span>강의용 {formatCounts.강의용자료}건</span>
+                        <span>수업용 {formatCounts.수업용자료}건</span>
+                        <span>변형문제 {formatCounts.변형문제}건</span>
+                        <Link href="/my" className="text-[#2563eb] font-semibold underline">
+                          나의양식에서 업로드 →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {isMember && !myFormatApproved && (
+                <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/80 border border-amber-200/90 text-[13px] text-amber-950 leading-relaxed shadow-sm">
+                  <p className="font-bold text-amber-900 mb-2 flex items-center gap-1.5">
+                    <span aria-hidden>✨</span> 직접 쓰시는 HWP 양식으로도 워크북을 맞춤 제작해 드려요
+                  </p>
+                  <p className="text-amber-900/95 mb-2">
+                    강의용·수업용·변형문제 등, 평소 쓰시는 양식이 있으시면 그 레이아웃에 맞춰 드릴 수 있어서 활용도가 높습니다.
+                  </p>
+                  <p className="text-amber-900/90 text-[12px]">
+                    <Link href="/my" className="font-bold text-[#b45309] underline underline-offset-2 hover:text-amber-950">
+                      내정보 → 나의양식
+                    </Link>
+                    에서 패키지에 맞는 유형별 hwp/hwpx를 올려 주시면, 확인 후 주문 시 <strong>「사용」</strong>으로 선택하실 수 있어요. 준비 중이시면 표준 양식으로도 편하게 이용하실 수 있습니다.
+                  </p>
+                </div>
+              )}
               {/* 패키지 안내 및 할인 정보 */}
               <div className="mb-6 space-y-4">
                 {/* 패키지 안내 */}
@@ -420,19 +584,34 @@ ${selectedPackageDetails.map(pkg =>
 
               {/* 워크북 패키지 선택 */}
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <h4 className="text-lg font-medium text-black">워크북 패키지</h4>
-                  <button
-                    onClick={handleAllPackagesToggle}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 text-white hover:opacity-90`}
-                    style={{ 
-                      backgroundColor: selectedPackages.length > 0 ? '#888B8D' : '#00A9E0',
-                      borderColor: selectedPackages.length > 0 ? '#888B8D' : '#00A9E0'
-                    }}
-                  >
-                    {selectedPackages.length > 0 ? '전체 해제' : '추천 선택'}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isMember && (
+                      <button
+                        type="button"
+                        onClick={loadLatestOrderOptions}
+                        disabled={loadingLatestOptions}
+                        className="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc] hover:bg-[#bae6fd] disabled:opacity-60"
+                      >
+                        {loadingLatestOptions ? '불러오는 중…' : '📥 최신 주문 옵션'}
+                      </button>
+                    )}
+                    <button
+                      onClick={handleAllPackagesToggle}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 text-white hover:opacity-90`}
+                      style={{ 
+                        backgroundColor: selectedPackages.length > 0 ? '#888B8D' : '#00A9E0',
+                        borderColor: selectedPackages.length > 0 ? '#888B8D' : '#00A9E0'
+                      }}
+                    >
+                      {selectedPackages.length > 0 ? '전체 해제' : '추천 선택'}
+                    </button>
+                  </div>
                 </div>
+                {isMember && (
+                  <p className="text-[11px] text-gray-500 mb-3">회원 · 직전 워크북 주문의 패키지·이메일·커스텀 HWP 여부를 불러옵니다</p>
+                )}
                 <div className="space-y-4">
                   {workbookPackages.map((pkg) => {
                     // 상호 배타적 규칙 확인
@@ -524,7 +703,54 @@ ${selectedPackageDetails.map(pkg =>
 
             {/* 오른쪽: 가격 미리보기 */}
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-black mb-4">주문 미리보기</h3>
+              <h3 className="text-xl font-bold text-black mb-3">주문 미리보기</h3>
+
+              {/* 나의양식(HWP) 사용 여부 — 미리보기에서도 바로 확인 */}
+              {isMember ? (
+                <div
+                  className={`mb-4 p-3 rounded-xl border-2 ${
+                    myFormatApproved
+                      ? useCustomHwp
+                        ? 'border-sky-400 bg-sky-50'
+                        : 'border-slate-200 bg-slate-50'
+                      : 'border-amber-200 bg-amber-50'
+                  }`}
+                >
+                  <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                    나의양식 (HWP)
+                  </div>
+                  {myFormatApproved ? (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span
+                        className={`text-sm font-bold ${
+                          useCustomHwp ? 'text-sky-800' : 'text-slate-700'
+                        }`}
+                      >
+                        {useCustomHwp
+                          ? '✓ 커스텀 양식 사용 (업로드 hwp/hwpx로 제작)'
+                          : '○ 기본 양식 (표준 레이아웃)'}
+                      </span>
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded-lg shrink-0 ${
+                          useCustomHwp ? 'bg-sky-600 text-white' : 'bg-slate-500 text-white'
+                        }`}
+                      >
+                        {useCustomHwp ? 'HWP 사용' : 'HWP 미사용'}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-amber-900 leading-snug">
+                      <span className="font-semibold">맞춤 HWP</span>는 나의양식에 올려 주시면 이후부터 선택 가능해요.
+                      <span className="block mt-1 text-[12px] text-amber-800/95">지금 주문은 표준 양식으로 진행됩니다.</span>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="mb-4 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                  <div className="text-[11px] font-bold text-gray-500 mb-1">나의양식 (HWP)</div>
+                  <p className="text-sm text-gray-700">비회원 주문 · 기본 양식으로 제작됩니다</p>
+                </div>
+              )}
               
               {selectedPackages.length > 0 ? (
                 <div className="space-y-4">
@@ -555,6 +781,20 @@ ${selectedPackageDetails.map(pkg =>
                       <div className="flex justify-between">
                         <span className="text-black">선택된 패키지:</span>
                         <span className="font-medium text-black">{selectedPackages.length}개</span>
+                      </div>
+                      <div className="flex justify-between items-center gap-2 pt-1 border-t border-dashed border-gray-300">
+                        <span className="text-black">나의양식(HWP):</span>
+                        <span className="font-semibold text-right text-sm">
+                          {!isMember ? (
+                            <span className="text-gray-600">기본 양식</span>
+                          ) : !myFormatApproved ? (
+                            <span className="text-amber-800">표준 (맞춤은 업로드 후)</span>
+                          ) : useCustomHwp ? (
+                            <span className="text-sky-700">커스텀 사용</span>
+                          ) : (
+                            <span className="text-slate-600">기본 양식</span>
+                          )}
+                        </span>
                       </div>
                       
                       {/* 패키지별 세부 정보 */}

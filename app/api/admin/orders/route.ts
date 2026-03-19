@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const loginId = searchParams.get('loginId')?.trim() || undefined;
+    const limitRaw = parseInt(searchParams.get('limit') || '', 10);
+    const defaultLimit = loginId ? 50 : 30;
+    const limit = Math.min(100, Math.max(1, Number.isFinite(limitRaw) ? limitRaw : defaultLimit));
 
     const db = await getDb('gomijoshua');
     const filter = loginId ? { loginId } : {};
@@ -31,20 +34,28 @@ export async function GET(request: NextRequest) {
       .collection('orders')
       .find(filter)
       .sort({ createdAt: -1 })
-      .limit(loginId ? 50 : 30)
+      .limit(limit)
       .toArray();
 
-    const orders = list.map((o) => ({
-      id: o._id.toString(),
-      orderText: o.orderText,
-      createdAt: o.createdAt,
-      status: o.status || 'pending',
-      statusLabel: STATUS_LABELS[o.status || 'pending'] || o.status || '주문 접수',
-      loginId: o.loginId ?? null,
-      orderNumber: o.orderNumber ?? null,
-      fileUrl: o.fileUrl ?? null,
-      dropboxFolderCreated: !!(o as { dropboxFolderCreated?: boolean }).dropboxFolderCreated,
-    }));
+    const orders = list.map((o) => {
+      const meta =
+        o.orderMeta && typeof o.orderMeta === 'object' && !Array.isArray(o.orderMeta)
+          ? (o.orderMeta as Record<string, unknown>)
+          : null;
+      return {
+        id: o._id.toString(),
+        orderText: o.orderText,
+        createdAt: o.createdAt,
+        status: o.status || 'pending',
+        statusLabel: STATUS_LABELS[o.status || 'pending'] || o.status || '주문 접수',
+        loginId: o.loginId ?? null,
+        orderNumber: o.orderNumber ?? null,
+        fileUrl: o.fileUrl ?? null,
+        dropboxFolderCreated: !!(o as { dropboxFolderCreated?: boolean }).dropboxFolderCreated,
+        hasOrderMeta: !!meta,
+        orderMetaFlow: meta && typeof meta.flow === 'string' ? meta.flow : null,
+      };
+    });
 
     return NextResponse.json({ orders });
   } catch (err) {

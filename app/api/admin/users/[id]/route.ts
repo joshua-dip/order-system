@@ -52,6 +52,8 @@ export async function PATCH(
     const allowedTextbooks = Array.isArray(body?.allowedTextbooks) ? body.allowedTextbooks : undefined;
     const allowedTextbooksAnalysis = Array.isArray(body?.allowedTextbooksAnalysis) ? body.allowedTextbooksAnalysis : undefined;
     const allowedTextbooksEssay = Array.isArray(body?.allowedTextbooksEssay) ? body.allowedTextbooksEssay : undefined;
+    const hasAllowedTextbooksWorkbook = 'allowedTextbooksWorkbook' in body;
+    const allowedTextbooksWorkbookRaw = hasAllowedTextbooksWorkbook ? body.allowedTextbooksWorkbook : undefined;
     const allowedEssayTypeIds = Array.isArray(body?.allowedEssayTypeIds) ? body.allowedEssayTypeIds.filter((id: unknown) => typeof id === 'string') : undefined;
     const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
     const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
@@ -69,6 +71,7 @@ export async function PATCH(
     }
 
     const updates: Record<string, unknown> = {};
+    const unsetDoc: Record<string, string> = {};
     if (name !== undefined) updates.name = name;
     if (email !== undefined) updates.email = email;
     if (phone !== undefined) updates.phone = phone;
@@ -80,6 +83,15 @@ export async function PATCH(
     if (allowedTextbooks !== undefined) updates.allowedTextbooks = allowedTextbooks;
     if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;
     if (allowedTextbooksEssay !== undefined) updates.allowedTextbooksEssay = allowedTextbooksEssay;
+    if (hasAllowedTextbooksWorkbook) {
+      if (allowedTextbooksWorkbookRaw === null) {
+        unsetDoc.allowedTextbooksWorkbook = '';
+      } else if (Array.isArray(allowedTextbooksWorkbookRaw)) {
+        updates.allowedTextbooksWorkbook = allowedTextbooksWorkbookRaw.filter(
+          (x: unknown): x is string => typeof x === 'string'
+        );
+      }
+    }
     if (allowedEssayTypeIds !== undefined) updates.allowedEssayTypeIds = allowedEssayTypeIds;
     if (points !== undefined) updates.points = points;
     if (supplementaryNote !== undefined) updates.supplementaryNote = supplementaryNote;
@@ -93,11 +105,15 @@ export async function PATCH(
       updates.passwordHash = await hashPassword(DEFAULT_PASSWORD);
     }
 
-    if (Object.keys(updates).length === 0) {
+    const mongoOp: Record<string, unknown> = {};
+    if (Object.keys(updates).length > 0) mongoOp.$set = updates;
+    if (Object.keys(unsetDoc).length > 0) mongoOp.$unset = unsetDoc;
+
+    if (Object.keys(mongoOp).length === 0) {
       return NextResponse.json({ error: '변경할 내용이 없습니다.' }, { status: 400 });
     }
 
-    await users.updateOne({ _id: new ObjectId(id) }, { $set: updates });
+    await users.updateOne({ _id: new ObjectId(id) }, mongoOp);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('관리자 계정 수정 실패:', err);

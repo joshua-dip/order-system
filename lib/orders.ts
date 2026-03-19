@@ -17,12 +17,19 @@ export const ORDER_FOOTER_MESSAGE =
 export async function saveOrderToDb(
   orderText: string,
   orderPrefix?: string,
-  pointsUsed?: number
+  pointsUsed?: number,
+  orderMeta?: Record<string, unknown>
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   try {
-    const payload: { orderText: string; orderPrefix?: string; pointsUsed?: number } = { orderText };
+    const payload: {
+      orderText: string;
+      orderPrefix?: string;
+      pointsUsed?: number;
+      orderMeta?: Record<string, unknown>;
+    } = { orderText };
     if (orderPrefix) payload.orderPrefix = orderPrefix;
     if (typeof pointsUsed === 'number' && pointsUsed > 0) payload.pointsUsed = pointsUsed;
+    if (orderMeta && typeof orderMeta === 'object') payload.orderMeta = orderMeta;
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

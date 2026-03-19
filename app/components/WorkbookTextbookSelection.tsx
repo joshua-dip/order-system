@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
-import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { filterWorkbookSupplementaryTextbookKeys } from '@/lib/workbook-textbooks';
 import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 
@@ -32,10 +33,13 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
   useEffect(() => {
     if (!convertedData) return;
     const allKeys = Object.keys(convertedData as Record<string, unknown>);
-    const textbookNames = filterTextbooksByAllowed(allKeys, currentUser?.allowedTextbooks);
+    const textbookNames = filterWorkbookSupplementaryTextbookKeys(allKeys, {
+      allowedTextbooks: currentUser?.allowedTextbooks,
+      allowedTextbooksWorkbook: currentUser?.allowedTextbooksWorkbook,
+    });
     setWorkbookTextbooks(textbookNames);
     setFilteredTextbooks(textbookNames);
-  }, [convertedData, currentUser?.allowedTextbooks]);
+  }, [convertedData, currentUser?.allowedTextbooks, currentUser?.allowedTextbooksWorkbook]);
 
   useEffect(() => {
     if (!convertedData) return;

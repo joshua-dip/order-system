@@ -39,6 +39,8 @@ interface ListUser {
   allowedTextbooks?: string[];
   allowedTextbooksAnalysis?: string[];
   allowedTextbooksEssay?: string[];
+  /** 워크북 부교재만; 없으면 일반 allowedTextbooks 규칙 */
+  allowedTextbooksWorkbook?: string[];
   allowedEssayTypeIds?: string[];
   points?: number;
   supplementaryNote?: string;
@@ -155,7 +157,7 @@ export default function AdminDashboardPage() {
   const [pathSavingId, setPathSavingId] = useState<string | null>(null);
   const [menuSavingId, setMenuSavingId] = useState<string | null>(null);
   const [editingTextbooksUserId, setEditingTextbooksUserId] = useState<string | null>(null);
-  const [editingTextbooksMode, setEditingTextbooksMode] = useState<'analysis' | 'essay' | null>(null);
+  const [editingTextbooksMode, setEditingTextbooksMode] = useState<'analysis' | 'essay' | 'workbook' | null>(null);
   const [textbookListForModal, setTextbookListForModal] = useState<string[]>([]);
   const [selectedTextbooksForModal, setSelectedTextbooksForModal] = useState<string[]>([]);
   const [textbooksModalLoading, setTextbooksModalLoading] = useState(false);
@@ -651,26 +653,90 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const openTextbooksModal = (u: ListUser, mode: 'analysis' | 'essay') => {
+  const openTextbooksModal = (u: ListUser, mode: 'analysis' | 'essay' | 'workbook') => {
     setEditingTextbooksUserId(u.id);
     setEditingTextbooksMode(mode);
     const legacy = Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [];
-    const list = mode === 'analysis'
-      ? (Array.isArray(u.allowedTextbooksAnalysis) ? u.allowedTextbooksAnalysis : legacy)
-      : (Array.isArray(u.allowedTextbooksEssay) ? u.allowedTextbooksEssay : legacy);
-    setSelectedTextbooksForModal([...list]);
+    if (mode === 'analysis' || mode === 'essay') {
+      const list =
+        mode === 'analysis'
+          ? Array.isArray(u.allowedTextbooksAnalysis)
+            ? u.allowedTextbooksAnalysis
+            : legacy
+          : Array.isArray(u.allowedTextbooksEssay)
+            ? u.allowedTextbooksEssay
+            : legacy;
+      setSelectedTextbooksForModal([...list]);
+    } else {
+      setSelectedTextbooksForModal([]);
+    }
     setTextbooksModalLoading(true);
     fetch('/api/textbooks')
       .then((r) => r.json())
       .then((data) => {
         if (data && typeof data === 'object' && !data.error) {
-          setTextbookListForModal(Object.keys(data));
+          let keys = Object.keys(data);
+          if (mode === 'workbook') {
+            keys = keys.filter((k) => !/^고[123]_/.test(k));
+            setTextbookListForModal(keys);
+            if (Array.isArray(u.allowedTextbooksWorkbook)) {
+              setSelectedTextbooksForModal(
+                u.allowedTextbooksWorkbook.filter((t) => keys.includes(t))
+              );
+            } else if (legacy.length > 0) {
+              setSelectedTextbooksForModal(keys.filter((k) => legacy.includes(k)));
+            } else {
+              setSelectedTextbooksForModal([...keys]);
+            }
+          } else {
+            setTextbookListForModal(keys);
+          }
         } else {
           setTextbookListForModal([]);
         }
       })
       .catch(() => setTextbookListForModal([]))
       .finally(() => setTextbooksModalLoading(false));
+  };
+
+  const clearWorkbookTextbooks = async (u: ListUser) => {
+    if (
+      !confirm(
+        '워크북 부교재 전용 목록을 해제할까요? 이후에는 일반「교재 허용」목록(allowedTextbooks)과 동일한 규칙이 적용됩니다.'
+      )
+    )
+      return;
+    setTextbooksSavingId(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allowedTextbooksWorkbook: null }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setUsers((prev) =>
+          prev.map((x) => {
+            if (x.id !== u.id) return x;
+            const { allowedTextbooksWorkbook: _w, ...rest } = x;
+            return rest;
+          })
+        );
+        if (editUser?.id === u.id) {
+          setEditUser((prev) => {
+            if (!prev) return null;
+            const { allowedTextbooksWorkbook: _w, ...rest } = prev;
+            return rest;
+          });
+        }
+      } else {
+        alert(data?.error || '해제에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setTextbooksSavingId(null);
+    }
   };
 
   const openEssayTypesModal = (u: ListUser) => {
@@ -708,9 +774,12 @@ export default function AdminDashboardPage() {
     if (!editingTextbooksUserId || !editingTextbooksMode) return;
     setTextbooksSavingId(editingTextbooksUserId);
     try {
-      const body = editingTextbooksMode === 'analysis'
-        ? { allowedTextbooksAnalysis: selectedTextbooksForModal }
-        : { allowedTextbooksEssay: selectedTextbooksForModal };
+      const body =
+        editingTextbooksMode === 'analysis'
+          ? { allowedTextbooksAnalysis: selectedTextbooksForModal }
+          : editingTextbooksMode === 'essay'
+            ? { allowedTextbooksEssay: selectedTextbooksForModal }
+            : { allowedTextbooksWorkbook: selectedTextbooksForModal };
       const res = await fetch(`/api/admin/users/${editingTextbooksUserId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -718,10 +787,16 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        const key = editingTextbooksMode === 'analysis' ? 'allowedTextbooksAnalysis' : 'allowedTextbooksEssay';
+        const key =
+          editingTextbooksMode === 'analysis'
+            ? 'allowedTextbooksAnalysis'
+            : editingTextbooksMode === 'essay'
+              ? 'allowedTextbooksEssay'
+              : 'allowedTextbooksWorkbook';
         const next = [...selectedTextbooksForModal];
         setUsers((prev) => prev.map((u) => (u.id === editingTextbooksUserId ? { ...u, [key]: next } : u)));
-        if (editUser?.id === editingTextbooksUserId) setEditUser((prev) => (prev ? { ...prev, [key]: next } : null));
+        if (editUser?.id === editingTextbooksUserId)
+          setEditUser((prev) => (prev ? { ...prev, [key]: next } : null));
         setEditingTextbooksUserId(null);
         setEditingTextbooksMode(null);
       } else {
@@ -1415,6 +1490,18 @@ export default function AdminDashboardPage() {
           >
             지문 업로드
           </button>
+          <Link
+            href="/admin/passages"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            원문 관리 (DB)
+          </Link>
+          <Link
+            href="/admin/generated-questions"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            변형문제 관리 (DB)
+          </Link>
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
           <button
             type="button"
@@ -2235,6 +2322,50 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
                         </div>
+                        {/* 워크북 부교재 노출 (회원별) */}
+                        <div className="mx-3 mb-3 rounded-xl overflow-hidden border border-[#2e3248] bg-[#22263a]">
+                          <div className="px-3 py-2 border-b border-[#2e3248] flex items-center gap-2">
+                            <span className="text-sm">📘</span>
+                            <span className="text-[11px] font-semibold text-slate-400 flex-1">워크북 부교재 노출</span>
+                            {u.allowedTextbooksWorkbook !== undefined ? (
+                              <span className="text-[10px] font-semibold text-cyan-400/90">전용 목록 사용 중</span>
+                            ) : (
+                              <span className="text-[10px] font-semibold text-slate-500">일반 허용과 동일</span>
+                            )}
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                              전 회원 공통 부교재는 코드{' '}
+                              <code className="text-slate-400">lib/workbook-textbooks.ts</code>의{' '}
+                              <code className="text-slate-400">WORKBOOK_SUPPLEMENTARY_COMMON_KEYS</code>에 넣습니다.
+                              여기서는 그 외 <strong className="text-slate-400">이 회원만</strong> 볼 추가 교재를 고릅니다.
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openTextbooksModal(u, 'workbook')}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-[#2e3248] text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                              >
+                                부교재 선택
+                                {u.allowedTextbooksWorkbook !== undefined
+                                  ? ` (${u.allowedTextbooksWorkbook.length}개)`
+                                  : u.allowedTextbooks && u.allowedTextbooks.length > 0
+                                    ? ' (일반과 동일·미저장)'
+                                    : ''}
+                              </button>
+                              {u.allowedTextbooksWorkbook !== undefined && (
+                                <button
+                                  type="button"
+                                  onClick={() => clearWorkbookTextbooks(u)}
+                                  disabled={textbooksSavingId === u.id}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-amber-500/30 text-amber-400/90 rounded-lg text-[11px] font-semibold hover:bg-amber-500/10 disabled:opacity-50"
+                                >
+                                  전용 해제
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                         {/* 메뉴 허용: 분석지·서술형 */}
                         <div className="mx-3 mb-3 rounded-xl overflow-hidden border border-[#2e3248] bg-[#22263a]">
                           <div className="px-3 py-2 border-b border-[#2e3248]">
@@ -2851,8 +2982,27 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col border border-slate-700">
             <div className="p-4 border-b border-slate-700">
-              <h3 className="font-bold text-white">{editingTextbooksMode === 'analysis' ? '분석지 허용 교재' : '서술형 허용 교재'}</h3>
-              <p className="text-slate-400 text-xs mt-1">선택한 교재만 해당 회원에게 노출됩니다. {editingTextbooksMode === 'analysis' ? '분석지' : '서술형'} 주문 시 강과/교재 선택에 사용됩니다.</p>
+              <h3 className="font-bold text-white">
+                {editingTextbooksMode === 'analysis'
+                  ? '분석지 허용 교재'
+                  : editingTextbooksMode === 'essay'
+                    ? '서술형 허용 교재'
+                    : '워크북 부교재 (회원 전용 추가)'}
+              </h3>
+              <p className="text-slate-400 text-xs mt-1">
+                {editingTextbooksMode === 'workbook' ? (
+                  <>
+                    모의고사(고1_/고2_/고3_)는 제외된 목록입니다. 저장 시 이 회원에게는{' '}
+                    <strong className="text-slate-300">공통 교재(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
+                    워크북 부교재로 보입니다.
+                  </>
+                ) : (
+                  <>
+                    선택한 교재만 해당 회원에게 노출됩니다.{' '}
+                    {editingTextbooksMode === 'analysis' ? '분석지' : '서술형'} 주문 시 강과/교재 선택에 사용됩니다.
+                  </>
+                )}
+              </p>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
               {textbooksModalLoading ? (

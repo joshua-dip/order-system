@@ -10,7 +10,7 @@ const ALLOWED_EXT = ['.hwp', '.hwpx'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_FILES = 10;
 
-const TYPES = ['강의용자료', '수업용자료'] as const;
+const TYPES = ['강의용자료', '수업용자료', '변형문제'] as const;
 type FormatType = (typeof TYPES)[number];
 
 function safeFileName(original: string, index: number): string {
@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
     const byType: Record<FormatType, { id: string; files: { originalName: string; fileIndex: number }[]; createdAt: string }[]> = {
       강의용자료: [],
       수업용자료: [],
+      변형문제: [],
     };
     for (const d of docs) {
       const type = (TYPES as readonly string[]).includes(d.type) ? (d.type as FormatType) : '강의용자료';
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const type = (formData.get('type') as string)?.trim();
     if (!type || !TYPES.includes(type as FormatType)) {
-      return NextResponse.json({ error: '유형을 선택해주세요. (강의용자료 / 수업용자료)' }, { status: 400 });
+      return NextResponse.json({ error: '유형을 선택해주세요. (강의용자료 / 수업용자료 / 변형문제)' }, { status: 400 });
     }
 
     const fileList: File[] = [];

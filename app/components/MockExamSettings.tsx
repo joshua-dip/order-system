@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 
+export type OrderGenerateExtras = { orderMeta?: Record<string, unknown> };
+
 interface MockExamSettingsProps {
-  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
+  onOrderGenerate: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
   onBack: () => void;
 }
 
@@ -19,16 +21,74 @@ interface ExamSelection {
 const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) => {
   const [examSelections, setExamSelections] = useState<ExamSelection[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [questionsPerType, setQuestionsPerType] = useState<number>(2);
+  const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [email, setEmail] = useState<string>('');
   const [mockExamsData, setMockExamsData] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [questionSamples, setQuestionSamples] = useState<Record<string, {blogUrl: string, description: string, sampleTitle: string}>>({});
+  /** 순서·삽입 각각: true=해설포함 80원, false=미포함(문제·답만) 50원 */
+  const [orderInsertExplanation, setOrderInsertExplanation] = useState<{ 순서: boolean; 삽입: boolean }>({
+    순서: true,
+    삽입: true,
+  });
 
   // 새 모의고사 추가를 위한 임시 상태
   const [tempGrade, setTempGrade] = useState<string>('');
   const [tempExam, setTempExam] = useState<string>('');
   const [tempNumbers, setTempNumbers] = useState<string[]>([]);
+  const [isMember, setIsMember] = useState(false);
+  const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setIsMember(!!d?.user && d.user.role !== 'admin'))
+      .catch(() => setIsMember(false));
+  }, []);
+
+  const loadLatestOrderOptions = async () => {
+    setLoadingLatestOptions(true);
+    try {
+      const res = await fetch('/api/my/latest-order-options?flow=mockVariant', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '불러오기에 실패했습니다.');
+        return;
+      }
+      const m = data.orderMeta as Record<string, unknown> | null;
+      if (!m || m.flow !== 'mockVariant') {
+        alert('저장된 최근 모의고사 변형 주문 옵션이 없습니다. 주문을 한 번 완료하면 다음부터 불러올 수 있어요.');
+        return;
+      }
+      if (Array.isArray(m.examSelections) && m.examSelections.length > 0) {
+        setExamSelections(
+          (m.examSelections as { grade?: string; exam?: string; numbers?: string[] }[]).map((e, i) => ({
+            id: `loaded-${Date.now()}-${i}`,
+            grade: typeof e.grade === 'string' ? e.grade : '',
+            exam: typeof e.exam === 'string' ? e.exam : '',
+            numbers: Array.isArray(e.numbers) ? e.numbers.filter((x) => typeof x === 'string') : [],
+          }))
+        );
+      }
+      if (Array.isArray(m.selectedTypes) && m.selectedTypes.length > 0) {
+        setSelectedTypes(m.selectedTypes.filter((t): t is string => typeof t === 'string'));
+      }
+      if (m.orderInsertExplanation && typeof m.orderInsertExplanation === 'object' && m.orderInsertExplanation !== null) {
+        const o = m.orderInsertExplanation as { 순서?: boolean; 삽입?: boolean };
+        setOrderInsertExplanation({
+          순서: typeof o.순서 === 'boolean' ? o.순서 : true,
+          삽입: typeof o.삽입 === 'boolean' ? o.삽입 : true,
+        });
+      }
+      if (typeof m.questionsPerType === 'number' && m.questionsPerType >= 1 && m.questionsPerType <= 3) {
+        setQuestionsPerType(m.questionsPerType);
+      }
+      if (typeof m.email === 'string' && m.email.trim()) setEmail(m.email.trim());
+      alert(data.orderNumber ? `주문 ${data.orderNumber} 기준 옵션을 불러왔습니다.` : '최근 옵션을 불러왔습니다.');
+    } finally {
+      setLoadingLatestOptions(false);
+    }
+  };
 
   useEffect(() => {
     const loadMockExamsData = async () => {
@@ -50,7 +110,34 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     loadMockExamsData();
   }, []);
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '빈칸', '함의', '어법', '순서', '삽입', '요약'];
+  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입'];
+  const ORDER_INSERT_TYPES = new Set(['순서', '삽입']);
+
+  const computeMockExamPrice = () => {
+    const totalNumberCount = examSelections.reduce((sum, exam) => sum + exam.numbers.length, 0);
+    let basePrice = 0;
+    for (const type of selectedTypes) {
+      const n = totalNumberCount * questionsPerType;
+      const unit =
+        type === '순서'
+          ? orderInsertExplanation.순서
+            ? 80
+            : 50
+          : type === '삽입'
+            ? orderInsertExplanation.삽입
+              ? 80
+              : 50
+            : 80;
+      basePrice += n * unit;
+    }
+    const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
+    let discountRate = 0;
+    if (totalQuestions >= 200) discountRate = 0.2;
+    else if (totalQuestions >= 100) discountRate = 0.1;
+    const discountAmount = basePrice * discountRate;
+    const totalPrice = Math.round(basePrice - discountAmount);
+    return { basePrice, totalQuestions, discountRate, discountAmount, totalPrice, isDiscounted: totalQuestions >= 100, totalNumberCount };
+  };
 
   // 모의고사 번호별 구성
   const examNumbers = [
@@ -152,21 +239,15 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       return;
     }
 
-    // 총 문항 수 계산
-    const totalNumberCount = examSelections.reduce((sum, exam) => sum + exam.numbers.length, 0);
-    const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
-    
-    // 가격 계산
-    const basePrice = totalQuestions * 80;
-    let discountRate = 0;
-    if (totalQuestions >= 200) {
-      discountRate = 0.2;
-    } else if (totalQuestions >= 100) {
-      discountRate = 0.1;
-    }
-    const discountAmount = basePrice * discountRate;
-    const totalPrice = basePrice - discountAmount;
-    const isDiscounted = totalQuestions >= 100;
+    const {
+      basePrice,
+      totalQuestions,
+      discountRate,
+      discountAmount,
+      totalPrice,
+      isDiscounted,
+      totalNumberCount,
+    } = computeMockExamPrice();
 
     // 모의고사별 상세 정보
     const examDetails = examSelections.map((exam, index) => {
@@ -178,6 +259,19 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
    - 선택된 문항: ${selectedNumberNames}`;
     }).join('\n');
     
+    const orderInsertLines: string[] = [];
+    if (selectedTypes.includes('순서')) {
+      orderInsertLines.push(
+        `순서: ${orderInsertExplanation.순서 ? '해설 포함 (80원/문항)' : '해설 미포함·문제·답만 (50원/문항)'}`
+      );
+    }
+    if (selectedTypes.includes('삽입')) {
+      orderInsertLines.push(
+        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함 (80원/문항)' : '해설 미포함·문제·답만 (50원/문항)'}`
+      );
+    }
+    const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
+
     const orderText = `모의고사 주문서
 
 자료 받으실 이메일 주소: ${email.trim()}
@@ -186,7 +280,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 ${examDetails}
 
 2. 문제 유형
-: ${selectedTypes.join(', ')}
+: ${selectedTypes.join(', ')}${orderInsertNote}
 
 3. 번호별 문항 수
 : ${questionsPerType}문항씩
@@ -195,24 +289,29 @@ ${examDetails}
 : ${totalQuestions}문항 (총 ${totalNumberCount}개 번호 × ${selectedTypes.length}개 유형 × ${questionsPerType}문항)
 
 5. 가격
-: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${discountAmount.toLocaleString()}원)` : ''}`;
+: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`;
 
-    onOrderGenerate(orderText, 'MV');
+    const orderMeta = {
+      flow: 'mockVariant',
+      version: 1,
+      examSelections: examSelections.map(({ grade, exam, numbers }) => ({ grade, exam, numbers })),
+      selectedTypes,
+      orderInsertExplanation,
+      questionsPerType,
+      email: email.trim(),
+    };
+    onOrderGenerate(orderText, 'MV', { orderMeta });
   };
 
-  // 가격 계산 (미리보기용)
-  const totalNumberCount = examSelections.reduce((sum, exam) => sum + exam.numbers.length, 0);
-  const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
-  const basePrice = totalQuestions * 80;
-  let discountRate = 0;
-  if (totalQuestions >= 200) {
-    discountRate = 0.2;
-  } else if (totalQuestions >= 100) {
-    discountRate = 0.1;
-  }
-  const discountAmount = basePrice * discountRate;
-  const totalPrice = basePrice - discountAmount;
-  const isDiscounted = totalQuestions >= 100;
+  const {
+    basePrice,
+    totalQuestions,
+    discountRate,
+    discountAmount,
+    totalPrice,
+    isDiscounted,
+    totalNumberCount,
+  } = computeMockExamPrice();
 
   return (
     <>
@@ -404,7 +503,22 @@ ${examDetails}
 
               {/* 문제 유형 및 개수 선택 */}
               <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-xl font-bold text-black mb-4">문제 유형 및 개수</h3>
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                  <h3 className="text-xl font-bold text-black">문제 유형 및 개수</h3>
+                  {isMember && (
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={loadLatestOrderOptions}
+                        disabled={loadingLatestOptions}
+                        className="px-3 py-2 rounded-lg text-sm font-semibold bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc] hover:bg-[#bae6fd] disabled:opacity-60 whitespace-nowrap"
+                      >
+                        {loadingLatestOptions ? '불러오는 중…' : '📥 최신 주문 옵션'}
+                      </button>
+                      <p className="text-[11px] text-gray-500 mt-1 max-w-[200px] ml-auto">회원 · 직전 모의고사 변형 설정 불러오기</p>
+                    </div>
+                  )}
+                </div>
                 
                 {/* 할인 정보 */}
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -412,7 +526,7 @@ ${examDetails}
                     <span className="text-blue-600 font-semibold">💰 할인 안내</span>
                   </div>
                   <div className="text-sm text-blue-700">
-                    • 기본: 문항당 80원<br/>
+                    • 기본: 문항당 80원 (순서·삽입은 해설 추가하면 80원, 문제·답만이면 50원)<br/>
                     • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                     • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                   </div>
@@ -443,30 +557,74 @@ ${examDetails}
                             : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <label className="flex items-center space-x-3 cursor-pointer flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0">
                             <input
                               type="checkbox"
                               checked={selectedTypes.includes(type)}
                               onChange={() => handleTypeChange(type)}
-                              className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                              className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0"
                             />
                             <span className="font-medium text-black">{type}</span>
                           </label>
-                          
+                          {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
+                            <div
+                              className="flex rounded-lg border border-amber-300 bg-white overflow-hidden text-[11px] font-semibold shrink-0"
+                              role="group"
+                              aria-label={`${type} 해설 여부`}
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setOrderInsertExplanation((p) =>
+                                    type === '순서' ? { ...p, 순서: false } : { ...p, 삽입: false }
+                                  );
+                                }}
+                                className={`px-2 py-1 transition-colors ${
+                                  !(type === '순서' ? orderInsertExplanation.순서 : orderInsertExplanation.삽입)
+                                    ? 'bg-amber-500 text-white'
+                                    : 'text-gray-600 hover:bg-amber-50'
+                                }`}
+                              >
+                                미포함
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setOrderInsertExplanation((p) =>
+                                    type === '순서' ? { ...p, 순서: true } : { ...p, 삽입: true }
+                                  );
+                                }}
+                                className={`px-2 py-1 border-l border-amber-300 transition-colors ${
+                                  (type === '순서' ? orderInsertExplanation.순서 : orderInsertExplanation.삽입)
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-600 hover:bg-blue-50'
+                                }`}
+                              >
+                                해설
+                              </button>
+                            </div>
+                          )}
                           {questionSamples[type] && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(questionSamples[type].blogUrl, '_blank');
                               }}
-                              className="ml-2 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200"
+                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
                               title={`${questionSamples[type].sampleTitle} - 블로그에서 샘플 확인`}
                             >
                               📝
                             </button>
                           )}
                         </div>
+                        {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
+                          <p className="text-[10px] text-gray-500 mt-1.5 pl-8">
+                            미포함 50원 · 해설 80원/문항
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -550,8 +708,8 @@ ${examDetails}
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-black">기본 가격:</span>
-                        <span className="font-medium text-black">
-                          {totalQuestions} × 80원 = {basePrice.toLocaleString()}원
+                        <span className="font-medium text-black text-right">
+                          유형별 단가 합계 {basePrice.toLocaleString()}원
                         </span>
                       </div>
                       {isDiscounted && (

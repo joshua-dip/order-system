@@ -60,7 +60,7 @@ function statusVariant(status: string): 'new' | 'making' | 'done' | 'cancel' {
 
 type TabKey = 'orders' | 'exam' | 'myFormat' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
-type MyFormatType = '강의용자료' | '수업용자료';
+type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
 export default function MyPage() {
   const router = useRouter();
@@ -110,7 +110,11 @@ export default function MyPage() {
     files: { originalName: string; fileIndex: number }[];
     createdAt: string;
   }
-  const [myFormatByType, setMyFormatByType] = useState<Record<MyFormatType, MyFormatUploadItem[]>>({ 강의용자료: [], 수업용자료: [] });
+  const [myFormatByType, setMyFormatByType] = useState<Record<MyFormatType, MyFormatUploadItem[]>>({
+    강의용자료: [],
+    수업용자료: [],
+    변형문제: [],
+  });
   const [myFormatLoading, setMyFormatLoading] = useState(false);
   const [myFormatSubmitting, setMyFormatSubmitting] = useState<MyFormatType | null>(null);
   const [myFormatMessage, setMyFormatMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -159,8 +163,12 @@ export default function MyPage() {
     setMyFormatLoading(true);
     fetch('/api/my/my-format-upload', { credentials: 'include' })
       .then((res) => res.json())
-      .then((data) => setMyFormatByType(data.byType || { 강의용자료: [], 수업용자료: [] }))
-      .catch(() => setMyFormatByType({ 강의용자료: [], 수업용자료: [] }))
+      .then((data) =>
+        setMyFormatByType(
+          data.byType || { 강의용자료: [], 수업용자료: [], 변형문제: [] }
+        )
+      )
+      .catch(() => setMyFormatByType({ 강의용자료: [], 수업용자료: [], 변형문제: [] }))
       .finally(() => setMyFormatLoading(false));
   };
 
@@ -879,25 +887,28 @@ export default function MyPage() {
                 <ul className="text-[13px] text-[#475569] space-y-1.5 list-disc list-inside">
                   <li><strong className="text-[#0f172a]">강의용자료</strong>: 영어 지문만 포함된 자료입니다.</li>
                   <li><strong className="text-[#0f172a]">수업용자료</strong>: 영어 지문 + 한글 해석이 포함된 자료입니다.</li>
+                  <li><strong className="text-[#0f172a]">변형문제</strong>: 워크북(빈칸·낱말배열·한줄해석 등) 맞춤 제작 시 사용할 양식입니다.</li>
                 </ul>
               </div>
 
               {!user?.myFormatApproved ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                  <p className="text-sm font-bold text-amber-800 mb-2">업로드 이용 안내</p>
-                  <p className="text-[13px] text-amber-900 mb-3">나의양식 업로드는 <strong>관리자 승인 후</strong> 이용할 수 있습니다. 승인을 원하시면 카카오톡으로 문의해 주세요.</p>
+                  <p className="text-sm font-bold text-amber-800 mb-2">맞춤 HWP로 제작하시려면</p>
+                  <p className="text-[13px] text-amber-900 mb-3 leading-relaxed">
+                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. 카카오톡으로 가볍게 문의해 주시면 절차를 안내해 드리고, 이후 이 화면에서 유형별로 올리시면 주문 시 맞춤 양식을 선택하실 수 있어요.
+                  </p>
                   <a href={KAKAO_INQUIRY_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FEE500] text-[#191919] rounded-xl text-[13px] font-bold hover:opacity-90 no-underline">
                     카카오톡 문의하기
                   </a>
                 </div>
               ) : (
                 <>
-                  <p className="text-[12px] text-[#64748b]">hwp, hwpx 파일만 업로드 가능합니다. 강의용·수업용 유형별로 업로드해 주세요.</p>
+                  <p className="text-[12px] text-[#64748b]">hwp, hwpx 파일만 업로드 가능합니다. 유형별로 업로드해 주세요.</p>
                   {myFormatMessage && (
                     <p className={`text-sm ${myFormatMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{myFormatMessage.text}</p>
                   )}
 
-              {(['강의용자료', '수업용자료'] as const).map((type) => (
+              {(['강의용자료', '수업용자료', '변형문제'] as const).map((type) => (
                 <div key={type} className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
                   <div className="px-5 py-4 border-b border-[#f1f5f9] bg-[#f8fafc]">
                     <h3 className="text-sm font-bold text-[#0f172a]">{type}</h3>
