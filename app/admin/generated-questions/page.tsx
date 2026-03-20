@@ -54,6 +54,30 @@ function loadColWidthsForDensity(d: TableDensity): number[] {
 }
 
 
+/** Paragraph 내 <u>...</u> 구간을 색상·밑줄로 강조해 렌더 (XSS 방지: 태그 제거 후 텍스트만 표시) */
+function ParagraphWithUnderline({ text, className = '' }: { text: string; className?: string }) {
+  if (!text) return <span className={className}>—</span>;
+  const parts = text.split(/(<u>[\s\S]*?<\/u>)/gi);
+  return (
+    <span className={`whitespace-pre-wrap break-words ${className}`}>
+      {parts.map((part, i) => {
+        const m = part.match(/^<u>([\s\S]*)<\/u>$/i);
+        if (m) {
+          return (
+            <span
+              key={i}
+              className="bg-amber-500/25 text-amber-200 underline underline-offset-2 decoration-amber-400 decoration-2"
+            >
+              {m[1]}
+            </span>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+}
+
 const DEFAULT_QUESTION_JSON = `{
   "순서": 1,
   "Source": "",
@@ -74,6 +98,8 @@ type Row = {
   source: string;
   type: string;
   option_type?: string;
+  /** 원문 대비 지문 변형도 0~100 (API 계산) */
+  variation_pct?: number | null;
   question_data?: {
     Question?: string;
     Paragraph?: string;
@@ -120,6 +146,8 @@ export default function AdminGeneratedQuestionsPage() {
     error_msg: '',
   });
   const [questionJson, setQuestionJson] = useState(DEFAULT_QUESTION_JSON);
+  /** 저장 직후 해당 문제 행으로 스크롤하기 위한 id (문제보러가기 버튼 표시) */
+  const [goToRowId, setGoToRowId] = useState<string | null>(null);
 
   type SolveResult = {
     claudeAnswer: string;
@@ -169,6 +197,41 @@ export default function AdminGeneratedQuestionsPage() {
   } | null>(null);
   const [validateExpanded, setValidateExpanded] = useState<Record<number, boolean>>({});
   const [validateExcludedTypes, setValidateExcludedTypes] = useState<string[]>([]);
+  /** 선택지만 수정(Claude) 진행 중인 문서 id */
+  const [regenerateOptionsLoading, setRegenerateOptionsLoading] = useState<string | null>(null);
+
+  /** 변형도 분석 모달 */
+  const [variationAnalysisOpen, setVariationAnalysisOpen] = useState(false);
+  const [variationAnalysisLoading, setVariationAnalysisLoading] = useState(false);
+  const [variationAnalysisError, setVariationAnalysisError] = useState<string | null>(null);
+  const [variationAnalysisData, setVariationAnalysisData] = useState<{
+    totalScanned: number;
+    filters: { textbook: string | null; type: string | null };
+    byType: Record<
+      string,
+      { count: number; avg: number; min: number; max: number; distribution: number[] }
+    >;
+  } | null>(null);
+
+  /** 선택지 데이터 검증 (교재·강·category 그룹별 상호 일치도) */
+  const [optionsOverlapOpen, setOptionsOverlapOpen] = useState(false);
+  const [optionsOverlapLoading, setOptionsOverlapLoading] = useState(false);
+  const [optionsOverlapError, setOptionsOverlapError] = useState<string | null>(null);
+  const [optionsOverlapData, setOptionsOverlapData] = useState<{
+    filters: { textbook: string | null; category: string | null };
+    totalScanned: number;
+    totalGroups: number;
+    groups: {
+      textbook: string;
+      lessonKey: string;
+      category: string;
+      itemCount: number;
+      items: { id: string; source: string; type: string; avgOverlapWithOthers: number }[];
+      pairwiseOverlaps: { i: number; j: number; overlapPct: number }[];
+    }[];
+  } | null>(null);
+  /** 선택지 데이터 검증 결과에서 숨길 category (체크한 것은 목록에 안 보임) */
+  const [optionsOverlapExcludedCategories, setOptionsOverlapExcludedCategories] = useState<string[]>([]);
 
   type QCountNoRow = {
     passageId: string;
@@ -220,6 +283,8 @@ export default function AdminGeneratedQuestionsPage() {
     lessonsWithoutPassage?: string[];
     order: { id: string; orderNumber: string | null; flow: string } | null;
   } | null>(null);
+  /** 문제수 검증 — 유형 부족 표: 지문 라벨 순 vs 유형(카테고리)별 그룹 정렬 */
+  const [qCountUnderfilledSortBy, setQCountUnderfilledSortBy] = useState<'label' | 'type'>('label');
 
   useEffect(() => {
     try {
@@ -561,6 +626,9 @@ export default function AdminGeneratedQuestionsPage() {
         alert(data.error || '저장 실패');
         return;
       }
+      const savedId = editingId ?? (typeof data.item?._id === 'string' ? data.item._id : null);
+      if (savedId) setGoToRowId(savedId);
+      if (!editingId) setPage(1);
       setModalOpen(false);
       fetchList();
       fetchMeta();
@@ -781,6 +849,79 @@ export default function AdminGeneratedQuestionsPage() {
       .finally(() => setQCountOrdersLoading(false));
   };
 
+  const openVariationAnalysisModal = () => {
+    setVariationAnalysisOpen(true);
+    setVariationAnalysisData(null);
+    setVariationAnalysisError(null);
+    if (textbooks.length === 0 || types.length === 0) fetchMeta();
+  };
+
+  const openOptionsOverlapModal = () => {
+    setOptionsOverlapOpen(true);
+    setOptionsOverlapData(null);
+    setOptionsOverlapError(null);
+    if (textbooks.length === 0) fetchMeta();
+  };
+
+  const runOptionsOverlapValidate = async () => {
+    setOptionsOverlapLoading(true);
+    setOptionsOverlapError(null);
+    setOptionsOverlapData(null);
+    try {
+      const params = new URLSearchParams();
+      if (filterTextbook) params.set('textbook', filterTextbook);
+      const res = await fetch(
+        `/api/admin/generated-questions/validate/options-overlap?${params}`,
+        { credentials: 'include' }
+      );
+      const d = await res.json();
+      if (!res.ok) {
+        setOptionsOverlapError(d.error || '선택지 데이터 검증 실패');
+        return;
+      }
+      setOptionsOverlapData({
+        filters: d.filters ?? { textbook: null, category: null },
+        totalScanned: d.totalScanned ?? 0,
+        totalGroups: d.totalGroups ?? 0,
+        groups: Array.isArray(d.groups) ? d.groups : [],
+      });
+    } catch {
+      setOptionsOverlapError('네트워크 오류');
+    } finally {
+      setOptionsOverlapLoading(false);
+    }
+  };
+
+  const runVariationAnalysis = async () => {
+    setVariationAnalysisLoading(true);
+    setVariationAnalysisError(null);
+    setVariationAnalysisData(null);
+    try {
+      const params = new URLSearchParams();
+      if (filterTextbook) params.set('textbook', filterTextbook);
+      if (filterType) params.set('type', filterType);
+      params.set('limit', '3000');
+      const res = await fetch(
+        `/api/admin/generated-questions/analyze/variation?${params}`,
+        { credentials: 'include' }
+      );
+      const d = await res.json();
+      if (!res.ok) {
+        setVariationAnalysisError(d.error || '변형도 분석 실패');
+        return;
+      }
+      setVariationAnalysisData({
+        totalScanned: d.totalScanned ?? 0,
+        filters: d.filters ?? { textbook: null, type: null },
+        byType: d.byType && typeof d.byType === 'object' ? d.byType : {},
+      });
+    } catch {
+      setVariationAnalysisError('네트워크 오류');
+    } finally {
+      setVariationAnalysisLoading(false);
+    }
+  };
+
   const runQuestionCountValidate = async () => {
     if (qCountScope === 'order') {
       if (!qCountOrderId.trim()) {
@@ -900,6 +1041,28 @@ export default function AdminGeneratedQuestionsPage() {
   const openEditFromValidate = (id: string) => {
     setValidateOpen(false);
     openEdit(id);
+  };
+
+  const handleRegenerateOptionsOnly = async (id: string) => {
+    if (!confirm('이 문항의 선택지만 Claude로 새로 생성해 중복을 해소할까요?\n지문·발문·정답 의미는 유지됩니다.')) return;
+    setRegenerateOptionsLoading(id);
+    try {
+      const res = await fetch(`/api/admin/generated-questions/${id}/regenerate-options`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        alert(d.error || '선택지 재생성 실패');
+        return;
+      }
+      alert('선택지가 재생성되었습니다.');
+      await runOptionsDuplicateValidate();
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setRegenerateOptionsLoading(null);
+    }
   };
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -1065,6 +1228,15 @@ export default function AdminGeneratedQuestionsPage() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               type="button"
+              disabled={variationAnalysisLoading}
+              onClick={openVariationAnalysisModal}
+              className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
+              title="원문(passages) 대비 지문 변형도 유형별 평균·구간·분포"
+            >
+              변형도 분석
+            </button>
+            <button
+              type="button"
               disabled={qCountLoading}
               onClick={openQCountModal}
               className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
@@ -1080,6 +1252,15 @@ export default function AdminGeneratedQuestionsPage() {
               title="표의 Options 열 기준 · 모달에서 제외 유형 선택 후 검증"
             >
               Options 중복 검증
+            </button>
+            <button
+              type="button"
+              disabled={optionsOverlapLoading}
+              onClick={openOptionsOverlapModal}
+              className="shrink-0 bg-rose-900/80 hover:bg-rose-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-rose-100 border border-rose-500/40"
+              title="교재·강·category 동일 그룹 내 선택지 상호 일치도 · 내보낼 때 겹침 적은 문항 우선 추천"
+            >
+              선택지 데이터 검증
             </button>
             <button
               type="button"
@@ -1103,6 +1284,22 @@ export default function AdminGeneratedQuestionsPage() {
           </div>
         </div>
 
+        {goToRowId && (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-emerald-900/40 border border-emerald-600/60 px-4 py-2">
+            <span className="text-emerald-200 text-sm">저장되었습니다.</span>
+            <button
+              type="button"
+              onClick={() => {
+                document.getElementById(`row-${goToRowId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                setGoToRowId(null);
+              }}
+              className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1.5 rounded-lg text-sm"
+            >
+              문제보러가기
+            </button>
+          </div>
+        )}
+
         <div className="border border-slate-700 rounded-xl overflow-hidden bg-slate-800/30">
           <div className="overflow-x-auto">
             <table className="text-sm table-fixed border-collapse" style={{ width: colWidths.reduce((a, b) => a + b, 0) }}>
@@ -1112,7 +1309,7 @@ export default function AdminGeneratedQuestionsPage() {
                     { label: '작업', i: 0, cls: 'text-left' },
                     { label: '교재', i: 1 },
                     { label: '유형 (type)', i: 2, cls: 'text-violet-300/90' },
-                    { label: 'Paragraph', i: 3 },
+                    { label: 'Paragraph (변형도)', i: 3 },
                     { label: 'Options', i: 4 },
                     { label: 'Explanation', i: 5 },
                     { label: '출처', i: 6 },
@@ -1170,7 +1367,7 @@ export default function AdminGeneratedQuestionsPage() {
                     const typeStr = (row.type || '').trim();
                     const showCategoryNote = cat && cat !== typeStr;
                     return (
-                    <tr key={row._id} className="border-b border-slate-700/80 hover:bg-slate-800/40">
+                    <tr key={row._id} id={`row-${row._id}`} className="border-b border-slate-700/80 hover:bg-slate-800/40">
                       <td
                         className="px-2 py-2 align-top border-r border-slate-700/30"
                         style={{ width: colWidths[0], maxWidth: colWidths[0] }}
@@ -1232,27 +1429,34 @@ export default function AdminGeneratedQuestionsPage() {
                         )}
                       </td>
                       <td
-                        className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug"
+                        className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug select-text"
                         style={{ width: colWidths[3], maxWidth: colWidths[3] }}
                         title={para.length > 200 ? para.slice(0, 200) + '…' : para || undefined}
                       >
-                        <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-slate-200/95">
-                          {para || '—'}
+                        <div className="flex flex-col gap-1 select-text">
+                          {row.variation_pct != null && (
+                            <span className="text-[11px] text-slate-500 font-medium tabular-nums shrink-0" title="원문 대비 지문 변형도 (0=동일, 100=완전 다름)">
+                              변형도 {row.variation_pct}%
+                            </span>
+                          )}
+                          <div className="max-h-52 overflow-y-auto break-words pr-1 text-slate-200/95 select-text">
+                            <ParagraphWithUnderline text={para} />
+                          </div>
                         </div>
                       </td>
                       <td
-                        className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug"
+                        className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug select-text"
                         style={{ width: colWidths[4], maxWidth: colWidths[4] }}
                       >
-                        <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1">
+                        <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1 select-text">
                           {opt || '—'}
                         </div>
                       </td>
                       <td
-                        className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug"
+                        className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug select-text"
                         style={{ width: colWidths[5], maxWidth: colWidths[5] }}
                       >
-                        <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1">
+                        <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1 select-text">
                           {expl || '—'}
                         </div>
                       </td>
@@ -1311,6 +1515,265 @@ export default function AdminGeneratedQuestionsPage() {
           </div>
         )}
       </main>
+
+      {variationAnalysisOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-teal-700/40 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-teal-200">변형도 분석</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  원문(passages) 대비 지문(Paragraph) 변형도를 유형별로 집계합니다. 상단 목록의 <strong className="text-slate-300">교재·유형</strong> 필터와 동일하게 적용되며, 최대 3,000건을 스캔합니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVariationAnalysisOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {!variationAnalysisData && !variationAnalysisLoading && (
+                <div className="mb-4 p-4 rounded-xl border-2 border-teal-800/50 bg-slate-900/60 space-y-4">
+                  <p className="text-sm text-slate-300">
+                    현재 필터: <strong className="text-teal-200">{filterTextbook || '전체 교재'}</strong>
+                    {filterType ? ` / ${filterType}` : ' / 전체 유형'}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={variationAnalysisLoading}
+                    onClick={() => void runVariationAnalysis()}
+                    className="px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-bold text-sm shadow-lg"
+                  >
+                    분석 실행
+                  </button>
+                </div>
+              )}
+              {variationAnalysisLoading && (
+                <div className="flex items-center justify-center py-12 text-slate-400">
+                  <span className="animate-pulse">변형도 집계 중…</span>
+                </div>
+              )}
+              {variationAnalysisError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/40 border border-red-800/50">
+                  <p className="text-red-300 text-sm">{variationAnalysisError}</p>
+                </div>
+              )}
+              {variationAnalysisData && !variationAnalysisLoading && (
+                <>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <p className="text-sm text-slate-300">
+                      총 <strong className="text-white">{variationAnalysisData.totalScanned.toLocaleString()}</strong>건 분석
+                      {variationAnalysisData.filters.textbook && (
+                        <> · 교재: <strong className="text-teal-200">{variationAnalysisData.filters.textbook}</strong></>
+                      )}
+                      {variationAnalysisData.filters.type && (
+                        <> · 유형: <strong className="text-teal-200">{variationAnalysisData.filters.type}</strong></>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void runVariationAnalysis()}
+                      className="text-sm px-3 py-2 rounded-lg border border-teal-600/60 text-teal-200 hover:bg-teal-900/50"
+                    >
+                      다시 분석
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-slate-600">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-800 text-left text-slate-300 border-b border-slate-600">
+                          <th className="px-3 py-2 font-semibold">유형</th>
+                          <th className="px-3 py-2 font-semibold text-right">문항 수</th>
+                          <th className="px-3 py-2 font-semibold text-right">평균 변형도</th>
+                          <th className="px-3 py-2 font-semibold text-right">최소</th>
+                          <th className="px-3 py-2 font-semibold text-right">최대</th>
+                          {Array.from({ length: 10 }, (_, i) => (
+                            <th key={i} className="px-2 py-2 font-medium text-slate-500 text-xs text-right" title={i === 9 ? '90~100%' : `${i * 10}~${i * 10 + 9}%`}>
+                              {i === 9 ? '90~100%' : `${i * 10}~${i * 10 + 9}%`}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(variationAnalysisData.byType)
+                          .sort(([a], [b]) => (a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b, 'ko')))
+                          .map(([typeKey, stats]) => (
+                            <tr key={typeKey} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="px-3 py-2 text-teal-200 font-medium">{typeKey}</td>
+                              <td className="px-3 py-2 text-right tabular-nums">{stats.count.toLocaleString()}</td>
+                              <td className="px-3 py-2 text-right tabular-nums text-white">{stats.avg}%</td>
+                              <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.min}%</td>
+                              <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.max}%</td>
+                              {stats.distribution.map((n, i) => (
+                                <td key={i} className="px-2 py-2 text-right tabular-nums text-slate-400 text-xs">
+                                  {n > 0 ? n : '—'}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {optionsOverlapOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-rose-700/40 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-rose-200">선택지 데이터 검증</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  <strong className="text-slate-300">교재 · 강 번호(출처 첫 토큰) · category</strong>가 같은 문항끼리 그룹화한 뒤,
+                  동그라미번호(①②③④⑤)로 나뉜 선택지가 그룹 내 다른 문항과 얼마나 겹치는지 <strong className="text-rose-200">상호 일치도</strong>로 분석합니다.
+                  내보낼 때 <strong className="text-emerald-300">일치도가 낮은 문항</strong>을 우선 선택하면 선택지 겹침을 줄일 수 있습니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOptionsOverlapOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {!optionsOverlapData && !optionsOverlapLoading && (
+                <div className="mb-4 p-4 rounded-xl border-2 border-rose-800/50 bg-slate-900/60 space-y-4">
+                  <p className="text-sm text-slate-300">
+                    현재 필터: <strong className="text-rose-200">{filterTextbook || '전체 교재'}</strong>
+                  </p>
+                  <button
+                    type="button"
+                    disabled={optionsOverlapLoading}
+                    onClick={() => void runOptionsOverlapValidate()}
+                    className="px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-sm shadow-lg"
+                  >
+                    검증 실행
+                  </button>
+                </div>
+              )}
+              {optionsOverlapLoading && (
+                <div className="flex items-center justify-center py-12 text-slate-400">
+                  <span className="animate-pulse">선택지 상호 일치도 분석 중…</span>
+                </div>
+              )}
+              {optionsOverlapError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/40 border border-red-800/50">
+                  <p className="text-red-300 text-sm">{optionsOverlapError}</p>
+                </div>
+              )}
+              {optionsOverlapData && !optionsOverlapLoading && (
+                <>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <p className="text-sm text-slate-300">
+                      총 <strong className="text-white">{optionsOverlapData.totalScanned.toLocaleString()}</strong>건 스캔 ·{' '}
+                      <strong className="text-rose-200">{optionsOverlapData.totalGroups}</strong>개 그룹 (동일 교재·강·category, 2문항 이상)
+                      {optionsOverlapData.filters.textbook && (
+                        <> · 교재: <strong className="text-rose-200">{optionsOverlapData.filters.textbook}</strong></>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void runOptionsOverlapValidate()}
+                      className="text-sm px-3 py-2 rounded-lg border border-rose-600/60 text-rose-200 hover:bg-rose-900/50"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {(() => {
+                    const uniqueCategories = [...new Set(optionsOverlapData.groups.map((g) => g.category))].sort((a, b) => a.localeCompare(b, 'ko'));
+                    const visibleGroups = optionsOverlapData.groups.filter((grp) => !optionsOverlapExcludedCategories.includes(grp.category));
+                    const hiddenCount = optionsOverlapData.groups.length - visibleGroups.length;
+                    return (
+                      <>
+                        {uniqueCategories.length > 0 && (
+                          <div className="mb-4 p-3 rounded-xl border border-rose-800/50 bg-slate-900/60">
+                            <h3 className="text-sm font-bold text-rose-200 mb-2">검증 결과에서 숨길 category</h3>
+                            <p className="text-xs text-slate-400 mb-2">체크한 category는 아래 목록에 표시되지 않습니다.</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1">
+                              {uniqueCategories.map((cat) => (
+                                <label key={cat} className="inline-flex items-center gap-2 cursor-pointer text-slate-200 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={optionsOverlapExcludedCategories.includes(cat)}
+                                    onChange={() => {
+                                      setOptionsOverlapExcludedCategories((prev) =>
+                                        prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+                                      );
+                                    }}
+                                    className="rounded border-slate-500 text-rose-500"
+                                  />
+                                  <span className={optionsOverlapExcludedCategories.includes(cat) ? 'text-slate-500 line-through' : ''}>{cat}</span>
+                                </label>
+                              ))}
+                            </div>
+                            {hiddenCount > 0 && (
+                              <p className="text-xs text-slate-500 mt-2">현재 {hiddenCount}개 그룹 숨김 · {visibleGroups.length}개 그룹 표시</p>
+                            )}
+                          </div>
+                        )}
+                        <div className="space-y-6">
+                          {visibleGroups.map((grp, gIdx) => (
+                      <div key={`${grp.textbook}-${grp.lessonKey}-${grp.category}-${gIdx}`} className="rounded-xl border border-slate-600 bg-slate-900/50 overflow-hidden">
+                        <div className="px-4 py-2 bg-rose-950/40 border-b border-slate-600 flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-rose-200">{grp.textbook}</span>
+                          <span className="text-slate-500">·</span>
+                          <span className="px-2 py-0.5 rounded bg-slate-700 text-slate-300 text-xs font-mono">{grp.lessonKey}</span>
+                          <span className="text-slate-500">·</span>
+                          <span className="px-2 py-0.5 rounded bg-violet-900/60 text-violet-200 text-xs">{grp.category}</span>
+                          <span className="text-slate-500 text-xs">({grp.itemCount}문항)</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-left text-slate-500 border-b border-slate-700">
+                                <th className="px-3 py-2">출처</th>
+                                <th className="px-3 py-2">유형</th>
+                                <th className="px-3 py-2 text-right">평균 상호 일치도</th>
+                                <th className="px-3 py-2 w-20">내보낼 때</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[...grp.items]
+                                .map((it, idx) => ({ ...it, idx }))
+                                .sort((a, b) => a.avgOverlapWithOthers - b.avgOverlapWithOthers)
+                                .map((it) => (
+                                  <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                                    <td className="px-3 py-1.5 text-slate-300 font-mono">{it.source}</td>
+                                    <td className="px-3 py-1.5 text-violet-300">{it.type}</td>
+                                    <td className="px-3 py-1.5 text-right tabular-nums">
+                                      <span className={it.avgOverlapWithOthers <= 20 ? 'text-emerald-400 font-semibold' : it.avgOverlapWithOthers <= 50 ? 'text-amber-400' : 'text-rose-400'}>
+                                        {it.avgOverlapWithOthers}%
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-1.5 text-slate-500 text-[11px]">
+                                      {it.avgOverlapWithOthers <= 20 ? '우선 추천' : it.avgOverlapWithOthers <= 50 ? '보통' : '겹침 많음'}
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {validateOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
@@ -1601,10 +2064,12 @@ export default function AdminGeneratedQuestionsPage() {
                                       <td className="py-1.5 text-right">
                                         <button
                                           type="button"
-                                          onClick={() => openEditFromValidate(it.id)}
-                                          className="text-violet-400 hover:text-violet-300 font-medium"
+                                          disabled={regenerateOptionsLoading === it.id}
+                                          onClick={() => handleRegenerateOptionsOnly(it.id)}
+                                          className="text-violet-400 hover:text-violet-300 font-medium disabled:opacity-50"
+                                          title="선택지만 Claude로 새로 생성해 중복 해소"
                                         >
-                                          수정
+                                          {regenerateOptionsLoading === it.id ? '생성 중…' : '선택지만 수정'}
                                         </button>
                                       </td>
                                     </tr>
@@ -1639,13 +2104,28 @@ export default function AdminGeneratedQuestionsPage() {
                   <span className="text-slate-500">passage_id 없이만 등록된 변형은 제외됩니다.</span>
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setQCountOpen(false)}
-                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
-              >
-                ×
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  disabled={
+                    qCountLoading ||
+                    (qCountScope === 'textbook' && (!filterTextbook.trim() || textbooks.length === 0)) ||
+                    (qCountScope === 'order' && !qCountOrderId.trim())
+                  }
+                  onClick={() => void runQuestionCountValidate()}
+                  className="px-3 py-1.5 rounded-lg border border-cyan-600/60 bg-cyan-900/50 hover:bg-cyan-800/60 disabled:opacity-50 text-cyan-200 text-sm font-medium"
+                  title="현재 선택한 범위로 다시 집계"
+                >
+                  새로고침
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQCountOpen(false)}
+                  className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div className="overflow-y-auto flex-1 p-5">
               {!qCountData && !qCountLoading && (
@@ -1919,7 +2399,9 @@ export default function AdminGeneratedQuestionsPage() {
                       <p className="text-[11px] text-slate-500 mb-2">
                         <strong className="text-amber-400/90">부족</strong> 열의 숫자를 누르면 해당 지문·유형이
                         채워진 <strong className="text-slate-400">새 변형문제</strong> 작성 창이 열립니다. 같은
-                        passage·type으로 부족한 만큼 저장하면 기준 문항 수에 맞출 수 있습니다.
+                        passage·type으로 부족한 만큼 저장하면 기준 문항 수에 맞출 수 있습니다.{' '}
+                        <strong className="text-slate-400">유형(카테고리)</strong> 또는{' '}
+                        <strong className="text-slate-400">지문 라벨</strong> 헤더를 누르면 유형별·지문 순으로 정렬이 바뀝니다.
                       </p>
                     )}
                     {qCountData.underfilledTotal === 0 ? (
@@ -1932,8 +2414,40 @@ export default function AdminGeneratedQuestionsPage() {
                         <table className="w-full text-xs">
                           <thead className="sticky top-0 bg-slate-900 z-[1]">
                             <tr className="text-left text-slate-400 border-b border-slate-600">
-                              <th className="py-2 px-2">지문 라벨</th>
-                              <th className="py-2 px-2">유형(카테고리)</th>
+                              <th className="py-2 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setQCountUnderfilledSortBy('label')}
+                                  className={`text-left w-full rounded px-1 py-0.5 -mx-1 transition-colors ${
+                                    qCountUnderfilledSortBy === 'label'
+                                      ? 'text-cyan-200 font-semibold bg-cyan-950/50'
+                                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                  }`}
+                                  title="지문 라벨 순으로 정렬"
+                                >
+                                  지문 라벨
+                                  {qCountUnderfilledSortBy === 'label' && (
+                                    <span className="ml-1 text-[10px] opacity-80">▼</span>
+                                  )}
+                                </button>
+                              </th>
+                              <th className="py-2 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setQCountUnderfilledSortBy('type')}
+                                  className={`text-left w-full rounded px-1 py-0.5 -mx-1 transition-colors ${
+                                    qCountUnderfilledSortBy === 'type'
+                                      ? 'text-violet-200 font-semibold bg-violet-950/50'
+                                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                  }`}
+                                  title="유형(카테고리)별로 묶어서 보기"
+                                >
+                                  유형(카테고리)
+                                  {qCountUnderfilledSortBy === 'type' && (
+                                    <span className="ml-1 text-[10px] opacity-80">▼</span>
+                                  )}
+                                </button>
+                              </th>
                               <th className="py-2 px-2 text-right">현재</th>
                               <th className="py-2 px-2 text-right">기준</th>
                               <th className="py-2 px-2 text-right" title="클릭 시 새 변형문제">
@@ -1945,6 +2459,11 @@ export default function AdminGeneratedQuestionsPage() {
                           <tbody>
                             {[...qCountData.underfilled]
                               .sort((a, b) => {
+                                if (qCountUnderfilledSortBy === 'type') {
+                                  const t = a.type.localeCompare(b.type, 'ko');
+                                  if (t !== 0) return t;
+                                  return a.label.localeCompare(b.label, 'ko');
+                                }
                                 const l = a.label.localeCompare(b.label, 'ko');
                                 if (l !== 0) return l;
                                 return a.type.localeCompare(b.type, 'ko');
@@ -2190,7 +2709,9 @@ export default function AdminGeneratedQuestionsPage() {
                   {solveRow.paragraph && (
                     <div className="rounded-xl bg-slate-900/70 border border-slate-600 p-4">
                       <p className="text-xs text-slate-500 mb-2 font-semibold uppercase tracking-wider">지문</p>
-                      <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{solveRow.paragraph}</p>
+                      <p className="text-sm text-slate-200 leading-relaxed">
+                        <ParagraphWithUnderline text={solveRow.paragraph} />
+                      </p>
                     </div>
                   )}
                   {solveRow.question && (
@@ -2423,6 +2944,23 @@ export default function AdminGeneratedQuestionsPage() {
                   같은 교재·출처·passage·type 조합에서는 유형당 총 {DEFAULT_QUESTIONS_PER_VARIANT_TYPE}문항(행)이 되도록 NumQuestion·순서를
                   맞추면 됩니다.
                 </p>
+                {(() => {
+                  let para = '';
+                  try {
+                    const q = JSON.parse(questionJson) as Record<string, unknown>;
+                    para = typeof q?.Paragraph === 'string' ? q.Paragraph : '';
+                  } catch {
+                    /* invalid JSON while typing */
+                  }
+                  return para ? (
+                    <div className="mb-3 rounded-lg bg-slate-900/80 border border-slate-600 p-3">
+                      <p className="text-[11px] text-slate-500 mb-2 font-semibold uppercase tracking-wider">Paragraph 미리보기</p>
+                      <div className="text-sm text-slate-200 leading-relaxed max-h-40 overflow-y-auto">
+                        <ParagraphWithUnderline text={para} />
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
                 <textarea
                   value={questionJson}
                   onChange={(e) => setQuestionJson(e.target.value)}

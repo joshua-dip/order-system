@@ -38,6 +38,10 @@ export async function GET(request: NextRequest) {
         const wb = (u as Record<string, unknown>).allowedTextbooksWorkbook;
         return Array.isArray(wb) ? wb.filter((x): x is string => typeof x === 'string') : undefined;
       })(),
+      allowedTextbooksVariant: (() => {
+        const vb = (u as Record<string, unknown>).allowedTextbooksVariant;
+        return Array.isArray(vb) ? vb.filter((x): x is string => typeof x === 'string') : undefined;
+      })(),
       allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
       points: (() => { const p = (u as { points?: number }).points; return typeof p === 'number' && p >= 0 ? p : 0; })(),
       supplementaryNote: (() => { const s = (u as { supplementaryNote?: string }).supplementaryNote; return typeof s === 'string' ? s : ''; })(),

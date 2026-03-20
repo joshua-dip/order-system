@@ -41,6 +41,8 @@ interface ListUser {
   allowedTextbooksEssay?: string[];
   /** 워크북 부교재만; 없으면 일반 allowedTextbooks 규칙 */
   allowedTextbooksWorkbook?: string[];
+  /** 부교재 변형문제(/textbook) 전용; 없으면 기본 노출만 */
+  allowedTextbooksVariant?: string[];
   allowedEssayTypeIds?: string[];
   points?: number;
   supplementaryNote?: string;
@@ -157,7 +159,7 @@ export default function AdminDashboardPage() {
   const [pathSavingId, setPathSavingId] = useState<string | null>(null);
   const [menuSavingId, setMenuSavingId] = useState<string | null>(null);
   const [editingTextbooksUserId, setEditingTextbooksUserId] = useState<string | null>(null);
-  const [editingTextbooksMode, setEditingTextbooksMode] = useState<'analysis' | 'essay' | 'workbook' | null>(null);
+  const [editingTextbooksMode, setEditingTextbooksMode] = useState<'analysis' | 'essay' | 'workbook' | 'variant' | null>(null);
   const [textbookListForModal, setTextbookListForModal] = useState<string[]>([]);
   const [selectedTextbooksForModal, setSelectedTextbooksForModal] = useState<string[]>([]);
   const [textbooksModalLoading, setTextbooksModalLoading] = useState(false);
@@ -653,7 +655,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const openTextbooksModal = (u: ListUser, mode: 'analysis' | 'essay' | 'workbook') => {
+  const openTextbooksModal = (u: ListUser, mode: 'analysis' | 'essay' | 'workbook' | 'variant') => {
     setEditingTextbooksUserId(u.id);
     setEditingTextbooksMode(mode);
     const legacy = Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [];
@@ -676,12 +678,22 @@ export default function AdminDashboardPage() {
       .then((data) => {
         if (data && typeof data === 'object' && !data.error) {
           let keys = Object.keys(data);
-          if (mode === 'workbook') {
+          if (mode === 'workbook' || mode === 'variant') {
             keys = keys.filter((k) => !/^고[123]_/.test(k));
             setTextbookListForModal(keys);
-            if (Array.isArray(u.allowedTextbooksWorkbook)) {
+            if (mode === 'workbook') {
+              if (Array.isArray(u.allowedTextbooksWorkbook)) {
+                setSelectedTextbooksForModal(
+                  u.allowedTextbooksWorkbook.filter((t) => keys.includes(t))
+                );
+              } else if (legacy.length > 0) {
+                setSelectedTextbooksForModal(keys.filter((k) => legacy.includes(k)));
+              } else {
+                setSelectedTextbooksForModal([...keys]);
+              }
+            } else if (Array.isArray(u.allowedTextbooksVariant)) {
               setSelectedTextbooksForModal(
-                u.allowedTextbooksWorkbook.filter((t) => keys.includes(t))
+                u.allowedTextbooksVariant.filter((t) => keys.includes(t))
               );
             } else if (legacy.length > 0) {
               setSelectedTextbooksForModal(keys.filter((k) => legacy.includes(k)));
@@ -739,6 +751,46 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const clearVariantTextbooks = async (u: ListUser) => {
+    if (
+      !confirm(
+        '변형문제 부교재 전용 목록을 해제할까요? 이후에는 사이트 기본 노출(관리자 기본 교재 설정)만 적용됩니다.'
+      )
+    )
+      return;
+    setTextbooksSavingId(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allowedTextbooksVariant: null }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setUsers((prev) =>
+          prev.map((x) => {
+            if (x.id !== u.id) return x;
+            const { allowedTextbooksVariant: _v, ...rest } = x;
+            return rest;
+          })
+        );
+        if (editUser?.id === u.id) {
+          setEditUser((prev) => {
+            if (!prev) return null;
+            const { allowedTextbooksVariant: _v, ...rest } = prev;
+            return rest;
+          });
+        }
+      } else {
+        alert(data?.error || '해제에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setTextbooksSavingId(null);
+    }
+  };
+
   const openEssayTypesModal = (u: ListUser) => {
     setEditingEssayTypesUserId(u.id);
     setSelectedEssayTypeIdsForModal(Array.isArray(u.allowedEssayTypeIds) ? [...u.allowedEssayTypeIds] : []);
@@ -779,7 +831,9 @@ export default function AdminDashboardPage() {
           ? { allowedTextbooksAnalysis: selectedTextbooksForModal }
           : editingTextbooksMode === 'essay'
             ? { allowedTextbooksEssay: selectedTextbooksForModal }
-            : { allowedTextbooksWorkbook: selectedTextbooksForModal };
+            : editingTextbooksMode === 'workbook'
+              ? { allowedTextbooksWorkbook: selectedTextbooksForModal }
+              : { allowedTextbooksVariant: selectedTextbooksForModal };
       const res = await fetch(`/api/admin/users/${editingTextbooksUserId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -792,7 +846,9 @@ export default function AdminDashboardPage() {
             ? 'allowedTextbooksAnalysis'
             : editingTextbooksMode === 'essay'
               ? 'allowedTextbooksEssay'
-              : 'allowedTextbooksWorkbook';
+              : editingTextbooksMode === 'workbook'
+                ? 'allowedTextbooksWorkbook'
+                : 'allowedTextbooksVariant';
         const next = [...selectedTextbooksForModal];
         setUsers((prev) => prev.map((u) => (u.id === editingTextbooksUserId ? { ...u, [key]: next } : u)));
         if (editUser?.id === editingTextbooksUserId)
@@ -1368,7 +1424,7 @@ export default function AdminDashboardPage() {
       }
       return s;
     };
-    const headers = ['아이디', '이름', '이메일', '전화번호', 'Dropbox폴더', 'Dropbox공유링크', '분석지허용', '서술형허용', '분석지교재수', '서술형교재수', '가입일'];
+    const headers = ['아이디', '이름', '이메일', '전화번호', 'Dropbox폴더', 'Dropbox공유링크', '분석지허용', '서술형허용', '분석지교재수', '서술형교재수', '변형부교재전용수', '가입일'];
     const rows = users.map((u) => [
       escape(u.loginId ?? ''),
       escape(u.name ?? ''),
@@ -1380,6 +1436,7 @@ export default function AdminDashboardPage() {
       u.canAccessEssay ? 'Y' : 'N',
       String((u.allowedTextbooksAnalysis?.length ?? u.allowedTextbooks?.length) ?? 0),
       String((u.allowedTextbooksEssay?.length ?? u.allowedTextbooks?.length) ?? 0),
+      u.allowedTextbooksVariant !== undefined ? String(u.allowedTextbooksVariant.length) : '',
       escape(formatDate(u.createdAt)),
     ]);
     const bom = '\uFEFF';
@@ -2366,6 +2423,50 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
                         </div>
+                        {/* 변형문제 부교재 노출 (회원별) */}
+                        <div className="mx-3 mb-3 rounded-xl overflow-hidden border border-[#2e3248] bg-[#22263a]">
+                          <div className="px-3 py-2 border-b border-[#2e3248] flex items-center gap-2">
+                            <span className="text-sm">📗</span>
+                            <span className="text-[11px] font-semibold text-slate-400 flex-1">변형문제 부교재 노출</span>
+                            {u.allowedTextbooksVariant !== undefined ? (
+                              <span className="text-[10px] font-semibold text-emerald-400/90">전용 목록 사용 중</span>
+                            ) : (
+                              <span className="text-[10px] font-semibold text-slate-500">기본 노출과 동일</span>
+                            )}
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                              전 회원 공통 부교재는 코드{' '}
+                              <code className="text-slate-400">lib/variant-textbooks.ts</code>의{' '}
+                              <code className="text-slate-400">VARIANT_SUPPLEMENTARY_COMMON_KEYS</code>에 넣습니다.
+                              여기서는 <strong className="text-slate-400">이 회원만</strong> 부교재 변형문제 주문(/textbook) 화면에서 볼 추가 교재를 고릅니다.
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openTextbooksModal(u, 'variant')}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-[#2e3248] text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                              >
+                                부교재 선택
+                                {u.allowedTextbooksVariant !== undefined
+                                  ? ` (${u.allowedTextbooksVariant.length}개)`
+                                  : u.allowedTextbooks && u.allowedTextbooks.length > 0
+                                    ? ' (미저장·저장 시 전용 적용)'
+                                    : ''}
+                              </button>
+                              {u.allowedTextbooksVariant !== undefined && (
+                                <button
+                                  type="button"
+                                  onClick={() => clearVariantTextbooks(u)}
+                                  disabled={textbooksSavingId === u.id}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-emerald-500/30 text-emerald-400/90 rounded-lg text-[11px] font-semibold hover:bg-emerald-500/10 disabled:opacity-50"
+                                >
+                                  전용 해제
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                         {/* 메뉴 허용: 분석지·서술형 */}
                         <div className="mx-3 mb-3 rounded-xl overflow-hidden border border-[#2e3248] bg-[#22263a]">
                           <div className="px-3 py-2 border-b border-[#2e3248]">
@@ -2987,7 +3088,9 @@ export default function AdminDashboardPage() {
                   ? '분석지 허용 교재'
                   : editingTextbooksMode === 'essay'
                     ? '서술형 허용 교재'
-                    : '워크북 부교재 (회원 전용 추가)'}
+                    : editingTextbooksMode === 'workbook'
+                      ? '워크북 부교재 (회원 전용 추가)'
+                      : '변형문제 부교재 (회원 전용 추가)'}
               </h3>
               <p className="text-slate-400 text-xs mt-1">
                 {editingTextbooksMode === 'workbook' ? (
@@ -2995,6 +3098,12 @@ export default function AdminDashboardPage() {
                     모의고사(고1_/고2_/고3_)는 제외된 목록입니다. 저장 시 이 회원에게는{' '}
                     <strong className="text-slate-300">공통 교재(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
                     워크북 부교재로 보입니다.
+                  </>
+                ) : editingTextbooksMode === 'variant' ? (
+                  <>
+                    모의고사(고1_/고2_/고3_)는 제외된 목록입니다. 저장 시 이 회원에게는{' '}
+                    <strong className="text-slate-300">공통 교재(VARIANT_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
+                    부교재 변형문제 주문 화면에 보입니다.
                   </>
                 ) : (
                   <>

@@ -525,92 +525,6 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                 </p>
               </div>
 
-              {/* 변형 DB 준비 현황 (강·유형별) */}
-              {selectedLessons.length > 0 && selectedTypes.length > 0 && (
-                <div className="mb-6 rounded-xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/90 to-white p-4 shadow-sm">
-                  <h4 className="text-base font-bold text-indigo-950 mb-1 flex items-center gap-2">
-                    <span aria-hidden>📦</span> 변형문제 DB 준비 현황
-                  </h4>
-                  <p className="text-[11px] text-indigo-800/80 mb-3 leading-relaxed">
-                    선택하신 <strong>교재·강(지문)</strong>과 <strong>유형</strong> 조합으로 등록된 변형 데이터가 있는지 표시합니다.
-                    관리자 DB의 <strong>출처</strong>가 여기서 고른 강 이름과 같을 때 &quot;전 강 준비&quot;가 정확합니다.
-                  </p>
-                  {avLoading && (
-                    <p className="text-sm text-indigo-600 py-2">불러오는 중…</p>
-                  )}
-                  {avErr && !avLoading && (
-                    <p className="text-sm text-red-600 py-1">{avErr}</p>
-                  )}
-                  {!avLoading && !avErr && avData && (
-                    <>
-                      <div
-                        className={`mb-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                          avData.allLessonsAllTypesReady
-                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                            : 'bg-amber-50 text-amber-950 border border-amber-200'
-                        }`}
-                      >
-                        {avData.allLessonsAllTypesReady ? (
-                          <>
-                            ✓ 선택하신 유형·강 조합마다 DB에 문항이{' '}
-                            <strong>{avData.minCount}문항 이상</strong> 있어,{' '}
-                            <strong>빠르게 자료를 받아보실 수 있는 경우가 많습니다</strong>
-                            (최종 일정은 별도 안내를 기준으로 합니다).
-                          </>
-                        ) : (
-                          <>
-                            일부 강·유형은 DB에 아직 없을 수 있습니다. 없는 조합은{' '}
-                            <strong>제작에 약 1영업일</strong> 정도 걸릴 수 있어요. 아래에서 유형별로 확인해 보세요.
-                          </>
-                        )}
-                      </div>
-                      <ul className="space-y-2">
-                        {avData.typeSummary.map((row) => {
-                          let badge: { text: string; className: string };
-                          if (row.strictAllReady) {
-                            badge = {
-                              text: `전 강 준비 (${row.totalLessons}강 × ${avData.minCount}문항+)`,
-                              className: 'bg-emerald-600 text-white',
-                            };
-                          } else if (row.readyLessons > 0) {
-                            badge = {
-                              text: `일부 강만 (${row.readyLessons}/${row.totalLessons}강)`,
-                              className: 'bg-amber-500 text-white',
-                            };
-                          } else if (row.looselyEnough) {
-                            badge = {
-                              text: `교재 합산 충분 (${row.textbookTotal}건) · 강명 일치 확인`,
-                              className: 'bg-sky-600 text-white',
-                            };
-                          } else if (row.textbookTotal > 0) {
-                            badge = {
-                              text: `DB ${row.textbookTotal}건 · 강별 부족`,
-                              className: 'bg-orange-500 text-white',
-                            };
-                          } else {
-                            badge = {
-                              text: 'DB 없음 → 제작 필요',
-                              className: 'bg-slate-500 text-white',
-                            };
-                          }
-                          return (
-                            <li
-                              key={row.type}
-                              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-white/80 px-3 py-2"
-                            >
-                              <span className="font-semibold text-black">{row.type}</span>
-                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge.className}`}>
-                                {badge.text}
-                              </span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </>
-                  )}
-                </div>
-              )}
-
               {/* 나의양식(HWP) — 부교재 변형문제 */}
               {isMember && myFormatApproved && (
                 <div className="mb-6 p-4 rounded-xl border-2 border-[#0ea5e9] bg-sky-50">
@@ -840,6 +754,96 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
               )}
             </div>
           </div>
+
+          {/* 변형 DB 준비 현황 — 주문서(위) 아래 배치 */}
+          {selectedLessons.length > 0 && selectedTypes.length > 0 && (
+            <div className="max-w-2xl mx-auto mt-10 mb-6 rounded-xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/90 to-white p-4 shadow-sm">
+              <h4 className="text-base font-bold text-indigo-950 mb-1 flex items-center gap-2">
+                <span aria-hidden>📦</span> 변형문제 DB 준비 현황
+              </h4>
+              <p className="text-[11px] text-indigo-800/80 mb-3 leading-relaxed">
+                선택하신 <strong>교재·강(지문)</strong>과 <strong>유형</strong> 조합으로 등록된 변형 데이터가 있는지 표시합니다.
+                관리자 DB의 <strong>출처</strong>가 여기서 고른 강 이름과 같을 때 100%가 정확합니다.
+              </p>
+              {avLoading && (
+                <p className="text-sm text-indigo-600 py-2">불러오는 중…</p>
+              )}
+              {avErr && !avLoading && (
+                <p className="text-sm text-red-600 py-1">{avErr}</p>
+              )}
+              {!avLoading && !avErr && avData && (
+                <>
+                  <div
+                    className={`mb-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
+                      avData.allLessonsAllTypesReady
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                        : 'bg-amber-50 text-amber-950 border border-amber-200'
+                    }`}
+                  >
+                    {avData.allLessonsAllTypesReady ? (
+                      <>
+                        ✓ 선택하신 유형·강 조합마다 DB에 문항이{' '}
+                        <strong>{avData.minCount}문항 이상</strong> 있어,{' '}
+                        <strong>빠르게 자료를 받아보실 수 있는 경우가 많습니다</strong>
+                        (최종 일정은 별도 안내를 기준으로 합니다).
+                      </>
+                    ) : (
+                      <>
+                        일부 강·유형은 DB에 아직 없을 수 있습니다. 없는 조합은{' '}
+                        <strong>제작에 약 1영업일</strong> 정도 걸릴 수 있어요. 아래에서 유형별 퍼센트를 확인해 보세요.
+                      </>
+                    )}
+                  </div>
+                  <ul className="space-y-2">
+                    {avData.typeSummary.map((row) => {
+                      const pct =
+                        row.totalLessons > 0
+                          ? Math.round((row.readyLessons / row.totalLessons) * 100)
+                          : 0;
+                      let badge: { text: string; className: string };
+                      if (row.strictAllReady) {
+                        badge = {
+                          text: `100% (${row.totalLessons}강 × ${avData.minCount}문항+)`,
+                          className: 'bg-emerald-600 text-white',
+                        };
+                      } else if (row.readyLessons > 0) {
+                        badge = {
+                          text: `${pct}% (${row.readyLessons}/${row.totalLessons}강)`,
+                          className: 'bg-amber-500 text-white',
+                        };
+                      } else if (row.looselyEnough) {
+                        badge = {
+                          text: `교재 합산 충분 (${row.textbookTotal}건) · 강명 일치 확인`,
+                          className: 'bg-sky-600 text-white',
+                        };
+                      } else if (row.textbookTotal > 0) {
+                        badge = {
+                          text: `0% · DB ${row.textbookTotal}건 (강별 부족)`,
+                          className: 'bg-orange-500 text-white',
+                        };
+                      } else {
+                        badge = {
+                          text: '0% · DB 없음 → 제작 필요',
+                          className: 'bg-slate-500 text-white',
+                        };
+                      }
+                      return (
+                        <li
+                          key={row.type}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-white/80 px-3 py-2"
+                        >
+                          <span className="font-semibold text-black">{row.type}</span>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge.className}`}>
+                            {badge.text}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

@@ -19,7 +19,8 @@ export function isWorkbookMockExamTextbookKey(key: string): boolean {
 
 /**
  * 워크북 교재 선택 화면의 **부교재** 목록만 계산합니다. 모의고사 키는 제외합니다.
- * - `allowedTextbooksWorkbook` 미설정: 기존과 동일하게 `allowedTextbooks`로 필터
+ * - `allowedTextbooksWorkbook` 미설정이고 허용 목록이 비어 있으면: **공통(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS)만** 노출
+ * - `allowedTextbooksWorkbook` 미설정이고 허용 목록이 있으면: 해당 목록으로 필터
  * - 설정됨: `WORKBOOK_SUPPLEMENTARY_COMMON_KEYS` ∪ 개인 목록
  */
 export function filterWorkbookSupplementaryTextbookKeys(
@@ -31,10 +32,14 @@ export function filterWorkbookSupplementaryTextbookKeys(
 ): string[] {
   const suppKeys = allKeys.filter((k) => !isWorkbookMockExamTextbookKey(k));
   const personal = opts.allowedTextbooksWorkbook;
-  if (personal === undefined) {
-    return filterSupplementaryByAllowed(suppKeys, opts.allowedTextbooks);
-  }
   const common = new Set(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS);
+  if (personal === undefined) {
+    const allowed = opts.allowedTextbooks;
+    if (allowed === undefined || allowed.length === 0) {
+      return suppKeys.filter((k) => common.has(k));
+    }
+    return filterSupplementaryByAllowed(suppKeys, allowed);
+  }
   const allow = new Set<string>([...common, ...personal]);
   return suppKeys.filter((k) => allow.has(k));
 }

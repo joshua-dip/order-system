@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
+import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/variant-textbooks';
 
 interface LessonSelectionProps {
   selectedTextbook: string;
@@ -47,6 +48,28 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [searchTerm, setSearchTerm] = useState('');
   const [showTextbookList, setShowTextbookList] = useState(false);
   const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
+  /** 관리자가 회원 전용 변형문제 부교재 목록을 저장한 경우에만 true */
+  const [variantDedicatedActive, setVariantDedicatedActive] = useState(false);
+  const [variantDedicatedList, setVariantDedicatedList] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        const u = data?.user;
+        if (u && 'allowedTextbooksVariant' in u && Array.isArray(u.allowedTextbooksVariant)) {
+          setVariantDedicatedActive(true);
+          setVariantDedicatedList(u.allowedTextbooksVariant.filter((x: unknown): x is string => typeof x === 'string'));
+        } else {
+          setVariantDedicatedActive(false);
+          setVariantDedicatedList([]);
+        }
+      })
+      .catch(() => {
+        setVariantDedicatedActive(false);
+        setVariantDedicatedList([]);
+      });
+  }, []);
 
   useEffect(() => {
     fetch('/api/settings/default-textbooks')
@@ -63,10 +86,16 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         // 부교재 목록: 관리자가 설정한 기본 노출 교재만 표시 (비회원 포함). 미설정 시 전체 노출.
         if (selectedTextbook === '부교재_목록') {
           const allKeys = Object.keys(textbooksData);
-          const textbookList =
-            defaultTextbooks.length > 0
-              ? allKeys.filter((k) => defaultTextbooks.includes(k))
-              : allKeys;
+          let textbookList: string[];
+          if (variantDedicatedActive) {
+            textbookList = filterVariantSupplementaryTextbookKeys(allKeys, {
+              allowedTextbooksVariant: variantDedicatedList,
+            });
+          } else if (defaultTextbooks.length > 0) {
+            textbookList = allKeys.filter((k) => defaultTextbooks.includes(k));
+          } else {
+            textbookList = allKeys.filter((k) => VARIANT_SUPPLEMENTARY_COMMON_KEYS.includes(k));
+          }
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
           setShowTextbookList(true);
@@ -132,7 +161,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     if (selectedTextbook) {
       loadTextbookData();
     }
-  }, [selectedTextbook, textbooksData, defaultTextbooks]);
+  }, [selectedTextbook, textbooksData, defaultTextbooks, variantDedicatedActive, variantDedicatedList]);
 
   // 검색 필터링 로직
   useEffect(() => {

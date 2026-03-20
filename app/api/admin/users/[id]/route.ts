@@ -54,6 +54,8 @@ export async function PATCH(
     const allowedTextbooksEssay = Array.isArray(body?.allowedTextbooksEssay) ? body.allowedTextbooksEssay : undefined;
     const hasAllowedTextbooksWorkbook = 'allowedTextbooksWorkbook' in body;
     const allowedTextbooksWorkbookRaw = hasAllowedTextbooksWorkbook ? body.allowedTextbooksWorkbook : undefined;
+    const hasAllowedTextbooksVariant = 'allowedTextbooksVariant' in body;
+    const allowedTextbooksVariantRaw = hasAllowedTextbooksVariant ? body.allowedTextbooksVariant : undefined;
     const allowedEssayTypeIds = Array.isArray(body?.allowedEssayTypeIds) ? body.allowedEssayTypeIds.filter((id: unknown) => typeof id === 'string') : undefined;
     const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
     const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
@@ -88,6 +90,15 @@ export async function PATCH(
         unsetDoc.allowedTextbooksWorkbook = '';
       } else if (Array.isArray(allowedTextbooksWorkbookRaw)) {
         updates.allowedTextbooksWorkbook = allowedTextbooksWorkbookRaw.filter(
+          (x: unknown): x is string => typeof x === 'string'
+        );
+      }
+    }
+    if (hasAllowedTextbooksVariant) {
+      if (allowedTextbooksVariantRaw === null) {
+        unsetDoc.allowedTextbooksVariant = '';
+      } else if (Array.isArray(allowedTextbooksVariantRaw)) {
+        updates.allowedTextbooksVariant = allowedTextbooksVariantRaw.filter(
           (x: unknown): x is string => typeof x === 'string'
         );
       }

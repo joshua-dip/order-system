@@ -8,6 +8,8 @@ export interface CurrentUser {
   allowedTextbooksEssay: string[];
   /** 워크북 부교재 전용. 없으면 allowedTextbooks 규칙과 동일 */
   allowedTextbooksWorkbook?: string[];
+  /** 부교재 변형문제(/textbook) 전용. 없으면 사이트 기본 노출만 적용 */
+  allowedTextbooksVariant?: string[];
   canAccessAnalysis?: boolean;
   canAccessEssay?: boolean;
   points?: number;
@@ -28,11 +30,13 @@ export function useCurrentUser(): CurrentUser | null {
           const at = Array.isArray(data.user.allowedTextbooks) ? data.user.allowedTextbooks : [];
           const points = typeof data.user.points === 'number' && data.user.points >= 0 ? data.user.points : 0;
           const wb = data.user.allowedTextbooksWorkbook;
+          const vb = data.user.allowedTextbooksVariant;
           setUser({
             allowedTextbooks: at,
             allowedTextbooksAnalysis: Array.isArray(data.user.allowedTextbooksAnalysis) ? data.user.allowedTextbooksAnalysis : at,
             allowedTextbooksEssay: Array.isArray(data.user.allowedTextbooksEssay) ? data.user.allowedTextbooksEssay : at,
             ...(Array.isArray(wb) ? { allowedTextbooksWorkbook: wb } : {}),
+            ...(Array.isArray(vb) ? { allowedTextbooksVariant: vb } : {}),
             canAccessAnalysis: !!data.user.canAccessAnalysis,
             canAccessEssay: !!data.user.canAccessEssay,
             points,

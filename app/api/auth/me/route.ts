@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
           allowedTextbooksAnalysis: 1,
           allowedTextbooksEssay: 1,
           allowedTextbooksWorkbook: 1,
+          allowedTextbooksVariant: 1,
           points: 1,
         },
       }
@@ -40,6 +41,7 @@ export async function GET(request: NextRequest) {
     }
     const points = typeof user.points === 'number' && user.points >= 0 ? user.points : 0;
     const wb = user.allowedTextbooksWorkbook;
+    const vb = (user as { allowedTextbooksVariant?: unknown }).allowedTextbooksVariant;
     return NextResponse.json({
       user: {
         loginId: user.loginId,
@@ -55,6 +57,7 @@ export async function GET(request: NextRequest) {
         allowedTextbooksAnalysis: Array.isArray(user.allowedTextbooksAnalysis) ? user.allowedTextbooksAnalysis : (Array.isArray(user.allowedTextbooks) ? user.allowedTextbooks : []),
         allowedTextbooksEssay: Array.isArray(user.allowedTextbooksEssay) ? user.allowedTextbooksEssay : (Array.isArray(user.allowedTextbooks) ? user.allowedTextbooks : []),
         ...(Array.isArray(wb) ? { allowedTextbooksWorkbook: wb } : {}),
+        ...(Array.isArray(vb) ? { allowedTextbooksVariant: vb } : {}),
         points,
       },
     });
