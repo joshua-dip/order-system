@@ -19,22 +19,22 @@ async function getOwnerId(request: NextRequest): Promise<ObjectId | null> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ studentId: string }> }
 ) {
   const userId = await getOwnerId(request);
   if (!userId) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  const { id } = await params;
-  if (!id || !ObjectId.isValid(id)) {
+  const { studentId } = await params;
+  if (!studentId || !ObjectId.isValid(studentId)) {
     return NextResponse.json({ error: '잘못된 학생 ID입니다.' }, { status: 400 });
   }
 
   try {
     const db = await getDb('gomijoshua');
     const doc = await db.collection(COLLECTION).findOne({
-      _id: new ObjectId(id),
+      _id: new ObjectId(studentId),
       userId,
     });
     if (!doc) {
@@ -50,22 +50,22 @@ export async function GET(
       },
     });
   } catch (e) {
-    console.error('my/students/[id] GET:', e);
+    console.error('my/students/[studentId] GET:', e);
     return NextResponse.json({ error: '조회 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ studentId: string }> }
 ) {
   const userId = await getOwnerId(request);
   if (!userId) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  const { id } = await params;
-  if (!id || !ObjectId.isValid(id)) {
+  const { studentId } = await params;
+  if (!studentId || !ObjectId.isValid(studentId)) {
     return NextResponse.json({ error: '잘못된 학생 ID입니다.' }, { status: 400 });
   }
 
@@ -101,7 +101,7 @@ export async function PATCH(
   try {
     const db = await getDb('gomijoshua');
     const result = await db.collection(COLLECTION).updateOne(
-      { _id: new ObjectId(id), userId },
+      { _id: new ObjectId(studentId), userId },
       { $set }
     );
     if (result.matchedCount === 0) {
@@ -109,29 +109,29 @@ export async function PATCH(
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('my/students/[id] PATCH:', e);
+    console.error('my/students/[studentId] PATCH:', e);
     return NextResponse.json({ error: '수정 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ studentId: string }> }
 ) {
   const userId = await getOwnerId(request);
   if (!userId) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  const { id } = await params;
-  if (!id || !ObjectId.isValid(id)) {
+  const { studentId } = await params;
+  if (!studentId || !ObjectId.isValid(studentId)) {
     return NextResponse.json({ error: '잘못된 학생 ID입니다.' }, { status: 400 });
   }
 
   try {
     const db = await getDb('gomijoshua');
     const result = await db.collection(COLLECTION).deleteOne({
-      _id: new ObjectId(id),
+      _id: new ObjectId(studentId),
       userId,
     });
     if (result.deletedCount === 0) {
@@ -139,7 +139,7 @@ export async function DELETE(
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('my/students/[id] DELETE:', e);
+    console.error('my/students/[studentId] DELETE:', e);
     return NextResponse.json({ error: '삭제 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }
