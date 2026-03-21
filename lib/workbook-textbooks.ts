@@ -36,7 +36,9 @@ export function filterWorkbookSupplementaryTextbookKeys(
   if (personal === undefined) {
     const allowed = opts.allowedTextbooks;
     if (allowed === undefined || allowed.length === 0) {
-      return suppKeys.filter((k) => common.has(k));
+      const onlyCommon = suppKeys.filter((k) => common.has(k));
+      if (onlyCommon.length === 0) return suppKeys;
+      return onlyCommon;
     }
     return filterSupplementaryByAllowed(suppKeys, allowed);
   }

@@ -206,6 +206,9 @@ export default function AdminDashboardPage() {
   const [passageUploadFile, setPassageUploadFile] = useState<File | null>(null);
   const [passageUploadSaving, setPassageUploadSaving] = useState(false);
   const [passageUploadMessage, setPassageUploadMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [passageUploadDbTextbooks, setPassageUploadDbTextbooks] = useState<string[]>([]);
+  const [passageUploadDbTextbook, setPassageUploadDbTextbook] = useState('');
+  const [passageUploadFromDbSaving, setPassageUploadFromDbSaving] = useState(false);
 
   const [essayTypes, setEssayTypes] = useState<EssayTypeItem[]>([]);
   const [essayTypesLoading, setEssayTypesLoading] = useState(false);
@@ -325,6 +328,17 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (section === 'essayTypes' || section === 'exams') fetchEssayTypes();
   }, [section, fetchEssayTypes]);
+
+  useEffect(() => {
+    if (section !== 'passageUpload') return;
+    fetch('/api/admin/passages/textbooks', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const list = Array.isArray(d.textbooks) ? d.textbooks : [];
+        setPassageUploadDbTextbooks([...list].sort((a: string, b: string) => a.localeCompare(b, 'ko')));
+      })
+      .catch(() => setPassageUploadDbTextbooks([]));
+  }, [section]);
 
   const essayCategoriesForSelect = essayTypes.length > 0
     ? essayTypes.flatMap((t) => ({ value: `${t.대분류} > ${t.소분류}`, 대분류: t.대분류, 소분류: t.소분류 }))
@@ -1410,6 +1424,36 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handlePassageUploadFromDb = async () => {
+    if (!passageUploadDbTextbook.trim()) {
+      setPassageUploadMessage({ type: 'error', text: '원문 DB에서 가져올 교재를 선택해 주세요.' });
+      return;
+    }
+    setPassageUploadMessage(null);
+    setPassageUploadFromDbSaving(true);
+    try {
+      const res = await fetch('/api/admin/passage-upload/from-passages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ textbook: passageUploadDbTextbook.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setPassageUploadMessage({
+          type: 'success',
+          text: `교재 "${data.textbook}"를 MongoDB 원문(passages) 기준으로 converted_data.json에 반영했습니다. (강 ${data.lessonCount}개 · 원문 ${data.passageCount}건)`,
+        });
+      } else {
+        setPassageUploadMessage({ type: 'error', text: data?.error || '불러오기에 실패했습니다.' });
+      }
+    } catch {
+      setPassageUploadMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setPassageUploadFromDbSaving(false);
+    }
+  };
+
   const toggleClassifyCategory = (value: string) => {
     setSelectedCategoriesForClassify((prev) =>
       prev.includes(value) ? prev.filter((c) => c !== value) : [...prev, value]
@@ -2036,15 +2080,50 @@ export default function AdminDashboardPage() {
             <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden mb-8">
               <div className="px-5 py-4 border-b border-slate-700">
                 <h2 className="font-bold text-lg text-white">지문 업로드</h2>
-                <p className="text-slate-400 text-sm mt-0.5">교재 엑셀(.xlsx)을 올리면 지문 데이터(converted_data.json)에 자동 반영됩니다. 부교재·분석지·서술형 등에서 선택 가능한 교재로 바로 사용할 수 있습니다.</p>
+                <p className="text-slate-400 text-sm mt-0.5">
+                  교재 엑셀(.xlsx)을 올리거나, <strong className="text-slate-300">원문 관리(MongoDB passages)</strong>에 이미 저장된 교재를 불러와 지문 데이터(converted_data.json)에 반영할 수 있습니다. 부교재·분석지·서술형 등에서 선택 가능한 교재로 바로 사용할 수 있습니다.
+                </p>
               </div>
-              <div className="p-5 space-y-4">
-                <p className="text-slate-400 text-xs">엑셀 형식: 교재명 · 강/회차 · 번호 열이 있어야 합니다. 파일명이 교재 키로 사용됩니다.</p>
+              <div className="p-5 space-y-6">
                 {passageUploadMessage && (
                   <div className={`p-3 rounded-lg text-sm ${passageUploadMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/50' : 'bg-red-500/20 text-red-200 border border-red-500/50'}`}>
                     {passageUploadMessage.text}
                   </div>
                 )}
+                <div className="rounded-xl border border-emerald-700/40 bg-emerald-950/20 p-4 space-y-3">
+                  <h3 className="font-semibold text-emerald-200 text-sm">원문 DB에서 불러오기</h3>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    <strong className="text-slate-300">원문 관리</strong>에 등록된 교재·강(chapter)·번호(number)를 그대로 엑셀 변환과 동일한 JSON 구조(Sheet1 → 부교재)로 합칩니다. 해당 교재 키가 이미 있으면 <strong className="text-slate-300">덮어씁니다</strong>.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <select
+                      value={passageUploadDbTextbook}
+                      onChange={(e) => setPassageUploadDbTextbook(e.target.value)}
+                      className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white min-w-[240px]"
+                    >
+                      <option value="">교재 선택…</option>
+                      {passageUploadDbTextbooks.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handlePassageUploadFromDb}
+                      disabled={!passageUploadDbTextbook || passageUploadFromDbSaving}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {passageUploadFromDbSaving ? '반영 중…' : 'converted_data.json에 반영'}
+                    </button>
+                  </div>
+                  <p className="text-slate-500 text-[11px]">교재 목록은 passages 컬렉션의 distinct textbook입니다. 비어 있으면 원문 관리에서 먼저 원문을 등록하세요.</p>
+                </div>
+
+                <div className="border-t border-slate-700 pt-4">
+                  <h3 className="font-semibold text-slate-300 text-sm mb-2">엑셀 업로드</h3>
+                  <p className="text-slate-400 text-xs mb-3">엑셀 형식: 교재명 · 강/회차 · 번호 열이 있어야 합니다. 파일명이 교재 키로 사용됩니다.</p>
+                </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <input
                     type="file"

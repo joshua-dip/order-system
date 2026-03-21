@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME } from '@/lib/auth';
+import { recordPointLedger } from '@/lib/point-ledger';
 
 const DEFAULT_PASSWORD = '123456';
 
@@ -124,7 +125,38 @@ export async function PATCH(
       return NextResponse.json({ error: '변경할 내용이 없습니다.' }, { status: 400 });
     }
 
+    const previousPoints =
+      typeof (target as { points?: number }).points === 'number' &&
+      (target as { points?: number }).points! >= 0
+        ? (target as { points?: number }).points!
+        : 0;
+    let newPoints = previousPoints;
+    if (addPoints !== undefined && addPoints > 0) {
+      newPoints = previousPoints + addPoints;
+    } else if (points !== undefined) {
+      newPoints = points;
+    }
+    const pointDelta = newPoints - previousPoints;
+    const pointsFieldUpdated =
+      (points !== undefined) || (addPoints !== undefined && addPoints > 0);
+
     await users.updateOne({ _id: new ObjectId(id) }, mongoOp);
+
+    if (pointsFieldUpdated && pointDelta !== 0) {
+      const kind =
+        addPoints !== undefined && addPoints > 0 ? 'admin_grant' : 'admin_adjust';
+      await recordPointLedger(db, {
+        userId: new ObjectId(id),
+        delta: pointDelta,
+        balanceAfter: newPoints,
+        kind,
+        meta: {
+          adminUserId: payload?.sub,
+          ...(addPoints !== undefined && addPoints > 0 ? { addPoints } : {}),
+        },
+      }).catch((e) => console.error('point_ledger 기록 실패:', e));
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('관리자 계정 수정 실패:', err);

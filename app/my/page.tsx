@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppBar from '../components/AppBar';
+import StudentManagement from '../components/StudentManagement';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -58,7 +59,36 @@ function statusVariant(status: string): 'new' | 'making' | 'done' | 'cancel' {
   return 'new';
 }
 
-type TabKey = 'orders' | 'exam' | 'myFormat' | 'settings';
+interface PointHistoryEntry {
+  id: string;
+  createdAt: string;
+  delta: number;
+  balanceAfter: number;
+  kind: string;
+  meta: Record<string, unknown>;
+}
+
+function pointHistoryKindLabel(kind: string): string {
+  switch (kind) {
+    case 'order_spend':
+      return '주문 사용';
+    case 'admin_grant':
+      return '포인트 지급';
+    case 'admin_adjust':
+      return '포인트 조정';
+    default:
+      return kind;
+  }
+}
+
+function formatPointHistoryWhen(iso: string): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -121,6 +151,9 @@ export default function MyPage() {
   const [deletingMyFormatId, setDeletingMyFormatId] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [pointHistory, setPointHistory] = useState<PointHistoryEntry[]>([]);
+  const [pointHistoryLoading, setPointHistoryLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -176,6 +209,16 @@ export default function MyPage() {
     if (!user) return;
     fetchMyFormatUploads();
   }, [user]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'settings') return;
+    setPointHistoryLoading(true);
+    fetch('/api/my/point-history', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => setPointHistory(Array.isArray(data.entries) ? data.entries : []))
+      .catch(() => setPointHistory([]))
+      .finally(() => setPointHistoryLoading(false));
+  }, [user, activeTab]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -438,6 +481,7 @@ export default function MyPage() {
 
   const tabs: { key: TabKey; label: string; icon: string; count?: number }[] = [
     { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
+    { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
     { key: 'exam', label: '기출문제', icon: '📤' },
     { key: 'myFormat', label: '나의양식', icon: '📄' },
     { key: 'settings', label: '내 정보', icon: '⚙️' },
@@ -602,6 +646,11 @@ export default function MyPage() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* ━━ 학생 관리 탭 ━━ */}
+          {activeTab === 'students' && (
+            <StudentManagement onCountChange={setStudentsCount} />
           )}
 
           {/* ━━ 기출문제 탭 (하위: 업로드 / 조회) ━━ */}
@@ -883,7 +932,14 @@ export default function MyPage() {
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <p className="text-sm font-bold text-[#0f172a] mb-2">맞춤형 자료 제작</p>
                 <p className="text-[13px] text-[#475569] mb-2">업로드하신 양식(hwp, hwpx)을 바탕으로 맞춤형 자료를 제작해 드립니다.</p>
-                <p className="text-[13px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">맞춤형 자료 제작을 이용하시려면 <strong>연회원비</strong> 결제가 필요합니다. 연회비 문의는 카카오톡으로 해 주세요.</p>
+                <div className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-3 mb-3 space-y-2 leading-relaxed">
+                  <p>
+                    맞춤형 자료 제작을 이용하시려면 <strong>연회원비</strong> 결제가 필요합니다. 연회비·절차 문의는 <strong>카카오톡</strong>으로 해 주세요.
+                  </p>
+                  <p>
+                    <strong>스타벅스 기프티콘</strong>을 보내주시면 확인 후 바로 <strong>연회원</strong>으로 처리해 드립니다.
+                  </p>
+                </div>
                 <ul className="text-[13px] text-[#475569] space-y-1.5 list-disc list-inside">
                   <li><strong className="text-[#0f172a]">강의용자료</strong>: 영어 지문만 포함된 자료입니다.</li>
                   <li><strong className="text-[#0f172a]">수업용자료</strong>: 영어 지문 + 한글 해석이 포함된 자료입니다.</li>
@@ -894,8 +950,11 @@ export default function MyPage() {
               {!user?.myFormatApproved ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
                   <p className="text-sm font-bold text-amber-800 mb-2">맞춤 HWP로 제작하시려면</p>
+                  <p className="text-[13px] text-amber-900 mb-2 leading-relaxed">
+                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. <strong>연회원비</strong>는 <strong>스타벅스 기프티콘</strong>을 보내주시면 확인 후 바로 연회원으로 처리해 드립니다. 문의·절차는 카카오톡으로 연락 주세요.
+                  </p>
                   <p className="text-[13px] text-amber-900 mb-3 leading-relaxed">
-                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. 카카오톡으로 가볍게 문의해 주시면 절차를 안내해 드리고, 이후 이 화면에서 유형별로 올리시면 주문 시 맞춤 양식을 선택하실 수 있어요.
+                    승인 후 이 화면에서 유형별로 올리시면 주문 시 맞춤 양식을 선택하실 수 있어요.
                   </p>
                   <a href={KAKAO_INQUIRY_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FEE500] text-[#191919] rounded-xl text-[13px] font-bold hover:opacity-90 no-underline">
                     카카오톡 문의하기
@@ -1055,9 +1114,89 @@ export default function MyPage() {
               {/* 포인트 */}
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="text-sm font-bold text-[#0f172a] mb-3">내 포인트</div>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl font-black tracking-tight">{(user.points ?? 0).toLocaleString()} <sub className="text-xs font-medium text-[#94a3b8]">P</sub></span>
-                  <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">주문 시 포인트 사용 가능</span>
+                <div className="flex flex-wrap items-center gap-3 mb-5">
+                  <span className="text-2xl font-black tracking-tight">
+                    {(user.points ?? 0).toLocaleString()}{' '}
+                    <sub className="text-xs font-medium text-[#94a3b8]">P</sub>
+                  </span>
+                  <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">
+                    주문 시 포인트 사용 가능
+                  </span>
+                </div>
+
+                <div className="border-t border-[#f1f5f9] pt-4">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-xs font-bold text-[#475569]">포인트 사용·적립 내역</span>
+                    {pointHistoryLoading && (
+                      <span className="text-[11px] text-[#94a3b8]">불러오는 중…</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#94a3b8] mb-3 leading-relaxed">
+                    시스템에 기록된 거래만 표시됩니다. 이 기능 도입 이전 주문·지급은 목록에 없을 수 있어요.
+                  </p>
+                  {pointHistoryLoading && pointHistory.length === 0 ? (
+                    <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] py-8 text-center text-[13px] text-[#94a3b8]">
+                      내역을 불러오는 중입니다…
+                    </div>
+                  ) : !pointHistoryLoading && pointHistory.length === 0 ? (
+                    <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] py-8 text-center text-[13px] text-[#94a3b8]">
+                      아직 표시할 내역이 없습니다.
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-[#e2e8f0] overflow-hidden overflow-x-auto">
+                      <table className="w-full text-left text-[12px] min-w-[320px]">
+                        <thead>
+                          <tr className="bg-[#f8fafc] text-[#64748b] font-semibold border-b border-[#e2e8f0]">
+                            <th className="px-3 py-2.5 whitespace-nowrap">일시</th>
+                            <th className="px-3 py-2.5 whitespace-nowrap">구분</th>
+                            <th className="px-3 py-2.5 whitespace-nowrap text-right">변동</th>
+                            <th className="px-3 py-2.5 whitespace-nowrap text-right">잔액</th>
+                            <th className="px-3 py-2.5 min-w-[100px]">비고</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pointHistory.map((row) => {
+                            const orderNumber =
+                              typeof row.meta?.orderNumber === 'string' ? row.meta.orderNumber : '';
+                            const note =
+                              row.kind === 'order_spend' && orderNumber
+                                ? `주문 ${orderNumber}`
+                                : '';
+                            const deltaStr =
+                              row.delta > 0
+                                ? `+${row.delta.toLocaleString()}`
+                                : row.delta.toLocaleString();
+                            return (
+                              <tr
+                                key={row.id}
+                                className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#fafafa]"
+                              >
+                                <td className="px-3 py-2.5 text-[#475569] whitespace-nowrap align-top">
+                                  {formatPointHistoryWhen(row.createdAt)}
+                                </td>
+                                <td className="px-3 py-2.5 text-[#0f172a] whitespace-nowrap align-top">
+                                  {pointHistoryKindLabel(row.kind)}
+                                </td>
+                                <td
+                                  className={`px-3 py-2.5 text-right font-bold whitespace-nowrap align-top ${
+                                    row.delta >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'
+                                  }`}
+                                >
+                                  {deltaStr} P
+                                </td>
+                                <td className="px-3 py-2.5 text-right text-[#0f172a] font-medium whitespace-nowrap align-top">
+                                  {row.balanceAfter.toLocaleString()} P
+                                </td>
+                                <td className="px-3 py-2.5 text-[#64748b] align-top break-words max-w-[200px]">
+                                  {note}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

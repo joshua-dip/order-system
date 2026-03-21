@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { notifySlackOrder } from '@/lib/slack';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { createOrderFolder, uploadOrderTxt, isDropboxConfigured } from '@/lib/dropbox';
 import { ORDER_FOOTER_MESSAGE } from '@/lib/orders';
+import { recordPointLedger } from '@/lib/point-ledger';
 
 const COLLECTION = 'orders';
 
@@ -43,6 +45,8 @@ export async function POST(request: NextRequest) {
     // 회원이면 이름·드롭박스 경로·전화번호·포인트 조회
     let userDropboxFolderPath: string | undefined;
     let userPhone: string | undefined;
+    /** 포인트 차감 후 주문 성공 시 원장 기록용 */
+    let pointSpendLedger: { userId: ObjectId; balanceAfter: number; amount: number } | undefined;
     if (loginId) {
       const userDoc = await usersColl.findOne(
         { loginId },
@@ -67,6 +71,11 @@ export async function POST(request: NextRequest) {
           { _id: userDoc._id },
           { $inc: { points: -pointsUsed } }
         );
+        pointSpendLedger = {
+          userId: userDoc._id as ObjectId,
+          balanceAfter: currentPoints - pointsUsed,
+          amount: pointsUsed,
+        };
       }
     }
 
@@ -120,6 +129,16 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
 
     const result = await collection.insertOne(doc);
     const orderId = result.insertedId.toString();
+
+    if (pointSpendLedger) {
+      await recordPointLedger(db, {
+        userId: pointSpendLedger.userId,
+        delta: -pointSpendLedger.amount,
+        balanceAfter: pointSpendLedger.balanceAfter,
+        kind: 'order_spend',
+        meta: { orderNumber, orderId },
+      }).catch((e) => console.error('point_ledger 기록 실패:', e));
+    }
 
     notifySlackOrder(finalOrderText, orderId).catch((e) =>
       console.error('Slack 알림 실패:', e)

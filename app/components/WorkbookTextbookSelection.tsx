@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { filterWorkbookSupplementaryTextbookKeys } from '@/lib/workbook-textbooks';
+import { filterWorkbookSupplementaryTextbookKeys, WORKBOOK_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/workbook-textbooks';
 import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 
@@ -266,7 +266,10 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
               ) : (
                 <div className="space-y-8">
                   {(() => {
-                    const { ebs, revised, other } = groupTextbooksByRevised(filteredTextbooks);
+                    const commonSet = new Set(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS);
+                    const commonTextbooks = filteredTextbooks.filter((k) => commonSet.has(k));
+                    const nonCommon = filteredTextbooks.filter((k) => !commonSet.has(k));
+                    const { ebs, revised, other } = groupTextbooksByRevised(nonCommon);
                     const renderCard = (textbook: string) => (
                       <div
                         key={textbook}
@@ -299,6 +302,16 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                     );
                     return (
                       <>
+                        {commonTextbooks.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-emerald-600">
+                              공통
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {commonTextbooks.map(renderCard)}
+                            </div>
+                          </div>
+                        )}
                         {ebs.length > 0 && (
                           <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-emerald-200">
@@ -321,7 +334,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                         )}
                         {other.length > 0 && (
                           <div>
-                            {(ebs.length > 0 || revised.length > 0) && (
+                            {(commonTextbooks.length > 0 || ebs.length > 0 || revised.length > 0) && (
                               <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">
                                 기타 교재
                               </h3>

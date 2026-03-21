@@ -95,6 +95,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
             textbookList = allKeys.filter((k) => defaultTextbooks.includes(k));
           } else {
             textbookList = allKeys.filter((k) => VARIANT_SUPPLEMENTARY_COMMON_KEYS.includes(k));
+            if (textbookList.length === 0) textbookList = [...allKeys];
           }
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
@@ -366,7 +367,20 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
               ) : (
                 <div className="space-y-6">
                   {(() => {
-                    const { ebs, revised, other } = groupTextbooksByRevised(filteredTextbooks);
+                    // 교재 노출 설정 > 부교재 주문제작 기본 노출 교재에서 설정한 목록을 공통 유형으로 표시. 미설정/로딩 중이면 노출된 목록 전체를 공통으로 표시.
+                    const commonSet = new Set(defaultTextbooks);
+                    // defaultTextbooks가 설정되어 있으면 그 목록과 일치하는 것만 공통, 없으면 전체를 공통으로 표시
+                    const commonTextbooks =
+                      defaultTextbooks.length > 0
+                        ? filteredTextbooks.filter((k) => commonSet.has(k))
+                        : filteredTextbooks.length > 0
+                          ? [...filteredTextbooks]
+                          : [];
+                    const nonCommon =
+                      defaultTextbooks.length > 0
+                        ? filteredTextbooks.filter((k) => !commonSet.has(k))
+                        : [];
+                    const { ebs, revised, other } = groupTextbooksByRevised(nonCommon);
                     const renderCard = (textbook: string) => (
                       <div
                         key={textbook}
@@ -404,6 +418,16 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                     );
                     return (
                       <>
+                        {commonTextbooks.length > 0 && (
+                          <div>
+                            <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-emerald-600">
+                              공통
+                            </h3>
+                            <div className="space-y-4">
+                              {commonTextbooks.map(renderCard)}
+                            </div>
+                          </div>
+                        )}
                         {ebs.length > 0 && (
                           <div>
                             <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-emerald-200">
@@ -426,7 +450,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         )}
                         {other.length > 0 && (
                           <div>
-                            {(ebs.length > 0 || revised.length > 0) && (
+                            {(commonTextbooks.length > 0 || ebs.length > 0 || revised.length > 0) && (
                               <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">
                                 기타 교재
                               </h3>

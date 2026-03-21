@@ -12,17 +12,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 시스템 다크 모드여도 본 서비스는 라이트 UI 기준(좁은 max-width 레이아웃에서 양옆이 검게 보이지 않도록) */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  color-scheme: light;
 }
 
 @keyframes fadeSlide {

@@ -14,12 +14,25 @@ async function aggregateCountsByPassageAndType(gqCol: Collection<Document>, ids:
   if (ids.length === 0) {
     return new Map<string, Map<string, number>>();
   }
+  const idStrings = ids.map((id) => id.toString());
   const agg = await gqCol
     .aggregate([
-      { $match: { passage_id: { $in: ids } } },
+      {
+        $match: {
+          $or: [
+            { passage_id: { $in: ids } },
+            { passage_id: { $in: idStrings } },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          pidStr: { $toString: '$passage_id' },
+        },
+      },
       {
         $group: {
-          _id: { pid: '$passage_id', typ: '$type' },
+          _id: { pid: '$pidStr', typ: '$type' },
           c: { $sum: 1 },
         },
       },

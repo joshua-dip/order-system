@@ -122,6 +122,7 @@ export default function AdminGeneratedQuestionsPage() {
 
   const [filterTextbook, setFilterTextbook] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [filterPassageId, setFilterPassageId] = useState('');
   const [filterQ, setFilterQ] = useState('');
   const [page, setPage] = useState(1);
@@ -136,6 +137,14 @@ export default function AdminGeneratedQuestionsPage() {
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [draftUserHint, setDraftUserHint] = useState('');
+  /** Claude 초안 생성 성공 후 true → "생성됨" 표시 및 추가 수정 버튼 노출 */
+  const [draftGenerated, setDraftGenerated] = useState(false);
+  /** Claude로 해설(Explanation)만 생성 중 */
+  const [explanationOnlyLoading, setExplanationOnlyLoading] = useState(false);
+  /** 해당 교재 passage_id의 원문(원문 미리보기) */
+  const [passagePreview, setPassagePreview] = useState<string | null>(null);
+  const [passagePreviewLoading, setPassagePreviewLoading] = useState(false);
+  const questionJsonTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [form, setForm] = useState({
     textbook: '',
     passage_id: '',
@@ -233,6 +242,33 @@ export default function AdminGeneratedQuestionsPage() {
   /** 선택지 데이터 검증 결과에서 숨길 category (체크한 것은 목록에 안 보임) */
   const [optionsOverlapExcludedCategories, setOptionsOverlapExcludedCategories] = useState<string[]>([]);
 
+  /** Explanation 'API' 검증: Explanation에 'API' 텍스트 포함 여부 */
+  const [explanationApiOpen, setExplanationApiOpen] = useState(false);
+  const [explanationApiLoading, setExplanationApiLoading] = useState(false);
+  const [explanationApiError, setExplanationApiError] = useState<string | null>(null);
+  const [explanationApiData, setExplanationApiData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalScanned: number;
+    totalMatched: number;
+    items: { id: string; textbook: string; source: string; type: string; snippet: string; full: string }[];
+    truncated?: boolean;
+  } | null>(null);
+  /** Explanation/Options 검증 모달에서 셀 클릭 시 전체 텍스트 보기 */
+  const [fullTextView, setFullTextView] = useState<{ title: string; text: string } | null>(null);
+  /** Options 'API' 검증 */
+  const [optionsApiOpen, setOptionsApiOpen] = useState(false);
+  const [optionsApiLoading, setOptionsApiLoading] = useState(false);
+  const [optionsApiError, setOptionsApiError] = useState<string | null>(null);
+  const [optionsApiData, setOptionsApiData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalScanned: number;
+    totalMatched: number;
+    items: { id: string; textbook: string; source: string; type: string; snippet: string; full: string }[];
+    truncated?: boolean;
+  } | null>(null);
+  /** 메뉴 접기/펼치기 (검증 버튼 아래 나머지 메뉴) */
+  const [extraMenuExpanded, setExtraMenuExpanded] = useState(false);
+
   type QCountNoRow = {
     passageId: string;
     textbook: string;
@@ -285,6 +321,44 @@ export default function AdminGeneratedQuestionsPage() {
   } | null>(null);
   /** 문제수 검증 — 유형 부족 표: 지문 라벨 순 vs 유형(카테고리)별 그룹 정렬 */
   const [qCountUnderfilledSortBy, setQCountUnderfilledSortBy] = useState<'label' | 'type'>('label');
+  /** 문제수 검증 디버깅 정보 (주문서 기반 검증 시 상세 데이터) */
+  const [qCountDebugData, setQCountDebugData] = useState<{
+    order: { _id: string; orderNumber: string | null; flow: string };
+    orderMeta: { selectedTextbook: string; selectedLessons: string[]; selectedTypes: string[]; questionsPerType: number };
+    passages: { total: number; requestedLessons: number; matchedLessons: number; lessonsWithoutPassage: string[]; sample: Array<{ _id: string; textbook: string; chapter: string; number: string; source_key: string }> };
+    generatedQuestions: { total: number; byPassageType: Array<{ passageId: string; type: string; count: number }>; sample: Array<{ _id: string; passage_id: string; type: string; source: string; textbook: string }> };
+    analysis: { issue: string };
+  } | null>(null);
+  const [qCountDebugLoading, setQCountDebugLoading] = useState(false);
+  /** 부족 문항 한번에 처리: 남은 작업 큐. 처리 중이면 모달 저장 시 다음으로 넘어가고, 다 끝나면 검수 창으로 이동 */
+  const [shortageBatch, setShortageBatch] = useState<{
+    rows: QCountUnderRow[];
+    textbook: string;
+    rowIndex: number;
+    remainingInRow: number;
+    totalCreated: number;
+  } | null>(null);
+  /** 검수 창(목록 테이블)으로 스크롤하기 위한 ref */
+  const listSectionRef = useRef<HTMLDivElement>(null);
+  /** 부족 문항 일괄 처리 큐 ref — 저장 시 클로저에서 state가 비어 있을 수 있어 ref로 보강 */
+  const shortageBatchRef = useRef<{
+    rows: QCountUnderRow[];
+    textbook: string;
+    rowIndex: number;
+    remainingInRow: number;
+    totalCreated: number;
+  } | null>(null);
+  /** 부족 문항 일괄 처리 완료 시 표시할 건수 (검수 창 배너) */
+  const [shortageBatchFinishedCount, setShortageBatchFinishedCount] = useState<number | null>(null);
+  /** 한번에 먼저 생성: Claude 초안 생성 후 자동 저장 진행 중 */
+  const [batchCreatingAll, setBatchCreatingAll] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number;
+    total: number;
+    label: string;
+    type: string;
+  } | null>(null);
+  const [batchCreateError, setBatchCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -425,6 +499,7 @@ export default function AdminGeneratedQuestionsPage() {
     const params = new URLSearchParams();
     if (filterTextbook) params.set('textbook', filterTextbook);
     if (filterType) params.set('type', filterType);
+    if (filterStatus) params.set('status', filterStatus);
     if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
     if (filterQ) params.set('q', filterQ);
     params.set('page', String(page));
@@ -440,7 +515,7 @@ export default function AdminGeneratedQuestionsPage() {
         setTotal(0);
       })
       .finally(() => setListLoading(false));
-  }, [filterTextbook, filterType, filterPassageId, filterQ, page, limit]);
+  }, [filterTextbook, filterType, filterStatus, filterPassageId, filterQ, page, limit]);
 
   useEffect(() => {
     if (!user) return;
@@ -451,6 +526,8 @@ export default function AdminGeneratedQuestionsPage() {
     setEditingId(null);
     setDraftError(null);
     setDraftUserHint('');
+    setDraftGenerated(false);
+    setPassagePreview(null);
     setForm({
       textbook: filterTextbook || '',
       passage_id: filterPassageId.trim() || '',
@@ -466,8 +543,12 @@ export default function AdminGeneratedQuestionsPage() {
 
   /** 문제수 검증 — 부족 셀 클릭 시 해당 지문·유형으로 새 변형문제 모달 */
   const openCreateForQCountShortage = (r: QCountUnderRow, textbook: string) => {
+    console.log('[openCreateForQCountShortage]', { label: r.label, type: r.type, passageId: r.passageId?.slice(0, 8), textbook });
     const tb = (textbook || '').trim();
-    if (!tb || !r.passageId.trim()) return;
+    if (!tb || !r.passageId.trim()) {
+      console.warn('[openCreateForQCountShortage] early return: no textbook or passageId', { tb: !!tb, passageId: r.passageId?.trim() });
+      return;
+    }
     setQCountOpen(false);
     setValidateOpen(false);
     setEditingId(null);
@@ -486,13 +567,56 @@ export default function AdminGeneratedQuestionsPage() {
     setQuestionJson(DEFAULT_QUESTION_JSON);
     setDraftError(null);
     setDraftUserHint('');
+    setDraftGenerated(false);
+    setPassagePreview(null);
     setPage(1);
     setModalOpen(true);
     if (types.length === 0) fetchMeta();
   };
 
+  /** passage_id 유효 시 해당 교재 원문(passages) 로드 → 원문 미리보기 */
+  useEffect(() => {
+    if (!modalOpen || !form.passage_id.trim()) {
+      setPassagePreview(null);
+      return;
+    }
+    const pid = form.passage_id.trim();
+    if (!/^[a-f0-9]{24}$/i.test(pid)) {
+      setPassagePreview(null);
+      return;
+    }
+    let cancelled = false;
+    setPassagePreviewLoading(true);
+    setPassagePreview(null);
+    fetch(`/api/admin/passages/${pid}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const item = d?.item;
+        if (!item || typeof item !== 'object') {
+          setPassagePreview(null);
+          return;
+        }
+        const content = item.content;
+        const raw =
+          (typeof content?.original === 'string' && content.original.trim()) ||
+          (typeof content?.mixed === 'string' && content.mixed.trim()) ||
+          (typeof content?.translation === 'string' && content.translation.trim()) ||
+          '';
+        setPassagePreview(raw || null);
+      })
+      .catch(() => {
+        if (!cancelled) setPassagePreview(null);
+      })
+      .finally(() => {
+        if (!cancelled) setPassagePreviewLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [modalOpen, form.passage_id]);
+
   const runGenerateDraft = async () => {
-    if (editingId) return;
     if (!form.textbook.trim() || !form.passage_id.trim() || !form.source.trim() || !form.type.trim()) {
       setDraftError('교재·passage_id·출처·유형을 모두 채운 뒤 실행해 주세요.');
       return;
@@ -530,6 +654,7 @@ export default function AdminGeneratedQuestionsPage() {
       if (qd && typeof qd === 'object' && !Array.isArray(qd)) {
         setQuestionJson(JSON.stringify(qd, null, 2));
         setForm((f) => ({ ...f, status: '대기' }));
+        setDraftGenerated(true);
       }
     } catch {
       setDraftError('네트워크 오류');
@@ -538,10 +663,64 @@ export default function AdminGeneratedQuestionsPage() {
     }
   };
 
+  /** Claude로 Explanation(해설)만 생성해 question_data.Explanation만 덮어쓰기 */
+  const runGenerateExplanationOnly = async () => {
+    let question_data: Record<string, unknown>;
+    try {
+      question_data = JSON.parse(questionJson) as Record<string, unknown>;
+      if (!question_data || typeof question_data !== 'object' || Array.isArray(question_data)) {
+        setDraftError('question_data JSON 형식을 확인해 주세요.');
+        return;
+      }
+    } catch {
+      setDraftError('question_data JSON 형식을 확인해 주세요.');
+      return;
+    }
+    const paragraph = question_data.Paragraph;
+    if (typeof paragraph !== 'string' || !paragraph.trim()) {
+      setDraftError('Paragraph가 비어 있으면 해설을 생성할 수 없습니다.');
+      return;
+    }
+    setExplanationOnlyLoading(true);
+    setDraftError(null);
+    try {
+      const res = await fetch('/api/admin/generated-questions/generate-explanation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          question_data,
+          type: form.type.trim(),
+          userHint: draftUserHint.trim(),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setDraftError(d.error || '해설 생성 실패');
+        return;
+      }
+      const explanation = typeof d.explanation === 'string' ? d.explanation : '';
+      setQuestionJson(
+        JSON.stringify({ ...question_data, Explanation: explanation }, null, 2)
+      );
+    } catch {
+      setDraftError('네트워크 오류');
+    } finally {
+      setExplanationOnlyLoading(false);
+    }
+  };
+
+  const focusQuestionJsonForEdit = () => {
+    questionJsonTextareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => questionJsonTextareaRef.current?.focus(), 300);
+  };
+
   const openEdit = async (id: string) => {
     setEditingId(id);
     setDraftError(null);
     setDraftUserHint('');
+    setDraftGenerated(false);
+    setPassagePreview(null);
     try {
       const res = await fetch(`/api/admin/generated-questions/${id}`, { credentials: 'include' });
       const d = await res.json();
@@ -590,6 +769,7 @@ export default function AdminGeneratedQuestionsPage() {
     }
 
     setSaving(true);
+    console.log('[handleSave] start', { editingId: !!editingId, hasShortageBatch: !!shortageBatch });
     try {
       const url = editingId ? `/api/admin/generated-questions/${editingId}` : '/api/admin/generated-questions';
       const method = editingId ? 'PATCH' : 'POST';
@@ -623,15 +803,59 @@ export default function AdminGeneratedQuestionsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.warn('[handleSave] API not ok', res.status, data?.error);
         alert(data.error || '저장 실패');
         return;
       }
+      const batch = shortageBatchRef.current ?? shortageBatch;
+      console.log('[handleSave] saved ok', { editingId: !!editingId, shortageBatch: !!shortageBatch, batchRef: !!shortageBatchRef.current });
       const savedId = editingId ?? (typeof data.item?._id === 'string' ? data.item._id : null);
       if (savedId) setGoToRowId(savedId);
-      if (!editingId) setPage(1);
-      setModalOpen(false);
       fetchList();
       fetchMeta();
+
+      if (!editingId && batch) {
+        const { rows, textbook, rowIndex, remainingInRow, totalCreated } = batch;
+        const nextTotal = totalCreated + 1;
+        console.log('[handleSave] shortageBatch branch', { rowIndex, remainingInRow, rowsLength: rows.length, nextTotal });
+        if (remainingInRow > 1) {
+          console.log('[handleSave] same row: one more (remainingInRow - 1)');
+          const nextBatch = { ...batch, remainingInRow: remainingInRow - 1, totalCreated: nextTotal };
+          shortageBatchRef.current = nextBatch;
+          setShortageBatch(nextBatch);
+          setForm((f) => ({ ...f, source: (rows[rowIndex].label || '').trim() || `${rows[rowIndex].type} 변형` }));
+          setQuestionJson(DEFAULT_QUESTION_JSON);
+          setDraftGenerated(false);
+          setDraftError(null);
+          setPassagePreview(null);
+          setModalOpen(true);
+          return;
+        }
+        if (rowIndex + 1 < rows.length) {
+          const nextIndex = rowIndex + 1;
+          const nextRow = rows[nextIndex];
+          console.log('[handleSave] next row', { nextIndex, nextLabel: nextRow.label, nextType: nextRow.type });
+          const nextBatch = { rows, textbook, rowIndex: nextIndex, remainingInRow: nextRow.shortBy, totalCreated: nextTotal };
+          shortageBatchRef.current = nextBatch;
+          setShortageBatch(nextBatch);
+          openCreateForQCountShortage(nextRow, textbook);
+          return;
+        }
+        console.log('[handleSave] batch complete, scroll to list', { nextTotal, listSectionRef: !!listSectionRef.current });
+        shortageBatchRef.current = null;
+        setShortageBatch(null);
+        setModalOpen(false);
+        setFilterTextbook(textbook);
+        setPage(1);
+        setShortageBatchFinishedCount(nextTotal);
+        fetchList();
+        listSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setGoToRowId(null);
+        return;
+      }
+
+      if (!editingId) setPage(1);
+      setModalOpen(false);
     } catch {
       alert('요청 중 오류');
     } finally {
@@ -784,6 +1008,114 @@ export default function AdminGeneratedQuestionsPage() {
     if (types.length === 0) fetchMeta();
   };
 
+  /** 한번에 먼저 생성: 부족한 문항만큼 Claude 초안 생성 후 자동 저장. 완료 시 검수 창으로 이동 */
+  const runBatchCreateAll = async (sorted: QCountUnderRow[], textbook: string) => {
+    const total = sorted.reduce((s, r) => s + r.shortBy, 0);
+    if (total === 0) return;
+    const stored = loadTypePromptsFromStorage();
+    setBatchCreateError(null);
+    setBatchCreatingAll(true);
+    setBatchProgress({ current: 0, total, label: sorted[0]?.label ?? '', type: sorted[0]?.type ?? '' });
+    setQCountOpen(false);
+    setValidateOpen(false);
+    let created = 0;
+    let placeholderCount = 0;
+    const errors: string[] = [];
+    try {
+      for (const row of sorted) {
+        const typePrompt = (stored[row.type] ?? '').trim();
+        for (let i = 0; i < row.shortBy; i++) {
+          setBatchProgress({ current: created, total, label: row.label, type: row.type });
+          const draftBody = {
+            passage_id: row.passageId.trim(),
+            textbook: textbook.trim(),
+            source: (row.label || '').trim() || `${row.type} 변형`,
+            type: row.type,
+            userHint: '',
+            ...(typePrompt ? { typePrompt } : {}),
+            option_type: 'English',
+          };
+          let draftRes = await fetch('/api/admin/generated-questions/generate-draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(draftBody),
+          });
+          let draftData = await draftRes.json();
+          if (draftRes.status === 422 && !draftData?.question_data) {
+            await new Promise((r) => setTimeout(r, 1500));
+            draftRes = await fetch('/api/admin/generated-questions/generate-draft', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(draftBody),
+            });
+            draftData = await draftRes.json();
+          }
+          let qd: Record<string, unknown> | null = draftRes.ok && draftData?.question_data && typeof draftData.question_data === 'object' && !Array.isArray(draftData.question_data)
+            ? (draftData.question_data as Record<string, unknown>)
+            : null;
+          if (!qd) {
+            const nextNum = (draftData?.nextNum as number) ?? 1;
+            qd = {
+              순서: nextNum,
+              Source: '',
+              NumQuestion: nextNum,
+              Category: row.type,
+              Question: `[AI 초안 파싱 실패 — 검수에서 수정] ${row.label} ${row.type}`,
+              Paragraph: '',
+              Options: '',
+              OptionType: 'English',
+              CorrectAnswer: '',
+              Explanation: '한번에 먼저 생성 시 AI 응답 JSON 파싱에 실패했습니다. 검수에서 수정해 주세요.',
+            };
+            placeholderCount++;
+            errors.push(`${row.label} ${row.type}`);
+          }
+          const createRes = await fetch('/api/admin/generated-questions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              textbook: textbook.trim(),
+              passage_id: row.passageId.trim(),
+              source: (row.label || '').trim() || `${row.type} 변형`,
+              type: row.type,
+              option_type: 'English',
+              status: '대기',
+              error_msg: qd?.Question?.toString().startsWith('[AI 초안') ? 'AI 파싱 실패(검수 필요)' : null,
+              question_data: qd,
+            }),
+          });
+          const createData = await createRes.json();
+          if (!createRes.ok) {
+            setBatchCreateError(createData?.error ?? '저장 실패');
+            setBatchCreatingAll(false);
+            setBatchProgress(null);
+            return;
+          }
+          created++;
+        }
+      }
+      setBatchCreatingAll(false);
+      setBatchProgress(null);
+      if (placeholderCount > 0) {
+        setBatchCreateError(`${placeholderCount}건은 AI 파싱 실패로 플레이스홀더 저장됨. 검수에서 수정: ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? ' 외' : ''}`);
+      }
+      setFilterTextbook(textbook.trim());
+      setFilterStatus('대기');
+      setPage(1);
+      setShortageBatchFinishedCount(created);
+      fetchList();
+      fetchMeta();
+      listSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      setBatchCreateError(e instanceof Error ? e.message : '오류 발생');
+      setBatchCreatingAll(false);
+      setBatchProgress(null);
+    }
+  };
+
   const saveTypePrompts = () => {
     const toSave: Record<string, string> = {};
     for (const t of typePromptList) {
@@ -861,6 +1193,120 @@ export default function AdminGeneratedQuestionsPage() {
     setOptionsOverlapData(null);
     setOptionsOverlapError(null);
     if (textbooks.length === 0) fetchMeta();
+  };
+
+  const openExplanationApiModal = () => {
+    setExplanationApiOpen(true);
+    setExplanationApiData(null);
+    setExplanationApiError(null);
+    setExplanationApiLoading(true);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/explanation-api?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setExplanationApiError(d.error || '검증 실패');
+          return;
+        }
+        setExplanationApiData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          items: Array.isArray(d.items) ? d.items.map((it: { full?: string; snippet?: string }) => ({ ...it, full: it.full ?? it.snippet ?? '' })) : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setExplanationApiError('네트워크 오류'))
+      .finally(() => setExplanationApiLoading(false));
+  };
+
+  const runExplanationApiValidate = () => {
+    setExplanationApiLoading(true);
+    setExplanationApiError(null);
+    setExplanationApiData(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/explanation-api?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setExplanationApiError(d.error || '검증 실패');
+          return;
+        }
+        setExplanationApiData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          items: Array.isArray(d.items) ? d.items.map((it: { full?: string; snippet?: string }) => ({ ...it, full: it.full ?? it.snippet ?? '' })) : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setExplanationApiError('네트워크 오류'))
+      .finally(() => setExplanationApiLoading(false));
+  };
+
+  const openOptionsApiModal = () => {
+    setOptionsApiOpen(true);
+    setOptionsApiData(null);
+    setOptionsApiError(null);
+    setOptionsApiLoading(true);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/options-api?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setOptionsApiError(d.error || '검증 실패');
+          return;
+        }
+        setOptionsApiData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          items: Array.isArray(d.items) ? d.items.map((it: { full?: string; snippet?: string }) => ({ ...it, full: it.full ?? it.snippet ?? '' })) : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setOptionsApiError('네트워크 오류'))
+      .finally(() => setOptionsApiLoading(false));
+  };
+
+  const runOptionsApiValidate = () => {
+    setOptionsApiLoading(true);
+    setOptionsApiError(null);
+    setOptionsApiData(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/options-api?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setOptionsApiError(d.error || '검증 실패');
+          return;
+        }
+        setOptionsApiData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          items: Array.isArray(d.items) ? d.items.map((it: { full?: string; snippet?: string }) => ({ ...it, full: it.full ?? it.snippet ?? '' })) : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setOptionsApiError('네트워크 오류'))
+      .finally(() => setOptionsApiLoading(false));
   };
 
   const runOptionsOverlapValidate = async () => {
@@ -1190,6 +1636,24 @@ export default function AdminGeneratedQuestionsPage() {
             </select>
           </div>
           <div>
+            <label className="block text-xs text-slate-400 mb-1">상태</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setPage(1);
+              }}
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm min-w-[100px] text-white"
+            >
+              <option value="">전체</option>
+              {statuses.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-xs text-slate-400 mb-1">passage_id</label>
             <input
               value={filterPassageId}
@@ -1221,69 +1685,128 @@ export default function AdminGeneratedQuestionsPage() {
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <p className="text-slate-400 text-sm">
-            총 <span className="text-white font-semibold">{total}</span>건 · {page}/{totalPages}페이지
-          </p>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              disabled={variationAnalysisLoading}
-              onClick={openVariationAnalysisModal}
-              className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
-              title="원문(passages) 대비 지문 변형도 유형별 평균·구간·분포"
-            >
-              변형도 분석
-            </button>
-            <button
-              type="button"
-              disabled={qCountLoading}
-              onClick={openQCountModal}
-              className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
-              title="MongoDB passages(원문) 대비 변형문 유무·표준 11유형별 문항 수(기본 3) 검증"
-            >
-              문제수 검증
-            </button>
-            <button
-              type="button"
-              disabled={validateLoading}
-              onClick={openValidateModal}
-              className="shrink-0 bg-amber-800/90 hover:bg-amber-700 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 border border-amber-500/40"
-              title="표의 Options 열 기준 · 모달에서 제외 유형 선택 후 검증"
-            >
-              Options 중복 검증
-            </button>
-            <button
-              type="button"
-              disabled={optionsOverlapLoading}
-              onClick={openOptionsOverlapModal}
-              className="shrink-0 bg-rose-900/80 hover:bg-rose-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-rose-100 border border-rose-500/40"
-              title="교재·강·category 동일 그룹 내 선택지 상호 일치도 · 내보낼 때 겹침 적은 문항 우선 추천"
-            >
-              선택지 데이터 검증
-            </button>
-            <button
-              type="button"
-              onClick={openTypePromptModal}
-              className="shrink-0 bg-violet-900/80 hover:bg-violet-800 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-violet-100 border border-violet-500/40"
-              title="「+ 같은유형」AI 초안 시 유형별로 붙는 지침 (이 브라우저에 저장)"
-            >
-              유형별 AI 프롬프트
-            </button>
-            <span className="hidden sm:inline h-4 w-px bg-slate-600" aria-hidden />
-            <p className="text-slate-500 text-xs flex items-center gap-2">
-              <span className="hidden md:inline">헤더 오른쪽 가장자리를 드래그하면 열 너비 조절</span>
+        <div className="mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-slate-400 text-sm">
+              총 <span className="text-white font-semibold">{total}</span>건 · {page}/{totalPages}페이지
+            </p>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 type="button"
-                onClick={resetColWidths}
-                className="text-violet-400 hover:text-violet-300 underline text-xs whitespace-nowrap"
+                disabled={variationAnalysisLoading}
+                onClick={openVariationAnalysisModal}
+                className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
+                title="원문(passages) 대비 지문 변형도 유형별 평균·구간·분포"
               >
-                열 너비 초기화
+                변형도 분석
               </button>
-            </p>
+              <button
+                type="button"
+                disabled={qCountLoading}
+                onClick={openQCountModal}
+                className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
+                title="MongoDB passages(원문) 대비 변형문 유무·표준 11유형별 문항 수(기본 3) 검증"
+              >
+                문제수 검증
+              </button>
+              <button
+                type="button"
+                disabled={validateLoading}
+                onClick={openValidateModal}
+                className="shrink-0 bg-amber-800/90 hover:bg-amber-700 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 border border-amber-500/40"
+                title="표의 Options 열 기준 · 모달에서 제외 유형 선택 후 검증"
+              >
+                Options 중복 검증
+              </button>
+              <button
+                type="button"
+                disabled={optionsOverlapLoading}
+                onClick={openOptionsOverlapModal}
+                className="shrink-0 bg-rose-900/80 hover:bg-rose-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-rose-100 border border-rose-500/40"
+                title="교재·강·category 동일 그룹 내 선택지 상호 일치도 · 내보낼 때 겹침 적은 문항 우선 추천"
+              >
+                선택지 데이터 검증
+              </button>
+              <button
+                type="button"
+                disabled={explanationApiLoading}
+                onClick={openExplanationApiModal}
+                className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
+                title="Explanation 열에 'API' 텍스트 포함 여부 검증"
+              >
+              Explanation &apos;API&apos; 검증
+            </button>
+              <button
+                type="button"
+                disabled={optionsApiLoading}
+                onClick={openOptionsApiModal}
+                className="shrink-0 bg-amber-900/80 hover:bg-amber-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 border border-amber-500/40"
+                title="Options 열에 'API' 텍스트 포함 여부 검증"
+              >
+                Options &apos;API&apos; 검증
+              </button>
+              <button
+                type="button"
+                onClick={() => setExtraMenuExpanded((e) => !e)}
+                className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border border-slate-500/60 bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 hover:text-slate-200 transition-colors"
+                title={extraMenuExpanded ? '메뉴 접기' : '메뉴 펼치기'}
+              >
+                {extraMenuExpanded ? '접기' : '메뉴'}
+                <span
+                  className={`inline-block transition-transform duration-300 ease-out ${extraMenuExpanded ? 'rotate-180' : ''}`}
+                  aria-hidden
+                >
+                  ▼
+                </span>
+              </button>
+            </div>
+          </div>
+          <div
+            className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${extraMenuExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div
+                className={`flex flex-wrap items-center gap-2 sm:gap-3 pt-2 border-t border-slate-700/60 mt-2 transition-opacity duration-300 ease-out ${extraMenuExpanded ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <button
+                  type="button"
+                  onClick={openTypePromptModal}
+                  className="shrink-0 bg-violet-900/80 hover:bg-violet-800 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-violet-100 border border-violet-500/40"
+                  title="「+ 같은유형」AI 초안 시 유형별로 붙는 지침 (이 브라우저에 저장)"
+                >
+                  유형별 AI 프롬프트
+                </button>
+                <span className="hidden sm:inline h-4 w-px bg-slate-600" aria-hidden />
+                <p className="text-slate-500 text-xs flex items-center gap-2">
+                  <span className="hidden md:inline">헤더 오른쪽 가장자리를 드래그하면 열 너비 조절</span>
+                  <button
+                    type="button"
+                    onClick={resetColWidths}
+                    className="text-violet-400 hover:text-violet-300 underline text-xs whitespace-nowrap"
+                  >
+                    열 너비 초기화
+                  </button>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
+        <div ref={listSectionRef}>
+        {shortageBatchFinishedCount != null && (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-cyan-900/40 border border-cyan-600/60 px-4 py-2">
+            <span className="text-cyan-200 text-sm">
+              부족 문항 {shortageBatchFinishedCount}건 생성 완료. 아래 목록에서 검수하세요.
+            </span>
+            <button
+              type="button"
+              onClick={() => setShortageBatchFinishedCount(null)}
+              className="shrink-0 bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-3 py-1.5 rounded-lg text-sm"
+            >
+              닫기
+            </button>
+          </div>
+        )}
         {goToRowId && (
           <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-emerald-900/40 border border-emerald-600/60 px-4 py-2">
             <span className="text-emerald-200 text-sm">저장되었습니다.</span>
@@ -1514,6 +2037,7 @@ export default function AdminGeneratedQuestionsPage() {
             </button>
           </div>
         )}
+        </div>
       </main>
 
       {variationAnalysisOpen && (
@@ -1770,6 +2294,244 @@ export default function AdminGeneratedQuestionsPage() {
                   })()}
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {explanationApiOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-teal-700/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-teal-200">Explanation &apos;API&apos; 검증</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Explanation 열에 <strong className="text-teal-300">&apos;API&apos;</strong> 텍스트가 포함된 문항만 표시합니다. 상단 교재·유형 필터 적용.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setExplanationApiOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {explanationApiLoading && !explanationApiData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-teal-300">
+                  <span className="inline-block w-6 h-6 border-2 border-teal-500/50 border-t-teal-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {explanationApiError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {explanationApiError}
+                </div>
+              )}
+              {explanationApiData && !explanationApiLoading && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-teal-200">Explanation에 &apos;API&apos; 포함</strong>:{' '}
+                      <strong className="text-white">{explanationApiData.totalMatched.toLocaleString()}</strong>건
+                      {explanationApiData.filters.textbook && (
+                        <> · 교재: <strong className="text-teal-200">{explanationApiData.filters.textbook}</strong></>
+                      )}
+                      {explanationApiData.filters.type && (
+                        <> · 유형: <strong className="text-teal-200">{explanationApiData.filters.type}</strong></>
+                      )}
+                      {explanationApiData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">(최대 {explanationApiData.items.length}건만 표시)</span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runExplanationApiValidate}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-teal-800/80 hover:bg-teal-700 text-teal-200"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {explanationApiData.totalMatched === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">해당 없음 — 선택한 필터에서 Explanation에 &apos;API&apos;가 포함된 문항이 없습니다.</p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">유형</th>
+                            <th className="py-2 px-2">Explanation 일부</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {explanationApiData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setExplanationApiOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-teal-400 hover:text-teal-300 underline"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-violet-300">{it.type}</td>
+                              <td
+                                className="py-1.5 px-2 text-slate-400 max-w-[320px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                title="클릭하면 전체 내용 보기"
+                                onClick={() => setFullTextView({ title: `Explanation · ${it.source} ${it.type}`, text: (it as { full?: string }).full ?? it.snippet })}
+                              >
+                                {it.snippet}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {optionsApiOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-amber-700/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-amber-200">Options &apos;API&apos; 검증</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Options 열에 <strong className="text-amber-300">&apos;API&apos;</strong> 텍스트가 포함된 문항만 표시합니다. 상단 교재·유형 필터 적용.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOptionsApiOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {optionsApiLoading && !optionsApiData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-amber-300">
+                  <span className="inline-block w-6 h-6 border-2 border-amber-500/50 border-t-amber-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {optionsApiError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {optionsApiError}
+                </div>
+              )}
+              {optionsApiData && !optionsApiLoading && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-amber-200">Options에 &apos;API&apos; 포함</strong>:{' '}
+                      <strong className="text-white">{optionsApiData.totalMatched.toLocaleString()}</strong>건
+                      {optionsApiData.filters.textbook && (
+                        <> · 교재: <strong className="text-amber-200">{optionsApiData.filters.textbook}</strong></>
+                      )}
+                      {optionsApiData.filters.type && (
+                        <> · 유형: <strong className="text-amber-200">{optionsApiData.filters.type}</strong></>
+                      )}
+                      {optionsApiData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">(최대 {optionsApiData.items.length}건만 표시)</span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runOptionsApiValidate}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-amber-800/80 hover:bg-amber-700 text-amber-200"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {optionsApiData.totalMatched === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">해당 없음 — 선택한 필터에서 Options에 &apos;API&apos;가 포함된 문항이 없습니다.</p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">유형</th>
+                            <th className="py-2 px-2">Options 일부</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {optionsApiData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOptionsApiOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-amber-400 hover:text-amber-300 underline"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-violet-300">{it.type}</td>
+                              <td
+                                className="py-1.5 px-2 text-slate-400 max-w-[320px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                title="클릭하면 전체 내용 보기"
+                                onClick={() => setFullTextView({ title: `Options · ${it.source} ${it.type}`, text: (it as { full?: string }).full ?? it.snippet })}
+                              >
+                                {it.snippet}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {fullTextView && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/70"
+          onClick={() => setFullTextView(null)}
+        >
+          <div
+            className="bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-600 flex justify-between items-center shrink-0">
+              <span className="text-sm font-semibold text-slate-200 truncate pr-2">{fullTextView.title}</span>
+              <button
+                type="button"
+                onClick={() => setFullTextView(null)}
+                className="text-slate-400 hover:text-white text-xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              <pre className="text-xs text-slate-300 whitespace-pre-wrap break-words font-sans">{fullTextView.text || '(비어 있음)'}</pre>
             </div>
           </div>
         </div>
@@ -2285,17 +3047,132 @@ export default function AdminGeneratedQuestionsPage() {
                     <p className="text-amber-300/90 text-sm mb-4">{qCountData.message}</p>
                   )}
                   {qCountData.scope === 'order' && qCountData.order && (
-                    <p className="text-xs text-cyan-400/90 mb-3">
-                      주문 기준 검증 · 주문번호{' '}
-                      <strong className="text-cyan-200">{qCountData.order.orderNumber || qCountData.order.id}</strong>
-                      {typeof qCountData.orderLessonsRequested === 'number' && (
-                        <>
-                          {' '}
-                          · 주문 지문 {qCountData.orderLessonsRequested}개 중 DB 매칭{' '}
-                          {qCountData.orderLessonsMatched ?? qCountData.passageCount}개
-                        </>
-                      )}
-                    </p>
+                    <div className="mb-3 space-y-2">
+                      <p className="text-xs text-cyan-400/90">
+                        주문 기준 검증 · 주문번호{' '}
+                        <strong className="text-cyan-200">{qCountData.order.orderNumber || qCountData.order.id}</strong>
+                        {typeof qCountData.orderLessonsRequested === 'number' && (
+                          <>
+                            {' '}
+                            · 주문 지문 {qCountData.orderLessonsRequested}개 중 DB 매칭{' '}
+                            {qCountData.orderLessonsMatched ?? qCountData.passageCount}개
+                          </>
+                        )}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!qCountData.order?.orderNumber) return;
+                          setQCountDebugLoading(true);
+                          setQCountDebugData(null);
+                          try {
+                            const res = await fetch(
+                              `/api/admin/debug/question-count-order?orderNumber=${encodeURIComponent(qCountData.order.orderNumber)}`,
+                              { credentials: 'include' }
+                            );
+                            const d = await res.json();
+                            if (res.ok && d.order) {
+                              setQCountDebugData(d);
+                            } else {
+                              alert(d.error || '디버깅 정보 조회 실패');
+                            }
+                          } catch {
+                            alert('요청 중 오류가 발생했습니다.');
+                          } finally {
+                            setQCountDebugLoading(false);
+                          }
+                        }}
+                        disabled={qCountDebugLoading || !qCountData.order?.orderNumber}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-600/80 text-slate-200 disabled:opacity-50"
+                      >
+                        {qCountDebugLoading ? '조회 중…' : 'MongoDB 데이터 직접 비교'}
+                      </button>
+                    </div>
+                  )}
+                  {qCountDebugData && (
+                    <div className="mb-4 p-4 rounded-xl border border-slate-600 bg-slate-900/60 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-cyan-200">MongoDB 직접 조회 결과</h3>
+                        <button
+                          type="button"
+                          onClick={() => setQCountDebugData(null)}
+                          className="text-xs text-slate-400 hover:text-slate-200"
+                        >
+                          닫기
+                        </button>
+                      </div>
+                      <div className="space-y-3 text-xs">
+                        <div>
+                          <p className="text-slate-400 mb-1">주문서 orderMeta</p>
+                          <div className="bg-slate-950/80 p-2 rounded border border-slate-700 font-mono text-[11px] text-slate-300">
+                            <div>교재: {qCountDebugData.orderMeta.selectedTextbook}</div>
+                            <div>선택 지문: {qCountDebugData.orderMeta.selectedLessons.length}개</div>
+                            <div>선택 유형: {qCountDebugData.orderMeta.selectedTypes.length > 0 ? qCountDebugData.orderMeta.selectedTypes.join(', ') : '전체'}</div>
+                            <div>유형당 기준: {qCountDebugData.orderMeta.questionsPerType}문항</div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-slate-400 mb-1">passages 매칭</p>
+                          <div className="bg-slate-950/80 p-2 rounded border border-slate-700 text-slate-300">
+                            <div>요청 지문: {qCountDebugData.passages.requestedLessons}개</div>
+                            <div>매칭된 지문: <strong className="text-cyan-200">{qCountDebugData.passages.matchedLessons}</strong>개</div>
+                            <div>passages 총: <strong className="text-white">{qCountDebugData.passages.total}</strong>개</div>
+                            {qCountDebugData.passages.lessonsWithoutPassage.length > 0 && (
+                              <div className="mt-1 text-amber-300">
+                                매칭 실패: {qCountDebugData.passages.lessonsWithoutPassage.slice(0, 5).join(', ')}
+                                {qCountDebugData.passages.lessonsWithoutPassage.length > 5 && ` 외 ${qCountDebugData.passages.lessonsWithoutPassage.length - 5}개`}
+                              </div>
+                            )}
+                            {qCountDebugData.passages.sample.length > 0 && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-slate-400 hover:text-slate-200">샘플 passages (최대 5개)</summary>
+                                <ul className="mt-1 space-y-1 pl-4">
+                                  {qCountDebugData.passages.sample.map((p) => (
+                                    <li key={p._id} className="text-[11px] font-mono">
+                                      {p.source_key} (chapter: {p.chapter}, number: {p.number}) - _id: {p._id.slice(0, 12)}...
+                                    </li>
+                                  ))}
+                                </ul>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-slate-400 mb-1">generated_questions</p>
+                          <div className="bg-slate-950/80 p-2 rounded border border-slate-700 text-slate-300">
+                            <div>총 문제 수: <strong className={qCountDebugData.generatedQuestions.total > 0 ? 'text-emerald-300' : 'text-rose-300'}>{qCountDebugData.generatedQuestions.total}</strong>건</div>
+                            {qCountDebugData.generatedQuestions.byPassageType.length > 0 && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-slate-400 hover:text-slate-200">passage_id + type별 집계 (최대 20개)</summary>
+                                <ul className="mt-1 space-y-1 pl-4 text-[11px]">
+                                  {qCountDebugData.generatedQuestions.byPassageType.slice(0, 20).map((g, i) => (
+                                    <li key={i} className="font-mono">
+                                      passage_id: {g.passageId.slice(0, 12)}... · type: {g.type} · {g.count}건
+                                    </li>
+                                  ))}
+                                </ul>
+                              </details>
+                            )}
+                            {qCountDebugData.generatedQuestions.sample.length > 0 && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-slate-400 hover:text-slate-200">샘플 generated_questions (최대 10개)</summary>
+                                <ul className="mt-1 space-y-1 pl-4 text-[11px]">
+                                  {qCountDebugData.generatedQuestions.sample.map((g) => (
+                                    <li key={g._id} className="font-mono">
+                                      {g.source} ({g.type}) - passage_id: {g.passage_id.slice(0, 12)}...
+                                    </li>
+                                  ))}
+                                </ul>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                        <div className="p-2 rounded bg-amber-950/30 border border-amber-800/50">
+                          <p className="text-amber-200 font-semibold text-xs">분석</p>
+                          <p className="text-amber-100/90 text-xs mt-1">{qCountDebugData.analysis.issue}</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                   {qCountData.lessonsWithoutPassage && qCountData.lessonsWithoutPassage.length > 0 && (
                     <div className="mb-4 p-3 rounded-lg bg-amber-950/40 border border-amber-800/50 text-amber-100 text-xs">
@@ -2396,13 +3273,79 @@ export default function AdminGeneratedQuestionsPage() {
                       유형별 기준 미충족 (각 유형 {qCountData.requiredPerType}문항 미만)
                     </h3>
                     {qCountData.underfilledTotal > 0 && (
-                      <p className="text-[11px] text-slate-500 mb-2">
-                        <strong className="text-amber-400/90">부족</strong> 열의 숫자를 누르면 해당 지문·유형이
-                        채워진 <strong className="text-slate-400">새 변형문제</strong> 작성 창이 열립니다. 같은
-                        passage·type으로 부족한 만큼 저장하면 기준 문항 수에 맞출 수 있습니다.{' '}
-                        <strong className="text-slate-400">유형(카테고리)</strong> 또는{' '}
-                        <strong className="text-slate-400">지문 라벨</strong> 헤더를 누르면 유형별·지문 순으로 정렬이 바뀝니다.
-                      </p>
+                      <>
+                        <p className="text-[11px] text-slate-500 mb-2">
+                          <strong className="text-amber-400/90">부족</strong> 열의 숫자를 누르면 해당 지문·유형이
+                          채워진 <strong className="text-slate-400">새 변형문제</strong> 작성 창이 열립니다. 같은
+                          passage·type으로 부족한 만큼 저장하면 기준 문항 수에 맞출 수 있습니다.{' '}
+                          <strong className="text-slate-400">유형(카테고리)</strong> 또는{' '}
+                          <strong className="text-slate-400">지문 라벨</strong> 헤더를 누르면 유형별·지문 순으로 정렬이 바뀝니다.
+                        </p>
+                        {!shortageBatch && !batchCreatingAll && (
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const sorted = [...qCountData.underfilled].sort((a, b) => {
+                                  if (qCountUnderfilledSortBy === 'type') {
+                                    const t = a.type.localeCompare(b.type, 'ko');
+                                    if (t !== 0) return t;
+                                    return a.label.localeCompare(b.label, 'ko');
+                                  }
+                                  const l = a.label.localeCompare(b.label, 'ko');
+                                  if (l !== 0) return l;
+                                  return a.type.localeCompare(b.type, 'ko');
+                                });
+                                const total = sorted.reduce((s, r) => s + r.shortBy, 0);
+                                if (total === 0) return;
+                                void runBatchCreateAll(sorted, qCountData.textbook);
+                              }}
+                              className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium text-sm"
+                            >
+                              한번에 먼저 생성 ({qCountData.underfilled.reduce((s, r) => s + r.shortBy, 0)}건 → Claude 초안 후 자동 저장, 나중에 검수)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const sorted = [...qCountData.underfilled].sort((a, b) => {
+                                  if (qCountUnderfilledSortBy === 'type') {
+                                    const t = a.type.localeCompare(b.type, 'ko');
+                                    if (t !== 0) return t;
+                                    return a.label.localeCompare(b.label, 'ko');
+                                  }
+                                  const l = a.label.localeCompare(b.label, 'ko');
+                                  if (l !== 0) return l;
+                                  return a.type.localeCompare(b.type, 'ko');
+                                });
+                                const total = sorted.reduce((s, r) => s + r.shortBy, 0);
+                                if (total === 0) return;
+                                const batch = {
+                                  rows: sorted,
+                                  textbook: qCountData.textbook,
+                                  rowIndex: 0,
+                                  remainingInRow: sorted[0].shortBy,
+                                  totalCreated: 0,
+                                };
+                                console.log('[부족 문항 한번에 처리] click', { total, rows: sorted.length, first: sorted[0]?.label, firstType: sorted[0]?.type });
+                                shortageBatchRef.current = batch;
+                                setQCountOpen(false);
+                                setValidateOpen(false);
+                                setShortageBatch(batch);
+                                openCreateForQCountShortage(sorted[0], qCountData.textbook);
+                              }}
+                              className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-sm"
+                            >
+                              하나씩 처리 (저장할 때마다 다음으로)
+                            </button>
+                          </div>
+                        )}
+                        {batchCreateError && (
+                          <div className="mb-3 p-2 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm flex items-center justify-between gap-2">
+                            <span>{batchCreateError}</span>
+                            <button type="button" onClick={() => setBatchCreateError(null)} className="text-red-400 hover:text-white shrink-0">닫기</button>
+                          </div>
+                        )}
+                      </>
                     )}
                     {qCountData.underfilledTotal === 0 ? (
                       <p className="text-emerald-400/90 text-sm py-4">
@@ -2650,16 +3593,22 @@ export default function AdminGeneratedQuestionsPage() {
                 type="button"
                 disabled={siblingLoading}
                 onClick={() => runFromSibling('blank')}
-                className="px-4 py-2 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium"
+                className="px-4 py-2 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium inline-flex items-center gap-2"
               >
+                {siblingLoading && (
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                )}
                 {siblingLoading ? '처리 중…' : '빈 양식으로 추가'}
               </button>
               <button
                 type="button"
                 disabled={siblingLoading}
                 onClick={() => runFromSibling('ai')}
-                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold"
+                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold inline-flex items-center gap-2"
               >
+                {siblingLoading && (
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                )}
                 {siblingLoading ? 'AI 생성 중…' : 'AI 초안 생성'}
               </button>
             </div>
@@ -2817,7 +3766,19 @@ export default function AdminGeneratedQuestionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
           <div className="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-slate-800 border-b border-slate-600 px-5 py-4 flex justify-between items-center z-10">
-              <h2 className="text-lg font-bold">{editingId ? '변형문제 수정' : '새 변형문제'}</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold">
+                  {editingId ? '변형문제 수정' : shortageBatch
+                    ? `부족 문항 순차 처리 (${shortageBatch.totalCreated}/${shortageBatch.rows.reduce((s, r) => s + r.shortBy, 0)}건 완료 · 현재: ${shortageBatch.rows[shortageBatch.rowIndex].label} ${shortageBatch.rows[shortageBatch.rowIndex].type})`
+                    : '새 변형문제'}
+                </h2>
+                {(draftLoading || saving || explanationOnlyLoading) && (
+                  <span className="inline-flex items-center gap-2 text-sm text-amber-300">
+                    <span className="inline-block w-4 h-4 border-2 border-amber-500/50 border-t-amber-300 rounded-full animate-spin shrink-0" />
+                    {explanationOnlyLoading ? '해설 생성 중…' : draftLoading ? 'Claude 작성 중…' : '저장 중…'}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
@@ -2837,6 +3798,20 @@ export default function AdminGeneratedQuestionsPage() {
                     placeholder="24자 hex ObjectId"
                   />
                 </div>
+                {passagePreviewLoading && (
+                  <div className="sm:col-span-2 flex items-center gap-2 text-slate-400 text-sm">
+                    <span className="inline-block w-4 h-4 border-2 border-slate-500 border-t-cyan-400 rounded-full animate-spin" />
+                    원문 불러오는 중…
+                  </div>
+                )}
+                {!passagePreviewLoading && passagePreview != null && (
+                  <div className="sm:col-span-2 rounded-lg bg-slate-900/80 border border-slate-600 p-3">
+                    <p className="text-[11px] text-cyan-400 mb-2 font-semibold uppercase tracking-wider">원문 미리보기 (해당 교재 passage)</p>
+                    <div className="text-sm text-slate-200 leading-relaxed max-h-44 overflow-y-auto">
+                      <ParagraphWithUnderline text={passagePreview} />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-slate-400 block mb-1">교재명 *</label>
                   <input
@@ -2908,33 +3883,58 @@ export default function AdminGeneratedQuestionsPage() {
               <div>
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
                   <label className="text-xs text-violet-300 font-semibold">question_data (JSON) *</label>
-                  {!editingId && (
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {draftGenerated && (
+                      <>
+                        <span className="text-xs px-2 py-1 rounded-md bg-emerald-900/60 text-emerald-300 font-medium">
+                          생성됨
+                        </span>
+                        <button
+                          type="button"
+                          onClick={focusQuestionJsonForEdit}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-amber-600/60 bg-amber-900/40 hover:bg-amber-800/50 text-amber-200 font-medium"
+                        >
+                          추가 수정
+                        </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       disabled={draftLoading || saving}
                       onClick={() => void runGenerateDraft()}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-700 hover:from-violet-500 hover:to-fuchsia-600 text-white font-bold disabled:opacity-50 shadow-md shrink-0"
-                      title="passages 원문 + 위 유형으로 Claude가 1문항 JSON 초안 작성"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-700 hover:from-violet-500 hover:to-fuchsia-600 text-white font-bold disabled:opacity-50 shadow-md inline-flex items-center gap-2"
+                      title={editingId ? '현재 지문·유형으로 Claude가 새 초안 작성 (기존 JSON 덮어씀)' : 'passages 원문 + 위 유형으로 Claude가 1문항 JSON 초안 작성'}
                     >
-                      {draftLoading ? 'Claude 작성 중…' : 'Claude로 초안 생성'}
+                      {draftLoading && (
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                      )}
+                      {draftLoading ? 'Claude 작성 중…' : editingId ? 'Claude로 초안 다시 생성' : 'Claude로 초안 생성'}
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      disabled={draftLoading || saving || explanationOnlyLoading}
+                      onClick={() => void runGenerateExplanationOnly()}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold disabled:opacity-50 shadow-md inline-flex items-center gap-2"
+                      title="지문·발문·선택지·정답은 그대로 두고 Explanation(한국어 해설)만 Claude가 생성해 덮어씁니다."
+                    >
+                      {explanationOnlyLoading && (
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                      )}
+                      {explanationOnlyLoading ? '해설 생성 중…' : 'Claude로 해설만 수정'}
+                    </button>
+                  </div>
                 </div>
-                {!editingId && (
-                  <>
-                    <input
-                      value={draftUserHint}
-                      onChange={(e) => setDraftUserHint(e.target.value)}
-                      placeholder="AI 추가 지시 (선택)"
-                      className="w-full mb-2 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500"
-                    />
-                    <p className="text-[11px] text-slate-500 mb-1">
-                      「유형별 AI 프롬프트」에 저장한 지침이 위 유형에 자동 반영됩니다.{' '}
-                      <code className="text-slate-400">ANTHROPIC_API_KEY</code> 필요 (미설정 시 버튼은
-                      오류를 표시합니다).
-                    </p>
-                  </>
-                )}
+                <input
+                  value={draftUserHint}
+                  onChange={(e) => setDraftUserHint(e.target.value)}
+                  placeholder="AI 추가 지시 (선택)"
+                  className="w-full mb-2 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500"
+                />
+                <p className="text-[11px] text-slate-500 mb-1">
+                  「유형별 AI 프롬프트」에 저장한 지침이 위 유형에 자동 반영됩니다.{' '}
+                  <code className="text-slate-400">ANTHROPIC_API_KEY</code> 필요 (미설정 시 버튼은
+                  오류를 표시합니다). {editingId && '수정 시에는 기존 question_data를 새 초안으로 덮어씁니다.'}
+                </p>
                 {draftError && (
                   <div className="mb-2 p-2 rounded-lg bg-red-950/50 border border-red-800/40 text-red-300 text-xs whitespace-pre-wrap">
                     {draftError}
@@ -2962,6 +3962,7 @@ export default function AdminGeneratedQuestionsPage() {
                   ) : null;
                 })()}
                 <textarea
+                  ref={questionJsonTextareaRef}
                   value={questionJson}
                   onChange={(e) => setQuestionJson(e.target.value)}
                   rows={18}
@@ -2980,12 +3981,30 @@ export default function AdminGeneratedQuestionsPage() {
                   type="button"
                   disabled={saving}
                   onClick={handleSave}
-                  className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 font-bold disabled:opacity-50"
+                  className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 font-bold disabled:opacity-50 inline-flex items-center gap-2"
                 >
+                  {saving && (
+                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                  )}
                   {saving ? '저장 중…' : '저장'}
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {batchCreatingAll && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
+          <div className="bg-slate-800 border border-violet-600/60 rounded-2xl shadow-2xl px-8 py-6 max-w-md w-full text-center">
+            <div className="inline-block w-12 h-12 border-4 border-slate-600 border-t-violet-400 rounded-full animate-spin mb-4" />
+            <p className="text-lg font-bold text-white mb-1">한번에 먼저 생성 중</p>
+            {batchProgress && (
+              <p className="text-slate-300 text-sm">
+                {batchProgress.current}/{batchProgress.total}건 · 현재: {batchProgress.label} {batchProgress.type}
+              </p>
+            )}
+            <p className="text-slate-500 text-xs mt-2">완료 후 아래 목록에서 검수하세요.</p>
           </div>
         </div>
       )}
