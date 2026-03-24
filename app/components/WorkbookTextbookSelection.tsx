@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { useTextbookLinks } from '@/lib/useTextbookLinks';
 import { filterWorkbookSupplementaryTextbookKeys, WORKBOOK_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/workbook-textbooks';
 import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
@@ -16,10 +17,10 @@ interface WorkbookTextbookSelectionProps {
 const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextbookSelectionProps) => {
   const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const currentUser = useCurrentUser();
+  const { links: textbookLinks } = useTextbookLinks();
   const [workbookTextbooks, setWorkbookTextbooks] = useState<string[]>([]);
   const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
   
   const [selectedGrade, setSelectedGrade] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
@@ -40,13 +41,6 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
     setWorkbookTextbooks(textbookNames);
     setFilteredTextbooks(textbookNames);
   }, [convertedData, currentUser?.allowedTextbooks, currentUser?.allowedTextbooksWorkbook]);
-
-  useEffect(() => {
-    if (!convertedData) return;
-    import('../data/textbook-links.json')
-      .then((linksData) => setTextbookLinks(linksData.default))
-      .catch(() => setTextbookLinks({}));
-  }, [convertedData]);
 
   // 검색 필터링 로직
   useEffect(() => {

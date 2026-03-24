@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
+import { useTextbookLinks } from '@/lib/useTextbookLinks';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/variant-textbooks';
 
@@ -39,6 +40,7 @@ interface TextbookStructure {
 
 const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect }: LessonSelectionProps) => {
   const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
+  const { links: textbookLinks } = useTextbookLinks();
   const [defaultTextbooks, setDefaultTextbooks] = useState<string[]>([]);
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
@@ -47,10 +49,13 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTextbookList, setShowTextbookList] = useState(false);
-  const [textbookLinks, setTextbookLinks] = useState<Record<string, {kyoboUrl: string, description: string}>>({});
   /** 관리자가 회원 전용 변형문제 부교재 목록을 저장한 경우에만 true */
   const [variantDedicatedActive, setVariantDedicatedActive] = useState(false);
   const [variantDedicatedList, setVariantDedicatedList] = useState<string[]>([]);
+  /** /api/auth/me 응답 완료 여부 — 완료 전에는 배정 교재 분기를 쓰지 않아 전체 목록이 잠깐 보이는 현상 방지 */
+  const [memberPrefsLoaded, setMemberPrefsLoaded] = useState(false);
+  /** /api/settings/default-textbooks 응답 완료 여부 */
+  const [defaultTextbooksLoaded, setDefaultTextbooksLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -68,14 +73,16 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       .catch(() => {
         setVariantDedicatedActive(false);
         setVariantDedicatedList([]);
-      });
+      })
+      .finally(() => setMemberPrefsLoaded(true));
   }, []);
 
   useEffect(() => {
     fetch('/api/settings/default-textbooks')
       .then((res) => res.json())
       .then((data) => setDefaultTextbooks(Array.isArray(data?.textbookKeys) ? data.textbookKeys : []))
-      .catch(() => setDefaultTextbooks([]));
+      .catch(() => setDefaultTextbooks([]))
+      .finally(() => setDefaultTextbooksLoaded(true));
   }, []);
 
   // 선택된 교재에 따라 강과 번호 목록 업데이트
@@ -85,6 +92,12 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       try {
         // 부교재 목록: 관리자가 설정한 기본 노출 교재만 표시 (비회원 포함). 미설정 시 전체 노출.
         if (selectedTextbook === '부교재_목록') {
+          if (!memberPrefsLoaded || !defaultTextbooksLoaded) {
+            setTextbooks([]);
+            setFilteredTextbooks([]);
+            setShowTextbookList(true);
+            return;
+          }
           const allKeys = Object.keys(textbooksData);
           let textbookList: string[];
           if (variantDedicatedActive) {
@@ -100,16 +113,6 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
           setShowTextbookList(true);
-          
-          // 교보문고 링크 데이터 로드
-          try {
-            const linksData = await import('../data/textbook-links.json');
-            setTextbookLinks(linksData.default);
-          } catch (error) {
-            console.error('교보문고 링크 데이터 로드 실패:', error);
-            setTextbookLinks({});
-          }
-          
           return;
         }
         
@@ -162,7 +165,15 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     if (selectedTextbook) {
       loadTextbookData();
     }
-  }, [selectedTextbook, textbooksData, defaultTextbooks, variantDedicatedActive, variantDedicatedList]);
+  }, [
+    selectedTextbook,
+    textbooksData,
+    defaultTextbooks,
+    variantDedicatedActive,
+    variantDedicatedList,
+    memberPrefsLoaded,
+    defaultTextbooksLoaded,
+  ]);
 
   // 검색 필터링 로직
   useEffect(() => {
@@ -205,6 +216,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         : [...prev, lessonKey]
     );
   };
+
+  const prefsReady = memberPrefsLoaded && defaultTextbooksLoaded;
 
   const allLessonItems = Object.keys(lessonGroups).flatMap(key => lessonGroups[key] || []);
   const allSelected = allLessonItems.length > 0 && selectedLessons.length === allLessonItems.length;
@@ -315,6 +328,13 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           {showTextbookList ? (
             /* 부교재 목록 */
             <div>
+              {!prefsReady ? (
+                <div className="text-center py-20 px-4">
+                  <p className="text-gray-600 text-lg mb-2">교재 목록을 불러오는 중입니다</p>
+                  <p className="text-sm text-gray-400">잠시만 기다려 주세요</p>
+                </div>
+              ) : (
+                <div className="w-full">
               {/* 검색 입력 필드 */}
               <div className="max-w-md mx-auto mb-6">
                 <div className="relative">
@@ -463,6 +483,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                       </>
                     );
                   })()}
+                </div>
+              )}
                 </div>
               )}
             </div>

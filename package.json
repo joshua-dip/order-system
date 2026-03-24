@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed:admin": "node scripts/seed-admin.js",
-    "seed:testuser": "node scripts/seed-test-user.js"
+    "seed:testuser": "node scripts/seed-test-user.js",
+    "import:passages": "python3 scripts/excel_to_passages.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

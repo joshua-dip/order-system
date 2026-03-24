@@ -60,6 +60,9 @@ interface AdminOrder {
   orderNumber: string | null;
   fileUrl: string | null;
   dropboxFolderCreated?: boolean;
+  /** 상태「완료」 시 주문서에서 파싱·저장된 금액(원) */
+  revenueWon?: number | null;
+  completedAt?: string | null;
 }
 
 const MESSAGE_PRESETS: { id: string; label: string; getMessage: (u: ListUser) => string }[] = [
@@ -123,7 +126,15 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<SectionType>('dashboard');
 
-  const [stats, setStats] = useState<{ orderCountByLoginId: Record<string, number>; lastOrderDateByLoginId?: Record<string, string>; newMembersThisMonth: number; newOrdersThisWeek: number; dropboxConfigured?: boolean } | null>(null);
+  const [stats, setStats] = useState<{
+    orderCountByLoginId: Record<string, number>;
+    lastOrderDateByLoginId?: Record<string, string>;
+    newMembersThisMonth: number;
+    newOrdersThisWeek: number;
+    dropboxConfigured?: boolean;
+    revenueTotal?: number;
+    revenueThisMonth?: number;
+  } | null>(null);
   const [loginId, setLoginId] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -285,7 +296,16 @@ export default function AdminDashboardPage() {
         return r.json();
       })
       .then((d) => {
-        if (d && d.orderCountByLoginId != null) setStats({ orderCountByLoginId: d.orderCountByLoginId || {}, lastOrderDateByLoginId: d.lastOrderDateByLoginId || {}, newMembersThisMonth: d.newMembersThisMonth ?? 0, newOrdersThisWeek: d.newOrdersThisWeek ?? 0, dropboxConfigured: !!d.dropboxConfigured });
+        if (d && d.orderCountByLoginId != null)
+          setStats({
+            orderCountByLoginId: d.orderCountByLoginId || {},
+            lastOrderDateByLoginId: d.lastOrderDateByLoginId || {},
+            newMembersThisMonth: d.newMembersThisMonth ?? 0,
+            newOrdersThisWeek: d.newOrdersThisWeek ?? 0,
+            dropboxConfigured: !!d.dropboxConfigured,
+            revenueTotal: typeof d.revenueTotal === 'number' ? d.revenueTotal : 0,
+            revenueThisMonth: typeof d.revenueThisMonth === 'number' ? d.revenueThisMonth : 0,
+          });
       })
       .catch(() => setStats(null));
   }, []);
@@ -1206,10 +1226,25 @@ export default function AdminDashboardPage() {
       const data = await res.json();
       if (res.ok && data.ok) {
         const label = STATUS_LABELS[statusInput] || statusInput;
-        const next = { ...orderDetailModal, status: statusInput, statusLabel: label };
+        const next: AdminOrder = {
+          ...orderDetailModal,
+          status: statusInput,
+          statusLabel: label,
+          revenueWon:
+            statusInput === 'completed'
+              ? typeof data.revenueWon === 'number'
+                ? data.revenueWon
+                : null
+              : null,
+          completedAt:
+            statusInput === 'completed' && typeof data.completedAt === 'string'
+              ? data.completedAt
+              : null,
+        };
         setRecentOrders((prev) => prev.map((o) => (o.id === orderDetailModal.id ? next : o)));
         setUserOrders((prev) => prev.map((o) => (o.id === orderDetailModal.id ? next : o)));
         setOrderDetailModal(next);
+        fetchStats();
       } else {
         alert(data?.error || '저장에 실패했습니다.');
       }
@@ -1693,8 +1728,13 @@ export default function AdminDashboardPage() {
             </div>
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
               <p className="text-slate-400 text-sm">이번달 매출</p>
-              <p className="text-2xl font-bold text-white mt-1">—</p>
-              <p className="text-slate-500 text-xs mt-1">VAT 별도</p>
+              <p className="text-2xl font-bold text-white mt-1 tabular-nums">
+                {typeof stats?.revenueThisMonth === 'number' ? `${stats.revenueThisMonth.toLocaleString()}원` : '—'}
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                누적(완료) <span className="text-slate-400 tabular-nums">{typeof stats?.revenueTotal === 'number' ? `${stats.revenueTotal.toLocaleString()}원` : '—'}</span>
+                <span className="block text-slate-600 mt-0.5">완료 처리 시 주문서에서 금액 파싱 · VAT 별도</span>
+              </p>
             </div>
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
               <p className="text-slate-400 text-sm">미처리 주문</p>
@@ -1802,7 +1842,17 @@ export default function AdminDashboardPage() {
                           {o.orderText?.replace(/\s+/g, ' ').slice(0, 40) || '—'}
                           {(o.orderText?.length ?? 0) > 40 ? '…' : ''}
                         </td>
-                        <td className="py-3 px-5 text-slate-500">—</td>
+                        <td className="py-3 px-5 text-slate-300 tabular-nums text-xs" title={(o.status || 'pending') === 'completed' && (o.revenueWon == null || o.revenueWon < 0) ? '주문서에 인식 가능한 금액 문구가 없습니다' : undefined}>
+                          {(o.status || 'pending') === 'completed' ? (
+                            o.revenueWon != null && o.revenueWon >= 0 ? (
+                              <span className="text-emerald-300/95">{o.revenueWon.toLocaleString()}원</span>
+                            ) : (
+                              <span className="text-amber-400/90">미인식</span>
+                            )
+                          ) : (
+                            <span className="text-slate-600">—</span>
+                          )}
+                        </td>
                         <td className="py-3 px-5">
                           {(o.status || 'pending') === 'cancelled' ? (
                             <button
@@ -2094,6 +2144,7 @@ export default function AdminDashboardPage() {
                   <h3 className="font-semibold text-emerald-200 text-sm">원문 DB에서 불러오기</h3>
                   <p className="text-slate-400 text-xs leading-relaxed">
                     <strong className="text-slate-300">원문 관리</strong>에 등록된 교재·강(chapter)·번호(number)를 그대로 엑셀 변환과 동일한 JSON 구조(Sheet1 → 부교재)로 합칩니다. 해당 교재 키가 이미 있으면 <strong className="text-slate-300">덮어씁니다</strong>.
+                    <span className="block mt-1.5 text-slate-500">배포(Vercel 등) 환경에서는 병합 결과가 MongoDB(<code className="text-slate-400">converted_textbook_json</code>)에 저장되며, <code className="text-slate-400">/api/textbooks</code>가 여기를 우선 사용합니다.</span>
                   </p>
                   <div className="flex flex-wrap items-center gap-3">
                     <select
@@ -2765,6 +2816,16 @@ export default function AdminDashboardPage() {
                 <button type="button" onClick={handleSaveStatus} disabled={statusSavingId === orderDetailModal.id} className="mt-2 px-3 py-1.5 bg-slate-600 text-white text-sm rounded-lg hover:bg-slate-500 disabled:opacity-50">
                   {statusSavingId === orderDetailModal.id ? '저장 중…' : '상태 저장'}
                 </button>
+                {orderDetailModal.status === 'completed' && (
+                  <p className="mt-2 text-[11px] text-slate-500 leading-relaxed">
+                    매출 반영액:{' '}
+                    {orderDetailModal.revenueWon != null && orderDetailModal.revenueWon >= 0 ? (
+                      <span className="text-emerald-400/90 tabular-nums">{orderDetailModal.revenueWon.toLocaleString()}원</span>
+                    ) : (
+                      <span className="text-amber-400/90">주문서에서 금액을 찾지 못함</span>
+                    )}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-slate-400 text-sm mb-1">드롭박스 공유 링크</label>

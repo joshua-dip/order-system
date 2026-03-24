@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { requireAdmin } from '@/lib/admin-auth';
 
+export const maxDuration = 120;
+
 /**
  * 기존 question_data(지문·발문·선택지·정답)를 주고 Explanation(한국어 해설)만 생성.
  * 변형문제 수정 시 해설만 다시 만들 때 사용.
@@ -54,11 +56,13 @@ export async function POST(request: NextRequest) {
 주어진 지문(Paragraph), 발문(Question), 선택지(Options), 정답(CorrectAnswer)에 맞는 **한국어 해설(Explanation)**만 작성합니다.
 다른 내용은 출력하지 말고, 해설 텍스트만 출력하세요. 마크다운·JSON·제목 없이 순수 텍스트로만 출력.
 
-해설 규칙:
-- 정답이 왜 맞는지 지문/선택지와 연결해 설명하고, 오답이 왜 틀린지 간단히 짚습니다.
-- 순서/삽입 유형: "① 가 정답입니다."(또는 해당 번호)로 시작하고, 논리 흐름을 설명한 뒤 "논리 흐름 요약:" 한 문장으로 마침.
-- 어법 유형: 틀린 번호로 시작해 해당 어법 오류 이유를 한국어로 설명.
-- 그 외 유형: 지문 근거와 선택지 비교로 정답 근거를 명확히 제시.`;
+해설 규칙 (모든 유형 공통):
+- **길이: 한국어 450자 이하**(대략 4~7문장). 핵심만. 다른 번호·보기를 두고 망설이다 결론을 바꾸는 **자기모순 서술 금지**.
+- 정답이 왜 맞는지 지문/선택지와 연결해 설명하고, 오답은 필요하면 한두 문장으로만 짚습니다.
+- 순서/삽입 유형: "① 가 정답입니다."로 시작, 흐름은 짧게, 마지막에 "논리 흐름 요약:" 한 문장.
+- 어법 유형: 반드시 "② 가 정답입니다."처럼 **CorrectAnswer와 같은 번호로 시작** → **원문에서 맞는 표기(correctForm)**와 **지문에 실린 틀린 표기(wrongForm)**를 짚어 **2~3문장**. 다른 번호를 검토하며 길게 늘리지 말 것.
+- 빈칸(빈칸추론) 유형: 첫 줄에 정답 동그라미번호와 정답 영문 선택지를 붙여 쓰고(예: ③ the ability to adapt to changing circumstances), 다음 줄에 *해설: 로 시작하는 한국어 문단(전체 450자 이하). 빈칸 앞뒤 문맥 중심, 다른 보기 일일이 논박 금지.
+- 그 외 유형: 지문 근거와 정답 근거를 짧게 명확히.`;
 
     const userMsg = `유형(Category): ${category || type}
 ${userHint ? `추가 지시: ${userHint}\n\n` : ''}[Paragraph]
@@ -77,7 +81,7 @@ ${correctAnswer}
 
     const message = await client.messages.create({
       model,
-      max_tokens: 2048,
+      max_tokens: 900,
       system: sys,
       messages: [{ role: 'user', content: userMsg }],
     });

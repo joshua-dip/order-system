@@ -2,31 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
-
-/** 원문과 지문(Paragraph) 비교용 — 정규화 거리 비율 0~1 (0=동일, 1=완전 다름) */
-function variationRatio(original: string, paragraph: string): number {
-  const a = original.trim();
-  const b = paragraph.trim();
-  if (a.length === 0 && b.length === 0) return 0;
-  const maxLen = Math.max(a.length, b.length, 1);
-  const d = levenshtein(a, b);
-  return Math.min(1, d / maxLen);
-}
-
-function levenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  let prev = Array.from({ length: n + 1 }, (_, i) => i);
-  for (let i = 1; i <= m; i++) {
-    const curr = [i];
-    for (let j = 1; j <= n; j++) {
-      curr[j] =
-        a[i - 1] === b[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1]);
-    }
-    prev = curr;
-  }
-  return prev[n];
-}
+import { variationPercentAgainstOriginal } from '@/lib/paragraph-variation';
+import { getPassageTextForVariantCompare, passageIdToValidHex } from '@/lib/passage-variant-text';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -58,6 +35,8 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25', 10) || 25));
   const skip = (page - 1) * limit;
+  /** default: 교재·출처·유형 순(기존) / newest: 생성일 최신순 */
+  const sortMode = searchParams.get('sort')?.trim().toLowerCase() === 'newest' ? 'newest' : 'default';
 
   const filter: Record<string, unknown> = {};
   if (textbook) filter.textbook = textbook;
@@ -78,6 +57,11 @@ export async function GET(request: NextRequest) {
     ];
   }
 
+  const sortSpec =
+    sortMode === 'newest'
+      ? ({ created_at: -1, _id: -1 } as Record<string, 1 | -1>)
+      : ({ textbook: 1, source: 1, type: 1, created_at: -1 } as Record<string, 1 | -1>);
+
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection('generated_questions');
@@ -85,7 +69,7 @@ export async function GET(request: NextRequest) {
       col.countDocuments(filter),
       col
         .find(filter)
-        .sort({ textbook: 1, source: 1, type: 1, created_at: -1 })
+        .sort(sortSpec)
         .skip(skip)
         .limit(limit)
         .project({
@@ -100,45 +84,43 @@ export async function GET(request: NextRequest) {
           'question_data.NumQuestion': 1,
           'question_data.Category': 1,
           'question_data.Options': 1,
+          'question_data.CorrectAnswer': 1,
           'question_data.Explanation': 1,
         })
         .toArray(),
     ]);
 
-    const passageIds = [
-      ...new Set(
-        (items as { passage_id?: unknown }[])
-          .map((d) => d.passage_id)
-          .filter((id): id is ObjectId => id instanceof ObjectId),
-      ),
-    ];
+    const idHexSet = new Set<string>();
+    for (const d of items as { passage_id?: unknown }[]) {
+      const h = passageIdToValidHex(d.passage_id);
+      if (h) idHexSet.add(h);
+    }
+    const passageOids = [...idHexSet].map((h) => new ObjectId(h));
     const passageMap = new Map<string, string>();
-    if (passageIds.length > 0) {
+    if (passageOids.length > 0) {
       const passagesCol = db.collection('passages');
       const passages = await passagesCol
-        .find({ _id: { $in: passageIds } })
-        .project({ _id: 1, 'content.original': 1, 'content.mixed': 1 })
+        .find({ _id: { $in: passageOids } })
+        .project({ _id: 1, 'content.original': 1, 'content.mixed': 1, 'content.translation': 1 })
         .toArray();
       for (const p of passages) {
         const id = String(p._id);
-        const content = (p as { content?: { original?: string; mixed?: string } }).content;
-        const text =
-          (typeof content?.original === 'string' && content.original.trim()) ||
-          (typeof content?.mixed === 'string' && content.mixed.trim()) ||
-          '';
-        passageMap.set(id, text);
+        const content = (p as { content?: Record<string, unknown> }).content;
+        passageMap.set(id, getPassageTextForVariantCompare(content));
+      }
+      for (const oid of passageOids) {
+        const k = oid.toString();
+        if (!passageMap.has(k)) passageMap.set(k, '');
       }
     }
 
     const serialized = (items as Record<string, unknown>[]).map((d) => {
-      const passageId = d.passage_id;
-      const pid = passageId == null ? '' : typeof passageId === 'string' ? passageId : String(passageId);
-      const orig = pid ? passageMap.get(pid) ?? '' : '';
-      const para = typeof (d.question_data as Record<string, unknown>)?.Paragraph === 'string'
-        ? ((d.question_data as Record<string, unknown>).Paragraph as string)
-        : '';
-      const ratio = variationRatio(orig, para);
-      const variation_pct = Math.round(ratio * 100);
+      const pid = passageIdToValidHex(d.passage_id);
+      const orig = pid ? (passageMap.get(pid) ?? '') : '';
+      const qd = d.question_data as Record<string, unknown> | undefined;
+      const para = typeof qd?.Paragraph === 'string' ? (qd.Paragraph as string) : '';
+      const typeStr = String(d.type ?? '').trim();
+      const variation_pct = variationPercentAgainstOriginal(typeStr, orig, para, qd);
       return serialize(d, variation_pct);
     });
 

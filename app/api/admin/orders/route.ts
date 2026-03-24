@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { parseOrderRevenueFromOrderText } from '@/lib/order-revenue';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '주문 접수',
@@ -42,6 +43,16 @@ export async function GET(request: NextRequest) {
         o.orderMeta && typeof o.orderMeta === 'object' && !Array.isArray(o.orderMeta)
           ? (o.orderMeta as Record<string, unknown>)
           : null;
+      const rev = (o as { revenueWon?: unknown }).revenueWon;
+      const completedAt = (o as { completedAt?: unknown }).completedAt;
+      let revenueWon: number | null =
+        typeof rev === 'number' && Number.isFinite(rev) && rev >= 0 ? rev : null;
+      if ((o.status || 'pending') === 'completed' && revenueWon == null) {
+        const parsed = parseOrderRevenueFromOrderText(
+          typeof o.orderText === 'string' ? o.orderText : ''
+        );
+        revenueWon = parsed;
+      }
       return {
         id: o._id.toString(),
         orderText: o.orderText,
@@ -54,6 +65,13 @@ export async function GET(request: NextRequest) {
         dropboxFolderCreated: !!(o as { dropboxFolderCreated?: boolean }).dropboxFolderCreated,
         hasOrderMeta: !!meta,
         orderMetaFlow: meta && typeof meta.flow === 'string' ? meta.flow : null,
+        revenueWon,
+        completedAt:
+          completedAt instanceof Date
+            ? completedAt.toISOString()
+            : typeof completedAt === 'string'
+              ? completedAt
+              : null,
       };
     });
 

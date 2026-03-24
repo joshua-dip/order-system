@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { readMergedConvertedData, writeMergedConvertedData } from '@/lib/converted-data-store';
 
 type PassageRow = { chapter?: unknown; number?: unknown; order?: unknown };
 
 /**
- * MongoDB passages(원문 관리) → converted_data.json 구조로 동기화.
- * 엑셀 업로드와 동일한 형태: { [교재명]: { Sheet1: { 부교재: { [교재명]: { [강]: [{번호}] } } } } } }
+ * MongoDB passages(원문 관리) → 교재 병합 데이터로 동기화.
+ * — 로컬: MongoDB + converted_data.json(가능 시)
+ * — Vercel 등: MongoDB만 기록(파일시스템은 읽기 전용)
  */
 export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
@@ -70,18 +70,9 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    const jsonPath = path.join(process.cwd(), 'app', 'data', 'converted_data.json');
-    let existing: Record<string, unknown> = {};
-    try {
-      const raw = await fs.readFile(jsonPath, 'utf-8');
-      existing = JSON.parse(raw) as Record<string, unknown>;
-    } catch {
-      existing = {};
-    }
-
+    const existing = await readMergedConvertedData();
     existing[textbook] = branch;
-
-    await fs.writeFile(jsonPath, JSON.stringify(existing, null, 2), 'utf-8');
+    await writeMergedConvertedData(existing);
 
     const lessonCount = lessonKeys.length;
     const passageCount = docs.filter((p) => String(p.number ?? '').trim()).length;

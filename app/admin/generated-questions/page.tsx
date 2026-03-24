@@ -1,27 +1,43 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   BOOK_VARIANT_QUESTION_TYPES,
   DEFAULT_QUESTIONS_PER_VARIANT_TYPE,
 } from '@/lib/book-variant-types';
+import { buildEnglishExamSolveUserPrompt } from '@/lib/generated-question-solve-prompt';
+import { OpenIdFromQuery } from './OpenIdFromQuery';
 
 const VALIDATE_EXCLUDE_STORAGE = 'admin-gq-validate-excluded-types';
 /** 「+ 같은유형」 AI 초안 — 유형(type)별 추가 지침 (브라우저 저장) */
 const TYPE_VARIANT_PROMPTS_STORAGE = 'admin-gq-variant-prompts-by-type';
 const GQ_DENSITY_STORAGE_KEY = 'admin-gq-table-density';
-const GQ_COL_STORAGE_NARROW = 'admin-gq-cols-v5-narrow';
-const GQ_COL_STORAGE_WIDE = 'admin-gq-cols-v5-wide';
+const GQ_COL_STORAGE_NARROW = 'admin-gq-cols-v6-narrow';
+const GQ_COL_STORAGE_WIDE = 'admin-gq-cols-v6-wide';
 /** 구버전 한 키 — 넓게 보기 마이그레이션용 */
 const GQ_COL_STORAGE_LEGACY = 'admin-generated-questions-col-widths-v5';
 
-/** 열 순서: 작업, 교재, 유형, Paragraph, Options, Explanation, 출처, passage, 발문 */
-const GQ_COL_MINS = [72, 130, 100, 160, 200, 200, 88, 88, 180];
-const GQ_COL_MAXS = [220, 480, 280, 560, 720, 720, 280, 320, 800];
-const GQ_COL_DEFAULTS_NARROW = [72, 132, 100, 190, 220, 220, 88, 96, 180];
-const GQ_COL_DEFAULTS_WIDE = [104, 200, 140, 280, 320, 320, 120, 140, 260];
+/** 열 순서: 작업, 등록일시, 교재, 유형, Paragraph, Options, Explanation, 출처, passage, 발문 */
+const GQ_COL_MINS = [72, 118, 130, 100, 160, 200, 200, 88, 88, 180];
+const GQ_COL_MAXS = [220, 240, 480, 280, 560, 720, 720, 280, 320, 800];
+const GQ_COL_DEFAULTS_NARROW = [72, 124, 132, 100, 190, 220, 220, 88, 96, 180];
+const GQ_COL_DEFAULTS_WIDE = [104, 140, 200, 140, 280, 320, 320, 120, 140, 260];
+
+/** 변형도 분석 → 구간별 문항 목록 페이지 URL */
+function buildVariationBucketListUrl(opts: {
+  textbook: string;
+  typeKey: string;
+  bucket: number | 'all';
+}): string {
+  const sp = new URLSearchParams();
+  if (opts.textbook.trim()) sp.set('textbook', opts.textbook.trim());
+  if (opts.typeKey === '—') sp.set('typeEmpty', '1');
+  else if (opts.typeKey.trim()) sp.set('type', opts.typeKey.trim());
+  sp.set('bucket', String(opts.bucket));
+  return `/admin/generated-questions/variation-bucket?${sp.toString()}`;
+}
 
 type TableDensity = 'narrow' | 'wide';
 
@@ -53,6 +69,17 @@ function loadColWidthsForDensity(d: TableDensity): number[] {
   return [...def];
 }
 
+/** DB created_at(ISO·Date 문자열) → 한국 시간 표시 */
+function formatDbCreatedAt(value: string | null | undefined): string {
+  if (value == null || value === '') return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+    timeZone: 'Asia/Seoul',
+  }).format(d);
+}
 
 /** Paragraph 내 <u>...</u> 구간을 색상·밑줄로 강조해 렌더 (XSS 방지: 태그 제거 후 텍스트만 표시) */
 function ParagraphWithUnderline({ text, className = '' }: { text: string; className?: string }) {
@@ -108,7 +135,7 @@ type Row = {
     Options?: string;
     Explanation?: string;
   };
-  created_at?: string;
+  created_at?: string | null;
 };
 
 export default function AdminGeneratedQuestionsPage() {
@@ -125,6 +152,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPassageId, setFilterPassageId] = useState('');
   const [filterQ, setFilterQ] = useState('');
+  /** default: 교재·출처·유형 / newest: DB 입력(생성) 최신순 */
+  const [filterSortOrder, setFilterSortOrder] = useState<'default' | 'newest'>('default');
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
   const [total, setTotal] = useState(0);
@@ -157,6 +186,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [questionJson, setQuestionJson] = useState(DEFAULT_QUESTION_JSON);
   /** 저장 직후 해당 문제 행으로 스크롤하기 위한 id (문제보러가기 버튼 표시) */
   const [goToRowId, setGoToRowId] = useState<string | null>(null);
+  /** 변형도 구간 문항에서 「열기」로 들어온 뒤 저장 시 이 경로로 router.push */
+  const bucketReturnAfterSaveRef = useRef<string | null>(null);
 
   type SolveResult = {
     claudeAnswer: string;
@@ -215,12 +246,27 @@ export default function AdminGeneratedQuestionsPage() {
   const [variationAnalysisError, setVariationAnalysisError] = useState<string | null>(null);
   const [variationAnalysisData, setVariationAnalysisData] = useState<{
     totalScanned: number;
+    totalMatching?: number | null;
+    scanLimit?: number;
+    scanCap?: number;
+    scanCapped?: boolean;
     filters: { textbook: string | null; type: string | null };
     byType: Record<
       string,
       { count: number; avg: number; min: number; max: number; distribution: number[] }
     >;
+    /** 서버가 countDocuments를 건너뜀 */
+    totalCountSkipped?: boolean;
   } | null>(null);
+  /** 변형도 분석 최대 스캔 건수(서버 상한 내) */
+  const [variationScanLimit, setVariationScanLimit] = useState(25_000);
+  /** false면 총 건수 count 생략 → 훨씬 빠름 */
+  const [variationIncludeTotalCount, setVariationIncludeTotalCount] = useState(false);
+  /** 변형도 분석 모달 — 동일 필터 DB 문항 수(preview-count API) */
+  const [variationDbCount, setVariationDbCount] = useState<number | null>(null);
+  const [variationDbScanCap, setVariationDbScanCap] = useState<number | null>(null);
+  const [variationDbCountLoading, setVariationDbCountLoading] = useState(false);
+  const [variationDbCountError, setVariationDbCountError] = useState<string | null>(null);
 
   /** 선택지 데이터 검증 (교재·강·category 그룹별 상호 일치도) */
   const [optionsOverlapOpen, setOptionsOverlapOpen] = useState(false);
@@ -266,6 +312,31 @@ export default function AdminGeneratedQuestionsPage() {
     items: { id: string; textbook: string; source: string; type: string; snippet: string; full: string }[];
     truncated?: boolean;
   } | null>(null);
+  /** 어법: 구조·보기 일치·원문 대비 표기 변형 */
+  const [grammarVariantOpen, setGrammarVariantOpen] = useState(false);
+  const [grammarVariantLoading, setGrammarVariantLoading] = useState(false);
+  const [grammarVariantError, setGrammarVariantError] = useState<string | null>(null);
+  const [grammarVariantData, setGrammarVariantData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalScanned: number;
+    scanned: number;
+    truncated: boolean;
+    maxScan: number;
+    withErrors: number;
+    withWarningsOnly: number;
+    items: {
+      id: string;
+      textbook: string;
+      source: string;
+      passageId: string | null;
+      errors: { code: string; message: string }[];
+      warnings: { code: string; message: string }[];
+      snippet: string;
+    }[];
+  } | null>(null);
+  /** 어법 검증: code=blocks(밑줄 5곳 형식) 오류 문항 일괄 Claude 재생성 */
+  const [grammarBlocksRegenLoading, setGrammarBlocksRegenLoading] = useState(false);
+  const [grammarBlocksRegenMessage, setGrammarBlocksRegenMessage] = useState<string | null>(null);
   /** 메뉴 접기/펼치기 (검증 버튼 아래 나머지 메뉴) */
   const [extraMenuExpanded, setExtraMenuExpanded] = useState(false);
 
@@ -286,6 +357,8 @@ export default function AdminGeneratedQuestionsPage() {
     shortBy: number;
   };
   type QCountScope = 'textbook' | 'order';
+  /** 문제수 검증 — 변형문 status 집계 범위 */
+  type QCountQuestionStatus = 'all' | '대기' | '완료';
   type QCountOrderOption = {
     id: string;
     orderNumber: string | null;
@@ -293,16 +366,24 @@ export default function AdminGeneratedQuestionsPage() {
     orderMetaFlow: string | null;
     hasOrderMeta: boolean;
   };
+  /** 문제수 검증 — 미충족·무관문 목록 최대 행(API maxListRows, 상한 35k) */
+  const [qCountMaxListRows, setQCountMaxListRows] = useState(12_000);
   const [qCountOpen, setQCountOpen] = useState(false);
   const [qCountLoading, setQCountLoading] = useState(false);
   const [qCountError, setQCountError] = useState<string | null>(null);
   const [qCountScope, setQCountScope] = useState<QCountScope>('textbook');
+  const [qCountQuestionStatus, setQCountQuestionStatus] = useState<QCountQuestionStatus>('all');
   const [qCountOrderId, setQCountOrderId] = useState('');
   const [qCountOrders, setQCountOrders] = useState<QCountOrderOption[]>([]);
   const [qCountOrdersLoading, setQCountOrdersLoading] = useState(false);
+  /** 문제수 검증 모달 — 교재/주문 선택 시 DB 규모 미리보기(preview-stats API) */
+  const [qCountPreviewLoading, setQCountPreviewLoading] = useState(false);
+  const [qCountPreviewError, setQCountPreviewError] = useState<string | null>(null);
+  const [qCountPreviewStats, setQCountPreviewStats] = useState<Record<string, unknown> | null>(null);
   const [qCountData, setQCountData] = useState<{
     scope: QCountScope;
     textbook: string;
+    questionStatusScope: QCountQuestionStatus;
     requiredPerType: number;
     passageCount: number;
     standardTypes: string[];
@@ -330,6 +411,27 @@ export default function AdminGeneratedQuestionsPage() {
     analysis: { issue: string };
   } | null>(null);
   const [qCountDebugLoading, setQCountDebugLoading] = useState(false);
+  /** 문제수 검증 스냅샷(MongoDB question_count_validation_snapshots) */
+  const [qCountSnapshotNote, setQCountSnapshotNote] = useState('');
+  const [qCountSnapshotSaving, setQCountSnapshotSaving] = useState(false);
+  const [qCountSnapshotMsg, setQCountSnapshotMsg] = useState<string | null>(null);
+  const [qCountSnapshots, setQCountSnapshots] = useState<
+    Array<{
+      id: string;
+      saved_at: string | null;
+      saved_by_login_id: string | null;
+      note: string | null;
+      query: {
+        scope: string;
+        textbook: string;
+        order_id: string | null;
+        required_per_type: number;
+        question_status?: string;
+      };
+      summary: Record<string, unknown> | null;
+    }>
+  >([]);
+  const [qCountSnapshotsLoading, setQCountSnapshotsLoading] = useState(false);
   /** 부족 문항 한번에 처리: 남은 작업 큐. 처리 중이면 모달 저장 시 다음으로 넘어가고, 다 끝나면 검수 창으로 이동 */
   const [shortageBatch, setShortageBatch] = useState<{
     rows: QCountUnderRow[];
@@ -502,6 +604,7 @@ export default function AdminGeneratedQuestionsPage() {
     if (filterStatus) params.set('status', filterStatus);
     if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
     if (filterQ) params.set('q', filterQ);
+    if (filterSortOrder === 'newest') params.set('sort', 'newest');
     params.set('page', String(page));
     params.set('limit', String(limit));
     fetch(`/api/admin/generated-questions?${params}`, { credentials: 'include' })
@@ -523,6 +626,7 @@ export default function AdminGeneratedQuestionsPage() {
   }, [user, fetchList]);
 
   const openCreate = () => {
+    bucketReturnAfterSaveRef.current = null;
     setEditingId(null);
     setDraftError(null);
     setDraftUserHint('');
@@ -543,13 +647,14 @@ export default function AdminGeneratedQuestionsPage() {
 
   /** 문제수 검증 — 부족 셀 클릭 시 해당 지문·유형으로 새 변형문제 모달 */
   const openCreateForQCountShortage = (r: QCountUnderRow, textbook: string) => {
+    bucketReturnAfterSaveRef.current = null;
     console.log('[openCreateForQCountShortage]', { label: r.label, type: r.type, passageId: r.passageId?.slice(0, 8), textbook });
     const tb = (textbook || '').trim();
     if (!tb || !r.passageId.trim()) {
       console.warn('[openCreateForQCountShortage] early return: no textbook or passageId', { tb: !!tb, passageId: r.passageId?.trim() });
       return;
     }
-    setQCountOpen(false);
+    // 문제수 검증 모달은 닫지 않음 — 저장 후에도 검증 결과·변형도 분석을 다시 돌리지 않도록 유지 (편집 모달 z-[60]이 더 위)
     setValidateOpen(false);
     setEditingId(null);
     setFilterTextbook(tb);
@@ -715,7 +820,21 @@ export default function AdminGeneratedQuestionsPage() {
     setTimeout(() => questionJsonTextareaRef.current?.focus(), 300);
   };
 
-  const openEdit = async (id: string) => {
+  const isVariationBucketReturnPath = useCallback((path: string) => {
+    const q = path.indexOf('?');
+    const pathname = q >= 0 ? path.slice(0, q) : path;
+    if (pathname !== '/admin/generated-questions/variation-bucket') return false;
+    if (path.startsWith('//') || path.includes('://')) return false;
+    return true;
+  }, []);
+
+  const openEdit = useCallback(
+    async (id: string, bucketReturnPath: string | null = null) => {
+    if (bucketReturnPath && isVariationBucketReturnPath(bucketReturnPath)) {
+      bucketReturnAfterSaveRef.current = bucketReturnPath;
+    } else {
+      bucketReturnAfterSaveRef.current = null;
+    }
     setEditingId(id);
     setDraftError(null);
     setDraftUserHint('');
@@ -726,6 +845,7 @@ export default function AdminGeneratedQuestionsPage() {
       const d = await res.json();
       if (!res.ok || !d.item) {
         alert(d.error || '불러오기 실패');
+        bucketReturnAfterSaveRef.current = null;
         return;
       }
       const it = d.item as Record<string, unknown>;
@@ -745,8 +865,11 @@ export default function AdminGeneratedQuestionsPage() {
       setModalOpen(true);
     } catch {
       alert('요청 실패');
+      bucketReturnAfterSaveRef.current = null;
     }
-  };
+  },
+    [isVariationBucketReturnPath]
+  );
 
   const handleSave = async () => {
     if (!form.textbook.trim() || !form.passage_id.trim()) {
@@ -854,6 +977,17 @@ export default function AdminGeneratedQuestionsPage() {
         return;
       }
 
+      /** 변형도 구간 문항 페이지에서 「열기」로 연 경우 저장 후 동일 버킷 목록으로 복귀 */
+      if (editingId && bucketReturnAfterSaveRef.current) {
+        const returnPath = bucketReturnAfterSaveRef.current;
+        bucketReturnAfterSaveRef.current = null;
+        setGoToRowId(null);
+        setEditingId(null);
+        setModalOpen(false);
+        router.push(returnPath);
+        return;
+      }
+
       if (!editingId) setPage(1);
       setModalOpen(false);
     } catch {
@@ -932,6 +1066,28 @@ export default function AdminGeneratedQuestionsPage() {
       setSolveError('네트워크 오류');
     } finally {
       setSolveLoading(false);
+    }
+  };
+
+  /** ChatGPT 웹: Claude API와 동일한 풀이용 프롬프트를 클립보드에 넣고 chatgpt.com 새 탭 */
+  const openGptWebSolveFromRow = async (row: Row) => {
+    const qd = row.question_data || {};
+    const prompt = buildEnglishExamSolveUserPrompt({
+      questionType: row.type,
+      paragraph: typeof qd.Paragraph === 'string' ? qd.Paragraph : '',
+      question: typeof qd.Question === 'string' ? qd.Question : '',
+      options: typeof qd.Options === 'string' ? qd.Options : '',
+    });
+    try {
+      await navigator.clipboard.writeText(prompt);
+      window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
+      alert(
+        '풀이용 프롬프트를 클립보드에 복사했습니다.\n열린 ChatGPT 탭에서 붙여넣기(Cmd+V / Ctrl+V) 후 전송하세요.'
+      );
+    } catch {
+      alert(
+        '클립보드 복사에 실패했습니다. HTTPS 환경인지·브라우저 클립보드 권한을 확인하거나, 문제 내용을 직접 복사해 주세요.'
+      );
     }
   };
 
@@ -1035,26 +1191,32 @@ export default function AdminGeneratedQuestionsPage() {
             ...(typePrompt ? { typePrompt } : {}),
             option_type: 'English',
           };
-          let draftRes = await fetch('/api/admin/generated-questions/generate-draft', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(draftBody),
-          });
-          let draftData = await draftRes.json();
-          if (draftRes.status === 422 && !draftData?.question_data) {
-            await new Promise((r) => setTimeout(r, 1500));
-            draftRes = await fetch('/api/admin/generated-questions/generate-draft', {
+          let draftData: Record<string, unknown> = {};
+          let qd: Record<string, unknown> | null = null;
+          const maxDraftAttempts = 3;
+          for (let attempt = 0; attempt < maxDraftAttempts; attempt++) {
+            if (attempt > 0) {
+              await new Promise((r) => setTimeout(r, 1000 + attempt * 800));
+            }
+            const draftRes = await fetch('/api/admin/generated-questions/generate-draft', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
               body: JSON.stringify(draftBody),
             });
             draftData = await draftRes.json();
+            const candidate =
+              draftRes.ok &&
+              draftData?.question_data &&
+              typeof draftData.question_data === 'object' &&
+              !Array.isArray(draftData.question_data)
+                ? (draftData.question_data as Record<string, unknown>)
+                : null;
+            if (candidate) {
+              qd = candidate;
+              break;
+            }
           }
-          let qd: Record<string, unknown> | null = draftRes.ok && draftData?.question_data && typeof draftData.question_data === 'object' && !Array.isArray(draftData.question_data)
-            ? (draftData.question_data as Record<string, unknown>)
-            : null;
           if (!qd) {
             const nextNum = (draftData?.nextNum as number) ?? 1;
             qd = {
@@ -1152,9 +1314,110 @@ export default function AdminGeneratedQuestionsPage() {
     if (types.length === 0) fetchMeta();
   };
 
+  useEffect(() => {
+    if (!qCountOpen) {
+      setQCountPreviewStats(null);
+      setQCountPreviewError(null);
+      setQCountPreviewLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const oidOk = (id: string) => /^[a-f0-9]{24}$/i.test(id.trim());
+
+    const run = async () => {
+      if (qCountScope === 'textbook') {
+        const tb = filterTextbook.trim();
+        if (!tb) {
+          setQCountPreviewStats(null);
+          setQCountPreviewError(null);
+          setQCountPreviewLoading(false);
+          return;
+        }
+        setQCountPreviewLoading(true);
+        setQCountPreviewError(null);
+        try {
+          const qs =
+            qCountQuestionStatus !== 'all'
+              ? `&questionStatus=${encodeURIComponent(qCountQuestionStatus)}`
+              : '';
+          const res = await fetch(
+            `/api/admin/generated-questions/validate/question-counts/preview-stats?textbook=${encodeURIComponent(tb)}${qs}`,
+            { credentials: 'include' }
+          );
+          const d = (await res.json()) as Record<string, unknown>;
+          if (cancelled) return;
+          if (!res.ok) {
+            setQCountPreviewStats(null);
+            setQCountPreviewError(typeof d.error === 'string' ? d.error : '조회 실패');
+            return;
+          }
+          setQCountPreviewStats(d);
+        } catch {
+          if (!cancelled) {
+            setQCountPreviewStats(null);
+            setQCountPreviewError('네트워크 오류');
+          }
+        } finally {
+          if (!cancelled) setQCountPreviewLoading(false);
+        }
+        return;
+      }
+
+      const oid = qCountOrderId.trim();
+      if (!oidOk(oid)) {
+        setQCountPreviewStats(null);
+        setQCountPreviewError(null);
+        setQCountPreviewLoading(false);
+        return;
+      }
+      setQCountPreviewLoading(true);
+      setQCountPreviewError(null);
+      try {
+        const qs =
+          qCountQuestionStatus !== 'all'
+            ? `&questionStatus=${encodeURIComponent(qCountQuestionStatus)}`
+            : '';
+        const res = await fetch(
+          `/api/admin/generated-questions/validate/question-counts/preview-stats?orderId=${encodeURIComponent(oid)}${qs}`,
+          { credentials: 'include' }
+        );
+        const d = (await res.json()) as Record<string, unknown>;
+        if (cancelled) return;
+        if (!res.ok) {
+          setQCountPreviewStats(null);
+          setQCountPreviewError(typeof d.error === 'string' ? d.error : '조회 실패');
+          return;
+        }
+        setQCountPreviewStats(d);
+      } catch {
+        if (!cancelled) {
+          setQCountPreviewStats(null);
+          setQCountPreviewError('네트워크 오류');
+        }
+      } finally {
+        if (!cancelled) setQCountPreviewLoading(false);
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [qCountOpen, qCountScope, filterTextbook, qCountOrderId, qCountQuestionStatus]);
+
   const openQCountModal = () => {
     setQCountOpen(true);
-    setQCountData(null);
+    // 이전 검증 결과는 유지. 다만 모달을 닫은 뒤 교재/주문 조건이 바뀌었으면 스테일하므로 비움
+    setQCountData((prev) => {
+      if (!prev) return null;
+      if (prev.scope !== qCountScope) return null;
+      if (qCountScope === 'textbook') {
+        if (prev.textbook !== filterTextbook.trim()) return null;
+      } else if ((prev.order?.id ?? '') !== qCountOrderId.trim()) {
+        return null;
+      }
+      return prev;
+    });
     setQCountError(null);
     if (textbooks.length === 0) fetchMeta();
     setQCountOrdersLoading(true);
@@ -1183,10 +1446,65 @@ export default function AdminGeneratedQuestionsPage() {
 
   const openVariationAnalysisModal = () => {
     setVariationAnalysisOpen(true);
-    setVariationAnalysisData(null);
+    // 이전 집계 결과 유지 — 수정·저장 후 다시 열어도 긴 재분석 없이 이어서 작업 가능
+    setVariationAnalysisData((prev) => {
+      if (!prev) return null;
+      const tbNow = filterTextbook.trim();
+      const tyNow = filterType.trim();
+      const tbPrev = (prev.filters.textbook ?? '').trim();
+      const tyPrev = (prev.filters.type ?? '').trim();
+      if (tbPrev !== tbNow || tyPrev !== tyNow) return null;
+      return prev;
+    });
     setVariationAnalysisError(null);
     if (textbooks.length === 0 || types.length === 0) fetchMeta();
   };
+
+  useEffect(() => {
+    if (!variationAnalysisOpen) {
+      setVariationDbCount(null);
+      setVariationDbScanCap(null);
+      setVariationDbCountLoading(false);
+      setVariationDbCountError(null);
+      return;
+    }
+    let cancelled = false;
+    setVariationDbCountLoading(true);
+    setVariationDbCountError(null);
+    const params = new URLSearchParams();
+    if (filterTextbook.trim()) params.set('textbook', filterTextbook.trim());
+    if (filterType.trim()) params.set('type', filterType.trim());
+    void fetch(
+      `/api/admin/generated-questions/analyze/variation/preview-count?${params}`,
+      { credentials: 'include' }
+    )
+      .then(async (r) => {
+        const d = (await r.json()) as Record<string, unknown>;
+        if (cancelled) return;
+        if (!r.ok) {
+          setVariationDbCount(null);
+          setVariationDbScanCap(null);
+          setVariationDbCountError(typeof d.error === 'string' ? d.error : '건수 조회 실패');
+          return;
+        }
+        setVariationDbCount(typeof d.matchingCount === 'number' ? d.matchingCount : null);
+        setVariationDbScanCap(typeof d.scanCap === 'number' ? d.scanCap : null);
+        setVariationDbCountError(null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setVariationDbCount(null);
+          setVariationDbScanCap(null);
+          setVariationDbCountError('네트워크 오류');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setVariationDbCountLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [variationAnalysisOpen, filterTextbook, filterType]);
 
   const openOptionsOverlapModal = () => {
     setOptionsOverlapOpen(true);
@@ -1309,6 +1627,124 @@ export default function AdminGeneratedQuestionsPage() {
       .finally(() => setOptionsApiLoading(false));
   };
 
+  const openGrammarVariantModal = () => {
+    setGrammarVariantOpen(true);
+    setGrammarVariantData(null);
+    setGrammarVariantError(null);
+    setGrammarBlocksRegenMessage(null);
+    setGrammarVariantLoading(true);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/grammar-variant?${params}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setGrammarVariantError(d.error || '검증 실패');
+          return;
+        }
+        setGrammarVariantData({
+          filters: d.filters ?? { textbook: null, type: '어법' },
+          totalScanned: d.totalScanned ?? 0,
+          scanned: d.scanned ?? 0,
+          truncated: !!d.truncated,
+          maxScan: d.maxScan ?? 0,
+          withErrors: d.withErrors ?? 0,
+          withWarningsOnly: d.withWarningsOnly ?? 0,
+          items: Array.isArray(d.items) ? d.items : [],
+        });
+      })
+      .catch(() => setGrammarVariantError('네트워크 오류'))
+      .finally(() => setGrammarVariantLoading(false));
+  };
+
+  const runGrammarVariantValidate = () => {
+    setGrammarVariantLoading(true);
+    setGrammarVariantError(null);
+    setGrammarVariantData(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/grammar-variant?${params}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setGrammarVariantError(d.error || '검증 실패');
+          return;
+        }
+        setGrammarVariantData({
+          filters: d.filters ?? { textbook: null, type: '어법' },
+          totalScanned: d.totalScanned ?? 0,
+          scanned: d.scanned ?? 0,
+          truncated: !!d.truncated,
+          maxScan: d.maxScan ?? 0,
+          withErrors: d.withErrors ?? 0,
+          withWarningsOnly: d.withWarningsOnly ?? 0,
+          items: Array.isArray(d.items) ? d.items : [],
+        });
+      })
+      .catch(() => setGrammarVariantError('네트워크 오류'))
+      .finally(() => setGrammarVariantLoading(false));
+  };
+
+  const grammarBlocksErrorIds = useMemo(() => {
+    if (!grammarVariantData?.items?.length) return [];
+    return grammarVariantData.items
+      .filter((it) => it.errors.some((e) => e.code === 'blocks'))
+      .map((it) => it.id);
+  }, [grammarVariantData]);
+
+  const runGrammarBlocksBulkRegenerate = async () => {
+    if (grammarBlocksErrorIds.length === 0) return;
+    const n = grammarBlocksErrorIds.length;
+    if (
+      !confirm(
+        `Paragraph 밑줄 형식 오류(①~⑤·<u>) 문항 ${n}건을 passage 원문으로 Claude 재생성합니다.\n기존 문항 번호(NumQuestion)·Source·UniqueID는 유지됩니다. 시간이 다소 걸릴 수 있습니다. 계속할까요?`
+      )
+    ) {
+      return;
+    }
+    setGrammarBlocksRegenLoading(true);
+    setGrammarBlocksRegenMessage(null);
+    setGrammarVariantError(null);
+    let typePrompt = '';
+    try {
+      const raw = localStorage.getItem(TYPE_VARIANT_PROMPTS_STORAGE);
+      if (raw) {
+        const p = JSON.parse(raw) as unknown;
+        if (p && typeof p === 'object' && !Array.isArray(p) && typeof (p as Record<string, unknown>)['어법'] === 'string') {
+          typePrompt = String((p as Record<string, string>)['어법']).trim().slice(0, 12000);
+        }
+      }
+    } catch {
+      typePrompt = '';
+    }
+    try {
+      const res = await fetch('/api/admin/generated-questions/bulk-regenerate-grammar-blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          ids: grammarBlocksErrorIds,
+          ...(typePrompt ? { typePrompt } : {}),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setGrammarVariantError(typeof d.error === 'string' ? d.error : '일괄 재생성 실패');
+        return;
+      }
+      const ok = typeof d.succeeded === 'number' ? d.succeeded : 0;
+      const fail = typeof d.failed === 'number' ? d.failed : 0;
+      setGrammarBlocksRegenMessage(`재생성 완료: 성공 ${ok}건, 실패 ${fail}건`);
+      fetchList();
+      fetchMeta();
+      runGrammarVariantValidate();
+    } catch {
+      setGrammarVariantError('네트워크 오류');
+    } finally {
+      setGrammarBlocksRegenLoading(false);
+    }
+  };
+
   const runOptionsOverlapValidate = async () => {
     setOptionsOverlapLoading(true);
     setOptionsOverlapError(null);
@@ -1346,7 +1782,8 @@ export default function AdminGeneratedQuestionsPage() {
       const params = new URLSearchParams();
       if (filterTextbook) params.set('textbook', filterTextbook);
       if (filterType) params.set('type', filterType);
-      params.set('limit', '3000');
+      params.set('limit', String(Math.max(1, variationScanLimit)));
+      if (!variationIncludeTotalCount) params.set('skipTotal', '1');
       const res = await fetch(
         `/api/admin/generated-questions/analyze/variation?${params}`,
         { credentials: 'include' }
@@ -1358,8 +1795,13 @@ export default function AdminGeneratedQuestionsPage() {
       }
       setVariationAnalysisData({
         totalScanned: d.totalScanned ?? 0,
+        totalMatching: typeof d.totalMatching === 'number' ? d.totalMatching : d.totalMatching === null ? null : undefined,
+        scanLimit: typeof d.scanLimit === 'number' ? d.scanLimit : undefined,
+        scanCap: typeof d.scanCap === 'number' ? d.scanCap : undefined,
+        scanCapped: !!d.scanCapped,
         filters: d.filters ?? { textbook: null, type: null },
         byType: d.byType && typeof d.byType === 'object' ? d.byType : {},
+        totalCountSkipped: !!(d.performance && d.performance.totalCountSkipped),
       });
     } catch {
       setVariationAnalysisError('네트워크 오류');
@@ -1389,6 +1831,10 @@ export default function AdminGeneratedQuestionsPage() {
         params.set('textbook', filterTextbook.trim());
         params.set('requiredPerType', String(DEFAULT_QUESTIONS_PER_VARIANT_TYPE));
       }
+      params.set('maxListRows', String(Math.max(400, qCountMaxListRows)));
+      if (qCountQuestionStatus !== 'all') {
+        params.set('questionStatus', qCountQuestionStatus);
+      }
       const res = await fetch(
         `/api/admin/generated-questions/validate/question-counts?${params}`,
         { credentials: 'include' }
@@ -1398,10 +1844,15 @@ export default function AdminGeneratedQuestionsPage() {
         setQCountError(d.error || '검증 요청 실패');
         return;
       }
+      setQCountSnapshotMsg(null);
       const ord = d.order;
+      const qss = d.questionStatusScope;
+      const questionStatusScope: QCountQuestionStatus =
+        qss === '대기' || qss === '완료' ? qss : 'all';
       setQCountData({
         scope: d.scope === 'order' ? 'order' : 'textbook',
         textbook: String(d.textbook ?? ''),
+        questionStatusScope,
         requiredPerType: Number(d.requiredPerType) || DEFAULT_QUESTIONS_PER_VARIANT_TYPE,
         passageCount: Number(d.passageCount) || 0,
         standardTypes: Array.isArray(d.standardTypes) ? d.standardTypes : [...BOOK_VARIANT_QUESTION_TYPES],
@@ -1436,6 +1887,68 @@ export default function AdminGeneratedQuestionsPage() {
       setQCountError('네트워크 오류');
     } finally {
       setQCountLoading(false);
+    }
+  };
+
+  const saveQuestionCountSnapshot = async () => {
+    if (!qCountData) return;
+    if (qCountScope === 'order' && !qCountOrderId.trim()) {
+      alert('주문 기준일 때는 주문이 선택되어 있어야 합니다.');
+      return;
+    }
+    if (qCountScope === 'textbook' && !filterTextbook.trim()) {
+      alert('교재 필터를 맞춘 뒤 저장해 주세요.');
+      return;
+    }
+    setQCountSnapshotSaving(true);
+    setQCountSnapshotMsg(null);
+    try {
+      const res = await fetch('/api/admin/generated-questions/validate/question-counts/snapshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          note: qCountSnapshotNote.trim(),
+          textbook: qCountScope === 'textbook' ? filterTextbook.trim() : '',
+          orderId: qCountScope === 'order' ? qCountOrderId.trim() : '',
+          requiredPerType: qCountData.requiredPerType,
+          questionStatus: qCountData.questionStatusScope,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        alert(typeof d.error === 'string' ? d.error : '스냅샷 저장 실패');
+        return;
+      }
+      setQCountSnapshotMsg(`저장됨 · MongoDB id: ${d.id} · 컬렉션 question_count_validation_snapshots`);
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setQCountSnapshotSaving(false);
+    }
+  };
+
+  const loadQuestionCountSnapshots = async () => {
+    setQCountSnapshotsLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '20' });
+      if (filterTextbook.trim()) params.set('textbook', filterTextbook.trim());
+      const res = await fetch(
+        `/api/admin/generated-questions/validate/question-counts/snapshots?${params}`,
+        { credentials: 'include' }
+      );
+      const d = await res.json();
+      if (res.ok && Array.isArray(d.items)) {
+        setQCountSnapshots(d.items);
+      } else {
+        setQCountSnapshots([]);
+        alert(typeof d.error === 'string' ? d.error : '목록 조회 실패');
+      }
+    } catch {
+      setQCountSnapshots([]);
+      alert('목록 조회 중 오류');
+    } finally {
+      setQCountSnapshotsLoading(false);
     }
   };
 
@@ -1524,6 +2037,9 @@ export default function AdminGeneratedQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
+      <Suspense fallback={null}>
+        <OpenIdFromQuery enabled={!!user} openEdit={openEdit} />
+      </Suspense>
       <header className="border-b border-slate-700 bg-slate-800/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -1654,6 +2170,21 @@ export default function AdminGeneratedQuestionsPage() {
             </select>
           </div>
           <div>
+            <label className="block text-xs text-slate-400 mb-1">정렬</label>
+            <select
+              value={filterSortOrder}
+              onChange={(e) => {
+                setFilterSortOrder(e.target.value === 'newest' ? 'newest' : 'default');
+                setPage(1);
+              }}
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm min-w-[180px] text-white"
+              title="목록 정렬 방식"
+            >
+              <option value="default">기본 (교재·출처·유형)</option>
+              <option value="newest">최신 입력순</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-xs text-slate-400 mb-1">passage_id</label>
             <input
               value={filterPassageId}
@@ -1747,6 +2278,15 @@ export default function AdminGeneratedQuestionsPage() {
               </button>
               <button
                 type="button"
+                disabled={grammarVariantLoading}
+                onClick={openGrammarVariantModal}
+                className="shrink-0 bg-indigo-900/80 hover:bg-indigo-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-indigo-100 border border-indigo-500/40"
+                title="type=어법만: ①~⑤·밑줄 형식, Options가 ①###②###③###④###⑤(번호만)이면 보기↔밑줄 비교 생략, 구형 보기는 CorrectAnswer만 일치 검사, 원문 대비 오답 칸·전체 평문"
+              >
+                어법 변형 검증
+              </button>
+              <button
+                type="button"
                 onClick={() => setExtraMenuExpanded((e) => !e)}
                 className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border border-slate-500/60 bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 hover:text-slate-200 transition-colors"
                 title={extraMenuExpanded ? '메뉴 접기' : '메뉴 펼치기'}
@@ -1830,14 +2370,19 @@ export default function AdminGeneratedQuestionsPage() {
                 <tr className="bg-slate-800 text-left text-slate-300 border-b border-slate-700">
                   {[
                     { label: '작업', i: 0, cls: 'text-left' },
-                    { label: '교재', i: 1 },
-                    { label: '유형 (type)', i: 2, cls: 'text-violet-300/90' },
-                    { label: 'Paragraph (변형도)', i: 3 },
-                    { label: 'Options', i: 4 },
-                    { label: 'Explanation', i: 5 },
-                    { label: '출처', i: 6 },
-                    { label: 'passage', i: 7, cls: 'font-mono text-xs' },
-                    { label: '발문', i: 8 },
+                    {
+                      label: '등록일시',
+                      i: 1,
+                      cls: 'text-slate-400 text-xs whitespace-nowrap',
+                    },
+                    { label: '교재', i: 2 },
+                    { label: '유형 (type)', i: 3, cls: 'text-violet-300/90' },
+                    { label: 'Paragraph (변형도)', i: 4 },
+                    { label: 'Options', i: 5 },
+                    { label: 'Explanation', i: 6 },
+                    { label: '출처', i: 7 },
+                    { label: 'passage', i: 8, cls: 'font-mono text-xs' },
+                    { label: '발문', i: 9 },
                   ].map(({ label, i, cls }) => (
                     <th
                       key={`gq-col-${i}`}
@@ -1870,13 +2415,13 @@ export default function AdminGeneratedQuestionsPage() {
               <tbody>
                 {listLoading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
+                    <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
                       불러오는 중…
                     </td>
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
+                    <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
                       데이터가 없습니다.
                     </td>
                   </tr>
@@ -1917,6 +2462,14 @@ export default function AdminGeneratedQuestionsPage() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => void openGptWebSolveFromRow(row)}
+                            className="text-left text-teal-400 hover:text-teal-300 text-xs font-medium"
+                            title="Claude API 대신 ChatGPT 웹에서 풀기 — 동일 프롬프트를 복사 후 새 탭에서 붙여넣기"
+                          >
+                            GPT웹 풀기
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => openEdit(row._id)}
                             className="text-left text-violet-400 hover:text-violet-300 text-xs font-medium"
                           >
@@ -1932,15 +2485,26 @@ export default function AdminGeneratedQuestionsPage() {
                         </div>
                       </td>
                       <td
-                        className="px-2 py-2 text-slate-200 align-top truncate border-r border-slate-700/30"
+                        className="px-2 py-2 text-slate-400 align-top tabular-nums border-r border-slate-700/30 text-xs whitespace-nowrap"
                         style={{ width: colWidths[1], maxWidth: colWidths[1] }}
+                        title={
+                          row.created_at
+                            ? `${formatDbCreatedAt(row.created_at)} (DB 등록)`
+                            : '등록 시각 없음(구 데이터 등)'
+                        }
+                      >
+                        {formatDbCreatedAt(row.created_at ?? undefined)}
+                      </td>
+                      <td
+                        className="px-2 py-2 text-slate-200 align-top truncate border-r border-slate-700/30"
+                        style={{ width: colWidths[2], maxWidth: colWidths[2] }}
                         title={row.textbook}
                       >
                         {row.textbook}
                       </td>
                       <td
                         className="px-2 py-2 align-top border-r border-slate-700/30 overflow-hidden"
-                        style={{ width: colWidths[2], maxWidth: colWidths[2] }}
+                        style={{ width: colWidths[3], maxWidth: colWidths[3] }}
                         title={showCategoryNote ? `${typeStr} · Category: ${cat}` : typeStr}
                       >
                         <span className="text-violet-300 font-medium break-words">{typeStr || '—'}</span>
@@ -1953,7 +2517,7 @@ export default function AdminGeneratedQuestionsPage() {
                       </td>
                       <td
                         className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug select-text"
-                        style={{ width: colWidths[3], maxWidth: colWidths[3] }}
+                        style={{ width: colWidths[4], maxWidth: colWidths[4] }}
                         title={para.length > 200 ? para.slice(0, 200) + '…' : para || undefined}
                       >
                         <div className="flex flex-col gap-1 select-text">
@@ -1969,7 +2533,7 @@ export default function AdminGeneratedQuestionsPage() {
                       </td>
                       <td
                         className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug select-text"
-                        style={{ width: colWidths[4], maxWidth: colWidths[4] }}
+                        style={{ width: colWidths[5], maxWidth: colWidths[5] }}
                       >
                         <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1 select-text">
                           {opt || '—'}
@@ -1977,7 +2541,7 @@ export default function AdminGeneratedQuestionsPage() {
                       </td>
                       <td
                         className="px-2 py-2 text-slate-300 align-top border-r border-slate-700/30 text-[13px] leading-snug select-text"
-                        style={{ width: colWidths[5], maxWidth: colWidths[5] }}
+                        style={{ width: colWidths[6], maxWidth: colWidths[6] }}
                       >
                         <div className="max-h-52 overflow-y-auto break-words whitespace-pre-wrap pr-1 select-text">
                           {expl || '—'}
@@ -1985,21 +2549,21 @@ export default function AdminGeneratedQuestionsPage() {
                       </td>
                       <td
                         className="px-2 py-2 text-slate-400 align-top truncate border-r border-slate-700/30"
-                        style={{ width: colWidths[6], maxWidth: colWidths[6] }}
+                        style={{ width: colWidths[7], maxWidth: colWidths[7] }}
                         title={row.source}
                       >
                         {row.source}
                       </td>
                       <td
                         className="px-2 py-2 text-slate-500 align-top font-mono text-[10px] truncate border-r border-slate-700/30"
-                        style={{ width: colWidths[7], maxWidth: colWidths[7] }}
+                        style={{ width: colWidths[8], maxWidth: colWidths[8] }}
                         title={row.passage_id || ''}
                       >
                         {row.passage_id ? `${row.passage_id.slice(0, 8)}…` : '—'}
                       </td>
                       <td
                         className="px-2 py-2 text-slate-400 align-top border-r border-slate-700/30 overflow-hidden"
-                        style={{ width: colWidths[8], maxWidth: colWidths[8] }}
+                        style={{ width: colWidths[9], maxWidth: colWidths[9] }}
                       >
                         <span className="line-clamp-3 break-words" title={questionPreview(row)}>
                           {questionPreview(row)}
@@ -2046,8 +2610,19 @@ export default function AdminGeneratedQuestionsPage() {
             <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
               <div>
                 <h2 className="text-lg font-bold text-teal-200">변형도 분석</h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  원문(passages) 대비 지문(Paragraph) 변형도를 유형별로 집계합니다. 상단 목록의 <strong className="text-slate-300">교재·유형</strong> 필터와 동일하게 적용되며, 최대 3,000건을 스캔합니다.
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  원문(passages) 대비 지문(Paragraph) 변형도를 유형별로 집계합니다. 상단 목록의 <strong className="text-slate-300">교재·유형</strong> 필터와 동일하게 적용됩니다. 스캔 상한은 아래에서 선택하며, 서버는{' '}
+                  <code className="text-slate-400 text-[10px]">ADMIN_VARIATION_MAX_SCAN</code> 환경변수로 최대 20만까지 조절할 수 있습니다.{' '}
+                  <span className="text-slate-500">
+                    집계는 지문을 청크로 묶어 passages를 배치 조회하고, 비교 문자열 길이는 서버에서 제한해 속도를 맞춥니다(
+                    <code className="text-slate-500 text-[10px]">ADMIN_VARIATION_DOC_CHUNK</code>,{' '}
+                    <code className="text-slate-500 text-[10px]">ADMIN_VARIATION_COMPARE_MAX_CHARS</code>).{' '}
+                    ※ 변형도는 낮을수록 원문과 글자상 유사(0%에 가깝게 동일), 높을수록 다릅니다.{' '}
+                    <strong className="text-slate-400">순서</strong>·<strong className="text-slate-400">삽입</strong>·
+                    <strong className="text-slate-400">빈칸</strong>은 정답(CorrectAnswer·Options)으로 읽기 순서·삽입·빈칸 채움을
+                    반영하고, <strong className="text-slate-400">어법</strong>은 정답 번호(틀린 밑줄)에 해당하는 부분을
+                    정답 보기 문구·원문과 맞추어 교정한 뒤 비교합니다.
+                  </span>
                 </p>
               </div>
               <button
@@ -2065,6 +2640,71 @@ export default function AdminGeneratedQuestionsPage() {
                     현재 필터: <strong className="text-teal-200">{filterTextbook || '전체 교재'}</strong>
                     {filterType ? ` / ${filterType}` : ' / 전체 유형'}
                   </p>
+                  {variationDbCountLoading && (
+                    <p className="text-xs text-slate-500 animate-pulse">DB 조건 일치 문항 수 조회 중…</p>
+                  )}
+                  {variationDbCountError && !variationDbCountLoading && (
+                    <p className="text-xs text-amber-300/90">{variationDbCountError}</p>
+                  )}
+                  {variationDbCount != null && !variationDbCountLoading && (
+                    <div className="rounded-lg border border-teal-900/50 bg-slate-950/70 px-3 py-2 text-xs text-slate-300 space-y-1">
+                      <p>
+                        위 필터와 <strong className="text-teal-200">동일 조건</strong>의 변형문제(
+                        <code className="text-slate-500">generated_questions</code>):{' '}
+                        <strong className="text-white tabular-nums text-sm">
+                          {variationDbCount.toLocaleString()}
+                        </strong>
+                        건
+                        {variationDbScanCap != null && (
+                          <span className="text-slate-500">
+                            {' '}
+                            · 서버 스캔 상한 <strong className="text-slate-400">{variationDbScanCap.toLocaleString()}</strong>건
+                          </span>
+                        )}
+                      </p>
+                      {variationDbCount > 0 && variationScanLimit < variationDbCount && (
+                        <p className="text-amber-200/90 leading-relaxed">
+                          선택한 최대 스캔({variationScanLimit.toLocaleString()}건)이 DB보다 작으면{' '}
+                          <strong className="text-amber-100">앞에서부터 일부만</strong> 집계됩니다. 전체를 보려면 스캔 건수를
+                          늘리세요.
+                        </p>
+                      )}
+                      {variationDbScanCap != null && variationDbCount > variationDbScanCap && (
+                        <p className="text-slate-500 leading-relaxed">
+                          DB가 서버 상한({variationDbScanCap.toLocaleString()}건)보다 많으면 환경변수{' '}
+                          <code className="text-slate-600">ADMIN_VARIATION_MAX_SCAN</code>으로 상한을 올려야 전체 스캔이
+                          가능합니다.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">최대 스캔 건수 (조건 일치 문항 중 앞에서부터)</label>
+                    <select
+                      value={variationScanLimit}
+                      onChange={(e) => setVariationScanLimit(Number(e.target.value) || 25_000)}
+                      className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      {[5_000, 10_000, 25_000, 50_000, 80_000, 100_000, 150_000, 200_000].map((n) => (
+                        <option key={n} value={n}>
+                          {n.toLocaleString()}건
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <label className="flex items-start gap-2 cursor-pointer text-sm text-slate-300 max-w-xl">
+                    <input
+                      type="checkbox"
+                      checked={variationIncludeTotalCount}
+                      onChange={(e) => setVariationIncludeTotalCount(e.target.checked)}
+                      className="mt-1 rounded border-slate-500"
+                    />
+                    <span>
+                      <strong className="text-slate-200">조건 일치 총 건수</strong>도 조회 (MongoDB{' '}
+                      <code className="text-slate-500 text-xs">countDocuments</code> — 데이터가 많으면 수십 초 걸릴 수 있음).{' '}
+                      <span className="text-slate-500">끄면 집계만 빠르게 돌아갑니다.</span>
+                    </span>
+                  </label>
                   <button
                     type="button"
                     disabled={variationAnalysisLoading}
@@ -2090,6 +2730,16 @@ export default function AdminGeneratedQuestionsPage() {
                   <div className="flex flex-wrap items-center gap-3 mb-4">
                     <p className="text-sm text-slate-300">
                       총 <strong className="text-white">{variationAnalysisData.totalScanned.toLocaleString()}</strong>건 분석
+                      {variationAnalysisData.totalCountSkipped && (
+                        <span className="text-slate-500"> · 총 건수는 생략(빠른 모드)</span>
+                      )}
+                      {typeof variationAnalysisData.totalMatching === 'number' && (
+                        <>
+                          {' '}
+                          (조건 일치 <strong className="text-slate-200">{variationAnalysisData.totalMatching.toLocaleString()}</strong>건
+                          {variationAnalysisData.scanCapped ? ' · 일부만 집계' : ' · 전부 집계'})
+                        </>
+                      )}
                       {variationAnalysisData.filters.textbook && (
                         <> · 교재: <strong className="text-teal-200">{variationAnalysisData.filters.textbook}</strong></>
                       )}
@@ -2097,6 +2747,15 @@ export default function AdminGeneratedQuestionsPage() {
                         <> · 유형: <strong className="text-teal-200">{variationAnalysisData.filters.type}</strong></>
                       )}
                     </p>
+                    {variationDbCount != null && (
+                      <p className="text-xs text-slate-500 basis-full w-full">
+                        DB 동일 조건 변형문제{' '}
+                        <strong className="text-teal-300/90 tabular-nums">
+                          {variationDbCount.toLocaleString()}
+                        </strong>
+                        건 (최대 스캔 설정 참고)
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={() => void runVariationAnalysis()}
@@ -2105,6 +2764,18 @@ export default function AdminGeneratedQuestionsPage() {
                       다시 분석
                     </button>
                   </div>
+                  {variationAnalysisData.scanCapped && (
+                    <p className="text-amber-200/90 text-xs mb-4 leading-relaxed">
+                      스캔 상한({(variationAnalysisData.scanLimit ?? variationAnalysisData.totalScanned).toLocaleString()}건)에 도달했습니다. 더 보려면 분석 전에 최대 스캔 건수를 늘리거나 서버{' '}
+                      <code className="text-amber-100/80">ADMIN_VARIATION_MAX_SCAN</code>을 올려 주세요.
+                      {typeof variationAnalysisData.scanCap === 'number' && (
+                        <> (현재 서버 상한 약 {variationAnalysisData.scanCap.toLocaleString()}건)</>
+                      )}
+                    </p>
+                  )}
+                  <p className="text-slate-500 text-xs mb-2">
+                    <strong className="text-slate-400">문항 수·구간 숫자</strong>를 누르면 해당 문항 목록 페이지로 이동합니다. 목록에서 <strong className="text-slate-400">열기</strong>로 수정 화면을 띄울 수 있습니다(최대 500건 표시).
+                  </p>
                   <div className="overflow-x-auto rounded-xl border border-slate-600">
                     <table className="w-full text-sm">
                       <thead>
@@ -2133,7 +2804,21 @@ export default function AdminGeneratedQuestionsPage() {
                               <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.max}%</td>
                               {stats.distribution.map((n, i) => (
                                 <td key={i} className="px-2 py-2 text-right tabular-nums text-slate-400 text-xs">
-                                  {n > 0 ? n : '—'}
+                                  {n > 0 ? (
+                                    <Link
+                                      href={buildVariationBucketListUrl({
+                                        textbook: variationAnalysisData.filters.textbook ?? '',
+                                        typeKey,
+                                        bucket: i,
+                                      })}
+                                      onClick={() => setVariationAnalysisOpen(false)}
+                                      className="text-teal-300 hover:text-teal-100 underline-offset-2 hover:underline font-semibold"
+                                    >
+                                      {n.toLocaleString()}
+                                    </Link>
+                                  ) : (
+                                    '—'
+                                  )}
                                 </td>
                               ))}
                             </tr>
@@ -2391,6 +3076,149 @@ export default function AdminGeneratedQuestionsPage() {
                                 onClick={() => setFullTextView({ title: `Explanation · ${it.source} ${it.type}`, text: (it as { full?: string }).full ?? it.snippet })}
                               >
                                 {it.snippet}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {grammarVariantOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-indigo-600/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-indigo-200">어법 변형 검증</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  DB에서 <strong className="text-indigo-300">type=어법</strong>만 최대 {grammarVariantData?.maxScan ?? 1200}건 스캔합니다. 상단{' '}
+                  <strong className="text-slate-300">교재</strong> 필터만 적용됩니다. 오류: 형식·보기 불일치·원문과 평문 동일(표기 변형 없음). 경고:{' '}
+                  passage 미연결로 원문 비교 생략.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGrammarVariantOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {grammarVariantLoading && !grammarVariantData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-indigo-300">
+                  <span className="inline-block w-6 h-6 border-2 border-indigo-500/50 border-t-indigo-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {grammarVariantError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {grammarVariantError}
+                </div>
+              )}
+              {grammarVariantData && !grammarVariantLoading && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      어법 전체 <strong className="text-white">{grammarVariantData.totalScanned.toLocaleString()}</strong>건 중{' '}
+                      <strong className="text-white">{grammarVariantData.scanned.toLocaleString()}</strong>건 검사
+                      {grammarVariantData.truncated && (
+                        <span className="text-amber-400 text-xs ml-1">(스캔 상한 {grammarVariantData.maxScan.toLocaleString()}건)</span>
+                      )}
+                      {grammarVariantData.filters.textbook && (
+                        <> · 교재: <strong className="text-indigo-200">{grammarVariantData.filters.textbook}</strong></>
+                      )}
+                      <br />
+                      <span className="text-red-300">오류 {grammarVariantData.withErrors.toLocaleString()}건</span>
+                      {' · '}
+                      <span className="text-amber-200">경고만 {grammarVariantData.withWarningsOnly.toLocaleString()}건</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runGrammarVariantValidate}
+                      disabled={grammarVariantLoading || grammarBlocksRegenLoading}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-indigo-800/80 hover:bg-indigo-700 text-indigo-200 disabled:opacity-50"
+                    >
+                      다시 검증
+                    </button>
+                    <button
+                      type="button"
+                      onClick={runGrammarBlocksBulkRegenerate}
+                      disabled={
+                        grammarVariantLoading ||
+                        grammarBlocksRegenLoading ||
+                        grammarBlocksErrorIds.length === 0
+                      }
+                      title="오류 코드「blocks」: ①~⑤ 밑줄 형식이 아닌 Paragraph 문항만, passage 원문으로 Claude 재생성(문항 번호·Source·UniqueID 유지). 한 번에 최대 30건."
+                      className="text-xs px-3 py-1.5 rounded-lg bg-rose-900/80 hover:bg-rose-800 text-rose-100 border border-rose-600/40 disabled:opacity-50"
+                    >
+                      {grammarBlocksRegenLoading
+                        ? '재생성 중…'
+                        : `밑줄 형식 오류 ${grammarBlocksErrorIds.length}건 재생성`}
+                    </button>
+                  </div>
+                  {grammarBlocksRegenMessage && (
+                    <p className="text-xs text-emerald-400/90 mb-2">{grammarBlocksRegenMessage}</p>
+                  )}
+                  {grammarVariantData.items.length === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      검사한 범위에서 오류·경고가 없습니다. (구조·보기 일치·원문 대비 표기 변형)
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">구분</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">내용</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {grammarVariantData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setGrammarVariantOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-indigo-400 hover:text-indigo-300 underline"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 whitespace-nowrap">
+                                {it.errors.length > 0 ? (
+                                  <span className="text-red-400 font-medium">오류</span>
+                                ) : (
+                                  <span className="text-amber-400 font-medium">경고</span>
+                                )}
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-slate-400">
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {it.errors.map((e, i) => (
+                                    <li key={`e-${i}`} className="text-red-300/90">
+                                      {e.message}
+                                    </li>
+                                  ))}
+                                  {it.warnings.map((w, i) => (
+                                    <li key={`w-${i}`} className="text-amber-200/90">
+                                      {w.message}
+                                    </li>
+                                  ))}
+                                </ul>
                               </td>
                             </tr>
                           ))}
@@ -2852,7 +3680,7 @@ export default function AdminGeneratedQuestionsPage() {
       )}
 
       {qCountOpen && (
-        <div className="fixed inset-0 z-[61] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+        <div className="fixed inset-0 z-[59] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
           <div className="bg-slate-800 border border-cyan-700/40 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
               <div>
@@ -2922,6 +3750,57 @@ export default function AdminGeneratedQuestionsPage() {
                         주문서(부교재 변형)에 선택된 지문만
                       </label>
                     </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-700/60">
+                    <span className="block text-sm font-medium text-cyan-100/90 mb-2">
+                      변형문 집계 기준 (generated_questions.status)
+                    </span>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-slate-200">
+                        <input
+                          type="radio"
+                          name="qCountQuestionStatus"
+                          checked={qCountQuestionStatus === 'all'}
+                          onChange={() => {
+                            setQCountQuestionStatus('all');
+                            setQCountError(null);
+                          }}
+                          className="text-cyan-500"
+                        />
+                        전체 (대기+완료)
+                      </label>
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-slate-200">
+                        <input
+                          type="radio"
+                          name="qCountQuestionStatus"
+                          checked={qCountQuestionStatus === '대기'}
+                          onChange={() => {
+                            setQCountQuestionStatus('대기');
+                            setQCountError(null);
+                          }}
+                          className="text-amber-500"
+                        />
+                        대기만
+                      </label>
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-slate-200">
+                        <input
+                          type="radio"
+                          name="qCountQuestionStatus"
+                          checked={qCountQuestionStatus === '완료'}
+                          onChange={() => {
+                            setQCountQuestionStatus('완료');
+                            setQCountError(null);
+                          }}
+                          className="text-emerald-500"
+                        />
+                        완료만
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                      원문(passages)별로 연결된 변형문을 위 status로 한정해 개수를 셉니다. 「대기만」은 검수 전 초안,
+                      「완료만」은 확정 문항만 반영합니다.
+                    </p>
                   </div>
 
                   {qCountScope === 'textbook' ? (
@@ -2994,6 +3873,109 @@ export default function AdminGeneratedQuestionsPage() {
                     </div>
                   )}
 
+                  {(qCountPreviewLoading ||
+                    qCountPreviewError ||
+                    (qCountPreviewStats && qCountPreviewStats.ok === true)) && (
+                    <div className="rounded-xl border border-cyan-900/45 bg-slate-950/70 px-3 py-2.5 text-xs mb-3">
+                      {qCountPreviewLoading && (
+                        <p className="text-slate-500 animate-pulse">DB 규모 조회 중…</p>
+                      )}
+                      {qCountPreviewError && !qCountPreviewLoading && (
+                        <p className="text-amber-300/90">{qCountPreviewError}</p>
+                      )}
+                      {qCountPreviewStats &&
+                        qCountPreviewStats.ok === true &&
+                        !qCountPreviewLoading &&
+                        (qCountPreviewStats.orderMetaMissing === true ||
+                        qCountPreviewStats.orderNotBookVariant === true ? (
+                          <p className="text-amber-200/90">
+                            {typeof qCountPreviewStats.message === 'string'
+                              ? qCountPreviewStats.message
+                              : '이 주문은 미리보기 집계를 지원하지 않습니다.'}
+                            {qCountPreviewStats.orderNotBookVariant === true &&
+                              typeof qCountPreviewStats.flow === 'string' && (
+                                <span className="text-slate-500"> (flow: {qCountPreviewStats.flow})</span>
+                              )}
+                          </p>
+                        ) : (
+                          <div className="text-slate-300 space-y-1.5">
+                            {typeof qCountPreviewStats.message === 'string' && (
+                              <p className="text-amber-200/90">{qCountPreviewStats.message}</p>
+                            )}
+                            <p className="font-semibold text-cyan-200/95">선택 조건 DB 요약</p>
+                            <ul className="list-disc list-inside text-slate-400 space-y-0.5 leading-relaxed">
+                              <li>
+                                <strong className="text-slate-300">passages</strong>{' '}
+                                {Number(qCountPreviewStats.passageCount ?? 0).toLocaleString()}건
+                                {qCountPreviewStats.scope === 'order' &&
+                                  typeof qCountPreviewStats.orderLessonsRequested === 'number' && (
+                                    <>
+                                      {' '}
+                                      <span className="text-slate-500">
+                                        (주문 라벨 {qCountPreviewStats.orderLessonsRequested.toLocaleString()}개 중
+                                        DB 매칭)
+                                      </span>
+                                    </>
+                                  )}
+                              </li>
+                              <li>
+                                <strong className="text-slate-300">generated_questions</strong> (교재명 동일
+                                {qCountPreviewStats.questionStatusScope === '대기'
+                                  ? ', status=대기'
+                                  : qCountPreviewStats.questionStatusScope === '완료'
+                                    ? ', status=완료'
+                                    : ''}
+                                ){' '}
+                                {Number(qCountPreviewStats.generatedQuestionsCount ?? 0).toLocaleString()}건
+                              </li>
+                              <li>
+                                유형 부족 표 이론상 최대 약{' '}
+                                <strong className="text-white tabular-nums">
+                                  {Number(qCountPreviewStats.underfilledRowsWorstCase ?? 0).toLocaleString()}
+                                </strong>
+                                행 (지문 × 표준 유형 {Number(qCountPreviewStats.standardTypeCount ?? 11)}개)
+                              </li>
+                              <li>
+                                미생성(변형 0건) 표 최대{' '}
+                                <strong className="text-white tabular-nums">
+                                  {Number(qCountPreviewStats.noQuestionsRowsWorstCase ?? 0).toLocaleString()}
+                                </strong>
+                                행
+                              </li>
+                            </ul>
+                            <p className="text-slate-500 mt-2 leading-relaxed border-t border-slate-700/60 pt-2">
+                              아래 <strong className="text-slate-400">최대 행 수</strong>는 미생성·유형부족 표
+                              <strong className="text-slate-400"> 각각</strong>에 따로 적용됩니다. 잘림을 줄이려면
+                              실제 검증 결과의 총건(또는 위 이론상 최대) 이상으로 맞추면 됩니다. (요청 상한 35,000)
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-cyan-100/90 mb-2">
+                      화면에 표시할 목록 최대 행 수
+                    </label>
+                    <p className="text-xs text-slate-500 mb-2 leading-relaxed">
+                      <strong className="text-slate-400">미생성·유형 부족</strong> 표만 잘립니다.{' '}
+                      <strong className="text-slate-400">총 건수</strong>(숫자 요약)은 항상 전체 지문 기준입니다. 전체
+                      행 목록은 <strong className="text-slate-400">스냅샷 저장</strong>으로 DB에 그대로 남길 수 있습니다. (요청
+                      상한 35,000행)
+                    </p>
+                    <select
+                      value={qCountMaxListRows}
+                      onChange={(e) => setQCountMaxListRows(Number(e.target.value) || 12_000)}
+                      className="bg-slate-900 border border-cyan-800/60 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      {[4000, 8000, 12_000, 16_000, 20_000, 25_000, 30_000, 35_000].map((n) => (
+                        <option key={n} value={n}>
+                          {n.toLocaleString()}행
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <button
                     type="button"
                     disabled={
@@ -3037,12 +4019,104 @@ export default function AdminGeneratedQuestionsPage() {
                       onClick={() => {
                         setQCountData(null);
                         setQCountError(null);
+                        setQCountSnapshotMsg(null);
                       }}
                       className="text-sm px-3 py-2 rounded-lg border border-slate-500 text-slate-300 hover:bg-slate-700"
                     >
                       ← 다시 검증
                     </button>
                   </div>
+
+                  <div className="mb-4 p-3 rounded-lg border border-cyan-800/50 bg-slate-900/50 space-y-2">
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      검증 결과를 MongoDB 컬렉션{' '}
+                      <code className="text-cyan-300/90 text-[11px]">question_count_validation_snapshots</code>에
+                      남겨 두려면 아래를 사용하세요. 저장 시{' '}
+                      <strong className="text-slate-300">같은 조건으로 서버에서 다시 집계</strong>한 뒤 전체 행이
+                      기록됩니다(화면 2,500행 제한과 무관).
+                    </p>
+                    <input
+                      type="text"
+                      value={qCountSnapshotNote}
+                      onChange={(e) => setQCountSnapshotNote(e.target.value)}
+                      placeholder="메모 (선택, 예: 2025-03 검수 전)"
+                      className="w-full max-w-md bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={qCountSnapshotSaving}
+                        onClick={() => void saveQuestionCountSnapshot()}
+                        className="text-sm px-3 py-2 rounded-lg bg-cyan-800 hover:bg-cyan-700 disabled:opacity-50 text-white font-medium"
+                      >
+                        {qCountSnapshotSaving ? '저장 중…' : '이 조건으로 스냅샷 저장'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={qCountSnapshotsLoading}
+                        onClick={() => void loadQuestionCountSnapshots()}
+                        className="text-sm px-3 py-2 rounded-lg border border-slate-500 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                      >
+                        {qCountSnapshotsLoading ? '불러오는 중…' : '최근 스냅샷 목록'}
+                      </button>
+                    </div>
+                    {qCountSnapshotMsg && (
+                      <p className="text-xs text-emerald-300/90 break-all">{qCountSnapshotMsg}</p>
+                    )}
+                    {qCountSnapshots.length > 0 && (
+                      <div className="mt-2 max-h-40 overflow-y-auto rounded border border-slate-700/80 text-xs">
+                        <table className="w-full text-left">
+                          <thead className="sticky top-0 bg-slate-800 text-slate-400">
+                            <tr>
+                              <th className="px-2 py-1 font-medium">저장 시각</th>
+                              <th className="px-2 py-1 font-medium">교재</th>
+                              <th className="px-2 py-1 font-medium">집계</th>
+                              <th className="px-2 py-1 font-medium">요약</th>
+                              <th className="px-2 py-1 font-medium">메모</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {qCountSnapshots.map((s) => {
+                              const sum = s.summary as Record<string, number | undefined> | null;
+                              return (
+                                <tr key={s.id} className="border-t border-slate-700/60 text-slate-300">
+                                  <td className="px-2 py-1 whitespace-nowrap text-slate-400">
+                                    {s.saved_at
+                                      ? new Date(s.saved_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+                                      : '—'}
+                                  </td>
+                                  <td className="px-2 py-1 max-w-[120px] truncate" title={s.query.textbook}>
+                                    {s.query.textbook}
+                                  </td>
+                                  <td className="px-2 py-1 text-[11px] text-slate-400 whitespace-nowrap">
+                                    {s.query.question_status === '대기'
+                                      ? '대기'
+                                      : s.query.question_status === '완료'
+                                        ? '완료'
+                                        : '전체'}
+                                  </td>
+                                  <td className="px-2 py-1 text-[11px] text-slate-400">
+                                    지문 {sum?.passageCount ?? '—'} · 미생성 {sum?.noQuestionsTotal ?? '—'} · 부족{' '}
+                                    {sum?.underfilledTotal ?? '—'}
+                                  </td>
+                                  <td className="px-2 py-1 max-w-[100px] truncate" title={s.note || ''}>
+                                    {s.note || '—'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                        <p className="px-2 py-1 text-[10px] text-slate-500 border-t border-slate-700/60">
+                          상세(전체 행)는{' '}
+                          <code className="text-slate-400">
+                            GET /api/admin/generated-questions/validate/question-counts/snapshots/&#123;id&#125;
+                          </code>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
                   {qCountData.message && (
                     <p className="text-amber-300/90 text-sm mb-4">{qCountData.message}</p>
                   )}
@@ -3208,6 +4282,24 @@ export default function AdminGeneratedQuestionsPage() {
                       교재: <strong className="text-white">{qCountData.textbook}</strong>
                     </span>
                     <span>
+                      변형 집계:{' '}
+                      <strong
+                        className={
+                          qCountData.questionStatusScope === '대기'
+                            ? 'text-amber-200'
+                            : qCountData.questionStatusScope === '완료'
+                              ? 'text-emerald-200'
+                              : 'text-slate-100'
+                        }
+                      >
+                        {qCountData.questionStatusScope === 'all'
+                          ? '전체'
+                          : qCountData.questionStatusScope === '대기'
+                            ? '대기만'
+                            : '완료만'}
+                      </strong>
+                    </span>
+                    <span>
                       {qCountData.scope === 'order' ? '검증 지문 수' : '원문 지문 수'}:{' '}
                       <strong className="text-white">{qCountData.passageCount.toLocaleString()}</strong>
                     </span>
@@ -3236,7 +4328,11 @@ export default function AdminGeneratedQuestionsPage() {
 
                   <section className="mb-8">
                     <h3 className="text-sm font-bold text-rose-200 mb-2 border-b border-rose-900/40 pb-1">
-                      변형문이 전혀 없는 지문 (passage_id 연결 0건)
+                      변형문이 전혀 없는 지문 (passage_id 연결 0건
+                      {qCountData.questionStatusScope !== 'all'
+                        ? ` · ${qCountData.questionStatusScope}만 집계`
+                        : ''}
+                      )
                     </h3>
                     {qCountData.noQuestionsTotal === 0 ? (
                       <p className="text-emerald-400/90 text-sm py-4">해당 없음 — 모든 원문에 최소 1건 이상 연결되었습니다.</p>
@@ -3270,7 +4366,11 @@ export default function AdminGeneratedQuestionsPage() {
 
                   <section>
                     <h3 className="text-sm font-bold text-amber-200 mb-1 border-b border-amber-900/40 pb-1">
-                      유형별 기준 미충족 (각 유형 {qCountData.requiredPerType}문항 미만)
+                      유형별 기준 미충족 (각 유형 {qCountData.requiredPerType}문항 미만
+                      {qCountData.questionStatusScope !== 'all'
+                        ? ` · ${qCountData.questionStatusScope}만 집계`
+                        : ''}
+                      )
                     </h3>
                     {qCountData.underfilledTotal > 0 && (
                       <>
@@ -3328,7 +4428,6 @@ export default function AdminGeneratedQuestionsPage() {
                                 };
                                 console.log('[부족 문항 한번에 처리] click', { total, rows: sorted.length, first: sorted[0]?.label, firstType: sorted[0]?.type });
                                 shortageBatchRef.current = batch;
-                                setQCountOpen(false);
                                 setValidateOpen(false);
                                 setShortageBatch(batch);
                                 openCreateForQCountShortage(sorted[0], qCountData.textbook);

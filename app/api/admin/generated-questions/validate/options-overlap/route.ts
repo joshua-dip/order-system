@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { splitQuestionOptionSegments } from '@/lib/question-options-segments';
 
 const MAX_ITEMS_PER_GROUP = 100;
 const MAX_GROUPS = 200;
 
 /**
- * Options 문자열을 동그라미번호(①②③④⑤) 또는 1. 2. 3. 형식으로 분리해 선택지 배열 반환.
- * 각 선택지 trim, 빈 문자열 제외.
+ * Options 문자열을 보기 단위로 분리 후, 앞의 동그라미/번호만 제거한 본문 배열.
+ * `###` 구분 우선, 없으면 줄바꿈(기존 데이터).
  */
 function parseChoices(optionsStr: string): string[] {
-  const s = (optionsStr || '').trim();
-  if (!s) return [];
-  // ①②③④⑤ 또는 1. 2. 3. 4. 5. 또는 ① ② ... 구분
-  const parts = s.split(/(?=[①②③④⑤])|(?=\d+\.\s)/u).map((p) => p.replace(/^[①②③④⑤]\s*|\d+\.\s*/u, '').trim()).filter(Boolean);
-  return parts.slice(0, 10); // 최대 10개
+  const segs = splitQuestionOptionSegments(optionsStr || '');
+  return segs
+    .map((p) => p.replace(/^[①②③④⑤]\s*/, '').replace(/^\d+[\).:．]\s*/u, '').trim())
+    .filter(Boolean)
+    .slice(0, 10);
 }
 
 /**

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { parseOrderRevenueFromOrderText } from '@/lib/order-revenue';
 
 const COLLECTION = 'orders';
 
@@ -74,11 +75,33 @@ export async function PATCH(
         return NextResponse.json({ error: '유효한 상태가 아닙니다.' }, { status: 400 });
       }
       const db = await getDb('gomijoshua');
-      await db.collection(COLLECTION).updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { status: newStatus } }
-      );
-      return NextResponse.json({ ok: true });
+      const col = db.collection(COLLECTION);
+      const existing = await col.findOne({ _id: new ObjectId(id) });
+      if (!existing) {
+        return NextResponse.json({ error: '주문을 찾을 수 없습니다.' }, { status: 404 });
+      }
+
+      const now = new Date();
+      let parsedRevenue: number | null = null;
+      if (newStatus === 'completed') {
+        const text = typeof existing.orderText === 'string' ? existing.orderText : '';
+        parsedRevenue = parseOrderRevenueFromOrderText(text);
+        await col.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { status: newStatus, revenueWon: parsedRevenue, completedAt: now } }
+        );
+      } else {
+        await col.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { status: newStatus, revenueWon: null, completedAt: null } }
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        revenueWon: newStatus === 'completed' ? parsedRevenue : null,
+        completedAt: newStatus === 'completed' ? now.toISOString() : null,
+      });
     }
 
     if (body?.action === 'assignMember' && isAdmin) {

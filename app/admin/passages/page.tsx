@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -63,6 +63,132 @@ export default function AdminPassagesPage() {
   const [saving, setSaving] = useState(false);
   const [advancedJson, setAdvancedJson] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  /** MongoDB textbook_links — 부교재/워크북 「교재 확인」버튼 */
+  const [linksPanelOpen, setLinksPanelOpen] = useState(true);
+  const [linkDrafts, setLinkDrafts] = useState<Record<string, { kyoboUrl: string; description: string }>>({});
+  const [linksLoading, setLinksLoading] = useState(false);
+  const [linkSearch, setLinkSearch] = useState('');
+  const [linkSavingKey, setLinkSavingKey] = useState<string | null>(null);
+  const [linkMsg, setLinkMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const fetchAdminTextbookLinks = useCallback(() => {
+    setLinksLoading(true);
+    setLinkMsg(null);
+    fetch('/api/admin/textbook-links', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.links || typeof d.links !== 'object') return;
+        const map = d.links as Record<string, { kyoboUrl?: string; description?: string }>;
+        const next: Record<string, { kyoboUrl: string; description: string }> = {};
+        for (const [k, v] of Object.entries(map)) {
+          next[k] = {
+            kyoboUrl: typeof v?.kyoboUrl === 'string' ? v.kyoboUrl : '',
+            description: typeof v?.description === 'string' ? v.description : '',
+          };
+        }
+        setLinkDrafts((prev) => {
+          const out: Record<string, { kyoboUrl: string; description: string }> = { ...next };
+          for (const k of Object.keys(prev)) {
+            if (!(k in out)) out[k] = prev[k];
+          }
+          return out;
+        });
+      })
+      .catch(() => setLinkMsg({ type: 'err', text: '링크 목록을 불러오지 못했습니다.' }))
+      .finally(() => setLinksLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchAdminTextbookLinks();
+  }, [user, fetchAdminTextbookLinks]);
+
+  useEffect(() => {
+    setLinkDrafts((prev) => {
+      const next = { ...prev };
+      for (const t of textbooks) {
+        if (!(t in next)) next[t] = { kyoboUrl: '', description: '' };
+      }
+      return next;
+    });
+  }, [textbooks]);
+
+  const setLinkField = (textbookKey: string, field: 'kyoboUrl' | 'description', value: string) => {
+    setLinkDrafts((prev) => ({
+      ...prev,
+      [textbookKey]: {
+        kyoboUrl: field === 'kyoboUrl' ? value : prev[textbookKey]?.kyoboUrl ?? '',
+        description: field === 'description' ? value : prev[textbookKey]?.description ?? '',
+      },
+    }));
+  };
+
+  const saveTextbookLink = async (textbookKey: string) => {
+    const d = linkDrafts[textbookKey];
+    if (!d?.kyoboUrl?.trim()) {
+      alert('구매 링크(URL)를 입력해 주세요.');
+      return;
+    }
+    setLinkSavingKey(textbookKey);
+    setLinkMsg(null);
+    try {
+      const res = await fetch('/api/admin/textbook-links', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          textbookKey,
+          kyoboUrl: d.kyoboUrl.trim(),
+          description: (d.description || '').trim(),
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        setLinkMsg({ type: 'err', text: j.error || '저장 실패' });
+        return;
+      }
+      setLinkMsg({ type: 'ok', text: `「${textbookKey}」 링크를 저장했습니다.` });
+    } catch {
+      setLinkMsg({ type: 'err', text: '요청 실패' });
+    } finally {
+      setLinkSavingKey(null);
+    }
+  };
+
+  const deleteTextbookLink = async (textbookKey: string) => {
+    if (!confirm(`「${textbookKey}」 구매 링크를 삭제할까요?`)) return;
+    setLinkSavingKey(textbookKey);
+    setLinkMsg(null);
+    try {
+      const res = await fetch(
+        `/api/admin/textbook-links?key=${encodeURIComponent(textbookKey)}`,
+        { method: 'DELETE', credentials: 'include' }
+      );
+      const j = await res.json();
+      if (!res.ok) {
+        setLinkMsg({ type: 'err', text: j.error || '삭제 실패' });
+        return;
+      }
+      setLinkDrafts((prev) => ({
+        ...prev,
+        [textbookKey]: { kyoboUrl: '', description: '' },
+      }));
+      setLinkMsg({ type: 'ok', text: '삭제했습니다.' });
+    } catch {
+      setLinkMsg({ type: 'err', text: '요청 실패' });
+    } finally {
+      setLinkSavingKey(null);
+    }
+  };
+
+  const linkRowKeys = useMemo(() => {
+    const keys = new Set([...textbooks, ...Object.keys(linkDrafts)]);
+    const q = linkSearch.trim().toLowerCase();
+    return Array.from(keys)
+      .filter((k) => !q || k.toLowerCase().includes(q))
+      .sort((a, b) => a.localeCompare(b, 'ko'));
+  }, [textbooks, linkDrafts, linkSearch]);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -287,6 +413,130 @@ export default function AdminPassagesPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        <section className="bg-slate-800/50 border border-slate-700 rounded-xl mb-6 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setLinksPanelOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/80 transition-colors"
+          >
+            <div>
+              <h2 className="text-base font-bold text-white">교재 구매 링크 (YES24·교보문고 등)</h2>
+              <p className="text-slate-400 text-xs mt-0.5">
+                아래에 등록된 원문 교재명 기준으로 링크를 넣으면, 부교재·워크북 주문 화면의 「교재 확인」에 반영됩니다. MongoDB{' '}
+                <code className="text-amber-200/90">textbook_links</code>
+              </p>
+            </div>
+            <span className="text-slate-400 shrink-0">{linksPanelOpen ? '▼' : '▶'}</span>
+          </button>
+          {linksPanelOpen && (
+            <div className="px-4 pb-4 border-t border-slate-700/80">
+              <div className="flex flex-wrap gap-3 items-center py-3">
+                <input
+                  type="search"
+                  value={linkSearch}
+                  onChange={(e) => setLinkSearch(e.target.value)}
+                  placeholder="교재명 검색…"
+                  className="flex-1 min-w-[200px] bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => fetchAdminTextbookLinks()}
+                  disabled={linksLoading}
+                  className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm disabled:opacity-50"
+                >
+                  {linksLoading ? '불러오는 중…' : 'DB에서 다시 불러오기'}
+                </button>
+              </div>
+              {linkMsg && (
+                <p
+                  className={`text-sm mb-2 ${linkMsg.type === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}
+                >
+                  {linkMsg.text}
+                </p>
+              )}
+              <div className="max-h-[min(28rem,55vh)] overflow-y-auto rounded-lg border border-slate-700">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-slate-900 z-[1] border-b border-slate-600">
+                    <tr className="text-left text-slate-400">
+                      <th className="px-3 py-2 font-medium w-[min(14rem,28vw)]">교재명 (passages)</th>
+                      <th className="px-3 py-2 font-medium min-w-[200px]">구매 URL</th>
+                      <th className="px-3 py-2 font-medium min-w-[140px]">설명(툴팁)</th>
+                      <th className="px-3 py-2 font-medium w-36 text-right">작업</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {linkRowKeys.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                          {textbooks.length === 0
+                            ? '등록된 교재가 없습니다. 원문을 먼저 등록하면 교재명이 여기에 나타납니다.'
+                            : '검색 결과가 없습니다.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      linkRowKeys.map((key) => {
+                        const draft = linkDrafts[key] ?? { kyoboUrl: '', description: '' };
+                        const hasSaved = !!draft.kyoboUrl?.trim();
+                        return (
+                          <tr key={key} className="border-b border-slate-700/60 align-top hover:bg-slate-900/40">
+                            <td className="px-3 py-2 text-slate-200">
+                              <span className="line-clamp-3" title={key}>
+                                {key}
+                              </span>
+                              {hasSaved && (
+                                <span className="ml-1 inline-block text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">
+                                  등록됨
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                value={draft.kyoboUrl}
+                                onChange={(e) => setLinkField(key, 'kyoboUrl', e.target.value)}
+                                placeholder="https://..."
+                                className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white font-mono"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                value={draft.description}
+                                onChange={(e) => setLinkField(key, 'description', e.target.value)}
+                                placeholder="예: 2025 개정"
+                                className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                disabled={linkSavingKey === key}
+                                onClick={() => saveTextbookLink(key)}
+                                className="text-sky-400 hover:text-sky-300 text-xs font-semibold mr-2 disabled:opacity-40"
+                              >
+                                {linkSavingKey === key ? '…' : '저장'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={linkSavingKey === key || !hasSaved}
+                                onClick={() => deleteTextbookLink(key)}
+                                className="text-red-400 hover:text-red-300 text-xs disabled:opacity-40"
+                              >
+                                삭제
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-slate-500 text-xs mt-2">
+                교재명은 passages에 저장된 문자열과 정확히 같아야 주문 화면에서 매칭됩니다.
+              </p>
+            </div>
+          )}
+        </section>
+
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-xs text-slate-400 mb-1">교재</label>

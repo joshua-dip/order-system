@@ -5,6 +5,8 @@ import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { extractJsonObject } from '@/lib/llm-json';
 
+export const maxDuration = 120;
+
 /**
  * 해당 문항의 선택지(Options)만 Claude로 새로 생성해 중복 해소.
  * 지문·발문·정답 의미는 유지, 선택지 문장만 다르게 만듦.
@@ -61,7 +63,7 @@ The passage, question stem, and the MEANING of the correct answer must stay the 
 
 Rules:
 1) Output a single JSON object with keys: Options (string), CorrectAnswer (string).
-2) Options: Same format as the current one (e.g. ① ... ② ... ③ ... ④ ... ⑤, or 1. ... 2. ...). Use English only for the option sentences. Keep the same number of options (typically 5).
+2) Options: If type is **어법** (grammar / "밑줄 친 부분 중 어법상 틀린 것"), output **exactly** \`①###②###③###④###⑤\` — numbering tokens only, no English text, no \`<u>\`. Otherwise: single string, **###** between choices, English only, e.g. \`① ... ### ② ... ### ③ ... ### ④ ... ### ⑤ ...\`. Keep five choices.
 3) CorrectAnswer: The same correct answer as before (e.g. "1", "2", "①", "②", or "①" etc. — match the numbering style you use in Options). The CONTENT of the correct option must express the same meaning as the original correct answer; only the wording can change.
 4) Make the new options clearly different in wording from the current options so that duplicate detection will not match them.`;
 

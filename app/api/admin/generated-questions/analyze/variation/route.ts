@@ -2,37 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
-
-function variationRatio(original: string, paragraph: string): number {
-  const a = original.trim();
-  const b = paragraph.trim();
-  if (a.length === 0 && b.length === 0) return 0;
-  const maxLen = Math.max(a.length, b.length, 1);
-  const d = levenshtein(a, b);
-  return Math.min(1, d / maxLen);
-}
-
-function levenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  let prev = Array.from({ length: n + 1 }, (_, i) => i);
-  for (let i = 1; i <= m; i++) {
-    const curr = [i];
-    for (let j = 1; j <= n; j++) {
-      curr[j] =
-        a[i - 1] === b[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1]);
-    }
-    prev = curr;
-  }
-  return prev[n];
-}
+import {
+  parseCompareMaxChars,
+  parseDocChunkSize,
+  parsePassageFetchBatch,
+  parseVariationScanCap,
+  variationPercentAggregate,
+} from '@/lib/admin-variation-aggregate';
+import {
+  getPassageTextForVariantCompare,
+  passageIdToValidHex,
+} from '@/lib/passage-variant-text';
+import { buildVariationAnalysisFilter } from '@/lib/variation-analysis-filter';
 
 const BUCKETS = 10; // 0-10, 10-20, ..., 90-100
-const MAX_SCAN = 3000;
+
+const VARIATION_SCAN_CAP = parseVariationScanCap();
+const DOC_CHUNK = parseDocChunkSize();
+const PASSAGE_FETCH_BATCH = parsePassageFetchBatch();
+const COMPARE_MAX_CHARS = parseCompareMaxChars();
 
 /**
  * 유형별 변형도 집계: 평균, 최소, 최대, 구간별 분포.
  * 상단 필터(textbook, type)와 동일하게 적용.
+ * — 문서는 청크로 모아 passages를 배치 조회(지문당 1회 쿼리 폭주 방지).
+ * — `limit` 쿼리(기본=상한까지) · `ADMIN_VARIATION_MAX_SCAN` 환경변수로 상한 조절(3000~200000).
+ * — `skipTotal=1`: countDocuments 생략(대량 컬렉션에서 수 초~수십 초 절약).
  */
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
@@ -41,46 +36,43 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const textbook = searchParams.get('textbook')?.trim() || '';
   const typeFilter = searchParams.get('type')?.trim() || '';
-  const limit = Math.min(MAX_SCAN, Math.max(1, parseInt(searchParams.get('limit') || String(MAX_SCAN), 10) || MAX_SCAN));
+  const limitParam = parseInt(searchParams.get('limit') || String(VARIATION_SCAN_CAP), 10) || VARIATION_SCAN_CAP;
+  const limit = Math.min(VARIATION_SCAN_CAP, Math.max(1, limitParam));
+  const debug = searchParams.get('debug') === '1';
+  const skipTotal = searchParams.get('skipTotal') === '1';
 
-  const filter: Record<string, unknown> = {
-    passage_id: { $exists: true, $ne: null },
-    'question_data.Paragraph': { $exists: true, $type: 'string' },
-  };
-  if (textbook) filter.textbook = textbook;
-  if (typeFilter) filter.type = typeFilter;
+  const filter = buildVariationAnalysisFilter(textbook, typeFilter);
 
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection('generated_questions');
-    const items = await col
-      .find(filter)
-      .project({ type: 1, passage_id: 1, 'question_data.Paragraph': 1 })
-      .limit(limit)
-      .toArray();
+    const passagesCol = db.collection('passages');
 
-    const passageIds = [
-      ...new Set(
-        (items as { passage_id?: unknown }[])
-          .map((d) => d.passage_id)
-          .filter((id): id is ObjectId => id instanceof ObjectId),
-      ),
-    ];
-    const passageMap = new Map<string, string>();
-    if (passageIds.length > 0) {
-      const passages = await db
-        .collection('passages')
-        .find({ _id: { $in: passageIds } })
-        .project({ _id: 1, 'content.original': 1, 'content.mixed': 1 })
-        .toArray();
-      for (const p of passages) {
-        const id = String(p._id);
-        const content = (p as { content?: { original?: string; mixed?: string } }).content;
-        const text =
-          (typeof content?.original === 'string' && content.original.trim()) ||
-          (typeof content?.mixed === 'string' && content.mixed.trim()) ||
-          '';
-        passageMap.set(id, text);
+    const totalMatching = skipTotal ? null : await col.countDocuments(filter);
+
+    const passageCache = new Map<string, string>();
+
+    async function fetchPassagesIntoCache(ids: string[]) {
+      const need = [...new Set(ids)].filter((id) => ObjectId.isValid(id) && !passageCache.has(id));
+      if (need.length === 0) return;
+      for (let i = 0; i < need.length; i += PASSAGE_FETCH_BATCH) {
+        const slice = need.slice(i, i + PASSAGE_FETCH_BATCH);
+        const oids = slice.map((id) => new ObjectId(id));
+        const arr = await passagesCol
+          .find({ _id: { $in: oids } })
+          .project({ _id: 1, 'content.original': 1, 'content.mixed': 1, 'content.translation': 1 })
+          .toArray();
+        const found = new Set<string>();
+        for (const p of arr) {
+          const id = String(p._id);
+          const content = (p as { content?: Record<string, unknown> }).content;
+          const text = getPassageTextForVariantCompare(content);
+          passageCache.set(id, text);
+          found.add(id);
+        }
+        for (const id of slice) {
+          if (!found.has(id)) passageCache.set(id, '');
+        }
       }
     }
 
@@ -93,32 +85,92 @@ export async function GET(request: NextRequest) {
     };
     const byType = new Map<string, TypeStats>();
 
-    for (const d of items as Record<string, unknown>[]) {
-      const passageId = d.passage_id;
-      const pid = passageId == null ? '' : typeof passageId === 'string' ? passageId : String(passageId);
-      const orig = pid ? passageMap.get(pid) ?? '' : '';
-      const para =
-        typeof (d.question_data as Record<string, unknown>)?.Paragraph === 'string'
-          ? ((d.question_data as Record<string, unknown>).Paragraph as string)
-          : '';
-      const ratio = variationRatio(orig, para);
-      const pct = Math.round(ratio * 100);
-      const typeKey = String(d.type ?? '').trim() || '—';
-
-      let stats = byType.get(typeKey);
-      if (!stats) {
-        stats = { count: 0, sum: 0, min: 100, max: 0, distribution: Array(BUCKETS).fill(0) };
-        byType.set(typeKey, stats);
+    function ingestDocs(docs: Record<string, unknown>[]) {
+      const passageIds: string[] = [];
+      for (const d of docs) {
+        const pid = passageIdToValidHex(d.passage_id);
+        if (pid) passageIds.push(pid);
       }
-      stats.count += 1;
-      stats.sum += pct;
-      stats.min = Math.min(stats.min, pct);
-      stats.max = Math.max(stats.max, pct);
-      const bucketIdx = Math.min(BUCKETS - 1, Math.floor(pct / 10));
-      stats.distribution[bucketIdx] += 1;
+      return passageIds;
     }
 
-    const result: Record<string, { count: number; avg: number; min: number; max: number; distribution: number[] }> = {};
+    function processDocs(
+      docs: Record<string, unknown>[],
+      dbg: { invalidPassageId: number; emptyPassageText: number }
+    ) {
+      for (const d of docs) {
+        const passageId = d.passage_id;
+        const pid = passageIdToValidHex(passageId);
+
+        if (debug) {
+          if (!pid) dbg.invalidPassageId += 1;
+        }
+
+        const orig = pid ? (passageCache.get(pid) ?? '') : '';
+        if (debug && pid && !orig.trim()) dbg.emptyPassageText += 1;
+
+        const qd = d.question_data as Record<string, unknown> | undefined;
+        const para = typeof qd?.Paragraph === 'string' ? (qd.Paragraph as string) : '';
+        const typeKey = String(d.type ?? '').trim() || '—';
+        const pct = variationPercentAggregate(typeKey, orig, para, qd, COMPARE_MAX_CHARS);
+
+        let stats = byType.get(typeKey);
+        if (!stats) {
+          stats = { count: 0, sum: 0, min: 100, max: 0, distribution: Array(BUCKETS).fill(0) };
+          byType.set(typeKey, stats);
+        }
+        stats.count += 1;
+        stats.sum += pct;
+        stats.min = Math.min(stats.min, pct);
+        stats.max = Math.max(stats.max, pct);
+        const bucketIdx = Math.min(BUCKETS - 1, Math.floor(pct / 10));
+        stats.distribution[bucketIdx] += 1;
+      }
+    }
+
+    const cursor = col
+      .find(filter)
+      .project({
+        type: 1,
+        passage_id: 1,
+        'question_data.Paragraph': 1,
+        'question_data.Options': 1,
+        'question_data.CorrectAnswer': 1,
+      })
+      .batchSize(Math.min(800, DOC_CHUNK * 2));
+
+    let scanned = 0;
+    let dbgInvalidPassageId = 0;
+    let dbgEmptyPassageText = 0;
+    const dbg = { invalidPassageId: 0, emptyPassageText: 0 };
+
+    let docBuffer: Record<string, unknown>[] = [];
+
+    async function flushBuffer() {
+      if (docBuffer.length === 0) return;
+      const ids = ingestDocs(docBuffer);
+      await fetchPassagesIntoCache(ids);
+      processDocs(docBuffer, dbg);
+      docBuffer = [];
+    }
+
+    for await (const d of cursor as AsyncIterable<Record<string, unknown>>) {
+      if (scanned >= limit) break;
+      scanned += 1;
+      docBuffer.push(d);
+      if (docBuffer.length >= DOC_CHUNK) {
+        await flushBuffer();
+      }
+    }
+    await flushBuffer();
+
+    if (debug) {
+      dbgInvalidPassageId = dbg.invalidPassageId;
+      dbgEmptyPassageText = dbg.emptyPassageText;
+    }
+
+    const result: Record<string, { count: number; avg: number; min: number; max: number; distribution: number[] }> =
+      {};
     for (const [typeKey, stats] of byType.entries()) {
       result[typeKey] = {
         count: stats.count,
@@ -129,11 +181,32 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    const scanCapped = totalMatching != null && totalMatching > scanned;
+
     return NextResponse.json({
       ok: true,
-      totalScanned: items.length,
+      totalScanned: scanned,
+      totalMatching,
+      scanLimit: limit,
+      scanCap: VARIATION_SCAN_CAP,
+      scanCapped,
       filters: { textbook: textbook || null, type: typeFilter || null },
       byType: result,
+      performance: {
+        docChunk: DOC_CHUNK,
+        passageFetchBatch: PASSAGE_FETCH_BATCH,
+        compareMaxChars: COMPARE_MAX_CHARS,
+        totalCountSkipped: skipTotal,
+      },
+      ...(debug
+        ? {
+            diagnostics: {
+              invalidPassageId: dbgInvalidPassageId,
+              emptyPassageSourceText: dbgEmptyPassageText,
+              note: 'empty: 원문 passages가 없거나, original·mixed·translation이 모두 비어 있음. invalidPassageId: passage_id가 유효 ObjectId가 아님.',
+            },
+          }
+        : {}),
     });
   } catch (e) {
     console.error('analyze variation GET:', e);
