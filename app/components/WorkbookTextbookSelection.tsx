@@ -18,6 +18,8 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
   const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const currentUser = useCurrentUser();
   const { links: textbookLinks } = useTextbookLinks();
+  const [defaultTextbooks, setDefaultTextbooks] = useState<string[]>([]);
+  const [defaultTextbooksLoaded, setDefaultTextbooksLoaded] = useState(false);
   const [workbookTextbooks, setWorkbookTextbooks] = useState<string[]>([]);
   const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,15 +34,25 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
   const [isMockExamExpanded, setIsMockExamExpanded] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!convertedData) return;
+    fetch('/api/settings/default-textbooks')
+      .then((res) => res.json())
+      .then((data) => setDefaultTextbooks(Array.isArray(data?.textbookKeys) ? data.textbookKeys : []))
+      .catch(() => setDefaultTextbooks([]))
+      .finally(() => setDefaultTextbooksLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!convertedData || !defaultTextbooksLoaded) return;
     const allKeys = Object.keys(convertedData as Record<string, unknown>);
     const textbookNames = filterWorkbookSupplementaryTextbookKeys(allKeys, {
       allowedTextbooks: currentUser?.allowedTextbooks,
       allowedTextbooksWorkbook: currentUser?.allowedTextbooksWorkbook,
+      defaultTextbooksForGuests: defaultTextbooks,
+      isGuest: !currentUser,
     });
     setWorkbookTextbooks(textbookNames);
     setFilteredTextbooks(textbookNames);
-  }, [convertedData, currentUser?.allowedTextbooks, currentUser?.allowedTextbooksWorkbook]);
+  }, [convertedData, defaultTextbooksLoaded, defaultTextbooks, currentUser]);
 
   // 검색 필터링 로직
   useEffect(() => {
