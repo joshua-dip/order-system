@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
+import { isAnnualMemberActive } from '@/lib/annual-member';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
           allowedTextbooksWorkbook: 1,
           allowedTextbooksVariant: 1,
           points: 1,
+          annualMemberSince: 1,
         },
       }
     );
@@ -42,6 +44,10 @@ export async function GET(request: NextRequest) {
     const points = typeof user.points === 'number' && user.points >= 0 ? user.points : 0;
     const wb = user.allowedTextbooksWorkbook;
     const vb = (user as { allowedTextbooksVariant?: unknown }).allowedTextbooksVariant;
+    const annualSince = (user as { annualMemberSince?: Date }).annualMemberSince;
+    const annualMemberSinceIso =
+      annualSince instanceof Date && !Number.isNaN(annualSince.getTime()) ? annualSince.toISOString() : null;
+    const annualMemberActive = isAnnualMemberActive(annualSince ?? null);
     return NextResponse.json({
       user: {
         loginId: user.loginId,
@@ -59,11 +65,27 @@ export async function GET(request: NextRequest) {
         ...(Array.isArray(wb) ? { allowedTextbooksWorkbook: wb } : {}),
         ...(Array.isArray(vb) ? { allowedTextbooksVariant: vb } : {}),
         points,
+        annualMemberSince: annualMemberSinceIso,
+        isAnnualMemberActive: annualMemberActive,
       },
     });
-    } catch {
+  } catch {
     return NextResponse.json({
-      user: { loginId: payload.loginId, role: payload.role, name: payload.loginId, email: '', canAccessAnalysis: false, canAccessEssay: false, myFormatApproved: false, allowedTextbooks: [], allowedTextbooksAnalysis: [], allowedTextbooksEssay: [], points: 0 },
+      user: {
+        loginId: payload.loginId,
+        role: payload.role,
+        name: payload.loginId,
+        email: '',
+        canAccessAnalysis: false,
+        canAccessEssay: false,
+        myFormatApproved: false,
+        allowedTextbooks: [],
+        allowedTextbooksAnalysis: [],
+        allowedTextbooksEssay: [],
+        points: 0,
+        annualMemberSince: null,
+        isAnnualMemberActive: false,
+      },
     });
   }
 }

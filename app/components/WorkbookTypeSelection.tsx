@@ -63,7 +63,13 @@ const WorkbookTypeSelection = ({
 
   const needsLectureHwp = selectedPackages.includes('lecture_material');
   const needsVariantHwp = selectedPackages.some((p) =>
-    ['blank_package', 'keyword_blank', 'word_arrangement', 'one_line_interpretation'].includes(p)
+    [
+      'blank_package',
+      'keyword_blank',
+      'word_arrangement',
+      'workbook_grammar_either_or',
+      'one_line_interpretation',
+    ].includes(p)
   );
 
   const loadLatestOrderOptions = async () => {
@@ -122,6 +128,13 @@ const WorkbookTypeSelection = ({
       description: '낱말 순서 배열 연습',
       price: 100,
       subTypes: ['낱말배열연습']
+    },
+    {
+      id: 'workbook_grammar_either_or',
+      name: '워크북_어법_양자택일',
+      description: '어법 양자택일(두 보기 중 선택) 연습',
+      price: 100,
+      subTypes: ['어법양자택일']
     },
     {
       id: 'lecture_material',

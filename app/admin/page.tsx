@@ -50,6 +50,18 @@ interface ListUser {
   createdAt: string;
 }
 
+interface AdminAnnualSharedItem {
+  id: string;
+  title: string;
+  description: string;
+  originalName: string;
+  contentType: string;
+  size: number;
+  sortOrder: number;
+  uploadedAt: string | null;
+  uploadedByLoginId: string;
+}
+
 interface AdminOrder {
   id: string;
   orderText: string;
@@ -107,6 +119,13 @@ function getDropboxFolderUrl(path: string): string {
   const pathEnc = path.trim().slice(1).split('/').filter(Boolean).map((s) => encodeURIComponent(s)).join('/');
   const workSpace = typeof process.env.NEXT_PUBLIC_DROPBOX_WORK_SPACE === 'string' && process.env.NEXT_PUBLIC_DROPBOX_WORK_SPACE.trim();
   return workSpace ? `https://www.dropbox.com/work/${encodeURIComponent(workSpace)}/앱/${pathEnc}` : `https://www.dropbox.com/work/Apps/${pathEnc}`;
+}
+
+function formatAdminFileSize(bytes: number): string {
+  if (!bytes || bytes < 0) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
@@ -207,6 +226,15 @@ export default function AdminDashboardPage() {
   const [defaultTextbooksList, setDefaultTextbooksList] = useState<string[]>([]);
   const [defaultTextbooksSelected, setDefaultTextbooksSelected] = useState<string[]>([]);
   const [defaultTextbooksSaving, setDefaultTextbooksSaving] = useState(false);
+
+  const [annualSharedItems, setAnnualSharedItems] = useState<AdminAnnualSharedItem[]>([]);
+  const [annualSharedLoading, setAnnualSharedLoading] = useState(false);
+  const [annualSharedUploading, setAnnualSharedUploading] = useState(false);
+  const [annualSharedTitle, setAnnualSharedTitle] = useState('');
+  const [annualSharedDescription, setAnnualSharedDescription] = useState('');
+  const [annualSharedFile, setAnnualSharedFile] = useState<File | null>(null);
+  const [annualSharedDeletingId, setAnnualSharedDeletingId] = useState<string | null>(null);
+  const [annualSharedMessage, setAnnualSharedMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [examUploadForAddFiles, setExamUploadForAddFiles] = useState<PastExamUpload | null>(null);
   const [addFilesList, setAddFilesList] = useState<FileList | null>(null);
   const [addFilesSavingId, setAddFilesSavingId] = useState<string | null>(null);
@@ -319,6 +347,15 @@ export default function AdminDashboardPage() {
       .finally(() => setEssayTypesLoading(false));
   }, []);
 
+  const fetchAnnualSharedFiles = useCallback(() => {
+    setAnnualSharedLoading(true);
+    fetch('/api/admin/annual-shared-files', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setAnnualSharedItems(Array.isArray(d?.items) ? d.items : []))
+      .catch(() => setAnnualSharedItems([]))
+      .finally(() => setAnnualSharedLoading(false));
+  }, []);
+
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
       .then((res) => res.json())
@@ -348,6 +385,11 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (section === 'essayTypes' || section === 'exams') fetchEssayTypes();
   }, [section, fetchEssayTypes]);
+
+  useEffect(() => {
+    if (section !== 'settings') return;
+    fetchAnnualSharedFiles();
+  }, [section, fetchAnnualSharedFiles]);
 
   useEffect(() => {
     if (section !== 'passageUpload') return;
@@ -686,6 +728,69 @@ export default function AdminDashboardPage() {
       alert('요청 중 오류가 발생했습니다.');
     } finally {
       setDefaultTextbooksSaving(false);
+    }
+  };
+
+  const handleAnnualSharedUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAnnualSharedMessage(null);
+    const title = annualSharedTitle.trim();
+    if (!title) {
+      setAnnualSharedMessage({ type: 'error', text: '자료 제목을 입력해 주세요.' });
+      return;
+    }
+    if (!annualSharedFile) {
+      setAnnualSharedMessage({ type: 'error', text: 'hwp·hwpx·pdf 파일을 선택해 주세요.' });
+      return;
+    }
+    setAnnualSharedUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('title', title);
+      fd.append('description', annualSharedDescription.trim());
+      fd.append('file', annualSharedFile);
+      const res = await fetch('/api/admin/annual-shared-files', {
+        method: 'POST',
+        body: fd,
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setAnnualSharedTitle('');
+        setAnnualSharedDescription('');
+        setAnnualSharedFile(null);
+        setAnnualSharedMessage({ type: 'success', text: '업로드되었습니다.' });
+        fetchAnnualSharedFiles();
+      } else {
+        setAnnualSharedMessage({ type: 'error', text: data?.error || '업로드에 실패했습니다.' });
+      }
+    } catch {
+      setAnnualSharedMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setAnnualSharedUploading(false);
+    }
+  };
+
+  const handleAnnualSharedDelete = async (id: string) => {
+    if (!confirm('이 자료를 삭제할까요? 연회원 화면에서도 사라집니다.')) return;
+    setAnnualSharedDeletingId(id);
+    setAnnualSharedMessage(null);
+    try {
+      const res = await fetch(`/api/admin/annual-shared-files/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setAnnualSharedMessage({ type: 'success', text: '삭제되었습니다.' });
+        fetchAnnualSharedFiles();
+      } else {
+        setAnnualSharedMessage({ type: 'error', text: data?.error || '삭제에 실패했습니다.' });
+      }
+    } catch {
+      setAnnualSharedMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setAnnualSharedDeletingId(null);
     }
   };
 
@@ -2223,6 +2328,94 @@ export default function AdminDashboardPage() {
                 <div className="border border-slate-600 rounded-xl p-4 bg-slate-700/30">
                   <p className="font-semibold text-slate-300">분석지 · 서술형</p>
                   <p className="text-slate-500 text-sm mt-1">회원별로 허용된 교재는 회원 관리에서 각 회원의 「교재 선택하기」로 설정합니다. 관리자가 허용한 메뉴와 교재만 해당 회원에게 노출됩니다.</p>
+                </div>
+
+                <div className="border border-slate-600 rounded-xl p-4">
+                  <div className="mb-4">
+                    <p className="font-semibold text-white">연회원 무료공유자료</p>
+                    <p className="text-slate-400 text-sm mt-1">
+                      .hwp, .hwpx, .pdf만 업로드 가능(최대 15MB). 유효 연회원은 내정보 → 무료공유자료에서 다운로드합니다.
+                    </p>
+                  </div>
+                  <form onSubmit={handleAnnualSharedUpload} className="space-y-3 mb-6 pb-6 border-b border-slate-600">
+                    <div>
+                      <label className="block text-slate-400 text-xs font-medium mb-1">제목</label>
+                      <input
+                        type="text"
+                        value={annualSharedTitle}
+                        onChange={(e) => setAnnualSharedTitle(e.target.value)}
+                        placeholder="자료 제목"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-xs font-medium mb-1">설명(선택)</label>
+                      <textarea
+                        value={annualSharedDescription}
+                        onChange={(e) => setAnnualSharedDescription(e.target.value)}
+                        rows={2}
+                        placeholder="회원에게 보이는 짧은 안내"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm outline-none focus:border-cyan-500 resize-y min-h-[60px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-xs font-medium mb-1">파일</label>
+                      <input
+                        type="file"
+                        accept=".hwp,.hwpx,.pdf,application/pdf,application/x-hwp"
+                        onChange={(e) => setAnnualSharedFile(e.target.files?.[0] ?? null)}
+                        className="block w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-slate-600 file:text-white"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={annualSharedUploading}
+                      className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold hover:bg-cyan-500 disabled:opacity-50"
+                    >
+                      {annualSharedUploading ? '업로드 중…' : '업로드'}
+                    </button>
+                  </form>
+                  {annualSharedMessage && (
+                    <p
+                      className={`text-sm mb-4 ${annualSharedMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
+                    >
+                      {annualSharedMessage.text}
+                    </p>
+                  )}
+                  {annualSharedLoading ? (
+                    <p className="text-slate-500 text-sm py-4">목록 불러오는 중…</p>
+                  ) : annualSharedItems.length === 0 ? (
+                    <p className="text-slate-500 text-sm py-2">등록된 자료가 없습니다.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {annualSharedItems.map((row) => (
+                        <li
+                          key={row.id}
+                          className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3 px-3 rounded-lg bg-slate-700/40 border border-slate-600/80"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-medium text-sm">{row.title}</p>
+                            {row.description ? (
+                              <p className="text-slate-400 text-xs mt-0.5 whitespace-pre-wrap">{row.description}</p>
+                            ) : null}
+                            <p className="text-slate-500 text-xs mt-1 truncate">
+                              {row.originalName} · {formatAdminFileSize(row.size)}
+                              {row.uploadedAt ? ` · ${new Date(row.uploadedAt).toLocaleString('ko-KR')}` : ''}
+                              {row.uploadedByLoginId ? ` · ${row.uploadedByLoginId}` : ''}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleAnnualSharedDelete(row.id)}
+                            disabled={annualSharedDeletingId === row.id}
+                            className="px-3 py-1.5 rounded-lg border border-red-500/50 text-red-400 text-xs font-medium hover:bg-red-500/10 disabled:opacity-50 shrink-0 self-start sm:self-center"
+                          >
+                            {annualSharedDeletingId === row.id ? '삭제 중…' : '삭제'}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>

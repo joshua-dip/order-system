@@ -299,6 +299,33 @@ export default function AdminGeneratedQuestionsPage() {
     items: { id: string; textbook: string; source: string; type: string; snippet: string; full: string }[];
     truncated?: boolean;
   } | null>(null);
+  /** Explanation: nan 토큰·빈 해설·비문자 타입 등 */
+  const [explanationNanOpen, setExplanationNanOpen] = useState(false);
+  const [explanationNanLoading, setExplanationNanLoading] = useState(false);
+  const [explanationNanError, setExplanationNanError] = useState<string | null>(null);
+  const [explanationNanData, setExplanationNanData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalMatched: number;
+    note?: string;
+    items: {
+      id: string;
+      textbook: string;
+      source: string;
+      type: string;
+      reason: string;
+      snippet: string;
+      full: string;
+    }[];
+    truncated?: boolean;
+  } | null>(null);
+  /** nan/누락 검증 모달 — 행별 Claude 해설 작성 중(단건·일괄 공통 표시) */
+  const [explanationNanWritingId, setExplanationNanWritingId] = useState<string | null>(null);
+  const [explanationNanBatchRunning, setExplanationNanBatchRunning] = useState(false);
+  const [explanationNanBatchProgress, setExplanationNanBatchProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
+  const [explanationNanSelectedIds, setExplanationNanSelectedIds] = useState<Set<string>>(() => new Set());
   /** Explanation/Options 검증 모달에서 셀 클릭 시 전체 텍스트 보기 */
   const [fullTextView, setFullTextView] = useState<{ title: string; text: string } | null>(null);
   /** Options 'API' 검증 */
@@ -1570,6 +1597,166 @@ export default function AdminGeneratedQuestionsPage() {
       .finally(() => setExplanationApiLoading(false));
   };
 
+  const openExplanationNanModal = () => {
+    setExplanationNanOpen(true);
+    setExplanationNanData(null);
+    setExplanationNanError(null);
+    setExplanationNanSelectedIds(new Set());
+    setExplanationNanLoading(true);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/explanation-nan?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setExplanationNanError(d.error || '검증 실패');
+          return;
+        }
+        setExplanationNanData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalMatched: d.totalMatched ?? 0,
+          note: typeof d.note === 'string' ? d.note : undefined,
+          items: Array.isArray(d.items)
+            ? d.items.map(
+                (it: { full?: string; snippet?: string; reason?: string }) => ({
+                  ...it,
+                  full: it.full ?? it.snippet ?? '',
+                  reason: typeof it.reason === 'string' ? it.reason : '',
+                })
+              )
+            : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setExplanationNanError('네트워크 오류'))
+      .finally(() => setExplanationNanLoading(false));
+  };
+
+  const runExplanationNanValidate = () => {
+    setExplanationNanLoading(true);
+    setExplanationNanError(null);
+    setExplanationNanData(null);
+    setExplanationNanSelectedIds(new Set());
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/explanation-nan?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setExplanationNanError(d.error || '검증 실패');
+          return;
+        }
+        setExplanationNanData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalMatched: d.totalMatched ?? 0,
+          note: typeof d.note === 'string' ? d.note : undefined,
+          items: Array.isArray(d.items)
+            ? d.items.map(
+                (it: { full?: string; snippet?: string; reason?: string }) => ({
+                  ...it,
+                  full: it.full ?? it.snippet ?? '',
+                  reason: typeof it.reason === 'string' ? it.reason : '',
+                })
+              )
+            : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setExplanationNanError('네트워크 오류'))
+      .finally(() => setExplanationNanLoading(false));
+  };
+
+  const runWriteExplanationForNanItem = async (
+    itemId: string
+  ): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`/api/admin/generated-questions/${itemId}/write-explanation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: typeof d.error === 'string' ? d.error : '해설 작성에 실패했습니다.',
+        };
+      }
+      setExplanationNanData((prev) => {
+        if (!prev) return prev;
+        const items = prev.items.filter((x) => x.id !== itemId);
+        return {
+          ...prev,
+          items,
+          totalMatched: Math.max(0, prev.totalMatched - 1),
+        };
+      });
+      setExplanationNanSelectedIds((prev) => {
+        const n = new Set(prev);
+        n.delete(itemId);
+        return n;
+      });
+      return { ok: true };
+    } catch {
+      return { ok: false, error: '네트워크 오류' };
+    }
+  };
+
+  const writeExplanationFromNanModal = async (itemId: string) => {
+    setExplanationNanWritingId(itemId);
+    setExplanationNanError(null);
+    try {
+      const r = await runWriteExplanationForNanItem(itemId);
+      if (!r.ok) setExplanationNanError(r.error || '해설 작성에 실패했습니다.');
+      else fetchList();
+    } finally {
+      setExplanationNanWritingId(null);
+    }
+  };
+
+  const writeExplanationBatchFromNanModal = async () => {
+    if (!explanationNanData?.items.length) return;
+    const ordered = explanationNanData.items
+      .map((it) => it.id)
+      .filter((id) => explanationNanSelectedIds.has(id));
+    if (ordered.length === 0) return;
+
+    setExplanationNanBatchRunning(true);
+    setExplanationNanBatchProgress({ done: 0, total: ordered.length });
+    setExplanationNanError(null);
+    let failCount = 0;
+    let lastError = '';
+    try {
+      for (let i = 0; i < ordered.length; i++) {
+        const itemId = ordered[i];
+        setExplanationNanWritingId(itemId);
+        const r = await runWriteExplanationForNanItem(itemId);
+        setExplanationNanBatchProgress({ done: i + 1, total: ordered.length });
+        if (!r.ok) {
+          failCount += 1;
+          lastError = r.error || '';
+        }
+      }
+    } finally {
+      setExplanationNanWritingId(null);
+      setExplanationNanBatchRunning(false);
+      setExplanationNanBatchProgress(null);
+      fetchList();
+      if (failCount > 0) {
+        setExplanationNanError(
+          `${failCount}건 실패${lastError ? ` — ${lastError}` : ''}. 나머지는 저장되었습니다.`
+        );
+      }
+    }
+  };
+
   const openOptionsApiModal = () => {
     setOptionsApiOpen(true);
     setOptionsApiData(null);
@@ -2217,30 +2404,41 @@ export default function AdminGeneratedQuestionsPage() {
         </div>
 
         <div className="mb-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-slate-400 text-sm">
-              총 <span className="text-white font-semibold">{total}</span>건 · {page}/{totalPages}페이지
-            </p>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                disabled={variationAnalysisLoading}
-                onClick={openVariationAnalysisModal}
-                className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
-                title="원문(passages) 대비 지문 변형도 유형별 평균·구간·분포"
-              >
-                변형도 분석
-              </button>
-              <button
-                type="button"
-                disabled={qCountLoading}
-                onClick={openQCountModal}
-                className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
-                title="MongoDB passages(원문) 대비 변형문 유무·표준 11유형별 문항 수(기본 3) 검증"
-              >
-                문제수 검증
-              </button>
-              <button
+          <p className="text-slate-400 text-sm mb-2">
+            총 <span className="text-white font-semibold">{total}</span>건 · {page}/{totalPages}페이지
+          </p>
+          <div className="rounded-lg border border-slate-700/50 bg-slate-900/35 px-3 py-2.5 space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3">
+              <span className="text-slate-500 text-[10px] sm:text-[11px] font-bold tracking-wide shrink-0 sm:w-[4.75rem] sm:pt-1.5">
+                분석·통계
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={variationAnalysisLoading}
+                  onClick={openVariationAnalysisModal}
+                  className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
+                  title="원문(passages) 대비 지문 변형도 유형별 평균·구간·분포"
+                >
+                  변형도 분석
+                </button>
+                <button
+                  type="button"
+                  disabled={qCountLoading}
+                  onClick={openQCountModal}
+                  className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
+                  title="MongoDB passages(원문) 대비 변형문 유무·표준 11유형별 문항 수(기본 3) 검증"
+                >
+                  문제수 검증
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3 pt-1 border-t border-slate-700/40">
+              <span className="text-slate-500 text-[10px] sm:text-[11px] font-bold tracking-wide shrink-0 sm:w-[4.75rem] sm:pt-1.5">
+                선택지 검증
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <button
                 type="button"
                 disabled={validateLoading}
                 onClick={openValidateModal}
@@ -2248,8 +2446,8 @@ export default function AdminGeneratedQuestionsPage() {
                 title="표의 Options 열 기준 · 모달에서 제외 유형 선택 후 검증"
               >
                 Options 중복 검증
-              </button>
-              <button
+                </button>
+                <button
                 type="button"
                 disabled={optionsOverlapLoading}
                 onClick={openOptionsOverlapModal}
@@ -2257,48 +2455,65 @@ export default function AdminGeneratedQuestionsPage() {
                 title="교재·강·category 동일 그룹 내 선택지 상호 일치도 · 내보낼 때 겹침 적은 문항 우선 추천"
               >
                 선택지 데이터 검증
-              </button>
-              <button
-                type="button"
-                disabled={explanationApiLoading}
-                onClick={openExplanationApiModal}
-                className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
-                title="Explanation 열에 'API' 텍스트 포함 여부 검증"
-              >
-              Explanation &apos;API&apos; 검증
-            </button>
-              <button
-                type="button"
-                disabled={optionsApiLoading}
-                onClick={openOptionsApiModal}
-                className="shrink-0 bg-amber-900/80 hover:bg-amber-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 border border-amber-500/40"
-                title="Options 열에 'API' 텍스트 포함 여부 검증"
-              >
-                Options &apos;API&apos; 검증
-              </button>
-              <button
-                type="button"
-                disabled={grammarVariantLoading}
-                onClick={openGrammarVariantModal}
-                className="shrink-0 bg-indigo-900/80 hover:bg-indigo-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-indigo-100 border border-indigo-500/40"
-                title="type=어법만: ①~⑤·밑줄 형식, Options가 ①###②###③###④###⑤(번호만)이면 보기↔밑줄 비교 생략, 구형 보기는 CorrectAnswer만 일치 검사, 원문 대비 오답 칸·전체 평문"
-              >
-                어법 변형 검증
-              </button>
-              <button
-                type="button"
-                onClick={() => setExtraMenuExpanded((e) => !e)}
-                className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border border-slate-500/60 bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 hover:text-slate-200 transition-colors"
-                title={extraMenuExpanded ? '메뉴 접기' : '메뉴 펼치기'}
-              >
-                {extraMenuExpanded ? '접기' : '메뉴'}
-                <span
-                  className={`inline-block transition-transform duration-300 ease-out ${extraMenuExpanded ? 'rotate-180' : ''}`}
-                  aria-hidden
+                </button>
+                <button
+                  type="button"
+                  disabled={optionsApiLoading}
+                  onClick={openOptionsApiModal}
+                  className="shrink-0 bg-amber-900/80 hover:bg-amber-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 border border-amber-500/40"
+                  title="Options 열에 'API' 텍스트 포함 여부 검증"
                 >
-                  ▼
-                </span>
-              </button>
+                  Options &apos;API&apos; 검증
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3 pt-1 border-t border-slate-700/40">
+              <span className="text-slate-500 text-[10px] sm:text-[11px] font-bold tracking-wide shrink-0 sm:w-[4.75rem] sm:pt-1.5">
+                해설·어법
+              </span>
+              <div className="flex flex-wrap gap-2 items-center">
+                <button
+                  type="button"
+                  disabled={explanationApiLoading}
+                  onClick={openExplanationApiModal}
+                  className="shrink-0 bg-teal-900/80 hover:bg-teal-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-teal-100 border border-teal-500/40"
+                  title="Explanation 열에 'API' 텍스트 포함 여부 검증"
+                >
+                  Explanation &apos;API&apos; 검증
+                </button>
+                <button
+                  type="button"
+                  disabled={explanationNanLoading}
+                  onClick={openExplanationNanModal}
+                  className="shrink-0 bg-sky-900/80 hover:bg-sky-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-sky-100 border border-sky-500/40"
+                  title="해설 없음(필드 없음·null·빈칸) 또는 문자열에 'nan' 포함·숫자 NaN 등"
+                >
+                  Explanation &apos;nan&apos;/누락 검증
+                </button>
+                <button
+                  type="button"
+                  disabled={grammarVariantLoading}
+                  onClick={openGrammarVariantModal}
+                  className="shrink-0 bg-indigo-900/80 hover:bg-indigo-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-indigo-100 border border-indigo-500/40"
+                  title="type=어법만: ①~⑤·밑줄 형식, Options가 ①###②###③###④###⑤(번호만)이면 보기↔밑줄 비교 생략, 구형 보기는 CorrectAnswer만 일치 검사, 원문 대비 오답 칸·전체 평문"
+                >
+                  어법 변형 검증
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExtraMenuExpanded((e) => !e)}
+                  className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border border-slate-500/60 bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 hover:text-slate-200 transition-colors"
+                  title={extraMenuExpanded ? '추가 메뉴 접기' : '추가 메뉴 펼치기'}
+                >
+                  {extraMenuExpanded ? '추가 메뉴 접기' : '추가 메뉴'}
+                  <span
+                    className={`inline-block transition-transform duration-300 ease-out ${extraMenuExpanded ? 'rotate-180' : ''}`}
+                    aria-hidden
+                  >
+                    ▼
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
           <div
@@ -3085,6 +3300,217 @@ export default function AdminGeneratedQuestionsPage() {
                   )}
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {explanationNanOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-sky-600/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-sky-200">Explanation &apos;nan&apos;/누락 검증</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <strong className="text-sky-300">사유</strong>로 해설이 비어 있는 경우와 문자열에{' '}
+                  <strong className="text-sky-300">nan</strong>이 섞인 경우, BSON 숫자 NaN 등을 구분합니다. 상단{' '}
+                  <strong className="text-slate-300">교재·유형</strong> 필터가 적용됩니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setExplanationNanOpen(false);
+                  setExplanationNanSelectedIds(new Set());
+                  setExplanationNanBatchRunning(false);
+                  setExplanationNanBatchProgress(null);
+                  setExplanationNanWritingId(null);
+                }}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {explanationNanLoading && !explanationNanData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-sky-300">
+                  <span className="inline-block w-6 h-6 border-2 border-sky-500/50 border-t-sky-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {explanationNanError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {explanationNanError}
+                </div>
+              )}
+              {explanationNanData && !explanationNanLoading && (() => {
+                    const nanWriteBusy =
+                      explanationNanWritingId !== null || explanationNanBatchRunning;
+                    const visibleIds = explanationNanData.items.map((it) => it.id);
+                    const selectedInView = visibleIds.filter((id) =>
+                      explanationNanSelectedIds.has(id)
+                    );
+                    const allVisibleSelected =
+                      visibleIds.length > 0 &&
+                      visibleIds.every((id) => explanationNanSelectedIds.has(id));
+                    const someVisibleSelected = selectedInView.length > 0 && !allVisibleSelected;
+                    return (
+                  <>
+                  {explanationNanData.note && (
+                    <p className="mb-3 text-xs text-slate-400 leading-relaxed border border-slate-600/80 rounded-lg p-3 bg-slate-900/50">
+                      {explanationNanData.note}
+                    </p>
+                  )}
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-sky-200">이상·누락 의심</strong>:{' '}
+                      <strong className="text-white">{explanationNanData.totalMatched.toLocaleString()}</strong>건
+                      {explanationNanData.filters.textbook && (
+                        <> · 교재: <strong className="text-sky-200">{explanationNanData.filters.textbook}</strong></>
+                      )}
+                      {explanationNanData.filters.type && (
+                        <> · 유형: <strong className="text-sky-200">{explanationNanData.filters.type}</strong></>
+                      )}
+                      {explanationNanData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">
+                          (최대 {explanationNanData.items.length}건만 표시)
+                        </span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runExplanationNanValidate}
+                      disabled={nanWriteBusy}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-sky-800/80 hover:bg-sky-700 text-sky-200 disabled:opacity-50"
+                    >
+                      다시 검증
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void writeExplanationBatchFromNanModal()}
+                      disabled={
+                        nanWriteBusy || selectedInView.length === 0
+                      }
+                      className="text-xs px-3 py-1.5 rounded-lg bg-emerald-800/90 hover:bg-emerald-700 text-emerald-100 border border-emerald-600/50 disabled:opacity-50 font-semibold"
+                      title="표시된 목록 중 체크한 문항만 순서대로 Claude 해설 작성"
+                    >
+                      {explanationNanBatchRunning && explanationNanBatchProgress
+                        ? `일괄 작성 중… ${explanationNanBatchProgress.done}/${explanationNanBatchProgress.total}`
+                        : `선택 ${selectedInView.length}건 해설 작성`}
+                    </button>
+                  </div>
+                  {explanationNanData.totalMatched === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      해당 없음 — 선택한 필터에서 해설 누락·nan 이상이 없습니다.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 pl-2 pr-1 w-10 text-center align-middle">
+                              <input
+                                type="checkbox"
+                                title="현재 표에 보이는 행만 전체 선택/해제"
+                                disabled={nanWriteBusy || visibleIds.length === 0}
+                                checked={allVisibleSelected}
+                                ref={(el) => {
+                                  if (el) el.indeterminate = someVisibleSelected;
+                                }}
+                                onChange={() => {
+                                  setExplanationNanSelectedIds((prev) => {
+                                    const n = new Set(prev);
+                                    if (allVisibleSelected) {
+                                      visibleIds.forEach((id) => n.delete(id));
+                                    } else {
+                                      visibleIds.forEach((id) => n.add(id));
+                                    }
+                                    return n;
+                                  });
+                                }}
+                                className="rounded border-slate-500 bg-slate-800 text-sky-500 focus:ring-sky-500"
+                              />
+                            </th>
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">유형</th>
+                            <th className="py-2 px-2">사유</th>
+                            <th className="py-2 px-2">미리보기</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {explanationNanData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 pl-2 pr-1 text-center align-middle">
+                                <input
+                                  type="checkbox"
+                                  checked={explanationNanSelectedIds.has(it.id)}
+                                  disabled={nanWriteBusy}
+                                  onChange={() => {
+                                    setExplanationNanSelectedIds((prev) => {
+                                      const n = new Set(prev);
+                                      if (n.has(it.id)) n.delete(it.id);
+                                      else n.add(it.id);
+                                      return n;
+                                    });
+                                  }}
+                                  className="rounded border-slate-500 bg-slate-800 text-sky-500 focus:ring-sky-500"
+                                />
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <div className="flex flex-col gap-1 items-start">
+                                  <button
+                                    type="button"
+                                    disabled={nanWriteBusy}
+                                    onClick={() => writeExplanationFromNanModal(it.id)}
+                                    className="text-emerald-400 hover:text-emerald-300 underline disabled:opacity-40 disabled:no-underline text-left"
+                                    title="Claude로 해설 생성 후 DB에 저장합니다. 지문·발문·선택지가 있어야 합니다."
+                                  >
+                                    {explanationNanWritingId === it.id ? '해설 작성 중…' : '해설 작성'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={nanWriteBusy}
+                                    onClick={() => {
+                                      setExplanationNanOpen(false);
+                                      setExplanationNanSelectedIds(new Set());
+                                      setExplanationNanBatchRunning(false);
+                                      setExplanationNanBatchProgress(null);
+                                      setExplanationNanWritingId(null);
+                                      openEdit(it.id);
+                                    }}
+                                    className="text-sky-400 hover:text-sky-300 underline disabled:opacity-40 text-left"
+                                  >
+                                    수정
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-violet-300">{it.type}</td>
+                              <td className="py-1.5 px-2 text-amber-200/95 whitespace-nowrap">{it.reason}</td>
+                              <td
+                                className="py-1.5 px-2 text-slate-400 max-w-[240px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                title="클릭하면 전체 내용 보기"
+                                onClick={() =>
+                                  setFullTextView({
+                                    title: `Explanation · ${it.reason} · ${it.source} ${it.type}`,
+                                    text: it.full || it.snippet,
+                                  })
+                                }
+                              >
+                                {it.snippet}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  </>
+                    );
+                  })()}
             </div>
           </div>
         </div>

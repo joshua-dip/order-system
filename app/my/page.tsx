@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppBar from '../components/AppBar';
@@ -17,6 +17,8 @@ interface AuthUser {
   dropboxSharedLink?: string;
   points?: number;
   myFormatApproved?: boolean;
+  annualMemberSince?: string | null;
+  isAnnualMemberActive?: boolean;
 }
 
 interface MyOrder {
@@ -88,7 +90,24 @@ function formatPointHistoryWhen(iso: string): string {
   return d.toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'settings';
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes < 0) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+interface AnnualSharedFileItem {
+  id: string;
+  title: string;
+  description: string;
+  originalName: string;
+  contentType: string;
+  size: number;
+  uploadedAt: string | null;
+}
+
+type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -155,6 +174,9 @@ export default function MyPage() {
   const [pointHistory, setPointHistory] = useState<PointHistoryEntry[]>([]);
   const [pointHistoryLoading, setPointHistoryLoading] = useState(false);
 
+  const [annualSharedItems, setAnnualSharedItems] = useState<AnnualSharedFileItem[]>([]);
+  const [annualSharedLoading, setAnnualSharedLoading] = useState(false);
+
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
@@ -218,6 +240,22 @@ export default function MyPage() {
       .then((data) => setPointHistory(Array.isArray(data.entries) ? data.entries : []))
       .catch(() => setPointHistory([]))
       .finally(() => setPointHistoryLoading(false));
+  }, [user, activeTab]);
+
+  useEffect(() => {
+    if (!user?.isAnnualMemberActive || activeTab !== 'annualShared') return;
+    setAnnualSharedLoading(true);
+    fetch('/api/my/annual-shared-files', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => setAnnualSharedItems(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setAnnualSharedItems([]))
+      .finally(() => setAnnualSharedLoading(false));
+  }, [user?.isAnnualMemberActive, activeTab]);
+
+  useEffect(() => {
+    if (user && user.isAnnualMemberActive !== true && activeTab === 'annualShared') {
+      setActiveTab('orders');
+    }
   }, [user, activeTab]);
 
   const handleLogout = async () => {
@@ -479,13 +517,19 @@ export default function MyPage() {
     }
   };
 
-  const tabs: { key: TabKey; label: string; icon: string; count?: number }[] = [
-    { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
-    { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
-    { key: 'exam', label: '기출문제', icon: '📤' },
-    { key: 'myFormat', label: '나의양식', icon: '📄' },
-    { key: 'settings', label: '내 정보', icon: '⚙️' },
-  ];
+  const tabs = useMemo(() => {
+    const base: { key: TabKey; label: string; icon: string; count?: number }[] = [
+      { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
+      { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
+      { key: 'exam', label: '기출문제', icon: '📤' },
+      { key: 'myFormat', label: '나의양식', icon: '📄' },
+    ];
+    if (user?.isAnnualMemberActive) {
+      base.push({ key: 'annualShared', label: '무료공유자료', icon: '📥' });
+    }
+    base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
+    return base;
+  }, [user?.isAnnualMemberActive, orders.length, studentsCount]);
 
   return (
     <>
@@ -932,12 +976,9 @@ export default function MyPage() {
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <p className="text-sm font-bold text-[#0f172a] mb-2">맞춤형 자료 제작</p>
                 <p className="text-[13px] text-[#475569] mb-2">업로드하신 양식(hwp, hwpx)을 바탕으로 맞춤형 자료를 제작해 드립니다.</p>
-                <div className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-3 mb-3 space-y-2 leading-relaxed">
+                <div className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-3 mb-3 leading-relaxed">
                   <p>
-                    맞춤형 자료 제작을 이용하시려면 <strong>연회원비</strong> 결제가 필요합니다. 연회비·절차 문의는 <strong>카카오톡</strong>으로 해 주세요.
-                  </p>
-                  <p>
-                    <strong>스타벅스 기프티콘</strong>을 보내주시면 확인 후 바로 <strong>연회원</strong>으로 처리해 드립니다.
+                    맞춤형 자료 제작은 <strong>연회원</strong> 전용입니다. 연회비·이용 절차·결제 방법 등은 <strong>카카오톡</strong>으로 문의해 주시면 안내해 드립니다.
                   </p>
                 </div>
                 <ul className="text-[13px] text-[#475569] space-y-1.5 list-disc list-inside">
@@ -951,7 +992,7 @@ export default function MyPage() {
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
                   <p className="text-sm font-bold text-amber-800 mb-2">맞춤 HWP로 제작하시려면</p>
                   <p className="text-[13px] text-amber-900 mb-2 leading-relaxed">
-                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. <strong>연회원비</strong>는 <strong>스타벅스 기프티콘</strong>을 보내주시면 확인 후 바로 연회원으로 처리해 드립니다. 문의·절차는 카카오톡으로 연락 주세요.
+                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. 연회원 관련 문의(절차·비용 등)는 <strong>카카오톡</strong>으로 연락 주시면 안내해 드립니다.
                   </p>
                   <p className="text-[13px] text-amber-900 mb-3 leading-relaxed">
                     승인 후 이 화면에서 유형별로 올리시면 주문 시 맞춤 양식을 선택하실 수 있어요.
@@ -1031,6 +1072,59 @@ export default function MyPage() {
                 </div>
               ))}
                 </>
+              )}
+            </div>
+          )}
+
+          {/* ━━ 연회원 무료공유자료 ━━ */}
+          {activeTab === 'annualShared' && user.isAnnualMemberActive && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <p className="text-sm font-bold text-[#0f172a] mb-1">무료 공유 자료</p>
+                <p className="text-[12px] text-[#94a3b8] leading-relaxed">
+                  연회원 기간 동안 관리자가 올린 HWP·PDF 자료를 언제든지 내려받을 수 있어요.
+                </p>
+              </div>
+              {annualSharedLoading ? (
+                <div className="py-16 text-center text-[13px] text-[#94a3b8]">불러오는 중…</div>
+              ) : annualSharedItems.length === 0 ? (
+                <div className="py-16 text-center rounded-2xl border border-[#e2e8f0] bg-white">
+                  <div className="text-4xl mb-2 opacity-40">📥</div>
+                  <p className="text-sm text-[#94a3b8]">등록된 자료가 아직 없습니다.</p>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {annualSharedItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="bg-white rounded-2xl border border-[#e2e8f0] p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[#0f172a]">{item.title || item.originalName}</p>
+                        {item.description ? (
+                          <p className="text-[12px] text-[#64748b] mt-1 whitespace-pre-wrap">{item.description}</p>
+                        ) : null}
+                        <p className="text-[11px] text-[#94a3b8] mt-2">
+                          {item.originalName}
+                          <span className="mx-1.5">·</span>
+                          {formatFileSize(item.size)}
+                          {item.uploadedAt ? (
+                            <>
+                              <span className="mx-1.5">·</span>
+                              {formatDate(item.uploadedAt)}
+                            </>
+                          ) : null}
+                        </p>
+                      </div>
+                      <a
+                        href={`/api/my/annual-shared-files/${item.id}/download`}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-[13px] font-bold bg-[#2563eb] text-white hover:bg-[#1d4ed8] no-underline shrink-0"
+                      >
+                        다운로드
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           )}

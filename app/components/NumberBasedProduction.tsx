@@ -84,6 +84,7 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
     { id: 'english_writing', name: '영작하기', price: 100, description: '영작 자료' },
     { id: 'workbook_blank', name: '워크북_빈칸쓰기', price: 100, description: '빈칸 쓰기 연습' },
     { id: 'workbook_word_arrangement', name: '워크북_낱말배열', price: 100, description: '낱말 배열 연습' },
+    { id: 'workbook_grammar_either_or', name: '워크북_어법_양자택일', price: 100, description: '어법 양자택일 연습' },
     { id: 'variant_subject', name: '변형문제_주제', price: 100, description: '주제 변형 문제' },
     { id: 'variant_title', name: '변형문제_제목', price: 100, description: '제목 변형 문제' },
     { id: 'variant_claim', name: '변형문제_주장', price: 100, description: '주장 변형 문제' },
