@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# Claude Code 로컬 워크트리(중첩 git 저장소)
+.claude/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -60,6 +63,10 @@ ENV/
 
 # uploads (기출문제 등)
 /uploads
+
+# mcp-bridge (별도 패키지)
+/mcp-bridge/node_modules
+/mcp-bridge/dist
 
 # logs
 *.log

@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { isDropboxConfigured } from '@/lib/dropbox';
-import { effectiveOrderRevenueWon, startOfKoreaMonth } from '@/lib/order-revenue';
+import { effectiveOrderRevenueWon } from '@/lib/order-revenue';
+import { koreaDateKey, koreaYearMonthKey } from '@/lib/korea-date-key';
+import { revenueMonthKeyForOrder } from '@/lib/order-number';
+
+type SiteStatsDaily = {
+  _id: string;
+  pageViews?: number;
+  uniqueVisitors?: number;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,12 +30,14 @@ export async function GET(request: NextRequest) {
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
+    const todayKey = koreaDateKey(now);
     const [
       userOrderCounts,
       userLastOrderDates,
       newMembersThisMonth,
       newOrdersThisWeek,
       completedForRevenue,
+      siteToday,
     ] = await Promise.all([
       db.collection('orders').aggregate<{ _id: string; count: number }>([
         { $match: { loginId: { $exists: true, $ne: null } } },
@@ -43,22 +53,20 @@ export async function GET(request: NextRequest) {
       db
         .collection('orders')
         .find({ status: 'completed' })
-        .project({ orderText: 1, revenueWon: 1, completedAt: 1 })
+        .project({ orderText: 1, revenueWon: 1, completedAt: 1, orderNumber: 1 })
         .toArray(),
+      db.collection<SiteStatsDaily>('site_stats_daily').findOne({ _id: todayKey }),
     ]);
 
-    const koreaMonthStart = startOfKoreaMonth(now);
+    const thisYearMonth = koreaYearMonthKey(now);
     let revenueTotal = 0;
     let revenueThisMonth = 0;
     for (const o of completedForRevenue) {
       const amount = effectiveOrderRevenueWon(o);
       revenueTotal += amount;
-      const ca = (o as { completedAt?: Date | string | null }).completedAt;
-      if (ca != null) {
-        const ref = ca instanceof Date ? ca : new Date(ca);
-        if (!Number.isNaN(ref.getTime()) && ref >= koreaMonthStart) {
-          revenueThisMonth += amount;
-        }
+      const monthKey = revenueMonthKeyForOrder(o as { orderNumber?: unknown; completedAt?: unknown });
+      if (monthKey === thisYearMonth) {
+        revenueThisMonth += amount;
       }
     }
 
@@ -72,15 +80,23 @@ export async function GET(request: NextRequest) {
       if (row.lastAt) lastOrderDateByLoginId[row._id] = typeof row.lastAt === 'string' ? row.lastAt : (row.lastAt as Date).toISOString();
     });
 
+    const pv = typeof siteToday?.pageViews === 'number' ? siteToday.pageViews : 0;
+    const uv = typeof siteToday?.uniqueVisitors === 'number' ? siteToday.uniqueVisitors : 0;
+
     return NextResponse.json({
       orderCountByLoginId,
       lastOrderDateByLoginId,
       newMembersThisMonth,
       newOrdersThisWeek,
+      /** 한국 날짜 기준 오늘 공개 페이지 조회(라우트 전환마다 1회 가까이) */
+      siteVisitsTodayPageViews: pv,
+      /** 쿠키 기준 당일 첫 방문만 1명으로 집계(추정 순방문) */
+      siteVisitsTodayUnique: uv,
+      siteVisitsTodayKey: todayKey,
       dropboxConfigured: isDropboxConfigured(),
       /** 완료 주문 기준 매출(원). 주문서 텍스트 파싱 + DB revenueWon */
       revenueTotal,
-      /** completedAt이 이번 달(한국)인 완료 주문만 합산(구 데이터는 completedAt 없으면 이번 달 제외) */
+      /** 완료 주문: 주문번호 중간 YYYYMMDD의 연·월이 이번 달(한국 달력과 동일 YYYY-MM 비교)이면 합산. 번호 없으면 completedAt(한국 월) */
       revenueThisMonth,
     });
   } catch (err) {

@@ -4,7 +4,13 @@ import {
   BOOK_VARIANT_QUESTION_TYPES,
   DEFAULT_QUESTIONS_PER_VARIANT_TYPE,
 } from '@/lib/book-variant-types';
-import { buildQuestionCountReport, type NoQuestionRow, type UnderfilledRow } from '@/lib/question-count-report';
+import {
+  buildQuestionCountReport,
+  type NoQuestionRow,
+  type UnderfilledRow,
+  type UnderfilledStatusBreakdown,
+} from '@/lib/question-count-report';
+import { passagesForMockVariantOrder } from '@/lib/mock-variant-order';
 
 /** 목록 API/화면에 기본으로 내려주는 최대 행 수 */
 export const QUESTION_COUNT_DEFAULT_LIST_ROWS = 12_000;
@@ -28,12 +34,13 @@ export type QuestionCountOrderInfo = {
 } | null;
 
 /** generated_questions.status 기준 집계 범위 (미지정·잘못된 값은 전체) */
-export type QuestionStatusScope = 'all' | '대기' | '완료';
+export type QuestionStatusScope = 'all' | '대기' | '완료' | '검수불일치';
 
 export function parseQuestionStatusScope(raw: string | null | undefined): QuestionStatusScope {
   const t = (raw ?? '').trim();
   if (t === '대기') return '대기';
   if (t === '완료') return '완료';
+  if (t === '검수불일치') return '검수불일치';
   return 'all';
 }
 
@@ -42,7 +49,7 @@ export type QuestionCountValidationPayload = {
   ok: true;
   scope: 'textbook' | 'order';
   textbook: string;
-  /** 변형문 집계 시 status 필터 (전체 / 대기 / 완료) */
+  /** 변형문 집계 시 status 필터 (전체 / 대기 / 완료 / 검수불일치) */
   questionStatusScope: QuestionStatusScope;
   requiredPerType: number;
   typesChecked: string[];
@@ -54,6 +61,19 @@ export type QuestionCountValidationPayload = {
   underfilledTruncated: boolean;
   noQuestions: NoQuestionRow[];
   underfilled: UnderfilledRow[];
+  /**
+   * 검증 범위 지문에 연결된 변형문 중 status=대기 건수.
+   * 검수·풀이 후 `variant_review_pending_record`(정답 일치 시 완료) 대상.
+   */
+  pendingReviewTotal: number;
+  /** 유형 미충족 행 shortBy 합 — 추가로 만들어야 하는 문항 수 */
+  needCreateShortBySum: number;
+  /** 변형 0건 지문마다 (typesChecked.length × requiredPerType) 슬롯 합 */
+  needCreateFromEmptyPassagesTotal: number;
+  /** 신규 작성 필요 문항 수 추정(위 둘의 합). 대기 검수와 별개 */
+  needCreateGrandTotal: number;
+  /** @deprecated pendingReviewTotal 과 동일. 기존 클라이언트 호환 */
+  pendingInScopeTotal?: number;
   order: QuestionCountOrderInfo;
   orderLessonsRequested?: number;
   orderLessonsMatched?: number;
@@ -113,21 +133,64 @@ async function aggregateCountsByPassageAndType(
   return countMap;
 }
 
+async function aggregateStatusBreakdownByPassageAndType(
+  gqCol: Collection<Document>,
+  ids: ObjectId[]
+): Promise<Map<string, Map<string, UnderfilledStatusBreakdown>>> {
+  const out = new Map<string, Map<string, UnderfilledStatusBreakdown>>();
+  if (ids.length === 0) return out;
+  const idStrings = ids.map((id) => id.toString());
+  const passageMatch: Document = {
+    $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
+  };
+  const agg = await gqCol
+    .aggregate([
+      { $match: passageMatch },
+      { $addFields: { pidStr: { $toString: '$passage_id' } } },
+      {
+        $group: {
+          _id: { pid: '$pidStr', typ: '$type', st: '$status' },
+          c: { $sum: 1 },
+        },
+      },
+    ])
+    .toArray();
+
+  for (const row of agg) {
+    const idObj = row._id as { pid?: unknown; typ?: unknown; st?: unknown };
+    const pid = String(idObj.pid ?? '');
+    const typ = String(idObj.typ ?? '');
+    const st = String(idObj.st ?? '');
+    const c = Number(row.c) || 0;
+    if (!out.has(pid)) out.set(pid, new Map());
+    const m = out.get(pid)!;
+    if (!m.has(typ)) m.set(typ, { 완료: 0, 대기: 0, 검수불일치: 0, 기타: 0 });
+    const b = m.get(typ)!;
+    if (st === '완료') b.완료 += c;
+    else if (st === '대기') b.대기 += c;
+    else if (st === '검수불일치') b.검수불일치 += c;
+    else b.기타 += c;
+  }
+  return out;
+}
+
 export type RunQuestionCountValidationInput = {
   textbookParam: string;
   orderIdRaw: string;
+  /** orders.orderNumber (예: BV-20260331-002). orderIdRaw와 동시 지정 불가. */
+  orderNumberRaw?: string | null;
   requiredPerTypeRaw?: string | null;
-  /** 쿼리/바디: questionStatus = all | 대기 | 완료 */
+  /** 쿼리/바디: questionStatus = all | 대기 | 완료 | 검수불일치 */
   questionStatusRaw?: string | null;
 };
 
 /**
- * passages(원문) 기준 변형문 집계 (교재 전체 또는 bookVariant 주문).
+ * passages(원문) 기준 변형문 집계 (교재 전체 또는 bookVariant / mockVariant 주문).
  */
 export async function runQuestionCountValidation(
   input: RunQuestionCountValidationInput
 ): Promise<QuestionCountValidationPayload | QuestionCountValidationError> {
-  const { textbookParam, orderIdRaw } = input;
+  const { textbookParam } = input;
   const questionStatusScope = parseQuestionStatusScope(input.questionStatusRaw);
   const requiredPerTypeDefault = Math.max(
     1,
@@ -143,6 +206,38 @@ export async function runQuestionCountValidation(
     const passagesCol = db.collection('passages');
     const gqCol = db.collection('generated_questions');
 
+    let orderIdTrim = input.orderIdRaw.trim();
+    let orderNumberTrim = (input.orderNumberRaw ?? '').trim();
+    if (orderIdTrim && orderNumberTrim) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: 'orderId와 orderNumber는 동시에 지정할 수 없습니다.' },
+      };
+    }
+
+    /** 24자 hex가 아니면 ObjectId가 아님 → BV 등 주문번호가 orderId 슬롯에 온 경우로 간주 */
+    if (orderIdTrim && !orderNumberTrim) {
+      const isObjectIdHex24 = /^[a-fA-F0-9]{24}$/.test(orderIdTrim);
+      if (!isObjectIdHex24) {
+        orderNumberTrim = orderIdTrim;
+        orderIdTrim = '';
+      }
+    }
+
+    let orderIdResolved = orderIdTrim;
+    if (orderNumberTrim) {
+      const byNum = await db.collection('orders').findOne({ orderNumber: orderNumberTrim });
+      if (!byNum) {
+        return {
+          ok: false,
+          status: 404,
+          body: { error: `주문번호 "${orderNumberTrim}"를 찾을 수 없습니다.` },
+        };
+      }
+      orderIdResolved = String(byNum._id);
+    }
+
     let textbook = '';
     let passageDocs: PDoc[] = [];
     let typesToCheck: string[] = [...BOOK_VARIANT_QUESTION_TYPES];
@@ -152,11 +247,11 @@ export async function runQuestionCountValidation(
     let lessonsWithoutPassage: string[] = [];
     let orderLessonsRequested = 0;
 
-    if (orderIdRaw) {
-      if (!ObjectId.isValid(orderIdRaw)) {
+    if (orderIdResolved) {
+      if (!ObjectId.isValid(orderIdResolved)) {
         return { ok: false, status: 400, body: { error: '유효한 orderId가 아닙니다.' } };
       }
-      const order = await db.collection('orders').findOne({ _id: new ObjectId(orderIdRaw) });
+      const order = await db.collection('orders').findOne({ _id: new ObjectId(orderIdResolved) });
       if (!order) {
         return { ok: false, status: 404, body: { error: '주문을 찾을 수 없습니다.' } };
       }
@@ -170,23 +265,8 @@ export async function runQuestionCountValidation(
       }
       const m = meta as Record<string, unknown>;
       const flow = typeof m.flow === 'string' ? m.flow : '';
-      if (flow !== 'bookVariant') {
-        return {
-          ok: false,
-          status: 400,
-          body: {
-            error:
-              '부교재 변형(bookVariant) 주문만 지원합니다. (모의고사·워크북 주문은 orderMeta 구조가 달라 추후 확장 가능)',
-            flow: flow || null,
-          },
-        };
-      }
 
-      textbook = typeof m.selectedTextbook === 'string' ? m.selectedTextbook.trim() : '';
-      const selectedLessons = Array.isArray(m.selectedLessons)
-        ? m.selectedLessons.filter((x): x is string => typeof x === 'string')
-        : [];
-      const selectedTypes = Array.isArray(m.selectedTypes)
+      const selectedTypesRaw = Array.isArray(m.selectedTypes)
         ? m.selectedTypes.filter((x): x is string => typeof x === 'string')
         : [];
       const qpt =
@@ -194,47 +274,96 @@ export async function runQuestionCountValidation(
           ? Math.min(20, Math.floor(m.questionsPerType))
           : DEFAULT_QUESTIONS_PER_VARIANT_TYPE;
 
-      if (!textbook) {
+      if (flow === 'bookVariant') {
+        textbook = typeof m.selectedTextbook === 'string' ? m.selectedTextbook.trim() : '';
+        const selectedLessons = Array.isArray(m.selectedLessons)
+          ? m.selectedLessons.filter((x): x is string => typeof x === 'string')
+          : [];
+
+        if (!textbook) {
+          return {
+            ok: false,
+            status: 400,
+            body: { error: '주문 메타에 교재명(selectedTextbook)이 없습니다.' },
+          };
+        }
+        if (selectedLessons.length === 0) {
+          return { ok: false, status: 400, body: { error: '주문에 선택된 지문(selectedLessons)이 없습니다.' } };
+        }
+
+        orderLessonsRequested = selectedLessons.length;
+        const normalizedLessons = [...new Set(selectedLessons.map((l) => l.trim()).filter(Boolean))];
+
+        passageDocs = (await passagesCol
+          .find({ textbook, source_key: { $in: normalizedLessons } })
+          .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
+          .toArray()) as PDoc[];
+
+        const matchedKeys = new Set(
+          passageDocs.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : ''))
+        );
+        lessonsWithoutPassage = normalizedLessons.filter((l) => !matchedKeys.has(l));
+
+        typesToCheck =
+          selectedTypesRaw.length > 0
+            ? [...new Set(selectedTypesRaw.map((t) => t.trim()).filter(Boolean))]
+            : [...BOOK_VARIANT_QUESTION_TYPES];
+        requiredPerType = qpt;
+        scope = 'order';
+        orderInfo = {
+          id: orderIdResolved,
+          orderNumber: order.orderNumber != null ? String(order.orderNumber) : null,
+          flow: 'bookVariant',
+        };
+      } else if (flow === 'mockVariant') {
+        const {
+          passageDocs: mockDocs,
+          lessonsWithoutPassage: mockMissing,
+          primaryTextbook,
+          totalSlotsRequested,
+        } = await passagesForMockVariantOrder(passagesCol, m.examSelections);
+
+        if (!primaryTextbook) {
+          return {
+            ok: false,
+            status: 400,
+            body: { error: '모의고사 변형 주문에 examSelections(모의고사·번호)이 없습니다.' },
+          };
+        }
+
+        textbook = primaryTextbook;
+        passageDocs = mockDocs as PDoc[];
+        lessonsWithoutPassage = mockMissing;
+        orderLessonsRequested = totalSlotsRequested;
+
+        typesToCheck =
+          selectedTypesRaw.length > 0
+            ? [...new Set(selectedTypesRaw.map((t) => t.trim()).filter(Boolean))]
+            : [...BOOK_VARIANT_QUESTION_TYPES];
+        requiredPerType = qpt;
+        scope = 'order';
+        orderInfo = {
+          id: orderIdResolved,
+          orderNumber: order.orderNumber != null ? String(order.orderNumber) : null,
+          flow: 'mockVariant',
+        };
+      } else {
         return {
           ok: false,
           status: 400,
-          body: { error: '주문 메타에 교재명(selectedTextbook)이 없습니다.' },
+          body: {
+            error:
+              '문제수 검증 주문 범위는 부교재 변형(bookVariant) 또는 모의고사 변형(mockVariant)만 지원합니다. (워크북·번호별 제작 등은 orderMeta 구조가 다릅니다.)',
+            flow: flow || null,
+          },
         };
       }
-      if (selectedLessons.length === 0) {
-        return { ok: false, status: 400, body: { error: '주문에 선택된 지문(selectedLessons)이 없습니다.' } };
-      }
-
-      orderLessonsRequested = selectedLessons.length;
-      const normalizedLessons = [...new Set(selectedLessons.map((l) => l.trim()).filter(Boolean))];
-
-      passageDocs = (await passagesCol
-        .find({ textbook, source_key: { $in: normalizedLessons } })
-        .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
-        .toArray()) as PDoc[];
-
-      const matchedKeys = new Set(
-        passageDocs.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : ''))
-      );
-      lessonsWithoutPassage = normalizedLessons.filter((l) => !matchedKeys.has(l));
-
-      typesToCheck =
-        selectedTypes.length > 0
-          ? [...new Set(selectedTypes.map((t) => t.trim()).filter(Boolean))]
-          : [...BOOK_VARIANT_QUESTION_TYPES];
-      requiredPerType = qpt;
-      scope = 'order';
-      orderInfo = {
-        id: orderIdRaw,
-        orderNumber: order.orderNumber != null ? String(order.orderNumber) : null,
-        flow: 'bookVariant',
-      };
     } else {
       if (!textbookParam) {
         return {
           ok: false,
           status: 400,
-          body: { error: '교재(textbook) 또는 주문(orderId)을 지정해 주세요.' },
+          body: { error: '교재(textbook) 또는 주문(orderId / orderNumber)을 지정해 주세요.' },
         };
       }
       textbook = textbookParam;
@@ -268,6 +397,11 @@ export async function runQuestionCountValidation(
         underfilledTotal: 0,
         noQuestionsTruncated: false,
         underfilledTruncated: false,
+        pendingReviewTotal: 0,
+        needCreateShortBySum: 0,
+        needCreateFromEmptyPassagesTotal: 0,
+        needCreateGrandTotal: 0,
+        pendingInScopeTotal: 0,
         order: orderInfo,
         orderLessonsRequested: scope === 'order' ? orderLessonsRequested : undefined,
         orderLessonsMatched: scope === 'order' ? 0 : undefined,
@@ -277,15 +411,49 @@ export async function runQuestionCountValidation(
     }
 
     const ids = passageDocs.map((p) => p._id as ObjectId);
+    const idStrings = ids.map((id) => id.toString());
     const countMap = await aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope);
 
-    const { noQuestionsFull, underfilledFull } = buildQuestionCountReport(
+    const { noQuestionsFull, underfilledFull: underfilledRaw } = buildQuestionCountReport(
       passageDocs,
       countMap,
       typesToCheck,
       requiredPerType,
       textbook
     );
+
+    const passagePendingMatch: Document = {
+      $and: [
+        { $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }] },
+        { status: '대기' },
+      ],
+    };
+
+    let underfilledFull = underfilledRaw;
+    const [pendingReviewTotal, breakdownMap] = await Promise.all([
+      gqCol.countDocuments(passagePendingMatch),
+      questionStatusScope === 'all'
+        ? aggregateStatusBreakdownByPassageAndType(gqCol, ids)
+        : Promise.resolve(null as Map<string, Map<string, UnderfilledStatusBreakdown>> | null),
+    ]);
+
+    if (questionStatusScope === 'all' && breakdownMap) {
+      underfilledFull = underfilledRaw.map((row) => {
+        const b = breakdownMap.get(row.passageId)?.get(row.type);
+        const statusBreakdown: UnderfilledStatusBreakdown = b ?? {
+          완료: 0,
+          대기: 0,
+          검수불일치: 0,
+          기타: row.count,
+        };
+        return { ...row, statusBreakdown };
+      });
+    }
+
+    const needCreateShortBySum = underfilledFull.reduce((s, r) => s + r.shortBy, 0);
+    const needCreateFromEmptyPassagesTotal =
+      noQuestionsFull.length * typesToCheck.length * requiredPerType;
+    const needCreateGrandTotal = needCreateShortBySum + needCreateFromEmptyPassagesTotal;
 
     const noQuestionsTruncated = noQuestionsFull.length > QUESTION_COUNT_DEFAULT_LIST_ROWS;
     const underfilledTruncated = underfilledFull.length > QUESTION_COUNT_DEFAULT_LIST_ROWS;
@@ -305,6 +473,11 @@ export async function runQuestionCountValidation(
       underfilledTruncated,
       noQuestions: noQuestionsFull,
       underfilled: underfilledFull,
+      pendingReviewTotal,
+      needCreateShortBySum,
+      needCreateFromEmptyPassagesTotal,
+      needCreateGrandTotal,
+      pendingInScopeTotal: pendingReviewTotal,
       order: orderInfo,
       orderLessonsRequested: scope === 'order' ? orderLessonsRequested : undefined,
       orderLessonsMatched: scope === 'order' ? passageDocs.length : undefined,

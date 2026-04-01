@@ -4,9 +4,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { extractJsonObject } from '@/lib/llm-json';
 import { VARIANT_DRAFT_BLANK_AND_SUMMARY_RULES } from '@/lib/variant-draft-blank-summary-rules';
-import { VARIANT_DRAFT_GRAMMAR_RULES } from '@/lib/variant-draft-grammar-rules';
+import { GRAMMAR_VARIANT_OPTIONS_FIXED, VARIANT_DRAFT_GRAMMAR_RULES } from '@/lib/variant-draft-grammar-rules';
 
-function buildVariantDraftSystemPrompt(nextNum: number): string {
+export function buildVariantDraftSystemPrompt(nextNum: number): string {
   return `당신은 한국 수능 영어 변형문제 출제자입니다. 주어진 지문과 문제 유형에 맞는 객관식 1문항을 새로 만듭니다.
 반드시 아래 키만 갖는 JSON 한 개만 출력하세요. 다른 설명·마크다운 금지.
 
@@ -45,6 +45,56 @@ export type VariantDraftClaudeResult =
   | { ok: true; question_data: Record<string, unknown> }
   | { ok: false; error: string };
 
+/** Claude(또는 Claude Code)가 출력한 JSON 객체 → 폼용 question_data (API 경로와 동일 규칙) */
+export function normalizeClaudeDraftJsonToQuestionData(
+  parsed: Record<string, unknown>,
+  params: { paragraph: string; type: string; nextNum: number }
+): Record<string, unknown> {
+  const { paragraph, type, nextNum } = params;
+  const parsedParagraph =
+    typeof parsed.Paragraph === 'string' && parsed.Paragraph.trim()
+      ? parsed.Paragraph.trim()
+      : paragraph;
+  let questionText = typeof parsed.Question === 'string' ? parsed.Question : '';
+  const typeT = type.trim();
+  if (typeT === '함의' || typeT.includes('함의')) {
+    const uMatch = parsedParagraph.match(/<u>([\s\S]*?)<\/u>/i);
+    const underlinedText = uMatch ? uMatch[1].trim() : '';
+    if (underlinedText) {
+      questionText = `밑줄 친 "${underlinedText}" 표현이 다음 글에서 의미하는 바로 가장 적절한 것은?`;
+    }
+  }
+  const question_data: Record<string, unknown> = {
+    순서: typeof parsed.순서 === 'number' ? parsed.순서 : nextNum,
+    Source: typeof parsed.Source === 'string' ? parsed.Source : '',
+    NumQuestion: typeof parsed.NumQuestion === 'number' ? parsed.NumQuestion : nextNum,
+    Category: typeof parsed.Category === 'string' ? parsed.Category : type,
+    Question: questionText,
+    Paragraph: parsedParagraph,
+    Options: typeof parsed.Options === 'string' ? parsed.Options : '',
+    OptionType: 'English',
+    CorrectAnswer: typeof parsed.CorrectAnswer === 'string' ? parsed.CorrectAnswer : '',
+    Explanation: typeof parsed.Explanation === 'string' ? parsed.Explanation : '',
+  };
+
+  if (typeT === '어법') {
+    question_data.Options = GRAMMAR_VARIANT_OPTIONS_FIXED;
+  }
+
+  return question_data;
+}
+
+export function buildVariantDraftUserMessage(params: VariantDraftClaudeParams): string {
+  const { paragraph, type, userHint = '', typePrompt = '' } = params;
+  const extra =
+    (process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA && process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA.trim()) ||
+    '';
+  return `문제 유형(type): ${type}
+${extra ? `운영자 공통 지시(.env): ${extra}\n` : ''}${typePrompt ? `【이 유형 전용 출제 지침】\n${typePrompt}\n\n` : ''}${userHint ? `이번 문항만의 추가 지시: ${userHint}\n` : ''}
+[지문 Paragraph]
+${paragraph}`;
+}
+
 /**
  * passage 원문 paragraph + 유형으로 Claude JSON question_data 생성 (DB 저장 없음).
  */
@@ -59,16 +109,10 @@ export async function generateVariantDraftQuestionDataWithClaude(
   const model =
     (process.env.ANTHROPIC_SOLVE_MODEL && process.env.ANTHROPIC_SOLVE_MODEL.trim()) ||
     'claude-sonnet-4-6';
-  const extra =
-    (process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA && process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA.trim()) ||
-    '';
 
   const client = new Anthropic({ apiKey });
   const sys = buildVariantDraftSystemPrompt(nextNum);
-  const userMsg = `문제 유형(type): ${type}
-${extra ? `운영자 공통 지시(.env): ${extra}\n` : ''}${typePrompt ? `【이 유형 전용 출제 지침】\n${typePrompt}\n\n` : ''}${userHint ? `이번 문항만의 추가 지시: ${userHint}\n` : ''}
-[지문 Paragraph]
-${paragraph}`;
+  const userMsg = buildVariantDraftUserMessage({ paragraph, type, nextNum, userHint, typePrompt });
 
   const fixJsonUserMsg =
     '위 출력은 JSON.parse로 파싱할 수 없었습니다. 반드시 키만 갖는 유효한 JSON 한 개만 출력하세요. 마크다운·코드펜스·설명 문장 금지. 문자열 안의 따옴표는 반드시 \\" 로 이스케이프하세요.';
@@ -105,31 +149,7 @@ ${paragraph}`;
     };
   }
 
-  const parsedParagraph =
-    typeof parsed.Paragraph === 'string' && parsed.Paragraph.trim()
-      ? parsed.Paragraph.trim()
-      : paragraph;
-  let questionText = typeof parsed.Question === 'string' ? parsed.Question : '';
-  if (type === '함의') {
-    const uMatch = parsedParagraph.match(/<u>([\s\S]*?)<\/u>/i);
-    const underlinedText = uMatch ? uMatch[1].trim() : '';
-    if (underlinedText) {
-      questionText = `밑줄 친 "${underlinedText}" 표현이 다음 글에서 의미하는 바로 가장 적절한 것은?`;
-    }
-  }
-  const question_data: Record<string, unknown> = {
-    순서: typeof parsed.순서 === 'number' ? parsed.순서 : nextNum,
-    Source: typeof parsed.Source === 'string' ? parsed.Source : '',
-    NumQuestion: typeof parsed.NumQuestion === 'number' ? parsed.NumQuestion : nextNum,
-    Category: typeof parsed.Category === 'string' ? parsed.Category : type,
-    Question: questionText,
-    Paragraph: parsedParagraph,
-    Options: typeof parsed.Options === 'string' ? parsed.Options : '',
-    OptionType: 'English',
-    CorrectAnswer: typeof parsed.CorrectAnswer === 'string' ? parsed.CorrectAnswer : '',
-    Explanation: typeof parsed.Explanation === 'string' ? parsed.Explanation : '',
-  };
-
+  const question_data = normalizeClaudeDraftJsonToQuestionData(parsed, { paragraph, type, nextNum });
   return { ok: true, question_data };
 }
 

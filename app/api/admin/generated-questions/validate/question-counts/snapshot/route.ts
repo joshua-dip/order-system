@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
   const note = typeof body.note === 'string' ? body.note.trim().slice(0, 500) : '';
   const textbookParam = typeof body.textbook === 'string' ? body.textbook.trim() : '';
   const orderIdRaw = typeof body.orderId === 'string' ? body.orderId.trim() : '';
+  const orderNumberRaw = typeof body.orderNumber === 'string' ? body.orderNumber.trim() : '';
   const requiredPerTypeRaw =
     body.requiredPerType != null && body.requiredPerType !== ''
       ? String(body.requiredPerType)
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
   const result = await runQuestionCountValidation({
     textbookParam,
     orderIdRaw,
+    orderNumberRaw: orderNumberRaw || null,
     requiredPerTypeRaw,
     questionStatusRaw: questionStatusRaw || null,
   });

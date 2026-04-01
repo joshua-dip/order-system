@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, passage_id, ...rest } = doc;
@@ -74,6 +75,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         $set.question_data = JSON.parse(body.question_data_json) as Record<string, unknown>;
       } catch {
         return NextResponse.json({ error: 'question_data JSON 형식이 올바르지 않습니다.' }, { status: 400 });
+      }
+    }
+
+    if (
+      $set.question_data &&
+      typeof $set.question_data === 'object' &&
+      !Array.isArray($set.question_data)
+    ) {
+      const effType =
+        typeof $set.type === 'string'
+          ? ($set.type as string).trim()
+          : String(existing.type ?? '').trim();
+      if (effType === '어법') {
+        $set.question_data = {
+          ...($set.question_data as Record<string, unknown>),
+          Options: GRAMMAR_VARIANT_OPTIONS_FIXED,
+        };
       }
     }
 

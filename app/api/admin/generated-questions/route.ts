@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 import { variationPercentAgainstOriginal } from '@/lib/paragraph-variation';
 import { getPassageTextForVariantCompare, passageIdToValidHex } from '@/lib/passage-variant-text';
 
@@ -173,6 +174,10 @@ export async function POST(request: NextRequest) {
         : typeof body.error_msg === 'string'
           ? body.error_msg
           : String(body.error_msg);
+
+    if (type === '어법') {
+      question_data = { ...question_data, Options: GRAMMAR_VARIANT_OPTIONS_FIXED };
+    }
 
     const now = new Date();
     const doc = {

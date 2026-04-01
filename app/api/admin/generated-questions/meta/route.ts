@@ -9,13 +9,20 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection('generated_questions');
-    const [textbooks, types, statuses] = await Promise.all([
+    const passagesCol = db.collection('passages');
+    const [gqTextbooks, passageTextbooks, types, statuses] = await Promise.all([
       col.distinct('textbook'),
+      passagesCol.distinct('textbook'),
       col.distinct('type'),
       col.distinct('status'),
     ]);
+    const tbSet = new Set<string>();
+    for (const t of [...(gqTextbooks as string[]), ...(passageTextbooks as string[])]) {
+      if (typeof t === 'string' && t.trim()) tbSet.add(t.trim());
+    }
+    const textbooks = [...tbSet].sort((a, b) => a.localeCompare(b, 'ko'));
     return NextResponse.json({
-      textbooks: (textbooks as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko')),
+      textbooks,
       types: (types as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko')),
       statuses: (statuses as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko')),
     });

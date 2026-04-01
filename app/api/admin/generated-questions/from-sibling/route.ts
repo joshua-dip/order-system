@@ -5,7 +5,10 @@ import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { extractJsonObject } from '@/lib/llm-json';
 import { VARIANT_DRAFT_BLANK_AND_SUMMARY_RULES } from '@/lib/variant-draft-blank-summary-rules';
-import { VARIANT_DRAFT_GRAMMAR_RULES } from '@/lib/variant-draft-grammar-rules';
+import {
+  GRAMMAR_VARIANT_OPTIONS_FIXED,
+  VARIANT_DRAFT_GRAMMAR_RULES,
+} from '@/lib/variant-draft-grammar-rules';
 
 export const maxDuration = 120;
 
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
         Category: typeof srcQd.Category === 'string' ? srcQd.Category : '',
         Question: '',
         Paragraph: paragraph,
-        Options: '',
+        Options: type.trim() === '어법' ? GRAMMAR_VARIANT_OPTIONS_FIXED : '',
         OptionType: typeof srcQd.OptionType === 'string' ? srcQd.OptionType : 'English',
         CorrectAnswer: '',
         Explanation: '',
@@ -187,6 +190,9 @@ ${paragraph}`;
         CorrectAnswer: typeof parsed.CorrectAnswer === 'string' ? parsed.CorrectAnswer : '',
         Explanation: typeof parsed.Explanation === 'string' ? parsed.Explanation : '',
       };
+      if (type.trim() === '어법') {
+        question_data.Options = GRAMMAR_VARIANT_OPTIONS_FIXED;
+      }
     }
 
     const doc = {

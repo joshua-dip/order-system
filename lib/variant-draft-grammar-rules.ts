@@ -1,6 +1,10 @@
 /**
  * Claude 초안(generate-draft / from-sibling) 시스템 프롬프트 — 어법(grammar) 유형 전용 절차·형식
  */
+
+/** 어법 유형: 보기는 지문 밑줄에만 두고 Options 문자열은 이 값으로 통일 */
+export const GRAMMAR_VARIANT_OPTIONS_FIXED = '①###②###③###④###⑤';
+
 export const VARIANT_DRAFT_GRAMMAR_RULES = `- 어법: Question은 반드시 "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?"으로 작성.
   (아래 **출제 절차**를 먼저 머릿속으로 밟은 뒤, 최종적으로 JSON만 출력한다.)
   【출제 절차】 (아래 "단계"는 문제 번호 ①~⑤와 무관)

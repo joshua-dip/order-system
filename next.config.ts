@@ -1,19 +1,16 @@
 import type { NextConfig } from "next";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * 상위 디렉터리에 다른 package-lock이 있으면 프로덕션 빌드 시 추적 루트가 어긋날 수 있음.
- * `next dev`에도 동일 옵션을 쓰면 `.next/required-server-files.json` 등이 꼬여 ENOENT가 나는 경우가 있어
- * 프로덕션 빌드에만 적용합니다.
+ * 홈 디렉터리 등 상위에 package-lock.json 이 있으면 Next가 워크스페이스 루트를 잘못 잡습니다.
+ * 이 저장소 디렉터리를 추적 루트로 고정합니다(import.meta.url — cwd 와 무관).
  */
-const prodTracing =
-  process.env.NODE_ENV === "production"
-    ? { outputFileTracingRoot: path.resolve(process.cwd()) }
-    : {};
-
 const nextConfig: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
-  ...prodTracing,
+  outputFileTracingRoot: __dirname,
 };
 
 export default nextConfig;

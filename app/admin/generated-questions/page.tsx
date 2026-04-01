@@ -105,6 +105,245 @@ function ParagraphWithUnderline({ text, className = '' }: { text: string; classN
   );
 }
 
+/** HTML에서 태그만 제거한 평문 (미리보기 분할·검증용) */
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]+>/g, '');
+}
+
+/**
+ * plain 문자열 인덱스 [plainStart, plainEnd) 에 대응하는 HTML 구간 (태그 보존).
+ */
+function sliceHtmlByPlainRange(html: string, plainStart: number, plainEnd: number): string {
+  let pi = 0;
+  let i = 0;
+  let h0 = -1;
+  let h1 = -1;
+  while (i < html.length) {
+    if (html[i] === '<') {
+      const e = html.indexOf('>', i);
+      if (e < 0) break;
+      i = e + 1;
+      continue;
+    }
+    if (pi === plainStart) h0 = i;
+    pi++;
+    i++;
+    if (pi === plainEnd) {
+      h1 = i;
+      break;
+    }
+  }
+  if (h0 < 0) return '';
+  if (h1 < 0) h1 = html.length;
+  return html.slice(h0, h1);
+}
+
+/**
+ * passages.content.sentences_en 과 Paragraph 평문이 순서대로 일치할 때만 HTML 조각으로 분할.
+ * 어법용 ① <u> 삽입 등으로 평문이 어긋나면 null → 아래 휴리스틱 분할로 대체.
+ */
+function trySplitParagraphByDbSentences(paragraphHtml: string, dbSents: string[]): string[] | null {
+  const sents = dbSents.map((s) => s.trim()).filter(Boolean);
+  if (sents.length === 0) return null;
+  const plain = stripHtmlTags(paragraphHtml);
+  let pCursor = 0;
+  while (pCursor < plain.length && /\s/.test(plain[pCursor]!)) pCursor++;
+
+  const htmlChunks: string[] = [];
+  for (const needle of sents) {
+    const idx = plain.indexOf(needle, pCursor);
+    if (idx < 0) return null;
+    const gap = plain.slice(pCursor, idx);
+    if (gap.trim() !== '') return null;
+    const end = idx + needle.length;
+    htmlChunks.push(sliceHtmlByPlainRange(paragraphHtml, idx, end));
+    pCursor = end;
+  }
+  while (pCursor < plain.length && /\s/.test(plain[pCursor]!)) pCursor++;
+  if (pCursor !== plain.length) return null;
+  return htmlChunks;
+}
+
+/**
+ * Paragraph 미리보기용 휴리스틱: 구두점 + 따옴표 뒤 공백에서 분리 (<u> 유지).
+ */
+function splitParagraphIntoPreviewSentences(text: string): string[] {
+  const t = text.trim();
+  if (!t) return [];
+  const parts = t
+    .split(/(?<=[.!?。])["'」』]?\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts : [t];
+}
+
+const GRAMMAR_MARKS = ['①', '②', '③', '④', '⑤'] as const;
+
+function normalizeCircledAnswer(raw: string | undefined): string | null {
+  const t = String(raw ?? '').trim();
+  const d = t.match(/^([1-5])$/);
+  if (d) {
+    const i = parseInt(d[1]!, 10) - 1;
+    return GRAMMAR_MARKS[i] ?? null;
+  }
+  if (/^[①②③④⑤]$/.test(t)) return t;
+  return null;
+}
+
+/** 원문 평문에 밑줄 표기와 동일한 구절이 있는지 (공백·대소문자 정규화, 단어 1개는 \\b 경계) */
+function phraseAppearsInOriginal(needle: string, haystack: string): boolean {
+  const n = needle.replace(/\s+/g, ' ').trim();
+  const h = haystack.replace(/\s+/g, ' ');
+  if (!n || !h) return false;
+  const hl = h.toLowerCase();
+  const nl = n.toLowerCase();
+  if (nl.includes(' ')) {
+    return hl.includes(nl);
+  }
+  if (nl.length < 2) return false;
+  try {
+    const escaped = nl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`).test(hl);
+  } catch {
+    return hl.includes(nl);
+  }
+}
+
+/** 어법: ①~⑤ 밑줄·Options ### 구간 점검 + 선택 시 원문(passage)과 동일 표기 안내 */
+function validateGrammarUnderlineOptions(
+  paragraph: string,
+  options: string,
+  extra?: {
+    /** 원문 미리보기 텍스트(HTML 가능) — 없으면 원문 비교 생략 */
+    originalPassage?: string | null;
+    /** JSON CorrectAnswer 예: "⑤" 또는 "5" */
+    correctAnswerRaw?: string;
+  }
+): { ok: boolean; issues: string[]; originalNotes: string[]; originalCompareSkipped?: string } {
+  const issues: string[] = [];
+  const originalNotes: string[] = [];
+  const re = /([①②③④⑤])\s*<u>([^<]*)<\/u>/gi;
+  const found: { mark: string; word: string }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(paragraph)) !== null) {
+    found.push({ mark: m[1]!, word: (m[2] ?? '').trim() });
+  }
+  if (found.length !== 5) {
+    issues.push(`밑줄 ① <u>…</u> 형태는 5개여야 합니다 (현재 ${found.length}개).`);
+  }
+  for (let i = 0; i < 5; i++) {
+    const mk = GRAMMAR_MARKS[i];
+    if (!found[i] || found[i]!.mark !== mk) {
+      issues.push(`밑줄 번호가 지문 앞→뒤 순서로 ①②③④⑤가 아닙니다 (${i + 1}번째 확인).`);
+      break;
+    }
+  }
+  const optParts =
+    typeof options === 'string'
+      ? options
+          .split(/###/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+  if (optParts.length !== 5) {
+    issues.push(`Options는 ### 로 구분된 보기 5개를 권장합니다 (현재 ${optParts.length}개).`);
+  }
+  const plainPara = stripHtmlTags(paragraph);
+  for (let i = 0; i < Math.min(5, found.length); i++) {
+    const w = found[i]!.word;
+    if (!w) {
+      issues.push(`${GRAMMAR_MARKS[i]} 밑줄 안 단어가 비어 있습니다.`);
+      continue;
+    }
+    if (!plainPara.includes(w)) {
+      issues.push(`${GRAMMAR_MARKS[i]} 밑줄 "${w}"(이)가 지문 평문에 나타나지 않습니다.`);
+    }
+  }
+  for (let i = 0; i < Math.min(5, optParts.length, found.length); i++) {
+    const stem = optParts[i]!.replace(/^[①②③④⑤]\s*/, '').trim();
+    const w = found[i]!.word;
+    if (!stem || !w) continue;
+    if (stem !== w && !optParts[i]!.includes(w)) {
+      issues.push(
+        `보기 ${GRAMMAR_MARKS[i]}("${stem.slice(0, 24)}${stem.length > 24 ? '…' : ''}")와 밑줄 단어 "${w}"가 다릅니다.`
+      );
+    }
+  }
+
+  let originalCompareSkipped: string | undefined;
+  const origSrc = extra?.originalPassage;
+  if (origSrc == null || !String(origSrc).trim()) {
+    originalCompareSkipped = '원문(passage) 미리보기가 없어 밑줄·원문 동일 여부는 비교하지 않았습니다.';
+  } else {
+    const origPlain = stripHtmlTags(String(origSrc)).replace(/\s+/g, ' ').trim();
+    if (!origPlain) {
+      originalCompareSkipped = '원문 내용이 비어 있어 동일 여부를 비교하지 않았습니다.';
+    } else {
+      const correctMark = normalizeCircledAnswer(extra?.correctAnswerRaw);
+      for (let i = 0; i < Math.min(5, found.length); i++) {
+        const mark = found[i]!.mark;
+        const w = found[i]!.word.trim();
+        if (!w || w.length < 2) continue;
+        if (!phraseAppearsInOriginal(w, origPlain)) continue;
+        const isCorrectSlot = correctMark != null && mark === correctMark;
+        if (isCorrectSlot) {
+          originalNotes.push(
+            `${mark} 「${w}」 — 원문에도 같은 표기가 있습니다. 정답(CorrectAnswer)으로 지정된 번호인데 밑줄이 원문과 다르지 않다면, 실제로는 ‘틀린 어법’이 아닐 수 있으니 지문·정답·해설을 확인하세요.`
+          );
+        } else {
+          originalNotes.push(
+            `${mark} 「${w}」 — 원문에도 같은 표기가 있습니다. (오답 위치로 쓰려면 원문과 다른 형태로 바꾸는 것이 일반적입니다.)`
+          );
+        }
+      }
+    }
+  }
+
+  return { ok: issues.length === 0, issues, originalNotes, originalCompareSkipped };
+}
+
+/** 변형문제 수정 등: 문장마다 작은 번호를 붙여 Claude 지시(예: 3번 문장) 시 참조하기 쉽게 함 */
+function ParagraphPreviewWithSentenceNumbers({
+  text,
+  dbSentences,
+}: {
+  text: string;
+  /** passages 문장구분(영) — 평문이 Paragraph와 순서대로 같을 때만 번호 분할에 사용 */
+  dbSentences?: string[] | null;
+}) {
+  const fromDb =
+    dbSentences && dbSentences.length > 0 ? trySplitParagraphByDbSentences(text, dbSentences) : null;
+  const sentences = fromDb ?? splitParagraphIntoPreviewSentences(text);
+  const usedDb = fromDb != null;
+  const dbTried = (dbSentences?.length ?? 0) > 0;
+  return (
+    <div className="w-full">
+      {usedDb && (
+        <p className="text-[10px] text-emerald-400/95 mb-1.5">문장 번호: 원문 passages · 문장구분(영) 기준</p>
+      )}
+      {!usedDb && dbTried && (
+        <p className="text-[10px] text-amber-400/90 mb-1.5">
+          문장구분(영) 평문과 지문이 순서대로 일치하지 않아, 구두점·따옴표 뒤 공백 휴리스틱으로 나눕니다.
+        </p>
+      )}
+      <span className="inline-block w-full whitespace-pre-wrap break-words">
+        {sentences.map((sent, idx) => (
+          <span key={idx} className="inline">
+            <span
+              className="inline text-[9px] font-bold tabular-nums align-super mr-0.5 select-none text-lime-400 drop-shadow-[0_0_6px_rgba(163,230,53,0.95)]"
+              title={`문장 ${idx + 1}`}
+            >
+              {idx + 1}
+            </span>
+            <ParagraphWithUnderline text={sent} className="inline" />
+            {idx < sentences.length - 1 ? ' ' : null}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
+
 const DEFAULT_QUESTION_JSON = `{
   "순서": 1,
   "Source": "",
@@ -173,6 +412,13 @@ export default function AdminGeneratedQuestionsPage() {
   /** 해당 교재 passage_id의 원문(원문 미리보기) */
   const [passagePreview, setPassagePreview] = useState<string | null>(null);
   const [passagePreviewLoading, setPassagePreviewLoading] = useState(false);
+  /** passages.content.sentences_en — Paragraph 번호 분할에 사용 */
+  const [passageSentencesEn, setPassageSentencesEn] = useState<string[] | null>(null);
+  /** 새 변형문제: 교재별 passages 목록(드롭다운) */
+  const [passagePickerItems, setPassagePickerItems] = useState<
+    Array<{ id: string; label: string; sourceForDb: string }>
+  >([]);
+  const [passagePickerLoading, setPassagePickerLoading] = useState(false);
   const questionJsonTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [form, setForm] = useState({
     textbook: '',
@@ -188,6 +434,17 @@ export default function AdminGeneratedQuestionsPage() {
   const [goToRowId, setGoToRowId] = useState<string | null>(null);
   /** 변형도 구간 문항에서 「열기」로 들어온 뒤 저장 시 이 경로로 router.push */
   const bucketReturnAfterSaveRef = useRef<string | null>(null);
+  /** 신규 저장 직후 「이어서 만들기」에 복원할 폼 스냅샷 */
+  const postSaveFormSnapshotRef = useRef<{
+    textbook: string;
+    passage_id: string;
+    source: string;
+    type: string;
+    option_type: string;
+    status: string;
+    error_msg: string;
+  } | null>(null);
+  const [postSaveContinueOpen, setPostSaveContinueOpen] = useState(false);
 
   type SolveResult = {
     claudeAnswer: string;
@@ -382,10 +639,11 @@ export default function AdminGeneratedQuestionsPage() {
     count: number;
     required: number;
     shortBy: number;
+    statusBreakdown?: { 완료: number; 대기: number; 검수불일치?: number; 기타: number };
   };
   type QCountScope = 'textbook' | 'order';
   /** 문제수 검증 — 변형문 status 집계 범위 */
-  type QCountQuestionStatus = 'all' | '대기' | '완료';
+  type QCountQuestionStatus = 'all' | '대기' | '완료' | '검수불일치';
   type QCountOrderOption = {
     id: string;
     orderNumber: string | null;
@@ -421,6 +679,11 @@ export default function AdminGeneratedQuestionsPage() {
     underfilledTruncated: boolean;
     noQuestions: QCountNoRow[];
     underfilled: QCountUnderRow[];
+    pendingReviewTotal?: number;
+    needCreateShortBySum?: number;
+    needCreateFromEmptyPassagesTotal?: number;
+    needCreateGrandTotal?: number;
+    pendingInScopeTotal?: number;
     message?: string;
     orderLessonsRequested?: number;
     orderLessonsMatched?: number;
@@ -653,12 +916,15 @@ export default function AdminGeneratedQuestionsPage() {
   }, [user, fetchList]);
 
   const openCreate = () => {
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
     bucketReturnAfterSaveRef.current = null;
     setEditingId(null);
     setDraftError(null);
     setDraftUserHint('');
     setDraftGenerated(false);
     setPassagePreview(null);
+    setPassageSentencesEn(null);
     setForm({
       textbook: filterTextbook || '',
       passage_id: filterPassageId.trim() || '',
@@ -674,6 +940,8 @@ export default function AdminGeneratedQuestionsPage() {
 
   /** 문제수 검증 — 부족 셀 클릭 시 해당 지문·유형으로 새 변형문제 모달 */
   const openCreateForQCountShortage = (r: QCountUnderRow, textbook: string) => {
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
     bucketReturnAfterSaveRef.current = null;
     console.log('[openCreateForQCountShortage]', { label: r.label, type: r.type, passageId: r.passageId?.slice(0, 8), textbook });
     const tb = (textbook || '').trim();
@@ -701,6 +969,7 @@ export default function AdminGeneratedQuestionsPage() {
     setDraftUserHint('');
     setDraftGenerated(false);
     setPassagePreview(null);
+    setPassageSentencesEn(null);
     setPage(1);
     setModalOpen(true);
     if (types.length === 0) fetchMeta();
@@ -710,16 +979,19 @@ export default function AdminGeneratedQuestionsPage() {
   useEffect(() => {
     if (!modalOpen || !form.passage_id.trim()) {
       setPassagePreview(null);
+      setPassageSentencesEn(null);
       return;
     }
     const pid = form.passage_id.trim();
     if (!/^[a-f0-9]{24}$/i.test(pid)) {
       setPassagePreview(null);
+      setPassageSentencesEn(null);
       return;
     }
     let cancelled = false;
     setPassagePreviewLoading(true);
     setPassagePreview(null);
+    setPassageSentencesEn(null);
     fetch(`/api/admin/passages/${pid}`, { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
@@ -727,6 +999,7 @@ export default function AdminGeneratedQuestionsPage() {
         const item = d?.item;
         if (!item || typeof item !== 'object') {
           setPassagePreview(null);
+          setPassageSentencesEn(null);
           return;
         }
         const content = item.content;
@@ -736,9 +1009,17 @@ export default function AdminGeneratedQuestionsPage() {
           (typeof content?.translation === 'string' && content.translation.trim()) ||
           '';
         setPassagePreview(raw || null);
+        const se = content?.sentences_en;
+        const arr = Array.isArray(se)
+          ? se.filter((x: unknown): x is string => typeof x === 'string' && x.trim() !== '')
+          : [];
+        setPassageSentencesEn(arr.length > 0 ? arr.map((x: string) => x.trim()) : null);
       })
       .catch(() => {
-        if (!cancelled) setPassagePreview(null);
+        if (!cancelled) {
+          setPassagePreview(null);
+          setPassageSentencesEn(null);
+        }
       })
       .finally(() => {
         if (!cancelled) setPassagePreviewLoading(false);
@@ -748,9 +1029,52 @@ export default function AdminGeneratedQuestionsPage() {
     };
   }, [modalOpen, form.passage_id]);
 
+  /** 새 변형문제: 선택한 교재의 passages 목록 로드 → 출처 드롭다운 */
+  useEffect(() => {
+    if (!modalOpen || editingId || !form.textbook.trim()) {
+      setPassagePickerItems([]);
+      setPassagePickerLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setPassagePickerLoading(true);
+    fetch(
+      `/api/admin/passages?textbook=${encodeURIComponent(form.textbook.trim())}&limit=2000`,
+      { credentials: 'include' }
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const raw = Array.isArray(d?.items) ? d.items : [];
+        const rows: Array<{ id: string; label: string; sourceForDb: string }> = [];
+        for (const row of raw as Record<string, unknown>[]) {
+          const id = String(row._id ?? '').trim();
+          if (!id || !/^[a-f0-9]{24}$/i.test(id)) continue;
+          const ch = String(row.chapter ?? '').trim();
+          const num = String(row.number ?? '').trim();
+          const sk = String(row.source_key ?? '').trim();
+          const sourceForDb = (sk || [ch, num].filter(Boolean).join(' ').trim() || id).trim();
+          const part = [ch, num].filter(Boolean).join(' · ');
+          const label = sk ? (part ? `${sk} — ${part}` : sk) : part || id;
+          rows.push({ id, label, sourceForDb });
+        }
+        rows.sort((a, b) => a.label.localeCompare(b.label, 'ko'));
+        setPassagePickerItems(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setPassagePickerItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setPassagePickerLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [modalOpen, editingId, form.textbook]);
+
   const runGenerateDraft = async () => {
     if (!form.textbook.trim() || !form.passage_id.trim() || !form.source.trim() || !form.type.trim()) {
-      setDraftError('교재·passage_id·출처·유형을 모두 채운 뒤 실행해 주세요.');
+      setDraftError('교재·원문 지문(출처)·유형을 모두 선택·입력한 뒤 실행해 주세요.');
       return;
     }
     const pid = form.passage_id.trim();
@@ -857,6 +1181,8 @@ export default function AdminGeneratedQuestionsPage() {
 
   const openEdit = useCallback(
     async (id: string, bucketReturnPath: string | null = null) => {
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
     if (bucketReturnPath && isVariationBucketReturnPath(bucketReturnPath)) {
       bucketReturnAfterSaveRef.current = bucketReturnPath;
     } else {
@@ -867,6 +1193,7 @@ export default function AdminGeneratedQuestionsPage() {
     setDraftUserHint('');
     setDraftGenerated(false);
     setPassagePreview(null);
+    setPassageSentencesEn(null);
     try {
       const res = await fetch(`/api/admin/generated-questions/${id}`, { credentials: 'include' });
       const d = await res.json();
@@ -900,7 +1227,11 @@ export default function AdminGeneratedQuestionsPage() {
 
   const handleSave = async () => {
     if (!form.textbook.trim() || !form.passage_id.trim()) {
-      alert('교재명과 passage_id(원문 문서 ObjectId)는 필수입니다.');
+      alert(
+        editingId
+          ? '교재명과 passage_id(원문 문서 ObjectId)는 필수입니다.'
+          : '교재와 출처(원문 지문)를 선택해 주세요. passage_id는 선택 시 자동으로 설정됩니다.'
+      );
       return;
     }
     if (!editingId && (!form.source.trim() || !form.type.trim())) {
@@ -978,6 +1309,7 @@ export default function AdminGeneratedQuestionsPage() {
           setDraftGenerated(false);
           setDraftError(null);
           setPassagePreview(null);
+          setPassageSentencesEn(null);
           setModalOpen(true);
           return;
         }
@@ -1015,14 +1347,83 @@ export default function AdminGeneratedQuestionsPage() {
         return;
       }
 
-      if (!editingId) setPage(1);
-      setModalOpen(false);
+      if (!editingId) {
+        setPage(1);
+        postSaveFormSnapshotRef.current = { ...form };
+        setModalOpen(false);
+        setPostSaveContinueOpen(true);
+      } else {
+        setModalOpen(false);
+      }
     } catch {
       alert('요청 중 오류');
     } finally {
       setSaving(false);
     }
   };
+
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
+  /** 변형문제 모달(신규·수정·부족 문항 순차): ⌘↵ / Ctrl+↵ 로 저장 */
+  useEffect(() => {
+    if (!modalOpen) return;
+    let inFlight = false;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
+      e.preventDefault();
+      if (inFlight) return;
+      inFlight = true;
+      void (async () => {
+        try {
+          await handleSaveRef.current();
+        } finally {
+          inFlight = false;
+        }
+      })();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen]);
+
+  const dismissPostSaveContinue = useCallback(() => {
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
+  }, []);
+
+  const handlePostSaveContinue = () => {
+    const snap = postSaveFormSnapshotRef.current;
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
+    if (!snap) return;
+    bucketReturnAfterSaveRef.current = null;
+    shortageBatchRef.current = null;
+    setShortageBatch(null);
+    setEditingId(null);
+    setFilterTextbook(snap.textbook.trim());
+    setFilterPassageId(snap.passage_id.trim());
+    setFilterType(snap.type.trim());
+    setForm({
+      ...snap,
+      error_msg: '',
+    });
+    setQuestionJson(DEFAULT_QUESTION_JSON);
+    setDraftError(null);
+    setDraftUserHint('');
+    setDraftGenerated(false);
+    setPassagePreview(null);
+    setPassageSentencesEn(null);
+    setModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (!postSaveContinueOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dismissPostSaveContinue();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [postSaveContinueOpen, dismissPostSaveContinue]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('이 변형문제를 삭제할까요? 되돌릴 수 없습니다.')) return;
@@ -1071,6 +1472,70 @@ export default function AdminGeneratedQuestionsPage() {
       };
       setSolveRow(rowData);
 
+      const solveRes = await fetch('/api/admin/generated-questions/solve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          question: rowData.question,
+          paragraph: rowData.paragraph,
+          options: rowData.options,
+          correctAnswer: rowData.correctAnswer,
+          questionType: rowData.type,
+        }),
+      });
+      const sd = await solveRes.json();
+      if (!solveRes.ok) {
+        setSolveError(sd.error || '풀기 요청 실패');
+        return;
+      }
+      setSolveResult(sd as SolveResult);
+    } catch {
+      setSolveError('네트워크 오류');
+    } finally {
+      setSolveLoading(false);
+    }
+  };
+
+  /** 새·수정 변형문제 모달의 question_data JSON으로 Claude 풀이(기존 solve API) */
+  const openSolveFromDraftModal = async () => {
+    let qd: Record<string, unknown>;
+    try {
+      qd = JSON.parse(questionJson) as Record<string, unknown>;
+      if (!qd || typeof qd !== 'object' || Array.isArray(qd)) {
+        setDraftError('question_data JSON 형식을 확인해 주세요.');
+        return;
+      }
+    } catch {
+      setDraftError('question_data JSON 파싱에 실패했습니다.');
+      return;
+    }
+    const question = String(qd.Question ?? '').trim();
+    const paragraph = String(qd.Paragraph ?? '').trim();
+    const options = String(qd.Options ?? '').trim();
+    const correctAnswer = String(qd.CorrectAnswer ?? '').trim();
+    if (!question && !paragraph) {
+      setDraftError('풀기에는 발문(Question) 또는 지문(Paragraph)이 필요합니다.');
+      return;
+    }
+    const typeStr = form.type.trim() || String(qd.Category ?? '').trim();
+
+    setSolveOpen(true);
+    setSolveResult(null);
+    setSolveError(null);
+    const rowData = {
+      id: '__draft__',
+      source: form.source.trim() || '(모달 미저장)',
+      type: typeStr || '(유형 미지정)',
+      textbook: form.textbook.trim() || '(교재 미선택)',
+      question,
+      paragraph,
+      options,
+      correctAnswer,
+    };
+    setSolveRow(rowData);
+    setSolveLoading(true);
+    try {
       const solveRes = await fetch('/api/admin/generated-questions/solve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2035,7 +2500,7 @@ export default function AdminGeneratedQuestionsPage() {
       const ord = d.order;
       const qss = d.questionStatusScope;
       const questionStatusScope: QCountQuestionStatus =
-        qss === '대기' || qss === '완료' ? qss : 'all';
+        qss === '대기' || qss === '완료' || qss === '검수불일치' ? qss : 'all';
       setQCountData({
         scope: d.scope === 'order' ? 'order' : 'textbook',
         textbook: String(d.textbook ?? ''),
@@ -2050,6 +2515,14 @@ export default function AdminGeneratedQuestionsPage() {
         underfilledTruncated: !!d.underfilledTruncated,
         noQuestions: Array.isArray(d.noQuestions) ? d.noQuestions : [],
         underfilled: Array.isArray(d.underfilled) ? d.underfilled : [],
+        pendingReviewTotal: typeof d.pendingReviewTotal === 'number' ? d.pendingReviewTotal : undefined,
+        needCreateShortBySum: typeof d.needCreateShortBySum === 'number' ? d.needCreateShortBySum : undefined,
+        needCreateFromEmptyPassagesTotal:
+          typeof d.needCreateFromEmptyPassagesTotal === 'number'
+            ? d.needCreateFromEmptyPassagesTotal
+            : undefined,
+        needCreateGrandTotal: typeof d.needCreateGrandTotal === 'number' ? d.needCreateGrandTotal : undefined,
+        pendingInScopeTotal: typeof d.pendingInScopeTotal === 'number' ? d.pendingInScopeTotal : undefined,
         message: typeof d.message === 'string' ? d.message : undefined,
         orderLessonsRequested:
           typeof d.orderLessonsRequested === 'number' ? d.orderLessonsRequested : undefined,
@@ -2272,6 +2745,12 @@ export default function AdminGeneratedQuestionsPage() {
               className="text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg border border-slate-600 hover:border-slate-500"
             >
               원문 관리
+            </Link>
+            <Link
+              href="/admin/generated-questions/review-logs"
+              className="text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 text-emerald-200/90"
+            >
+              Claude Code 검수 로그
             </Link>
             <button
               type="button"
@@ -4194,7 +4673,7 @@ export default function AdminGeneratedQuestionsPage() {
                           }}
                           className="text-cyan-500"
                         />
-                        전체 (대기+완료)
+                        전체 (대기+완료+검수불일치 등)
                       </label>
                       <label className="inline-flex items-center gap-2 cursor-pointer text-slate-200">
                         <input
@@ -4222,10 +4701,23 @@ export default function AdminGeneratedQuestionsPage() {
                         />
                         완료만
                       </label>
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-slate-200">
+                        <input
+                          type="radio"
+                          name="qCountQuestionStatus"
+                          checked={qCountQuestionStatus === '검수불일치'}
+                          onChange={() => {
+                            setQCountQuestionStatus('검수불일치');
+                            setQCountError(null);
+                          }}
+                          className="text-rose-400"
+                        />
+                        검수불일치만
+                      </label>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
                       원문(passages)별로 연결된 변형문을 위 status로 한정해 개수를 셉니다. 「대기만」은 검수 전 초안,
-                      「완료만」은 확정 문항만 반영합니다.
+                      「완료만」은 확정 문항, 「검수불일치만」은 재시도 검수 등으로 표시한 문항만 반영합니다.
                     </p>
                   </div>
 
@@ -4350,7 +4842,9 @@ export default function AdminGeneratedQuestionsPage() {
                                   ? ', status=대기'
                                   : qCountPreviewStats.questionStatusScope === '완료'
                                     ? ', status=완료'
-                                    : ''}
+                                    : qCountPreviewStats.questionStatusScope === '검수불일치'
+                                      ? ', status=검수불일치'
+                                      : ''}
                                 ){' '}
                                 {Number(qCountPreviewStats.generatedQuestionsCount ?? 0).toLocaleString()}건
                               </li>
@@ -4519,7 +5013,9 @@ export default function AdminGeneratedQuestionsPage() {
                                       ? '대기'
                                       : s.query.question_status === '완료'
                                         ? '완료'
-                                        : '전체'}
+                                        : s.query.question_status === '검수불일치'
+                                          ? '검수불일치'
+                                          : '전체'}
                                   </td>
                                   <td className="px-2 py-1 text-[11px] text-slate-400">
                                     지문 {sum?.passageCount ?? '—'} · 미생성 {sum?.noQuestionsTotal ?? '—'} · 부족{' '}
@@ -4715,14 +5211,18 @@ export default function AdminGeneratedQuestionsPage() {
                             ? 'text-amber-200'
                             : qCountData.questionStatusScope === '완료'
                               ? 'text-emerald-200'
-                              : 'text-slate-100'
+                              : qCountData.questionStatusScope === '검수불일치'
+                                ? 'text-rose-200'
+                                : 'text-slate-100'
                         }
                       >
                         {qCountData.questionStatusScope === 'all'
                           ? '전체'
                           : qCountData.questionStatusScope === '대기'
                             ? '대기만'
-                            : '완료만'}
+                            : qCountData.questionStatusScope === '완료'
+                              ? '완료만'
+                              : '검수불일치만'}
                       </strong>
                     </span>
                     <span>
@@ -4745,6 +5245,32 @@ export default function AdminGeneratedQuestionsPage() {
                         (지문×유형 조합)
                       </span>
                     </span>
+                    {(qCountData.pendingReviewTotal != null || qCountData.pendingInScopeTotal != null) && (
+                      <span className="text-violet-200/90">
+                        <strong className="text-violet-100">검수 대기</strong> 변형:{' '}
+                        <strong>
+                          {(qCountData.pendingReviewTotal ?? qCountData.pendingInScopeTotal ?? 0).toLocaleString()}
+                        </strong>
+                        건
+                        <span className="text-slate-500 text-xs font-normal">
+                          {' '}
+                          (풀이·일치 시 완료 · MCP{' '}
+                          <code className="text-slate-500">variant_review_pending_record</code>)
+                        </span>
+                      </span>
+                    )}
+                    {(qCountData.needCreateGrandTotal != null ||
+                      qCountData.needCreateShortBySum != null) && (
+                      <span className="text-amber-200/90">
+                        <strong className="text-amber-100">신규 작성 필요</strong> 추정:{' '}
+                        <strong>{(qCountData.needCreateGrandTotal ?? 0).toLocaleString()}</strong>건
+                        <span className="text-slate-500 text-xs font-normal">
+                          {' '}
+                          (유형 부족 합 {qCountData.needCreateShortBySum?.toLocaleString() ?? '—'} + 무지문 슬롯{' '}
+                          {qCountData.needCreateFromEmptyPassagesTotal?.toLocaleString() ?? '—'})
+                        </span>
+                      </span>
+                    )}
                   </div>
                   {(qCountData.noQuestionsTruncated || qCountData.underfilledTruncated) && (
                     <p className="text-xs text-amber-500/90 mb-4">
@@ -4806,6 +5332,18 @@ export default function AdminGeneratedQuestionsPage() {
                           passage·type으로 부족한 만큼 저장하면 기준 문항 수에 맞출 수 있습니다.{' '}
                           <strong className="text-slate-400">유형(카테고리)</strong> 또는{' '}
                           <strong className="text-slate-400">지문 라벨</strong> 헤더를 누르면 유형별·지문 순으로 정렬이 바뀝니다.
+                          {qCountData.questionStatusScope === 'all' && (
+                            <>
+                              {' '}
+                              집계가 <strong className="text-violet-300/90">전체</strong>일 때{' '}
+                              <strong className="text-slate-400">완료/대기/검수불일치/기타</strong> 열에 문항 수가 갈라져
+                              보입니다. <strong className="text-violet-300/90">대기</strong>는 아직 검수 전이며, Claude
+                              Code에서 풀이 후 <code className="text-slate-500">variant_review_pending_record</code>로
+                              기록하고 정답이 맞으면 자동으로 <strong className="text-emerald-300/90">완료</strong>로
+                              바뀝니다(재시도 시 <code className="text-slate-500">attemptNumber≥2</code>이면{' '}
+                              <strong className="text-rose-300/90">검수불일치</strong>).
+                            </>
+                          )}
                         </p>
                         {!shortageBatch && !batchCreatingAll && (
                           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -4918,6 +5456,11 @@ export default function AdminGeneratedQuestionsPage() {
                               </th>
                               <th className="py-2 px-2 text-right">현재</th>
                               <th className="py-2 px-2 text-right">기준</th>
+                              {qCountData.questionStatusScope === 'all' && (
+                                <th className="py-2 px-2 text-right text-[10px] leading-tight text-violet-300/90">
+                                  완료/대기/검수불일치/기타
+                                </th>
+                              )}
                               <th className="py-2 px-2 text-right" title="클릭 시 새 변형문제">
                                 부족
                               </th>
@@ -4942,6 +5485,23 @@ export default function AdminGeneratedQuestionsPage() {
                                   <td className="py-1.5 px-2 text-violet-300 font-medium">{r.type}</td>
                                   <td className="py-1.5 px-2 text-right text-slate-300">{r.count}</td>
                                   <td className="py-1.5 px-2 text-right text-slate-500">{r.required}</td>
+                                  {qCountData.questionStatusScope === 'all' && (
+                                    <td className="py-1.5 px-2 text-right text-[10px] text-slate-400 whitespace-nowrap">
+                                      {r.statusBreakdown ? (
+                                        <>
+                                          <span className="text-emerald-400/90">{r.statusBreakdown.완료}</span>/
+                                          <span className="text-violet-300/90">{r.statusBreakdown.대기}</span>/
+                                          <span className="text-rose-300/85">
+                                            {r.statusBreakdown.검수불일치 ?? 0}
+                                          </span>
+                                          /
+                                          <span className="text-slate-500">{r.statusBreakdown.기타}</span>
+                                        </>
+                                      ) : (
+                                        '—'
+                                      )}
+                                    </td>
+                                  )}
                                   <td className="py-1.5 px-2 text-right">
                                     <button
                                       type="button"
@@ -5149,6 +5709,9 @@ export default function AdminGeneratedQuestionsPage() {
                 <h2 className="text-lg font-bold text-emerald-300">Claude로 문제 풀기</h2>
                 {solveRow && (
                   <p className="text-xs text-slate-400 mt-1">
+                    {solveRow.id === '__draft__' && (
+                      <span className="mr-2 text-amber-400 font-medium">편집 중 JSON · </span>
+                    )}
                     <span className="text-violet-300">{solveRow.type}</span>
                     {' · '}{solveRow.source}
                     {' · '}<span className="text-slate-500">{solveRow.textbook}</span>
@@ -5300,7 +5863,11 @@ export default function AdminGeneratedQuestionsPage() {
                 {(draftLoading || saving || explanationOnlyLoading) && (
                   <span className="inline-flex items-center gap-2 text-sm text-amber-300">
                     <span className="inline-block w-4 h-4 border-2 border-amber-500/50 border-t-amber-300 rounded-full animate-spin shrink-0" />
-                    {explanationOnlyLoading ? '해설 생성 중…' : draftLoading ? 'Claude 작성 중…' : '저장 중…'}
+                    {explanationOnlyLoading
+                      ? '해설 생성 중…'
+                      : draftLoading
+                        ? 'Claude 작성 중…'
+                        : '저장 중…'}
                   </span>
                 )}
               </div>
@@ -5314,15 +5881,97 @@ export default function AdminGeneratedQuestionsPage() {
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="text-xs text-slate-400 block mb-1">passage_id (원문 passages._id) *</label>
-                  <input
-                    value={form.passage_id}
-                    onChange={(e) => setForm((f) => ({ ...f, passage_id: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white font-mono"
-                    placeholder="24자 hex ObjectId"
-                  />
-                </div>
+                {editingId ? (
+                  <div className="sm:col-span-2">
+                    <label className="text-xs text-slate-400 block mb-1">passage_id (원문 passages._id) *</label>
+                    <input
+                      value={form.passage_id}
+                      onChange={(e) => setForm((f) => ({ ...f, passage_id: e.target.value }))}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white font-mono"
+                      placeholder="24자 hex ObjectId"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs text-slate-400 block mb-1">교재명 *</label>
+                      <select
+                        value={form.textbook}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((f) => ({ ...f, textbook: v, passage_id: '', source: '' }));
+                        }}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                      >
+                        <option value="">교재 선택…</option>
+                        {textbooks.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs text-slate-400 block mb-1">출처 (원문 지문) *</label>
+                      <select
+                        value={
+                          passagePickerItems.some((p) => p.id === form.passage_id) ? form.passage_id : ''
+                        }
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          const row = passagePickerItems.find((p) => p.id === id);
+                          setForm((f) => ({
+                            ...f,
+                            passage_id: id,
+                            source: row?.sourceForDb ?? '',
+                          }));
+                        }}
+                        disabled={!form.textbook.trim() || passagePickerLoading}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white disabled:opacity-50"
+                      >
+                        <option value="">
+                          {passagePickerLoading
+                            ? '지문 목록 불러오는 중…'
+                            : !form.textbook.trim()
+                              ? '먼저 교재를 선택하세요'
+                              : '원문 지문(passage) 선택…'}
+                        </option>
+                        {passagePickerItems.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
+                      {form.textbook.trim() &&
+                        !passagePickerLoading &&
+                        passagePickerItems.length === 0 && (
+                          <p className="text-[11px] text-amber-400/90 mt-1">
+                            이 교재에 등록된 passage가 없습니다. 원문 관리에서 먼저 등록하세요.
+                          </p>
+                        )}
+                      {form.passage_id && /^[a-f0-9]{24}$/i.test(form.passage_id) && (
+                        <p className="text-[11px] text-slate-500 mt-1.5 font-mono">
+                          저장 시 사용되는 passages._id: {form.passage_id}
+                          {form.source ? (
+                            <span className="block text-slate-600 mt-0.5 font-sans">
+                              source 필드: {form.source}
+                            </span>
+                          ) : null}
+                        </p>
+                      )}
+                      {form.passage_id &&
+                        /^[a-f0-9]{24}$/i.test(form.passage_id) &&
+                        !passagePickerLoading &&
+                        form.textbook.trim() &&
+                        passagePickerItems.length > 0 &&
+                        !passagePickerItems.some((p) => p.id === form.passage_id) && (
+                          <p className="text-[11px] text-amber-300/90 mt-1.5">
+                            선택 목록에 없는 passage입니다. 부족 문항 등에서 연 경우 그대로 저장·초안 생성할 수 있습니다.
+                          </p>
+                        )}
+                    </div>
+                  </>
+                )}
                 {passagePreviewLoading && (
                   <div className="sm:col-span-2 flex items-center gap-2 text-slate-400 text-sm">
                     <span className="inline-block w-4 h-4 border-2 border-slate-500 border-t-cyan-400 rounded-full animate-spin" />
@@ -5337,23 +5986,27 @@ export default function AdminGeneratedQuestionsPage() {
                     </div>
                   </div>
                 )}
-                <div>
-                  <label className="text-xs text-slate-400 block mb-1">교재명 *</label>
-                  <input
-                    value={form.textbook}
-                    onChange={(e) => setForm((f) => ({ ...f, textbook: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-400 block mb-1">출처 (source) *</label>
-                  <input
-                    value={form.source}
-                    onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
-                    placeholder="예: 01강 기출 예제"
-                  />
-                </div>
+                {editingId && (
+                  <>
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">교재명 *</label>
+                      <input
+                        value={form.textbook}
+                        onChange={(e) => setForm((f) => ({ ...f, textbook: e.target.value }))}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">출처 (source) *</label>
+                      <input
+                        value={form.source}
+                        onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                        placeholder="예: 01강 기출 예제"
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <label className="text-xs text-slate-400 block mb-1">유형 (type) *</label>
                   <input
@@ -5384,12 +6037,12 @@ export default function AdminGeneratedQuestionsPage() {
                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
                     className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
                   >
-                    {['완료', '대기', '오류'].map((s) => (
+                    {['완료', '대기', '검수불일치', '오류'].map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>
                     ))}
-                    {statuses.filter((s) => !['완료', '대기', '오류'].includes(s)).map((s) => (
+                    {statuses.filter((s) => !['완료', '대기', '검수불일치', '오류'].includes(s)).map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>
@@ -5428,7 +6081,11 @@ export default function AdminGeneratedQuestionsPage() {
                       disabled={draftLoading || saving}
                       onClick={() => void runGenerateDraft()}
                       className="text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-700 hover:from-violet-500 hover:to-fuchsia-600 text-white font-bold disabled:opacity-50 shadow-md inline-flex items-center gap-2"
-                      title={editingId ? '현재 지문·유형으로 Claude가 새 초안 작성 (기존 JSON 덮어씀)' : 'passages 원문 + 위 유형으로 Claude가 1문항 JSON 초안 작성'}
+                      title={
+                        editingId
+                          ? '현재 지문·유형으로 Claude가 새 초안 작성 (기존 JSON 덮어씀). ANTHROPIC_API_KEY 필요.'
+                          : 'passages 원문 + 위 유형으로 Claude가 1문항 JSON 초안 작성. ANTHROPIC_API_KEY 필요.'
+                      }
                     >
                       {draftLoading && (
                         <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
@@ -5456,9 +6113,9 @@ export default function AdminGeneratedQuestionsPage() {
                   className="w-full mb-2 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500"
                 />
                 <p className="text-[11px] text-slate-500 mb-1">
-                  「유형별 AI 프롬프트」에 저장한 지침이 위 유형에 자동 반영됩니다.{' '}
-                  <code className="text-slate-400">ANTHROPIC_API_KEY</code> 필요 (미설정 시 버튼은
-                  오류를 표시합니다). {editingId && '수정 시에는 기존 question_data를 새 초안으로 덮어씁니다.'}
+                  「유형별 AI 프롬프트」에 저장한 지침이 위 유형에 자동 반영됩니다. 초안 생성은 서버가 Anthropic API를
+                  한 번 호출해 JSON을 채웁니다 (<code className="text-slate-400">ANTHROPIC_API_KEY</code>).{' '}
+                  {editingId && '수정 시에도 새 초안으로 JSON을 덮어씁니다.'}
                 </p>
                 {draftError && (
                   <div className="mb-2 p-2 rounded-lg bg-red-950/50 border border-red-800/40 text-red-300 text-xs whitespace-pre-wrap">
@@ -5471,17 +6128,86 @@ export default function AdminGeneratedQuestionsPage() {
                 </p>
                 {(() => {
                   let para = '';
+                  let category = '';
+                  let optionsStr = '';
+                  let correctAnswerStr = '';
                   try {
                     const q = JSON.parse(questionJson) as Record<string, unknown>;
                     para = typeof q?.Paragraph === 'string' ? q.Paragraph : '';
+                    category = typeof q?.Category === 'string' ? q.Category : '';
+                    optionsStr = typeof q?.Options === 'string' ? q.Options : '';
+                    correctAnswerStr = typeof q?.CorrectAnswer === 'string' ? q.CorrectAnswer : '';
                   } catch {
                     /* invalid JSON while typing */
                   }
+                  const isGrammar =
+                    category === '어법' || form.type.trim() === '어법';
+                  const grammarCheck =
+                    isGrammar && para
+                      ? validateGrammarUnderlineOptions(para, optionsStr, {
+                          originalPassage: passagePreview,
+                          correctAnswerRaw: correctAnswerStr,
+                        })
+                      : null;
+                  const grammarStructureOk = grammarCheck?.ok === true;
+                  const hasOriginalSameNotes = (grammarCheck?.originalNotes?.length ?? 0) > 0;
+                  const structureBoxTone =
+                    grammarCheck && !grammarStructureOk
+                      ? 'border-amber-600/50 bg-amber-950/35 text-amber-100'
+                      : grammarCheck && hasOriginalSameNotes
+                        ? 'border-violet-600/45 bg-violet-950/30 text-violet-100'
+                        : 'border-emerald-600/50 bg-emerald-950/40 text-emerald-200';
                   return para ? (
                     <div className="mb-3 rounded-lg bg-slate-900/80 border border-slate-600 p-3">
                       <p className="text-[11px] text-slate-500 mb-2 font-semibold uppercase tracking-wider">Paragraph 미리보기</p>
+                      <p className="text-[10px] text-slate-600 mb-2">
+                        번호는 미리보기 전용입니다. passage에 문장구분(영)이 있으면 그 순서로 나누고, 아니면 구두점·따옴표 뒤 공백으로 나눕니다.
+                      </p>
+                      {grammarCheck && (
+                        <div className="mb-2 space-y-2">
+                          <div className={`rounded-lg border px-2.5 py-2 text-[11px] ${structureBoxTone}`}>
+                            <span className="font-semibold">어법 점검(형식): </span>
+                            {grammarStructureOk ? (
+                              <>
+                                ①~⑤ 밑줄 5개·순서, Options ### 구간 5개, 밑줄 단어와 지문 포함 관계를 통과했습니다.
+                                {hasOriginalSameNotes &&
+                                  ' 아래 「원문과 동일한 밑줄」을 함께 확인하세요.'}
+                              </>
+                            ) : (
+                              <ul className="list-disc pl-4 mt-1 space-y-0.5">
+                                {grammarCheck.issues.map((issue, i) => (
+                                  <li key={i}>{issue}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                          {grammarCheck.originalCompareSkipped && !passagePreviewLoading && (
+                            <p className="text-[10px] text-slate-500 leading-relaxed px-0.5">
+                              {grammarCheck.originalCompareSkipped}{' '}
+                              <span className="text-slate-600">
+                                (passage_id가 맞으면 상단 「원문 미리보기」 로드 후 자동 비교됩니다.)
+                              </span>
+                            </p>
+                          )}
+                          {grammarCheck.originalNotes.length > 0 && (
+                            <div className="rounded-lg border border-cyan-700/45 bg-cyan-950/25 px-2.5 py-2 text-[11px] text-cyan-100/95">
+                              <p className="font-semibold text-cyan-200/95 mb-1">원문 대비 밑줄 표기</p>
+                              <p className="text-[10px] text-cyan-200/75 leading-relaxed mb-1.5">
+                                상단 「원문 미리보기」와 같은 표기가 밑줄 안에 그대로 있으면 아래에 표시합니다. 어법형은 보통 한 곳만 원문과 다른(틀린) 형태로
+                                바꾸므로, 정답 번호(CorrectAnswer)에 해당하는 밑줄이 원문과 같다면
+                                ‘틀린 것’이 아닐 수 있어 출제·JSON을 점검하는 것이 좋습니다.
+                              </p>
+                              <ul className="list-disc pl-4 space-y-1 text-cyan-100/90">
+                                {grammarCheck.originalNotes.map((note, i) => (
+                                  <li key={i}>{note}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div className="text-sm text-slate-200 leading-relaxed max-h-40 overflow-y-auto">
-                        <ParagraphWithUnderline text={para} />
+                        <ParagraphPreviewWithSentenceNumbers text={para} dbSentences={passageSentencesEn} />
                       </div>
                     </div>
                   ) : null;
@@ -5494,7 +6220,7 @@ export default function AdminGeneratedQuestionsPage() {
                   className="w-full bg-slate-950 border border-violet-900/50 rounded-lg px-3 py-2 text-xs text-green-200 font-mono"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
@@ -5504,16 +6230,70 @@ export default function AdminGeneratedQuestionsPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={saving}
+                  disabled={saving || draftLoading || explanationOnlyLoading || solveLoading}
+                  onClick={() => void openSolveFromDraftModal()}
+                  title="현재 question_data JSON으로 Claude가 풀고, 정답 일치 여부와 풀이를 표시합니다 (ANTHROPIC_API_KEY)."
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-teal-700 to-emerald-800 hover:from-teal-600 hover:to-emerald-700 text-white text-sm font-bold disabled:opacity-50 shadow-md"
+                >
+                  클로드코드로 생성된 문제 풀기
+                </button>
+                <button
+                  type="button"
+                  disabled={saving || draftLoading || explanationOnlyLoading}
                   onClick={handleSave}
+                  title="⌘↵(Mac) 또는 Ctrl+↵(Windows)로 저장"
                   className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 font-bold disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving && (
                     <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
                   )}
                   {saving ? '저장 중…' : '저장'}
+                  {!saving ? (
+                    <span className="text-[10px] font-normal text-violet-200/80 tabular-nums hidden sm:inline">
+                      ⌘↵ / Ctrl↵
+                    </span>
+                  ) : null}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {postSaveContinueOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75"
+          onClick={dismissPostSaveContinue}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="post-save-continue-title"
+            className="bg-slate-800 border border-violet-500/40 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="post-save-continue-title" className="text-lg font-bold text-white">
+              이어서 문제 만들기
+            </h3>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              변형문제를 저장했습니다. 「이어서 만들기」를 누르면 <span className="text-violet-200 font-medium">새 변형문제</span> 창이 열리고, 방금 쓰던{' '}
+              <span className="text-slate-200">교재·출처(지문)·유형</span>이 그대로 채워집니다. JSON만 초기 템플릿으로 비웁니다.
+            </p>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={dismissPostSaveContinue}
+                className="px-4 py-2.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 text-sm font-medium"
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={handlePostSaveContinue}
+                className="px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold"
+              >
+                이어서 만들기
+              </button>
             </div>
           </div>
         </div>

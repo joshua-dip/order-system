@@ -24,6 +24,7 @@ function OrderDoneContent() {
   const [error, setError] = useState('');
   const [user, setUser] = useState<{ loginId: string } | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [orderNumberCopied, setOrderNumberCopied] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -73,6 +74,30 @@ function OrderDoneContent() {
     }
   };
 
+  const copyOrderNumberToClipboard = async (num: string) => {
+    try {
+      await navigator.clipboard.writeText(num);
+      setOrderNumberCopied(true);
+      window.setTimeout(() => setOrderNumberCopied(false), 2000);
+    } catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = num;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setOrderNumberCopied(true);
+        window.setTimeout(() => setOrderNumberCopied(false), 2000);
+      } catch {
+        alert('복사에 실패했습니다. 주문번호를 직접 선택해 복사해 주세요.');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -115,8 +140,49 @@ function OrderDoneContent() {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">주문서가 접수되었습니다</h1>
             <p className="text-gray-600">아래 내용을 확인하시고 문의 시 참고해 주세요.</p>
             {order.orderNumber && (
-              <p className="mt-2 text-sm text-gray-500">
-                주문번호: <span className="font-mono font-semibold text-gray-700">{order.orderNumber}</span>
+              <p className="mt-2 text-sm text-gray-500 flex flex-wrap items-center justify-center gap-2">
+                <span>
+                  주문번호:{' '}
+                  <span className="font-mono font-semibold text-gray-700">{order.orderNumber}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void copyOrderNumberToClipboard(order.orderNumber!)}
+                  className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white p-1.5 text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  aria-label="주문번호 클립보드에 복사"
+                  title="복사"
+                >
+                  {orderNumberCopied ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-4 h-4 text-emerald-600"
+                      aria-hidden
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-4 h-4"
+                      aria-hidden
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  )}
+                </button>
               </p>
             )}
             <div

@@ -1,6 +1,13 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
+
 const Footer = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin/syntax-analyzer')) {
+    return null;
+  }
+
   const companyName = process.env.NEXT_PUBLIC_FOOTER_COMPANY_NAME ?? '';
   const repName = process.env.NEXT_PUBLIC_FOOTER_REP_NAME ?? '';
   const bizNumber = process.env.NEXT_PUBLIC_FOOTER_BIZ_NUMBER ?? '';

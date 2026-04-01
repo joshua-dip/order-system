@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ObjectId } from 'mongodb';
+import { ObjectId, type Document } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { passagesForMockVariantOrder } from '@/lib/mock-variant-order';
 
 /**
  * 디버깅용: orderNumber로 주문서 찾아서 문제수 검증 데이터 상세 조회
@@ -37,19 +38,7 @@ export async function GET(request: NextRequest) {
 
     const m = meta as Record<string, unknown>;
     const flow = typeof m.flow === 'string' ? m.flow : '';
-    if (flow !== 'bookVariant') {
-      return NextResponse.json({
-        error: `flow가 "bookVariant"가 아닙니다: ${flow}`,
-        orderId: order._id.toString(),
-        orderNumber: order.orderNumber,
-        flow,
-      });
-    }
 
-    const textbook = typeof m.selectedTextbook === 'string' ? m.selectedTextbook.trim() : '';
-    const selectedLessons = Array.isArray(m.selectedLessons)
-      ? m.selectedLessons.filter((x): x is string => typeof x === 'string').map((l) => l.trim()).filter(Boolean)
-      : [];
     const selectedTypes = Array.isArray(m.selectedTypes)
       ? m.selectedTypes.filter((x): x is string => typeof x === 'string').map((t) => t.trim()).filter(Boolean)
       : [];
@@ -58,15 +47,44 @@ export async function GET(request: NextRequest) {
         ? Math.min(20, Math.floor(m.questionsPerType))
         : 3;
 
-    const passages = await passagesCol
-      .find({ textbook, source_key: { $in: selectedLessons } })
-      .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
-      .toArray();
+    let textbook: string;
+    let selectedLessons: string[] = [];
+    let passages: Document[];
+    let lessonsWithoutPassage: string[];
+    let matchedLessonsCount = 0;
+    let mockRequestedSlots = 0;
 
-    const matchedKeys = new Set(
-      passages.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : ''))
-    );
-    const lessonsWithoutPassage = selectedLessons.filter((l) => !matchedKeys.has(l));
+    if (flow === 'bookVariant') {
+      textbook = typeof m.selectedTextbook === 'string' ? m.selectedTextbook.trim() : '';
+      selectedLessons = Array.isArray(m.selectedLessons)
+        ? m.selectedLessons.filter((x): x is string => typeof x === 'string').map((l) => l.trim()).filter(Boolean)
+        : [];
+
+      passages = await passagesCol
+        .find({ textbook, source_key: { $in: selectedLessons } })
+        .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
+        .toArray();
+
+      const matchedKeys = new Set(
+        passages.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : ''))
+      );
+      matchedLessonsCount = matchedKeys.size;
+      lessonsWithoutPassage = selectedLessons.filter((l) => !matchedKeys.has(l));
+    } else if (flow === 'mockVariant') {
+      const mock = await passagesForMockVariantOrder(passagesCol, m.examSelections);
+      textbook = mock.primaryTextbook;
+      passages = mock.passageDocs;
+      lessonsWithoutPassage = mock.lessonsWithoutPassage;
+      mockRequestedSlots = mock.totalSlotsRequested;
+      selectedLessons = [];
+    } else {
+      return NextResponse.json({
+        error: `지원 flow가 아닙니다 (bookVariant·mockVariant만): ${flow}`,
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        flow,
+      });
+    }
 
     const passageIds = passages.map((p) => p._id as ObjectId);
     const passageIdStrings = passageIds.map((id) => id.toString());
@@ -118,15 +136,18 @@ export async function GET(request: NextRequest) {
         flow,
       },
       orderMeta: {
-        selectedTextbook: textbook,
-        selectedLessons,
+        flow,
+        selectedTextbook: flow === 'bookVariant' ? textbook : undefined,
+        examSelections: flow === 'mockVariant' ? m.examSelections : undefined,
+        selectedLessons: flow === 'bookVariant' ? selectedLessons : undefined,
         selectedTypes,
         questionsPerType: qpt,
       },
       passages: {
         total: passages.length,
-        requestedLessons: selectedLessons.length,
-        matchedLessons: matchedKeys.size,
+        requestedLessons: flow === 'bookVariant' ? selectedLessons.length : undefined,
+        requestedSlots: flow === 'mockVariant' ? mockRequestedSlots : undefined,
+        matchedLessons: flow === 'bookVariant' ? matchedLessonsCount : undefined,
         lessonsWithoutPassage,
         sample: samplePassages,
       },

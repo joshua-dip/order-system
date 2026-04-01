@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# next-order 루트에서: ./claude claude:BV-20260331-002  또는  ./claude BV-20260331-002
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+exec npx tsx scripts/cc-variant-cli.ts "$@"

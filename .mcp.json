@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "next-order-variant": {
+      "type": "stdio",
+      "command": "npm",
+      "args": [
+        "run",
+        "mcp:variant"
+      ],
+      "env": {}
+    }
+  }
+}

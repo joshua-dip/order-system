@@ -17,6 +17,14 @@ export type NoQuestionRow = {
   label: string;
 };
 
+export type UnderfilledStatusBreakdown = {
+  완료: number;
+  대기: number;
+  /** 재시도 검수 등으로 표시 — 문항 품질 의심 시 */
+  검수불일치: number;
+  기타: number;
+};
+
 export type UnderfilledRow = {
   passageId: string;
   label: string;
@@ -24,6 +32,8 @@ export type UnderfilledRow = {
   count: number;
   required: number;
   shortBy: number;
+  /** questionStatusScope가 all일 때만: 해당 지문×유형 변형문의 status별 건수(합=count) */
+  statusBreakdown?: UnderfilledStatusBreakdown;
 };
 
 /**

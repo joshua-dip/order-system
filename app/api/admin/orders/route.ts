@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { parseOrderRevenueFromOrderText } from '@/lib/order-revenue';
+import { parseOrderRevenueFromOrderText, resolvePointOrderDisplayAmounts } from '@/lib/order-revenue';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '주문 접수',
@@ -45,6 +45,9 @@ export async function GET(request: NextRequest) {
           : null;
       const rev = (o as { revenueWon?: unknown }).revenueWon;
       const completedAt = (o as { completedAt?: unknown }).completedAt;
+      const rawPu = (o as { pointsUsed?: unknown }).pointsUsed;
+      const pointsUsed =
+        typeof rawPu === 'number' && Number.isFinite(rawPu) && rawPu > 0 ? Math.floor(rawPu) : 0;
       let revenueWon: number | null =
         typeof rev === 'number' && Number.isFinite(rev) && rev >= 0 ? rev : null;
       if ((o.status || 'pending') === 'completed' && revenueWon == null) {
@@ -53,6 +56,15 @@ export async function GET(request: NextRequest) {
         );
         revenueWon = parsed;
       }
+      const orderTextStr = typeof o.orderText === 'string' ? o.orderText : '';
+      const pointDisp =
+        pointsUsed > 0
+          ? resolvePointOrderDisplayAmounts({
+              orderText: orderTextStr,
+              revenueWon,
+              pointsUsed,
+            })
+          : { grossWon: null as number | null, paymentDueWon: null as number | null };
       return {
         id: o._id.toString(),
         orderText: o.orderText,
@@ -66,6 +78,11 @@ export async function GET(request: NextRequest) {
         hasOrderMeta: !!meta,
         orderMetaFlow: meta && typeof meta.flow === 'string' ? meta.flow : null,
         revenueWon,
+        pointsUsed,
+        /** 포인트 사용 시 주문 총액(추정). 없으면 null */
+        orderGrossWon: pointDisp.grossWon,
+        /** 포인트 사용 시 실제 입금할 금액(추정). 목록·통계 revenueWon과 같을 때가 많음 */
+        paymentDueWon: pointsUsed > 0 ? pointDisp.paymentDueWon : null,
         completedAt:
           completedAt instanceof Date
             ? completedAt.toISOString()

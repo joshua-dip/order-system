@@ -10,14 +10,16 @@ import {
 /**
  * passages(원문) 기준 변형문 집계.
  * - textbook: 해당 교재 전체 지문
- * - orderId: 주문서 orderMeta(bookVariant)의 선택 지문·유형·문항수 기준
- * - questionStatus (선택): all(기본) | 대기 | 완료 — 해당 status 변형문만 passage별로 집계
+ * - orderId: 주문서 _id 24hex
+ * - orderNumber: 주문번호(예: BV-… 부교재 변형, MV-… 모의고사 변형). orderId와 동시 사용 불가
+ * - questionStatus (선택): all(기본) | 대기 | 완료 | 검수불일치 — 해당 status 변형문만 passage별로 집계
  */
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
   const orderIdRaw = request.nextUrl.searchParams.get('orderId')?.trim() || '';
+  const orderNumberRaw = request.nextUrl.searchParams.get('orderNumber')?.trim() || '';
   const textbookParam = request.nextUrl.searchParams.get('textbook')?.trim() || '';
   const requiredPerTypeRaw = request.nextUrl.searchParams.get('requiredPerType');
   const questionStatusRaw = request.nextUrl.searchParams.get('questionStatus')?.trim() || '';
@@ -29,6 +31,7 @@ export async function GET(request: NextRequest) {
   const result = await runQuestionCountValidation({
     textbookParam,
     orderIdRaw,
+    orderNumberRaw: orderNumberRaw || null,
     requiredPerTypeRaw,
     questionStatusRaw: questionStatusRaw || null,
   });

@@ -74,6 +74,12 @@ interface AdminOrder {
   dropboxFolderCreated?: boolean;
   /** 상태「완료」 시 주문서에서 파싱·저장된 금액(원) */
   revenueWon?: number | null;
+  /** 회원 주문 시 주문에 사용한 포인트(원). 0이면 미사용 */
+  pointsUsed?: number;
+  /** 포인트 사용 시 주문서 기준 총액(추정). API 전용 */
+  orderGrossWon?: number | null;
+  /** 포인트 사용 시 실입금액(추정). API 전용 */
+  paymentDueWon?: number | null;
   completedAt?: string | null;
 }
 
@@ -153,6 +159,9 @@ export default function AdminDashboardPage() {
     dropboxConfigured?: boolean;
     revenueTotal?: number;
     revenueThisMonth?: number;
+    siteVisitsTodayPageViews?: number;
+    siteVisitsTodayUnique?: number;
+    siteVisitsTodayKey?: string;
   } | null>(null);
   const [loginId, setLoginId] = useState('');
   const [name, setName] = useState('');
@@ -281,8 +290,25 @@ export default function AdminDashboardPage() {
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [createOrderFolderId, setCreateOrderFolderId] = useState<string | null>(null);
   const [copiedLinkOrderId, setCopiedLinkOrderId] = useState<string | null>(null);
+  const [copiedOrderNumberId, setCopiedOrderNumberId] = useState<string | null>(null);
 
   const [dataError, setDataError] = useState<string | null>(null);
+
+  const [monthlyRevenueOpen, setMonthlyRevenueOpen] = useState(false);
+  const [monthlyRevenueLoading, setMonthlyRevenueLoading] = useState(false);
+  const [monthlyRevenueRows, setMonthlyRevenueRows] = useState<
+    Array<{ key: string; label: string; totalWon: number; orderCount: number }>
+  >([]);
+  const [monthlyRevenueNote, setMonthlyRevenueNote] = useState<string | null>(null);
+  const [monthlyRevenueError, setMonthlyRevenueError] = useState<string | null>(null);
+
+  const [siteVisitsHistoryOpen, setSiteVisitsHistoryOpen] = useState(false);
+  const [siteVisitsHistoryLoading, setSiteVisitsHistoryLoading] = useState(false);
+  const [siteVisitsHistoryRows, setSiteVisitsHistoryRows] = useState<
+    Array<{ date: string; pageViews: number; uniqueVisitors: number }>
+  >([]);
+  const [siteVisitsHistoryNote, setSiteVisitsHistoryNote] = useState<string | null>(null);
+  const [siteVisitsHistoryError, setSiteVisitsHistoryError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(() => {
     setUsersLoading(true);
@@ -333,9 +359,52 @@ export default function AdminDashboardPage() {
             dropboxConfigured: !!d.dropboxConfigured,
             revenueTotal: typeof d.revenueTotal === 'number' ? d.revenueTotal : 0,
             revenueThisMonth: typeof d.revenueThisMonth === 'number' ? d.revenueThisMonth : 0,
+            siteVisitsTodayPageViews: typeof d.siteVisitsTodayPageViews === 'number' ? d.siteVisitsTodayPageViews : 0,
+            siteVisitsTodayUnique: typeof d.siteVisitsTodayUnique === 'number' ? d.siteVisitsTodayUnique : 0,
+            siteVisitsTodayKey: typeof d.siteVisitsTodayKey === 'string' ? d.siteVisitsTodayKey : undefined,
           });
       })
       .catch(() => setStats(null));
+  }, []);
+
+  const openSiteVisitsHistoryModal = useCallback(() => {
+    setSiteVisitsHistoryOpen(true);
+    setSiteVisitsHistoryError(null);
+    setSiteVisitsHistoryLoading(true);
+    setSiteVisitsHistoryRows([]);
+    setSiteVisitsHistoryNote(null);
+    fetch('/api/admin/stats/site-visits-history?days=120', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!Array.isArray(d?.days)) {
+          setSiteVisitsHistoryError(typeof d?.error === 'string' ? d.error : '불러오기에 실패했습니다.');
+          return;
+        }
+        setSiteVisitsHistoryRows(d.days);
+        setSiteVisitsHistoryNote(typeof d.note === 'string' ? d.note : null);
+      })
+      .catch(() => setSiteVisitsHistoryError('네트워크 오류'))
+      .finally(() => setSiteVisitsHistoryLoading(false));
+  }, []);
+
+  const openMonthlyRevenueModal = useCallback(() => {
+    setMonthlyRevenueOpen(true);
+    setMonthlyRevenueError(null);
+    setMonthlyRevenueLoading(true);
+    setMonthlyRevenueRows([]);
+    setMonthlyRevenueNote(null);
+    fetch('/api/admin/stats/revenue-by-month?months=48', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!Array.isArray(d?.months)) {
+          setMonthlyRevenueError(typeof d?.error === 'string' ? d.error : '불러오기에 실패했습니다.');
+          return;
+        }
+        setMonthlyRevenueRows(d.months);
+        setMonthlyRevenueNote(typeof d.note === 'string' ? d.note : null);
+      })
+      .catch(() => setMonthlyRevenueError('네트워크 오류'))
+      .finally(() => setMonthlyRevenueLoading(false));
   }, []);
 
   const fetchEssayTypes = useCallback(() => {
@@ -454,7 +523,7 @@ export default function AdminDashboardPage() {
     setEditUser(u);
     setEditName(u.name);
     setEditEmail(u.email);
-    setEditPhone(u.phone ?? '');
+    setEditPhone((u.phone ?? '').replace(/\D/g, ''));
     setEditDropboxFolderPath(u.dropboxFolderPath ?? '');
     setEditDropboxSharedLink(u.dropboxSharedLink ?? '');
     setEditMyFormatApproved(!!u.myFormatApproved);
@@ -474,7 +543,8 @@ export default function AdminDashboardPage() {
       const body: { name?: string; email?: string; phone?: string; dropboxFolderPath?: string; dropboxSharedLink?: string; myFormatApproved?: boolean; resetPassword?: boolean; addPoints?: number; supplementaryNote?: string; annualMemberSince?: string | null } = {};
       if (editName !== editUser.name) body.name = editName;
       if (editEmail !== editUser.email) body.email = editEmail;
-      if (editPhone !== (editUser.phone ?? '')) body.phone = editPhone;
+      const storedPhoneDigits = (editUser.phone ?? '').replace(/\D/g, '');
+      if (editPhone !== storedPhoneDigits) body.phone = editPhone;
       if (editDropboxFolderPath !== (editUser.dropboxFolderPath ?? '')) body.dropboxFolderPath = editDropboxFolderPath;
       if (editDropboxSharedLink !== (editUser.dropboxSharedLink ?? '')) body.dropboxSharedLink = editDropboxSharedLink;
       if (editMyFormatApproved !== !!editUser.myFormatApproved) body.myFormatApproved = editMyFormatApproved;
@@ -1646,8 +1716,26 @@ export default function AdminDashboardPage() {
 
   const today = new Date().toDateString();
   const todayOrders = recentOrders.filter((o) => new Date(o.createdAt).toDateString() === today);
-  const needLinkOrders = recentOrders.filter((o) => (o.status || 'pending') !== 'cancelled' && !o.fileUrl);
-  const needLinkCount = needLinkOrders.length;
+  /** 취소 아님 + 드롭박스 공유 링크(fileUrl) 없음 = 대시보드에서 말하는 「미처리」 */
+  const pendingNoLinkOrders = recentOrders.filter(
+    (o) => (o.status || 'pending') !== 'cancelled' && !o.fileUrl
+  );
+  const needLinkCount = pendingNoLinkOrders.length;
+  /** 폴더는 만들어졌고 공유 링크만 없음 */
+  const needShareLinkOrders = pendingNoLinkOrders.filter((o) => o.dropboxFolderCreated);
+  const needShareLinkCount = needShareLinkOrders.length;
+  /** 회원 주문·Dropbox 연동됨인데 아직 폴더 생성 전 */
+  const needCreateFolderOrders = pendingNoLinkOrders.filter(
+    (o) => !o.dropboxFolderCreated && !!o.loginId && !!stats?.dropboxConfigured
+  );
+  const needCreateFolderCount = needCreateFolderOrders.length;
+  /** 비회원, 또는 Dropbox 미설정 등으로 자동 폴더 플로우 밖 */
+  const needOtherPendingOrders = pendingNoLinkOrders.filter((o) => {
+    if (o.dropboxFolderCreated) return false;
+    if (o.loginId && stats?.dropboxConfigured) return false;
+    return true;
+  });
+  const needOtherPendingCount = needOtherPendingOrders.length;
 
   const filteredOrders = recentOrders.filter((o) => {
     if (orderFilter === 'pending' && (o.status || 'pending') !== 'pending') return false;
@@ -1678,11 +1766,11 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex text-white">
       {/* Sidebar */}
-      <aside className="w-60 bg-slate-800 shrink-0 flex flex-col border-r border-slate-700">
-        <div className="p-5 border-b border-slate-700">
+      <aside className="w-60 bg-slate-800 shrink-0 flex flex-col border-r border-slate-700 h-svh sticky top-0">
+        <div className="p-5 border-b border-slate-700 shrink-0">
           <h1 className="font-bold text-lg text-white">PAYPERIC ADMIN</h1>
         </div>
-        <nav className="p-3 flex-1 text-sm">
+        <nav className="p-3 flex-1 text-sm overflow-y-auto min-h-0">
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
           <button
             type="button"
@@ -1743,6 +1831,24 @@ export default function AdminDashboardPage() {
           >
             변형문제 관리 (DB)
           </Link>
+          <Link
+            href="/admin/syntax-analyzer"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            구문 분석기
+          </Link>
+          <Link
+            href="/admin/mcp"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            Claude MCP
+          </Link>
+          <Link
+            href="/admin/generated-questions/review-logs"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-emerald-200/90 hover:bg-emerald-950/40 transition-colors border border-emerald-800/40 mt-1"
+          >
+            Claude Code 검수 로그
+          </Link>
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
           <button
             type="button"
@@ -1774,7 +1880,7 @@ export default function AdminDashboardPage() {
             서술형 유형 관리
           </button>
         </nav>
-        <div className="p-4 border-t border-slate-700 flex items-center gap-3">
+        <div className="p-4 border-t border-slate-700 flex items-center gap-3 shrink-0">
           <div className="w-9 h-9 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold text-white">
             {(user.loginId || 'A').charAt(0).toUpperCase()}
           </div>
@@ -1783,7 +1889,7 @@ export default function AdminDashboardPage() {
             <p className="text-slate-400 text-xs">관리자</p>
           </div>
         </div>
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-slate-700 shrink-0">
           <Link href="/" className="text-slate-400 hover:text-white text-sm">← 메인으로</Link>
           <button type="button" onClick={handleLogout} className="block mt-2 text-slate-400 hover:text-white text-sm">로그아웃</button>
         </div>
@@ -1805,10 +1911,22 @@ export default function AdminDashboardPage() {
 
           {/* Red alert: 미처리 주문 */}
           {needLinkCount > 0 && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 flex items-center justify-between gap-4 mb-6">
-              <span className="text-red-200 font-medium flex-1 min-w-0">
-                미처리 주문 {needLinkCount}건이 있습니다 — 드롭박스 링크 등록이 필요해요
-              </span>
+            <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+              <div className="text-red-200 flex-1 min-w-0 text-sm leading-relaxed">
+                <p className="font-medium text-red-100">미처리 주문 {needLinkCount}건 (공유 링크 미등록)</p>
+                <p className="mt-1 text-red-200/95 text-xs sm:text-sm">
+                  · 공유 링크만 필요 (폴더 생성됨){' '}
+                  <span className="tabular-nums font-semibold text-red-100">{needShareLinkCount}</span>건
+                  <span className="text-red-300/80 mx-1.5">|</span>· Dropbox 폴더 생성 전 (회원·연동){' '}
+                  <span className="tabular-nums font-semibold text-red-100">{needCreateFolderCount}</span>건
+                  {needOtherPendingCount > 0 && (
+                    <>
+                      <span className="text-red-300/80 mx-1.5">|</span>· 기타 (비회원·Dropbox 미설정 등){' '}
+                      <span className="tabular-nums font-semibold text-red-100">{needOtherPendingCount}</span>건
+                    </>
+                  )}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => { setSection('orders'); setOrderFilter('pending'); }}
@@ -1820,7 +1938,27 @@ export default function AdminDashboardPage() {
           )}
 
           {/* Summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+            <button
+              type="button"
+              onClick={() => void openSiteVisitsHistoryModal()}
+              className="bg-slate-800 rounded-xl border border-slate-700 p-5 text-left w-full transition-colors hover:border-slate-500 hover:bg-slate-700/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 cursor-pointer"
+            >
+              <p className="text-slate-400 text-sm flex items-center justify-between gap-2">
+                오늘 사이트 방문(추정)
+                <span className="text-[10px] font-medium text-cyan-400/90">일별 기록 →</span>
+              </p>
+              <p className="text-2xl font-bold text-cyan-300 mt-1 tabular-nums">
+                {stats?.siteVisitsTodayUnique?.toLocaleString() ?? '—'}명
+              </p>
+              <p className="text-slate-500 text-xs mt-1 leading-relaxed">
+                쿠키 기준 당일 첫 방문만 1명으로 집계
+                <span className="block text-slate-600 mt-0.5">
+                  페이지 조회 {stats?.siteVisitsTodayPageViews?.toLocaleString() ?? '—'}회 · 한국 날짜{' '}
+                  {stats?.siteVisitsTodayKey ?? '—'}
+                </span>
+              </p>
+            </button>
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
               <p className="text-slate-400 text-sm">오늘 주문</p>
               <p className="text-2xl font-bold text-white mt-1">{todayOrders.length}건</p>
@@ -1831,25 +1969,47 @@ export default function AdminDashboardPage() {
               <p className="text-2xl font-bold text-white mt-1">{users.length}명</p>
               <p className="text-slate-500 text-xs mt-1">+{stats?.newMembersThisMonth ?? 0}명 이번 달</p>
             </div>
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
-              <p className="text-slate-400 text-sm">이번달 매출</p>
+            <button
+              type="button"
+              onClick={() => void openMonthlyRevenueModal()}
+              className="bg-slate-800 rounded-xl border border-slate-700 p-5 text-left w-full transition-colors hover:border-slate-500 hover:bg-slate-700/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 cursor-pointer"
+            >
+              <p className="text-slate-400 text-sm flex items-center justify-between gap-2">
+                이번달 매출
+                <span className="text-[10px] font-medium text-cyan-400/90">월별 조회 →</span>
+              </p>
               <p className="text-2xl font-bold text-white mt-1 tabular-nums">
                 {typeof stats?.revenueThisMonth === 'number' ? `${stats.revenueThisMonth.toLocaleString()}원` : '—'}
               </p>
               <p className="text-slate-500 text-xs mt-1">
                 누적(완료) <span className="text-slate-400 tabular-nums">{typeof stats?.revenueTotal === 'number' ? `${stats.revenueTotal.toLocaleString()}원` : '—'}</span>
-                <span className="block text-slate-600 mt-0.5">완료 처리 시 주문서에서 금액 파싱 · VAT 별도</span>
+                <span className="block text-slate-600 mt-0.5">
+                  이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱 · VAT 별도
+                </span>
               </p>
-            </div>
+            </button>
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
               <p className="text-slate-400 text-sm">미처리 주문</p>
               <p className="text-2xl font-bold text-amber-400 mt-1 flex items-center gap-2">
                 {needLinkCount}건
                 {needLinkCount > 0 && (
-                  <span className="text-amber-400" title="링크 등록 필요">⚠</span>
+                  <span className="text-amber-400" title="드롭박스 공유 링크 미등록">⚠</span>
                 )}
               </p>
-              <p className="text-slate-500 text-xs mt-1">링크 등록 필요</p>
+              <div className="text-slate-500 text-[11px] mt-2 space-y-1 leading-snug">
+                <p>
+                  링크만 필요 <span className="text-amber-200/90 tabular-nums font-semibold">{needShareLinkCount}</span>
+                  <span className="text-slate-600 mx-1">·</span>
+                  폴더 생성 전 <span className="text-amber-200/90 tabular-nums font-semibold">{needCreateFolderCount}</span>
+                </p>
+                {needOtherPendingCount > 0 && (
+                  <p>
+                    기타 <span className="text-slate-300 tabular-nums font-semibold">{needOtherPendingCount}</span>
+                    <span className="text-slate-600"> (비회원·연동 불가)</span>
+                  </p>
+                )}
+                <p className="text-slate-600 pt-0.5">취소 제외 · fileUrl 없음 기준</p>
+              </div>
             </div>
           </div>
 
@@ -1872,13 +2032,27 @@ export default function AdminDashboardPage() {
 
           {/* Recent orders (dashboard) or full orders (orders section) */}
           <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden mb-8">
-            <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3 flex-wrap">
               <h2 className="font-bold text-lg text-white">최근 주문 요청</h2>
-              {section === 'dashboard' && (
-                <button type="button" onClick={() => setSection('orders')} className="text-slate-400 hover:text-white text-sm font-medium">
-                  전체 보기 →
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDataError(null);
+                    fetchOrders();
+                  }}
+                  disabled={recentOrdersLoading}
+                  className="px-3 py-1.5 border border-slate-600 rounded-lg text-xs text-slate-400 hover:text-white hover:border-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="주문 목록 다시 불러오기"
+                >
+                  {recentOrdersLoading ? '불러오는 중…' : '새로고침'}
                 </button>
-              )}
+                {section === 'dashboard' && (
+                  <button type="button" onClick={() => setSection('orders')} className="text-slate-400 hover:text-white text-sm font-medium">
+                    전체 보기 →
+                  </button>
+                )}
+              </div>
             </div>
             {/* 주문번호 접두어 안내 (전체 주문 화면에서만 표시) */}
             {section === 'orders' && (
@@ -1928,10 +2102,87 @@ export default function AdminDashboardPage() {
                   <tbody>
                     {displayOrders.map((o) => {
                       const member = o.loginId ? users.find((u) => u.loginId === o.loginId) : null;
+                      const orderCompleted = (o.status || 'pending') === 'completed';
+                      const pointsUsedOnOrder = o.pointsUsed ?? 0;
+                      const payWonForPoints =
+                        pointsUsedOnOrder > 0 ? (o.paymentDueWon ?? o.revenueWon) : o.revenueWon;
+                      const amountTitle = (() => {
+                        if (!orderCompleted) return undefined;
+                        if (o.revenueWon == null || o.revenueWon < 0) {
+                          return '주문서에 인식 가능한 금액 문구가 없습니다';
+                        }
+                        if (pointsUsedOnOrder <= 0) return undefined;
+                        const chunks: string[] = [];
+                        if (o.orderGrossWon != null && o.orderGrossWon > 0) {
+                          chunks.push(`주문 총액 ${o.orderGrossWon.toLocaleString()}원`);
+                        }
+                        if (payWonForPoints != null && payWonForPoints >= 0) {
+                          chunks.push(`실입금 ${payWonForPoints.toLocaleString()}원`);
+                        }
+                        chunks.push(`포인트 ${pointsUsedOnOrder.toLocaleString()}원`);
+                        return chunks.join(' · ');
+                      })();
                       return (
                       <tr key={o.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                         <td className="py-3 px-5">
-                          <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="font-mono text-white hover:text-blue-300 hover:underline">{o.orderNumber || '—'}</a>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {o.orderNumber ? (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(o.orderNumber!);
+                                    setCopiedOrderNumberId(o.id);
+                                    setTimeout(() => setCopiedOrderNumberId(null), 1500);
+                                  } catch {
+                                    setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
+                                  }
+                                }}
+                                className="shrink-0 rounded p-1 text-slate-500 hover:text-cyan-300 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                title="주문번호 복사"
+                                aria-label={`주문번호 ${o.orderNumber} 클립보드에 복사`}
+                              >
+                                {copiedOrderNumberId === o.id ? (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2.5}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="w-3.5 h-3.5 text-emerald-400"
+                                    aria-hidden
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="w-3.5 h-3.5"
+                                    aria-hidden
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                )}
+                              </button>
+                            ) : null}
+                            <a
+                              href={`/order/done?id=${o.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-white hover:text-blue-300 hover:underline truncate min-w-0"
+                            >
+                              {o.orderNumber || '—'}
+                            </a>
+                          </div>
                         </td>
                         <td className="py-3 px-5 text-slate-300">
                           {o.loginId ? (
@@ -1947,10 +2198,33 @@ export default function AdminDashboardPage() {
                           {o.orderText?.replace(/\s+/g, ' ').slice(0, 40) || '—'}
                           {(o.orderText?.length ?? 0) > 40 ? '…' : ''}
                         </td>
-                        <td className="py-3 px-5 text-slate-300 tabular-nums text-xs" title={(o.status || 'pending') === 'completed' && (o.revenueWon == null || o.revenueWon < 0) ? '주문서에 인식 가능한 금액 문구가 없습니다' : undefined}>
-                          {(o.status || 'pending') === 'completed' ? (
+                        <td className="py-3 px-5 text-slate-300 tabular-nums text-xs align-top" title={amountTitle}>
+                          {orderCompleted ? (
                             o.revenueWon != null && o.revenueWon >= 0 ? (
-                              <span className="text-emerald-300/95">{o.revenueWon.toLocaleString()}원</span>
+                              pointsUsedOnOrder > 0 ? (
+                                <div className="space-y-0.5">
+                                  {o.orderGrossWon != null && o.orderGrossWon > 0 ? (
+                                    <div className="text-[11px] text-slate-400 tabular-nums leading-tight">
+                                      총 {o.orderGrossWon.toLocaleString()}원
+                                    </div>
+                                  ) : null}
+                                  <div className="text-sky-300/95 tabular-nums leading-tight font-medium">
+                                    입금{' '}
+                                    {(payWonForPoints != null && payWonForPoints >= 0
+                                      ? payWonForPoints
+                                      : o.revenueWon
+                                    ).toLocaleString()}
+                                    원
+                                  </div>
+                                  <div className="text-[10px] text-sky-400/80 tabular-nums leading-tight">
+                                    포인트 {pointsUsedOnOrder.toLocaleString()}원
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-emerald-300/95">
+                                  {o.revenueWon.toLocaleString()}원
+                                </span>
+                              )
                             ) : (
                               <span className="text-amber-400/90">미인식</span>
                             )
@@ -2571,7 +2845,7 @@ export default function AdminDashboardPage() {
                     type="text"
                     value={memberSearch}
                     onChange={(e) => setMemberSearch(e.target.value)}
-                    placeholder="회원 검색..."
+                    placeholder="이름·아이디·이메일·전화번호"
                     className="pl-9 pr-3 py-2 w-48 bg-[#1a1d27] border border-[#2e3248] rounded-lg text-slate-200 text-sm outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -2583,6 +2857,76 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </div>
+
+            <div id="quick-create" className="bg-slate-800 rounded-xl border border-slate-700 p-5 mb-5">
+              <h2 className="font-bold text-lg text-white mb-4">빠른 계정 생성</h2>
+              <p className="text-slate-400 text-sm mb-4">초기 비밀번호는 <strong className="text-slate-300">123456</strong>으로 통일됩니다.</p>
+              <form onSubmit={handleCreateUser} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1">아이디 *</label>
+                  <input
+                    type="text"
+                    value={loginId}
+                    onChange={(e) => setLoginId(e.target.value)}
+                    placeholder="예: student01"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
+                    required
+                    minLength={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1">이름</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="이름"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1">이메일</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="이메일"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1">전화번호</label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder="01012345678 (폴더명에 사용)"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1">드롭박스 폴더 경로</label>
+                  <input
+                    type="text"
+                    value={dropboxFolderPath}
+                    onChange={(e) => setDropboxFolderPath(e.target.value)}
+                    placeholder="/gomijoshua/이름_전화번호"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm font-mono"
+                  />
+                </div>
+                <div>
+                  {message && <p className={`text-sm mb-2 ${message.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>{message.text}</p>}
+                  <button
+                    type="submit"
+                    disabled={submitLoading}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                  >
+                    {submitLoading ? '생성 중…' : '계정 생성'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
             {!usersLoading && stats && !stats.dropboxConfigured && (
               <div className="mb-4 p-3 rounded-lg bg-amber-900/30 border border-amber-700/50 text-amber-200 text-sm">
                 <strong>Dropbox 미설정.</strong> 회원별 폴더를 쓰려면 <code className="bg-slate-700 px-1 rounded">.env</code>에 DROPBOX_APP_KEY, DROPBOX_APP_SECRET, DROPBOX_REFRESH_TOKEN을 설정한 뒤 서버를 재시작하세요.
@@ -2605,10 +2949,24 @@ export default function AdminDashboardPage() {
             {usersLoading ? (
               <div className="py-12 text-center text-slate-500">불러오는 중…</div>
             ) : (() => {
-              const q = memberSearch.trim().toLowerCase();
-              const filtered = q ? users.filter((u) => (u.loginId || '').toLowerCase().includes(q) || (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) : users;
+              const qRaw = memberSearch.trim().toLowerCase();
+              const qDigits = qRaw.replace(/\D/g, '');
+              const filtered = qRaw
+                ? users.filter((u) => {
+                    const login = (u.loginId || '').toLowerCase();
+                    const name = (u.name || '').toLowerCase();
+                    const email = (u.email || '').toLowerCase();
+                    const phoneDigits = (u.phone || '').replace(/\D/g, '');
+                    return (
+                      login.includes(qRaw) ||
+                      name.includes(qRaw) ||
+                      email.includes(qRaw) ||
+                      (qDigits.length > 0 && phoneDigits.includes(qDigits))
+                    );
+                  })
+                : users;
               if (filtered.length === 0) {
-                return <div className="py-16 text-center text-slate-500">{q ? '검색 결과가 없습니다' : '등록된 회원이 없습니다.'}</div>;
+                return <div className="py-16 text-center text-slate-500">{qRaw ? '검색 결과가 없습니다' : '등록된 회원이 없습니다.'}</div>;
               }
               return (
                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>
@@ -2893,78 +3251,157 @@ export default function AdminDashboardPage() {
               );
             })()}
           </div>
-
-          {/* Quick account creation (bottom) */}
-          <div id="quick-create" className="bg-slate-800 rounded-xl border border-slate-700 p-5">
-            <h2 className="font-bold text-lg text-white mb-4">빠른 계정 생성</h2>
-            <p className="text-slate-400 text-sm mb-4">초기 비밀번호는 <strong className="text-slate-300">123456</strong>으로 통일됩니다.</p>
-            <form onSubmit={handleCreateUser} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">아이디 *</label>
-                <input
-                  type="text"
-                  value={loginId}
-                  onChange={(e) => setLoginId(e.target.value)}
-                  placeholder="예: student01"
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
-                  required
-                  minLength={2}
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">이름</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="이름"
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">이메일</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="이메일"
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">전화번호</label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="01012345678 (폴더명에 사용)"
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">드롭박스 폴더 경로</label>
-                <input
-                  type="text"
-                  value={dropboxFolderPath}
-                  onChange={(e) => setDropboxFolderPath(e.target.value)}
-                  placeholder="/gomijoshua/이름_전화번호"
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm font-mono"
-                />
-              </div>
-              <div>
-                {message && <p className={`text-sm mb-2 ${message.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>{message.text}</p>}
-                <button
-                  type="submit"
-                  disabled={submitLoading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium disabled:opacity-50"
-                >
-                  {submitLoading ? '생성 중…' : '계정 생성'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       </main>
+
+      {monthlyRevenueOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="monthly-revenue-title"
+          onClick={() => setMonthlyRevenueOpen(false)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full border border-slate-600 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3 shrink-0">
+              <h3 id="monthly-revenue-title" className="font-bold text-white text-lg">
+                월별 매출 (완료 주문)
+              </h3>
+              <button
+                type="button"
+                onClick={() => setMonthlyRevenueOpen(false)}
+                className="text-slate-400 hover:text-white text-xl leading-none px-1"
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto flex-1 min-h-0">
+              {monthlyRevenueLoading && (
+                <p className="text-slate-400 text-sm py-8 text-center">불러오는 중…</p>
+              )}
+              {monthlyRevenueError && !monthlyRevenueLoading && (
+                <p className="text-red-300 text-sm">{monthlyRevenueError}</p>
+              )}
+              {!monthlyRevenueLoading && !monthlyRevenueError && monthlyRevenueRows.length === 0 && (
+                <p className="text-slate-500 text-sm py-6 text-center">집계할 데이터가 없습니다.</p>
+              )}
+              {!monthlyRevenueLoading && !monthlyRevenueError && monthlyRevenueRows.length > 0 && (
+                <>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-600 text-slate-400 text-left">
+                        <th className="py-2 pr-3 font-medium">월 (한국)</th>
+                        <th className="py-2 pr-3 font-medium text-right">건수</th>
+                        <th className="py-2 font-medium text-right">매출(원)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthlyRevenueRows.map((row) => (
+                        <tr key={row.key} className="border-b border-slate-700/60 text-slate-200">
+                          <td className="py-2 pr-3 tabular-nums">{row.label}</td>
+                          <td className="py-2 pr-3 text-right tabular-nums text-slate-300">{row.orderCount}</td>
+                          <td className="py-2 text-right tabular-nums font-medium text-white">
+                            {row.totalWon.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {monthlyRevenueNote && (
+                    <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">{monthlyRevenueNote}</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {siteVisitsHistoryOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="site-visits-history-title"
+          onClick={() => setSiteVisitsHistoryOpen(false)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full border border-slate-600 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3 shrink-0">
+              <h3 id="site-visits-history-title" className="font-bold text-white text-lg">
+                사이트 방문 일별 기록
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSiteVisitsHistoryOpen(false)}
+                className="text-slate-400 hover:text-white text-xl leading-none px-1"
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto flex-1 min-h-0">
+              {siteVisitsHistoryLoading && (
+                <p className="text-slate-400 text-sm py-8 text-center">불러오는 중…</p>
+              )}
+              {siteVisitsHistoryError && !siteVisitsHistoryLoading && (
+                <p className="text-red-300 text-sm">{siteVisitsHistoryError}</p>
+              )}
+              {!siteVisitsHistoryLoading && !siteVisitsHistoryError && siteVisitsHistoryRows.length === 0 && (
+                <p className="text-slate-500 text-sm py-6 text-center">저장된 일별 기록이 없습니다.</p>
+              )}
+              {!siteVisitsHistoryLoading && !siteVisitsHistoryError && siteVisitsHistoryRows.length > 0 && (
+                <>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-600 text-slate-400 text-left">
+                        <th className="py-2 pr-3 font-medium">한국 날짜</th>
+                        <th className="py-2 pr-3 font-medium text-right">순방문(추정)</th>
+                        <th className="py-2 font-medium text-right">페이지 조회</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {siteVisitsHistoryRows.map((row) => {
+                        const isToday = row.date === stats?.siteVisitsTodayKey;
+                        return (
+                          <tr
+                            key={row.date}
+                            className={`border-b border-slate-700/60 text-slate-200 ${
+                              isToday ? 'bg-cyan-950/35' : ''
+                            }`}
+                          >
+                            <td className="py-2 pr-3 tabular-nums text-white">
+                              {row.date}
+                              {isToday ? (
+                                <span className="ml-2 text-[10px] font-medium text-cyan-400/90">오늘</span>
+                              ) : null}
+                            </td>
+                            <td className="py-2 pr-3 text-right tabular-nums text-cyan-200/90">
+                              {row.uniqueVisitors.toLocaleString()}명
+                            </td>
+                            <td className="py-2 text-right tabular-nums text-slate-300">
+                              {row.pageViews.toLocaleString()}회
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {siteVisitsHistoryNote && (
+                    <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">{siteVisitsHistoryNote}</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Order detail modal */}
       {orderDetailModal && (
@@ -3010,14 +3447,49 @@ export default function AdminDashboardPage() {
                   {statusSavingId === orderDetailModal.id ? '저장 중…' : '상태 저장'}
                 </button>
                 {orderDetailModal.status === 'completed' && (
-                  <p className="mt-2 text-[11px] text-slate-500 leading-relaxed">
-                    매출 반영액:{' '}
-                    {orderDetailModal.revenueWon != null && orderDetailModal.revenueWon >= 0 ? (
-                      <span className="text-emerald-400/90 tabular-nums">{orderDetailModal.revenueWon.toLocaleString()}원</span>
-                    ) : (
-                      <span className="text-amber-400/90">주문서에서 금액을 찾지 못함</span>
-                    )}
-                  </p>
+                  <div className="mt-2 text-[11px] text-slate-500 leading-relaxed space-y-1">
+                    <p>
+                      매출 반영액(실입금 기준):{' '}
+                      {orderDetailModal.revenueWon != null && orderDetailModal.revenueWon >= 0 ? (
+                        <span
+                          className={
+                            (orderDetailModal.pointsUsed ?? 0) > 0
+                              ? 'text-sky-400/90 tabular-nums font-medium'
+                              : 'text-emerald-400/90 tabular-nums'
+                          }
+                        >
+                          {(orderDetailModal.pointsUsed ?? 0) > 0
+                            ? (
+                                orderDetailModal.paymentDueWon ??
+                                orderDetailModal.revenueWon
+                              ).toLocaleString()
+                            : orderDetailModal.revenueWon.toLocaleString()}
+                          원
+                        </span>
+                      ) : (
+                        <span className="text-amber-400/90">주문서에서 금액을 찾지 못함</span>
+                      )}
+                    </p>
+                    {(orderDetailModal.pointsUsed ?? 0) > 0 ? (
+                      <>
+                        {orderDetailModal.orderGrossWon != null &&
+                        orderDetailModal.orderGrossWon > 0 ? (
+                          <p className="text-slate-400">
+                            주문 총액:{' '}
+                            <span className="text-slate-300 tabular-nums">
+                              {orderDetailModal.orderGrossWon.toLocaleString()}원
+                            </span>
+                          </p>
+                        ) : null}
+                        <p className="text-sky-400/80">
+                          포인트 사용:{' '}
+                          <span className="tabular-nums">
+                            {(orderDetailModal.pointsUsed ?? 0).toLocaleString()}원
+                          </span>
+                        </p>
+                      </>
+                    ) : null}
+                  </div>
                 )}
               </div>
               <div>
@@ -3054,7 +3526,64 @@ export default function AdminDashboardPage() {
                     {userOrders.map((o) => (
                       <tr key={o.id} className="border-t border-slate-700">
                         <td className="py-2 px-3">
-                          <a href={`/order/done?id=${o.id}`} target="_blank" rel="noopener noreferrer" className="font-mono text-white hover:text-blue-300 hover:underline">{o.orderNumber || '—'}</a>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {o.orderNumber ? (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(o.orderNumber!);
+                                    setCopiedOrderNumberId(o.id);
+                                    setTimeout(() => setCopiedOrderNumberId(null), 1500);
+                                  } catch {
+                                    setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
+                                  }
+                                }}
+                                className="shrink-0 rounded p-1 text-slate-500 hover:text-cyan-300 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                title="주문번호 복사"
+                                aria-label={`주문번호 ${o.orderNumber} 클립보드에 복사`}
+                              >
+                                {copiedOrderNumberId === o.id ? (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2.5}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="w-3.5 h-3.5 text-emerald-400"
+                                    aria-hidden
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="w-3.5 h-3.5"
+                                    aria-hidden
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                )}
+                              </button>
+                            ) : null}
+                            <a
+                              href={`/order/done?id=${o.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-white hover:text-blue-300 hover:underline truncate min-w-0"
+                            >
+                              {o.orderNumber || '—'}
+                            </a>
+                          </div>
                         </td>
                         <td className="py-2 px-3 text-slate-400">{formatDateTime(o.createdAt)}</td>
                         <td className="py-2 px-3">
@@ -3104,7 +3633,7 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <label className="block text-slate-400 text-sm mb-1">전화번호</label>
-                <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="01012345678 (폴더명에 사용)" className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
+                <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ''))} placeholder="01012345678 (폴더명에 사용)" className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
               </div>
               <div>
                 <label className="block text-slate-400 text-sm mb-1">부교재 사용 기록</label>

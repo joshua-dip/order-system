@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PassageFolderScopeBar, type PassageAdminFolder } from '@/app/components/admin/PassageFolderScopeBar';
+import { TextbookLinkFolderScopeBar, type TextbookLinkFolder } from '@/app/components/admin/TextbookLinkFolderScopeBar';
+import { passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
 
 type PassageListItem = {
   _id: string;
@@ -16,6 +19,7 @@ type PassageListItem = {
   content?: { original?: string };
   created_at?: string;
   updated_at?: string;
+  folder_id?: string | null;
 };
 
 type PassageFull = PassageListItem & {
@@ -56,6 +60,8 @@ export default function AdminPassagesPage() {
   const [total, setTotal] = useState(0);
   const [items, setItems] = useState<PassageListItem[]>([]);
   const [listLoading, setListLoading] = useState(false);
+  const [folderScope, setFolderScope] = useState('');
+  const [passageFolders, setPassageFolders] = useState<PassageAdminFolder[]>([]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -71,6 +77,9 @@ export default function AdminPassagesPage() {
   const [linkSearch, setLinkSearch] = useState('');
   const [linkSavingKey, setLinkSavingKey] = useState<string | null>(null);
   const [linkMsg, setLinkMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [linkFolderScope, setLinkFolderScope] = useState('');
+  const [textbookLinkFolders, setTextbookLinkFolders] = useState<TextbookLinkFolder[]>([]);
+  const [textbookLinkAssignments, setTextbookLinkAssignments] = useState<Record<string, string>>({});
 
   const fetchAdminTextbookLinks = useCallback(() => {
     setLinksLoading(true);
@@ -99,10 +108,22 @@ export default function AdminPassagesPage() {
       .finally(() => setLinksLoading(false));
   }, []);
 
+  const fetchTextbookLinkAssignments = useCallback(() => {
+    fetch('/api/admin/textbook-link-folder-assignments', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.assignments && typeof d.assignments === 'object') {
+          setTextbookLinkAssignments(d.assignments as Record<string, string>);
+        }
+      })
+      .catch(() => setTextbookLinkAssignments({}));
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     fetchAdminTextbookLinks();
-  }, [user, fetchAdminTextbookLinks]);
+    fetchTextbookLinkAssignments();
+  }, [user, fetchAdminTextbookLinks, fetchTextbookLinkAssignments]);
 
   useEffect(() => {
     setLinkDrafts((prev) => {
@@ -182,13 +203,37 @@ export default function AdminPassagesPage() {
     }
   };
 
+  const assignTextbookLinkFolder = async (textbookKey: string, folderId: string) => {
+    try {
+      const res = await fetch('/api/admin/textbook-link-folder-assignments', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbookKey, folderId: folderId.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setLinkMsg({ type: 'err', text: d.message || '폴더 저장 실패' });
+        return;
+      }
+      fetchTextbookLinkAssignments();
+    } catch {
+      setLinkMsg({ type: 'err', text: '폴더 저장 요청 실패' });
+    }
+  };
+
   const linkRowKeys = useMemo(() => {
     const keys = new Set([...textbooks, ...Object.keys(linkDrafts)]);
     const q = linkSearch.trim().toLowerCase();
-    return Array.from(keys)
-      .filter((k) => !q || k.toLowerCase().includes(q))
-      .sort((a, b) => a.localeCompare(b, 'ko'));
-  }, [textbooks, linkDrafts, linkSearch]);
+    let list = Array.from(keys).filter((k) => !q || k.toLowerCase().includes(q));
+    if (linkFolderScope === 'unassigned') {
+      list = list.filter((k) => !textbookLinkAssignments[k]);
+    } else if (linkFolderScope) {
+      const norm = linkFolderScope.toLowerCase();
+      list = list.filter((k) => (textbookLinkAssignments[k] || '').toLowerCase() === norm);
+    }
+    return list.sort((a, b) => a.localeCompare(b, 'ko'));
+  }, [textbooks, linkDrafts, linkSearch, linkFolderScope, textbookLinkAssignments]);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -222,6 +267,7 @@ export default function AdminPassagesPage() {
     if (filterTextbook) params.set('textbook', filterTextbook);
     if (filterChapter) params.set('chapter', filterChapter);
     if (filterQ) params.set('q', filterQ);
+    if (folderScope) params.set('folderScope', folderScope);
     params.set('page', String(page));
     params.set('limit', String(limit));
     fetch(`/api/admin/passages?${params}`, { credentials: 'include' })
@@ -235,7 +281,7 @@ export default function AdminPassagesPage() {
         setTotal(0);
       })
       .finally(() => setListLoading(false));
-  }, [filterTextbook, filterChapter, filterQ, page, limit]);
+  }, [filterTextbook, filterChapter, filterQ, folderScope, page, limit]);
 
   useEffect(() => {
     if (!user) return;
@@ -361,6 +407,30 @@ export default function AdminPassagesPage() {
     }
   };
 
+  const assignPassageFolder = async (passageId: string, folderId: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch('/api/admin/passage-analyzer/file-folders', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.loginId,
+          fileName: passageAnalysisFileNameForPassageId(passageId),
+          folderId: folderId.trim(),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        alert(d.message || '폴더 저장 실패');
+        return;
+      }
+      fetchList();
+    } catch {
+      alert('요청 실패');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('이 원문을 삭제할까요? 되돌릴 수 없습니다.')) return;
     try {
@@ -454,11 +524,20 @@ export default function AdminPassagesPage() {
                   {linkMsg.text}
                 </p>
               )}
+              <div className="mb-3">
+                <TextbookLinkFolderScopeBar
+                  value={linkFolderScope}
+                  onChange={setLinkFolderScope}
+                  onFoldersChange={setTextbookLinkFolders}
+                  onFoldersDirty={fetchTextbookLinkAssignments}
+                />
+              </div>
               <div className="max-h-[min(28rem,55vh)] overflow-y-auto rounded-lg border border-slate-700">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-slate-900 z-[1] border-b border-slate-600">
                     <tr className="text-left text-slate-400">
                       <th className="px-3 py-2 font-medium w-[min(14rem,28vw)]">교재명 (passages)</th>
+                      <th className="px-3 py-2 font-medium min-w-[7rem]">폴더</th>
                       <th className="px-3 py-2 font-medium min-w-[200px]">구매 URL</th>
                       <th className="px-3 py-2 font-medium min-w-[140px]">설명(툴팁)</th>
                       <th className="px-3 py-2 font-medium w-36 text-right">작업</th>
@@ -467,7 +546,7 @@ export default function AdminPassagesPage() {
                   <tbody>
                     {linkRowKeys.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                           {textbooks.length === 0
                             ? '등록된 교재가 없습니다. 원문을 먼저 등록하면 교재명이 여기에 나타납니다.'
                             : '검색 결과가 없습니다.'}
@@ -488,6 +567,20 @@ export default function AdminPassagesPage() {
                                   등록됨
                                 </span>
                               )}
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              <select
+                                value={textbookLinkAssignments[key] || ''}
+                                onChange={(e) => assignTextbookLinkFolder(key, e.target.value)}
+                                className="max-w-[9rem] w-full bg-slate-900 border border-slate-600 rounded px-1.5 py-1 text-xs text-white"
+                              >
+                                <option value="">미지정</option>
+                                {textbookLinkFolders.map((f) => (
+                                  <option key={f.id} value={f.id}>
+                                    {f.name}
+                                  </option>
+                                ))}
+                              </select>
                             </td>
                             <td className="px-3 py-2">
                               <input
@@ -536,6 +629,21 @@ export default function AdminPassagesPage() {
             </div>
           )}
         </section>
+
+        {user && (
+          <div className="mb-6">
+            <PassageFolderScopeBar
+              loginId={user.loginId}
+              value={folderScope}
+              onChange={(v) => {
+                setFolderScope(v);
+                setPage(1);
+              }}
+              onFoldersChange={setPassageFolders}
+              onFoldersDirty={fetchList}
+            />
+          </div>
+        )}
 
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 flex flex-wrap gap-3 items-end">
           <div>
@@ -602,6 +710,7 @@ export default function AdminPassagesPage() {
                   <th className="px-3 py-3 font-medium w-24">강</th>
                   <th className="px-3 py-3 font-medium w-28">번호</th>
                   <th className="px-3 py-3 font-medium w-14">p.</th>
+                  <th className="px-3 py-3 font-medium min-w-[128px]">폴더</th>
                   <th className="px-3 py-3 font-medium min-w-[200px]">원문 미리보기</th>
                   <th className="px-3 py-3 font-medium w-32 text-right">작업</th>
                 </tr>
@@ -609,13 +718,13 @@ export default function AdminPassagesPage() {
               <tbody>
                 {listLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
                       불러오는 중…
                     </td>
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
                       데이터가 없습니다. 필터를 바꾸거나 새 원문을 추가해 보세요.
                     </td>
                   </tr>
@@ -628,6 +737,20 @@ export default function AdminPassagesPage() {
                       <td className="px-3 py-2 text-slate-300 align-top">{row.chapter}</td>
                       <td className="px-3 py-2 text-slate-300 align-top">{row.number}</td>
                       <td className="px-3 py-2 text-slate-400 align-top">{row.page ?? '—'}</td>
+                      <td className="px-3 py-2 align-top">
+                        <select
+                          value={row.folder_id || ''}
+                          onChange={(e) => assignPassageFolder(row._id, e.target.value)}
+                          className="max-w-[10rem] bg-slate-900 border border-slate-600 rounded px-1.5 py-1 text-xs text-white"
+                        >
+                          <option value="">미지정</option>
+                          {passageFolders.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
                       <td className="px-3 py-2 text-slate-400 align-top max-w-xl">
                         <span className="line-clamp-2">
                           {(row.content?.original || '').slice(0, 180)}

@@ -4,36 +4,52 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:with-mcp": "concurrently -n next,mcp -c cyan,magenta \"next dev\" \"node scripts/mcp-bridge-dev.cjs\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "seed:admin": "node scripts/seed-admin.js",
     "seed:testuser": "node scripts/seed-test-user.js",
-    "import:passages": "python3 scripts/excel_to_passages.py"
+    "import:passages": "python3 scripts/excel_to_passages.py",
+    "import:generated-questions": "python3 scripts/excel_variant_to_generated_questions.py",
+    "mcp-bridge:install": "npm install --prefix mcp-bridge",
+    "mcp-bridge:setup": "node scripts/ensure-mcp-bridge-env.cjs",
+    "mcp-bridge:dev": "node scripts/mcp-bridge-dev.cjs",
+    "mcp:variant": "tsx scripts/mcp-next-order-variant.ts",
+    "cc:variant": "tsx scripts/cc-variant-cli.ts",
+    "claude": "tsx scripts/cc-variant-cli.ts",
+    "variant:auto-fill": "tsx scripts/variant-auto-fill.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
+    "@notionhq/client": "^5.15.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "html2canvas": "^1.4.1",
     "jose": "^6.2.0",
+    "jsonrepair": "^3.13.3",
     "jspdf": "^4.2.1",
     "mongodb": "^6.21.0",
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.1.2",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "zod": "^4.3.6"
   }
 }

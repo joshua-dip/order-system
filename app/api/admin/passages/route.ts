@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
+
+const ASSIGN_COL = 'passage_analyzer_file_folders';
+const LINK_LINK_ASSIGN = 'textbook_link_folder_assignments';
+
+const LINK_FOLDER_ID_RE = /^[a-f0-9]{24}$/i;
+
+function normalizeLinkFolderId(raw: unknown): string {
+  if (raw == null) return '';
+  const s = typeof raw === 'string' ? raw : String(raw);
+  return s.trim().toLowerCase();
+}
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, ...rest } = doc;
@@ -13,7 +26,7 @@ function serialize(doc: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
-  const { error } = await requireAdmin(request);
+  const { error, payload } = await requireAdmin(request);
   if (error) return error;
 
   const { searchParams } = request.nextUrl;
@@ -21,11 +34,16 @@ export async function GET(request: NextRequest) {
   const chapter = searchParams.get('chapter')?.trim() || '';
   const q = searchParams.get('q')?.trim() || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25', 10) || 25));
+  /** 변형문제 생성 시 교재 전체 지문 선택 등 — 상한 확대 */
+  const limit = Math.min(2000, Math.max(1, parseInt(searchParams.get('limit') || '25', 10) || 25));
   const skip = (page - 1) * limit;
+  /** 지문별 분류(passage_analyzer_file_folders): 빈 값=전체, unassigned, 그 외=폴더 _id */
+  const folderScope = searchParams.get('folderScope')?.trim() || '';
+  /** 교재 구매 링크와 동일(textbook_link_*): 교재명(textbook 필드) 기준 */
+  const linkFolderScope = searchParams.get('linkFolderScope')?.trim() || '';
 
   const filter: Record<string, unknown> = {};
-  if (textbook) filter.textbook = textbook;
+  const textbookParam = textbook;
   if (chapter) filter.chapter = { $regex: chapter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
   if (q) {
     filter.$or = [
@@ -38,6 +56,95 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection('passages');
+    const assignCol = db.collection(ASSIGN_COL);
+    const userId = payload?.loginId || '';
+
+    if (linkFolderScope) {
+      const linkAssigns = await db
+        .collection(LINK_LINK_ASSIGN)
+        .find({})
+        .project({ textbookKey: 1, folderId: 1 })
+        .toArray();
+      const keysForFolder = new Map<string, string[]>();
+      const keysWithLinkFolder = new Set<string>();
+      for (const a of linkAssigns) {
+        const k = String((a as { textbookKey?: string }).textbookKey ?? '').trim();
+        const fid = normalizeLinkFolderId((a as { folderId?: unknown }).folderId);
+        if (!k || !fid) continue;
+        keysWithLinkFolder.add(k);
+        if (!keysForFolder.has(fid)) keysForFolder.set(fid, []);
+        keysForFolder.get(fid)!.push(k);
+      }
+
+      if (linkFolderScope === 'unassigned') {
+        if (textbookParam) {
+          if (keysWithLinkFolder.has(textbookParam)) {
+            filter.textbook = { $in: [] as string[] };
+          } else {
+            filter.textbook = textbookParam;
+          }
+        } else if (keysWithLinkFolder.size > 0) {
+          filter.textbook = { $nin: Array.from(keysWithLinkFolder) };
+        }
+      } else if (LINK_FOLDER_ID_RE.test(linkFolderScope)) {
+        const lid = linkFolderScope.toLowerCase();
+        const keys = keysForFolder.get(lid) ?? [];
+        if (textbookParam) {
+          if (keys.includes(textbookParam)) {
+            filter.textbook = textbookParam;
+          } else {
+            filter.textbook = { $in: [] as string[] };
+          }
+        } else {
+          filter.textbook = keys.length > 0 ? { $in: keys } : { $in: [] as string[] };
+        }
+      } else {
+        filter.textbook = { $in: [] as string[] };
+      }
+    } else if (textbookParam) {
+      filter.textbook = textbookParam;
+    }
+
+    if (folderScope && userId) {
+      const assigns = await assignCol.find({ userId }).toArray();
+      const passageFolder = new Map<string, string>();
+      for (const a of assigns) {
+        const fn = String((a as { fileName?: string }).fileName || '');
+        const m = fn.match(/^passage:([a-f0-9]{24})$/i);
+        if (!m) continue;
+        const fid = String((a as { folderId?: string | null }).folderId ?? '').trim();
+        passageFolder.set(m[1].toLowerCase(), fid);
+      }
+
+      if (folderScope === 'unassigned') {
+        const inAnyFolder: ObjectId[] = [];
+        for (const [pid, fid] of passageFolder) {
+          if (fid) {
+            try {
+              inAnyFolder.push(new ObjectId(pid));
+            } catch {
+              /* skip */
+            }
+          }
+        }
+        if (inAnyFolder.length > 0) {
+          filter._id = { $nin: inAnyFolder };
+        }
+      } else if (ObjectId.isValid(folderScope)) {
+        const inFolder: ObjectId[] = [];
+        for (const [pid, fid] of passageFolder) {
+          if (fid === folderScope) {
+            try {
+              inFolder.push(new ObjectId(pid));
+            } catch {
+              /* skip */
+            }
+          }
+        }
+        filter._id = { $in: inFolder };
+      }
+    }
+
     const [total, items] = await Promise.all([
       col.countDocuments(filter),
       col
@@ -60,8 +167,31 @@ export async function GET(request: NextRequest) {
         .toArray(),
     ]);
 
+    let serialized = items.map((d) => serialize(d as Record<string, unknown>)) as Record<string, unknown>[];
+
+    if (userId && serialized.length > 0) {
+      const keys = serialized.map((row) => passageAnalysisFileNameForPassageId(String(row._id)));
+      const relevant = await assignCol
+        .find({ userId, fileName: { $in: keys } })
+        .project({ fileName: 1, folderId: 1 })
+        .toArray();
+      const folderByFile = new Map<string, string | null>();
+      for (const a of relevant) {
+        const fn = String((a as { fileName?: string }).fileName || '');
+        const raw = (a as { folderId?: string | null }).folderId;
+        folderByFile.set(fn, raw != null && String(raw).trim() ? String(raw).trim() : null);
+      }
+      serialized = serialized.map((row) => {
+        const fn = passageAnalysisFileNameForPassageId(String(row._id));
+        const fid = folderByFile.has(fn) ? folderByFile.get(fn) : null;
+        return { ...row, folder_id: fid ?? null };
+      });
+    } else {
+      serialized = serialized.map((row) => ({ ...row, folder_id: null }));
+    }
+
     return NextResponse.json({
-      items: items.map((d) => serialize(d as Record<string, unknown>)),
+      items: serialized,
       total,
       page,
       limit,
