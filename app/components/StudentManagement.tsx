@@ -225,14 +225,6 @@ export default function StudentManagement({ onCountChange }: Props) {
           </ul>
         )}
       </div>
-
-      <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] p-4 text-[12px] text-[#64748b] leading-relaxed">
-        <p className="font-semibold text-[#475569] mb-1">안내</p>
-        <ul className="list-disc list-inside space-y-1">
-          <li>변형문제는 로컬 생성기의 QR로 학생용 답안 입력 페이지와 연결할 예정입니다. (웹 연동은 추후)</li>
-          <li>채점 결과 저장 형식은 이후 단계에서 정의합니다.</li>
-        </ul>
-      </div>
     </div>
   );
 }

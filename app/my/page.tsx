@@ -258,6 +258,20 @@ export default function MyPage() {
     }
   }, [user, activeTab]);
 
+  const tabs = useMemo(() => {
+    const base: { key: TabKey; label: string; icon: string; count?: number }[] = [
+      { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
+      { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
+      { key: 'exam', label: '기출문제', icon: '📤' },
+      { key: 'myFormat', label: '나의양식', icon: '📄' },
+    ];
+    if (user?.isAnnualMemberActive) {
+      base.push({ key: 'annualShared', label: '무료공유자료', icon: '📥' });
+    }
+    base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
+    return base;
+  }, [user?.isAnnualMemberActive, orders.length, studentsCount]);
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.replace('/');
@@ -424,7 +438,7 @@ export default function MyPage() {
   if (loading) {
     return (
       <>
-        <AppBar title="페이퍼릭" />
+        <AppBar title="마이페이지" />
         <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
           <div className="animate-spin w-10 h-10 border-4 border-[#2563eb] border-t-transparent rounded-full" />
         </div>
@@ -517,23 +531,9 @@ export default function MyPage() {
     }
   };
 
-  const tabs = useMemo(() => {
-    const base: { key: TabKey; label: string; icon: string; count?: number }[] = [
-      { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
-      { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
-      { key: 'exam', label: '기출문제', icon: '📤' },
-      { key: 'myFormat', label: '나의양식', icon: '📄' },
-    ];
-    if (user?.isAnnualMemberActive) {
-      base.push({ key: 'annualShared', label: '무료공유자료', icon: '📥' });
-    }
-    base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
-    return base;
-  }, [user?.isAnnualMemberActive, orders.length, studentsCount]);
-
   return (
     <>
-      <AppBar title="페이퍼릭" />
+      <AppBar title="마이페이지" />
       <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] font-['Noto_Sans_KR',sans-serif]">
         {/* 상단 헤더 */}
         <div className="bg-white border-b border-[#e2e8f0]">

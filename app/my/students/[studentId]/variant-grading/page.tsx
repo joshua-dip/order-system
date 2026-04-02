@@ -37,7 +37,7 @@ export default function VariantGradingPage() {
   if (loading) {
     return (
       <>
-        <AppBar title="페이퍼릭" />
+        <AppBar title="마이페이지" />
         <div className="min-h-screen w-full bg-[#f8fafc]">
           <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center text-[#94a3b8] text-sm px-5">
             불러오는 중…
@@ -50,7 +50,7 @@ export default function VariantGradingPage() {
   if (error || !student) {
     return (
       <>
-        <AppBar title="페이퍼릭" />
+        <AppBar title="마이페이지" />
         <div className="min-h-screen w-full bg-[#f8fafc]">
           <div className="px-5 py-10 max-w-lg mx-auto">
             <p className="text-red-600 text-sm mb-4">{error}</p>
@@ -65,7 +65,7 @@ export default function VariantGradingPage() {
 
   return (
     <>
-      <AppBar title="페이퍼릭" />
+      <AppBar title="마이페이지" />
       <div className="min-h-screen w-full bg-[#f8fafc] text-[#0f172a] font-['Noto_Sans_KR',sans-serif]">
         <div className="max-w-3xl mx-auto px-5 py-6">
         <Link
