@@ -8,6 +8,7 @@ import CategorySelector, { type CategoryItem } from '../components/CategorySelec
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { isEbsTextbook } from '@/lib/textbookSort';
+import { ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES } from '@/app/data/essay-categories';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -125,8 +126,8 @@ export default function EssayPage() {
     });
   };
 
-  // 관리자가 주문서 노출한 유형만 표시. 대분류는 우선 '빈칸재배열형'만 사용.
-  const ONLY_대분류 = '빈칸재배열형';
+  // 주문서에 쓰는 대분류만 표시 (`app/data/essay-categories.ts`와 동기화)
+  const visible대분류Set = useMemo(() => new Set(ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES), []);
   const essayTypesGrouped = useMemo(() => {
     if (essayTypes.length === 0) return [];
     const grouped = Object.entries(essayTypes.reduce<Record<string, EssayTypeItem[]>>((acc, t) => {
@@ -136,9 +137,9 @@ export default function EssayPage() {
       return acc;
     }, {}))
       .map(([대분류, types]) => ({ 대분류, types: sortTypesWithTypeCodeFirst(types) }))
-      .filter((g) => g.대분류 === ONLY_대분류);
+      .filter((g) => visible대분류Set.has(g.대분류));
     return grouped;
-  }, [essayTypes]);
+  }, [essayTypes, visible대분류Set]);
 
   // 선택된 대분류 = 해당 대분류 하위 소분류 전부 포함
   const selectedTypePrices = selected대분류List.length > 0

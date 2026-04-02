@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { ESSAY_CATEGORIES } from '@/app/data/essay-categories';
+import { syncEssayTypesCollection } from '@/lib/essay-type-config-sync';
+
+const essaySort = { 대분류: 1, order: 1, 소분류: 1 } as const;
 
 export interface EssayTypeItem {
   id: string;
@@ -43,28 +45,8 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb('gomijoshua');
     const coll = db.collection('essayTypes');
-    let list = await coll.find({}).sort({ 대분류: 1, order: 1, 소분류: 1 }).toArray();
-
-    if (list.length === 0) {
-      let order = 0;
-      const seed = ESSAY_CATEGORIES.flatMap((cat) =>
-        (cat.소분류 || []).map((소) => ({
-          대분류: cat.대분류,
-          소분류: 소,
-          문제: '',
-          태그: [] as string[],
-          조건: '',
-          order: order++,
-          enabled: true,
-          common: true,
-          createdAt: new Date(),
-        }))
-      );
-      if (seed.length > 0) {
-        await coll.insertMany(seed);
-        list = await coll.find({}).sort({ 대분류: 1, order: 1, 소분류: 1 }).toArray();
-      }
-    }
+    await syncEssayTypesCollection(coll);
+    let list = await coll.find({}).sort(essaySort).toArray();
 
     // 주문서 노출 + 로그인한 서술형 선생님 기준으로 공통/배정 유형만
     list = list.filter((d) => (d as { enabled?: boolean }).enabled !== false);

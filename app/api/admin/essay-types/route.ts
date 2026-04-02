@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { syncEssayTypesCollection } from '@/lib/essay-type-config-sync';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
 async function requireAdmin(request: NextRequest) {
@@ -21,7 +22,9 @@ export async function GET(request: NextRequest) {
   if (error) return error;
   try {
     const db = await getDb('gomijoshua');
-    const list = await db.collection('essayTypes').find({}).sort({ 대분류: 1, order: 1, 소분류: 1 }).toArray();
+    const coll = db.collection('essayTypes');
+    await syncEssayTypesCollection(coll);
+    const list = await coll.find({}).sort({ 대분류: 1, order: 1, 소분류: 1 }).toArray();
     const types = list.map((d: { _id: ObjectId; 대분류?: string; 소분류?: string; typeCode?: string; 문제?: string; 태그?: string[]; 조건?: string; price?: number; order?: number; enabled?: boolean; common?: boolean; exampleFile?: { originalName: string; savedPath: string }; createdAt?: Date }) => ({
       id: d._id.toString(),
       대분류: d.대분류 ?? '',
