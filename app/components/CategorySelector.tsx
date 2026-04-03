@@ -53,7 +53,10 @@ function SubRow({
   index: number;
   exampleFileBaseUrl?: string;
 }) {
-  const exampleUrl = sub.id && exampleFileBaseUrl ? `${exampleFileBaseUrl}?typeId=${sub.id}` : null;
+  const exampleUrl =
+    sub.id && exampleFileBaseUrl && sub.exampleFile
+      ? `${exampleFileBaseUrl}?typeId=${sub.id}`
+      : null;
   return (
     <div
       className="flex items-center justify-between px-5 py-[13px] border-b border-r border-gray-200 group transition-colors duration-[140ms]"

@@ -4,6 +4,7 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import fs from 'fs/promises';
+import { toMongoExampleBinary } from '@/lib/essay-type-example-file';
 
 const UPLOAD_DIR = 'uploads/essay-type-examples';
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
@@ -35,8 +36,11 @@ export async function POST(
   }
   try {
     const db = await getDb('gomijoshua');
-    const doc = await db.collection('essayTypes').findOne({ _id: new ObjectId(id) });
-    if (!doc) return NextResponse.json({ error: '해당 유형을 찾을 수 없습니다.' }, { status: 404 });
+    const exists = await db.collection('essayTypes').findOne(
+      { _id: new ObjectId(id) },
+      { projection: { _id: 1 } }
+    );
+    if (!exists) return NextResponse.json({ error: '해당 유형을 찾을 수 없습니다.' }, { status: 404 });
 
     const formData = await request.formData();
     const file = formData.get('file');
@@ -54,27 +58,19 @@ export async function POST(
     }
     // 표시용 파일명은 한글 등 그대로 유지 (파일 시스템에는 example.ext 만 사용)
     const originalName = (rawName.trim() || `example${ext}`).slice(0, 120);
-    const savedName = `example${ext || ''}`;
-    const rootDir = path.join(process.cwd(), UPLOAD_DIR, id);
-    await fs.mkdir(rootDir, { recursive: true });
-
-    // 기존 파일 삭제 (다른 확장자일 수 있음)
-    try {
-      const existing = await fs.readdir(rootDir);
-      for (const name of existing) {
-        await fs.unlink(path.join(rootDir, name));
-      }
-    } catch { /* 없으면 무시 */ }
-
-    const savedPath = path.join(rootDir, savedName);
     const buf = Buffer.from(await f.arrayBuffer());
-    await fs.writeFile(savedPath, buf);
 
-    const relativePath = `${UPLOAD_DIR}/${id}/${savedName}`;
+    // MongoDB에 저장 — 배포(서버리스) 환경에서 로컬 uploads/ 가 없어도 다운로드 가능
     await db.collection('essayTypes').updateOne(
       { _id: new ObjectId(id) },
-      { $set: { exampleFile: { originalName, savedPath: relativePath } } }
+      { $set: { exampleFile: { originalName, data: toMongoExampleBinary(buf) } } }
     );
+
+    // 과거 디스크 저장본 정리
+    const legacyDir = path.join(process.cwd(), UPLOAD_DIR, id);
+    try {
+      await fs.rm(legacyDir, { recursive: true, force: true });
+    } catch { /* 없으면 무시 */ }
 
     return NextResponse.json({ ok: true, originalName });
   } catch (err) {
@@ -98,12 +94,21 @@ export async function DELETE(
   }
   try {
     const db = await getDb('gomijoshua');
-    const doc = await db.collection('essayTypes').findOne({ _id: new ObjectId(id) });
+    const doc = await db.collection('essayTypes').findOne(
+      { _id: new ObjectId(id) },
+      { projection: { 'exampleFile.savedPath': 1 } }
+    );
     if (!doc) return NextResponse.json({ error: '해당 유형을 찾을 수 없습니다.' }, { status: 404 });
 
-    const rootDir = path.join(process.cwd(), UPLOAD_DIR, id);
+    const savedPath = (doc.exampleFile as { savedPath?: string } | undefined)?.savedPath;
+    if (savedPath) {
+      try {
+        await fs.rm(path.join(process.cwd(), savedPath), { force: true });
+      } catch { /* 없으면 무시 */ }
+    }
+    const legacyDir = path.join(process.cwd(), UPLOAD_DIR, id);
     try {
-      await fs.rm(rootDir, { recursive: true, force: true });
+      await fs.rm(legacyDir, { recursive: true, force: true });
     } catch { /* 폴더 없으면 무시 */ }
 
     await db.collection('essayTypes').updateOne(

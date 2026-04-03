@@ -18,6 +18,7 @@
     "mcp:variant": "tsx scripts/mcp-next-order-variant.ts",
     "cc:variant": "tsx scripts/cc-variant-cli.ts",
     "claude": "tsx scripts/cc-variant-cli.ts",
+    "passage-analyzer:cli": "tsx scripts/passage-analyzer-cli.ts",
     "variant:auto-fill": "tsx scripts/variant-auto-fill.ts"
   },
   "dependencies": {

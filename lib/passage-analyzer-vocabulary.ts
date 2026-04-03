@@ -147,23 +147,47 @@ function cleanText(text: string): string {
     .trim();
 }
 
+function matchLine(block: string, label: RegExp): string {
+  const m = block.match(label);
+  return m ? cleanText(m[1]) : '';
+}
+
 export function parseWordBlock(block: string, item: Record<string, unknown>): Record<string, unknown> {
   const wordTypeMatch = block.match(/유형:\s*(.+?)(?=\n|$)/i);
   const partOfSpeechMatch = block.match(/품사:\s*(.+?)(?=\n|$)/i);
-  const meaningMatch = block.match(/뜻:\s*(.+?)(?=\n|$)/i);
-  const synonymMatch = block.match(/추가뜻:\s*(.+?)(?=\n|$)/i);
-  const antonymMatch = block.match(/동의어:\s*(.+?)(?=\n|$)/i);
-  const oppositeMatch = block.match(/반의어:\s*(.+?)(?=\n|$)/i);
+  const meaningMain = matchLine(block, /뜻:\s*(.+?)(?=\n|$)/i);
+  const meaningExtra =
+    matchLine(block, /부가뜻:\s*(.+?)(?=\n|$)/i) ||
+    matchLine(block, /추가뜻:\s*(.+?)(?=\n|$)/i);
+  /** 영어로 뜻이 같은 단어(동의어) — synonym 필드 */
+  const englishSynonyms =
+    matchLine(block, /영어유의어:\s*(.+?)(?=\n|$)/i) ||
+    matchLine(block, /동의어\s*\(\s*영어\s*\)\s*:\s*(.+?)(?=\n|$)/i);
+  /** 영어로 뜻이 반대인 단어(반의어) — antonym 필드 */
+  const englishAntonyms =
+    matchLine(block, /영어반의어:\s*(.+?)(?=\n|$)/i) ||
+    matchLine(block, /반의어\s*\(\s*영어\s*\)\s*:\s*(.+?)(?=\n|$)/i);
 
   let wordType = wordTypeMatch ? cleanText(wordTypeMatch[1]) : '';
   let partOfSpeech = partOfSpeechMatch ? cleanText(partOfSpeechMatch[1]) : '';
-  let meaning = meaningMatch ? cleanText(meaningMatch[1]) : '';
-  let synonym = synonymMatch ? cleanText(synonymMatch[1]) : '';
-  let antonym = antonymMatch ? cleanText(antonymMatch[1]) : '';
-  let opposite = oppositeMatch ? cleanText(oppositeMatch[1]) : '';
+  let meaning = meaningMain;
+  if (meaningExtra && meaningExtra !== '없음' && meaningExtra !== 'none' && meaningExtra !== '-') {
+    meaning = meaning ? `${meaning} · ${meaningExtra}` : meaningExtra;
+  }
 
+  let synonym = englishSynonyms;
+  let antonym = englishAntonyms;
+  let opposite = '';
+
+  if (!synonym) {
+    synonym = matchLine(block, /(?:^|\n)동의어:\s*(.+?)(?=\n|$)/i);
+  }
+  if (!antonym) {
+    antonym = matchLine(block, /(?:^|\n)반의어:\s*(.+?)(?=\n|$)/i);
+  }
+
+  if (synonym === '없음' || synonym === 'none' || synonym === '-') synonym = '';
   if (antonym === '없음' || antonym === 'none' || antonym === '-') antonym = '';
-  if (opposite === '없음' || opposite === 'none' || opposite === '-') opposite = '';
 
   return {
     ...item,

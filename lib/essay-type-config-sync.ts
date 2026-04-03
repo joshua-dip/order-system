@@ -33,7 +33,10 @@ export async function ensureEssayTypesFromConfig(coll: Collection<Document>) {
   let nextOrder = lastOrder + 1;
   for (const cat of ESSAY_CATEGORIES) {
     for (const 소분류 of cat.소분류 || []) {
-      const exists = await coll.findOne({ 대분류: cat.대분류, 소분류 });
+      const exists = await coll.findOne(
+        { 대분류: cat.대분류, 소분류 },
+        { projection: { _id: 1 } }
+      );
       if (exists) continue;
       const doc: Document = {
         대분류: cat.대분류,

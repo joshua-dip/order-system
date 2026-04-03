@@ -364,6 +364,9 @@ type Row = {
   source: string;
   type: string;
   option_type?: string;
+  status?: string;
+  /** variant: 변형문제 generated_questions / narrative: 서술형 narrative_questions */
+  record_kind?: 'variant' | 'narrative';
   /** 원문 대비 지문 변형도 0~100 (API 계산) */
   variation_pct?: number | null;
   question_data?: {
@@ -393,6 +396,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [filterQ, setFilterQ] = useState('');
   /** default: 교재·출처·유형 / newest: DB 입력(생성) 최신순 */
   const [filterSortOrder, setFilterSortOrder] = useState<'default' | 'newest'>('default');
+  /** 목록 데이터: 변형문제만 / 서술형만 / 병합 */
+  const [listDataScope, setListDataScope] = useState<'variant' | 'narrative' | 'all'>('all');
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
   const [total, setTotal] = useState(0);
@@ -401,6 +406,8 @@ export default function AdminGeneratedQuestionsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** 서술형(narrative_questions) 상세는 읽기 전용 */
+  const [narrativeReadOnly, setNarrativeReadOnly] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -895,6 +902,7 @@ export default function AdminGeneratedQuestionsPage() {
     if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
     if (filterQ) params.set('q', filterQ);
     if (filterSortOrder === 'newest') params.set('sort', 'newest');
+    params.set('data_scope', listDataScope);
     params.set('page', String(page));
     params.set('limit', String(limit));
     fetch(`/api/admin/generated-questions?${params}`, { credentials: 'include' })
@@ -908,7 +916,7 @@ export default function AdminGeneratedQuestionsPage() {
         setTotal(0);
       })
       .finally(() => setListLoading(false));
-  }, [filterTextbook, filterType, filterStatus, filterPassageId, filterQ, page, limit]);
+  }, [filterTextbook, filterType, filterStatus, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit]);
 
   useEffect(() => {
     if (!user) return;
@@ -919,6 +927,7 @@ export default function AdminGeneratedQuestionsPage() {
     postSaveFormSnapshotRef.current = null;
     setPostSaveContinueOpen(false);
     bucketReturnAfterSaveRef.current = null;
+    setNarrativeReadOnly(false);
     setEditingId(null);
     setDraftError(null);
     setDraftUserHint('');
@@ -1179,10 +1188,47 @@ export default function AdminGeneratedQuestionsPage() {
     return true;
   }, []);
 
+  const openNarrativeDetail = useCallback(async (id: string) => {
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
+    bucketReturnAfterSaveRef.current = null;
+    setNarrativeReadOnly(true);
+    setEditingId(id);
+    setDraftError(null);
+    setDraftUserHint('');
+    setDraftGenerated(false);
+    setPassagePreview(null);
+    setPassageSentencesEn(null);
+    try {
+      const res = await fetch(`/api/admin/narrative-questions/${id}`, { credentials: 'include' });
+      const d = await res.json();
+      if (!res.ok || !d.item) {
+        alert(d.error || '불러오기 실패');
+        return;
+      }
+      const it = d.item as Record<string, unknown>;
+      setForm({
+        textbook: String(it.textbook ?? ''),
+        passage_id: String(it.passage_id ?? ''),
+        source: String(it.source ?? ''),
+        type: String(it.type ?? ''),
+        option_type: String(it.option_type ?? '서술형'),
+        status: String(it.status ?? ''),
+        error_msg: '',
+      });
+      const qd = it.question_data;
+      setQuestionJson(qd && typeof qd === 'object' ? JSON.stringify(qd, null, 2) : '{}');
+      setModalOpen(true);
+    } catch {
+      alert('요청 실패');
+    }
+  }, []);
+
   const openEdit = useCallback(
     async (id: string, bucketReturnPath: string | null = null) => {
     postSaveFormSnapshotRef.current = null;
     setPostSaveContinueOpen(false);
+    setNarrativeReadOnly(false);
     if (bucketReturnPath && isVariationBucketReturnPath(bucketReturnPath)) {
       bucketReturnAfterSaveRef.current = bucketReturnPath;
     } else {
@@ -1226,6 +1272,10 @@ export default function AdminGeneratedQuestionsPage() {
   );
 
   const handleSave = async () => {
+    if (narrativeReadOnly) {
+      alert('서술형 문항은 이 화면에서 저장할 수 없습니다. (narrative_questions)');
+      return;
+    }
     if (!form.textbook.trim() || !form.passage_id.trim()) {
       alert(
         editingId
@@ -1367,7 +1417,7 @@ export default function AdminGeneratedQuestionsPage() {
 
   /** 변형문제 모달(신규·수정·부족 문항 순차): ⌘↵ / Ctrl+↵ 로 저장 */
   useEffect(() => {
-    if (!modalOpen) return;
+    if (!modalOpen || narrativeReadOnly) return;
     let inFlight = false;
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
@@ -1384,7 +1434,7 @@ export default function AdminGeneratedQuestionsPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [modalOpen]);
+  }, [modalOpen, narrativeReadOnly]);
 
   const dismissPostSaveContinue = useCallback(() => {
     postSaveFormSnapshotRef.current = null;
@@ -2703,8 +2753,16 @@ export default function AdminGeneratedQuestionsPage() {
       <header className="border-b border-slate-700 bg-slate-800/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-white">변형문제 관리</h1>
-            <p className="text-slate-400 text-sm mt-0.5">MongoDB · gomijoshua.generated_questions</p>
+            <h1 className="text-xl font-bold text-white">변형·서술 문제 관리</h1>
+            <p className="text-slate-400 text-sm mt-0.5">
+              MongoDB · <code className="text-slate-500">generated_questions</code>
+              {listDataScope !== 'variant' && (
+                <>
+                  {' · '}
+                  <code className="text-slate-500">narrative_questions</code>
+                </>
+              )}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5" role="group" aria-label="표 너비">
@@ -2781,6 +2839,23 @@ export default function AdminGeneratedQuestionsPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">데이터</label>
+            <select
+              value={listDataScope}
+              onChange={(e) => {
+                const v = e.target.value;
+                setListDataScope(v === 'narrative' || v === 'all' ? v : 'variant');
+                setPage(1);
+              }}
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm min-w-[200px] text-white"
+              title="목록에 포함할 컬렉션"
+            >
+              <option value="variant">변형문제만 (generated_questions)</option>
+              <option value="narrative">서술형만 (narrative_questions)</option>
+              <option value="all">변형 + 서술 (병합)</option>
+            </select>
+          </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">교재</label>
             <select
@@ -3129,53 +3204,72 @@ export default function AdminGeneratedQuestionsPage() {
                     const typeStr = (row.type || '').trim();
                     const showCategoryNote = cat && cat !== typeStr;
                     return (
-                    <tr key={row._id} id={`row-${row._id}`} className="border-b border-slate-700/80 hover:bg-slate-800/40">
+                    <tr
+                      key={`${row.record_kind ?? 'variant'}-${row._id}`}
+                      id={`row-${row._id}`}
+                      className="border-b border-slate-700/80 hover:bg-slate-800/40"
+                    >
                       <td
                         className="px-2 py-2 align-top border-r border-slate-700/30"
                         style={{ width: colWidths[0], maxWidth: colWidths[0] }}
                       >
                         <div className="flex flex-col gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSiblingModalId(row._id);
-                              setSiblingHint('');
-                              setSiblingErr(null);
-                            }}
-                            className="text-left text-sky-400 hover:text-sky-300 text-xs font-bold"
-                            title="같은 지문·같은 유형으로 새 문항"
-                          >
-                            ＋ 같은유형
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openSolve(row._id)}
-                            className="text-left text-emerald-400 hover:text-emerald-300 text-xs font-medium"
-                          >
-                            풀기
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void openGptWebSolveFromRow(row)}
-                            className="text-left text-teal-400 hover:text-teal-300 text-xs font-medium"
-                            title="Claude API 대신 ChatGPT 웹에서 풀기 — 동일 프롬프트를 복사 후 새 탭에서 붙여넣기"
-                          >
-                            GPT웹 풀기
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEdit(row._id)}
-                            className="text-left text-violet-400 hover:text-violet-300 text-xs font-medium"
-                          >
-                            수정
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(row._id)}
-                            className="text-left text-red-400 hover:text-red-300 text-xs font-medium"
-                          >
-                            삭제
-                          </button>
+                          {row.record_kind === 'narrative' ? (
+                            <>
+                              <span className="text-[10px] font-bold text-cyan-400/90 uppercase tracking-wide">서술형</span>
+                              <button
+                                type="button"
+                                onClick={() => void openNarrativeDetail(row._id)}
+                                className="text-left text-violet-400 hover:text-violet-300 text-xs font-medium"
+                              >
+                                상세
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSiblingModalId(row._id);
+                                  setSiblingHint('');
+                                  setSiblingErr(null);
+                                }}
+                                className="text-left text-sky-400 hover:text-sky-300 text-xs font-bold"
+                                title="같은 지문·같은 유형으로 새 문항"
+                              >
+                                ＋ 같은유형
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openSolve(row._id)}
+                                className="text-left text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+                              >
+                                풀기
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void openGptWebSolveFromRow(row)}
+                                className="text-left text-teal-400 hover:text-teal-300 text-xs font-medium"
+                                title="Claude API 대신 ChatGPT 웹에서 풀기 — 동일 프롬프트를 복사 후 새 탭에서 붙여넣기"
+                              >
+                                GPT웹 풀기
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openEdit(row._id)}
+                                className="text-left text-violet-400 hover:text-violet-300 text-xs font-medium"
+                              >
+                                수정
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(row._id)}
+                                className="text-left text-red-400 hover:text-red-300 text-xs font-medium"
+                              >
+                                삭제
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                       <td
@@ -5856,9 +5950,13 @@ export default function AdminGeneratedQuestionsPage() {
             <div className="sticky top-0 bg-slate-800 border-b border-slate-600 px-5 py-4 flex justify-between items-center z-10">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-bold">
-                  {editingId ? '변형문제 수정' : shortageBatch
-                    ? `부족 문항 순차 처리 (${shortageBatch.totalCreated}/${shortageBatch.rows.reduce((s, r) => s + r.shortBy, 0)}건 완료 · 현재: ${shortageBatch.rows[shortageBatch.rowIndex].label} ${shortageBatch.rows[shortageBatch.rowIndex].type})`
-                    : '새 변형문제'}
+                  {editingId
+                    ? narrativeReadOnly
+                      ? '서술형 문항 상세 (읽기 전용)'
+                      : '변형문제 수정'
+                    : shortageBatch
+                      ? `부족 문항 순차 처리 (${shortageBatch.totalCreated}/${shortageBatch.rows.reduce((s, r) => s + r.shortBy, 0)}건 완료 · 현재: ${shortageBatch.rows[shortageBatch.rowIndex].label} ${shortageBatch.rows[shortageBatch.rowIndex].type})`
+                      : '새 변형문제'}
                 </h2>
                 {(draftLoading || saving || explanationOnlyLoading) && (
                   <span className="inline-flex items-center gap-2 text-sm text-amber-300">
@@ -5873,13 +5971,26 @@ export default function AdminGeneratedQuestionsPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setModalOpen(false)}
+                onClick={() => {
+                  setModalOpen(false);
+                  setNarrativeReadOnly(false);
+                }}
                 className="text-slate-400 hover:text-white text-xl leading-none"
               >
                 ×
               </button>
             </div>
             <div className="p-5 space-y-4">
+              {narrativeReadOnly && (
+                <div className="rounded-lg border border-cyan-600/45 bg-cyan-950/35 px-3 py-2 text-sm text-cyan-100/95">
+                  <code className="text-cyan-300/90">narrative_questions</code> 문항입니다. 목록·JSON은 조회만 가능하며, 저장·삭제·Claude 초안은 변형문제(
+                  <code className="text-slate-400">generated_questions</code>)에서 진행해 주세요.
+                </div>
+              )}
+              <fieldset
+                disabled={narrativeReadOnly}
+                className="min-w-0 border-0 p-0 m-0 space-y-4 disabled:opacity-95"
+              >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {editingId ? (
                   <div className="sm:col-span-2">
@@ -6220,17 +6331,21 @@ export default function AdminGeneratedQuestionsPage() {
                   className="w-full bg-slate-950 border border-violet-900/50 rounded-lg px-3 py-2 text-xs text-green-200 font-mono"
                 />
               </div>
+              </fieldset>
               <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setModalOpen(false)}
+                  onClick={() => {
+                    setModalOpen(false);
+                    setNarrativeReadOnly(false);
+                  }}
                   className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
                 >
                   취소
                 </button>
                 <button
                   type="button"
-                  disabled={saving || draftLoading || explanationOnlyLoading || solveLoading}
+                  disabled={narrativeReadOnly || saving || draftLoading || explanationOnlyLoading || solveLoading}
                   onClick={() => void openSolveFromDraftModal()}
                   title="현재 question_data JSON으로 Claude가 풀고, 정답 일치 여부와 풀이를 표시합니다 (ANTHROPIC_API_KEY)."
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-teal-700 to-emerald-800 hover:from-teal-600 hover:to-emerald-700 text-white text-sm font-bold disabled:opacity-50 shadow-md"
@@ -6239,7 +6354,7 @@ export default function AdminGeneratedQuestionsPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={saving || draftLoading || explanationOnlyLoading}
+                  disabled={narrativeReadOnly || saving || draftLoading || explanationOnlyLoading}
                   onClick={handleSave}
                   title="⌘↵(Mac) 또는 Ctrl+↵(Windows)로 저장"
                   className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 font-bold disabled:opacity-50 inline-flex items-center gap-2"

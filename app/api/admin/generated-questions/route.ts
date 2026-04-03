@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 import { variationPercentAgainstOriginal } from '@/lib/paragraph-variation';
 import { getPassageTextForVariantCompare, passageIdToValidHex } from '@/lib/passage-variant-text';
+import { buildNarrativeQuestionsFilter, mapNarrativeDocToListRow } from '@/lib/admin-narrative-questions-list';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -23,6 +24,84 @@ function escapeRegex(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function buildVariantFilter(opts: {
+  textbook: string;
+  type: string;
+  status: string;
+  passageId: string;
+  q: string;
+}): Record<string, unknown> {
+  const filter: Record<string, unknown> = {};
+  if (opts.textbook) filter.textbook = opts.textbook;
+  if (opts.type) filter.type = opts.type;
+  if (opts.status) filter.status = opts.status;
+  if (opts.passageId && ObjectId.isValid(opts.passageId)) {
+    filter.passage_id = new ObjectId(opts.passageId);
+  }
+  if (opts.q) {
+    const rx = escapeRegex(opts.q);
+    filter.$or = [
+      { source: { $regex: rx, $options: 'i' } },
+      { 'question_data.Question': { $regex: rx, $options: 'i' } },
+      { 'question_data.Paragraph': { $regex: rx, $options: 'i' } },
+      { 'question_data.Options': { $regex: rx, $options: 'i' } },
+      { 'question_data.Explanation': { $regex: rx, $options: 'i' } },
+      { 'question_data.Category': { $regex: rx, $options: 'i' } },
+    ];
+  }
+  return filter;
+}
+
+function serializeListRows(
+  items: Record<string, unknown>[],
+  passageMap: Map<string, string>
+): Record<string, unknown>[] {
+  return items.map((d) => {
+    const kind = d.record_kind;
+    if (kind === 'narrative') {
+      return serialize({ ...d, record_kind: 'narrative' }, null);
+    }
+    const pid = passageIdToValidHex(d.passage_id);
+    const orig = pid ? (passageMap.get(pid) ?? '') : '';
+    const qd = d.question_data as Record<string, unknown> | undefined;
+    const para = typeof qd?.Paragraph === 'string' ? (qd.Paragraph as string) : '';
+    const typeStr = String(d.type ?? '').trim();
+    const variation_pct = variationPercentAgainstOriginal(typeStr, orig, para, qd);
+    const row = { ...d, record_kind: 'variant' };
+    return serialize(row, variation_pct);
+  });
+}
+
+async function loadPassageMapForRows(
+  db: Awaited<ReturnType<typeof getDb>>,
+  items: Record<string, unknown>[]
+): Promise<Map<string, string>> {
+  const idHexSet = new Set<string>();
+  for (const d of items) {
+    const h = passageIdToValidHex(d.passage_id);
+    if (h) idHexSet.add(h);
+  }
+  const passageOids = [...idHexSet].map((h) => new ObjectId(h));
+  const passageMap = new Map<string, string>();
+  if (passageOids.length > 0) {
+    const passagesCol = db.collection('passages');
+    const passages = await passagesCol
+      .find({ _id: { $in: passageOids } })
+      .project({ _id: 1, 'content.original': 1, 'content.mixed': 1, 'content.translation': 1 })
+      .toArray();
+    for (const p of passages) {
+      const id = String(p._id);
+      const content = (p as { content?: Record<string, unknown> }).content;
+      passageMap.set(id, getPassageTextForVariantCompare(content));
+    }
+    for (const oid of passageOids) {
+      const k = oid.toString();
+      if (!passageMap.has(k)) passageMap.set(k, '');
+    }
+  }
+  return passageMap;
+}
+
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
@@ -38,38 +117,157 @@ export async function GET(request: NextRequest) {
   const skip = (page - 1) * limit;
   /** default: 교재·출처·유형 순(기존) / newest: 생성일 최신순 */
   const sortMode = searchParams.get('sort')?.trim().toLowerCase() === 'newest' ? 'newest' : 'default';
+  const dataScopeRaw = searchParams.get('data_scope')?.trim().toLowerCase() || 'variant';
+  const dataScope =
+    dataScopeRaw === 'narrative' || dataScopeRaw === 'all' ? dataScopeRaw : 'variant';
 
-  const filter: Record<string, unknown> = {};
-  if (textbook) filter.textbook = textbook;
-  if (type) filter.type = type;
-  if (status) filter.status = status;
-  if (passageId && ObjectId.isValid(passageId)) {
-    filter.passage_id = new ObjectId(passageId);
-  }
-  if (q) {
-    const rx = escapeRegex(q);
-    filter.$or = [
-      { source: { $regex: rx, $options: 'i' } },
-      { 'question_data.Question': { $regex: rx, $options: 'i' } },
-      { 'question_data.Paragraph': { $regex: rx, $options: 'i' } },
-      { 'question_data.Options': { $regex: rx, $options: 'i' } },
-      { 'question_data.Explanation': { $regex: rx, $options: 'i' } },
-      { 'question_data.Category': { $regex: rx, $options: 'i' } },
-    ];
-  }
+  const variantFilter = buildVariantFilter({ textbook, type, status, passageId, q });
+  const narrFilter = buildNarrativeQuestionsFilter({
+    textbook,
+    type,
+    passageIdHex: passageId,
+    q,
+  });
 
   const sortSpec =
     sortMode === 'newest'
       ? ({ created_at: -1, _id: -1 } as Record<string, 1 | -1>)
-      : ({ textbook: 1, source: 1, type: 1, created_at: -1 } as Record<string, 1 | -1>);
+      : ({ textbook: 1, source: 1, type: 1, created_at: -1, _id: -1 } as Record<string, 1 | -1>);
 
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection('generated_questions');
+    const narrCol = db.collection('narrative_questions');
+
+    if (dataScope === 'narrative') {
+      const [total, raw] = await Promise.all([
+        narrCol.countDocuments(narrFilter),
+        narrCol
+          .find(narrFilter)
+          .sort(sortSpec)
+          .skip(skip)
+          .limit(limit)
+          .toArray(),
+      ]);
+      const items = raw.map((d) => mapNarrativeDocToListRow(d as Record<string, unknown>));
+      return NextResponse.json({
+        items,
+        total,
+        page,
+        limit,
+        data_scope: 'narrative',
+      });
+    }
+
+    if (dataScope === 'all') {
+      const variantPipeline: Record<string, unknown>[] = [
+        { $match: variantFilter },
+        { $addFields: { record_kind: 'variant' } },
+        {
+          $project: {
+            textbook: 1,
+            passage_id: 1,
+            source: 1,
+            type: 1,
+            option_type: 1,
+            status: 1,
+            created_at: 1,
+            record_kind: 1,
+            question_data: {
+              Question: '$question_data.Question',
+              Paragraph: '$question_data.Paragraph',
+              NumQuestion: '$question_data.NumQuestion',
+              Category: '$question_data.Category',
+              Options: '$question_data.Options',
+              CorrectAnswer: '$question_data.CorrectAnswer',
+              Explanation: '$question_data.Explanation',
+            },
+          },
+        },
+      ];
+      const narrativePipeline: Record<string, unknown>[] = [
+        { $match: narrFilter },
+        {
+          $addFields: {
+            record_kind: 'narrative',
+            source: { $ifNull: ['$source_key_matched', '$source_file'] },
+            type: '$narrative_subtype',
+            option_type: '서술형',
+            status: { $ifNull: ['$excel_row_status', ''] },
+            question_data: {
+              Question: '$question_data.문제',
+              Paragraph: { $ifNull: ['$question_data.본문', '$question_data.원문'] },
+              Options: '$question_data.모범답안',
+              Explanation: '$question_data.해설',
+              Category: '$question_data.문제유형',
+              NumQuestion: '$question_data.번호',
+            },
+          },
+        },
+        {
+          $project: {
+            textbook: 1,
+            passage_id: 1,
+            source: 1,
+            type: 1,
+            option_type: 1,
+            status: 1,
+            created_at: 1,
+            record_kind: 1,
+            question_data: 1,
+          },
+        },
+      ];
+
+      const [countAgg, listAgg] = await Promise.all([
+        col
+          .aggregate([
+            { $match: variantFilter },
+            { $project: { _id: 1 } },
+            {
+              $unionWith: {
+                coll: 'narrative_questions',
+                pipeline: [{ $match: narrFilter }, { $project: { _id: 1 } }],
+              },
+            },
+            { $count: 'n' },
+          ])
+          .toArray(),
+        col
+          .aggregate([
+            ...variantPipeline,
+            {
+              $unionWith: {
+                coll: 'narrative_questions',
+                pipeline: narrativePipeline,
+              },
+            },
+            { $sort: sortSpec },
+            { $skip: skip },
+            { $limit: limit },
+          ])
+          .toArray(),
+      ]);
+
+      const total = typeof countAgg[0]?.n === 'number' ? countAgg[0].n : 0;
+      const items = listAgg as Record<string, unknown>[];
+      const passageMap = await loadPassageMapForRows(db, items);
+      const serialized = serializeListRows(items, passageMap);
+
+      return NextResponse.json({
+        items: serialized,
+        total,
+        page,
+        limit,
+        data_scope: 'all',
+      });
+    }
+
+    // variant (default)
     const [total, items] = await Promise.all([
-      col.countDocuments(filter),
+      col.countDocuments(variantFilter),
       col
-        .find(filter)
+        .find(variantFilter)
         .sort(sortSpec)
         .skip(skip)
         .limit(limit)
@@ -91,45 +289,16 @@ export async function GET(request: NextRequest) {
         .toArray(),
     ]);
 
-    const idHexSet = new Set<string>();
-    for (const d of items as { passage_id?: unknown }[]) {
-      const h = passageIdToValidHex(d.passage_id);
-      if (h) idHexSet.add(h);
-    }
-    const passageOids = [...idHexSet].map((h) => new ObjectId(h));
-    const passageMap = new Map<string, string>();
-    if (passageOids.length > 0) {
-      const passagesCol = db.collection('passages');
-      const passages = await passagesCol
-        .find({ _id: { $in: passageOids } })
-        .project({ _id: 1, 'content.original': 1, 'content.mixed': 1, 'content.translation': 1 })
-        .toArray();
-      for (const p of passages) {
-        const id = String(p._id);
-        const content = (p as { content?: Record<string, unknown> }).content;
-        passageMap.set(id, getPassageTextForVariantCompare(content));
-      }
-      for (const oid of passageOids) {
-        const k = oid.toString();
-        if (!passageMap.has(k)) passageMap.set(k, '');
-      }
-    }
-
-    const serialized = (items as Record<string, unknown>[]).map((d) => {
-      const pid = passageIdToValidHex(d.passage_id);
-      const orig = pid ? (passageMap.get(pid) ?? '') : '';
-      const qd = d.question_data as Record<string, unknown> | undefined;
-      const para = typeof qd?.Paragraph === 'string' ? (qd.Paragraph as string) : '';
-      const typeStr = String(d.type ?? '').trim();
-      const variation_pct = variationPercentAgainstOriginal(typeStr, orig, para, qd);
-      return serialize(d, variation_pct);
-    });
+    const withKind = (items as Record<string, unknown>[]).map((d) => ({ ...d, record_kind: 'variant' }));
+    const passageMap = await loadPassageMapForRows(db, withKind);
+    const serialized = serializeListRows(withKind, passageMap);
 
     return NextResponse.json({
       items: serialized,
       total,
       page,
       limit,
+      data_scope: 'variant',
     });
   } catch (e) {
     console.error('generated-questions GET:', e);

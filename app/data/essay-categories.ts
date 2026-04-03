@@ -19,6 +19,11 @@ export const ESSAY_CATEGORIES: EssayCategoryConfig[] = [
     소분류: ['이중요지 요약'],
     pricePerPassage: 700,
   },
+  {
+    대분류: '요약문조건영작형',
+    소분류: ['요약문 조건 영작'],
+    pricePerPassage: 600,
+  },
 ];
 
 /** 서술형 주문서에 노출하는 대분류 */

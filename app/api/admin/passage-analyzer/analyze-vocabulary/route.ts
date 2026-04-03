@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const formatExample = batch
         .map(
           (_: unknown, idx: number) =>
-            `[단어 ${idx + 1}: "단어"]\n유형: word\n품사: n.\n뜻: 뜻\n추가뜻: 추가뜻\n동의어: synonym\n반의어: antonym`
+            `[단어 ${idx + 1}: "단어"]\n유형: word\n품사: n.\n뜻: 한글 주요 뜻\n부가뜻: 다른 한글 표현(없으면 없음)\n영어유의어: really, truly(같은 뜻의 영어 단어, 쉼표)\n영어반의어: supposedly(반대·대조 뜻의 영어, 없으면 없음)`
         )
         .join('\n\n');
 
@@ -84,13 +84,15 @@ export async function POST(request: NextRequest) {
 
 ${batchPrompt}
 
-각 단어마다 아래 형식으로 답변하세요.
+각 단어마다 아래 형식으로만 답변하세요. 라벨을 정확히 지키세요.
 유형: [word 또는 phrase]
 품사: [n., v., adj. 등]
-뜻: [주요 뜻]
-추가뜻: [다른 의미]
-동의어: [영어]
-반의어: [없으면 없음]
+뜻: [문맥에 맞는 주요 뜻, 한국어]
+부가뜻: [부가 한글 의미, 없으면 없음]
+영어유의어: [뜻이 같은 영어 단어·구만 쉼표로. 동의어(synonym)이지 반의어가 아님]
+영어반의어: [뜻이 정반대이거나 강하게 대조되는 영어 단어만. 없으면 없음]
+
+중요: "영어반의어"에는 permit/enable 같은 유의어를 넣지 마세요(그건 영어유의어). allow ↔ forbid 처럼 반대 관계만 영어반의어에 넣으세요.
 
 답변 형식 예시:
 ${formatExample}

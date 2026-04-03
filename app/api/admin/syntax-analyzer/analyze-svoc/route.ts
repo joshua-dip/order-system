@@ -40,7 +40,11 @@ export async function POST(request: NextRequest) {
 문장들 (0번부터 시작):
 ${sentences.map((s: string, i: number) => `[${i}] ${s}`).join('\n')}
 
-각 문장에서 주어(Subject), 동사(Verb), 목적어(Object, 있을 경우), 보어(Complement, 있을 경우)를 원문에서 정확히 일치하는 텍스트로 표시해주세요.
+정의:
+- Subject / Verb: 필수. 동사구(구동사·조동사+본동사)는 한 덩어리로.
+- Object: **목적어**만. 전치사 목적어는 동사의 목적어가 아니면 object에 넣지 않음.
+- Complement: **주격보어(subject complement)** 또는 **목적격보어(object complement)** 만. 주어/목적어를 **명사·형용사적으로** 보충하는 성분.
+- **전치사구·부사구**(장소·방향·속도·방식 등: around the ankle, a hundred miles an hour, in haste)는 보어가 아니라 부사적 수식이므로 **complement에 넣지 말고 null**. 문장에 목적어·보어가 없으면 object/complement는 null.
 
 응답 형식 (JSON 배열):
 [
@@ -53,7 +57,7 @@ ${sentences.map((s: string, i: number) => `[${i}] ${s}`).join('\n')}
   }
 ]
 
-조건: sentenceIndex 0부터, 텍스트는 원문 그대로, 동사구는 한 덩어리, JSON만 출력`,
+조건: sentenceIndex 0부터, 텍스트는 원문과 정확히 일치, JSON만 출력`,
         },
       ],
     });

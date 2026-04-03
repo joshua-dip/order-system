@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type {
   EditorViewMode,
   PassageStateStored,
@@ -45,6 +46,8 @@ import {
   filterVocabularyByStopwords,
 } from '@/lib/passage-analyzer-vocabulary-generate';
 import { VocabularyStopWordsModal } from '@/app/components/admin/VocabularyStopWordsModal';
+import { apiJsonErrorMessage, parseApiResponseJson } from '@/lib/parse-api-response-json';
+import { runPassageAnalyzerAiBatch } from '@/lib/passage-analyzer-run-ai-batch';
 
 const SYNTAX_LABEL_OPTIONS = Object.keys(SYNTAX_LABEL_COLORS);
 
@@ -259,6 +262,10 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   /** 문법태그 모드: 새 태그 추가 시 라벨(예: #전치사구) */
   const [newGrammarTagName, setNewGrammarTagName] = useState('');
   const [showStopWordsModal, setShowStopWordsModal] = useState(false);
+  const [mongoPanelOpen, setMongoPanelOpen] = useState(false);
+  const [mongoPanelJson, setMongoPanelJson] = useState<string | null>(null);
+  const [mongoPanelLoading, setMongoPanelLoading] = useState(false);
+  const [mongoPanelError, setMongoPanelError] = useState<string | null>(null);
   /** 같은 분석 파일에서 빈 단어장일 때 자동 추출을 한 번만 시도 */
   const autoVocabFilledForFile = useRef<string>('');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -286,7 +293,6 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
             body: JSON.stringify({
               fileName,
               data: { passageStates: { main: next }, fileName },
-              createHistory: false,
             }),
           });
         } catch {
@@ -309,13 +315,13 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         if (passageId) {
           fileName = passageAnalysisFileNameForPassageId(passageId);
           const pr = await fetch(`/api/admin/passages/${passageId}`, { credentials: 'include' });
-          const pd = await pr.json();
+          const pd = await parseApiResponseJson(pr);
           if (!pr.ok || !pd.item) {
-            setMsg(pd.error || '지문을 불러오지 못했습니다.');
+            setMsg(apiJsonErrorMessage(pd, '지문을 불러오지 못했습니다.'));
             setLoading(false);
             return;
           }
-          const c = (pd.item.content || {}) as Record<string, unknown>;
+          const c = (((pd.item as { content?: unknown })?.content || {}) as Record<string, unknown>);
           const { sentences, koreanSentences } = deriveSentencesFromPassageContent(c);
           initial = defaultPassageState(sentences, koreanSentences);
 
@@ -326,8 +332,9 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
             body: JSON.stringify({ fileName }),
           });
           if (lr.ok) {
-            const ld = await lr.json();
-            const saved = ld.data?.passageStates?.main as PassageStateStored | undefined;
+            const ld = await parseApiResponseJson(lr);
+            const saved = (ld.data as { passageStates?: { main?: PassageStateStored } } | undefined)
+              ?.passageStates?.main;
             initial = mergeSavedOntoPassagesBase(initial, saved);
           }
         }
@@ -681,8 +688,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sentences: state.sentences }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       const result = d.result as Array<{ sentenceIndex: number; phrases: unknown[] }>;
       updateState((s) => {
         const sp: NonNullable<PassageStateStored['syntaxPhrases']> = { ...(s.syntaxPhrases || {}) };
@@ -709,8 +716,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sentences: state.sentences }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       const result = d.result as Array<Record<string, unknown>>;
       updateState((s) => {
         const sv = { ...(s.svocData || {}) };
@@ -779,8 +786,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       const quote =
         typeof d.originalSentence === 'string' ? String(d.originalSentence).trim() : '';
       const topicIdx =
@@ -816,8 +823,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sentences: state.sentences }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       const result = d.result as Array<{ sentenceIndex: number; tags: PassageStateStored['grammarTags'] }>;
       updateState((s) => {
         const tags = [...(s.grammarTags || [])];
@@ -857,8 +864,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           customPrompt: promptUsed,
         }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       const wordKeys = (d.wordKeys as string[]) || [];
       updateState((s) => ({ ...s, grammarSelectedWords: wordKeys }));
       setMsg(
@@ -888,8 +895,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           customPrompt: promptUsed,
         }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       const wordKeys = (d.wordKeys as string[]) || [];
       updateState((s) => ({ ...s, contextSelectedWords: wordKeys }));
       setMsg(
@@ -904,19 +911,34 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
     }
   };
 
-  const handleSaveHistory = async () => {
-    if (!analysisFileName || !state) return;
-    await fetch('/api/admin/passage-analyzer/save-analysis', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fileName: analysisFileName,
-        data: { passageStates: { main: state }, fileName: analysisFileName },
-        createHistory: true,
-      }),
-    });
-    setMsg('버전 저장(히스토리) 완료');
+  /** 종합·어법·문맥·구문·SVOC·문법태그·단어장(추출+뜻)까지 순차/병렬 AI. 서술형·끊어읽기는 수동. */
+  const runBatchAiAll = async () => {
+    const cur = stateRef.current;
+    if (!cur?.sentences.length || busy) return;
+
+    setBusy('일괄');
+    setMsg(null);
+    try {
+      const { state: next, warnings } = await runPassageAnalyzerAiBatch({
+        initial: cur,
+        post: (path, body) =>
+          fetch(path, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          }),
+        sourcePassageLabel: passageId ?? analysisFileName,
+        onProgress: setMsg,
+      });
+      flushSync(() => setState(next));
+      stateRef.current = next;
+      setMsg(['일괄 AI 완료.', ...warnings].join(' '));
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '일괄 AI 실패');
+    } finally {
+      setBusy(null);
+    }
   };
 
   /** 자동 저장 대기 없이 즉시 반영(SVOC·구문 등 확인용) */
@@ -935,7 +957,6 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         body: JSON.stringify({
           fileName: analysisFileName,
           data: { passageStates: { main: s }, fileName: analysisFileName },
-          createHistory: false,
         }),
       });
       setMsg('서버에 저장했습니다.');
@@ -943,6 +964,34 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       setMsg('저장에 실패했습니다.');
     }
   }, [analysisFileName]);
+
+  const refreshMongoDocumentJson = useCallback(async () => {
+    if (!analysisFileName) return;
+    setMongoPanelLoading(true);
+    setMongoPanelError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/passage-analyzer/analysis-document?fileName=${encodeURIComponent(analysisFileName)}`,
+        { credentials: 'include' }
+      );
+      const data = await parseApiResponseJson(res);
+      if (!res.ok) {
+        setMongoPanelError(apiJsonErrorMessage(data, '조회 실패'));
+        setMongoPanelJson(null);
+        return;
+      }
+      setMongoPanelJson(JSON.stringify(data, null, 2));
+    } catch (e) {
+      setMongoPanelError(e instanceof Error ? e.message : '조회 실패');
+      setMongoPanelJson(null);
+    } finally {
+      setMongoPanelLoading(false);
+    }
+  }, [analysisFileName]);
+
+  useEffect(() => {
+    if (mongoPanelOpen && analysisFileName) void refreshMongoDocumentJson();
+  }, [mongoPanelOpen, analysisFileName, refreshMongoDocumentJson]);
 
   /** SVOC: 1~6 요소, Alt+C 취소, Alt+S 저장, Esc 취소(참고 PassageAnalyzerMain) */
   useEffect(() => {
@@ -1036,11 +1085,11 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           koreanSentences: state.koreanSentences,
         }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || '실패');
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, '실패'));
       updateState((s) => ({
         ...s,
-        vocabularyList: d.analyzedVocabulary || s.vocabularyList,
+        vocabularyList: (d.analyzedVocabulary as VocabularyEntry[] | undefined) ?? s.vocabularyList,
       }));
       setMsg('AI 단어장 분석을 반영했습니다.');
     } catch (e) {
@@ -1218,7 +1267,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const slotIndices = Array.from({ length: comprehensiveSlotCount }, (_, idx) => idx + 1);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 overflow-visible">
+    <div className="w-full max-w-[min(100vw-1rem,104rem)] mx-auto px-4 py-4 overflow-visible">
       <div className="mb-4 rounded-xl border border-slate-700 bg-slate-800/70 px-3 py-3">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="text-xs text-slate-400">
@@ -1238,14 +1287,6 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 shrink-0">
             {progressTrackingMode === 'auto' ? '자동 감지' : '수기 표시'}
           </span>
-          <button
-            type="button"
-            onClick={handleSaveHistory}
-            title="현재 편집 내용을 히스토리 버전으로 저장합니다"
-            className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-800/90 hover:bg-emerald-700 text-[11px] font-semibold text-emerald-100 border border-emerald-700/40"
-          >
-            수동 저장 (히스토리)
-          </button>
           <div className="relative shrink-0">
             <button
               type="button"
@@ -1623,7 +1664,26 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       <div className="flex flex-col lg:flex-row gap-4 overflow-visible">
       <aside className="lg:w-52 shrink-0 space-y-2">
         <p className="text-xs text-slate-500 font-mono break-all">{analysisFileName}</p>
+        <button
+          type="button"
+          onClick={() => setMongoPanelOpen((v) => !v)}
+          className="w-full py-1.5 rounded-lg border border-slate-600 bg-slate-800/90 text-[11px] text-slate-300 hover:bg-slate-700"
+        >
+          {mongoPanelOpen ? 'MongoDB JSON 닫기' : 'MongoDB JSON 보기'}
+        </button>
         <p className="text-[10px] text-slate-600 px-0.5 -mt-1 mb-1">왼쪽 점 아이콘을 드래그하면 순서가 저장됩니다.</p>
+        <button
+          type="button"
+          onClick={() => void runBatchAiAll()}
+          disabled={!!busy || !state.sentences.length}
+          title="종합분석 → 어법·문맥 → 구문·SVOC → 문법태그 → 단어장(비었으면 지문에서 추출 후 뜻·품사). 서술형·끊어읽기는 수동입니다."
+          className="w-full py-2.5 rounded-lg bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-700 hover:to-teal-700 text-sm font-semibold text-white border border-emerald-600/50 shadow-sm disabled:opacity-40 disabled:pointer-events-none"
+        >
+          {busy === '일괄' ? '일괄 AI 실행 중…' : 'AI 전체 자동 실행'}
+        </button>
+        <p className="text-[9px] text-slate-600 px-0.5 leading-snug">
+          서술형 대비·끊어읽기(/)는 자동 없음 — 해당 모드에서 직접 표시합니다.
+        </p>
         <ul className="space-y-2 list-none p-0 m-0" role="list">
           {orderedModes.map((m) => (
             <li key={m.id} className="m-0">
@@ -2109,25 +2169,25 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                       <input
                         value={vocabNewWord.meaning}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, meaning: e.target.value }))}
-                        placeholder="뜻"
+                        placeholder="한글 뜻(·부가)"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <input
                         value={vocabNewWord.synonym}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, synonym: e.target.value }))}
-                        placeholder="추가뜻"
+                        placeholder="영어 유의어"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <input
                         value={vocabNewWord.antonym}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, antonym: e.target.value }))}
-                        placeholder="동의어"
+                        placeholder="영어 반의어"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <input
                         value={vocabNewWord.opposite}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, opposite: e.target.value }))}
-                        placeholder="반의어"
+                        placeholder="기타"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <div className="flex gap-1 self-center">
@@ -2164,10 +2224,10 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                     <span>단어</span>
                     <span>유형</span>
                     <span>품사</span>
-                    <span>뜻</span>
-                    <span>추가뜻</span>
-                    <span>동의어</span>
-                    <span>반의어</span>
+                    <span>뜻(·부가)</span>
+                    <span>영어 유의어</span>
+                    <span>영어 반의어</span>
+                    <span>기타</span>
                     <span>위치</span>
                     <span />
                   </div>
@@ -2240,7 +2300,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                 return { ...s, vocabularyList: list };
                               });
                             }}
-                            placeholder="한글 뜻"
+                            placeholder="한글 뜻(·부가)"
                             className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
                           />
                           <input
@@ -2253,6 +2313,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                 return { ...s, vocabularyList: list };
                               });
                             }}
+                            placeholder="영어 유의어"
                             className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
                           />
                           <input
@@ -2265,6 +2326,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                 return { ...s, vocabularyList: list };
                               });
                             }}
+                            placeholder="영어 반의어"
                             className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
                           />
                           <input
@@ -2277,6 +2339,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                 return { ...s, vocabularyList: list };
                               });
                             }}
+                            placeholder="기타"
                             className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
                           />
                           <span className="text-slate-500 text-[10px] pt-1 font-mono leading-tight">{posLabel}</span>
@@ -2351,25 +2414,25 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                             <input
                               value={vocabNewWord.meaning}
                               onChange={(e) => setVocabNewWord((p) => ({ ...p, meaning: e.target.value }))}
-                              placeholder="뜻"
+                              placeholder="한글 뜻(·부가)"
                               className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                             />
                             <input
                               value={vocabNewWord.synonym}
                               onChange={(e) => setVocabNewWord((p) => ({ ...p, synonym: e.target.value }))}
-                              placeholder="추가뜻"
+                              placeholder="영어 유의어"
                               className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                             />
                             <input
                               value={vocabNewWord.antonym}
                               onChange={(e) => setVocabNewWord((p) => ({ ...p, antonym: e.target.value }))}
-                              placeholder="동의어"
+                              placeholder="영어 반의어"
                               className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                             />
                             <input
                               value={vocabNewWord.opposite}
                               onChange={(e) => setVocabNewWord((p) => ({ ...p, opposite: e.target.value }))}
-                              placeholder="반의어"
+                              placeholder="기타"
                               className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                             />
                             <div className="flex gap-1 self-center">
@@ -2464,25 +2527,25 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                       <input
                         value={vocabNewWord.meaning}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, meaning: e.target.value }))}
-                        placeholder="뜻"
+                        placeholder="한글 뜻(·부가)"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <input
                         value={vocabNewWord.synonym}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, synonym: e.target.value }))}
-                        placeholder="추가뜻"
+                        placeholder="영어 유의어"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <input
                         value={vocabNewWord.antonym}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, antonym: e.target.value }))}
-                        placeholder="동의어"
+                        placeholder="영어 반의어"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <input
                         value={vocabNewWord.opposite}
                         onChange={(e) => setVocabNewWord((p) => ({ ...p, opposite: e.target.value }))}
-                        placeholder="반의어"
+                        placeholder="기타"
                         className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200"
                       />
                       <div className="flex gap-1 self-center">
@@ -2579,22 +2642,30 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                 const vocabSup =
                   viewMode === 'vocabulary' ? vocabularyDisplayByPosition.get(vk) : undefined;
                 return (
-                <span key={wi}>
-                  <button
-                    type="button"
-                    onClick={() => onWordClick(si, wi)}
-                    className="inline px-0.5 rounded hover:ring-1 hover:ring-slate-500 align-baseline"
-                    style={wordStyle(si, wi, w)}
-                  >
-                    {w}
-                    {vocabSup != null && (
-                      <sup className="ml-0.5 text-[0.65em] font-semibold text-teal-300/95 tabular-nums align-super">
-                        {vocabSup}
-                      </sup>
-                    )}
-                  </button>
+                <span key={wi} className="inline-flex flex-wrap items-end gap-x-0">
+                  <span className="inline-flex flex-col items-center align-bottom mr-0.5">
+                    <span
+                      className="text-[7px] leading-none font-mono tabular-nums text-slate-500/75 select-none mb-px"
+                      title={`저장·API: sentence=${si}, position=${wi} (0부터) · 화면 표기 ${si + 1}:${wi + 1}`}
+                    >
+                      {si + 1}:{wi + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onWordClick(si, wi)}
+                      className="inline px-0.5 rounded hover:ring-1 hover:ring-slate-500 align-baseline"
+                      style={wordStyle(si, wi, w)}
+                    >
+                      {w}
+                      {vocabSup != null && (
+                        <sup className="ml-0.5 text-[0.65em] font-semibold text-teal-300/95 tabular-nums align-super">
+                          {vocabSup}
+                        </sup>
+                      )}
+                    </button>
+                  </span>
                   {(state.sentenceBreaks?.[si] || []).includes(wi) && (
-                    <span className="text-slate-500 font-bold mx-0.5">/</span>
+                    <span className="text-slate-500 font-bold mx-0.5 self-end pb-0.5">/</span>
                   )}{' '}
                 </span>
                 );
@@ -2808,6 +2879,58 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           </div>
         )}
       </div>
+
+      {mongoPanelOpen && (
+        <aside
+          className="w-full lg:w-[min(100%,24rem)] shrink-0 flex flex-col rounded-xl border border-slate-600 bg-slate-900/95 shadow-lg max-h-[min(70vh,36rem)] lg:max-h-[calc(100vh-5rem)] lg:sticky lg:top-4 z-20"
+          aria-label="MongoDB passage_analyses JSON"
+        >
+          <div className="flex flex-wrap items-center gap-1 px-2 py-2 border-b border-slate-700 bg-slate-800/90 shrink-0">
+            <span className="text-[10px] font-mono text-emerald-400/90 truncate flex-1 min-w-0">
+              gomijoshua · passage_analyses
+            </span>
+            <button
+              type="button"
+              onClick={() => void refreshMongoDocumentJson()}
+              disabled={mongoPanelLoading}
+              className="text-[10px] px-2 py-1 rounded bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+            >
+              새로고침
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  if (mongoPanelJson) {
+                    await navigator.clipboard.writeText(mongoPanelJson);
+                    setMsg('JSON을 클립보드에 복사했습니다.');
+                  }
+                } catch {
+                  setMsg('복사에 실패했습니다.');
+                }
+              }}
+              disabled={!mongoPanelJson}
+              className="text-[10px] px-2 py-1 rounded bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-40"
+            >
+              복사
+            </button>
+            <button
+              type="button"
+              onClick={() => setMongoPanelOpen(false)}
+              className="text-[10px] px-2 py-1 rounded border border-slate-600 text-slate-400 hover:bg-slate-800"
+            >
+              닫기
+            </button>
+          </div>
+          <pre className="flex-1 overflow-auto p-2 text-[10px] leading-relaxed font-mono text-slate-300 whitespace-pre-wrap break-words m-0 min-h-[12rem]">
+            {mongoPanelLoading
+              ? '불러오는 중…'
+              : mongoPanelError
+                ? mongoPanelError
+                : mongoPanelJson ?? '—'}
+          </pre>
+        </aside>
+      )}
       </div>
       <VocabularyStopWordsModal
         open={showStopWordsModal}

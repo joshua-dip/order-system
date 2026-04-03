@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { syncEssayTypesCollection } from '@/lib/essay-type-config-sync';
+import { ESSAY_TYPE_LIST_PROJECTION } from '@/lib/essay-type-example-file';
 
 const essaySort = { 대분류: 1, order: 1, 소분류: 1 } as const;
 
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const coll = db.collection('essayTypes');
     await syncEssayTypesCollection(coll);
-    let list = await coll.find({}).sort(essaySort).toArray();
+    let list = await coll.find({}, { projection: ESSAY_TYPE_LIST_PROJECTION }).sort(essaySort).toArray();
 
     // 주문서 노출 + 로그인한 서술형 선생님 기준으로 공통/배정 유형만
     list = list.filter((d) => (d as { enabled?: boolean }).enabled !== false);

@@ -27,10 +27,15 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: `다음 영어 문장들을 분석하여 주요 문법 요소를 추출해주세요.
+          content: `다음 영어 문장들을 분석하여 주요·특이 문법 요소만 태그하세요. 남발하지 마세요.
 
 문장들:
 ${sentences.map((s: string, i: number) => `[${i}] ${s}`).join('\n')}
+
+규칙:
+- #과거완료: **had + 과거분사(p.p.)** 형태가 명확할 때만 (예: had done, had been). 단순 과거형 was/were + not, 또는 일반 동사 과거형은 #과거완료가 아님.
+- #과거시제: 단순히 과거형 동사라는 이유만으로 붙이지 말 것. 과거완료와 대비·서술상 강조 등 **태그할 만한 교육적 포인트**가 있을 때만.
+- 그 외 #태그는 확실할 때만. 문장당 최대 5개.
 
 응답 형식 (JSON):
 [
@@ -47,7 +52,7 @@ ${sentences.map((s: string, i: number) => `[${i}] ${s}`).join('\n')}
   }
 ]
 
-조건: sentenceIndex 0부터, 문장당 최대 5개 태그, #으로 시작, JSON만`,
+조건: sentenceIndex 0부터, JSON만`,
         },
       ],
     });

@@ -111,6 +111,21 @@ export const DEFAULT_ENGLISH_STOPWORDS = [
   'd',
   'm',
   'o',
+  'because',
+  'but',
+  'or',
+  'nor',
+  'so',
+  'if',
+  'though',
+  'although',
+  'toward',
+  'towards',
+  'unless',
+  'while',
+  'yet',
+  'thus',
+  'hence',
 ] as const;
 
 export function allStopWordsSet(custom: string[] | undefined): Set<string> {
@@ -156,9 +171,24 @@ export function buildVocabularyListFromSentences(
     const rawWords = sentence.split(/\s+/);
     rawWords.forEach((rawWord, wordIndex) => {
       const word = rawWord.replace(/[^a-zA-Z'-]/g, '').toLowerCase();
-      if (word.length > 1 && !/^\d+$/.test(word)) {
-        wordPositions.push({ word, sentence: sentenceIndex, position: wordIndex });
+      if (word.length <= 1 || /^\d+$/.test(word)) return;
+
+      const alphaStart = rawWord.replace(/^[^A-Za-z]+/, '');
+      if (
+        wordIndex > 0 &&
+        alphaStart.length > 0 &&
+        /^[A-Z][a-z]{1,}/.test(alphaStart) &&
+        !/^I'/.test(alphaStart)
+      ) {
+        return;
       }
+
+      if (word === 'alone' && wordIndex > 0) {
+        const prev = rawWords[wordIndex - 1].replace(/[^a-zA-Z]/g, '').toLowerCase();
+        if (prev === 'let') return;
+      }
+
+      wordPositions.push({ word, sentence: sentenceIndex, position: wordIndex });
     });
   });
 

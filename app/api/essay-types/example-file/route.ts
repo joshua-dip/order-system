@@ -4,6 +4,10 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import fs from 'fs/promises';
+import {
+  bufferFromStoredExampleData,
+  essayExampleHasReadableContent,
+} from '@/lib/essay-type-example-file';
 
 const MIME_MAP: Record<string, string> = {
   '.pdf': 'application/pdf',
@@ -53,22 +57,32 @@ export async function GET(request: NextRequest) {
       if (!isAllowed) return NextResponse.json({ error: '해당 유형 예시를 볼 수 있는 권한이 없습니다.' }, { status: 403 });
     }
 
-    const exampleFile = doc.exampleFile;
-    if (!exampleFile?.savedPath) {
+    const exampleFile = doc.exampleFile as
+      | { originalName?: string; savedPath?: string; data?: unknown }
+      | undefined;
+    if (!essayExampleHasReadableContent(exampleFile)) {
       return NextResponse.json({ error: '예시 파일이 없습니다.' }, { status: 404 });
     }
 
-    const filePath = path.join(process.cwd(), exampleFile.savedPath);
-    try {
-      await fs.access(filePath);
-    } catch {
+    let fileBuffer: Buffer | null = bufferFromStoredExampleData(exampleFile?.data);
+    if (!fileBuffer && exampleFile?.savedPath) {
+      const filePath = path.join(process.cwd(), exampleFile.savedPath);
+      try {
+        await fs.access(filePath);
+        fileBuffer = await fs.readFile(filePath);
+      } catch {
+        return NextResponse.json({ error: '파일을 찾을 수 없습니다.' }, { status: 404 });
+      }
+    }
+    if (!fileBuffer) {
       return NextResponse.json({ error: '파일을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    const fileBuffer = await fs.readFile(filePath);
-    const ext = path.extname(exampleFile.originalName || exampleFile.savedPath).toLowerCase();
+    const ext = path
+      .extname(exampleFile?.originalName || exampleFile?.savedPath || '')
+      .toLowerCase();
     const contentType = MIME_MAP[ext] || 'application/octet-stream';
-    const encodedName = encodeURIComponent(exampleFile.originalName || `example${ext}`);
+    const encodedName = encodeURIComponent(exampleFile?.originalName || `example${ext}`);
 
     return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
