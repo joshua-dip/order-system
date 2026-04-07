@@ -185,6 +185,10 @@ export default function MyPage() {
   const [vocabSelectedLessons, setVocabSelectedLessons] = useState<string[]>([]);
   const [vocabExpandedLessons, setVocabExpandedLessons] = useState<string[]>([]);
   const [vocabDownloading, setVocabDownloading] = useState(false);
+  const [vocabCefrLevels, setVocabCefrLevels] = useState(['A1','A2','B1','B2','C1','C2']);
+  const [vocabColumns, setVocabColumns] = useState({ wordType: true, pos: true, cefr: true, meaning: true, synonym: true, antonym: true, opposite: false });
+  const [vocabFormat, setVocabFormat] = useState<'xlsx' | 'pdf' | 'test-xlsx'>('xlsx');
+  const [vocabTestDirection, setVocabTestDirection] = useState<'word-to-meaning' | 'meaning-to-word'>('word-to-meaning');
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -323,7 +327,8 @@ export default function MyPage() {
     else setVocabSelectedLessons([...vocabAllFlat]);
   };
 
-  const handleVocabDownload = async () => {
+  const handleVocabDownload = async (formatOverride?: 'xlsx' | 'pdf' | 'test-xlsx') => {
+    const fmt = formatOverride || vocabFormat;
     if (!vocabSelectedTextbook) { alert('교재를 선택해주세요.'); return; }
     if (vocabSelectedLessons.length === 0) { alert('강과 번호를 1개 이상 선택해주세요.'); return; }
     setVocabDownloading(true);
@@ -332,7 +337,14 @@ export default function MyPage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ textbook: vocabSelectedTextbook, selectedLessons: vocabSelectedLessons }),
+        body: JSON.stringify({
+          textbook: vocabSelectedTextbook,
+          selectedLessons: vocabSelectedLessons,
+          cefrLevels: vocabCefrLevels,
+          columns: vocabColumns,
+          format: fmt,
+          testDirection: vocabTestDirection,
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -343,7 +355,9 @@ export default function MyPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `단어장_${vocabSelectedTextbook}_${vocabSelectedLessons.length}지문.xlsx`;
+      const ext = fmt === 'pdf' ? 'pdf' : 'xlsx';
+      const prefix = fmt === 'test-xlsx' ? '단어시험지' : '단어장';
+      a.download = `${prefix}_${vocabSelectedTextbook}_${vocabSelectedLessons.length}지문.${ext}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1233,7 +1247,7 @@ export default function MyPage() {
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <p className="text-sm font-bold text-[#0f172a] mb-1">단어장 다운로드</p>
                 <p className="text-[12px] text-[#94a3b8] leading-relaxed">
-                  교재와 강·번호를 선택한 뒤 엑셀 파일로 바로 다운로드하세요. 단어·뜻·품사·CEFR·동의어·반의어가 포함되어 있습니다.
+                  교재·지문 선택 후 CEFR 난이도, 포함 항목을 설정하여 엑셀·PDF·시험지로 다운로드하세요.
                 </p>
               </div>
 
@@ -1257,11 +1271,7 @@ export default function MyPage() {
                 <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-bold text-[#0f172a]">강·번호 선택</span>
-                    <button
-                      type="button"
-                      onClick={handleVocabAllToggle}
-                      className="text-[11px] text-[#2563eb] hover:underline"
-                    >
+                    <button type="button" onClick={handleVocabAllToggle} className="text-[11px] text-[#2563eb] hover:underline">
                       {vocabSelectedLessons.length === vocabAllFlat.length ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
@@ -1274,21 +1284,9 @@ export default function MyPage() {
                       return (
                         <div key={lk} className="border border-[#f1f5f9] rounded-xl overflow-hidden">
                           <div className="flex items-center gap-2 px-3 py-2.5 bg-[#f8fafc]">
-                            <input
-                              type="checkbox"
-                              checked={allSel}
-                              ref={(el) => { if (el) el.indeterminate = someSel && !allSel; }}
-                              onChange={() => handleVocabGroupToggle(lk)}
-                              className="accent-[#2563eb] w-3.5 h-3.5"
-                            />
+                            <input type="checkbox" checked={allSel} ref={(el) => { if (el) el.indeterminate = someSel && !allSel; }} onChange={() => handleVocabGroupToggle(lk)} className="accent-[#2563eb] w-3.5 h-3.5" />
                             <span className="text-[13px] font-medium text-[#334155] flex-1">{lk}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleVocabExpandToggle(lk)}
-                              className="text-[11px] text-[#94a3b8] hover:text-[#64748b] px-1"
-                            >
-                              {expanded ? '−' : '+'}
-                            </button>
+                            <button type="button" onClick={() => handleVocabExpandToggle(lk)} className="text-[11px] text-[#94a3b8] hover:text-[#64748b] px-1">{expanded ? '−' : '+'}</button>
                           </div>
                           {expanded && (
                             <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-white">
@@ -1296,14 +1294,9 @@ export default function MyPage() {
                                 const num = l.split(' ').slice(1).join(' ');
                                 const sel = vocabSelectedLessons.includes(l);
                                 return (
-                                  <button
-                                    type="button"
-                                    key={l}
-                                    onClick={() => handleVocabLessonChange(l)}
+                                  <button type="button" key={l} onClick={() => handleVocabLessonChange(l)}
                                     className={`px-2.5 py-1 rounded-lg text-[12px] border transition-colors ${sel ? 'bg-[#2563eb] text-white border-[#2563eb]' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:border-[#94a3b8]'}`}
-                                  >
-                                    {num}
-                                  </button>
+                                  >{num}</button>
                                 );
                               })}
                             </div>
@@ -1315,30 +1308,94 @@ export default function MyPage() {
                 </div>
               )}
 
-              {/* 다운로드 버튼 */}
+              {/* 옵션 패널 — 지문 선택 후 표시 */}
               {vocabSelectedTextbook && vocabSelectedLessons.length > 0 && (
-                <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
-                  <div className="text-center mb-3">
-                    <span className="text-[13px] text-[#64748b]">
-                      선택된 지문: <span className="font-bold text-[#0f172a]">{vocabSelectedLessons.length}개</span>
-                    </span>
+                <>
+                  {/* CEFR 난이도 필터 */}
+                  <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-sm font-bold text-[#0f172a]">CEFR 난이도</span>
+                      <button type="button" onClick={() => setVocabCefrLevels((p) => p.length === 6 ? [] : ['A1','A2','B1','B2','C1','C2'])} className="text-[11px] text-[#2563eb] hover:underline">
+                        {vocabCefrLevels.length === 6 ? '전체 해제' : '전체 선택'}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {['A1','A2','B1','B2','C1','C2'].map((lv) => {
+                        const sel = vocabCefrLevels.includes(lv);
+                        const colors: Record<string, string> = { A1: '#22c55e', A2: '#16a34a', B1: '#eab308', B2: '#f59e0b', C1: '#ef4444', C2: '#dc2626' };
+                        return (
+                          <button type="button" key={lv} onClick={() => setVocabCefrLevels((p) => sel ? p.filter((x) => x !== lv) : [...p, lv])}
+                            className={`px-3.5 py-1.5 rounded-lg text-[12px] font-bold border transition-all ${sel ? 'text-white border-transparent' : 'bg-white text-[#94a3b8] border-[#e2e8f0]'}`}
+                            style={sel ? { backgroundColor: colors[lv] } : undefined}
+                          >{lv}</button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-[#94a3b8] mt-2">CEFR 미지정 단어는 항상 포함됩니다</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleVocabDownload}
-                    disabled={vocabDownloading}
-                    className="w-full py-3.5 bg-[#2563eb] text-white rounded-xl text-[14px] font-bold hover:bg-[#1d4ed8] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {vocabDownloading ? (
-                      <>다운로드 중…</>
-                    ) : (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        엑셀(xlsx) 다운로드
-                      </>
-                    )}
-                  </button>
-                </div>
+
+                  {/* 포함 항목 */}
+                  <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                    <span className="text-sm font-bold text-[#0f172a] block mb-2.5">포함 항목</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {([
+                        ['pos', '품사'],
+                        ['cefr', 'CEFR'],
+                        ['meaning', '뜻'],
+                        ['wordType', '유형(단어/숙어)'],
+                        ['synonym', '동의어'],
+                        ['antonym', '반의어'],
+                        ['opposite', '유의어(기타)'],
+                      ] as [keyof typeof vocabColumns, string][]).map(([key, label]) => (
+                        <label key={key} className="flex items-center gap-1.5 text-[12px] text-[#334155] cursor-pointer">
+                          <input type="checkbox" checked={vocabColumns[key]} onChange={() => setVocabColumns((p) => ({ ...p, [key]: !p[key] }))} className="accent-[#2563eb] w-3.5 h-3.5" />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 다운로드 버튼들 */}
+                  <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 space-y-3">
+                    <div className="text-center mb-1">
+                      <span className="text-[13px] text-[#64748b]">
+                        선택된 지문: <span className="font-bold text-[#0f172a]">{vocabSelectedLessons.length}개</span>
+                        {vocabCefrLevels.length < 6 && <span className="ml-2 text-[11px]">({vocabCefrLevels.join(', ')})</span>}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button type="button" onClick={() => handleVocabDownload('xlsx')} disabled={vocabDownloading}
+                        className="py-3 bg-[#2563eb] text-white rounded-xl text-[13px] font-bold hover:bg-[#1d4ed8] disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        단어장 (Excel)
+                      </button>
+                      <button type="button" onClick={() => handleVocabDownload('pdf')} disabled={vocabDownloading}
+                        className="py-3 bg-[#14213d] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        단어장 (PDF)
+                      </button>
+                    </div>
+
+                    <div className="border-t border-[#f1f5f9] pt-3">
+                      <p className="text-[11px] text-[#94a3b8] mb-2">단어 시험지 — 학생용 빈칸 시험지 + 정답지</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                          <input type="radio" name="vocabTestDir" checked={vocabTestDirection === 'word-to-meaning'} onChange={() => setVocabTestDirection('word-to-meaning')} className="accent-[#2563eb]" />
+                          영어 → 뜻
+                        </label>
+                        <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                          <input type="radio" name="vocabTestDir" checked={vocabTestDirection === 'meaning-to-word'} onChange={() => setVocabTestDirection('meaning-to-word')} className="accent-[#2563eb]" />
+                          뜻 → 영어
+                        </label>
+                      </div>
+                      <button type="button" onClick={() => handleVocabDownload('test-xlsx')} disabled={vocabDownloading}
+                        className="w-full py-2.5 bg-[#f8fafc] text-[#334155] border border-[#e2e8f0] rounded-xl text-[13px] font-bold hover:bg-[#f1f5f9] disabled:opacity-60 transition-colors">
+                        단어 시험지 다운로드
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           )}
