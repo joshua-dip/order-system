@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppBar from '../components/AppBar';
 import StudentManagement from '../components/StudentManagement';
+import { useTextbooksData } from '@/lib/useTextbooksData';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -107,7 +108,7 @@ interface AnnualSharedFileItem {
   uploadedAt: string | null;
 }
 
-type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'settings';
+type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -176,6 +177,14 @@ export default function MyPage() {
 
   const [annualSharedItems, setAnnualSharedItems] = useState<AnnualSharedFileItem[]>([]);
   const [annualSharedLoading, setAnnualSharedLoading] = useState(false);
+
+  /* ── 단어장 탭 상태 ── */
+  const { data: vocabTextbooksData } = useTextbooksData();
+  const [vocabSelectedTextbook, setVocabSelectedTextbook] = useState('');
+  const [vocabLessonGroups, setVocabLessonGroups] = useState<Record<string, string[]>>({});
+  const [vocabSelectedLessons, setVocabSelectedLessons] = useState<string[]>([]);
+  const [vocabExpandedLessons, setVocabExpandedLessons] = useState<string[]>([]);
+  const [vocabDownloading, setVocabDownloading] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -253,10 +262,98 @@ export default function MyPage() {
   }, [user?.isAnnualMemberActive, activeTab]);
 
   useEffect(() => {
-    if (user && user.isAnnualMemberActive !== true && activeTab === 'annualShared') {
+    if (user && user.isAnnualMemberActive !== true && (activeTab === 'annualShared' || activeTab === 'vocabulary')) {
       setActiveTab('orders');
     }
   }, [user, activeTab]);
+
+  /* ── 단어장: 교재 목록 ── */
+  interface VocabTextbookContent { [lessonKey: string]: { 번호: string }[] }
+  interface VocabTextbookStructure {
+    Sheet1?: { 부교재?: Record<string, VocabTextbookContent> };
+    '지문 데이터'?: { 부교재?: Record<string, VocabTextbookContent> };
+    부교재?: Record<string, VocabTextbookContent>;
+  }
+  const vocabPickContent = (key: string, data: VocabTextbookStructure): VocabTextbookContent | null => {
+    const sub = data.Sheet1?.부교재 ?? data['지문 데이터']?.부교재 ?? data.부교재;
+    if (!sub) return null;
+    return sub[key] ?? (Object.keys(sub).length > 0 ? sub[Object.keys(sub)[0]] : null);
+  };
+
+  const vocabTextbookList = useMemo(() => {
+    if (!vocabTextbooksData) return [];
+    return Object.keys(vocabTextbooksData).filter(
+      (k) => !k.startsWith('고1_') && !k.startsWith('고2_') && !k.startsWith('고3_'),
+    );
+  }, [vocabTextbooksData]);
+
+  useEffect(() => {
+    if (!vocabTextbooksData || !vocabSelectedTextbook || !vocabTextbooksData[vocabSelectedTextbook]) {
+      setVocabLessonGroups({}); setVocabSelectedLessons([]); setVocabExpandedLessons([]);
+      return;
+    }
+    const td = vocabTextbooksData[vocabSelectedTextbook] as VocabTextbookStructure;
+    const content = vocabPickContent(vocabSelectedTextbook, td);
+    if (!content) { setVocabLessonGroups({}); return; }
+    const groups: Record<string, string[]> = {};
+    Object.keys(content).forEach((lk) => {
+      const arr = content[lk];
+      if (Array.isArray(arr)) groups[lk] = arr.map((it) => `${lk} ${it.번호}`);
+    });
+    setVocabLessonGroups(groups);
+    setVocabSelectedLessons([]);
+    setVocabExpandedLessons([]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vocabSelectedTextbook, vocabTextbooksData]);
+
+  const vocabAllFlat = useMemo(() => Object.values(vocabLessonGroups).flat(), [vocabLessonGroups]);
+
+  const handleVocabLessonChange = (l: string) =>
+    setVocabSelectedLessons((p) => (p.includes(l) ? p.filter((x) => x !== l) : [...p, l]));
+  const handleVocabGroupToggle = (lk: string) => {
+    const group = vocabLessonGroups[lk] || [];
+    const allSel = group.every((l) => vocabSelectedLessons.includes(l));
+    if (allSel) setVocabSelectedLessons((p) => p.filter((l) => !group.includes(l)));
+    else setVocabSelectedLessons((p) => { const s = new Set(p); group.forEach((l) => s.add(l)); return [...s]; });
+  };
+  const handleVocabExpandToggle = (lk: string) =>
+    setVocabExpandedLessons((p) => (p.includes(lk) ? p.filter((k) => k !== lk) : [...p, lk]));
+  const handleVocabAllToggle = () => {
+    if (vocabSelectedLessons.length === vocabAllFlat.length) setVocabSelectedLessons([]);
+    else setVocabSelectedLessons([...vocabAllFlat]);
+  };
+
+  const handleVocabDownload = async () => {
+    if (!vocabSelectedTextbook) { alert('교재를 선택해주세요.'); return; }
+    if (vocabSelectedLessons.length === 0) { alert('강과 번호를 1개 이상 선택해주세요.'); return; }
+    setVocabDownloading(true);
+    try {
+      const res = await fetch('/api/my/vocabulary-download', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbook: vocabSelectedTextbook, selectedLessons: vocabSelectedLessons }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert((err as { error?: string }).error || '다운로드에 실패했습니다.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `단어장_${vocabSelectedTextbook}_${vocabSelectedLessons.length}지문.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('다운로드에 실패했습니다.');
+    } finally {
+      setVocabDownloading(false);
+    }
+  };
 
   const tabs = useMemo(() => {
     const base: { key: TabKey; label: string; icon: string; count?: number }[] = [
@@ -267,6 +364,7 @@ export default function MyPage() {
     ];
     if (user?.isAnnualMemberActive) {
       base.push({ key: 'annualShared', label: '무료공유자료', icon: '📥' });
+      base.push({ key: 'vocabulary', label: '단어장', icon: '📖' });
     }
     base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
     return base;
@@ -1125,6 +1223,122 @@ export default function MyPage() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+          )}
+
+          {/* ━━ 단어장 탭 ━━ */}
+          {activeTab === 'vocabulary' && user.isAnnualMemberActive && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <p className="text-sm font-bold text-[#0f172a] mb-1">단어장 다운로드</p>
+                <p className="text-[12px] text-[#94a3b8] leading-relaxed">
+                  교재와 강·번호를 선택한 뒤 엑셀 파일로 바로 다운로드하세요. 단어·뜻·품사·CEFR·동의어·반의어가 포함되어 있습니다.
+                </p>
+              </div>
+
+              {/* 교재 선택 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <label className="block text-sm font-bold text-[#0f172a] mb-2">교재 선택</label>
+                <select
+                  value={vocabSelectedTextbook}
+                  onChange={(e) => setVocabSelectedTextbook(e.target.value)}
+                  className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] bg-white outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                >
+                  <option value="">교재를 선택하세요</option>
+                  {vocabTextbookList.map((tb) => (
+                    <option key={tb} value={tb}>{tb}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 강·번호 선택 */}
+              {vocabSelectedTextbook && Object.keys(vocabLessonGroups).length > 0 && (
+                <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-[#0f172a]">강·번호 선택</span>
+                    <button
+                      type="button"
+                      onClick={handleVocabAllToggle}
+                      className="text-[11px] text-[#2563eb] hover:underline"
+                    >
+                      {vocabSelectedLessons.length === vocabAllFlat.length ? '전체 해제' : '전체 선택'}
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.keys(vocabLessonGroups).map((lk) => {
+                      const group = vocabLessonGroups[lk];
+                      const allSel = group.every((l) => vocabSelectedLessons.includes(l));
+                      const someSel = group.some((l) => vocabSelectedLessons.includes(l));
+                      const expanded = vocabExpandedLessons.includes(lk);
+                      return (
+                        <div key={lk} className="border border-[#f1f5f9] rounded-xl overflow-hidden">
+                          <div className="flex items-center gap-2 px-3 py-2.5 bg-[#f8fafc]">
+                            <input
+                              type="checkbox"
+                              checked={allSel}
+                              ref={(el) => { if (el) el.indeterminate = someSel && !allSel; }}
+                              onChange={() => handleVocabGroupToggle(lk)}
+                              className="accent-[#2563eb] w-3.5 h-3.5"
+                            />
+                            <span className="text-[13px] font-medium text-[#334155] flex-1">{lk}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleVocabExpandToggle(lk)}
+                              className="text-[11px] text-[#94a3b8] hover:text-[#64748b] px-1"
+                            >
+                              {expanded ? '−' : '+'}
+                            </button>
+                          </div>
+                          {expanded && (
+                            <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-white">
+                              {group.map((l) => {
+                                const num = l.split(' ').slice(1).join(' ');
+                                const sel = vocabSelectedLessons.includes(l);
+                                return (
+                                  <button
+                                    type="button"
+                                    key={l}
+                                    onClick={() => handleVocabLessonChange(l)}
+                                    className={`px-2.5 py-1 rounded-lg text-[12px] border transition-colors ${sel ? 'bg-[#2563eb] text-white border-[#2563eb]' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:border-[#94a3b8]'}`}
+                                  >
+                                    {num}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 다운로드 버튼 */}
+              {vocabSelectedTextbook && vocabSelectedLessons.length > 0 && (
+                <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                  <div className="text-center mb-3">
+                    <span className="text-[13px] text-[#64748b]">
+                      선택된 지문: <span className="font-bold text-[#0f172a]">{vocabSelectedLessons.length}개</span>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleVocabDownload}
+                    disabled={vocabDownloading}
+                    className="w-full py-3.5 bg-[#2563eb] text-white rounded-xl text-[14px] font-bold hover:bg-[#1d4ed8] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {vocabDownloading ? (
+                      <>다운로드 중…</>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        엑셀(xlsx) 다운로드
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
           )}
