@@ -162,6 +162,71 @@ export function allStopWordsSet(custom: string[] | undefined): Set<string> {
   return s;
 }
 
+const SINGULAR_EXCEPTIONS = new Set([
+  'series', 'species', 'news', 'means', 'always', 'perhaps',
+  'across', 'unless', 'whereas', 'besides', 'sometimes',
+  'towards', 'this', 'thus', 'plus', 'minus', 'versus',
+  'chaos', 'cosmos', 'yes', 'no', 'campus', 'bonus',
+  'focus', 'status', 'virus', 'apparatus', 'consensus',
+  'afterwards', 'always', 'sometimes', 'perhaps', 'its',
+  'has', 'was', 'does', 'goes',
+]);
+
+/**
+ * 영어 복수형/굴절형 → 기본형(단수) 변환.
+ * 완벽하지는 않지만 일반적인 패턴을 처리합니다.
+ */
+export function toBaseForm(word: string): string {
+  const lower = word.toLowerCase();
+  if (lower.length <= 3) return word;
+
+  if (SINGULAR_EXCEPTIONS.has(lower)) return word;
+
+  if (
+    lower.endsWith('ous') || lower.endsWith('ness') ||
+    lower.endsWith('less') || lower.endsWith('sis') ||
+    lower.endsWith('ics') || lower.endsWith('us') ||
+    lower.endsWith('is')
+  ) return word;
+
+  if (!lower.endsWith('s')) return word;
+  if (lower.endsWith('ss')) return word;
+  if (word.endsWith("'s") || word.endsWith("'s")) return word;
+
+  if (lower.endsWith('ies') && lower.length > 4) {
+    return word.slice(0, -3) + 'y';
+  }
+
+  if (lower.endsWith('es') && lower.length > 3) {
+    const stem = lower.slice(0, -2);
+    if (stem.endsWith('ch') || stem.endsWith('sh') ||
+        stem.endsWith('x') || stem.endsWith('z') ||
+        stem.endsWith('ss')) {
+      return word.slice(0, -2);
+    }
+    return word.slice(0, -1);
+  }
+
+  return word.slice(0, -1);
+}
+
+/**
+ * 쉼표로 구분된 영어 단어 각각을 기본형으로 변환.
+ */
+export function toBaseFormList(csv: string): string {
+  if (!csv.trim()) return csv;
+  return csv
+    .split(',')
+    .map((w) => {
+      const trimmed = w.trim();
+      if (!trimmed || trimmed.includes(' ')) return w;
+      const base = toBaseForm(trimmed);
+      const leading = w.match(/^\s*/)?.[0] ?? '';
+      return leading + base;
+    })
+    .join(',');
+}
+
 function guessPartOfSpeech(word: string): string {
   const isPhrase = word.includes(' ');
   if (isPhrase) {
@@ -217,7 +282,7 @@ export function buildVocabularyListFromSentences(
         if (prev === 'let') return;
       }
 
-      wordPositions.push({ word, sentence: sentenceIndex, position: wordIndex });
+      wordPositions.push({ word: toBaseForm(word), sentence: sentenceIndex, position: wordIndex });
     });
   });
 

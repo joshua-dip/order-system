@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
     const analyzedVocabulary: Record<string, unknown>[] = [];
 
     for (const item of vocabularyList as Record<string, unknown>[]) {
-      if (item.meaning && String(item.meaning).trim()) {
+      const hasMeaning = !!(item.meaning && String(item.meaning).trim());
+      const hasCefr = !!(item.cefr && String(item.cefr).trim());
+      if (hasMeaning && hasCefr) {
         analyzedVocabulary.push(item);
         continue;
       }
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
       const formatExample = batch
         .map(
           (_: unknown, idx: number) =>
-            `[단어 ${idx + 1}: "단어"]\n유형: word\n품사: n.\n뜻: 한글 주요 뜻\n부가뜻: 다른 한글 표현(없으면 없음)\n영어유의어: really, truly(같은 뜻의 영어 단어, 쉼표)\n영어반의어: supposedly(반대·대조 뜻의 영어, 없으면 없음)`
+            `[단어 ${idx + 1}: "단어"]\n유형: word\n품사: n.\nCEFR: B1\n뜻: 한글 주요 뜻\n부가뜻: 다른 한글 표현(없으면 없음)\n영어유의어: really, truly(같은 뜻의 영어 단어, 쉼표)\n영어반의어: supposedly(반대·대조 뜻의 영어, 없으면 없음)`
         )
         .join('\n\n');
 
@@ -87,12 +89,16 @@ ${batchPrompt}
 각 단어마다 아래 형식으로만 답변하세요. 라벨을 정확히 지키세요.
 유형: [word 또는 phrase]
 품사: [n., v., adj. 등]
+CEFR: [반드시 A1, A2, B1, B2, C1, C2 중 하나만. 해당 지문·문맥에서의 어휘 난이도]
 뜻: [문맥에 맞는 주요 뜻, 한국어]
 부가뜻: [부가 한글 의미, 없으면 없음]
 영어유의어: [뜻이 같은 영어 단어·구만 쉼표로. 동의어(synonym)이지 반의어가 아님]
 영어반의어: [뜻이 정반대이거나 강하게 대조되는 영어 단어만. 없으면 없음]
 
-중요: "영어반의어"에는 permit/enable 같은 유의어를 넣지 마세요(그건 영어유의어). allow ↔ forbid 처럼 반대 관계만 영어반의어에 넣으세요.
+중요:
+- "영어반의어"에는 permit/enable 같은 유의어를 넣지 마세요(그건 영어유의어). allow ↔ forbid 처럼 반대 관계만 영어반의어에 넣으세요.
+- 뜻은 반드시 단수 명사형으로 쓰세요(예: "공무원들" ✗ → "공무원" ✓, "아이들" ✗ → "아이" ✓).
+- 영어유의어·영어반의어는 반드시 기본형(단수·원형)으로 쓰세요(예: administrators ✗ → administrator ✓).
 
 답변 형식 예시:
 ${formatExample}

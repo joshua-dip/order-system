@@ -19,6 +19,7 @@ config({ path: path.join(__dirname, '..', '.env.local') });
 
 import { getDb } from '@/lib/mongodb';
 import type { VocabularyEntry } from '@/lib/passage-analyzer-types';
+import { toBaseForm, toBaseFormList } from '@/lib/passage-analyzer-vocabulary-generate';
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -65,6 +66,8 @@ async function main() {
   let totalMeaningFixed = 0;
   let totalAbbrevFixed = 0;
   let totalEmptyMeaning = 0;
+  let totalWordSingularized = 0;
+  let totalFieldSingularized = 0;
 
   for (const doc of docs) {
     const main = (doc as any).passageStates?.main;
@@ -90,6 +93,27 @@ async function main() {
         modified.word = abbrevFix;
         totalAbbrevFixed++;
         changed = true;
+      }
+
+      const baseWord = toBaseForm(modified.word);
+      if (baseWord !== modified.word) {
+        console.log(`  [단수] ${doc.fileName} — "${modified.word}" → "${baseWord}"`);
+        modified.word = baseWord;
+        totalWordSingularized++;
+        changed = true;
+      }
+
+      for (const field of ['synonym', 'antonym', 'opposite'] as const) {
+        const val = modified[field];
+        if (val) {
+          const fixed = toBaseFormList(val);
+          if (fixed !== val) {
+            console.log(`  [${field}단수] ${doc.fileName} — "${val}" → "${fixed}"`);
+            modified = { ...modified, [field]: fixed };
+            totalFieldSingularized++;
+            changed = true;
+          }
+        }
       }
 
       if (item.meaning) {
@@ -126,6 +150,8 @@ async function main() {
   console.log(`삭제된 노이즈 단어: ${totalRemoved}`);
   console.log(`약어 대문자 수정: ${totalAbbrevFixed}`);
   console.log(`복수형 뜻 수정: ${totalMeaningFixed}`);
+  console.log(`영단어 단수화: ${totalWordSingularized}`);
+  console.log(`동의어/반의어 단수화: ${totalFieldSingularized}`);
   console.log(`빈 뜻 항목: ${totalEmptyMeaning}`);
   if (DRY_RUN) console.log('(dry-run 모드 — 실제 변경 없음)');
 
