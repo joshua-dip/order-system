@@ -24,4 +24,6 @@ export const ORDER_PREFIX = {
   BOOK_ESSAY: 'BD',
   /** 부교재 통합 주문 */
   BOOK_BUNDLE: 'BB',
+  /** 부교재 + 단어장 */
+  BOOK_VOCABULARY: 'BL',
 } as const;
