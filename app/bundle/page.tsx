@@ -43,6 +43,11 @@ const WORKBOOK_PACKAGES = [
   { id: 'one_line_interpretation', name: '한줄해석/해석쓰기/영작하기', description: '한줄해석/해석쓰기/영작하기 자료', price: 300 },
 ] as const;
 
+const VOCABULARY_PACKAGES = [
+  { id: 'basic', name: '기본형', description: '단어 + 뜻', price: 300 },
+  { id: 'detailed', name: '상세형', description: '단어 + 뜻 + 동의어 + 반의어', price: 500 },
+] as const;
+
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
 /* ────────── 유틸 ────────── */
@@ -300,6 +305,12 @@ export default function BundlePage() {
   const analysisAllowed = canAccessAnalysis;
   const analysisSubtotal = analysisEnabled && analysisAllowed ? selectedLessons.length * ANALYSIS_PRICE_PER_ITEM : 0;
 
+  /* ── 단어장 ── */
+  const [vocabEnabled, setVocabEnabled] = useState(false);
+  const [vocabPackage, setVocabPackage] = useState<'basic' | 'detailed'>('basic');
+  const vocabPkg = VOCABULARY_PACKAGES.find((p) => p.id === vocabPackage)!;
+  const vocabSubtotal = vocabEnabled ? selectedLessons.length * vocabPkg.price : 0;
+
   /* ── 이메일 + 포인트 ── */
   const [email, setEmail] = useState('');
   const [useCustomHwp, setUseCustomHwp] = useState(false);
@@ -311,9 +322,10 @@ export default function BundlePage() {
     (variantPrice?.totalPrice ?? 0)
     + (wbPrice?.finalPrice ?? 0)
     + essaySubtotal
-    + analysisSubtotal;
+    + analysisSubtotal
+    + vocabSubtotal;
 
-  const enabledCount = [variantEnabled, workbookEnabled, essayEnabled, analysisEnabled].filter(Boolean).length;
+  const enabledCount = [variantEnabled, workbookEnabled, essayEnabled, analysisEnabled, vocabEnabled].filter(Boolean).length;
   const effectivePoints = Math.min(Math.max(0, pointsToUse), currentUser?.points ?? 0, grandTotal);
   const amountDue = grandTotal - effectivePoints;
 
@@ -374,6 +386,14 @@ export default function BundlePage() {
         `소계: ${analysisSubtotal.toLocaleString()}원`,
       );
     }
+    if (vocabEnabled) {
+      lines.push(
+        ``, `━━ 단어장 ━━`,
+        `유형: ${vocabPkg.name} — ${vocabPkg.description}`,
+        `지문 수: ${selectedLessons.length}개 (지문당 ${vocabPkg.price.toLocaleString()}원)`,
+        `소계: ${vocabSubtotal.toLocaleString()}원`,
+      );
+    }
 
     if (useCustomHwp) {
       lines.push(``, `커스텀 HWP 양식: 사용`);
@@ -413,6 +433,9 @@ export default function BundlePage() {
         } : {}),
         ...(analysisEnabled ? {
           analysis: { subtotal: analysisSubtotal },
+        } : {}),
+        ...(vocabEnabled ? {
+          vocabulary: { packageType: vocabPackage, subtotal: vocabSubtotal },
         } : {}),
       },
       totalPrice: grandTotal,
@@ -477,7 +500,7 @@ export default function BundlePage() {
           {/* 헤더 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h1 className="text-2xl font-bold text-gray-800">통합 주문서</h1>
-            <p className="text-gray-500 text-sm mt-1">교재 하나를 선택하고, 변형문제·워크북·서술형·분석지를 한 번에 주문하세요.</p>
+            <p className="text-gray-500 text-sm mt-1">교재 하나를 선택하고, 변형문제·워크북·서술형·분석지·단어장을 한 번에 주문하세요.</p>
           </div>
 
           {/* 1. 교재 선택 */}
@@ -713,6 +736,40 @@ export default function BundlePage() {
                   <p className="text-xs text-gray-400 mt-1">분석지는 PDF 파일로 제공됩니다.</p>
                 </div>
               </SectionCard>
+
+              {/* 3-5. 단어장 */}
+              <SectionCard
+                title="단어장"
+                enabled={vocabEnabled}
+                onToggle={() => setVocabEnabled((p) => !p)}
+                subtotalLabel={vocabSubtotal > 0 ? `${vocabSubtotal.toLocaleString()}원` : undefined}
+              >
+                <div className="space-y-3 mt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {VOCABULARY_PACKAGES.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setVocabPackage(p.id as 'basic' | 'detailed')}
+                        className={`p-3 rounded-xl border-2 text-left transition-colors ${
+                          vocabPackage === p.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-bold text-sm text-gray-800">{p.name}</span>
+                          <span className="text-xs font-semibold text-blue-600">{p.price.toLocaleString()}원/지문</span>
+                        </div>
+                        <p className="text-xs text-gray-500">{p.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {vocabSubtotal > 0 && (
+                    <p className="text-sm text-gray-600 pt-2 border-t">
+                      {selectedLessons.length}지문 × {vocabPkg.price.toLocaleString()}원 = <span className="font-semibold text-blue-600">{vocabSubtotal.toLocaleString()}원</span>
+                    </p>
+                  )}
+                </div>
+              </SectionCard>
             </div>
           )}
 
@@ -758,6 +815,9 @@ export default function BundlePage() {
                 )}
                 {analysisEnabled && analysisSubtotal > 0 && (
                   <div className="flex justify-between"><span>분석지</span><span>{analysisSubtotal.toLocaleString()}원</span></div>
+                )}
+                {vocabEnabled && vocabSubtotal > 0 && (
+                  <div className="flex justify-between"><span>단어장 ({vocabPkg.name})</span><span>{vocabSubtotal.toLocaleString()}원</span></div>
                 )}
                 <hr />
                 <div className="flex justify-between font-bold text-base text-gray-900">
