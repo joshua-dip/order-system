@@ -115,6 +115,8 @@ export interface VocabularyEntry {
   meaning: string;
   wordType?: string;
   partOfSpeech?: string;
+  /** CEFR 어휘 난이도 (예: A1~C2). 비우면 미지정 */
+  cefr?: string;
   synonym?: string;
   antonym?: string;
   positions?: { sentence: number; position: number }[];

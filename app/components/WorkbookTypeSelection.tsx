@@ -137,6 +137,13 @@ const WorkbookTypeSelection = ({
       subTypes: ['어법양자택일']
     },
     {
+      id: 'workbook_grammar_error_correction',
+      name: '워크북_어법_오류수정',
+      description: '어법 오류를 찾아 수정하는 연습',
+      price: 100,
+      subTypes: ['어법오류수정']
+    },
+    {
       id: 'lecture_material',
       name: '강의용자료/수업용자료',
       description: '원문과 해석 자료',

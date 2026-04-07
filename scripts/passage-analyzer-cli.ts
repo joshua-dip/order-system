@@ -26,6 +26,7 @@ import { config } from 'dotenv';
 import { getDb } from '@/lib/mongodb';
 import { runPassageAnalyzerAiBatch } from '@/lib/passage-analyzer-run-ai-batch';
 import { passageAnalysisFileNameForPassageId, type PassageStateStored } from '@/lib/passage-analyzer-types';
+import { deriveSentencesFromPassageContent, mergeSavedOntoPassagesBase } from '@/lib/passage-analyzer-passages';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -40,7 +41,7 @@ function die(msg: string): never {
   process.exit(1);
 }
 
-async function loadMain(passageId: string): Promise<{ fileName: string; main: PassageStateStored }> {
+async function loadMain(passageId: string): Promise<{ fileName: string; main: PassageStateStored } | null> {
   const fileName = passageAnalysisFileNameForPassageId(passageId.trim());
   const db = await getDb('gomijoshua');
   const doc = await db.collection(COL).findOne<{
@@ -48,10 +49,7 @@ async function loadMain(passageId: string): Promise<{ fileName: string; main: Pa
   }>({ fileName });
   const main = doc?.passageStates?.main;
   if (!main || typeof main !== 'object' || !Array.isArray(main.sentences)) {
-    die(
-      `passageStates.main 이 없거나 sentences 가 없습니다: ${fileName}\n` +
-        `→ 웹 지문분석기에서 해당 지문을 한 번 연 뒤 저장하거나, import 로 초기 JSON 을 넣으세요.`
-    );
+    return null;
   }
   return { fileName, main };
 }
@@ -90,7 +88,9 @@ async function saveMainToMongo(
 }
 
 async function cmdExport(passageId: string) {
-  const { fileName, main } = await loadMain(passageId);
+  const loaded = await loadMain(passageId);
+  if (!loaded) die(`passageStates.main 이 없거나 sentences 가 없습니다: passage:${passageId}\n→ 웹 지문분석기에서 해당 지문을 한 번 연 뒤 저장하거나, import 로 초기 JSON 을 넣으세요.`);
+  const { fileName, main } = loaded;
   console.log(JSON.stringify({ fileName, main }, null, 2));
 }
 
@@ -110,6 +110,28 @@ async function cmdImport(passageId: string, filePath: string) {
   await saveMainToMongo(fileName, main, { editorNote: 'cli-import' });
 }
 
+async function initMainFromApi(
+  passageId: string,
+  base: string,
+  token: string
+): Promise<{ fileName: string; main: PassageStateStored }> {
+  const fileName = passageAnalysisFileNameForPassageId(passageId.trim());
+  const pr = await fetch(`${base}/api/admin/passages/${passageId}`, {
+    headers: { Cookie: `admin_session=${token}` },
+  });
+  if (!pr.ok) die(`지문 API 호출 실패 (${pr.status}): ${passageId}`);
+  const pd = await pr.json() as { item?: { content?: Record<string, unknown> } };
+  if (!pd.item) die(`지문을 찾을 수 없습니다: ${passageId}`);
+  const c = pd.item.content || {};
+  const { sentences, koreanSentences } = deriveSentencesFromPassageContent(c);
+  const initial: PassageStateStored = mergeSavedOntoPassagesBase(
+    { sentences, koreanSentences, vocabularyList: [] },
+    undefined
+  );
+  await saveMainToMongo(fileName, initial, { editorNote: 'cli-init' });
+  return { fileName, main: initial };
+}
+
 async function cmdRunAi(passageId: string) {
   const base = (process.env.PASSAGE_ANALYZER_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
   const token = (process.env.ADMIN_SESSION_COOKIE || '').trim();
@@ -120,7 +142,9 @@ async function cmdRunAi(passageId: string) {
     );
   }
 
-  const { fileName, main } = await loadMain(passageId);
+  const existing = await loadMain(passageId);
+  const loaded = existing ?? (console.error('문서 없음 → 지문 API로 초기화 중...'), await initMainFromApi(passageId, base, token));
+  const { fileName, main } = loaded;
   console.error('API:', base, '| fileName:', fileName);
 
   const { state, warnings } = await runPassageAnalyzerAiBatch({
@@ -161,7 +185,9 @@ async function main() {
   else die(`알 수 없는 명령: ${cmd}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });

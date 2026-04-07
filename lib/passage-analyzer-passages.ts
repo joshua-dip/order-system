@@ -1,4 +1,12 @@
-import type { PassageStateStored } from '@/lib/passage-analyzer-types';
+import type { PassageStateStored, VocabularyEntry } from '@/lib/passage-analyzer-types';
+
+function pickVocabularyListFromSaved(base: PassageStateStored, saved: PassageStateStored): VocabularyEntry[] {
+  const s = saved as unknown as Record<string, unknown>;
+  if (Array.isArray(s.vocabularyList)) return s.vocabularyList as VocabularyEntry[];
+  /** 레거시 키 */
+  if (Array.isArray(s.vocabulary)) return s.vocabulary as VocabularyEntry[];
+  return base.vocabularyList;
+}
 
 /** passages 문서의 content → 분석용 영문 문장·한글 문장 (원문은 DB passages 전용) */
 export function deriveSentencesFromPassageContent(content: Record<string, unknown> | undefined | null): {
@@ -86,10 +94,12 @@ export function mergeSavedOntoPassagesBase(
 ): PassageStateStored {
   if (!saved) return base;
   const { sentences, koreanSentences } = base;
+  const vocabularyList = pickVocabularyListFromSaved(base, saved);
   return {
     ...base,
     ...saved,
     sentences,
     koreanSentences,
+    vocabularyList,
   };
 }

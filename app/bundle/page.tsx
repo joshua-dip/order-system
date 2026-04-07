@@ -39,6 +39,7 @@ const WORKBOOK_PACKAGES = [
   { id: 'keyword_blank', name: '워크북 빈칸쓰기 키워드', description: '키워드 중심의 빈칸쓰기 연습', price: 100 },
   { id: 'word_arrangement', name: '워크북 낱말배열', description: '낱말 순서 배열 연습', price: 100 },
   { id: 'workbook_grammar_either_or', name: '워크북_어법_양자택일', description: '어법 양자택일(두 보기 중 선택) 연습', price: 100 },
+  { id: 'workbook_grammar_error_correction', name: '워크북_어법_오류수정', description: '어법 오류를 찾아 수정하는 연습', price: 100 },
   { id: 'lecture_material', name: '강의용자료/수업용자료', description: '원문과 해석 자료', price: 200 },
   { id: 'one_line_interpretation', name: '한줄해석/해석쓰기/영작하기', description: '한줄해석/해석쓰기/영작하기 자료', price: 300 },
 ] as const;

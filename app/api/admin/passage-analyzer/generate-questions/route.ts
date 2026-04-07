@@ -77,7 +77,10 @@ export async function POST(request: NextRequest) {
       vocabularyList.length > 0
         ? `\n[단어장]\n${vocabularyList
             .slice(0, 30)
-            .map((v: { word: string; meaning: string }) => `- ${v.word}: ${v.meaning}`)
+            .map((v: { word: string; meaning: string; cefr?: string }) => {
+              const lv = v.cefr && String(v.cefr).trim();
+              return `- ${v.word}${lv ? ` [CEFR ${lv}]` : ''}: ${v.meaning}`;
+            })
             .join('\n')}`
         : '';
 

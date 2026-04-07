@@ -38,6 +38,51 @@ function deriveSentences(passage: PassageFull | null): string[] {
   return splitSentencesFromOriginal(passage.content.original || '');
 }
 
+function listProgressPct(map: Record<string, number>, id: string): number {
+  const v = map[id.trim().toLowerCase()];
+  return typeof v === 'number' && !Number.isNaN(v) ? Math.min(100, Math.max(0, v)) : 0;
+}
+
+function PassageListRow({
+  p,
+  selected,
+  progressPercent,
+  onPick,
+}: {
+  p: PassageListItem;
+  selected: boolean;
+  progressPercent: number;
+  onPick: (id: string) => void;
+}) {
+  const half = progressPercent >= 50;
+  const full = (p.content?.original || '');
+  const orig = full.slice(0, 72);
+  const truncated = full.length > 72;
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onPick(p._id)}
+        className={`w-full min-w-0 text-left px-3 py-2 text-sm transition-colors ${
+          selected
+            ? 'bg-sky-900/30 text-sky-100 border-l-2 border-sky-500/40'
+            : half
+              ? 'bg-emerald-950/25 border-l-2 border-emerald-500/50 text-slate-200'
+              : 'text-slate-200 border-l-2 border-transparent'
+        } hover:bg-slate-900/60`}
+      >
+        <span
+          className={`font-mono text-xs mr-2 tabular-nums ${half ? 'text-emerald-400 font-semibold' : 'text-slate-400'}`}
+        >
+          {p.chapter} · {p.number}
+        </span>
+        {orig}
+        {truncated ? '…' : ''}
+      </button>
+    </li>
+  );
+}
+
 /** 교재 링크 폴더: 미분류 또는 폴더 id면 교재 없이도 passages 목록 조회 */
 function linkFolderLoadsPassages(scope: string): boolean {
   if (scope === 'unassigned') return true;
@@ -58,6 +103,7 @@ export default function AdminSyntaxAnalyzerPage() {
 
   const [sentences, setSentences] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [progressByPassageId, setProgressByPassageId] = useState<Record<string, number>>({});
 
   /** 원문 관리·교재 구매 링크와 동일한 textbook_link_folders */
   const [linkFolderScope, setLinkFolderScope] = useState('');
@@ -193,6 +239,33 @@ export default function AdminSyntaxAnalyzerPage() {
     fetchPassageList();
   }, [user, fetchPassageList]);
 
+  useEffect(() => {
+    if (!passageItems.length) {
+      setProgressByPassageId({});
+      return;
+    }
+    let cancelled = false;
+    const ids = passageItems.map((p) => p._id);
+    fetch('/api/admin/passage-analyzer/list-progress', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passageIds: ids }),
+    })
+      .then((r) => r.json())
+      .then((d: { progress?: Record<string, number> }) => {
+        if (cancelled) return;
+        const pr = d.progress;
+        setProgressByPassageId(pr && typeof pr === 'object' ? pr : {});
+      })
+      .catch(() => {
+        if (!cancelled) setProgressByPassageId({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [passageItems]);
+
   const loadPassage = async (id: string) => {
     setPassageLoading(true);
     setErrorMsg(null);
@@ -260,6 +333,11 @@ export default function AdminSyntaxAnalyzerPage() {
               <strong className="text-slate-400">같은 목록</strong>입니다(교재명 기준). 「미분류」·특정 폴더를 고르면
               해당 교재의 지문만 나옵니다. 「전체」는 교재를 골라 주세요. 폴더 이름 추가·삭제도 그 링크 섹션에서
               합니다.
+            </p>
+            <p className="text-[10px] text-emerald-500/85 mb-3 leading-relaxed">
+              분석 작업대 진행(10단계·자동 감지 기준)이 <strong className="text-emerald-400/95">50% 이상</strong>인
+              지문은 <strong className="text-emerald-400/95">회차·번호</strong>가 초록으로 강조되고, 행 왼쪽에
+              초록 띠가 보입니다.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-1">
               <div>
@@ -331,21 +409,13 @@ export default function AdminSyntaxAnalyzerPage() {
                       </div>
                       <ul className="divide-y divide-slate-700/60">
                         {rows.map((p) => (
-                          <li key={p._id}>
-                            <button
-                              type="button"
-                              onClick={() => loadPassage(p._id)}
-                              className={`w-full min-w-0 text-left px-3 py-2 text-sm hover:bg-slate-900/60 ${
-                                selectedPassage?._id === p._id ? 'bg-sky-900/30 text-sky-100' : 'text-slate-200'
-                              }`}
-                            >
-                              <span className="font-mono text-xs text-slate-400 mr-2">
-                                {p.chapter} · {p.number}
-                              </span>
-                              {(p.content?.original || '').slice(0, 72)}
-                              {(p.content?.original || '').length > 72 ? '…' : ''}
-                            </button>
-                          </li>
+                          <PassageListRow
+                            key={p._id}
+                            p={p}
+                            selected={selectedPassage?._id === p._id}
+                            progressPercent={listProgressPct(progressByPassageId, p._id)}
+                            onPick={loadPassage}
+                          />
                         ))}
                       </ul>
                     </div>
@@ -354,21 +424,13 @@ export default function AdminSyntaxAnalyzerPage() {
               ) : (
                 <ul className="divide-y divide-slate-700/80">
                   {passageItems.map((p) => (
-                    <li key={p._id}>
-                      <button
-                        type="button"
-                        onClick={() => loadPassage(p._id)}
-                        className={`w-full min-w-0 text-left px-3 py-2 text-sm hover:bg-slate-900/60 ${
-                          selectedPassage?._id === p._id ? 'bg-sky-900/30 text-sky-100' : 'text-slate-200'
-                        }`}
-                      >
-                        <span className="font-mono text-xs text-slate-400 mr-2">
-                          {p.chapter} · {p.number}
-                        </span>
-                        {(p.content?.original || '').slice(0, 72)}
-                        {(p.content?.original || '').length > 72 ? '…' : ''}
-                      </button>
-                    </li>
+                    <PassageListRow
+                      key={p._id}
+                      p={p}
+                      selected={selectedPassage?._id === p._id}
+                      progressPercent={listProgressPct(progressByPassageId, p._id)}
+                      onPick={loadPassage}
+                    />
                   ))}
                 </ul>
               )}

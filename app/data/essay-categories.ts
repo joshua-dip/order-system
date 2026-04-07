@@ -22,7 +22,7 @@ export const ESSAY_CATEGORIES: EssayCategoryConfig[] = [
   {
     대분류: '요약문조건영작형',
     소분류: ['요약문 조건 영작'],
-    pricePerPassage: 600,
+    pricePerPassage: 200,
   },
 ];
 

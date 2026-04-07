@@ -16,6 +16,7 @@
  *   npm run claude -- claude:BV-20260331-002
  *   npx tsx scripts/cc-variant-cli.ts save --json path/to/question.json
  *   cat question.json | npx tsx scripts/cc-variant-cli.ts save --json -
+ *   record-review --id <generated_question_id> --answer "2" --response "풀이 요약" [--attempt 1]
  *
  * save용 JSON 예시:
  *   { "passage_id","textbook","source","type","question_data":{...}, "status":"대기", "option_type":"English" }
@@ -31,6 +32,7 @@ import {
   sliceQuestionCountPayloadForApi,
 } from '@/lib/question-count-validation';
 import { saveGeneratedQuestionToDb } from '@/lib/variant-save-generated-question';
+import { recordReviewLogFromClaudeCode } from '@/lib/generated-question-review-cc';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -222,6 +224,23 @@ async function cmdSave(flags: Map<string, string>) {
   out(saved);
 }
 
+async function cmdRecordReview(flags: Map<string, string>) {
+  const id = (flags.get('id') ?? '').trim();
+  const answer = flags.get('answer') ?? '';
+  const response = (flags.get('response') ?? '').trim() || '(검수 기록)';
+  const attempt = Math.floor(flagNum(flags, 'attempt', 1));
+  if (!id || !ObjectId.isValid(id)) die('record-review: --id <유효한 ObjectId> 가 필요합니다.');
+  if (!answer.trim()) die('record-review: --answer 가 필요합니다.');
+  const result = await recordReviewLogFromClaudeCode({
+    generated_question_id: id,
+    claude_answer: answer,
+    claude_response: response,
+    admin_login_id: null,
+    attemptNumber: attempt,
+  });
+  out(result);
+}
+
 function argvAfterScript(): string[] {
   const raw = process.argv.slice(2);
   const first = raw[0] ?? '';
@@ -248,7 +267,8 @@ async function main() {
   shortage --textbook "이름" [--required N] [--status all|대기|완료|검수불일치] [--max-rows N]
   shortage --order-id <ObjectId> | shortage --order-number BV-… [동일 옵션]
   단축: BV-20260331-002  또는  claude:BV-20260331-002  → shortage --order-number … 와 동일
-  save --json <파일|- >`);
+  save --json <파일|- >
+  record-review --id <generated_question_id> --answer "정답 표현" [--response "풀이"] [--attempt 1]`);
     process.exit(cmd ? 0 : 1);
   }
 
@@ -271,6 +291,9 @@ async function main() {
       break;
     case 'save':
       await cmdSave(flags);
+      break;
+    case 'record-review':
+      await cmdRecordReview(flags);
       break;
     default:
       die(`알 수 없는 명령: ${cmd} (--help 참고)`);
