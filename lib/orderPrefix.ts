@@ -22,4 +22,6 @@ export const ORDER_PREFIX = {
   MOCK_ESSAY: 'MD',
   /** 부교재 + 서술형 */
   BOOK_ESSAY: 'BD',
+  /** 부교재 통합 주문 */
+  BOOK_BUNDLE: 'BB',
 } as const;
