@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import type {
@@ -38,13 +40,19 @@ import {
   regenerateVocabularyPositions,
   sortVocabularyEntries,
   vocabularyPositionToDisplayIndex,
+  VOCABULARY_CEFR_OPTIONS,
   VOCABULARY_POS_OPTIONS,
+  VOCABULARY_WORD_TYPE_LABELS,
   VOCABULARY_WORD_TYPE_OPTIONS,
 } from '@/lib/passage-analyzer-vocabulary';
 import {
   buildVocabularyListFromSentences,
   filterVocabularyByStopwords,
 } from '@/lib/passage-analyzer-vocabulary-generate';
+import {
+  buildSinglePassageVocabularyAoA,
+  sanitizeExcelFileBase,
+} from '@/lib/passage-analyzer-vocabulary-export';
 import { VocabularyStopWordsModal } from '@/app/components/admin/VocabularyStopWordsModal';
 import { apiJsonErrorMessage, parseApiResponseJson } from '@/lib/parse-api-response-json';
 import { runPassageAnalyzerAiBatch } from '@/lib/passage-analyzer-run-ai-batch';
@@ -52,6 +60,31 @@ import { runPassageAnalyzerAiBatch } from '@/lib/passage-analyzer-run-ai-batch';
 const SYNTAX_LABEL_OPTIONS = Object.keys(SYNTAX_LABEL_COLORS);
 
 const EMPTY_VOCAB_CUSTOM_STOPWORDS: string[] = [];
+
+/** CEFR 셀렉트에서 AI 단건 분석 트리거 (value는 저장하지 않음) */
+const CEFR_SELECT_AI_VALUE = '__ai_cefr__';
+
+type TextbookSibling = {
+  _id: string;
+  chapter: string;
+  number: string;
+  source_key: string;
+  order: number;
+};
+
+function formatSiblingLabel(s: TextbookSibling): string {
+  const ch = String(s.chapter || '').trim();
+  const num = String(s.number || '').trim();
+  const parts = [ch, num].filter(Boolean);
+  const head = parts.length ? parts.join(' · ') : '';
+  const sk = String(s.source_key || '').trim();
+  const composite = `${ch} ${num}`.trim();
+  const tail = sk && sk !== composite ? sk : '';
+  if (head && tail) return `${head} — ${tail}`;
+  if (head) return head;
+  if (tail) return tail;
+  return s._id.length >= 8 ? `…${s._id.slice(-8)}` : s._id;
+}
 
 const MODES: { id: EditorViewMode; label: string }[] = [
   { id: 'base', label: '기본' },
@@ -235,6 +268,7 @@ function clearSvocComponentFields(
 
 
 export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null }) {
+  const router = useRouter();
   const [analysisFileName, setAnalysisFileName] = useState('');
   const [state, setState] = useState<PassageStateStored | null>(null);
   const [viewMode, setViewMode] = useState<EditorViewMode>('base');
@@ -254,6 +288,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
     word: '',
     wordType: 'word',
     partOfSpeech: 'n.',
+    cefr: '',
     meaning: '',
     synonym: '',
     antonym: '',
@@ -266,10 +301,25 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const [mongoPanelJson, setMongoPanelJson] = useState<string | null>(null);
   const [mongoPanelLoading, setMongoPanelLoading] = useState(false);
   const [mongoPanelError, setMongoPanelError] = useState<string | null>(null);
+  /** passages 문서 메타(교재 전체 단어장보내기·파일명용) */
+  const [passageMeta, setPassageMeta] = useState<{
+    textbook?: string;
+    chapter?: string;
+    number?: string;
+    source_key?: string;
+  } | null>(null);
+  const [vocabExportBusy, setVocabExportBusy] = useState<'passage' | 'textbook' | null>(null);
+  const [cefrAiRowIndex, setCefrAiRowIndex] = useState<number | null>(null);
+  const [cefrAiInline, setCefrAiInline] = useState(false);
+  const cefrAiLockRef = useRef(false);
+  const [textbookSiblings, setTextbookSiblings] = useState<TextbookSibling[]>([]);
+  const [textbookSiblingsLoading, setTextbookSiblingsLoading] = useState(false);
   /** 같은 분석 파일에서 빈 단어장일 때 자동 추출을 한 번만 시도 */
   const autoVocabFilledForFile = useRef<string>('');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stateRef = useRef<PassageStateStored | null>(null);
+  /** 서버에서 막 불러온 직후 빈 상태로 자동 저장해 단어장 등을 덮어쓰지 않도록, 실제 편집 시에만 저장 */
+  const stateDirtyRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -317,11 +367,19 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           const pr = await fetch(`/api/admin/passages/${passageId}`, { credentials: 'include' });
           const pd = await parseApiResponseJson(pr);
           if (!pr.ok || !pd.item) {
+            setPassageMeta(null);
             setMsg(apiJsonErrorMessage(pd, '지문을 불러오지 못했습니다.'));
             setLoading(false);
             return;
           }
-          const c = (((pd.item as { content?: unknown })?.content || {}) as Record<string, unknown>);
+          const item = pd.item as Record<string, unknown>;
+          setPassageMeta({
+            textbook: String(item.textbook ?? '').trim() || undefined,
+            chapter: String(item.chapter ?? '').trim() || undefined,
+            number: String(item.number ?? '').trim() || undefined,
+            source_key: String(item.source_key ?? '').trim() || undefined,
+          });
+          const c = (((item.content || {}) as Record<string, unknown>) ?? {}) as Record<string, unknown>;
           const { sentences, koreanSentences } = deriveSentencesFromPassageContent(c);
           initial = defaultPassageState(sentences, koreanSentences);
 
@@ -340,10 +398,14 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         }
 
         if (cancelled) return;
+        stateDirtyRef.current = false;
         setAnalysisFileName(fileName);
         setState(initial);
       } catch {
-        if (!cancelled) setMsg('로드 오류');
+        if (!cancelled) {
+          setPassageMeta(null);
+          setMsg('로드 오류');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -362,10 +424,12 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   }, [state]);
 
   useEffect(() => {
-    if (state && analysisFileName) scheduleSave(analysisFileName, state);
+    if (!state || !analysisFileName || !stateDirtyRef.current) return;
+    scheduleSave(analysisFileName, state);
   }, [state, analysisFileName, scheduleSave]);
 
   const updateState = useCallback((fn: (s: PassageStateStored) => PassageStateStored) => {
+    stateDirtyRef.current = true;
     setState((prev) => (prev ? fn({ ...prev }) : null));
   }, []);
 
@@ -445,6 +509,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           meaning: '',
           wordType: 'word',
           partOfSpeech: 'n.',
+          cefr: '',
           positions: [{ sentence: si, position: wi }],
         });
         return { ...s, vocabularyList: list };
@@ -931,6 +996,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         sourcePassageLabel: passageId ?? analysisFileName,
         onProgress: setMsg,
       });
+      stateDirtyRef.current = true;
       flushSync(() => setState(next));
       stateRef.current = next;
       setMsg(['일괄 AI 완료.', ...warnings].join(' '));
@@ -1058,6 +1124,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
             meaning: '',
             wordType: 'word',
             partOfSpeech: 'n.',
+            cefr: '',
             positions: [{ sentence: si, position: wi }],
           });
         }
@@ -1098,6 +1165,199 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       setBusy(null);
     }
   }, [state, updateState]);
+
+  const downloadCurrentVocabularyXlsx = useCallback(async () => {
+    if (!state) return;
+    setVocabExportBusy('passage');
+    setMsg(null);
+    try {
+      const XLSX = await import('xlsx');
+      const aoa = buildSinglePassageVocabularyAoA(
+        state.vocabularyList || [],
+        (state.vocabularySortOrder || 'position') as VocabularySortOrder
+      );
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      XLSX.utils.book_append_sheet(wb, ws, '단어장');
+      const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([out], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const parts = [passageMeta?.textbook, passageMeta?.chapter, passageMeta?.number].filter(
+        (x): x is string => Boolean(x && String(x).trim())
+      );
+      const base =
+        parts.length > 0
+          ? parts.map((p) => sanitizeExcelFileBase(String(p), 24)).join('_')
+          : passageId
+            ? `passage_${passageId.slice(-8)}`
+            : 'vocab';
+      const name = `단어장_${base}.xlsx`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg('엑셀 파일을 내려받았습니다. (현재 화면 편집 내용 기준)');
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '엑셀 저장에 실패했습니다.');
+    } finally {
+      setVocabExportBusy(null);
+    }
+  }, [state, passageId, passageMeta]);
+
+  const downloadTextbookVocabularyXlsx = useCallback(async () => {
+    const tb = passageMeta?.textbook?.trim();
+    if (!tb) {
+      setMsg('이 지문에 교재명이 없어 교재 전체 보내기를 할 수 없습니다.');
+      return;
+    }
+    setVocabExportBusy('textbook');
+    setMsg(null);
+    try {
+      const res = await fetch('/api/admin/passage-analyzer/export-vocabulary-xlsx', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbook: tb }),
+      });
+      const ct = res.headers.get('Content-Type') || '';
+      if (!res.ok) {
+        let err = `요청 실패 (${res.status})`;
+        if (ct.includes('application/json')) {
+          try {
+            const d = (await res.json()) as { error?: string };
+            if (d.error) err = d.error;
+          } catch {
+            /* ignore */
+          }
+        }
+        throw new Error(err);
+      }
+      const blob = await res.blob();
+      const cd = res.headers.get('Content-Disposition');
+      let filename = `단어장_${sanitizeExcelFileBase(tb, 40)}_전체.xlsx`;
+      const m = cd?.match(/filename\*=UTF-8''([^;]+)/i);
+      if (m?.[1]) {
+        try {
+          filename = decodeURIComponent(m[1].trim());
+        } catch {
+          /* keep default */
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg(`교재 「${tb}」에 저장된 단어장을 엑셀로 내려받았습니다.`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '교재 전체 보내기에 실패했습니다.');
+    } finally {
+      setVocabExportBusy(null);
+    }
+  }, [passageMeta]);
+
+  const fetchCefrForWord = useCallback(
+    async (opts: {
+      word: string;
+      positions?: VocabularyEntry['positions'];
+      meaning?: string;
+      partOfSpeech?: string;
+    }) => {
+      const s = stateRef.current;
+      if (!s?.sentences?.length) throw new Error('지문 문장이 없습니다.');
+      const res = await fetch('/api/admin/passage-analyzer/analyze-vocabulary-cefr', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: opts.word.trim(),
+          positions: opts.positions ?? [],
+          englishSentences: s.sentences,
+          koreanSentences: s.koreanSentences,
+          meaning: opts.meaning ?? '',
+          partOfSpeech: opts.partOfSpeech ?? '',
+        }),
+      });
+      const d = await parseApiResponseJson(res);
+      if (!res.ok) throw new Error(apiJsonErrorMessage(d, 'CEFR 분석 실패'));
+      return String((d as { cefr?: string }).cefr ?? '').trim();
+    },
+    []
+  );
+
+  const runCefrAiForRow = useCallback(
+    async (oi: number) => {
+      if (busy || cefrAiLockRef.current) return;
+      const item = stateRef.current?.vocabularyList?.[oi];
+      if (!item?.word?.trim()) {
+        setMsg('단어가 비어 있으면 CEFR 분석을 할 수 없습니다.');
+        return;
+      }
+      cefrAiLockRef.current = true;
+      setCefrAiRowIndex(oi);
+      setMsg(null);
+      try {
+        const cefr = await fetchCefrForWord({
+          word: item.word,
+          positions: item.positions,
+          meaning: item.meaning,
+          partOfSpeech: item.partOfSpeech,
+        });
+        updateState((prev) => {
+          const list = [...(prev.vocabularyList || [])];
+          if (list[oi]) list[oi] = { ...list[oi], cefr };
+          return { ...prev, vocabularyList: list };
+        });
+        setMsg(
+          cefr
+            ? `「${item.word.trim()}」 CEFR → ${cefr}`
+            : '모델이 CEFR을 확정하지 못했습니다. 수동으로 선택하세요.'
+        );
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : 'CEFR 분석 실패');
+      } finally {
+        cefrAiLockRef.current = false;
+        setCefrAiRowIndex(null);
+      }
+    },
+    [busy, fetchCefrForWord, updateState]
+  );
+
+  const runCefrAiForVocabNewWord = useCallback(
+    async (snap: { word: string; meaning: string; partOfSpeech: string }) => {
+      if (busy || cefrAiLockRef.current) return;
+      const w = snap.word.trim();
+      if (!w) {
+        setMsg('먼저 영단어를 입력하세요.');
+        return;
+      }
+      cefrAiLockRef.current = true;
+      setCefrAiInline(true);
+      setMsg(null);
+      try {
+        const cefr = await fetchCefrForWord({
+          word: w,
+          positions: [],
+          meaning: snap.meaning,
+          partOfSpeech: snap.partOfSpeech,
+        });
+        setVocabNewWord((p) => ({ ...p, cefr }));
+        setMsg(
+          cefr ? `「${w}」 CEFR → ${cefr}` : '모델이 CEFR을 확정하지 못했습니다. 수동으로 선택하세요.'
+        );
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : 'CEFR 분석 실패');
+      } finally {
+        cefrAiLockRef.current = false;
+        setCefrAiInline(false);
+      }
+    },
+    [busy, fetchCefrForWord]
+  );
 
   const regenerateVocabularyFromPassage = () => {
     if (!state || !analysisFileName) return;
@@ -1154,6 +1414,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         meaning: vocabNewWord.meaning.trim(),
         wordType: vocabNewWord.wordType,
         partOfSpeech: vocabNewWord.partOfSpeech,
+        cefr: vocabNewWord.cefr,
         synonym: vocabNewWord.synonym.trim(),
         antonym: vocabNewWord.antonym.trim(),
         opposite: vocabNewWord.opposite.trim(),
@@ -1169,6 +1430,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       word: '',
       wordType: 'word',
       partOfSpeech: 'n.',
+      cefr: '',
       meaning: '',
       synonym: '',
       antonym: '',
@@ -1251,6 +1513,98 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
     return order.map((id) => MODES.find((m) => m.id === id)!) as typeof MODES;
   }, [state]);
 
+  useEffect(() => {
+    const tb = passageMeta?.textbook?.trim();
+    if (!tb) {
+      setTextbookSiblings([]);
+      setTextbookSiblingsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setTextbookSiblingsLoading(true);
+    fetch(`/api/admin/passages?textbook=${encodeURIComponent(tb)}&limit=500&page=1`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d: { items?: unknown[] }) => {
+        if (cancelled) return;
+        const items = Array.isArray(d.items) ? d.items : [];
+        setTextbookSiblings(
+          items.map((row) => {
+            const rec = row as Record<string, unknown>;
+            const o = rec.order;
+            return {
+              _id: String(rec._id ?? ''),
+              chapter: rec.chapter != null ? String(rec.chapter) : '',
+              number: rec.number != null ? String(rec.number) : '',
+              source_key: rec.source_key != null ? String(rec.source_key) : '',
+              order: typeof o === 'number' && !Number.isNaN(o) ? o : 0,
+            };
+          })
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setTextbookSiblings([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTextbookSiblingsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [passageMeta?.textbook]);
+
+  const siblingNav = useMemo(() => {
+    const id = passageId?.trim().toLowerCase() ?? '';
+    if (!id || textbookSiblings.length === 0) {
+      return { index: -1, prev: null as string | null, next: null as string | null, total: 0 };
+    }
+    const idx = textbookSiblings.findIndex((s) => s._id.toLowerCase() === id);
+    return {
+      index: idx,
+      prev: idx > 0 ? textbookSiblings[idx - 1]._id : null,
+      next: idx >= 0 && idx < textbookSiblings.length - 1 ? textbookSiblings[idx + 1]._id : null,
+      total: textbookSiblings.length,
+    };
+  }, [passageId, textbookSiblings]);
+
+  const goPassage = useCallback(
+    (nextPassageId: string) => {
+      const next = nextPassageId.trim();
+      if (!next || next === passageId?.trim()) return;
+      if (stateDirtyRef.current) {
+        if (!window.confirm('저장되지 않은 변경이 있을 수 있습니다. 다른 지문으로 이동할까요?')) return;
+      }
+      router.push(`/admin/syntax-analyzer/analyze?passageId=${encodeURIComponent(next)}`);
+    },
+    [passageId, router]
+  );
+
+  /** 같은 교재 지문: ⌘⇧← 이전 / ⌘⇧→ 다음 (Windows: Ctrl⇧← / →). 입력·셀렉트 포커스일 때는 무시 */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.shiftKey || (!e.metaKey && !e.ctrlKey)) return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+
+      const el = e.target;
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)
+        return;
+      if (el instanceof HTMLElement && el.isContentEditable) return;
+
+      if (textbookSiblingsLoading || !passageMeta?.textbook?.trim()) return;
+
+      if (e.key === 'ArrowLeft' && siblingNav.prev) {
+        e.preventDefault();
+        goPassage(siblingNav.prev);
+        return;
+      }
+      if (e.key === 'ArrowRight' && siblingNav.next) {
+        e.preventDefault();
+        goPassage(siblingNav.next);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [goPassage, siblingNav.prev, siblingNav.next, passageMeta?.textbook, textbookSiblingsLoading]);
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -1268,6 +1622,91 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
 
   return (
     <div className="w-full max-w-[min(100vw-1rem,104rem)] mx-auto px-4 py-4 overflow-visible">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between rounded-xl border border-slate-700/85 bg-slate-900/85 px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 text-xs">
+          <Link
+            href="/admin/syntax-analyzer"
+            className="text-sky-400 hover:text-sky-300 shrink-0 font-medium"
+          >
+            ← 구문분석 목록
+          </Link>
+          {passageMeta?.textbook ? (
+            <span className="text-slate-400 truncate max-w-[min(100vw-6rem,32rem)]" title={passageMeta.textbook}>
+              <span className="text-slate-600">교재</span>{' '}
+              <span className="text-slate-100 font-semibold">{passageMeta.textbook}</span>
+              {(passageMeta.chapter || passageMeta.number) && (
+                <span className="text-slate-500 font-normal">
+                  {' '}
+                  · {passageMeta.chapter}
+                  {passageMeta.number ? ` ${passageMeta.number}` : ''}
+                </span>
+              )}
+            </span>
+          ) : (
+            <span className="text-slate-600">교재명 없음 — 이전/다음·목록 이동은 같은 교재로 묶인 지문만 가능합니다.</span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => siblingNav.prev && goPassage(siblingNav.prev)}
+            disabled={!siblingNav.prev || textbookSiblingsLoading || !passageMeta?.textbook}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-600 bg-slate-800 text-[11px] font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-35 disabled:pointer-events-none"
+            title="같은 교재에서 이전 지문(목록 순서) · ⌘⇧← / Ctrl⇧←"
+          >
+            ← 이전
+          </button>
+          <select
+            value={passageId || ''}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v && v !== passageId) goPassage(v);
+            }}
+            disabled={
+              textbookSiblingsLoading ||
+              (!textbookSiblings.length && !passageId) ||
+              !passageMeta?.textbook
+            }
+            className="max-w-[min(100vw-11rem,22rem)] text-[11px] bg-slate-950 border border-slate-600 rounded-lg px-2 py-1.5 text-slate-200"
+            title="같은 교재 지문을 골라 바로 이동 (필터가 아니라 목록 점프)"
+            aria-label="같은 교재 지문으로 이동"
+          >
+            {textbookSiblingsLoading ? (
+              <option value={passageId || ''}>목록 불러오는 중…</option>
+            ) : (
+              <>
+                {passageId && !textbookSiblings.some((s) => s._id === passageId) ? (
+                  <option value={passageId}>현재 지문 (목록에 없음)</option>
+                ) : null}
+                {textbookSiblings.length === 0 && passageMeta?.textbook ? (
+                  <option value={passageId || ''}>같은 교재 지문 없음</option>
+                ) : null}
+                {textbookSiblings.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {formatSiblingLabel(s)}
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+          <button
+            type="button"
+            onClick={() => siblingNav.next && goPassage(siblingNav.next)}
+            disabled={!siblingNav.next || textbookSiblingsLoading || !passageMeta?.textbook}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-600 bg-slate-800 text-[11px] font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-35 disabled:pointer-events-none"
+            title="같은 교재에서 다음 지문(목록 순서) · ⌘⇧→ / Ctrl⇧→"
+          >
+            다음 →
+          </button>
+          {passageMeta?.textbook && siblingNav.total > 0 ? (
+            <span className="text-[10px] text-slate-500 tabular-nums whitespace-nowrap hidden sm:inline">
+              {siblingNav.index >= 0 ? `${siblingNav.index + 1} / ${siblingNav.total}` : `총 ${siblingNav.total}`}
+              <span className="text-slate-600 ml-1.5 hidden md:inline">· ⌘⇧←→</span>
+            </span>
+          ) : null}
+        </div>
+      </div>
+
       <div className="mb-4 rounded-xl border border-slate-700 bg-slate-800/70 px-3 py-3">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="text-xs text-slate-400">
@@ -2016,7 +2455,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                         ? 'AI로 표시한 뒤에도 단어를 클릭해 문맥 표시를 더하거나 뺄 수 있습니다. 프롬프트는 왼쪽 「AI 프롬프트 설정」에서 수정합니다.'
                         : '단어를 클릭해 문맥으로 표시할 위치를 켜고 끕니다.'
                       : viewMode === 'vocabulary'
-                        ? '단어장이 비어 있으면 지문에서 고유 단어를 자동으로 채웁니다(불용어 제외). 왼쪽에서 「지문에서 다시 생성」「불용어 관리」를 쓸 수 있고, 단어를 클릭해 항목을 더하거나 빼며, 「AI로 뜻·품사 채우기」로 분석을 돌릴 수 있습니다.'
+                        ? '단어장이 비어 있으면 지문에서 고유 단어를 자동으로 채웁니다(불용어 제외). 왼쪽에서 「지문에서 다시 생성」「불용어 관리」를 쓸 수 있고, 단어를 클릭해 항목을 더하거나 빼며, 「AI로 뜻·품사 채우기」로 분석을 돌릴 수 있습니다. CEFR 칸 목록의 「✨ AI로 CEFR」을 고르면 해당 줄만 문맥·뜻 기준으로 난이도를 채웁니다.'
                         : null}
         </p>
 
@@ -2070,37 +2509,65 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
 
         {viewMode === 'vocabulary' && (
           <div className="rounded-xl border border-teal-900/50 bg-slate-900/80 px-3 py-3 space-y-3 mb-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-teal-200/95">단어장 편집</span>
-              <div className="flex rounded-lg border border-slate-600 overflow-hidden text-[11px]">
-                {(
-                  [
-                    { id: 'original' as const, label: '원본순' },
-                    { id: 'alphabetical' as const, label: '알파벳' },
-                    { id: 'position' as const, label: '위치순' },
-                  ] as const
-                ).map(({ id, label }, i) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => updateState((s) => ({ ...s, vocabularySortOrder: id }))}
-                    className={`px-2 py-1 ${i > 0 ? 'border-l border-slate-600' : ''} ${
-                      (state.vocabularySortOrder || 'position') === id
-                        ? 'bg-teal-800 text-white'
-                        : 'bg-slate-950 text-slate-400 hover:bg-slate-800'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <span className="text-sm font-semibold text-teal-200/95 shrink-0">단어장 편집</span>
+                <div className="flex rounded-lg border border-slate-600 overflow-hidden text-[11px]">
+                  {(
+                    [
+                      { id: 'original' as const, label: '원본순' },
+                      { id: 'alphabetical' as const, label: '알파벳' },
+                      { id: 'position' as const, label: '위치순' },
+                    ] as const
+                  ).map(({ id, label }, i) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => updateState((s) => ({ ...s, vocabularySortOrder: id }))}
+                      className={`px-2 py-1 ${i > 0 ? 'border-l border-slate-600' : ''} ${
+                        (state.vocabularySortOrder || 'position') === id
+                          ? 'bg-teal-800 text-white'
+                          : 'bg-slate-950 text-slate-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateState((s) => ({ ...s, showVocabulary: !(s.showVocabulary !== false) }))}
+                  className="text-[11px] px-2 py-1 rounded-md border border-slate-600 text-slate-400 hover:bg-slate-800"
+                >
+                  {state.showVocabulary === false ? '펼치기' : '접기'}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => updateState((s) => ({ ...s, showVocabulary: !(s.showVocabulary !== false) }))}
-                className="text-[11px] px-2 py-1 rounded-md border border-slate-600 text-slate-400 hover:bg-slate-800"
-              >
-                {state.showVocabulary === false ? '펼치기' : '접기'}
-              </button>
+              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void downloadCurrentVocabularyXlsx()}
+                  disabled={!!vocabExportBusy || !state}
+                  className="text-[11px] px-2.5 py-1.5 rounded-lg border border-emerald-700/70 bg-emerald-950/50 text-emerald-100 hover:bg-emerald-900/40 disabled:opacity-40 disabled:pointer-events-none"
+                  title="현재 표에 보이는 단어장(정렬·편집 반영)을 .xlsx로 저장합니다."
+                >
+                  {vocabExportBusy === 'passage' ? '만드는 중…' : '이 지문 엑셀'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void downloadTextbookVocabularyXlsx()}
+                  disabled={
+                    !!vocabExportBusy || !passageMeta?.textbook?.trim()
+                  }
+                  className="text-[11px] px-2.5 py-1.5 rounded-lg border border-sky-800/70 bg-sky-950/40 text-sky-100 hover:bg-sky-900/35 disabled:opacity-40 disabled:pointer-events-none"
+                  title={
+                    passageMeta?.textbook?.trim()
+                      ? `같은 교재명「${passageMeta.textbook}」지문 중, MongoDB에 저장된 단어장만 모읍니다.`
+                      : '지문에 교재명이 있어야 사용할 수 있습니다.'
+                  }
+                >
+                  {vocabExportBusy === 'textbook' ? '모으는 중…' : '교재 전체 엑셀'}
+                </button>
+              </div>
             </div>
             {state.showVocabulary !== false && (
               <>
@@ -2121,7 +2588,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                     {vocabShowInputAt === 0 ? '— 취소 —' : '+ 맨 앞에 행 추가'}
                   </button>
                   {vocabShowInputAt === 0 && (
-                    <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_auto] gap-1 p-2 bg-teal-950/40 border-b border-slate-700 text-[11px] min-w-[52rem]">
+                    <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_auto] gap-1 p-2 bg-teal-950/40 border-b border-slate-700 text-[11px] min-w-[56rem]">
                       <span className="text-slate-500 self-center">새</span>
                       <input
                         value={vocabNewWord.word}
@@ -2134,6 +2601,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                               word: '',
                               wordType: 'word',
                               partOfSpeech: 'n.',
+                              cefr: '',
                               meaning: '',
                               synonym: '',
                               antonym: '',
@@ -2151,7 +2619,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                       >
                         {VOCABULARY_WORD_TYPE_OPTIONS.map((o) => (
                           <option key={o} value={o}>
-                            {o}
+                            {VOCABULARY_WORD_TYPE_LABELS[o] ?? o}
                           </option>
                         ))}
                       </select>
@@ -2161,6 +2629,32 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                         className="bg-slate-950 border border-slate-600 rounded text-slate-300 text-[10px]"
                       >
                         {VOCABULARY_POS_OPTIONS.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={vocabNewWord.cefr}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === CEFR_SELECT_AI_VALUE) {
+                            void runCefrAiForVocabNewWord({
+                              word: vocabNewWord.word,
+                              meaning: vocabNewWord.meaning,
+                              partOfSpeech: vocabNewWord.partOfSpeech,
+                            });
+                            return;
+                          }
+                          setVocabNewWord((p) => ({ ...p, cefr: v }));
+                        }}
+                        disabled={!!busy || cefrAiRowIndex !== null || cefrAiInline}
+                        className="bg-slate-950 border border-slate-600 rounded text-slate-300 text-[10px]"
+                        title="미지정·등급 또는 ✨ AI로 CEFR (문맥 기준, 새 행은 영단어 입력 후)"
+                      >
+                        <option value="">미지정</option>
+                        <option value={CEFR_SELECT_AI_VALUE}>✨ AI로 CEFR</option>
+                        {VOCABULARY_CEFR_OPTIONS.filter((o) => o !== '').map((o) => (
                           <option key={o} value={o}>
                             {o}
                           </option>
@@ -2206,6 +2700,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                               word: '',
                               wordType: 'word',
                               partOfSpeech: 'n.',
+                              cefr: '',
                               meaning: '',
                               synonym: '',
                               antonym: '',
@@ -2219,11 +2714,12 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                       </div>
                     </div>
                   )}
-                  <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 px-2 py-1.5 bg-slate-800/90 text-[10px] text-slate-400 font-medium border-b border-slate-700 min-w-[58rem]">
+                  <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 px-2 py-1.5 bg-slate-800/90 text-[10px] text-slate-400 font-medium border-b border-slate-700 min-w-[62rem]">
                     <span>#</span>
                     <span>단어</span>
                     <span>유형</span>
                     <span>품사</span>
+                    <span title="목록에서 「✨ AI로 CEFR」 선택 시 AI가 문맥 기준으로 등급 제안">CEFR</span>
                     <span>뜻(·부가)</span>
                     <span>영어 유의어</span>
                     <span>영어 반의어</span>
@@ -2240,7 +2736,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                         .join(', ') || '—';
                     return (
                       <div key={`vr-${oi}-${displayIdx}`} className="border-b border-slate-800">
-                        <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 p-2 items-start text-[11px] min-w-[58rem]">
+                        <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 p-2 items-start text-[11px] min-w-[62rem]">
                           <span className="text-slate-500 tabular-nums pt-1">{displayIdx + 1}</span>
                           <input
                             value={item.word}
@@ -2268,7 +2764,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                           >
                             {VOCABULARY_WORD_TYPE_OPTIONS.map((o) => (
                               <option key={o} value={o}>
-                                {o}
+                                {VOCABULARY_WORD_TYPE_LABELS[o] ?? o}
                               </option>
                             ))}
                           </select>
@@ -2285,6 +2781,32 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                             className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
                           >
                             {VOCABULARY_POS_OPTIONS.map((o) => (
+                              <option key={o} value={o}>
+                                {o}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={item.cefr ?? ''}
+                            disabled={!!busy || cefrAiRowIndex === oi || cefrAiInline}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === CEFR_SELECT_AI_VALUE) {
+                                void runCefrAiForRow(oi);
+                                return;
+                              }
+                              updateState((s) => {
+                                const list = [...(s.vocabularyList || [])];
+                                if (list[oi]) list[oi] = { ...list[oi], cefr: v };
+                                return { ...s, vocabularyList: list };
+                              });
+                            }}
+                            className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
+                            title="CEFR — 목록에서 「✨ AI로 CEFR」을 고르면 문맥·뜻 기준 자동 채움"
+                          >
+                            <option value="">미지정</option>
+                            <option value={CEFR_SELECT_AI_VALUE}>✨ AI로 CEFR</option>
+                            {VOCABULARY_CEFR_OPTIONS.filter((o) => o !== '').map((o) => (
                               <option key={o} value={o}>
                                 {o}
                               </option>
@@ -2366,7 +2888,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                           {vocabShowInputAt === gapAfter ? '— 취소 —' : '+ 여기에 행 추가'}
                         </button>
                         {vocabShowInputAt === gapAfter && (
-                          <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_auto] gap-1 p-2 bg-teal-950/30 border-b border-slate-700 text-[11px] min-w-[52rem]">
+                          <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_auto] gap-1 p-2 bg-teal-950/30 border-b border-slate-700 text-[11px] min-w-[56rem]">
                             <span className="text-slate-500 self-center">새</span>
                             <input
                               value={vocabNewWord.word}
@@ -2379,6 +2901,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                     word: '',
                                     wordType: 'word',
                                     partOfSpeech: 'n.',
+                                    cefr: '',
                                     meaning: '',
                                     synonym: '',
                                     antonym: '',
@@ -2396,7 +2919,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                             >
                               {VOCABULARY_WORD_TYPE_OPTIONS.map((o) => (
                                 <option key={o} value={o}>
-                                  {o}
+                                  {VOCABULARY_WORD_TYPE_LABELS[o] ?? o}
                                 </option>
                               ))}
                             </select>
@@ -2406,6 +2929,32 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                               className="bg-slate-950 border border-slate-600 rounded text-slate-300 text-[10px]"
                             >
                               {VOCABULARY_POS_OPTIONS.map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              value={vocabNewWord.cefr}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === CEFR_SELECT_AI_VALUE) {
+                                  void runCefrAiForVocabNewWord({
+                                    word: vocabNewWord.word,
+                                    meaning: vocabNewWord.meaning,
+                                    partOfSpeech: vocabNewWord.partOfSpeech,
+                                  });
+                                  return;
+                                }
+                                setVocabNewWord((p) => ({ ...p, cefr: v }));
+                              }}
+                              disabled={!!busy || cefrAiRowIndex !== null || cefrAiInline}
+                              className="bg-slate-950 border border-slate-600 rounded text-slate-300 text-[10px]"
+                              title="미지정·등급 또는 ✨ AI로 CEFR (문맥 기준, 새 행은 영단어 입력 후)"
+                            >
+                              <option value="">미지정</option>
+                              <option value={CEFR_SELECT_AI_VALUE}>✨ AI로 CEFR</option>
+                              {VOCABULARY_CEFR_OPTIONS.filter((o) => o !== '').map((o) => (
                                 <option key={o} value={o}>
                                   {o}
                                 </option>
@@ -2451,6 +3000,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                     word: '',
                                     wordType: 'word',
                                     partOfSpeech: 'n.',
+                                    cefr: '',
                                     meaning: '',
                                     synonym: '',
                                     antonym: '',
@@ -2479,7 +3029,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                     {vocabShowInputAt === sortedVocabulary.length ? '— 취소 —' : '+ 맨 끝에 행 추가'}
                   </button>
                   {vocabShowInputAt === sortedVocabulary.length && (
-                    <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_auto] gap-1 p-2 bg-teal-950/40 text-[11px] min-w-[52rem]">
+                    <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_auto] gap-1 p-2 bg-teal-950/40 text-[11px] min-w-[56rem]">
                       <span className="text-slate-500 self-center">새</span>
                       <input
                         value={vocabNewWord.word}
@@ -2492,6 +3042,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                               word: '',
                               wordType: 'word',
                               partOfSpeech: 'n.',
+                              cefr: '',
                               meaning: '',
                               synonym: '',
                               antonym: '',
@@ -2509,7 +3060,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                       >
                         {VOCABULARY_WORD_TYPE_OPTIONS.map((o) => (
                           <option key={o} value={o}>
-                            {o}
+                            {VOCABULARY_WORD_TYPE_LABELS[o] ?? o}
                           </option>
                         ))}
                       </select>
@@ -2519,6 +3070,32 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                         className="bg-slate-950 border border-slate-600 rounded text-slate-300 text-[10px]"
                       >
                         {VOCABULARY_POS_OPTIONS.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={vocabNewWord.cefr}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === CEFR_SELECT_AI_VALUE) {
+                            void runCefrAiForVocabNewWord({
+                              word: vocabNewWord.word,
+                              meaning: vocabNewWord.meaning,
+                              partOfSpeech: vocabNewWord.partOfSpeech,
+                            });
+                            return;
+                          }
+                          setVocabNewWord((p) => ({ ...p, cefr: v }));
+                        }}
+                        disabled={!!busy || cefrAiRowIndex !== null || cefrAiInline}
+                        className="bg-slate-950 border border-slate-600 rounded text-slate-300 text-[10px]"
+                        title="미지정·등급 또는 ✨ AI로 CEFR (문맥 기준, 새 행은 영단어 입력 후)"
+                      >
+                        <option value="">미지정</option>
+                        <option value={CEFR_SELECT_AI_VALUE}>✨ AI로 CEFR</option>
+                        {VOCABULARY_CEFR_OPTIONS.filter((o) => o !== '').map((o) => (
                           <option key={o} value={o}>
                             {o}
                           </option>
@@ -2564,6 +3141,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                               word: '',
                               wordType: 'word',
                               partOfSpeech: 'n.',
+                              cefr: '',
                               meaning: '',
                               synonym: '',
                               antonym: '',
@@ -2772,11 +3350,18 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           <div className="border border-slate-700 rounded-lg p-3">
             <p className="text-sm font-bold text-slate-300 mb-2">단어장 요약</p>
             <ul className="text-sm space-y-1">
-              {state.vocabularyList.map((v, i) => (
-                <li key={i} className="text-slate-400">
-                  <strong className="text-white">{v.word}</strong> — {v.meaning || '(뜻 입력)'}
-                </li>
-              ))}
+              {state.vocabularyList.map((v, i) => {
+                const lv = v.cefr && String(v.cefr).trim();
+                return (
+                  <li key={i} className="text-slate-400">
+                    <strong className="text-white">{v.word}</strong>
+                    {lv ? (
+                      <span className="text-teal-500/90 text-xs ml-1">({lv})</span>
+                    ) : null}{' '}
+                    — {v.meaning || '(뜻 입력)'}
+                  </li>
+                );
+              })}
             </ul>
             <p className="text-[11px] text-slate-500 mt-2">전체 편집은 상단 「단어장」 모드에서 할 수 있습니다.</p>
           </div>

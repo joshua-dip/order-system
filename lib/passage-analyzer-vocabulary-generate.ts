@@ -126,6 +126,31 @@ export const DEFAULT_ENGLISH_STOPWORDS = [
   'yet',
   'thus',
   'hence',
+  'st',
+  'nd',
+  'rd',
+  'th',
+  'also',
+  'just',
+  'about',
+  'up',
+  'out',
+  'into',
+  'over',
+  'after',
+  'before',
+  'between',
+  'under',
+  'again',
+  'then',
+  'once',
+  'during',
+  'through',
+  'down',
+  'against',
+  'until',
+  'among',
+  'etc',
 ] as const;
 
 export function allStopWordsSet(custom: string[] | undefined): Set<string> {
@@ -170,7 +195,11 @@ export function buildVocabularyListFromSentences(
   sentences.forEach((sentence, sentenceIndex) => {
     const rawWords = sentence.split(/\s+/);
     rawWords.forEach((rawWord, wordIndex) => {
-      const word = rawWord.replace(/[^a-zA-Z'-]/g, '').toLowerCase();
+      const cleaned = rawWord.replace(/[^a-zA-Z'-]/g, '');
+      const alphaOnly = cleaned.replace(/[^a-zA-Z]/g, '');
+      const word = (alphaOnly.length >= 2 && alphaOnly === alphaOnly.toUpperCase())
+        ? cleaned
+        : cleaned.toLowerCase();
       if (word.length <= 1 || /^\d+$/.test(word)) return;
 
       const alphaStart = rawWord.replace(/^[^A-Za-z]+/, '');
@@ -209,6 +238,7 @@ export function buildVocabularyListFromSentences(
       meaning: '',
       wordType: isPhrase ? 'phrase' : 'word',
       partOfSpeech: guessPartOfSpeech(word),
+      cefr: '',
       synonym: '',
       antonym: '',
       opposite: '',

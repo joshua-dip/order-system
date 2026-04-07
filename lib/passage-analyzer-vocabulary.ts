@@ -6,6 +6,11 @@ export type VocabularySortOrder = 'original' | 'alphabetical' | 'position';
 
 export const VOCABULARY_WORD_TYPE_OPTIONS = ['word', 'phrase'] as const;
 
+export const VOCABULARY_WORD_TYPE_LABELS: Record<string, string> = {
+  word: '단어',
+  phrase: '숙어',
+};
+
 export const VOCABULARY_POS_OPTIONS = [
   'n.',
   'v.',
@@ -22,6 +27,9 @@ export const VOCABULARY_POS_OPTIONS = [
   'adv. phrase',
   'prep. phrase',
 ] as const;
+
+/** 단어장 CEFR — 첫 값 '' 은 UI에서 「미지정」 */
+export const VOCABULARY_CEFR_OPTIONS = ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 
 export function sortVocabularyEntries(
   list: VocabularyEntry[],
@@ -124,10 +132,13 @@ export function mergeDuplicateVocabularyEntries(list: VocabularyEntry[]): Vocabu
       seen.add(pk);
       return true;
     });
+    const prevCefr = (prev.cefr && String(prev.cefr).trim()) || '';
+    const itemCefr = (item.cefr && String(item.cefr).trim()) || '';
     byWord.set(k, {
       ...prev,
       meaning: (prev.meaning && prev.meaning.trim()) || item.meaning || '',
       partOfSpeech: prev.partOfSpeech || item.partOfSpeech,
+      cefr: prevCefr || itemCefr,
       synonym: prev.synonym || item.synonym,
       antonym: prev.antonym || item.antonym,
       opposite: prev.opposite || item.opposite,
@@ -150,6 +161,17 @@ function cleanText(text: string): string {
 function matchLine(block: string, label: RegExp): string {
   const m = block.match(label);
   return m ? cleanText(m[1]) : '';
+}
+
+const CEFR_CANONICAL = new Set(VOCABULARY_CEFR_OPTIONS.filter(Boolean) as string[]);
+
+/** AI·수동 입력 정규화 → '' 또는 A1~C2 */
+export function normalizeCefrLevel(raw: string): string {
+  const t = cleanText(raw).toUpperCase();
+  if (!t || t === '없음' || t === 'NONE' || t === '-' || t === '미정' || t === 'N/A') return '';
+  if (CEFR_CANONICAL.has(t)) return t;
+  const m = t.match(/\b(A1|A2|B1|B2|C1|C2)\b/);
+  return m ? m[1] : '';
 }
 
 export function parseWordBlock(block: string, item: Record<string, unknown>): Record<string, unknown> {
@@ -189,11 +211,18 @@ export function parseWordBlock(block: string, item: Record<string, unknown>): Re
   if (synonym === '없음' || synonym === 'none' || synonym === '-') synonym = '';
   if (antonym === '없음' || antonym === 'none' || antonym === '-') antonym = '';
 
+  const cefrLine =
+    matchLine(block, /CEFR\s*[:：]\s*(.+?)(?=\n|$)/i) ||
+    matchLine(block, /난이도\s*[:：]\s*(.+?)(?=\n|$)/i);
+  const parsedCefr = normalizeCefrLevel(cefrLine);
+  const prevCefr = typeof item.cefr === 'string' ? item.cefr.trim() : '';
+
   return {
     ...item,
     wordType: wordType || item.wordType,
     partOfSpeech: partOfSpeech || item.partOfSpeech,
     meaning: meaning || item.meaning,
+    cefr: parsedCefr || prevCefr,
     synonym: synonym || item.synonym,
     antonym: antonym || item.antonym,
     opposite: opposite || item.opposite,
