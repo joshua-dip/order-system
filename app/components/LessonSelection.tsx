@@ -102,7 +102,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           let textbookList: string[];
           if (variantDedicatedActive) {
             textbookList = filterVariantSupplementaryTextbookKeys(allKeys, {
-              allowedTextbooksVariant: variantDedicatedList,
+              allowedTextbooksVariant: [...variantDedicatedList, ...defaultTextbooks],
             });
           } else if (defaultTextbooks.length > 0) {
             textbookList = allKeys.filter((k) => defaultTextbooks.includes(k));
