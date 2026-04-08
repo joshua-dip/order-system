@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
   outputFileTracingRoot: __dirname,
+  serverExternalPackages: ["pdfkit"],
 };
 
 export default nextConfig;

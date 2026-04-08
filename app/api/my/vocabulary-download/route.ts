@@ -83,7 +83,10 @@ async function loadVocabulary(
     passageFilter = {
       $or: selectedLessons.map((l) => {
         const parts = l.split(' ');
-        return { textbook, chapter: parts[0], number: parts.slice(1).join(' ') };
+        if (parts.length >= 2) {
+          return { textbook, chapter: parts[0], number: parts.slice(1).join(' ') };
+        }
+        return { textbook, number: l };
       }),
     };
   } else {

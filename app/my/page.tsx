@@ -180,6 +180,8 @@ export default function MyPage() {
 
   /* ── 단어장 탭 상태 ── */
   const { data: vocabTextbooksData } = useTextbooksData();
+  const [vocabDbTextbooks, setVocabDbTextbooks] = useState<string[]>([]);
+  const [vocabDbLessonMap, setVocabDbLessonMap] = useState<Record<string, Record<string, string[]>>>({});
   const [vocabSelectedTextbook, setVocabSelectedTextbook] = useState('');
   const [vocabLessonGroups, setVocabLessonGroups] = useState<Record<string, string[]>>({});
   const [vocabSelectedLessons, setVocabSelectedLessons] = useState<string[]>([]);
@@ -271,6 +273,17 @@ export default function MyPage() {
     }
   }, [user, activeTab]);
 
+  useEffect(() => {
+    if (!user?.isAnnualMemberActive || activeTab !== 'vocabulary') return;
+    fetch('/api/my/vocabulary-textbooks', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.textbooks)) setVocabDbTextbooks(d.textbooks);
+        if (d.lessonMap) setVocabDbLessonMap(d.lessonMap);
+      })
+      .catch(() => {});
+  }, [user?.isAnnualMemberActive, activeTab]);
+
   /* ── 단어장: 교재 목록 ── */
   interface VocabTextbookContent { [lessonKey: string]: { 번호: string }[] }
   interface VocabTextbookStructure {
@@ -285,15 +298,31 @@ export default function MyPage() {
   };
 
   const vocabTextbookList = useMemo(() => {
-    if (!vocabTextbooksData) return [];
-    return Object.keys(vocabTextbooksData).filter((k) => {
-      if (k.startsWith('고1_') || k.startsWith('고2_') || k.startsWith('고3_')) return false;
-      return /영어모의고사/.test(k) || /EBS|수능특강/.test(k);
-    });
-  }, [vocabTextbooksData]);
+    const set = new Set<string>();
+    if (vocabTextbooksData) {
+      Object.keys(vocabTextbooksData).forEach((k) => {
+        if (k.startsWith('고1_') || k.startsWith('고2_') || k.startsWith('고3_')) return;
+        if (/영어모의고사/.test(k) || /EBS|수능특강/.test(k)) set.add(k);
+      });
+    }
+    for (const tb of vocabDbTextbooks) set.add(tb);
+    return Array.from(set).sort();
+  }, [vocabTextbooksData, vocabDbTextbooks]);
 
   useEffect(() => {
-    if (!vocabTextbooksData || !vocabSelectedTextbook || !vocabTextbooksData[vocabSelectedTextbook]) {
+    if (!vocabSelectedTextbook) {
+      setVocabLessonGroups({}); setVocabSelectedLessons([]); setVocabExpandedLessons([]);
+      return;
+    }
+    if (vocabDbLessonMap[vocabSelectedTextbook]) {
+      const groups = vocabDbLessonMap[vocabSelectedTextbook];
+      const keys = Object.keys(groups);
+      setVocabLessonGroups(groups);
+      setVocabSelectedLessons([]);
+      setVocabExpandedLessons(keys.length <= 2 ? keys : []);
+      return;
+    }
+    if (!vocabTextbooksData || !vocabTextbooksData[vocabSelectedTextbook]) {
       setVocabLessonGroups({}); setVocabSelectedLessons([]); setVocabExpandedLessons([]);
       return;
     }
@@ -309,7 +338,7 @@ export default function MyPage() {
     setVocabSelectedLessons([]);
     setVocabExpandedLessons([]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vocabSelectedTextbook, vocabTextbooksData]);
+  }, [vocabSelectedTextbook, vocabTextbooksData, vocabDbLessonMap]);
 
   const vocabAllFlat = useMemo(() => Object.values(vocabLessonGroups).flat(), [vocabLessonGroups]);
 
@@ -1292,7 +1321,7 @@ export default function MyPage() {
                           {expanded && (
                             <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-white">
                               {group.map((l) => {
-                                const num = l.split(' ').slice(1).join(' ');
+                                const num = l.includes(' ') ? l.split(' ').slice(1).join(' ') : l;
                                 const sel = vocabSelectedLessons.includes(l);
                                 return (
                                   <button type="button" key={l} onClick={() => handleVocabLessonChange(l)}

@@ -547,6 +547,26 @@ export function buildVocabularyListFromSentences(
     wordMap.get(word)!.push({ sentence, position });
   }
 
+  const properNounWords = new Set<string>();
+  for (const [word, positions] of wordMap) {
+    if (word.includes(' ')) continue;
+    let hasMidSentenceCap = false;
+    for (const p of positions) {
+      if (p.position > 0) {
+        const raw = sentences[p.sentence]?.split(/\s+/)[p.position] || '';
+        const alpha = raw.replace(/^[^A-Za-z]+/, '');
+        if (alpha.length > 0 && /^[A-Z][a-z]/.test(alpha)) {
+          hasMidSentenceCap = true;
+          break;
+        }
+      }
+    }
+    if (hasMidSentenceCap) {
+      properNounWords.add(word);
+    }
+  }
+  for (const w of properNounWords) wordMap.delete(w);
+
   const uniqueWords = Array.from(wordMap.keys()).sort((a, b) => a.localeCompare(b));
 
   const withMeta = uniqueWords.map((word) => {
