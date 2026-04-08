@@ -281,6 +281,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const [progressTrackingMode, setProgressTrackingMode] = useState<'auto' | 'manual'>('auto');
   const [showProgressSettings, setShowProgressSettings] = useState(false);
   const [dragOverMode, setDragOverMode] = useState<EditorViewMode | null>(null);
+  const [showSvOverlay, setShowSvOverlay] = useState(false);
   const [grammarSubMode, setGrammarSubMode] = useState<'manual' | 'ai'>('manual');
   const [contextSubMode, setContextSubMode] = useState<'manual' | 'ai'>('manual');
   const [vocabShowInputAt, setVocabShowInputAt] = useState<number | null>(null);
@@ -1478,6 +1479,10 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       }
 
       const sv = state.svocData?.[si];
+      let textDecoration: string | undefined;
+      let textDecorationColor: string | undefined;
+      let textUnderlineOffset: string | undefined;
+
       if (sv && viewMode === 'svoc') {
         const hit = (start: unknown, end: unknown) =>
           typeof start === 'number' &&
@@ -1501,11 +1506,23 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           if (hit(sv.objectStart, sv.objectEnd)) bg = SVOC_WORD_BG.green;
           else if (hit(sv.complementStart, sv.complementEnd)) bg = SVOC_WORD_BG.purple;
         }
+      } else if (sv && showSvOverlay) {
+        const inRange = (s: unknown, e: unknown) =>
+          typeof s === 'number' && s >= 0 && typeof e === 'number' && e >= 0 && wi >= s && wi <= e;
+        if (inRange(sv.subjectStart, sv.subjectEnd)) {
+          textDecoration = 'underline wavy';
+          textDecorationColor = 'rgba(234,179,8,0.7)';
+          textUnderlineOffset = '3px';
+        } else if (inRange(sv.verbStart, sv.verbEnd)) {
+          textDecoration = 'underline wavy';
+          textDecorationColor = 'rgba(59,130,246,0.7)';
+          textUnderlineOffset = '3px';
+        }
       }
 
-      return { backgroundColor: bg, borderRight, outline, outlineOffset: outline ? 1 : undefined };
+      return { backgroundColor: bg, borderRight, outline, outlineOffset: outline ? 1 : undefined, textDecoration, textDecorationColor, textUnderlineOffset };
     };
-  }, [state, viewMode, vocabularyDisplayByPosition, pending]);
+  }, [state, viewMode, vocabularyDisplayByPosition, pending, showSvOverlay]);
 
   const orderedModes = useMemo(() => {
     if (!state) return MODES;
@@ -2123,6 +2140,19 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         <p className="text-[9px] text-slate-600 px-0.5 leading-snug">
           서술형 대비·끊어읽기(/)는 자동 없음 — 해당 모드에서 직접 표시합니다.
         </p>
+        <label className="flex items-center gap-2 px-1 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 cursor-pointer select-none group">
+          <input
+            type="checkbox"
+            checked={showSvOverlay}
+            onChange={() => setShowSvOverlay((p) => !p)}
+            className="accent-amber-500 w-3.5 h-3.5"
+          />
+          <span className="text-[11px] text-slate-400 group-hover:text-slate-200 transition-colors">
+            <span className="inline-block w-3 h-0.5 rounded-full mr-0.5 align-middle" style={{ background: 'rgba(234,179,8,0.7)' }} />S
+            <span className="inline-block w-3 h-0.5 rounded-full mx-0.5 align-middle" style={{ background: 'rgba(59,130,246,0.7)' }} />V
+            {' '}오버레이 표시
+          </span>
+        </label>
         <ul className="space-y-2 list-none p-0 m-0" role="list">
           {orderedModes.map((m) => (
             <li key={m.id} className="m-0">
