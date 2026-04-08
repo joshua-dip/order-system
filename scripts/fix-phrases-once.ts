@@ -191,7 +191,8 @@ async function main() {
   await client.connect();
   const db = client.db('gomijoshua');
 
-  const textbook = '26년 3월 고1 영어모의고사';
+  const textbook = process.argv.find((a) => a.startsWith('--textbook='))?.split('=')[1]?.trim()
+    || '26년 3월 고1 영어모의고사';
   const passages = await db.collection('passages')
     .find({ textbook })
     .project({ _id: 1, chapter: 1, number: 1, content: 1 })

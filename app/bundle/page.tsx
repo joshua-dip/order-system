@@ -140,16 +140,13 @@ export default function BundlePage() {
   /* ── auth ── */
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
-  const [canAccessAnalysis, setCanAccessAnalysis] = useState(false);
-
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
         setAuthorized(!!d?.user);
-        setCanAccessAnalysis(!!d?.user?.canAccessAnalysis);
       })
-      .catch(() => { setAuthorized(false); setCanAccessAnalysis(false); })
+      .catch(() => { setAuthorized(false); })
       .finally(() => setChecking(false));
   }, []);
 
@@ -301,10 +298,9 @@ export default function BundlePage() {
     .reduce((sum, g) => sum + (g.types[0]?.price ?? 0), 0);
   const essaySubtotal = essayEnabled && essayCategories.length > 0 ? essaySumPerPassage * selectedLessons.length : 0;
 
-  /* ── 분석지 ── */
-  const [analysisEnabled, setAnalysisEnabled] = useState(false);
-  const analysisAllowed = canAccessAnalysis;
-  const analysisSubtotal = analysisEnabled && analysisAllowed ? selectedLessons.length * ANALYSIS_PRICE_PER_ITEM : 0;
+  /* ── 분석지 (준비중) ── */
+  const analysisEnabled = false;
+  const analysisSubtotal = 0;
 
   /* ── 단어장 ── */
   const [vocabEnabled, setVocabEnabled] = useState(false);
@@ -724,18 +720,13 @@ export default function BundlePage() {
               {/* 3-4. 분석지 */}
               <SectionCard
                 title="분석지 (PDF)"
-                enabled={analysisEnabled}
-                onToggle={() => { if (analysisAllowed) setAnalysisEnabled((p) => !p); }}
-                disabled={!analysisAllowed}
-                disabledMessage={!canAccessAnalysis ? '분석지 이용 권한 필요 — 카톡 문의' : undefined}
-                subtotalLabel={analysisSubtotal > 0 ? `${analysisSubtotal.toLocaleString()}원` : undefined}
+                enabled={false}
+                onToggle={() => {}}
+                disabled
+                disabledMessage="준비중"
+                subtotalLabel={undefined}
               >
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600">
-                    선택 지문 {selectedLessons.length}개 × {ANALYSIS_PRICE_PER_ITEM.toLocaleString()}원 = <span className="font-semibold text-blue-600">{analysisSubtotal.toLocaleString()}원</span>
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">분석지는 PDF 파일로 제공됩니다.</p>
-                </div>
+                <div />
               </SectionCard>
 
               {/* 3-5. 단어장 */}

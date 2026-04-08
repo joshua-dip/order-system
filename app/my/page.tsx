@@ -286,9 +286,10 @@ export default function MyPage() {
 
   const vocabTextbookList = useMemo(() => {
     if (!vocabTextbooksData) return [];
-    return Object.keys(vocabTextbooksData).filter(
-      (k) => !k.startsWith('고1_') && !k.startsWith('고2_') && !k.startsWith('고3_'),
-    );
+    return Object.keys(vocabTextbooksData).filter((k) => {
+      if (k.startsWith('고1_') || k.startsWith('고2_') || k.startsWith('고3_')) return false;
+      return /영어모의고사/.test(k) || /EBS|수능특강/.test(k);
+    });
   }, [vocabTextbooksData]);
 
   useEffect(() => {

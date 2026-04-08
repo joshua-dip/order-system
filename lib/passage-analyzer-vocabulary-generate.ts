@@ -162,25 +162,125 @@ export function allStopWordsSet(custom: string[] | undefined): Set<string> {
   return s;
 }
 
+const IRREGULAR_PAST: Record<string, string> = {
+  led: 'lead', fed: 'feed', bred: 'breed', bled: 'bleed', sped: 'speed', fled: 'flee',
+  dealt: 'deal', felt: 'feel', knelt: 'kneel', leapt: 'leap', dreamt: 'dream',
+  meant: 'mean', burnt: 'burn', learnt: 'learn', spelt: 'spell', spilt: 'spill',
+  built: 'build', lent: 'lend', sent: 'send', spent: 'spend', bent: 'bend',
+  went: 'go', gone: 'go', began: 'begin', begun: 'begin',
+  broke: 'break', broken: 'break', chose: 'choose', chosen: 'choose',
+  drove: 'drive', driven: 'drive', wrote: 'write', written: 'write',
+  spoke: 'speak', spoken: 'speak', woke: 'wake', woken: 'wake',
+  froze: 'freeze', frozen: 'freeze', stole: 'steal', stolen: 'steal',
+  rose: 'rise', risen: 'rise', rode: 'ride', ridden: 'ride',
+  shook: 'shake', shaken: 'shake', took: 'take', taken: 'take',
+  gave: 'give', given: 'give', forgave: 'forgive', forgiven: 'forgive',
+  drew: 'draw', drawn: 'draw', grew: 'grow', grown: 'grow',
+  knew: 'know', known: 'know', threw: 'throw', thrown: 'throw',
+  blew: 'blow', blown: 'blow', flew: 'fly', flown: 'fly',
+  wore: 'wear', worn: 'wear', tore: 'tear', torn: 'tear',
+  bore: 'bear', borne: 'bear', born: 'bear', swore: 'swear', sworn: 'swear',
+  fell: 'fall', fallen: 'fall', held: 'hold', hidden: 'hide', hid: 'hide',
+  stood: 'stand', understood: 'understand', withstood: 'withstand',
+  found: 'find', bound: 'bind', wound: 'wind', ground: 'grind',
+  thought: 'think', brought: 'bring', bought: 'buy', fought: 'fight',
+  sought: 'seek', caught: 'catch', taught: 'teach', wrought: 'work',
+  told: 'tell', sold: 'sell', lost: 'lose', shot: 'shoot',
+  sat: 'sit', ran: 'run', sang: 'sing', sung: 'sing',
+  sank: 'sink', sunk: 'sink', swam: 'swim', swum: 'swim',
+  rang: 'ring', rung: 'ring', sprang: 'spring', sprung: 'spring',
+  shrank: 'shrink', shrunk: 'shrink', stank: 'stink', stunk: 'stink',
+  drank: 'drink', drunk: 'drink', clung: 'cling', flung: 'fling',
+  stung: 'sting', strung: 'string', swung: 'swing', wrung: 'wring',
+  dug: 'dig', hung: 'hang', spun: 'spin', won: 'win',
+  wove: 'weave', woven: 'weave', strove: 'strive', striven: 'strive',
+  ate: 'eat', eaten: 'eat', bit: 'bite', bitten: 'bite',
+  forbade: 'forbid', forbidden: 'forbid', overcame: 'overcome',
+  forgot: 'forget', forgotten: 'forget',
+  lay: 'lie', lain: 'lie', paid: 'pay', said: 'say',
+  slept: 'sleep', wept: 'weep', kept: 'keep', crept: 'creep', swept: 'sweep',
+  left: 'leave', met: 'meet',
+  arose: 'arise', arisen: 'arise', awoke: 'awake', awoken: 'awake',
+  shone: 'shine', struck: 'strike', stricken: 'strike',
+  interfered: 'interfere', adhered: 'adhere', persevered: 'persevere',
+  withdrew: 'withdraw', withdrawn: 'withdraw',
+  undertook: 'undertake', undertaken: 'undertake',
+  underwent: 'undergo', undergone: 'undergo',
+  upheld: 'uphold', misled: 'mislead', outgrew: 'outgrow',
+  // -it verbs (base doesn't end in silent-e despite -ited matching -ite)
+  prohibited: 'prohibit', limited: 'limit', exhibited: 'exhibit',
+  inhabited: 'inhabit', inhibited: 'inhibit', deposited: 'deposit',
+  credited: 'credit', submitted: 'submit', committed: 'commit',
+  permitted: 'permit', admitted: 'admit', emitted: 'emit',
+  transmitted: 'transmit', omitted: 'omit', visited: 'visit',
+  edited: 'edit', inherited: 'inherit', merited: 'merit',
+  profited: 'profit', benefited: 'benefit', elicited: 'elicit',
+  solicited: 'solicit', exploited: 'exploit', audited: 'audit',
+  // -on/-an verbs (base doesn't end in silent-e despite -one/-ane matching)
+  mentioned: 'mention', abandoned: 'abandon', conditioned: 'condition',
+  positioned: 'position', fashioned: 'fashion', functioned: 'function',
+  questioned: 'question', stationed: 'station', reasoned: 'reason',
+  seasoned: 'season', summoned: 'summon', pardoned: 'pardon',
+  // -ain/-ear/-eer verbs (vowel digraph + consonant + ed)
+  sustained: 'sustain', maintained: 'maintain', obtained: 'obtain',
+  retained: 'retain', contained: 'contain', explained: 'explain',
+  complained: 'complain', remained: 'remain', trained: 'train',
+  gained: 'gain', rained: 'rain', strained: 'strain',
+  appeared: 'appear', disappeared: 'disappear', cleared: 'clear',
+  feared: 'fear', neared: 'near', volunteered: 'volunteer',
+  pioneered: 'pioneer', engineered: 'engineer', steered: 'steer',
+  // -ust/-aust verbs
+  exhausted: 'exhaust', adjusted: 'adjust', trusted: 'trust',
+  disgusted: 'disgust', suggested: 'suggest',
+  // -ound verbs (base form ends in -ound, not past of something)
+  surrounded: 'surround', grounded: 'ground', founded: 'found',
+  // Others that cause false positives
+  biased: 'bias', beloved: 'beloved', supposed: 'suppose',
+};
+
+const PAST_FORM_EXCEPTIONS = new Set([
+  'bed', 'red', 'shed', 'sled', 'wed',
+  'sacred', 'naked', 'wicked', 'rugged', 'ragged', 'crooked',
+  'indeed', 'widespread', 'hatred',
+  'exceed', 'proceed', 'succeed', 'precede', 'concede', 'recede', 'supersede',
+  'need', 'seed', 'feed', 'breed', 'bleed', 'speed', 'weed', 'deed',
+]);
+
+const SILENT_E_ENDINGS = new Set([
+  'ace', 'age', 'ake', 'ale', 'ame', 'ane', 'ape', 'are', 'ase', 'ate', 'ave', 'aze',
+  'ece', 'ege', 'ibe', 'ice', 'ide', 'ife', 'ige', 'ike', 'ile', 'ime', 'ine', 'ipe',
+  'ire', 'ise', 'ite', 'ive', 'ize',
+  'obe', 'ode', 'oke', 'ole', 'ome', 'one', 'ope', 'ore', 'ose', 'ote', 'ove', 'oze',
+  'ube', 'uce', 'ude', 'uge', 'uke', 'ule', 'ume', 'une', 'upe', 'ure', 'use', 'ute',
+  'ble', 'cle', 'dle', 'fle', 'gle', 'kle', 'ple', 'tle', 'zle',
+  'nce', 'nge', 'dge', 'rce', 'rge', 'rse', 'rve', 'lse', 'lve', 'nse', 'pse', 'ste',
+  'gue', 'nue', 'que', 'ede',
+]);
+
 const SINGULAR_EXCEPTIONS = new Set([
   'series', 'species', 'news', 'means', 'always', 'perhaps',
   'across', 'unless', 'whereas', 'besides', 'sometimes',
   'towards', 'this', 'thus', 'plus', 'minus', 'versus',
   'chaos', 'cosmos', 'yes', 'no', 'campus', 'bonus',
-  'focus', 'status', 'virus', 'apparatus', 'consensus',
+  'focus', 'status', 'virus', 'apparatus', 'consensus', 'canvas',
+  'bias', 'atlas', 'christmas', 'alias', 'texas',
   'afterwards', 'always', 'sometimes', 'perhaps', 'its',
   'has', 'was', 'does', 'goes',
 ]);
 
 /**
- * 영어 복수형/굴절형 → 기본형(단수) 변환.
- * 완벽하지는 않지만 일반적인 패턴을 처리합니다.
+ * 영어 복수형/굴절형/과거형 → 기본형(원형) 변환.
  */
 export function toBaseForm(word: string): string {
   const lower = word.toLowerCase();
-  if (lower.length <= 3) return word;
+  if (lower.length <= 2) return word;
 
   if (SINGULAR_EXCEPTIONS.has(lower)) return word;
+
+  const irregBase = IRREGULAR_PAST[lower];
+  if (irregBase) return irregBase;
+
+  if (lower.length <= 3) return word;
 
   if (
     lower.endsWith('ous') || lower.endsWith('ness') ||
@@ -188,6 +288,43 @@ export function toBaseForm(word: string): string {
     lower.endsWith('ics') || lower.endsWith('us') ||
     lower.endsWith('is')
   ) return word;
+
+  if (lower.endsWith('ed') && lower.length >= 5 && !PAST_FORM_EXCEPTIONS.has(lower)) {
+    if (lower.endsWith('ied')) {
+      return word.slice(0, -3) + 'y';
+    }
+
+    const stemD = lower.slice(0, -1);
+    const stemED = lower.slice(0, -2);
+
+    if (stemD.endsWith('e') && stemD.length >= 4) {
+      const suffix3 = stemD.slice(-3);
+      if (SILENT_E_ENDINGS.has(suffix3)) {
+        if (stemD.length > 3) {
+          const charBefore = stemD[stemD.length - 4];
+          if (charBefore === suffix3[0] && 'aeiou'.includes(charBefore)) {
+            // doubled vowel (e.g., "looke" from "looked") → not silent-e
+          } else {
+            return word.slice(0, -1);
+          }
+        } else {
+          return word.slice(0, -1);
+        }
+      }
+    }
+
+    if (stemED.length >= 4) {
+      const last = stemED[stemED.length - 1];
+      const prev = stemED[stemED.length - 2];
+      const pprev = stemED[stemED.length - 3];
+      if (last === prev && !'aeiouls'.includes(last) && 'aeiou'.includes(pprev)) {
+        return word.slice(0, -3);
+      }
+    }
+
+    if (stemED.length >= 2) return word.slice(0, -2);
+    return word;
+  }
 
   if (!lower.endsWith('s')) return word;
   if (lower.endsWith('ss')) return word;

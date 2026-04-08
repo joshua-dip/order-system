@@ -285,6 +285,10 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const [grammarSubMode, setGrammarSubMode] = useState<'manual' | 'ai'>('manual');
   const [contextSubMode, setContextSubMode] = useState<'manual' | 'ai'>('manual');
   const [vocabShowInputAt, setVocabShowInputAt] = useState<number | null>(null);
+  const [vocabAiFixIdx, setVocabAiFixIdx] = useState<number | null>(null);
+  const [vocabBaseFormIdx, setVocabBaseFormIdx] = useState<number | null>(null);
+  const [vocabMergeFirstIdx, setVocabMergeFirstIdx] = useState<number | null>(null);
+  const [vocabMerging, setVocabMerging] = useState(false);
   const [vocabNewWord, setVocabNewWord] = useState({
     word: '',
     wordType: 'word',
@@ -1095,6 +1099,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         e.preventDefault();
         setPending(null);
         setSvocPart(null);
+        setVocabMergeFirstIdx(null);
         setMsg(null);
       }
     };
@@ -1326,6 +1331,196 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       }
     },
     [busy, fetchCefrForWord, updateState]
+  );
+
+  const runMeaningAiForRow = useCallback(
+    async (oi: number) => {
+      const item = stateRef.current?.vocabularyList?.[oi];
+      if (!item?.word?.trim()) return;
+      const sentences = stateRef.current?.sentences || [];
+      const koreanSentences = stateRef.current?.koreanSentences || [];
+      const contexts = (item.positions || []).slice(0, 3).map((p) => ({
+        english: sentences[p.sentence] || '',
+        korean: koreanSentences[p.sentence] || '',
+      })).filter((c) => c.english);
+      if (contexts.length === 0) {
+        setMsg('문맥 정보가 없어 AI 수정이 불가합니다.');
+        return;
+      }
+      setVocabAiFixIdx(oi);
+      setMsg(null);
+      try {
+        const res = await fetch('/api/admin/passage-analyzer/fix-single-meaning', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word: item.word,
+            partOfSpeech: item.partOfSpeech,
+            wordType: item.wordType,
+            currentMeaning: item.meaning,
+            contexts,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          updateState((prev) => {
+            const list = [...(prev.vocabularyList || [])];
+            if (list[oi]) {
+              list[oi] = {
+                ...list[oi],
+                meaning: data.meaning,
+                ...(data.synonym ? { synonym: data.synonym } : {}),
+                ...(data.antonym ? { antonym: data.antonym } : {}),
+              };
+            }
+            return { ...prev, vocabularyList: list };
+          });
+          setMsg(`「${item.word}」 뜻 수정: ${data.meaning}`);
+          void flushAnalysisSave();
+        } else {
+          setMsg(data.error || '뜻 수정 실패');
+        }
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : '뜻 수정 실패');
+      } finally {
+        setVocabAiFixIdx(null);
+      }
+    },
+    [updateState, flushAnalysisSave]
+  );
+
+  const runBaseFormAiForRow = useCallback(
+    async (oi: number) => {
+      const item = stateRef.current?.vocabularyList?.[oi];
+      if (!item?.word?.trim()) return;
+      const sentences = stateRef.current?.sentences || [];
+      const koreanSentences = stateRef.current?.koreanSentences || [];
+      const contexts = (item.positions || []).slice(0, 3).map((p) => ({
+        english: sentences[p.sentence] || '',
+        korean: koreanSentences[p.sentence] || '',
+      })).filter((c) => c.english);
+      setVocabBaseFormIdx(oi);
+      setMsg(null);
+      try {
+        const res = await fetch('/api/admin/passage-analyzer/to-base-form', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word: item.word,
+            partOfSpeech: item.partOfSpeech,
+            wordType: item.wordType,
+            currentMeaning: item.meaning,
+            contexts,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          updateState((prev) => {
+            const list = [...(prev.vocabularyList || [])];
+            if (list[oi]) {
+              list[oi] = {
+                ...list[oi],
+                word: data.baseForm,
+                meaning: data.meaning,
+                ...(data.synonym ? { synonym: data.synonym } : {}),
+                ...(data.antonym ? { antonym: data.antonym } : {}),
+              };
+            }
+            return { ...prev, vocabularyList: list };
+          });
+          const changed = data.baseForm !== item.word;
+          setMsg(
+            changed
+              ? `「${item.word}」→「${data.baseForm}」 원형 변환 · 뜻: ${data.meaning}`
+              : `「${item.word}」 이미 원형입니다.`
+          );
+          void flushAnalysisSave();
+        } else {
+          setMsg(data.error || '원형 변환 실패');
+        }
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : '원형 변환 실패');
+      } finally {
+        setVocabBaseFormIdx(null);
+      }
+    },
+    [updateState, flushAnalysisSave]
+  );
+
+  const handleVocabMergeClick = useCallback(
+    async (oi: number) => {
+      if (vocabMergeFirstIdx === null) {
+        setVocabMergeFirstIdx(oi);
+        setMsg('⌘+클릭: 합칠 두 번째 단어를 클릭하세요 (Esc 취소)');
+        return;
+      }
+      if (vocabMergeFirstIdx === oi) {
+        setVocabMergeFirstIdx(null);
+        setMsg(null);
+        return;
+      }
+      const list = stateRef.current?.vocabularyList;
+      if (!list) return;
+      const item1 = list[vocabMergeFirstIdx];
+      const item2 = list[oi];
+      if (!item1 || !item2) return;
+
+      const sentences = stateRef.current?.sentences || [];
+      const koreanSentences = stateRef.current?.koreanSentences || [];
+      const allPos = [...(item1.positions || []), ...(item2.positions || [])];
+      const contexts = allPos.slice(0, 4).map((p) => ({
+        english: sentences[p.sentence] || '',
+        korean: koreanSentences[p.sentence] || '',
+      })).filter((c) => c.english);
+      const uniqueCtx = contexts.filter((c, i, a) => a.findIndex((x) => x.english === c.english) === i);
+
+      setVocabMerging(true);
+      setMsg(`「${item1.word}」+「${item2.word}」 숙어 판단 중…`);
+      try {
+        const res = await fetch('/api/admin/passage-analyzer/merge-phrase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word1: item1.word,
+            word2: item2.word,
+            contexts: uniqueCtx,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.isPhrase) {
+          const firstIdx = vocabMergeFirstIdx;
+          const secondIdx = oi;
+          const mergedPositions = [...(item1.positions || []), ...(item2.positions || [])];
+          updateState((prev) => {
+            const newList = [...(prev.vocabularyList || [])];
+            newList[firstIdx] = {
+              ...newList[firstIdx],
+              word: data.phrase,
+              wordType: 'phrase',
+              partOfSpeech: data.partOfSpeech || 'v.',
+              cefr: data.cefr || newList[firstIdx].cefr || '',
+              meaning: data.meaning || '',
+              synonym: data.synonym || '',
+              antonym: data.antonym || '',
+              positions: mergedPositions,
+            };
+            return { ...prev, vocabularyList: newList.filter((_, i) => i !== secondIdx) };
+          });
+          setMsg(`✓ 「${data.phrase}」 숙어로 병합 · 뜻: ${data.meaning}`);
+          void flushAnalysisSave();
+        } else if (data.success && !data.isPhrase) {
+          setMsg(`「${item1.word}」+「${item2.word}」 → AI 판단: 숙어가 아닙니다.`);
+        } else {
+          setMsg(data.error || '숙어 판단 실패');
+        }
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : '숙어 판단 실패');
+      } finally {
+        setVocabMergeFirstIdx(null);
+        setVocabMerging(false);
+      }
+    },
+    [vocabMergeFirstIdx, updateState, flushAnalysisSave]
   );
 
   const runCefrAiForVocabNewWord = useCallback(
@@ -2455,6 +2650,13 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
             >
               같은 단어 병합
             </button>
+            <button
+              type="button"
+              onClick={() => void flushAnalysisSave()}
+              className="w-full py-2 rounded-lg bg-amber-700/90 text-xs font-medium text-white hover:bg-amber-600"
+            >
+              지금 저장 (Alt+S)
+            </button>
           </div>
         )}
       </aside>
@@ -2767,7 +2969,18 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                     return (
                       <div key={`vr-${oi}-${displayIdx}`} className="border-b border-slate-800">
                         <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 p-2 items-start text-[11px] min-w-[62rem]">
-                          <span className="text-slate-500 tabular-nums pt-1">{displayIdx + 1}</span>
+                          <span className="text-slate-500 tabular-nums pt-1 flex items-center gap-0.5">
+                            {displayIdx + 1}
+                            <button
+                              type="button"
+                              disabled={vocabBaseFormIdx === oi}
+                              onClick={() => void runBaseFormAiForRow(oi)}
+                              className="shrink-0 w-[16px] h-[16px] flex items-center justify-center rounded text-[8px] leading-none border border-amber-700/60 text-amber-400 hover:bg-amber-900/40 disabled:opacity-40 disabled:cursor-wait"
+                              title="AI로 동사 원형 변환 (seeing→see)"
+                            >
+                              {vocabBaseFormIdx === oi ? '…' : '∞'}
+                            </button>
+                          </span>
                           <input
                             value={item.word}
                             onChange={(e) => {
@@ -2778,7 +2991,17 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                 return { ...s, vocabularyList: list };
                               });
                             }}
-                            className="bg-transparent border border-slate-700 rounded px-1 py-1 text-teal-100 font-medium w-full"
+                            onClick={(e) => {
+                              if (e.metaKey || e.ctrlKey) {
+                                e.preventDefault();
+                                void handleVocabMergeClick(oi);
+                              }
+                            }}
+                            className={`bg-transparent border rounded px-1 py-1 font-medium w-full ${
+                              vocabMergeFirstIdx === oi
+                                ? 'border-amber-400 text-amber-200 ring-1 ring-amber-400/50 bg-amber-950/30'
+                                : 'border-slate-700 text-teal-100'
+                            }`}
                           />
                           <select
                             value={item.wordType || 'word'}
@@ -2842,19 +3065,30 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                               </option>
                             ))}
                           </select>
-                          <input
-                            value={item.meaning || ''}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], meaning: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            placeholder="한글 뜻(·부가)"
-                            className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
-                          />
+                          <div className="flex gap-0.5 items-start w-full">
+                            <input
+                              value={item.meaning || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                updateState((s) => {
+                                  const list = [...(s.vocabularyList || [])];
+                                  if (list[oi]) list[oi] = { ...list[oi], meaning: v };
+                                  return { ...s, vocabularyList: list };
+                                });
+                              }}
+                              placeholder="한글 뜻(·부가)"
+                              className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 flex-1 min-w-0"
+                            />
+                            <button
+                              type="button"
+                              disabled={vocabAiFixIdx === oi}
+                              onClick={() => void runMeaningAiForRow(oi)}
+                              className="shrink-0 px-1 py-1 rounded text-[9px] leading-tight border border-violet-700/60 text-violet-300 hover:bg-violet-900/40 disabled:opacity-40 disabled:cursor-wait"
+                              title="AI로 뜻 수정 (문맥 기반)"
+                            >
+                              {vocabAiFixIdx === oi ? '…' : '✨'}
+                            </button>
+                          </div>
                           <input
                             value={item.synonym || ''}
                             onChange={(e) => {

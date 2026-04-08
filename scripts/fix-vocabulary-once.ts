@@ -35,6 +35,15 @@ function fixPluralSuffix(meaning: string): string {
   return meaning.replace(/([가-힣])들(?=[,\s·;]|$)/g, '$1');
 }
 
+function fixKoreanPastTense(meaning: string): string {
+  return meaning
+    .replace(/했다/g, '하다')
+    .replace(/됐다/g, '되다')
+    .replace(/였다/g, '이다')
+    .replace(/었다/g, '다')
+    .replace(/았다/g, '다');
+}
+
 function fixAbbreviation(word: string): string | null {
   const lower = word.toLowerCase();
   return KNOWN_ABBREVIATIONS[lower] ?? null;
@@ -44,7 +53,8 @@ async function main() {
   const db = await getDb('gomijoshua');
   const col = db.collection('passage_analyses');
 
-  const textbook = '26년 3월 고1 영어모의고사';
+  const textbook = process.argv.find((a) => a.startsWith('--textbook='))?.split('=')[1]?.trim()
+    || '26년 3월 고1 영어모의고사';
   const passagesCol = db.collection('passages');
   const passages = await passagesCol
     .find({ textbook })
@@ -95,12 +105,14 @@ async function main() {
         changed = true;
       }
 
-      const baseWord = toBaseForm(modified.word);
-      if (baseWord !== modified.word) {
-        console.log(`  [단수] ${doc.fileName} — "${modified.word}" → "${baseWord}"`);
-        modified.word = baseWord;
-        totalWordSingularized++;
-        changed = true;
+      if (modified.wordType !== 'phrase') {
+        const baseWord = toBaseForm(modified.word);
+        if (baseWord !== modified.word) {
+          console.log(`  [원형] ${doc.fileName} — "${modified.word}" → "${baseWord}"`);
+          modified.word = baseWord;
+          totalWordSingularized++;
+          changed = true;
+        }
       }
 
       for (const field of ['synonym', 'antonym', 'opposite'] as const) {
@@ -117,9 +129,10 @@ async function main() {
       }
 
       if (item.meaning) {
-        const fixedMeaning = fixPluralSuffix(item.meaning);
+        let fixedMeaning = fixPluralSuffix(item.meaning);
+        fixedMeaning = fixKoreanPastTense(fixedMeaning);
         if (fixedMeaning !== item.meaning) {
-          console.log(`  [복수] ${doc.fileName} — "${item.meaning}" → "${fixedMeaning}"`);
+          console.log(`  [뜻보정] ${doc.fileName} — "${item.meaning}" → "${fixedMeaning}"`);
           modified.meaning = fixedMeaning;
           totalMeaningFixed++;
           changed = true;
