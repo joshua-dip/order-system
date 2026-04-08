@@ -189,8 +189,10 @@ export default function MyPage() {
   const [vocabDownloading, setVocabDownloading] = useState(false);
   const [vocabCefrLevels, setVocabCefrLevels] = useState(['A1','A2','B1','B2','C1','C2']);
   const [vocabColumns, setVocabColumns] = useState({ wordType: true, pos: true, cefr: true, meaning: true, synonym: true, antonym: true, opposite: false });
-  const [vocabFormat, setVocabFormat] = useState<'xlsx' | 'pdf' | 'test-xlsx'>('xlsx');
+  const [vocabFormat, setVocabFormat] = useState<'xlsx' | 'pdf' | 'test-xlsx' | 'test-pdf'>('xlsx');
   const [vocabTestDirection, setVocabTestDirection] = useState<'word-to-meaning' | 'meaning-to-word'>('word-to-meaning');
+  const [vocabTestColumns, setVocabTestColumns] = useState<1 | 2>(1);
+  const [vocabTestShuffle, setVocabTestShuffle] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -357,7 +359,7 @@ export default function MyPage() {
     else setVocabSelectedLessons([...vocabAllFlat]);
   };
 
-  const handleVocabDownload = async (formatOverride?: 'xlsx' | 'pdf' | 'test-xlsx') => {
+  const handleVocabDownload = async (formatOverride?: 'xlsx' | 'pdf' | 'test-xlsx' | 'test-pdf') => {
     const fmt = formatOverride || vocabFormat;
     if (!vocabSelectedTextbook) { alert('교재를 선택해주세요.'); return; }
     if (vocabSelectedLessons.length === 0) { alert('강과 번호를 1개 이상 선택해주세요.'); return; }
@@ -374,6 +376,8 @@ export default function MyPage() {
           columns: vocabColumns,
           format: fmt,
           testDirection: vocabTestDirection,
+          testColumns: vocabTestColumns,
+          testShuffle: vocabTestShuffle,
         }),
       });
       if (!res.ok) {
@@ -385,8 +389,8 @@ export default function MyPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const ext = fmt === 'pdf' ? 'pdf' : 'xlsx';
-      const prefix = fmt === 'test-xlsx' ? '단어시험지' : '단어장';
+      const ext = (fmt === 'pdf' || fmt === 'test-pdf') ? 'pdf' : 'xlsx';
+      const prefix = (fmt === 'test-xlsx' || fmt === 'test-pdf') ? '단어시험지' : '단어장';
       a.download = `${prefix}_${vocabSelectedTextbook}_${vocabSelectedLessons.length}지문.${ext}`;
       document.body.appendChild(a);
       a.click();
@@ -1409,20 +1413,52 @@ export default function MyPage() {
 
                     <div className="border-t border-[#f1f5f9] pt-3">
                       <p className="text-[11px] text-[#94a3b8] mb-2">단어 시험지 — 학생용 빈칸 시험지 + 정답지</p>
-                      <div className="flex items-center gap-2 mb-2">
-                        <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
-                          <input type="radio" name="vocabTestDir" checked={vocabTestDirection === 'word-to-meaning'} onChange={() => setVocabTestDirection('word-to-meaning')} className="accent-[#2563eb]" />
-                          영어 → 뜻
-                        </label>
-                        <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
-                          <input type="radio" name="vocabTestDir" checked={vocabTestDirection === 'meaning-to-word'} onChange={() => setVocabTestDirection('meaning-to-word')} className="accent-[#2563eb]" />
-                          뜻 → 영어
-                        </label>
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                            <input type="radio" name="vocabTestDir" checked={vocabTestDirection === 'word-to-meaning'} onChange={() => setVocabTestDirection('word-to-meaning')} className="accent-[#2563eb]" />
+                            영어 → 뜻
+                          </label>
+                          <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                            <input type="radio" name="vocabTestDir" checked={vocabTestDirection === 'meaning-to-word'} onChange={() => setVocabTestDirection('meaning-to-word')} className="accent-[#2563eb]" />
+                            뜻 → 영어
+                          </label>
+                        </div>
+                        <span className="text-[#e2e8f0]">|</span>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                            <input type="radio" name="vocabTestCols" checked={vocabTestColumns === 1} onChange={() => setVocabTestColumns(1)} className="accent-[#2563eb]" />
+                            1단
+                          </label>
+                          <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                            <input type="radio" name="vocabTestCols" checked={vocabTestColumns === 2} onChange={() => setVocabTestColumns(2)} className="accent-[#2563eb]" />
+                            2단
+                          </label>
+                        </div>
+                        <span className="text-[#e2e8f0]">|</span>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                            <input type="radio" name="vocabTestOrder" checked={!vocabTestShuffle} onChange={() => setVocabTestShuffle(false)} className="accent-[#2563eb]" />
+                            순서대로
+                          </label>
+                          <label className="flex items-center gap-1 text-[12px] text-[#334155] cursor-pointer">
+                            <input type="radio" name="vocabTestOrder" checked={vocabTestShuffle} onChange={() => setVocabTestShuffle(true)} className="accent-[#2563eb]" />
+                            랜덤
+                          </label>
+                        </div>
                       </div>
-                      <button type="button" onClick={() => handleVocabDownload('test-xlsx')} disabled={vocabDownloading}
-                        className="w-full py-2.5 bg-[#f8fafc] text-[#334155] border border-[#e2e8f0] rounded-xl text-[13px] font-bold hover:bg-[#f1f5f9] disabled:opacity-60 transition-colors">
-                        단어 시험지 다운로드
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" onClick={() => handleVocabDownload('test-xlsx')} disabled={vocabDownloading}
+                          className="py-2.5 bg-[#2563eb] text-white rounded-xl text-[13px] font-bold hover:bg-[#1d4ed8] disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                          시험지 (Excel)
+                        </button>
+                        <button type="button" onClick={() => handleVocabDownload('test-pdf')} disabled={vocabDownloading}
+                          className="py-2.5 bg-[#14213d] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          시험지 (PDF)
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>
