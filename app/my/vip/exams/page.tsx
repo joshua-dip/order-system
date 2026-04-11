@@ -854,13 +854,22 @@ export default function VipExamsPage() {
                                           <div className={`w-0.5 self-stretch rounded-full bg-violet-500/60 shrink-0 ${isGroupStart ? 'mt-1' : ''} ${isGroupEnd ? 'mb-1' : ''}`} />
                                         )}
                                         <div className="flex flex-col">
-                                          <button
-                                            onClick={() => openTextModal(exam.id, qNum)}
-                                            title="클릭하여 지문 입력 및 출처 검색"
-                                            className={`font-mono text-sm text-left hover:text-cyan-300 transition-colors leading-none ${q.questionBody ? 'text-cyan-400' : 'text-zinc-500'}`}
-                                          >
-                                            {qNum}
-                                          </button>
+                                          {(() => {
+                                            const hasDetail = !!(q.questionTitle || q.questionBody || q.choices);
+                                            return (
+                                              <button
+                                                onClick={() => openTextModal(exam.id, qNum)}
+                                                title="클릭하여 지문 입력 및 출처 검색"
+                                                className={`font-mono text-xs leading-none transition-colors rounded px-1 py-0.5 ${
+                                                  hasDetail
+                                                    ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/35'
+                                                    : 'text-zinc-500 hover:text-cyan-300'
+                                                }`}
+                                              >
+                                                {qNum}
+                                              </button>
+                                            );
+                                          })()}
                                           {groupRange && (
                                             <span className="text-[9px] text-violet-400 font-medium leading-none mt-0.5">{groupRange}</span>
                                           )}
