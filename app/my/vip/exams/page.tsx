@@ -865,13 +865,26 @@ export default function VipExamsPage() {
                                       ${i + 1 === local.objectiveCount + 1 && local.subjectiveCount > 0 ? 'border-t-2 border-t-amber-500/30' : ''}
                                       ${q.groupId ? 'bg-violet-950/10' : ''}`}
                                   >
-                                    <td className="px-2 py-1.5">
-                                      <div className="flex items-center gap-1">
-                                        {/* 그룹 왼쪽 선 */}
-                                        {q.groupId && (
-                                          <div className={`w-0.5 self-stretch rounded-full bg-violet-500/60 shrink-0 ${isGroupStart ? 'mt-1' : ''} ${isGroupEnd ? 'mb-1' : ''}`} />
+                                    <td className="py-1.5 pl-1 pr-2">
+                                      <div className="flex items-stretch gap-1.5">
+                                        {/* 그룹 브래킷 */}
+                                        {q.groupId ? (
+                                          <div className="flex flex-col items-center w-3 shrink-0 self-stretch">
+                                            {/* 위 채움 */}
+                                            <div className={`w-px flex-1 ${isGroupStart ? 'bg-transparent' : 'bg-violet-500/50'}`} />
+                                            {/* 수평 tick */}
+                                            {isGroupStart && <div className="w-2 h-px bg-violet-500/70 mb-0" />}
+                                            {/* 수직 선 */}
+                                            <div className={`w-px ${isGroupStart && isGroupEnd ? 'h-3' : 'flex-1'} bg-violet-500/70`} />
+                                            {isGroupEnd && <div className="w-2 h-px bg-violet-500/70 mt-0" />}
+                                            {/* 아래 채움 */}
+                                            <div className={`w-px flex-1 ${isGroupEnd ? 'bg-transparent' : 'bg-violet-500/50'}`} />
+                                          </div>
+                                        ) : (
+                                          <div className="w-3 shrink-0" />
                                         )}
-                                        <div className="flex flex-col">
+                                        {/* 번호 + 그룹 범위 뱃지 */}
+                                        <div className="flex items-center gap-1 self-center">
                                           {(() => {
                                             const hasDetail = !!(q.questionTitle || q.questionBody || q.choices);
                                             return (
@@ -889,7 +902,9 @@ export default function VipExamsPage() {
                                             );
                                           })()}
                                           {groupRange && (
-                                            <span className="text-[9px] text-violet-400 font-medium leading-none mt-0.5">{groupRange}</span>
+                                            <span className="text-[9px] px-1 py-0.5 rounded bg-violet-500/15 text-violet-400 font-medium leading-none border border-violet-500/30">
+                                              {groupRange}
+                                            </span>
                                           )}
                                         </div>
                                       </div>
@@ -954,13 +969,14 @@ export default function VipExamsPage() {
                                   {i + 1 < totalQ && (
                                     <tr className="h-0">
                                       <td colSpan={6} className="p-0">
-                                        <div className="relative flex items-center justify-start pl-3 h-4 group/connector">
+                                        <div className="relative flex items-center h-3 group/connector">
                                           {isGroupedWithNext ? (
                                             <>
-                                              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-violet-500/50" />
+                                              {/* 브래킷 연결선 (왼쪽 정렬 맞춤: pl-1 + w-3 = 16px) */}
+                                              <div className="absolute left-[16px] top-0 bottom-0 w-px bg-violet-500/50" />
                                               <button
                                                 onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
-                                                className="absolute left-5 top-1/2 -translate-y-1/2 opacity-0 group-hover/connector:opacity-100 transition-opacity px-1.5 py-0.5 text-[9px] text-violet-300 bg-violet-900/50 border border-violet-700/50 rounded hover:bg-violet-800/60"
+                                                className="absolute left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/connector:opacity-100 transition-opacity px-1.5 py-0.5 text-[9px] text-violet-300 bg-violet-900/60 border border-violet-700/50 rounded-md"
                                               >
                                                 풀기
                                               </button>
@@ -968,7 +984,7 @@ export default function VipExamsPage() {
                                           ) : (
                                             <button
                                               onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
-                                              className="opacity-0 group-hover/connector:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 text-[9px] text-zinc-500 border border-dashed border-zinc-700 rounded hover:text-violet-300 hover:border-violet-600 hover:bg-violet-950/30"
+                                              className="ml-4 opacity-0 group-hover/connector:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 text-[9px] text-zinc-500 border border-dashed border-zinc-700 rounded hover:text-violet-300 hover:border-violet-600 hover:bg-violet-950/30"
                                             >
                                               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
