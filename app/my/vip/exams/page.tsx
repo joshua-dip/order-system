@@ -355,9 +355,11 @@ export default function VipExamsPage() {
     }
   };
 
-  const applyTextModal = (applyMatch: boolean) => {
+  const applyTextModal = async (applyMatch: boolean) => {
     if (!textModal) return;
     const { examId, body, groupQuestions, matchResult } = textModal;
+    // 1) 로컬 상태 업데이트 + 업데이트된 exam 캡처
+    let updatedExam: SchoolExam | null = null;
     setLocalExams((prev) => {
       const exam = prev[examId] || exams.find((e) => e.id === examId)!;
       const newQs = { ...exam.questions };
@@ -377,9 +379,21 @@ export default function VipExamsPage() {
         }
         newQs[qNum] = { ...existing, ...patch };
       });
-      return { ...prev, [examId]: { ...exam, questions: newQs } };
+      updatedExam = { ...exam, questions: newQs };
+      return { ...prev, [examId]: updatedExam };
     });
     setTextModal(null);
+    // 2) DB 저장
+    if (!updatedExam) return;
+    const e = updatedExam as SchoolExam;
+    const res = await fetch(`/api/my/vip/school-exams/${examId}`, {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questions: e.questions, objectiveCount: e.objectiveCount, subjectiveCount: e.subjectiveCount, examScope: e.examScope, isLocked: e.isLocked }),
+    });
+    const d = await res.json();
+    if (d.ok) showToast('저장되었습니다.');
+    else showToast('저장 실패: ' + (d.error || ''));
   };
 
   const toggleGroup = (examId: string, qNumA: string, qNumB: string) => {
