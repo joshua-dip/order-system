@@ -93,6 +93,7 @@ export default function VipExamsPage() {
     showSummary: boolean;
     showBulkChoices: boolean;
     bulkChoicesText: string;
+    bodySelection: string;  // 문제본문에서 드래그한 선택 영역
     matching: boolean;
     matchResult: { textbook: string; sourceKey: string; similarity: number } | null;
     noMatch: boolean;
@@ -328,6 +329,7 @@ export default function VipExamsPage() {
       showSummary: isYoyak || !!(q?.summary),
       showBulkChoices: false,
       bulkChoicesText: '',
+      bodySelection: '',
       matching: false, matchResult: null, noMatch: false,
     });
   };
@@ -922,7 +924,25 @@ export default function VipExamsPage() {
 
               {/* Col 1: 문제제목 */}
               <div className="flex flex-col w-56 shrink-0 border-r border-zinc-800 p-3 gap-2">
-                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">문제제목</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">문제제목</span>
+                  {textModal.bodySelection && (
+                    <button
+                      onClick={() => setTextModal((prev) => prev && ({
+                        ...prev,
+                        title: prev.bodySelection.trim(),
+                        bodySelection: '',
+                      }))}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
+                      title="선택한 텍스트를 문제제목으로 가져오기"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                      </svg>
+                      여기로
+                    </button>
+                  )}
+                </div>
                 <textarea
                   autoFocus
                   value={textModal.title}
@@ -951,6 +971,16 @@ export default function VipExamsPage() {
                 <textarea
                   value={textModal.body}
                   onChange={(e) => setTextModal((prev) => prev && ({ ...prev, body: e.target.value, matchResult: null, noMatch: false }))}
+                  onSelect={(e) => {
+                    const el = e.currentTarget;
+                    const sel = el.value.substring(el.selectionStart, el.selectionEnd).trim();
+                    setTextModal((prev) => prev && ({ ...prev, bodySelection: sel }));
+                  }}
+                  onMouseUp={(e) => {
+                    const el = e.currentTarget;
+                    const sel = el.value.substring(el.selectionStart, el.selectionEnd).trim();
+                    setTextModal((prev) => prev && ({ ...prev, bodySelection: sel }));
+                  }}
                   placeholder={"James felt happy when his friend Yena praised his dancing skills after seeing his social media post..."}
                   className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0"
                 />
