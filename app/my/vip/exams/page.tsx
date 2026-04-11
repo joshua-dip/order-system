@@ -1019,7 +1019,35 @@ export default function VipExamsPage() {
               {/* Col 3: 선택지 */}
               <div className="flex flex-col w-72 shrink-0 p-3 gap-2 overflow-y-auto">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
+                    {/* 드래그 선택 시 동그라미 번호 감지 → 여기로 버튼 */}
+                    {textModal.bodySelection && /[①②③④⑤]/.test(textModal.bodySelection) && (
+                      <button
+                        onClick={() => {
+                          const raw = textModal.bodySelection;
+                          const parts = raw
+                            .split(/(?=[①②③④⑤])/)
+                            .map((s) => s.replace(/^[①②③④⑤\s]+/, '').trim())
+                            .filter(Boolean)
+                            .slice(0, 5);
+                          while (parts.length < 5) parts.push('');
+                          setTextModal((prev) => prev && ({
+                            ...prev,
+                            choices: parts.join('\n'),
+                            bodySelection: '',
+                          }));
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
+                        title="선택한 텍스트를 선택지로 분리"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                        여기로
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={() => setTextModal((prev) => prev && ({ ...prev, showBulkChoices: !prev.showBulkChoices, bulkChoicesText: '' }))}
                     className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors px-1.5 py-0.5 rounded hover:bg-zinc-800"
