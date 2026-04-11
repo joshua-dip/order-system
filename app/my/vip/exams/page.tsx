@@ -358,38 +358,38 @@ export default function VipExamsPage() {
   const applyTextModal = async (applyMatch: boolean) => {
     if (!textModal) return;
     const { examId, body, groupQuestions, matchResult } = textModal;
-    // 1) 로컬 상태 업데이트 + 업데이트된 exam 캡처
-    let updatedExam: SchoolExam | null = null;
-    setLocalExams((prev) => {
-      const exam = prev[examId] || exams.find((e) => e.id === examId)!;
-      const newQs = { ...exam.questions };
-      groupQuestions.forEach(({ qNum, title, choices, score, summary }) => {
-        const existing = newQs[qNum] || { score: 0, isSubjective: false };
-        const patch: Partial<ExamQuestion> = {
-          questionTitle: title,
-          questionBody: body,
-          choices,
-          summary,
-          score,
-          questionText: title || body.slice(0, 60) || '',
-        };
-        if (applyMatch && matchResult) {
-          patch.textbook = matchResult.textbook;
-          patch.source = matchResult.sourceKey;
-        }
-        newQs[qNum] = { ...existing, ...patch };
-      });
-      updatedExam = { ...exam, questions: newQs };
-      return { ...prev, [examId]: updatedExam };
+
+    // 1) 업데이트된 exam을 먼저 계산
+    const currentExam = localExams[examId] || exams.find((e) => e.id === examId);
+    if (!currentExam) return;
+    const newQs = { ...currentExam.questions };
+    groupQuestions.forEach(({ qNum, title, choices, score, summary }) => {
+      const existing = newQs[qNum] || { score: 0, isSubjective: false };
+      const patch: Partial<ExamQuestion> = {
+        questionTitle: title,
+        questionBody: body,
+        choices,
+        summary,
+        score,
+        questionText: title || body.slice(0, 60) || '',
+      };
+      if (applyMatch && matchResult) {
+        patch.textbook = matchResult.textbook;
+        patch.source = matchResult.sourceKey;
+      }
+      newQs[qNum] = { ...existing, ...patch };
     });
+    const updatedExam: SchoolExam = { ...currentExam, questions: newQs };
+
+    // 2) 로컬 상태 업데이트
+    setLocalExams((prev) => ({ ...prev, [examId]: updatedExam }));
     setTextModal(null);
-    // 2) DB 저장
-    if (!updatedExam) return;
-    const e = updatedExam as SchoolExam;
+
+    // 3) DB 저장
     const res = await fetch(`/api/my/vip/school-exams/${examId}`, {
       method: 'PUT', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ questions: e.questions, objectiveCount: e.objectiveCount, subjectiveCount: e.subjectiveCount, examScope: e.examScope, isLocked: e.isLocked }),
+      body: JSON.stringify({ questions: updatedExam.questions, objectiveCount: updatedExam.objectiveCount, subjectiveCount: updatedExam.subjectiveCount, examScope: updatedExam.examScope, isLocked: updatedExam.isLocked }),
     });
     const d = await res.json();
     if (d.ok) showToast('저장되었습니다.');
@@ -397,38 +397,31 @@ export default function VipExamsPage() {
   };
 
   const toggleGroup = async (examId: string, qNumA: string, qNumB: string) => {
-    let updatedExam: SchoolExam | null = null;
-    setLocalExams((prev) => {
-      const exam = prev[examId] || exams.find((e) => e.id === examId)!;
-      const qA = exam.questions[qNumA] || { score: 0, isSubjective: false };
-      const qB = exam.questions[qNumB] || { score: 0, isSubjective: false };
-      const sameGroup = qA.groupId && qA.groupId === qB.groupId;
-      let newQs: Record<string, ExamQuestion>;
-      if (sameGroup) {
-        newQs = { ...exam.questions };
-        newQs[qNumA] = { ...qA, groupId: undefined };
-        newQs[qNumB] = { ...qB, groupId: undefined };
-      } else {
-        const groupId = qA.groupId || qB.groupId || `grp-${Date.now()}`;
-        newQs = { ...exam.questions };
-        Object.entries(newQs).forEach(([k, q]) => {
-          if (q.groupId && (q.groupId === qA.groupId || q.groupId === qB.groupId)) {
-            newQs[k] = { ...q, groupId };
-          }
-        });
-        newQs[qNumA] = { ...newQs[qNumA], groupId };
-        newQs[qNumB] = { ...newQs[qNumB], groupId };
-      }
-      updatedExam = { ...exam, questions: newQs };
-      return { ...prev, [examId]: updatedExam };
-    });
-    // DB 저장
-    if (!updatedExam) return;
-    const e = updatedExam as SchoolExam;
+    const currentExam = localExams[examId] || exams.find((e) => e.id === examId);
+    if (!currentExam) return;
+    const qA = currentExam.questions[qNumA] || { score: 0, isSubjective: false };
+    const qB = currentExam.questions[qNumB] || { score: 0, isSubjective: false };
+    const sameGroup = qA.groupId && qA.groupId === qB.groupId;
+    const newQs: Record<string, ExamQuestion> = { ...currentExam.questions };
+    if (sameGroup) {
+      newQs[qNumA] = { ...qA, groupId: undefined };
+      newQs[qNumB] = { ...qB, groupId: undefined };
+    } else {
+      const groupId = qA.groupId || qB.groupId || `grp-${Date.now()}`;
+      Object.entries(newQs).forEach(([k, q]) => {
+        if (q.groupId && (q.groupId === qA.groupId || q.groupId === qB.groupId)) {
+          newQs[k] = { ...q, groupId };
+        }
+      });
+      newQs[qNumA] = { ...newQs[qNumA], groupId };
+      newQs[qNumB] = { ...newQs[qNumB], groupId };
+    }
+    const updatedExam: SchoolExam = { ...currentExam, questions: newQs };
+    setLocalExams((prev) => ({ ...prev, [examId]: updatedExam }));
     await fetch(`/api/my/vip/school-exams/${examId}`, {
       method: 'PUT', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ questions: e.questions, objectiveCount: e.objectiveCount, subjectiveCount: e.subjectiveCount, examScope: e.examScope, isLocked: e.isLocked }),
+      body: JSON.stringify({ questions: updatedExam.questions, objectiveCount: updatedExam.objectiveCount, subjectiveCount: updatedExam.subjectiveCount, examScope: updatedExam.examScope, isLocked: updatedExam.isLocked }),
     });
   };
 
