@@ -927,6 +927,7 @@ export default function VipExamsPage() {
                       onClick={() => setTextModal((prev) => prev && ({
                         ...prev,
                         title: prev.bodySelection.trim(),
+                        body: prev.body.replace(prev.bodySelection, '').replace(/\n{3,}/g, '\n\n').trim(),
                         bodySelection: '',
                       }))}
                       className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
@@ -940,7 +941,6 @@ export default function VipExamsPage() {
                   )}
                 </div>
                 <textarea
-                  autoFocus
                   value={textModal.title}
                   onChange={(e) => setTextModal((prev) => prev && ({ ...prev, title: e.target.value }))}
                   placeholder={"다음 글의 요지로 가장 적절한 것은?"}
@@ -965,6 +965,7 @@ export default function VipExamsPage() {
                   </button>
                 </div>
                 <textarea
+                  autoFocus
                   value={textModal.body}
                   onChange={(e) => setTextModal((prev) => prev && ({ ...prev, body: e.target.value, matchResult: null, noMatch: false }))}
                   onSelect={(e) => {
@@ -1031,6 +1032,7 @@ export default function VipExamsPage() {
                           setTextModal((prev) => prev && ({
                             ...prev,
                             choices: parts.join('\n'),
+                            body: prev.body.replace(prev.bodySelection, '').replace(/\n{3,}/g, '\n\n').trim(),
                             bodySelection: '',
                           }));
                         }}
