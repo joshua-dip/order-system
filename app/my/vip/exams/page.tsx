@@ -815,7 +815,7 @@ export default function VipExamsPage() {
                                 <th className="text-left px-2 py-2 w-14">구분</th>
                                 <th className="text-left px-2 py-2 w-32">유형</th>
                                 <th className="text-left px-2 py-2 w-36">교재</th>
-                                <th className="text-left px-2 py-2">출처/내용</th>
+                                <th className="text-left px-2 py-2">문제제목</th>
                                 <th className="text-center px-2 py-2 w-14">배점</th>
                               </tr>
                             </thead>
@@ -916,7 +916,7 @@ export default function VipExamsPage() {
                                         type="text"
                                         value={q.questionText || ''}
                                         onChange={(e) => updateQuestion(exam.id, qNum, { questionText: e.target.value })}
-                                        placeholder="출처/내용"
+                                        placeholder="문제제목"
                                         className="w-full px-2 py-1 rounded bg-zinc-900/60 border border-zinc-800/80 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-[11px]"
                                       />
                                     </td>
