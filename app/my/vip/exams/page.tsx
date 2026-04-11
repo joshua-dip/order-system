@@ -91,6 +91,8 @@ export default function VipExamsPage() {
     choices: string;  // 선택지 (\n 구분)
     summary: string;  // 요약문
     showSummary: boolean;
+    showBulkChoices: boolean;
+    bulkChoicesText: string;
     matching: boolean;
     matchResult: { textbook: string; sourceKey: string; similarity: number } | null;
     noMatch: boolean;
@@ -324,6 +326,8 @@ export default function VipExamsPage() {
       choices: q?.choices || '',
       summary: q?.summary || '',
       showSummary: isYoyak || !!(q?.summary),
+      showBulkChoices: false,
+      bulkChoicesText: '',
       matching: false, matchResult: null, noMatch: false,
     });
   };
@@ -983,8 +987,56 @@ export default function VipExamsPage() {
               </div>
 
               {/* Col 3: 선택지 */}
-              <div className="flex flex-col w-64 shrink-0 p-3 gap-2 overflow-y-auto">
-                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
+              <div className="flex flex-col w-72 shrink-0 p-3 gap-2 overflow-y-auto">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
+                  <button
+                    onClick={() => setTextModal((prev) => prev && ({ ...prev, showBulkChoices: !prev.showBulkChoices, bulkChoicesText: '' }))}
+                    className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors px-1.5 py-0.5 rounded hover:bg-zinc-800"
+                    title="전체 선택지 붙여넣기 → 자동 분리"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 004.5 9.75v7.5a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-7.5a2.25 2.25 0 00-2.25-2.25h-.75m-6 3.75l3 3m0 0l3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25h-7.5a2.25 2.25 0 01-2.25-2.25v-.75" />
+                    </svg>
+                    일괄 붙여넣기
+                  </button>
+                </div>
+
+                {/* 일괄 붙여넣기 & 자동 분리 영역 */}
+                {textModal.showBulkChoices && (
+                  <div className="rounded-xl bg-zinc-900/80 border border-zinc-700 p-2 space-y-1.5">
+                    <p className="text-[10px] text-zinc-500">①②③④⑤ 또는 1. 2. 3. 형식으로 붙여넣기</p>
+                    <textarea
+                      autoFocus
+                      rows={6}
+                      value={textModal.bulkChoicesText}
+                      onChange={(e) => setTextModal((prev) => prev && ({ ...prev, bulkChoicesText: e.target.value }))}
+                      placeholder={"① You're really good at dancing.\n② I love that idea!\n③ You have made a cool short video.\n④ Awesome! The school choir is the best.\n⑤ That's okay. I don't know what we'd do."}
+                      className="w-full px-2 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-[11px] resize-none leading-relaxed"
+                    />
+                    <button
+                      onClick={() => {
+                        const raw = textModal.bulkChoicesText;
+                        const parts = raw
+                          .split(/(?=[①②③④⑤]|\n\s*\d+[.)]\s)/)
+                          .map((s) => s.replace(/^[①②③④⑤\d.)\s]+/, '').trim())
+                          .filter(Boolean)
+                          .slice(0, 5);
+                        while (parts.length < 5) parts.push('');
+                        setTextModal((prev) => prev && ({
+                          ...prev,
+                          choices: parts.join('\n'),
+                          showBulkChoices: false,
+                          bulkChoicesText: '',
+                        }));
+                      }}
+                      className="w-full py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 rounded-lg text-[11px] transition-colors font-medium"
+                    >
+                      ✂ 자동 분리 적용
+                    </button>
+                  </div>
+                )}
+
                 {[1, 2, 3, 4, 5].map((n) => {
                   const lines = textModal.choices.split('\n');
                   const val = lines[n - 1] ?? '';
