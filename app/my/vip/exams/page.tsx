@@ -56,6 +56,8 @@ async function parseExamExcel(file: File): Promise<ExcelQuestion[]> {
   }).filter((q) => q.num > 0);
 }
 
+type GroupQuestion = { qNum: string; title: string; choices: string; score: number; summary: string; showSummary: boolean; };
+
 export default function VipExamsPage() {
   const [schools, setSchools] = useState<School[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
@@ -86,14 +88,11 @@ export default function VipExamsPage() {
 
   // 지문 입력 모달
   const [textModal, setTextModal] = useState<{
-    examId: string; qNum: string;
-    title: string;    // 문제제목
-    body: string;     // 문제본문
-    choices: string;  // 선택지 (\n 구분)
-    summary: string;  // 요약문
-    showSummary: boolean;
-    score: number;          // 배점
-    bodySelection: string;  // 문제본문에서 드래그한 선택 영역
+    examId: string;
+    qNum: string;      // 모달 열린 기준 문항 (단일/그룹 공통)
+    groupQuestions: GroupQuestion[]; // 단일이면 length=1
+    body: string;      // 공통 문제본문
+    bodySelection: string;
     matching: boolean;
     matchResult: { textbook: string; sourceKey: string; similarity: number } | null;
     noMatch: boolean;
@@ -319,18 +318,21 @@ export default function VipExamsPage() {
   const openTextModal = (examId: string, qNum: string) => {
     const exam = localExams[examId] || exams.find((e) => e.id === examId);
     const q = exam?.questions[qNum];
-    const isYoyak = (q?.questionType || '').includes('요약');
-    setTextModal({
-      examId, qNum,
-      title: q?.questionTitle || '',
-      body: q?.questionBody || '',
-      choices: q?.choices || '',
-      summary: q?.summary || '',
-      showSummary: isYoyak || !!(q?.summary),
-      score: q?.score ?? 0,
-      bodySelection: '',
-      matching: false, matchResult: null, noMatch: false,
+    // 그룹 내 모든 문항 수집 (번호 순)
+    const groupId = q?.groupId;
+    const groupNums: string[] = groupId
+      ? Object.entries(exam?.questions || {})
+          .filter(([, v]) => v.groupId === groupId)
+          .map(([k]) => k)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+      : [qNum];
+    const groupQuestions: GroupQuestion[] = groupNums.map((n) => {
+      const gq = exam?.questions[n];
+      const isYoyak = (gq?.questionType || '').includes('요약');
+      return { qNum: n, title: gq?.questionTitle || '', choices: gq?.choices || '', score: gq?.score ?? 0, summary: gq?.summary || '', showSummary: isYoyak || !!(gq?.summary) };
     });
+    // 공통 문제본문: 기준 문항 것 사용 (그룹은 동기화됨)
+    setTextModal({ examId, qNum, groupQuestions, body: q?.questionBody || '', bodySelection: '', matching: false, matchResult: null, noMatch: false });
   };
 
   const handleMatchPassage = async () => {
@@ -355,34 +357,26 @@ export default function VipExamsPage() {
 
   const applyTextModal = (applyMatch: boolean) => {
     if (!textModal) return;
-    const { examId, qNum, title, body, choices, summary, score, matchResult } = textModal;
-    const patch: Partial<ExamQuestion> = {
-      questionTitle: title,
-      questionBody: body,
-      choices,
-      summary,
-      score,
-      questionText: title || body.slice(0, 60) || '',
-    };
-    if (applyMatch && matchResult) {
-      patch.textbook = matchResult.textbook;
-      patch.source = matchResult.sourceKey;
-    }
-    // 그룹 내 다른 문항에도 questionBody 동기화
+    const { examId, body, groupQuestions, matchResult } = textModal;
     setLocalExams((prev) => {
       const exam = prev[examId] || exams.find((e) => e.id === examId)!;
-      const thisQ = exam.questions[qNum];
       const newQs = { ...exam.questions };
-      // 현재 문항 업데이트
-      newQs[qNum] = { ...(newQs[qNum] || { score: 0, isSubjective: false }), ...patch };
-      // 같은 groupId인 다른 문항에 questionBody 전파
-      if (thisQ?.groupId) {
-        Object.keys(newQs).forEach((k) => {
-          if (k !== qNum && newQs[k]?.groupId === thisQ.groupId) {
-            newQs[k] = { ...newQs[k], questionBody: body };
-          }
-        });
-      }
+      groupQuestions.forEach(({ qNum, title, choices, score, summary }) => {
+        const existing = newQs[qNum] || { score: 0, isSubjective: false };
+        const patch: Partial<ExamQuestion> = {
+          questionTitle: title,
+          questionBody: body,
+          choices,
+          summary,
+          score,
+          questionText: title || body.slice(0, 60) || '',
+        };
+        if (applyMatch && matchResult) {
+          patch.textbook = matchResult.textbook;
+          patch.source = matchResult.sourceKey;
+        }
+        newQs[qNum] = { ...existing, ...patch };
+      });
       return { ...prev, [examId]: { ...exam, questions: newQs } };
     });
     setTextModal(null);
@@ -999,306 +993,232 @@ export default function VipExamsPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-emerald-600 text-zinc-100 text-sm rounded-xl shadow-lg">{toast}</div>
       )}
 
-      {/* 지문 입력 모달 — 3컬럼 */}
-      {textModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          onKeyDown={(e) => { if (e.key === 'Escape') setTextModal(null); }}
-        >
-          <div className="w-full max-w-5xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col"
-            style={{ maxHeight: 'calc(100vh - 2rem)' }}>
+      {/* 문항 세부 정보 모달 */}
+      {textModal && (() => {
+        const isGroup = textModal.groupQuestions.length > 1;
+        const updateGQ = (idx: number, patch: Partial<GroupQuestion>) =>
+          setTextModal((prev) => {
+            if (!prev) return prev;
+            const gqs = [...prev.groupQuestions];
+            gqs[idx] = { ...gqs[idx], ...patch };
+            return { ...prev, groupQuestions: gqs };
+          });
 
-            {/* 헤더 */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-300 text-sm font-mono flex items-center justify-center">{textModal.qNum}</span>
-                <span className="text-sm font-medium text-zinc-100">문항 세부 정보</span>
-                {(() => {
-                  const exam = localExams[textModal.examId] || exams.find((e) => e.id === textModal.examId);
-                  const thisQ = exam?.questions[textModal.qNum];
-                  if (!thisQ?.groupId) return null;
-                  const groupNums = Object.entries(exam!.questions)
-                    .filter(([, v]) => v.groupId === thisQ.groupId)
-                    .map(([k]) => parseInt(k)).sort((a, b) => a - b);
-                  return (
-                    <span className="flex items-center gap-1 px-2 py-0.5 bg-violet-500/20 text-violet-300 rounded-lg text-[11px]">
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                      </svg>
-                      {groupNums[0]}-{groupNums[groupNums.length - 1]}번 공통지문 · 저장 시 전체 동기화
-                    </span>
-                  );
-                })()}
-                {textModal.matchResult && (
-                  <span className="flex items-center gap-1 text-[11px] text-cyan-400">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    출처 찾음 ({textModal.matchResult.similarity}%)
-                    <span className="text-zinc-500 ml-1">{textModal.matchResult.textbook} · {textModal.matchResult.sourceKey}</span>
-                  </span>
-                )}
-                {textModal.noMatch && <span className="text-[11px] text-zinc-600">일치 지문 없음</span>}
+        // 선택지 드래그 이동 핸들러 (대상 문항 인덱스)
+        const moveChoicesToGQ = (gqIdx: number) => {
+          const raw = textModal.bodySelection;
+          const parts = raw.split(/(?=[①②③④⑤])/).map((s) => s.replace(/^[①②③④⑤\s]+/, '').trim()).filter(Boolean).slice(0, 5);
+          while (parts.length < 5) parts.push('');
+          setTextModal((prev) => {
+            if (!prev) return prev;
+            const idx = prev.body.indexOf(prev.bodySelection);
+            const newBody = idx >= 0 ? (prev.body.slice(0, idx) + prev.body.slice(idx + prev.bodySelection.length)).replace(/\n{3,}/g, '\n\n').trim() : prev.body;
+            const gqs = [...prev.groupQuestions];
+            gqs[gqIdx] = { ...gqs[gqIdx], choices: parts.join('\n') };
+            return { ...prev, groupQuestions: gqs, body: newBody, bodySelection: '' };
+          });
+        };
+
+        // 문제제목 드래그 이동 (대상 문항 인덱스)
+        const moveTitleToGQ = (gqIdx: number) => {
+          const sel = textModal.bodySelection;
+          setTextModal((prev) => {
+            if (!prev) return prev;
+            const idx = prev.body.indexOf(sel);
+            const newBody = idx >= 0 ? (prev.body.slice(0, idx) + prev.body.slice(idx + sel.length)).replace(/\n{3,}/g, '\n\n').trim() : prev.body;
+            const m = sel.match(/\[(\d+(?:\.\d+)?)점\]/);
+            const detectedScore = m ? parseFloat(m[1]) : null;
+            const gqs = [...prev.groupQuestions];
+            gqs[gqIdx] = { ...gqs[gqIdx], title: sel.trim(), ...(detectedScore !== null ? { score: detectedScore } : {}) };
+            return { ...prev, groupQuestions: gqs, body: newBody, bodySelection: '' };
+          });
+        };
+
+        // 문항별 패널 (문제제목 + 배점 + 선택지)
+        const QuestionPanel = ({ gq, idx }: { gq: GroupQuestion; idx: number }) => (
+          <div className={`flex flex-col shrink-0 border-r border-zinc-800 p-3 gap-2 overflow-y-auto ${isGroup ? 'w-64' : 'w-56'}`}>
+            {/* 문제제목 */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">
+                {isGroup ? `${gq.qNum}번 문제제목` : '문제제목'}
+              </span>
+              {textModal.bodySelection && !/[①②③④⑤]/.test(textModal.bodySelection) && (
+                <button onClick={() => moveTitleToGQ(idx)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                  여기로
+                </button>
+              )}
+            </div>
+            <textarea
+              value={gq.title}
+              onChange={(e) => {
+                const val = e.target.value;
+                const m = val.match(/\[(\d+(?:\.\d+)?)점\]/);
+                const ds = m ? parseFloat(m[1]) : null;
+                updateGQ(idx, { title: val, ...(ds !== null ? { score: ds } : {}) });
+              }}
+              placeholder="다음 글의 요지로 가장 적절한 것은?"
+              rows={isGroup ? 3 : undefined}
+              className={`w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed ${isGroup ? '' : 'flex-1'}`}
+            />
+            {/* 배점 */}
+            <div className="shrink-0 flex items-center gap-2">
+              <label className="text-[10px] text-zinc-500 shrink-0">배점</label>
+              <div className="relative flex items-center">
+                <input type="number" min={0} max={100} step={0.5}
+                  value={gq.score || ''}
+                  onChange={(e) => updateGQ(idx, { score: parseFloat(e.target.value) || 0 })}
+                  placeholder="0"
+                  className="w-16 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 text-xs text-center"
+                />
+                <span className="absolute right-1.5 text-[10px] text-zinc-600 pointer-events-none">점</span>
               </div>
-              <button onClick={() => setTextModal(null)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              {gq.title.match(/\[(\d+(?:\.\d+)?)점\]/) && <span className="text-[10px] text-emerald-400">자동</span>}
+            </div>
+            {/* 선택지 */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
+              {textModal.bodySelection && /[①②③④⑤]/.test(textModal.bodySelection) && (
+                <button onClick={() => moveChoicesToGQ(idx)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                  여기로
+                </button>
+              )}
+            </div>
+            {[1,2,3,4,5].map((n) => {
+              const val = (gq.choices.split('\n')[n-1]) ?? '';
+              return (
+                <div key={n} className="flex items-start gap-1">
+                  <span className="text-[11px] text-zinc-600 mt-2 shrink-0">{'①②③④⑤'[n-1]}</span>
+                  <textarea value={val} rows={2} placeholder={`선택지 ${n}`}
+                    onChange={(e) => {
+                      const lines = gq.choices.split('\n');
+                      while (lines.length < 5) lines.push('');
+                      lines[n-1] = e.target.value;
+                      updateGQ(idx, { choices: lines.join('\n') });
+                    }}
+                    className="flex-1 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed"
+                  />
+                </div>
+              );
+            })}
+            {/* 요약문 */}
+            {gq.showSummary ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-amber-400">요약문</span>
+                  <button onClick={() => updateGQ(idx, { showSummary: false, summary: '' })} className="text-[10px] text-zinc-600 hover:text-zinc-400">✕</button>
+                </div>
+                <textarea value={gq.summary} rows={3} placeholder="요약문..."
+                  onChange={(e) => updateGQ(idx, { summary: e.target.value })}
+                  className="w-full px-2 py-1.5 rounded-xl bg-amber-950/30 border border-amber-800/50 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-700 text-xs resize-none"
+                />
+              </div>
+            ) : (
+              <button onClick={() => updateGQ(idx, { showSummary: true })}
+                className="flex items-center gap-1 self-start px-2 py-1 rounded-lg border border-dashed border-zinc-700 text-zinc-600 hover:text-zinc-400 text-[11px]">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                요약문
               </button>
-            </div>
+            )}
+          </div>
+        );
 
-            {/* 3컬럼 본문 */}
-            <div className="flex-1 overflow-hidden flex min-h-0">
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+            onKeyDown={(e) => { if (e.key === 'Escape') setTextModal(null); }}>
+            <div className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col"
+              style={{ maxWidth: isGroup ? '80vw' : '64rem', maxHeight: 'calc(100vh - 2rem)' }}>
 
-              {/* Col 1: 문제제목 */}
-              <div className="flex flex-col w-56 shrink-0 border-r border-zinc-800 p-3 gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">문제제목</span>
-                  {textModal.bodySelection && !/[①②③④⑤]/.test(textModal.bodySelection) && (
-                    <button
-                      onClick={() => setTextModal((prev) => {
-                        if (!prev) return prev;
-                        const sel = prev.bodySelection;
-                        const idx = prev.body.indexOf(sel);
-                        const newBody = idx >= 0
-                          ? (prev.body.slice(0, idx) + prev.body.slice(idx + sel.length))
-                              .replace(/\n{3,}/g, '\n\n').trim()
-                          : prev.body;
-                        return { ...prev, title: sel.trim(), body: newBody, bodySelection: '' };
-                      })}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
-                      title="선택한 텍스트를 문제제목으로 가져오기"
-                    >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                      </svg>
-                      여기로
-                    </button>
+              {/* 헤더 */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
+                <div className="flex items-center gap-3">
+                  {isGroup ? (
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-500/20 text-violet-300 rounded-lg text-sm font-medium">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                      [{textModal.groupQuestions.map(g => g.qNum).join('-')}번] 공통지문
+                    </span>
+                  ) : (
+                    <span className="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-300 text-sm font-mono flex items-center justify-center">{textModal.qNum}</span>
                   )}
-                </div>
-                <textarea
-                  value={textModal.title}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    // [X.X점] 또는 [X점] 패턴 자동 감지
-                    const m = val.match(/\[(\d+(?:\.\d+)?)점\]/);
-                    const detectedScore = m ? parseFloat(m[1]) : null;
-                    setTextModal((prev) => prev && ({
-                      ...prev,
-                      title: val,
-                      ...(detectedScore !== null ? { score: detectedScore } : {}),
-                    }));
-                  }}
-                  placeholder={"다음 글의 요지로 가장 적절한 것은?"}
-                  className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed"
-                />
-                {/* 배점 */}
-                <div className="shrink-0 flex items-center gap-2">
-                  <label className="text-[10px] text-zinc-500 shrink-0">배점</label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step={0.5}
-                      value={textModal.score || ''}
-                      onChange={(e) => setTextModal((prev) => prev && ({ ...prev, score: parseFloat(e.target.value) || 0 }))}
-                      placeholder="0"
-                      className="w-20 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 text-xs text-center"
-                    />
-                    <span className="absolute right-2 text-[10px] text-zinc-600 pointer-events-none">점</span>
-                  </div>
-                  {textModal.title.match(/\[(\d+(?:\.\d+)?)점\]/) && (
-                    <span className="text-[10px] text-emerald-400">자동 감지됨</span>
+                  <span className="text-sm font-medium text-zinc-100">문항 세부 정보</span>
+                  {textModal.matchResult && (
+                    <span className="flex items-center gap-1 text-[11px] text-cyan-400">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      출처 찾음 ({textModal.matchResult.similarity}%) · {textModal.matchResult.textbook} {textModal.matchResult.sourceKey}
+                    </span>
                   )}
+                  {textModal.noMatch && <span className="text-[11px] text-zinc-600">일치 지문 없음</span>}
                 </div>
+                <button onClick={() => setTextModal(null)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
 
-              {/* Col 2: 문제본문 + 요약문 */}
-              <div className="flex flex-col flex-1 min-w-0 border-r border-zinc-800 p-3 gap-2 overflow-hidden">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">문제본문</span>
-                  <button
-                    disabled={textModal.matching || textModal.body.trim().length < 15}
-                    onClick={handleMatchPassage}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-cyan-500/20 text-cyan-300 rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 text-[11px]"
-                  >
-                    {textModal.matching ? (
-                      <><div className="w-3 h-3 border border-cyan-400 border-t-transparent rounded-full animate-spin" />검색 중…</>
-                    ) : (
-                      <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>출처 검색</>
-                    )}
-                  </button>
-                </div>
-                <textarea
-                  autoFocus
-                  value={textModal.body}
-                  onChange={(e) => setTextModal((prev) => prev && ({ ...prev, body: e.target.value, matchResult: null, noMatch: false }))}
-                  onSelect={(e) => {
-                    const el = e.currentTarget;
-                    const sel = el.value.substring(el.selectionStart, el.selectionEnd).trim();
-                    setTextModal((prev) => prev && ({ ...prev, bodySelection: sel }));
-                  }}
-                  onMouseUp={(e) => {
-                    const el = e.currentTarget;
-                    const sel = el.value.substring(el.selectionStart, el.selectionEnd).trim();
-                    setTextModal((prev) => prev && ({ ...prev, bodySelection: sel }));
-                  }}
-                  placeholder={"James felt happy when his friend Yena praised his dancing skills after seeing his social media post..."}
-                  className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0"
-                />
-
-                {/* 빈칸 감지 제안 */}
-                {(() => {
-                  const blanks = textModal.body.match(/ {2,}/g);
-                  if (!blanks) return null;
-                  const preview = textModal.body
-                    .replace(/ {2,}/g, '␣빈칸␣')
-                    .slice(0, 80);
-                  return (
-                    <div className="shrink-0 rounded-lg bg-orange-950/40 border border-orange-700/50 px-3 py-2 flex items-start gap-2">
-                      <svg className="w-3.5 h-3.5 text-orange-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                      </svg>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] text-orange-300 font-medium">
-                          연속 공백 {blanks.length}곳 감지 — 빈칸 태그로 변환할까요?
-                        </p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 truncate">
-                          {preview}{textModal.body.length > 80 ? '…' : ''}
-                        </p>
-                        <p className="text-[10px] text-zinc-600 mt-0.5 font-mono">공백 → &lt;u&gt;_____&lt;/u&gt;</p>
+              {/* 본문: 문제본문 | 문항 패널들 */}
+              <div className="flex-1 overflow-hidden flex min-h-0">
+                {/* 문제본문 */}
+                <div className="flex flex-col flex-1 min-w-0 border-r border-zinc-800 p-3 gap-2 overflow-hidden">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">
+                      문제본문{isGroup && ' (공통)'}
+                    </span>
+                    <button disabled={textModal.matching || textModal.body.trim().length < 15} onClick={handleMatchPassage}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-cyan-500/20 text-cyan-300 rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 text-[11px]">
+                      {textModal.matching
+                        ? <><div className="w-3 h-3 border border-cyan-400 border-t-transparent rounded-full animate-spin" />검색 중…</>
+                        : <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>출처 검색</>
+                      }
+                    </button>
+                  </div>
+                  <textarea autoFocus value={textModal.body}
+                    onChange={(e) => setTextModal((prev) => prev && ({ ...prev, body: e.target.value, matchResult: null, noMatch: false }))}
+                    onSelect={(e) => { const el = e.currentTarget; setTextModal((prev) => prev && ({ ...prev, bodySelection: el.value.substring(el.selectionStart, el.selectionEnd).trim() })); }}
+                    onMouseUp={(e) => { const el = e.currentTarget; setTextModal((prev) => prev && ({ ...prev, bodySelection: el.value.substring(el.selectionStart, el.selectionEnd).trim() })); }}
+                    placeholder="지문을 붙여넣으세요..."
+                    className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0"
+                  />
+                  {/* 빈칸 감지 */}
+                  {textModal.body.match(/ {2,}/g) && (() => {
+                    const blanks = textModal.body.match(/ {2,}/g)!;
+                    return (
+                      <div className="shrink-0 rounded-lg bg-orange-950/40 border border-orange-700/50 px-3 py-2 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-orange-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                        <span className="text-[11px] text-orange-300 flex-1">연속 공백 {blanks.length}곳 → &lt;u&gt;_____&lt;/u&gt; 변환</span>
+                        <button onClick={() => setTextModal((prev) => prev && ({ ...prev, body: prev.body.replace(/ {2,}/g, '<u>_____</u>') }))}
+                          className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] transition-colors shrink-0">변환</button>
                       </div>
-                      <button
-                        onClick={() => setTextModal((prev) => prev && ({
-                          ...prev,
-                          body: prev.body.replace(/ {2,}/g, '<u>_____</u>'),
-                        }))}
-                        className="shrink-0 px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] transition-colors"
-                      >
-                        변환
-                      </button>
-                    </div>
-                  );
-                })()}
-
-                {/* 요약문 토글 */}
-                {textModal.showSummary ? (
-                  <div className="flex flex-col gap-1.5 shrink-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">요약문</span>
-                      <button
-                        onClick={() => setTextModal((prev) => prev && ({ ...prev, showSummary: false, summary: '' }))}
-                        className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
-                      >✕ 제거</button>
-                    </div>
-                    <textarea
-                      value={textModal.summary}
-                      onChange={(e) => setTextModal((prev) => prev && ({ ...prev, summary: e.target.value }))}
-                      placeholder="Promotion ________ with consumer psychology, keeping wealth ________ within a small number of families."
-                      rows={3}
-                      className="w-full px-2.5 py-2 rounded-xl bg-amber-950/30 border border-amber-800/50 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-700 text-xs resize-none leading-relaxed"
-                    />
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setTextModal((prev) => prev && ({ ...prev, showSummary: true }))}
-                    className="flex items-center gap-1.5 self-start px-2.5 py-1 rounded-lg border border-dashed border-zinc-700 text-zinc-600 hover:text-zinc-400 hover:border-zinc-500 transition-colors text-[11px] shrink-0"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    요약문 추가
-                  </button>
-                )}
-              </div>
-
-              {/* Col 3: 선택지 */}
-              <div className="flex flex-col w-72 shrink-0 p-3 gap-2 overflow-y-auto">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
-                    {/* 드래그 선택 시 동그라미 번호 감지 → 여기로 버튼 */}
-                    {textModal.bodySelection && /[①②③④⑤]/.test(textModal.bodySelection) && (
-                      <button
-                        onClick={() => {
-                          const raw = textModal.bodySelection;
-                          const parts = raw
-                            .split(/(?=[①②③④⑤])/)
-                            .map((s) => s.replace(/^[①②③④⑤\s]+/, '').trim())
-                            .filter(Boolean)
-                            .slice(0, 5);
-                          while (parts.length < 5) parts.push('');
-                          setTextModal((prev) => {
-                            if (!prev) return prev;
-                            const idx = prev.body.indexOf(prev.bodySelection);
-                            const newBody = idx >= 0
-                              ? (prev.body.slice(0, idx) + prev.body.slice(idx + prev.bodySelection.length))
-                                  .replace(/\n{3,}/g, '\n\n').trim()
-                              : prev.body;
-                            return { ...prev, choices: parts.join('\n'), body: newBody, bodySelection: '' };
-                          });
-                        }}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
-                        title="선택한 텍스트를 선택지로 분리"
-                      >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                        </svg>
-                        여기로
-                      </button>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
 
-                {[1, 2, 3, 4, 5].map((n) => {
-                  const lines = textModal.choices.split('\n');
-                  const val = lines[n - 1] ?? '';
-                  return (
-                    <div key={n} className="flex items-start gap-1.5">
-                      <span className="text-[11px] text-zinc-600 mt-2 shrink-0 w-4">{'①②③④⑤'[n - 1]}</span>
-                      <textarea
-                        value={val}
-                        onChange={(e) => {
-                          const lines = textModal.choices.split('\n');
-                          while (lines.length < 5) lines.push('');
-                          lines[n - 1] = e.target.value;
-                          setTextModal((prev) => prev && ({ ...prev, choices: lines.join('\n') }));
-                        }}
-                        rows={2}
-                        className="flex-1 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed"
-                        placeholder={`선택지 ${n}`}
-                      />
-                    </div>
-                  );
-                })}
+                {/* 문항별 패널 */}
+                {textModal.groupQuestions.map((gq, idx) => (
+                  <QuestionPanel key={gq.qNum} gq={gq} idx={idx} />
+                ))}
               </div>
-            </div>
 
-            {/* 푸터 */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-t border-zinc-800 shrink-0">
-              <div className="text-[11px] text-zinc-600">Esc 닫기 · 번호를 클릭하면 언제든 다시 편집 가능</div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setTextModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">취소</button>
-                {textModal.matchResult ? (
-                  <>
-                    <button onClick={() => applyTextModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-xl transition-colors">
-                      텍스트만 저장
-                    </button>
-                    <button onClick={() => applyTextModal(true)} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm rounded-xl transition-colors">
-                      교재·출처도 적용
-                    </button>
-                  </>
-                ) : (
-                  <button onClick={() => applyTextModal(false)} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 text-sm rounded-xl transition-colors">
-                    저장
-                  </button>
-                )}
+              {/* 푸터 */}
+              <div className="flex items-center justify-between px-5 py-3.5 border-t border-zinc-800 shrink-0">
+                <div className="text-[11px] text-zinc-600">Esc 닫기 · 번호 클릭으로 재편집</div>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setTextModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">취소</button>
+                  {textModal.matchResult ? (
+                    <>
+                      <button onClick={() => applyTextModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-xl transition-colors">텍스트만 저장</button>
+                      <button onClick={() => applyTextModal(true)} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm rounded-xl transition-colors">교재·출처도 적용</button>
+                    </>
+                  ) : (
+                    <button onClick={() => applyTextModal(false)} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 text-sm rounded-xl transition-colors">저장</button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
