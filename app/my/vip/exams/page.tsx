@@ -20,8 +20,35 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
 const EXAM_TYPES = ['1학기 중간고사', '1학기 기말고사', '2학기 중간고사', '2학기 기말고사'];
 
-const OBJECTIVE_TYPES = ['주제', '제목', '요지', '빈칸', '순서', '삽입', '연결사', '지칭추론', '어법', '어휘', '요약', '내용일치', '심경', '함의', '글의목적', '장문', '기타'];
+const OBJECTIVE_TYPES = ['주제', '제목', '요지', '빈칸', '순서', '삽입', '연결사', '지칭추론', '어법', '어휘', '요약', '내용일치', '내용불일치', '심경', '함의', '글의목적', '장문', '기타'];
 const SUBJECTIVE_TYPES = ['서술형', '영작', '요약서술', '기타'];
+
+// 엑셀 문제유형 → 시스템 유형 매핑
+const EXCEL_TYPE_MAP: Record<string, string> = {
+  요지: '요지', 주제: '주제', 제목: '제목', 일치: '내용일치', 불일치: '내용불일치',
+  문장삽입: '삽입', 삽입: '삽입', 순서: '순서', 어법: '어법', 어휘: '어휘',
+  빈칸: '빈칸', 연결사: '연결사', 지칭추론: '지칭추론', 심경: '심경',
+  함의: '함의', 글의의미: '함의', 요약: '요약', 글의목적: '글의목적', 장문: '장문',
+  서술형: '서술형', 영작: '영작', 요약서술: '요약서술',
+};
+const SUBJECTIVE_TYPE_SET = new Set(['서술형', '영작', '요약서술']);
+
+type ExcelQuestion = { num: number; questionType: string; score: number; isSubjective: boolean };
+
+async function parseExamExcel(file: File): Promise<ExcelQuestion[]> {
+  const XLSX = await import('xlsx');
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
+  return rows.map((row) => {
+    const num = Number(row['문제번호'] ?? row['번호'] ?? 0);
+    const rawType = String(row['문제유형'] ?? row['유형'] ?? '').trim();
+    const mappedType = EXCEL_TYPE_MAP[rawType] ?? (rawType || '기타');
+    const score = Number(row['문제점수'] ?? row['점수'] ?? 0);
+    return { num, questionType: mappedType, score, isSubjective: SUBJECTIVE_TYPE_SET.has(mappedType) };
+  }).filter((q) => q.num > 0);
+}
 
 export default function VipExamsPage() {
   const [schools, setSchools] = useState<School[]>([]);
@@ -48,7 +75,10 @@ export default function VipExamsPage() {
     subjectiveCount: number;
     questions: Record<string, { questionType: string; score: number; questionText: string }>;
   } | null>>({});
+  // 엑셀 가져오기 미리보기
+  const [xlsxPreview, setXlsxPreview] = useState<Record<string, ExcelQuestion[] | null>>({});
   const pdfInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const xlsxInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const [toast, setToast] = useState('');
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2500); };
@@ -221,6 +251,48 @@ export default function VipExamsPage() {
     } catch {
       showToast('적용됨 (저장 중 오류 발생)');
     }
+  };
+
+  const handleXlsxSelect = async (examId: string, file: File) => {
+    try {
+      const questions = await parseExamExcel(file);
+      if (questions.length === 0) { alert('문항 데이터를 찾을 수 없습니다. 열 이름을 확인해주세요 (문제번호, 문제유형, 문제점수).'); return; }
+      setXlsxPreview((prev) => ({ ...prev, [examId]: questions }));
+    } catch {
+      alert('엑셀 파일 파싱 중 오류가 발생했습니다.');
+    }
+  };
+
+  const applyXlsx = async (examId: string) => {
+    const questions = xlsxPreview[examId];
+    if (!questions) return;
+    const exam = localExams[examId] || exams.find((e) => e.id === examId);
+    if (!exam) return;
+    const objCount = questions.filter((q) => !q.isSubjective).length;
+    const subCount = questions.filter((q) => q.isSubjective).length;
+    const newQuestions: Record<string, ExamQuestion> = {};
+    questions.forEach((q) => {
+      newQuestions[String(q.num)] = {
+        questionType: q.questionType,
+        score: q.score,
+        isSubjective: q.isSubjective,
+        textbook: exam.questions[String(q.num)]?.textbook || '',
+        questionText: '',
+      };
+    });
+    const updated = { ...(localExams[examId] || exam), objectiveCount: objCount, subjectiveCount: subCount, questions: newQuestions };
+    setLocalExams((prev) => ({ ...prev, [examId]: updated }));
+    setXlsxPreview((prev) => ({ ...prev, [examId]: null }));
+    try {
+      const res = await fetch(`/api/my/vip/school-exams/${examId}`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questions: newQuestions, objectiveCount: objCount, subjectiveCount: subCount, examScope: updated.examScope, isLocked: updated.isLocked }),
+      });
+      const d = await res.json();
+      if (d.ok) { showToast('엑셀 문항 정보가 저장되었습니다.'); await loadExams(); }
+      else showToast('적용됨 (저장 실패: ' + (d.error || '알 수 없는 오류') + ')');
+    } catch { showToast('적용됨 (저장 중 오류 발생)'); }
   };
 
   const updateLocal = (id: string, patch: Partial<SchoolExam>) => {
@@ -431,6 +503,61 @@ export default function VipExamsPage() {
                           </div>
 
                           {/* AI 분석 결과 미리보기 */}
+                          {/* 엑셀 가져오기 버튼 */}
+                          <input
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            className="hidden"
+                            ref={(el) => { xlsxInputRefs.current[exam.id] = el; }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleXlsxSelect(exam.id, file);
+                              e.target.value = '';
+                            }}
+                          />
+                          <button
+                            onClick={() => xlsxInputRefs.current[exam.id]?.click()}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg hover:bg-emerald-500/30 transition-colors text-[11px] shrink-0"
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            엑셀 가져오기
+                          </button>
+
+                          {/* 엑셀 미리보기 */}
+                          {xlsxPreview[exam.id] && (
+                            <div className="mt-2 rounded-xl bg-emerald-950/30 border border-emerald-800/50 p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
+                                  </svg>
+                                  <span className="text-xs font-medium text-emerald-300">엑셀 가져오기 미리보기</span>
+                                  <span className="text-[10px] text-zinc-500">
+                                    객관 {xlsxPreview[exam.id]!.filter(q => !q.isSubjective).length}문 / 주관 {xlsxPreview[exam.id]!.filter(q => q.isSubjective).length}문
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => setXlsxPreview((prev) => ({ ...prev, [exam.id]: null }))} className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">닫기</button>
+                                  <button onClick={() => applyXlsx(exam.id)} className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] rounded-lg transition-colors">적용하기</button>
+                                </div>
+                              </div>
+                              <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                                {xlsxPreview[exam.id]!.map((q) => (
+                                  <div key={q.num} className="flex items-center gap-2 text-[11px]">
+                                    <span className="w-6 text-right text-zinc-500 shrink-0">{q.num}</span>
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] shrink-0 ${q.isSubjective ? 'bg-amber-500/20 text-amber-300' : 'bg-blue-500/20 text-blue-300'}`}>
+                                      {q.isSubjective ? '주관' : '객관'}
+                                    </span>
+                                    <span className="text-zinc-300 truncate">{q.questionType}</span>
+                                    {q.score > 0 && <span className="text-zinc-500 shrink-0">{q.score}점</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {preview && (
                             <div className="rounded-xl bg-violet-950/30 border border-violet-800/50 p-4 space-y-3">
                               <div className="flex items-center justify-between">
