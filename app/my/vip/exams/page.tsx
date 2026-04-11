@@ -986,6 +986,40 @@ export default function VipExamsPage() {
                   className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0"
                 />
 
+                {/* 빈칸 감지 제안 */}
+                {(() => {
+                  const blanks = textModal.body.match(/ {2,}/g);
+                  if (!blanks) return null;
+                  const preview = textModal.body
+                    .replace(/ {2,}/g, '␣빈칸␣')
+                    .slice(0, 80);
+                  return (
+                    <div className="shrink-0 rounded-lg bg-orange-950/40 border border-orange-700/50 px-3 py-2 flex items-start gap-2">
+                      <svg className="w-3.5 h-3.5 text-orange-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-orange-300 font-medium">
+                          연속 공백 {blanks.length}곳 감지 — 빈칸 태그로 변환할까요?
+                        </p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5 truncate">
+                          {preview}{textModal.body.length > 80 ? '…' : ''}
+                        </p>
+                        <p className="text-[10px] text-zinc-600 mt-0.5 font-mono">공백 → &lt;u&gt;_____&lt;/u&gt;</p>
+                      </div>
+                      <button
+                        onClick={() => setTextModal((prev) => prev && ({
+                          ...prev,
+                          body: prev.body.replace(/ {2,}/g, '<u>_____</u>'),
+                        }))}
+                        className="shrink-0 px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] transition-colors"
+                      >
+                        변환
+                      </button>
+                    </div>
+                  );
+                })()}
+
                 {/* 요약문 토글 */}
                 {textModal.showSummary ? (
                   <div className="flex flex-col gap-1.5 shrink-0">
