@@ -924,12 +924,16 @@ export default function VipExamsPage() {
                   <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">문제제목</span>
                   {textModal.bodySelection && !/[①②③④⑤]/.test(textModal.bodySelection) && (
                     <button
-                      onClick={() => setTextModal((prev) => prev && ({
-                        ...prev,
-                        title: prev.bodySelection.trim(),
-                        body: prev.body.replace(prev.bodySelection, '').replace(/\n{3,}/g, '\n\n').trim(),
-                        bodySelection: '',
-                      }))}
+                      onClick={() => setTextModal((prev) => {
+                        if (!prev) return prev;
+                        const sel = prev.bodySelection;
+                        const idx = prev.body.indexOf(sel);
+                        const newBody = idx >= 0
+                          ? (prev.body.slice(0, idx) + prev.body.slice(idx + sel.length))
+                              .replace(/\n{3,}/g, '\n\n').trim()
+                          : prev.body;
+                        return { ...prev, title: sel.trim(), body: newBody, bodySelection: '' };
+                      })}
                       className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
                       title="선택한 텍스트를 문제제목으로 가져오기"
                     >
@@ -1029,12 +1033,15 @@ export default function VipExamsPage() {
                             .filter(Boolean)
                             .slice(0, 5);
                           while (parts.length < 5) parts.push('');
-                          setTextModal((prev) => prev && ({
-                            ...prev,
-                            choices: parts.join('\n'),
-                            body: prev.body.replace(prev.bodySelection, '').replace(/\n{3,}/g, '\n\n').trim(),
-                            bodySelection: '',
-                          }));
+                          setTextModal((prev) => {
+                            if (!prev) return prev;
+                            const idx = prev.body.indexOf(prev.bodySelection);
+                            const newBody = idx >= 0
+                              ? (prev.body.slice(0, idx) + prev.body.slice(idx + prev.bodySelection.length))
+                                  .replace(/\n{3,}/g, '\n\n').trim()
+                              : prev.body;
+                            return { ...prev, choices: parts.join('\n'), body: newBody, bodySelection: '' };
+                          });
                         }}
                         className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-300 hover:bg-indigo-500/40 transition-colors text-[10px] animate-pulse"
                         title="선택한 텍스트를 선택지로 분리"
