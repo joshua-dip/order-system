@@ -92,6 +92,7 @@ export default function VipExamsPage() {
     choices: string;  // 선택지 (\n 구분)
     summary: string;  // 요약문
     showSummary: boolean;
+    score: number;          // 배점
     bodySelection: string;  // 문제본문에서 드래그한 선택 영역
     matching: boolean;
     matchResult: { textbook: string; sourceKey: string; similarity: number } | null;
@@ -326,6 +327,7 @@ export default function VipExamsPage() {
       choices: q?.choices || '',
       summary: q?.summary || '',
       showSummary: isYoyak || !!(q?.summary),
+      score: q?.score ?? 0,
       bodySelection: '',
       matching: false, matchResult: null, noMatch: false,
     });
@@ -353,12 +355,13 @@ export default function VipExamsPage() {
 
   const applyTextModal = (applyMatch: boolean) => {
     if (!textModal) return;
-    const { examId, qNum, title, body, choices, summary, matchResult } = textModal;
+    const { examId, qNum, title, body, choices, summary, score, matchResult } = textModal;
     const patch: Partial<ExamQuestion> = {
       questionTitle: title,
       questionBody: body,
       choices,
       summary,
+      score,
       questionText: title || body.slice(0, 60) || '',
     };
     if (applyMatch && matchResult) {
@@ -1075,10 +1078,40 @@ export default function VipExamsPage() {
                 </div>
                 <textarea
                   value={textModal.title}
-                  onChange={(e) => setTextModal((prev) => prev && ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    // [X.X점] 또는 [X점] 패턴 자동 감지
+                    const m = val.match(/\[(\d+(?:\.\d+)?)점\]/);
+                    const detectedScore = m ? parseFloat(m[1]) : null;
+                    setTextModal((prev) => prev && ({
+                      ...prev,
+                      title: val,
+                      ...(detectedScore !== null ? { score: detectedScore } : {}),
+                    }));
+                  }}
                   placeholder={"다음 글의 요지로 가장 적절한 것은?"}
                   className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed"
                 />
+                {/* 배점 */}
+                <div className="shrink-0 flex items-center gap-2">
+                  <label className="text-[10px] text-zinc-500 shrink-0">배점</label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      value={textModal.score || ''}
+                      onChange={(e) => setTextModal((prev) => prev && ({ ...prev, score: parseFloat(e.target.value) || 0 }))}
+                      placeholder="0"
+                      className="w-20 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 text-xs text-center"
+                    />
+                    <span className="absolute right-2 text-[10px] text-zinc-600 pointer-events-none">점</span>
+                  </div>
+                  {textModal.title.match(/\[(\d+(?:\.\d+)?)점\]/) && (
+                    <span className="text-[10px] text-emerald-400">자동 감지됨</span>
+                  )}
+                </div>
               </div>
 
               {/* Col 2: 문제본문 + 요약문 */}
