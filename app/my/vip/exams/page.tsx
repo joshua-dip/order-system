@@ -363,6 +363,11 @@ export default function VipExamsPage() {
     const currentExam = localExams[examId] || exams.find((e) => e.id === examId);
     if (!currentExam) return;
     const newQs = { ...currentExam.questions };
+    // 여러 문항이면 공통 groupId 부여
+    const needsGroup = groupQuestions.length > 1;
+    const existingGroupId = needsGroup
+      ? groupQuestions.map(gq => newQs[gq.qNum]?.groupId).find(Boolean) || `grp-${Date.now()}`
+      : undefined;
     groupQuestions.forEach(({ qNum, title, choices, score, summary }) => {
       const existing = newQs[qNum] || { score: 0, isSubjective: false };
       const patch: Partial<ExamQuestion> = {
@@ -372,6 +377,7 @@ export default function VipExamsPage() {
         summary,
         score,
         questionText: title || body.slice(0, 60) || '',
+        ...(needsGroup ? { groupId: existingGroupId } : {}),
       };
       if (applyMatch && matchResult) {
         patch.textbook = matchResult.textbook;
@@ -1207,6 +1213,37 @@ export default function VipExamsPage() {
                       </div>
                     );
                   })()}
+                  {/* [N-M] 공통지문 범위 자동 감지 */}
+                  {(() => {
+                    const rangeMatch = textModal.body.match(/\[(\d+)-(\d+)\]/);
+                    if (!rangeMatch) return null;
+                    const start = parseInt(rangeMatch[1]);
+                    const end = parseInt(rangeMatch[2]);
+                    const currentNums = textModal.groupQuestions.map(gq => parseInt(gq.qNum));
+                    const missing: number[] = [];
+                    for (let n = start; n <= end; n++) {
+                      if (!currentNums.includes(n)) missing.push(n);
+                    }
+                    if (missing.length === 0) return null;
+                    const currentExam = localExams[textModal.examId] || exams.find((e) => e.id === textModal.examId);
+                    return (
+                      <div className="shrink-0 rounded-lg bg-violet-950/40 border border-violet-700/50 px-3 py-2 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-violet-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                        <span className="text-[11px] text-violet-300 flex-1">[{start}-{end}] 공통지문 감지 — {missing.join(', ')}번 패널 추가</span>
+                        <button
+                          onClick={() => setTextModal((prev) => {
+                            if (!prev) return prev;
+                            const toAdd = missing.map((n) => {
+                              const q = currentExam?.questions[String(n)];
+                              return { qNum: String(n), title: q?.questionTitle || '', choices: q?.choices || '', score: q?.score ?? 0, summary: q?.summary || '', showSummary: !!(q?.summary) };
+                            });
+                            const allGQs = [...prev.groupQuestions, ...toAdd].sort((a, b) => parseInt(a.qNum) - parseInt(b.qNum));
+                            return { ...prev, groupQuestions: allGQs };
+                          })}
+                          className="px-2.5 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-[11px] transition-colors shrink-0">추가</button>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* 문항별 패널 */}
@@ -1217,7 +1254,35 @@ export default function VipExamsPage() {
 
               {/* 푸터 */}
               <div className="flex items-center justify-between px-5 py-3.5 border-t border-zinc-800 shrink-0">
-                <div className="text-[11px] text-zinc-600">Esc 닫기 · 번호 클릭으로 재편집</div>
+                <div className="flex items-center gap-3">
+                  <div className="text-[11px] text-zinc-600">Esc 닫기 · 번호 클릭으로 재편집</div>
+                  {/* 다음 문항 수동 추가 버튼 */}
+                  <button
+                    onClick={() => {
+                      const currentExam = localExams[textModal.examId] || exams.find((e) => e.id === textModal.examId);
+                      const lastNum = parseInt(textModal.groupQuestions[textModal.groupQuestions.length - 1].qNum);
+                      const nextNum = String(lastNum + 1);
+                      const q = currentExam?.questions[nextNum];
+                      setTextModal((prev) => prev && ({
+                        ...prev,
+                        groupQuestions: [...prev.groupQuestions, { qNum: nextNum, title: q?.questionTitle || '', choices: q?.choices || '', score: q?.score ?? 0, summary: q?.summary || '', showSummary: !!(q?.summary) }],
+                      }));
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-dashed border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-500 transition-colors text-[11px]"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    {String(parseInt(textModal.groupQuestions[textModal.groupQuestions.length - 1].qNum) + 1)}번 추가
+                  </button>
+                  {/* 마지막 문항 제거 버튼 (2개 이상일 때) */}
+                  {textModal.groupQuestions.length > 1 && (
+                    <button
+                      onClick={() => setTextModal((prev) => prev && ({ ...prev, groupQuestions: prev.groupQuestions.slice(0, -1) }))}
+                      className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                    >
+                      {textModal.groupQuestions[textModal.groupQuestions.length - 1].qNum}번 제거
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-3">
                   <button onClick={() => setTextModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">취소</button>
                   {textModal.matchResult ? (
