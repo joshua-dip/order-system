@@ -922,7 +922,7 @@ export default function VipExamsPage() {
               <div className="flex flex-col w-56 shrink-0 border-r border-zinc-800 p-3 gap-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">문제제목</span>
-                  {textModal.bodySelection && (
+                  {textModal.bodySelection && !/[①②③④⑤]/.test(textModal.bodySelection) && (
                     <button
                       onClick={() => setTextModal((prev) => prev && ({
                         ...prev,
