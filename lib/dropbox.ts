@@ -220,3 +220,69 @@ export function isDropboxConfigured(): boolean {
     process.env.DROPBOX_REFRESH_TOKEN
   );
 }
+
+/**
+ * VIP 시험지 PDF를 Dropbox에 업로드하고 Dropbox 내부 경로를 반환합니다.
+ * 경로: /{root}/vip-exams/{examId}_{filename}
+ *
+ * 공유 링크 대신 `files/get_temporary_link`을 사용합니다.
+ * App folder 타입 앱에서도 동작하며, 링크는 4시간 유효합니다.
+ */
+export async function uploadVipExamPdf(
+  examId: string,
+  fileName: string,
+  fileBuffer: Buffer,
+): Promise<{ path: string; name: string; tempUrl: string }> {
+  const token = await getAccessToken();
+  const root = process.env.DROPBOX_ROOT_FOLDER ?? 'gomijoshua';
+  const safeFileName = fileName.replace(/[/\\:*?"<>|]/g, '_');
+  const logicalPath = `/${root}/vip-exams/${examId}_${safeFileName}`;
+  const apiPath = toApiPath(logicalPath);
+
+  // 파일 업로드
+  const uploadRes = await fetch(`${DROPBOX_CONTENT_URL}/files/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': dropboxApiArgHeader({
+        path: apiPath,
+        mode: { '.tag': 'overwrite' },
+        autorename: false,
+      }),
+    },
+    body: fileBuffer as unknown as BodyInit,
+  });
+
+  if (!uploadRes.ok) {
+    const data = await uploadRes.json().catch(() => ({}));
+    throw new Error(`Dropbox 파일 업로드 실패: ${JSON.stringify(data)}`);
+  }
+
+  // 임시 다운로드 링크 생성 (4시간 유효, App folder 앱에서도 동작)
+  const tempUrl = await getDropboxTempLink(apiPath, token);
+  return { path: apiPath, name: safeFileName, tempUrl };
+}
+
+/**
+ * Dropbox 파일 경로로부터 임시 다운로드 링크를 생성합니다 (4시간 유효).
+ */
+export async function getDropboxTempLink(apiPath: string, existingToken?: string): Promise<string> {
+  const token = existingToken ?? await getAccessToken();
+  const res = await fetch(`${DROPBOX_API_URL}/files/get_temporary_link`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ path: apiPath }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`Dropbox 임시 링크 생성 실패: ${JSON.stringify(data)}`);
+  }
+
+  const data = await res.json();
+  return data.link as string;
+}

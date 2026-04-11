@@ -17,6 +17,7 @@ export interface VipSchool {
   userId: ObjectId;
   name: string;
   region?: string;
+  neisCode?: string;
   createdAt: Date;
 }
 
@@ -57,6 +58,7 @@ export interface VipSchoolExam {
   subjectiveCount: number;
   examScope: string[];
   isLocked: boolean;
+  pdfPath?: string;
   pdfUrl?: string;
   pdfName?: string;
   createdAt: Date;

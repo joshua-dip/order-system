@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
       id: s._id.toString(),
       name: s.name,
       region: s.region ?? '',
+      neisCode: s.neisCode ?? '',
       createdAt: s.createdAt?.toISOString() ?? '',
     })),
   });
@@ -48,10 +49,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, id: existing._id.toString(), existed: true });
   }
 
+  const neisCode = (body.neisCode ?? '').trim() || undefined;
   const doc: VipSchool = {
     userId: uid,
     name,
     region: (body.region ?? '').trim() || undefined,
+    neisCode,
     createdAt: new Date(),
   };
 

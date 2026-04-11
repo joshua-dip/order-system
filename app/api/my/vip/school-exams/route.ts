@@ -35,6 +35,8 @@ export async function GET(request: NextRequest) {
       subjectiveCount: e.subjectiveCount ?? 0,
       examScope: e.examScope ?? [],
       isLocked: !!e.isLocked,
+      pdfPath: e.pdfPath ?? null,
+      pdfName: e.pdfName ?? null,
     })),
   });
 }

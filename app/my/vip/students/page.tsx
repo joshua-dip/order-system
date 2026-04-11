@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import VipSchoolSearchInput from '@/app/components/VipSchoolSearchInput';
 
-interface School { id: string; name: string; region: string }
+interface School { id: string; name: string; region: string; neisCode?: string }
 interface Student {
   id: string; schoolId: string; schoolName: string; name: string;
   grade: number; academicYear: number; status: string;
@@ -26,6 +27,7 @@ export default function VipStudentsPage() {
 
   const [showAddSchool, setShowAddSchool] = useState(false);
   const [newSchoolName, setNewSchoolName] = useState('');
+  const [newSchoolMeta, setNewSchoolMeta] = useState<{ region?: string; neisCode?: string }>({});
   const [schoolSearch, setSchoolSearch] = useState('');
 
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -62,12 +64,13 @@ export default function VipStudentsPage() {
     const res = await fetch('/api/my/vip/schools', {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newSchoolName.trim() }),
+      body: JSON.stringify({ name: newSchoolName.trim(), region: newSchoolMeta.region, neisCode: newSchoolMeta.neisCode }),
     });
     const d = await res.json();
     if (d.ok) {
       await loadSchools();
       setNewSchoolName('');
+      setNewSchoolMeta({});
       setShowAddSchool(false);
       showToast(d.existed ? '이미 등록된 학교입니다.' : '학교가 등록되었습니다.');
     }
@@ -140,7 +143,8 @@ export default function VipStudentsPage() {
 
       <div className="flex gap-6">
         {/* School sidebar */}
-        <div className="w-64 flex-shrink-0">
+        <div className="w-64 flex-shrink-0 space-y-2">
+          {/* 학교 목록 카드 (overflow-hidden으로 스크롤 처리) */}
           <div className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 overflow-hidden">
             <div className="p-3 border-b border-zinc-800/80">
               <input
@@ -180,30 +184,43 @@ export default function VipStudentsPage() {
               )}
             </div>
 
-            <div className="p-3 border-t border-zinc-800/80">
-              {showAddSchool ? (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="학교 이름"
-                    value={newSchoolName}
-                    onChange={(e) => setNewSchoolName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddSchool()}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
-                    autoFocus
-                  />
-                  <div className="flex gap-1.5">
-                    <button onClick={handleAddSchool} className="flex-1 px-3 py-1.5 bg-zinc-100 text-zinc-900 text-xs rounded-lg hover:bg-zinc-200 transition-colors">추가</button>
-                    <button onClick={() => { setShowAddSchool(false); setNewSchoolName(''); }} className="flex-1 px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs rounded-lg hover:bg-zinc-700 transition-colors">취소</button>
-                  </div>
-                </div>
-              ) : (
+            {!showAddSchool && (
+              <div className="p-3 border-t border-zinc-800/80">
                 <button onClick={() => setShowAddSchool(true)} className="w-full px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors text-center">
                   + 학교 추가
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
+
+          {/* 학교 추가 영역 — overflow-hidden 밖에 배치해 드롭다운이 잘리지 않도록 */}
+          {showAddSchool && (
+            <div className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-3 space-y-2">
+              <VipSchoolSearchInput
+                value={newSchoolName}
+                onChange={(name, meta) => {
+                  setNewSchoolName(name);
+                  setNewSchoolMeta(meta ?? {});
+                }}
+                placeholder="학교명 검색 (2글자 이상)"
+              />
+              <div className="flex gap-1.5">
+                <button
+                  onClick={handleAddSchool}
+                  disabled={!newSchoolName.trim()}
+                  className="flex-1 px-3 py-1.5 bg-zinc-100 text-zinc-900 text-xs rounded-lg hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  추가
+                </button>
+                <button
+                  onClick={() => { setShowAddSchool(false); setNewSchoolName(''); setNewSchoolMeta({}); }}
+                  className="flex-1 px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs rounded-lg hover:bg-zinc-700 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main content */}
