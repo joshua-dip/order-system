@@ -150,6 +150,7 @@ async function runSave(args: {
   question_data_json: string;
   status?: string;
   option_type?: string;
+  difficulty?: string;
 }) {
   const passageIdStr = args.passage_id.trim();
   const textbook = args.textbook.trim();
@@ -157,6 +158,7 @@ async function runSave(args: {
   const type = args.type.trim();
   const option_type = (args.option_type ?? 'English').trim() || 'English';
   const docStatus = (args.status ?? '대기').trim() || '대기';
+  const difficulty = (args.difficulty ?? '').trim() || undefined;
 
   if (!textbook || !passageIdStr || !ObjectId.isValid(passageIdStr)) {
     return textError('교재명과 유효한 passage_id가 필요합니다.');
@@ -184,6 +186,7 @@ async function runSave(args: {
     question_data,
     status: docStatus,
     option_type,
+    difficulty,
   });
   if (!saved.ok) {
     return textError(saved.error);
@@ -417,6 +420,7 @@ async function main() {
           .describe('question_data 객체 전체를 JSON 문자열로 (generate_draft 결과의 question_data)'),
         status: z.string().optional().describe('기본: 대기'),
         option_type: z.string().optional().describe('기본: English'),
+        difficulty: z.string().optional().describe("난이도: '하', '중', '상' (기본: question_data.DifficultyLevel 또는 '중')"),
       },
     },
     async (args) => runSave(args)

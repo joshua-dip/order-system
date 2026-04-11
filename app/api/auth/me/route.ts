@@ -35,6 +35,8 @@ export async function GET(request: NextRequest) {
           allowedTextbooksVariant: 1,
           points: 1,
           annualMemberSince: 1,
+          isVip: 1,
+          vipSince: 1,
         },
       }
     );
@@ -48,6 +50,9 @@ export async function GET(request: NextRequest) {
     const annualMemberSinceIso =
       annualSince instanceof Date && !Number.isNaN(annualSince.getTime()) ? annualSince.toISOString() : null;
     const annualMemberActive = isAnnualMemberActive(annualSince ?? null);
+    const vipSinceRaw = (user as { vipSince?: Date }).vipSince;
+    const vipSinceIso =
+      vipSinceRaw instanceof Date && !Number.isNaN(vipSinceRaw.getTime()) ? vipSinceRaw.toISOString() : null;
     return NextResponse.json({
       user: {
         loginId: user.loginId,
@@ -67,6 +72,8 @@ export async function GET(request: NextRequest) {
         points,
         annualMemberSince: annualMemberSinceIso,
         isAnnualMemberActive: annualMemberActive,
+        isVip: !!user.isVip,
+        vipSince: vipSinceIso,
       },
     });
   } catch {
@@ -85,6 +92,8 @@ export async function GET(request: NextRequest) {
         points: 0,
         annualMemberSince: null,
         isAnnualMemberActive: false,
+        isVip: false,
+        vipSince: null,
       },
     });
   }

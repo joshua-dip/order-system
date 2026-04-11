@@ -35,7 +35,10 @@ function classifyExplanationIssue(raw: unknown): {
     };
   }
   if (/\bnan\b/i.test(s)) {
-    return { ok: false, reason: "문자열에 'nan' 포함", preview: s.slice(0, 200) };
+    const cleaned = s.replace(/\bNan\s+[A-Z][a-z]+/g, '');
+    if (/\bnan\b/i.test(cleaned)) {
+      return { ok: false, reason: "문자열에 'nan' 포함", preview: s.slice(0, 200) };
+    }
   }
   return { ok: true, reason: '', preview: s.slice(0, 100) };
 }
@@ -111,13 +114,14 @@ export async function GET(request: NextRequest) {
         reason: c.reason || '이상',
         snippet: c.preview.slice(0, 120) || '(표시 없음)',
         full: str,
+        _ok: c.ok,
       };
-    });
+    }).filter((item) => !item._ok);
 
     return NextResponse.json({
       ok: true,
       filters: { textbook: textbook || null, type: type || null },
-      totalMatched,
+      totalMatched: items.length,
       items,
       truncated: totalMatched > MAX_RESULTS,
       note:

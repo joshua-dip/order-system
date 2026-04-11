@@ -10,6 +10,7 @@ export type SaveGeneratedQuestionInput = {
   question_data: Record<string, unknown>;
   status?: string;
   option_type?: string;
+  difficulty?: string;
 };
 
 export type SaveGeneratedQuestionResult =
@@ -50,12 +51,17 @@ export async function saveGeneratedQuestionToDb(
   }
 
   const now = new Date();
+  const difficulty = type === '삽입-고난도'
+    ? '상'
+    : ((input.difficulty ?? input.question_data?.DifficultyLevel as string | undefined ?? '중').trim() || '중');
+
   const doc = {
     textbook,
     passage_id: new ObjectId(passageIdStr),
     source,
     type,
     option_type,
+    difficulty,
     question_data,
     status: docStatus,
     error_msg: null as string | null,

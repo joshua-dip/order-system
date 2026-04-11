@@ -51,6 +51,13 @@ export async function GET(request: NextRequest) {
         const date = d instanceof Date ? d : new Date(d);
         return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
       })(),
+      isVip: !!(u as { isVip?: boolean }).isVip,
+      vipSince: (() => {
+        const d = (u as { vipSince?: Date }).vipSince;
+        if (!d) return null;
+        const date = d instanceof Date ? d : new Date(d as string);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+      })(),
       createdAt: u.createdAt,
     }));
 

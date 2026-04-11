@@ -108,6 +108,12 @@ export async function PATCH(
     if (points !== undefined) updates.points = points;
     if (supplementaryNote !== undefined) updates.supplementaryNote = supplementaryNote;
     if (hasAnnualMemberSince && annualMemberSinceValue !== undefined) updates.annualMemberSince = annualMemberSinceValue;
+    if (body?.isVip === true) {
+      updates.isVip = true;
+      if (!(target as { vipSince?: Date }).vipSince) updates.vipSince = new Date();
+    } else if (body?.isVip === false) {
+      updates.isVip = false;
+    }
     if (addPoints !== undefined && addPoints > 0) {
       const t = target as { points?: number };
       const current = typeof t.points === 'number' && t.points >= 0 ? t.points : 0;

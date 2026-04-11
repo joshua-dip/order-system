@@ -47,6 +47,8 @@ interface ListUser {
   points?: number;
   supplementaryNote?: string;
   annualMemberSince?: string | null;
+  isVip?: boolean;
+  vipSince?: string | null;
   createdAt: string;
 }
 
@@ -184,6 +186,7 @@ export default function AdminDashboardPage() {
   const [editPointsAdd, setEditPointsAdd] = useState('');
   const [editSupplementaryNote, setEditSupplementaryNote] = useState('');
   const [editAnnualMemberSince, setEditAnnualMemberSince] = useState('');
+  const [editIsVip, setEditIsVip] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editMessage, setEditMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -531,6 +534,7 @@ export default function AdminDashboardPage() {
     setEditPointsAdd('');
     setEditSupplementaryNote(u.supplementaryNote ?? '');
     setEditAnnualMemberSince(u.annualMemberSince ?? '');
+    setEditIsVip(!!u.isVip);
     setEditMessage(null);
   };
 
@@ -550,6 +554,7 @@ export default function AdminDashboardPage() {
       if (editMyFormatApproved !== !!editUser.myFormatApproved) body.myFormatApproved = editMyFormatApproved;
       if (editSupplementaryNote !== (editUser.supplementaryNote ?? '')) body.supplementaryNote = editSupplementaryNote;
       if (editAnnualMemberSince !== (editUser.annualMemberSince ?? '')) body.annualMemberSince = editAnnualMemberSince.trim() || null;
+      if (editIsVip !== !!editUser.isVip) (body as Record<string, unknown>).isVip = editIsVip;
       if (editResetPassword) body.resetPassword = true;
       const addPointsNum = editPointsAdd.trim() !== '' ? parseInt(editPointsAdd.trim(), 10) : NaN;
       if (!Number.isNaN(addPointsNum) && addPointsNum > 0) body.addPoints = addPointsNum;
@@ -2995,6 +3000,9 @@ export default function AdminDashboardPage() {
                               ) : (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500">일반</span>
                               )}
+                              {u.isVip && (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">VIP</span>
+                              )}
                               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400">주문 {orderCountFor(u.loginId)}건</span>
                               {lastOrderDateFor(u.loginId) && (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDateTime(lastOrderDateFor(u.loginId)!)}>최근 주문 {daysAgo(lastOrderDateFor(u.loginId)!)}</span>
@@ -3618,7 +3626,7 @@ export default function AdminDashboardPage() {
 
       {/* Edit user modal */}
       {editUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onKeyDown={(e) => { if (e.key === 'Escape') setEditUser(null); }}>
           <div className="bg-slate-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-700">
             <h3 className="font-bold text-white p-6 pb-0 shrink-0">계정 수정 — {editUser.loginId}</h3>
             <form onSubmit={handleSaveEdit} className="flex flex-col flex-1 min-h-0 p-6">
@@ -3657,6 +3665,13 @@ export default function AdminDashboardPage() {
                 {editAnnualMemberSince && (
                   <input type="date" value={editAnnualMemberSince} onChange={(e) => setEditAnnualMemberSince(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
                 )}
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-1">VIP</label>
+                <label className="flex items-center gap-2 cursor-pointer text-slate-300 text-sm">
+                  <input type="checkbox" checked={editIsVip} onChange={(e) => setEditIsVip(e.target.checked)} className="rounded border-slate-500 text-amber-600 bg-slate-700" />
+                  VIP 회원으로 설정
+                </label>
               </div>
               <div>
                 <label className="block text-slate-400 text-sm mb-1">포인트</label>

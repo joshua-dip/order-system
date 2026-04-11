@@ -5,6 +5,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { extractJsonObject } from '@/lib/llm-json';
 import { VARIANT_DRAFT_BLANK_AND_SUMMARY_RULES } from '@/lib/variant-draft-blank-summary-rules';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED, VARIANT_DRAFT_GRAMMAR_RULES } from '@/lib/variant-draft-grammar-rules';
+import { HARD_INSERTION_PROMPT } from '@/lib/hard-insertion-generator';
+import { IRRELEVANT_SENTENCE_PROMPT } from '@/lib/irrelevant-sentence-generator';
 
 export function buildVariantDraftSystemPrompt(nextNum: number): string {
   return `당신은 한국 수능 영어 변형문제 출제자입니다. 주어진 지문과 문제 유형에 맞는 객관식 1문항을 새로 만듭니다.
@@ -29,6 +31,7 @@ export function buildVariantDraftSystemPrompt(nextNum: number): string {
 ${VARIANT_DRAFT_GRAMMAR_RULES}
 - 순서(글의순서): Question은 "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오."로 작성. Paragraph는 (1) 맨 위에 주어진 문장(첫 문장) 한 줄, (2) 빈 줄 또는 구분 후 (A), (B), (C) 세 블록을 나열. 각 블록은 여러 문장으로 구성되며, (A)-(B)-(C)의 올바른 순서를 뒤섞어 제시(예: (B)-(A)-(C), (C)-(B)-(A) 등). 블록 구분은 줄바꿈 또는 ### 사용. Options는 반드시 5개를 **한 문자열**로, 보기 사이는 \`###\`만: \`① (A)-(C)-(B) ### ② (B)-(A)-(C) ### ③ (B)-(C)-(A) ### ④ (C)-(A)-(B) ### ⑤ (C)-(B)-(A)\` 형식. CorrectAnswer는 올바른 순서에 해당하는 ①~⑤ 중 하나. Explanation은 "① 가 정답입니다."로 시작, 흐름 설명은 압축하고 마지막에 "논리 흐름 요약:" 한 문장 — **전체 450자 이하**. Paragraph에 <u> 태그 사용하지 말 것.
 - 삽입(문장삽입): Question은 "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오."로 작성. Paragraph는 (1) 맨 위에 삽입할 문장(주어진 문장) 한 줄, (2) 구분 후 본문. 본문에는 삽입 가능한 위치 5곳을 ①②③④⑤로 표시해 문장 사이에 배치(예: ... ① 다음 문장 ② ...). 즉 주어진 문장이 들어갈 수 있는 위치가 ①~⑤로 표시된 본문. CorrectAnswer는 주어진 문장이 들어가야 할 위치 번호 ①~⑤ 중 하나. Options는 ①~⑤ **한 문자열·\`###\` 구분**(위치만 표시해도 됨). Explanation은 "① 가 정답입니다."로 시작, 연결 근거는 짧게, 마지막 "논리 흐름 요약:" 한 문장 — **전체 450자 이하**. Paragraph에 <u> 태그 사용하지 말 것.
+- 무관한문장: Question은 "다음 글에서 전체 흐름과 관계없는 문장은?"으로 작성. Paragraph는 원문 문장들 사이에 **주제와 완전히 무관한 문장** 1개를 끼워넣되, 첫 문장은 번호 없이 도입부로 두고 두 번째 문장부터 ①②③④⑤ 번호를 부여(문장 수 부족 시에만 첫 문장에도 번호). 무관한 문장은 글의 톤·어휘 수준은 유지하되 주제가 완전히 다른 독립적 사실 문장이어야 하며 지시어(this, such)·접속사(however, therefore)로 앞뒤 문장을 참조하면 안 됨. CorrectAnswer는 무관한 문장의 번호 ①~⑤. Options는 \`① ### ② ### ③ ### ④ ### ⑤\`. Explanation은 "②가 정답입니다."로 시작, 글 전체 흐름 요약 후 해당 문장이 왜 무관한지 설명 — **전체 450자 이하**.
 ${VARIANT_DRAFT_BLANK_AND_SUMMARY_RULES}`;
 }
 
@@ -39,6 +42,7 @@ export type VariantDraftClaudeParams = {
   nextNum: number;
   userHint?: string;
   typePrompt?: string;
+  difficulty?: string;
 };
 
 export type VariantDraftClaudeResult =
@@ -85,12 +89,23 @@ export function normalizeClaudeDraftJsonToQuestionData(
 }
 
 export function buildVariantDraftUserMessage(params: VariantDraftClaudeParams): string {
-  const { paragraph, type, userHint = '', typePrompt = '' } = params;
+  const { paragraph, type, userHint = '', typePrompt = '', difficulty = '중' } = params;
   const extra =
     (process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA && process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA.trim()) ||
     '';
-  return `문제 유형(type): ${type}
-${extra ? `운영자 공통 지시(.env): ${extra}\n` : ''}${typePrompt ? `【이 유형 전용 출제 지침】\n${typePrompt}\n\n` : ''}${userHint ? `이번 문항만의 추가 지시: ${userHint}\n` : ''}
+
+  const isHardInsertion = difficulty === '상' && (type === '삽입' || type.includes('삽입'));
+  const hardBlock = isHardInsertion
+    ? `【난이도 상 · 삽입 문장 생성 전용 규칙】\n${HARD_INSERTION_PROMPT}\n\n`
+    : '';
+
+  const isIrrelevant = type === '무관한문장';
+  const irrelevantBlock = isIrrelevant
+    ? `【무관한문장 유형 전용 규칙】\n${IRRELEVANT_SENTENCE_PROMPT}\n\n`
+    : '';
+
+  return `문제 유형(type): ${type}${isHardInsertion ? ' (난이도: 상 — 새 문장 생성)' : ''}${isIrrelevant ? ' (무관한 문장 생성)' : ''}
+${extra ? `운영자 공통 지시(.env): ${extra}\n` : ''}${hardBlock}${irrelevantBlock}${typePrompt ? `【이 유형 전용 출제 지침】\n${typePrompt}\n\n` : ''}${userHint ? `이번 문항만의 추가 지시: ${userHint}\n` : ''}
 [지문 Paragraph]
 ${paragraph}`;
 }
@@ -101,7 +116,7 @@ ${paragraph}`;
 export async function generateVariantDraftQuestionDataWithClaude(
   params: VariantDraftClaudeParams
 ): Promise<VariantDraftClaudeResult> {
-  const { paragraph, type, nextNum, userHint = '', typePrompt = '' } = params;
+  const { paragraph, type, nextNum, userHint = '', typePrompt = '', difficulty = '중' } = params;
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey?.trim()) {
     return { ok: false, error: 'AI 초안 생성에는 ANTHROPIC_API_KEY 설정이 필요합니다.' };
@@ -112,7 +127,7 @@ export async function generateVariantDraftQuestionDataWithClaude(
 
   const client = new Anthropic({ apiKey });
   const sys = buildVariantDraftSystemPrompt(nextNum);
-  const userMsg = buildVariantDraftUserMessage({ paragraph, type, nextNum, userHint, typePrompt });
+  const userMsg = buildVariantDraftUserMessage({ paragraph, type, nextNum, userHint, typePrompt, difficulty });
 
   const fixJsonUserMsg =
     '위 출력은 JSON.parse로 파싱할 수 없었습니다. 반드시 키만 갖는 유효한 JSON 한 개만 출력하세요. 마크다운·코드펜스·설명 문장 금지. 문자열 안의 따옴표는 반드시 \\" 로 이스케이프하세요.';

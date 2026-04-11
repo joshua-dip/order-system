@@ -52,23 +52,58 @@ export async function POST(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const col = db.collection('generated_questions');
 
+    const hasHardInsertion = types.includes('삽입-고난도');
+    const dbTypes = hasHardInsertion
+      ? [...types.filter((t) => t !== '삽입-고난도'), ...(!types.includes('삽입') ? ['삽입'] : [])]
+      : types;
+
     const [combo, byType] = await Promise.all([
       col
-        .aggregate<{ _id: { s: string; t: string }; n: number }>([
+        .aggregate<{ _id: { s: string; t: string; d?: string }; n: number }>([
           {
             $match: {
               textbook,
               source: { $in: lessons },
-              type: { $in: types },
+              type: { $in: dbTypes },
             },
           },
-          { $group: { _id: { s: '$source', t: '$type' }, n: { $sum: 1 } } },
+          ...(hasHardInsertion
+            ? [
+                {
+                  $addFields: {
+                    effectiveType: {
+                      $cond: {
+                        if: { $and: [{ $eq: ['$type', '삽입'] }, { $eq: ['$difficulty', '상'] }] },
+                        then: '삽입-고난도',
+                        else: '$type',
+                      },
+                    },
+                  },
+                },
+                { $group: { _id: { s: '$source', t: '$effectiveType' } as Record<string, unknown>, n: { $sum: 1 } } },
+              ]
+            : [{ $group: { _id: { s: '$source', t: '$type' }, n: { $sum: 1 } } }]),
         ])
         .toArray(),
       col
         .aggregate<{ _id: string; n: number }>([
-          { $match: { textbook, type: { $in: types } } },
-          { $group: { _id: '$type', n: { $sum: 1 } } },
+          { $match: { textbook, type: { $in: dbTypes } } },
+          ...(hasHardInsertion
+            ? [
+                {
+                  $addFields: {
+                    effectiveType: {
+                      $cond: {
+                        if: { $and: [{ $eq: ['$type', '삽입'] }, { $eq: ['$difficulty', '상'] }] },
+                        then: '삽입-고난도',
+                        else: '$type',
+                      },
+                    },
+                  },
+                },
+                { $group: { _id: '$effectiveType' as string, n: { $sum: 1 } } },
+              ]
+            : [{ $group: { _id: '$type', n: { $sum: 1 } } }]),
         ])
         .toArray(),
     ]);

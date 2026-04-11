@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
+import { MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 
-export type OrderGenerateExtras = { orderMeta?: Record<string, unknown> };
+export type OrderGenerateExtras = { orderMeta?: Record<string, unknown>; pointsUsed?: number };
 
 interface MockExamSettingsProps {
   onOrderGenerate: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
@@ -38,11 +39,19 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [tempNumbers, setTempNumbers] = useState<string[]>([]);
   const [isMember, setIsMember] = useState(false);
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+  const [userPoints, setUserPoints] = useState(0);
+  const [showPointModal, setShowPointModal] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
       .then((r) => r.json())
-      .then((d) => setIsMember(!!d?.user && d.user.role !== 'admin'))
+      .then((d) => {
+        const u = d?.user;
+        setIsMember(!!u && u.role !== 'admin');
+        const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
+        setUserPoints(pts);
+      })
       .catch(() => setIsMember(false));
   }, []);
 
@@ -110,7 +119,9 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     loadMockExamsData();
   }, []);
 
-  const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입'];
+  const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장'];
+  const advancedTypes = ['삽입-고난도'];
+  const questionTypes = [...standardTypes, ...advancedTypes];
   const ORDER_INSERT_TYPES = new Set(['순서', '삽입']);
 
   const computeMockExamPrice = () => {
@@ -119,15 +130,17 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     for (const type of selectedTypes) {
       const n = totalNumberCount * questionsPerType;
       const unit =
-        type === '순서'
-          ? orderInsertExplanation.순서
-            ? 80
-            : 50
-          : type === '삽입'
-            ? orderInsertExplanation.삽입
+        type === '삽입-고난도'
+          ? 100
+          : type === '순서'
+            ? orderInsertExplanation.순서
               ? 80
               : 50
-            : 80;
+            : type === '삽입'
+              ? orderInsertExplanation.삽입
+                ? 80
+                : 50
+              : 80;
       basePrice += n * unit;
     }
     const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
@@ -219,28 +232,29 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     }
   };
 
-  const generateOrder = () => {
+  const validateOrder = (): boolean => {
     if (examSelections.length === 0) {
       alert('모의고사를 추가해주세요.');
-      return;
+      return false;
     }
     if (selectedTypes.length === 0) {
       alert('문제 유형을 선택해주세요.');
-      return;
+      return false;
     }
     if (!email.trim()) {
       alert('이메일 주소를 입력해주세요.');
-      return;
+      return false;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       alert('올바른 이메일 주소를 입력해주세요.');
-      return;
+      return false;
     }
+    return true;
+  };
 
+  const submitOrder = (pointsUsedAmount: number) => {
     const {
-      basePrice,
       totalQuestions,
       discountRate,
       discountAmount,
@@ -249,7 +263,6 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       totalNumberCount,
     } = computeMockExamPrice();
 
-    // 모의고사별 상세 정보
     const examDetails = examSelections.map((exam, index) => {
       const selectedNumberNames = exam.numbers.map(numberId => 
         examNumbers.find(number => number.id === numberId)?.name
@@ -270,7 +283,14 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         `삽입: ${orderInsertExplanation.삽입 ? '해설 포함 (80원/문항)' : '해설 미포함·문제·답만 (50원/문항)'}`
       );
     }
+    if (selectedTypes.includes('삽입-고난도')) {
+      orderInsertLines.push('삽입-고난도: 100원/문항');
+    }
     const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
+
+    const pointLine = pointsUsedAmount > 0
+      ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n입금하실 금액: ${Math.max(0, totalPrice - pointsUsedAmount).toLocaleString()}원`
+      : '';
 
     const orderText = `모의고사 주문서
 
@@ -289,7 +309,7 @@ ${examDetails}
 : ${totalQuestions}문항 (총 ${totalNumberCount}개 번호 × ${selectedTypes.length}개 유형 × ${questionsPerType}문항)
 
 5. 가격
-: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`;
+: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${pointLine}`;
 
     const orderMeta = {
       flow: 'mockVariant',
@@ -300,7 +320,18 @@ ${examDetails}
       questionsPerType,
       email: email.trim(),
     };
-    onOrderGenerate(orderText, 'MV', { orderMeta });
+    onOrderGenerate(orderText, 'MV', { orderMeta, pointsUsed: pointsUsedAmount || undefined });
+  };
+
+  const generateOrder = () => {
+    if (!validateOrder()) return;
+    if (isMember && userPoints > 0) {
+      const { totalPrice } = computeMockExamPrice();
+      setPointsToUse(Math.min(userPoints, totalPrice));
+      setShowPointModal(true);
+    } else {
+      submitOrder(0);
+    }
   };
 
   const {
@@ -527,6 +558,7 @@ ${examDetails}
                   </div>
                   <div className="text-sm text-blue-700">
                     • 기본: 문항당 80원 (순서·삽입은 해설 추가하면 80원, 문제·답만이면 50원)<br/>
+                    • 삽입-고난도: 문항당 100원<br/>
                     • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                     • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                   </div>
@@ -547,8 +579,9 @@ ${examDetails}
                       {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
+                  {/* 기본 유형 */}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {questionTypes.map((type) => (
+                    {standardTypes.map((type) => (
                       <div 
                         key={type} 
                         className={`p-3 border-2 rounded-lg transition-all hover:shadow-md ${
@@ -627,6 +660,51 @@ ${examDetails}
                         )}
                       </div>
                     ))}
+                  </div>
+
+                  {/* 고난도 유형 */}
+                  <div className="mt-5 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">고난도</span>
+                      <span className="text-xs text-gray-500">더 높은 변별력의 문항 유형</span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {advancedTypes.map((type) => (
+                        <div
+                          key={type}
+                          className={`p-3 border-2 rounded-lg transition-all hover:shadow-md ${
+                            selectedTypes.includes(type)
+                              ? 'border-orange-400 bg-orange-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={selectedTypes.includes(type)}
+                                onChange={() => handleTypeChange(type)}
+                                className="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-400 shrink-0"
+                              />
+                              <span className="font-medium text-black">{type}</span>
+                            </label>
+                            {questionSamples[type] && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(questionSamples[type].blogUrl, '_blank');
+                                }}
+                                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
+                                title={`${questionSamples[type].sampleTitle} - 블로그에서 샘플 확인`}
+                              >
+                                📝
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-500 mt-1.5 pl-8">100원/문항 · 새 문장을 생성하여 삽입 위치를 찾는 고난도 문항</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -788,6 +866,115 @@ ${examDetails}
 
       </div>
     </div>
+
+    {/* 포인트 사용 모달 */}
+    {showPointModal && (() => {
+      const { totalPrice } = computeMockExamPrice();
+      const maxUsable = Math.min(userPoints, totalPrice);
+      const depositDue = Math.max(0, totalPrice - pointsToUse);
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPointModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+              <h3 className="text-lg font-bold text-white">포인트 사용</h3>
+              <p className="text-blue-100 text-sm mt-0.5">보유 포인트를 사용하여 결제 금액을 줄일 수 있습니다</p>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600 text-sm">보유 포인트</span>
+                <span className="text-lg font-bold text-blue-600">{userPoints.toLocaleString()}P</span>
+              </div>
+
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600 text-sm">주문 금액</span>
+                <span className="text-lg font-bold text-black">{totalPrice.toLocaleString()}원</span>
+              </div>
+
+              <div className="border-2 border-blue-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">사용할 포인트</label>
+                  <button
+                    type="button"
+                    onClick={() => setPointsToUse(maxUsable)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                  >
+                    전액 사용
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={maxUsable}
+                    value={pointsToUse}
+                    onChange={(e) => {
+                      const v = Math.max(0, Math.min(maxUsable, Math.floor(Number(e.target.value) || 0)));
+                      setPointsToUse(v);
+                    }}
+                    className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 text-lg text-black text-right font-bold focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500"
+                  />
+                  <span className="text-gray-500 font-medium shrink-0">P</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxUsable}
+                  value={pointsToUse}
+                  onChange={(e) => setPointsToUse(Number(e.target.value))}
+                  className="w-full accent-blue-600"
+                />
+                <div className="flex justify-between text-[11px] text-gray-400">
+                  <span>0P</span>
+                  <span>{maxUsable.toLocaleString()}P</span>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl space-y-2">
+                {pointsToUse > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-green-700">포인트 차감</span>
+                    <span className="text-green-600 font-bold">-{pointsToUse.toLocaleString()}P</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">입금하실 금액</span>
+                  <span className="text-2xl font-bold text-black">{depositDue.toLocaleString()}원</span>
+                </div>
+                {depositDue > 0 && (
+                  <p className="text-[11px] text-gray-500 pt-1 border-t border-green-200">
+                    입금 계좌: {MEMBER_DEPOSIT_ACCOUNT}
+                  </p>
+                )}
+                {depositDue === 0 && (
+                  <p className="text-xs text-green-700 font-medium pt-1 border-t border-green-200">
+                    전액 포인트 결제 — 별도 입금이 필요 없습니다
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 pb-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setShowPointModal(false); submitOrder(0); }}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
+              >
+                사용 안 함
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowPointModal(false); submitOrder(pointsToUse); }}
+                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg transition"
+              >
+                {pointsToUse > 0 ? `${pointsToUse.toLocaleString()}P 사용` : '주문하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
     </>
   );
 };

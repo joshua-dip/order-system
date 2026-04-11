@@ -111,11 +111,23 @@ async function aggregateCountsByPassageAndType(
       {
         $addFields: {
           pidStr: { $toString: '$passage_id' },
+          effectiveType: {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: ['$type', '삽입'] },
+                  { $eq: ['$difficulty', '상'] },
+                ],
+              },
+              then: '삽입-고난도',
+              else: '$type',
+            },
+          },
         },
       },
       {
         $group: {
-          _id: { pid: '$pidStr', typ: '$type' },
+          _id: { pid: '$pidStr', typ: '$effectiveType' },
           c: { $sum: 1 },
         },
       },
@@ -146,10 +158,26 @@ async function aggregateStatusBreakdownByPassageAndType(
   const agg = await gqCol
     .aggregate([
       { $match: passageMatch },
-      { $addFields: { pidStr: { $toString: '$passage_id' } } },
+      {
+        $addFields: {
+          pidStr: { $toString: '$passage_id' },
+          effectiveType: {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: ['$type', '삽입'] },
+                  { $eq: ['$difficulty', '상'] },
+                ],
+              },
+              then: '삽입-고난도',
+              else: '$type',
+            },
+          },
+        },
+      },
       {
         $group: {
-          _id: { pid: '$pidStr', typ: '$type', st: '$status' },
+          _id: { pid: '$pidStr', typ: '$effectiveType', st: '$status' },
           c: { $sum: 1 },
         },
       },

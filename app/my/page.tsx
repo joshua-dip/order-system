@@ -20,6 +20,8 @@ interface AuthUser {
   myFormatApproved?: boolean;
   annualMemberSince?: string | null;
   isAnnualMemberActive?: boolean;
+  isVip?: boolean;
+  vipSince?: string | null;
 }
 
 interface MyOrder {
@@ -108,7 +110,7 @@ interface AnnualSharedFileItem {
   uploadedAt: string | null;
 }
 
-type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'settings';
+type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -273,6 +275,9 @@ export default function MyPage() {
     if (user && user.isAnnualMemberActive !== true && (activeTab === 'annualShared' || activeTab === 'vocabulary')) {
       setActiveTab('orders');
     }
+    if (user && !user.isVip && activeTab === 'vip') {
+      setActiveTab('orders');
+    }
   }, [user, activeTab]);
 
   useEffect(() => {
@@ -414,9 +419,12 @@ export default function MyPage() {
       base.push({ key: 'annualShared', label: '무료공유자료', icon: '📥' });
       base.push({ key: 'vocabulary', label: '단어장', icon: '📖' });
     }
+    if (user?.isVip) {
+      base.push({ key: 'vip', label: 'VIP', icon: '👑' });
+    }
     base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
     return base;
-  }, [user?.isAnnualMemberActive, orders.length, studentsCount]);
+  }, [user?.isAnnualMemberActive, user?.isVip, orders.length, studentsCount]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -692,7 +700,24 @@ export default function MyPage() {
                 {(user.name || user.loginId).charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg font-extrabold tracking-tight">{user.name || user.loginId}</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg font-extrabold tracking-tight">{user.name || user.loginId}</span>
+                  {user.isAnnualMemberActive && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                      정회원
+                    </span>
+                  )}
+                  {user.isVip && (
+                    <button
+                      onClick={() => router.push('/my/vip')}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border border-amber-300 hover:from-amber-100 hover:to-yellow-100 transition-all cursor-pointer animate-[vipGlow_2s_ease-in-out_infinite]"
+                    >
+                      <span className="animate-[vipSpin_3s_ease-in-out_infinite]">👑</span>
+                      VIP
+                    </button>
+                  )}
+                </div>
                 <div className="text-sm text-[#64748b]">{user.loginId}</div>
               </div>
               <button
@@ -1463,6 +1488,25 @@ export default function MyPage() {
                   </div>
                 </>
               )}
+            </div>
+          )}
+
+          {/* ━━ VIP 탭 ━━ */}
+          {activeTab === 'vip' && user.isVip && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-[#1e1b4b] to-[#312e81] rounded-2xl p-6 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl animate-[vipSpin_3s_ease-in-out_infinite]">👑</span>
+                  <h3 className="text-lg font-bold">맞춤 학습 관리</h3>
+                </div>
+                <p className="text-sm text-indigo-200 mb-4">학생 관리, 시험 분석, 변형문제 생성 등 VIP 전용 고급 기능을 이용하세요.</p>
+                <button
+                  onClick={() => router.push('/my/vip')}
+                  className="px-5 py-2.5 bg-white text-[#312e81] rounded-xl font-semibold text-sm hover:bg-indigo-50 transition-colors"
+                >
+                  관리 센터 이동 →
+                </button>
+              </div>
             </div>
           )}
 

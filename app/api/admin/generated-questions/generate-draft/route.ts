@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const userHint = typeof body.userHint === 'string' ? body.userHint.trim().slice(0, 2000) : '';
     const typePrompt =
       typeof body.typePrompt === 'string' ? body.typePrompt.trim().slice(0, 12000) : '';
+    const difficulty = typeof body.difficulty === 'string' ? body.difficulty.trim() : '중';
 
     if (!passageIdStr || !ObjectId.isValid(passageIdStr)) {
       return NextResponse.json({ error: '유효한 passage_id(ObjectId)가 필요합니다.' }, { status: 400 });
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
       nextNum,
       userHint,
       typePrompt,
+      difficulty,
     });
 
     if (!ai.ok) {

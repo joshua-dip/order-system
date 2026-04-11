@@ -57,6 +57,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (typeof body.source === 'string') $set.source = body.source.trim();
     if (typeof body.type === 'string') $set.type = body.type.trim();
     if (typeof body.option_type === 'string') $set.option_type = body.option_type.trim();
+    if (typeof body.difficulty === 'string') $set.difficulty = body.difficulty.trim();
     if (typeof body.status === 'string') $set.status = body.status.trim();
     if (body.error_msg !== undefined) {
       $set.error_msg =

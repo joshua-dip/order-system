@@ -136,6 +136,19 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           actualData = pickFirstIfSingle(textbookData.Sheet1?.부교재)
             ?? pickFirstIfSingle(textbookData['지문 데이터']?.부교재)
             ?? pickFirstIfSingle(textbookData.부교재);
+
+          // 위 세 경로가 모두 실패하면, 임의의 최상위 키 안에 "부교재"가 있는 구조를 탐색
+          // 예: { "06_워시메_...": { "부교재": { "교재명": { ... } } } }
+          if (!actualData) {
+            const rawData = textbookData as Record<string, Record<string, Record<string, TextbookContent>>>;
+            for (const outerKey of Object.keys(rawData)) {
+              const outerVal = rawData[outerKey];
+              if (outerVal && typeof outerVal === 'object' && outerVal['부교재']) {
+                actualData = pickFirstIfSingle(outerVal['부교재']);
+                if (actualData) break;
+              }
+            }
+          }
           
           if (actualData) {
             const groups: {[key: string]: string[]} = {};

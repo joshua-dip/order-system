@@ -8,6 +8,7 @@ import {
   DEFAULT_QUESTIONS_PER_VARIANT_TYPE,
 } from '@/lib/book-variant-types';
 import { buildEnglishExamSolveUserPrompt } from '@/lib/generated-question-solve-prompt';
+import { HARD_INSERTION_PROMPT } from '@/lib/hard-insertion-generator';
 import { OpenIdFromQuery } from './OpenIdFromQuery';
 
 const VALIDATE_EXCLUDE_STORAGE = 'admin-gq-validate-excluded-types';
@@ -391,6 +392,7 @@ export default function AdminGeneratedQuestionsPage() {
 
   const [filterTextbook, setFilterTextbook] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterDifficulty, setFilterDifficulty] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPassageId, setFilterPassageId] = useState('');
   const [filterQ, setFilterQ] = useState('');
@@ -433,6 +435,7 @@ export default function AdminGeneratedQuestionsPage() {
     source: '',
     type: '',
     option_type: 'English',
+    difficulty: '중',
     status: '완료',
     error_msg: '',
   });
@@ -448,6 +451,7 @@ export default function AdminGeneratedQuestionsPage() {
     source: string;
     type: string;
     option_type: string;
+    difficulty: string;
     status: string;
     error_msg: string;
   } | null>(null);
@@ -479,6 +483,7 @@ export default function AdminGeneratedQuestionsPage() {
   const [typePromptMap, setTypePromptMap] = useState<Record<string, string>>({});
   const [typePromptNewName, setTypePromptNewName] = useState('');
   const [typePromptSavedFlash, setTypePromptSavedFlash] = useState(false);
+  const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
 
   type DuplicateGroup = {
     questionType: string;
@@ -898,6 +903,7 @@ export default function AdminGeneratedQuestionsPage() {
     const params = new URLSearchParams();
     if (filterTextbook) params.set('textbook', filterTextbook);
     if (filterType) params.set('type', filterType);
+    if (filterDifficulty) params.set('difficulty', filterDifficulty);
     if (filterStatus) params.set('status', filterStatus);
     if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
     if (filterQ) params.set('q', filterQ);
@@ -916,7 +922,7 @@ export default function AdminGeneratedQuestionsPage() {
         setTotal(0);
       })
       .finally(() => setListLoading(false));
-  }, [filterTextbook, filterType, filterStatus, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit]);
+  }, [filterTextbook, filterType, filterDifficulty, filterStatus, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit]);
 
   useEffect(() => {
     if (!user) return;
@@ -940,6 +946,7 @@ export default function AdminGeneratedQuestionsPage() {
       source: '',
       type: filterType || '',
       option_type: 'English',
+      difficulty: '중',
       status: '완료',
       error_msg: '',
     });
@@ -970,6 +977,7 @@ export default function AdminGeneratedQuestionsPage() {
       source: (r.label || '').trim() || `${r.type} 변형`,
       type: r.type,
       option_type: 'English',
+      difficulty: '중',
       status: '완료',
       error_msg: '',
     });
@@ -1108,6 +1116,7 @@ export default function AdminGeneratedQuestionsPage() {
           userHint: draftUserHint.trim(),
           ...(typePrompt ? { typePrompt } : {}),
           option_type: form.option_type.trim() || 'English',
+          difficulty: form.difficulty.trim(),
         }),
       });
       const d = await res.json();
@@ -1213,6 +1222,7 @@ export default function AdminGeneratedQuestionsPage() {
         source: String(it.source ?? ''),
         type: String(it.type ?? ''),
         option_type: String(it.option_type ?? '서술형'),
+        difficulty: String(it.difficulty ?? '중'),
         status: String(it.status ?? ''),
         error_msg: '',
       });
@@ -1255,6 +1265,7 @@ export default function AdminGeneratedQuestionsPage() {
         source: String(it.source ?? ''),
         type: String(it.type ?? ''),
         option_type: String(it.option_type ?? 'English'),
+        difficulty: String(it.difficulty ?? '중'),
         status: String(it.status ?? '완료'),
         error_msg: it.error_msg == null ? '' : String(it.error_msg),
       });
@@ -1311,6 +1322,7 @@ export default function AdminGeneratedQuestionsPage() {
             source: form.source.trim(),
             type: form.type.trim(),
             option_type: form.option_type.trim(),
+            difficulty: form.difficulty.trim(),
             status: form.status.trim(),
             error_msg: form.error_msg.trim() || null,
             question_data,
@@ -1321,6 +1333,7 @@ export default function AdminGeneratedQuestionsPage() {
             source: form.source.trim(),
             type: form.type.trim(),
             option_type: form.option_type.trim(),
+            difficulty: form.difficulty.trim(),
             status: form.status.trim(),
             error_msg: form.error_msg.trim() || null,
             question_data,
@@ -2805,6 +2818,12 @@ export default function AdminGeneratedQuestionsPage() {
               원문 관리
             </Link>
             <Link
+              href="/admin/question-review"
+              className="text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg border border-amber-600/50 hover:border-amber-400/60 text-amber-200/90 font-semibold"
+            >
+              문제 검수
+            </Link>
+            <Link
               href="/admin/generated-questions/review-logs"
               className="text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 text-emerald-200/90"
             >
@@ -2893,6 +2912,21 @@ export default function AdminGeneratedQuestionsPage() {
             </select>
           </div>
           <div>
+            <label className="block text-xs text-slate-400 mb-1">난이도</label>
+            <select
+              value={filterDifficulty}
+              onChange={(e) => {
+                setFilterDifficulty(e.target.value);
+                setPage(1);
+              }}
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm min-w-[80px] text-white"
+            >
+              <option value="">전체</option>
+              <option value="중">중</option>
+              <option value="상">상</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-xs text-slate-400 mb-1">상태</label>
             <select
               value={filterStatus}
@@ -2955,6 +2989,27 @@ export default function AdminGeneratedQuestionsPage() {
           >
             새로고침
           </button>
+          {(['pdf', 'docx'] as const).map((fmt) => (
+            <button
+              key={fmt}
+              type="button"
+              disabled={total === 0}
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (filterTextbook) params.set('textbook', filterTextbook);
+                if (filterType) params.set('type', filterType);
+                if (filterDifficulty) params.set('difficulty', filterDifficulty);
+                if (filterStatus) params.set('status', filterStatus);
+                if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
+                params.set('format', fmt);
+                window.open(`/api/admin/generated-questions/download-pdf?${params}`, '_blank');
+              }}
+              className={`${fmt === 'pdf' ? 'bg-indigo-700 hover:bg-indigo-600' : 'bg-emerald-700 hover:bg-emerald-600'} disabled:opacity-40 px-4 py-2 rounded-lg text-sm font-medium`}
+              title={`현재 필터 조건의 문제를 ${fmt.toUpperCase()}로 다운로드 (최대 500문항)`}
+            >
+              {fmt.toUpperCase()} 다운로드
+            </button>
+          ))}
         </div>
 
         <div className="mb-3">
@@ -6119,19 +6174,52 @@ export default function AdminGeneratedQuestionsPage() {
                   </>
                 )}
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">유형 (type) *</label>
-                  <input
-                    list="gq-types"
-                    value={form.type}
-                    onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
-                    placeholder="빈칸, 주제, …"
-                  />
-                  <datalist id="gq-types">
-                    {types.map((t) => (
-                      <option key={t} value={t} />
-                    ))}
-                  </datalist>
+                  <label className="text-xs text-slate-400 flex items-center gap-1.5 mb-1">
+                    유형 (type) *
+                    {(() => {
+                      const stored = loadTypePromptsFromStorage();
+                      const hasPrompt = form.difficulty === '상'
+                        ? true
+                        : !!(form.type.trim() && stored[form.type.trim()]);
+                      if (!hasPrompt) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setPromptPreviewOpen(true)}
+                          className="text-violet-400 hover:text-violet-300 transition-colors"
+                          title="이 유형의 프롬프트 보기"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      );
+                    })()}
+                  </label>
+                  {form.difficulty === '상' ? (
+                    <select
+                      value={form.type}
+                      onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      <option value="삽입">삽입</option>
+                    </select>
+                  ) : (
+                    <>
+                      <input
+                        list="gq-types"
+                        value={form.type}
+                        onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                        placeholder="빈칸, 주제, …"
+                      />
+                      <datalist id="gq-types">
+                        {types.map((t) => (
+                          <option key={t} value={t} />
+                        ))}
+                      </datalist>
+                    </>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-slate-400 block mb-1">option_type</label>
@@ -6140,6 +6228,27 @@ export default function AdminGeneratedQuestionsPage() {
                     onChange={(e) => setForm((f) => ({ ...f, option_type: e.target.value }))}
                     className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
                   />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">난이도</label>
+                  <select
+                    value={form.difficulty}
+                    onChange={(e) => {
+                      const d = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        difficulty: d,
+                        ...(d === '상' && f.type !== '삽입' ? { type: '삽입' } : {}),
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  >
+                    {['중', '상'].map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs text-slate-400 block mb-1">상태</label>
@@ -6203,6 +6312,89 @@ export default function AdminGeneratedQuestionsPage() {
                       )}
                       {draftLoading ? 'Claude 작성 중…' : editingId ? 'Claude로 초안 다시 생성' : 'Claude로 초안 생성'}
                     </button>
+                    {form.difficulty === '상' && form.type === '삽입' && (
+                      <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            const parsed = JSON.parse(questionJson) as Record<string, unknown>;
+                            const errors: string[] = [];
+
+                            const requiredKeys = ['Question', 'Paragraph', 'Options', 'CorrectAnswer', 'Explanation'];
+                            for (const k of requiredKeys) {
+                              if (!parsed[k] || (typeof parsed[k] === 'string' && !(parsed[k] as string).trim())) {
+                                errors.push(`"${k}" 필드가 비어 있습니다.`);
+                              }
+                            }
+
+                            const para = String(parsed.Paragraph ?? '');
+                            const parts = para.split(/\n\n|\n###\n|###/);
+                            if (parts.length < 2) {
+                              errors.push('Paragraph: "삽입 문장\\n\\n본문" 형식이어야 합니다 (구분이 없음).');
+                            } else {
+                              const givenSentence = parts[0].trim();
+                              const body = parts.slice(1).join(' ').trim();
+
+                              const wordCount = givenSentence.split(/\s+/).filter(Boolean).length;
+                              if (wordCount < 10 || wordCount > 45) {
+                                errors.push(`삽입 문장 길이: ${wordCount}단어 (권장 15~35).`);
+                              }
+
+                              if (!/\b(this|such|these|those|however|therefore|consequently|as a result|in other words|thus|hence|nevertheless|furthermore|moreover)\b/i.test(givenSentence)) {
+                                errors.push('삽입 문장에 지시어/연결어(this, such, however 등)가 없습니다.');
+                              }
+
+                              const givenLower = givenSentence.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+                              if (givenLower.length > 20 && body.toLowerCase().includes(givenLower)) {
+                                errors.push('삽입 문장이 본문에 그대로 존재합니다 — 새 문장을 생성해야 합니다.');
+                              }
+
+                              const markers = body.match(/[①②③④⑤]/g) ?? [];
+                              if (markers.length < 5) {
+                                errors.push(`본문에 ①~⑤ 위치 마커가 ${markers.length}개뿐입니다 (5개 필요).`);
+                              }
+                            }
+
+                            const answer = String(parsed.CorrectAnswer ?? '').trim();
+                            if (answer && !/^[①②③④⑤]$/.test(answer)) {
+                              errors.push(`CorrectAnswer "${answer}"가 ①~⑤ 형식이 아닙니다.`);
+                            }
+
+                            if (errors.length === 0) {
+                              alert('검증 통과: 양식이 올바릅니다.');
+                            } else {
+                              alert('검증 실패:\n\n' + errors.map((e, i) => `${i + 1}. ${e}`).join('\n'));
+                            }
+                          } catch {
+                            alert('JSON 파싱 실패: 유효한 JSON 형식인지 확인하세요.');
+                          }
+                        }}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md"
+                        title="난이도 상 삽입 문제의 양식이 올바른지 검증합니다"
+                      >
+                        양식 검증
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!passagePreview}
+                        onClick={async () => {
+                          const prompt = `${HARD_INSERTION_PROMPT}\n\n---\n\n[지문 Paragraph]\n${passagePreview ?? ''}`;
+                          try {
+                            await navigator.clipboard.writeText(prompt);
+                            window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
+                            alert('프롬프트 + 지문을 클립보드에 복사했습니다.\nChatGPT에서 붙여넣기(Cmd+V) 후 전송하세요.');
+                          } catch {
+                            alert('클립보드 복사에 실패했습니다.');
+                          }
+                        }}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-green-700 hover:bg-green-600 text-white font-bold disabled:opacity-50 shadow-md"
+                        title="난이도 상 삽입 프롬프트 + 원문을 클립보드에 복사하고 ChatGPT를 엽니다"
+                      >
+                        GPT로 문제 만들기
+                      </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       disabled={draftLoading || saving || explanationOnlyLoading}
@@ -6355,6 +6547,30 @@ export default function AdminGeneratedQuestionsPage() {
                 <button
                   type="button"
                   disabled={narrativeReadOnly || saving || draftLoading || explanationOnlyLoading}
+                  onClick={async () => {
+                    try {
+                      const parsed = JSON.parse(questionJson) as Record<string, unknown>;
+                      const prompt = buildEnglishExamSolveUserPrompt({
+                        questionType: form.type,
+                        paragraph: typeof parsed.Paragraph === 'string' ? parsed.Paragraph : '',
+                        question: typeof parsed.Question === 'string' ? parsed.Question : '',
+                        options: typeof parsed.Options === 'string' ? parsed.Options : '',
+                      });
+                      await navigator.clipboard.writeText(prompt);
+                      window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
+                      alert('풀이용 프롬프트를 클립보드에 복사했습니다.\nChatGPT 탭에서 붙여넣기(Cmd+V) 후 전송하세요.');
+                    } catch {
+                      alert('JSON 파싱 또는 클립보드 복사에 실패했습니다.');
+                    }
+                  }}
+                  title="현재 question_data를 풀이 프롬프트로 변환 → 클립보드 복사 → ChatGPT 새 탭"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-700 to-emerald-700 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-bold disabled:opacity-50 shadow-md"
+                >
+                  GPT로 문제 풀기
+                </button>
+                <button
+                  type="button"
+                  disabled={narrativeReadOnly || saving || draftLoading || explanationOnlyLoading}
                   onClick={handleSave}
                   title="⌘↵(Mac) 또는 Ctrl+↵(Windows)로 저장"
                   className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 font-bold disabled:opacity-50 inline-flex items-center gap-2"
@@ -6408,6 +6624,64 @@ export default function AdminGeneratedQuestionsPage() {
                 className="px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold"
               >
                 이어서 만들기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {promptPreviewOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-slate-700">
+              <h3 className="text-base font-bold text-white">
+                {form.difficulty === '상'
+                  ? `난이도 상 · ${form.type || '삽입'} 프롬프트`
+                  : `${form.type || '유형'} 프롬프트`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPromptPreviewOpen(false)}
+                className="text-slate-400 hover:text-white text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <pre className="whitespace-pre-wrap text-sm text-slate-200 font-mono leading-relaxed">
+                {form.difficulty === '상'
+                  ? HARD_INSERTION_PROMPT
+                  : (() => {
+                      const stored = loadTypePromptsFromStorage();
+                      const p = form.type.trim() ? (stored[form.type.trim()] ?? '') : '';
+                      return p || '이 유형에 대한 프롬프트가 아직 설정되지 않았습니다.';
+                    })()}
+              </pre>
+            </div>
+            <div className="px-6 py-3 border-t border-slate-700 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const text = form.difficulty === '상'
+                    ? HARD_INSERTION_PROMPT
+                    : (() => {
+                        const stored = loadTypePromptsFromStorage();
+                        return form.type.trim() ? (stored[form.type.trim()] ?? '') : '';
+                      })();
+                  navigator.clipboard.writeText(text).then(() => {
+                    alert('프롬프트가 클립보드에 복사되었습니다.');
+                  });
+                }}
+                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold"
+              >
+                복사
+              </button>
+              <button
+                type="button"
+                onClick={() => setPromptPreviewOpen(false)}
+                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm"
+              >
+                닫기
               </button>
             </div>
           </div>

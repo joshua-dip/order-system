@@ -28,6 +28,7 @@ function buildVariantFilter(opts: {
   textbook: string;
   type: string;
   status: string;
+  difficulty: string;
   passageId: string;
   q: string;
 }): Record<string, unknown> {
@@ -35,6 +36,7 @@ function buildVariantFilter(opts: {
   if (opts.textbook) filter.textbook = opts.textbook;
   if (opts.type) filter.type = opts.type;
   if (opts.status) filter.status = opts.status;
+  if (opts.difficulty) filter.difficulty = opts.difficulty;
   if (opts.passageId && ObjectId.isValid(opts.passageId)) {
     filter.passage_id = new ObjectId(opts.passageId);
   }
@@ -110,6 +112,7 @@ export async function GET(request: NextRequest) {
   const textbook = searchParams.get('textbook')?.trim() || '';
   const type = searchParams.get('type')?.trim() || '';
   const status = searchParams.get('status')?.trim() || '';
+  const difficulty = searchParams.get('difficulty')?.trim() || '';
   const passageId = searchParams.get('passage_id')?.trim() || '';
   const q = searchParams.get('q')?.trim() || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
@@ -121,7 +124,7 @@ export async function GET(request: NextRequest) {
   const dataScope =
     dataScopeRaw === 'narrative' || dataScopeRaw === 'all' ? dataScopeRaw : 'variant';
 
-  const variantFilter = buildVariantFilter({ textbook, type, status, passageId, q });
+  const variantFilter = buildVariantFilter({ textbook, type, status, difficulty, passageId, q });
   const narrFilter = buildNarrativeQuestionsFilter({
     textbook,
     type,
@@ -170,6 +173,7 @@ export async function GET(request: NextRequest) {
             source: 1,
             type: 1,
             option_type: 1,
+            difficulty: 1,
             status: 1,
             created_at: 1,
             record_kind: 1,
@@ -211,6 +215,7 @@ export async function GET(request: NextRequest) {
             source: 1,
             type: 1,
             option_type: 1,
+            difficulty: 1,
             status: 1,
             created_at: 1,
             record_kind: 1,
@@ -277,6 +282,7 @@ export async function GET(request: NextRequest) {
           source: 1,
           type: 1,
           option_type: 1,
+          difficulty: 1,
           created_at: 1,
           'question_data.Question': 1,
           'question_data.Paragraph': 1,
@@ -337,6 +343,9 @@ export async function POST(request: NextRequest) {
 
     const option_type = typeof body.option_type === 'string' ? body.option_type.trim() : 'English';
     const docStatus = typeof body.status === 'string' && body.status.trim() ? body.status.trim() : '완료';
+    const difficulty = typeof body.difficulty === 'string' && body.difficulty.trim()
+      ? body.difficulty.trim()
+      : (typeof question_data?.DifficultyLevel === 'string' ? (question_data.DifficultyLevel as string) : '중');
     const error_msg =
       body.error_msg === null || body.error_msg === undefined
         ? null
@@ -355,6 +364,7 @@ export async function POST(request: NextRequest) {
       source,
       type,
       option_type,
+      difficulty,
       question_data,
       status: docStatus,
       error_msg,
