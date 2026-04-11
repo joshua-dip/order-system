@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface School { id: string; name: string }
 interface ExamQuestion {
@@ -10,6 +10,7 @@ interface ExamQuestion {
   questionBody?: string;   // 문제본문 (지문)
   choices?: string;        // 선택지 (\n 구분)
   summary?: string;        // 요약문 (요약 유형)
+  groupId?: string;        // 공통지문 묶음 ID
   score: number; isSubjective: boolean;
 }
 interface SchoolExam {
@@ -364,8 +365,52 @@ export default function VipExamsPage() {
       patch.textbook = matchResult.textbook;
       patch.source = matchResult.sourceKey;
     }
-    updateQuestion(examId, qNum, patch);
+    // 그룹 내 다른 문항에도 questionBody 동기화
+    setLocalExams((prev) => {
+      const exam = prev[examId] || exams.find((e) => e.id === examId)!;
+      const thisQ = exam.questions[qNum];
+      const newQs = { ...exam.questions };
+      // 현재 문항 업데이트
+      newQs[qNum] = { ...(newQs[qNum] || { score: 0, isSubjective: false }), ...patch };
+      // 같은 groupId인 다른 문항에 questionBody 전파
+      if (thisQ?.groupId) {
+        Object.keys(newQs).forEach((k) => {
+          if (k !== qNum && newQs[k]?.groupId === thisQ.groupId) {
+            newQs[k] = { ...newQs[k], questionBody: body };
+          }
+        });
+      }
+      return { ...prev, [examId]: { ...exam, questions: newQs } };
+    });
     setTextModal(null);
+  };
+
+  const toggleGroup = (examId: string, qNumA: string, qNumB: string) => {
+    setLocalExams((prev) => {
+      const exam = prev[examId] || exams.find((e) => e.id === examId)!;
+      const qA = exam.questions[qNumA] || { score: 0, isSubjective: false };
+      const qB = exam.questions[qNumB] || { score: 0, isSubjective: false };
+      const sameGroup = qA.groupId && qA.groupId === qB.groupId;
+      if (sameGroup) {
+        // 풀기: 두 문항의 groupId 제거 (그룹 전체 중 이 둘 연결만 끊음)
+        const newQs = { ...exam.questions };
+        newQs[qNumA] = { ...qA, groupId: undefined };
+        newQs[qNumB] = { ...qB, groupId: undefined };
+        return { ...prev, [examId]: { ...exam, questions: newQs } };
+      }
+      // 묶기: 기존 groupId 활용하거나 새로 생성
+      const groupId = qA.groupId || qB.groupId || `grp-${Date.now()}`;
+      const newQs: Record<string, ExamQuestion> = { ...exam.questions };
+      // 기존 그룹 내 모두 동일 groupId 부여
+      Object.entries(newQs).forEach(([k, q]) => {
+        if (q.groupId && (q.groupId === qA.groupId || q.groupId === qB.groupId)) {
+          newQs[k] = { ...q, groupId };
+        }
+      });
+      newQs[qNumA] = { ...newQs[qNumA], groupId };
+      newQs[qNumB] = { ...newQs[qNumB], groupId };
+      return { ...prev, [examId]: { ...exam, questions: newQs } };
+    });
   };
 
   const updateLocal = (id: string, patch: Partial<SchoolExam>) => {
@@ -777,22 +822,50 @@ export default function VipExamsPage() {
                             <tbody>
                               {Array.from({ length: totalQ }, (_, i) => {
                                 const qNum = String(i + 1);
+                                const nextQNum = String(i + 2);
                                 const isSubjective = i + 1 > local.objectiveCount;
                                 const q = local.questions[qNum] || { score: 0, isSubjective };
+                                const nextQ = local.questions[nextQNum];
                                 const types = isSubjective ? SUBJECTIVE_TYPES : OBJECTIVE_TYPES;
+                                const isGroupedWithNext = !!(q.groupId && nextQ?.groupId && q.groupId === nextQ.groupId);
+                                const isGroupStart = !!(q.groupId && (i === 0 || local.questions[String(i)]?.groupId !== q.groupId));
+                                const isGroupEnd = !!(q.groupId && (!nextQ || nextQ.groupId !== q.groupId));
+                                // 이 행이 그룹 내 첫 번째면 그룹 번호 범위 계산
+                                const groupRange = isGroupStart && q.groupId
+                                  ? (() => {
+                                      const nums = Object.entries(local.questions)
+                                        .filter(([, v]) => v.groupId === q.groupId)
+                                        .map(([k]) => parseInt(k))
+                                        .sort((a, b) => a - b);
+                                      return nums.length > 1 ? `[${nums[0]}-${nums[nums.length - 1]}]` : null;
+                                    })()
+                                  : null;
                                 return (
+                                  <React.Fragment key={qNum}>
                                   <tr
-                                    key={qNum}
-                                    className={`border-b border-zinc-800/50 hover:bg-zinc-800/20 ${i + 1 === local.objectiveCount + 1 && local.subjectiveCount > 0 ? 'border-t-2 border-t-amber-500/30' : ''}`}
+                                    className={`border-b border-zinc-800/50 hover:bg-zinc-800/20
+                                      ${i + 1 === local.objectiveCount + 1 && local.subjectiveCount > 0 ? 'border-t-2 border-t-amber-500/30' : ''}
+                                      ${q.groupId ? 'bg-violet-950/10' : ''}`}
                                   >
                                     <td className="px-2 py-1.5">
-                                      <button
-                                        onClick={() => openTextModal(exam.id, qNum)}
-                                        title="클릭하여 지문 입력 및 출처 검색"
-                                        className={`font-mono text-sm w-full text-left hover:text-cyan-300 transition-colors ${q.questionText ? 'text-cyan-400' : 'text-zinc-500'}`}
-                                      >
-                                        {qNum}
-                                      </button>
+                                      <div className="flex items-center gap-1">
+                                        {/* 그룹 왼쪽 선 */}
+                                        {q.groupId && (
+                                          <div className={`w-0.5 self-stretch rounded-full bg-violet-500/60 shrink-0 ${isGroupStart ? 'mt-1' : ''} ${isGroupEnd ? 'mb-1' : ''}`} />
+                                        )}
+                                        <div className="flex flex-col">
+                                          <button
+                                            onClick={() => openTextModal(exam.id, qNum)}
+                                            title="클릭하여 지문 입력 및 출처 검색"
+                                            className={`font-mono text-sm text-left hover:text-cyan-300 transition-colors leading-none ${q.questionBody ? 'text-cyan-400' : 'text-zinc-500'}`}
+                                          >
+                                            {qNum}
+                                          </button>
+                                          {groupRange && (
+                                            <span className="text-[9px] text-violet-400 font-medium leading-none mt-0.5">{groupRange}</span>
+                                          )}
+                                        </div>
+                                      </div>
                                     </td>
                                     <td className="px-2 py-1.5">
                                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${isSubjective ? 'bg-amber-500/20 text-amber-300' : 'bg-cyan-500/20 text-cyan-300'}`}>
@@ -850,6 +923,37 @@ export default function VipExamsPage() {
                                       />
                                     </td>
                                   </tr>
+                                  {/* 행 사이 묶기/풀기 커넥터 (마지막 행 제외) */}
+                                  {i + 1 < totalQ && (
+                                    <tr className="h-0">
+                                      <td colSpan={6} className="p-0">
+                                        <div className="relative flex items-center justify-start pl-3 h-4 group/connector">
+                                          {isGroupedWithNext ? (
+                                            <>
+                                              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-violet-500/50" />
+                                              <button
+                                                onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
+                                                className="absolute left-5 top-1/2 -translate-y-1/2 opacity-0 group-hover/connector:opacity-100 transition-opacity px-1.5 py-0.5 text-[9px] text-violet-300 bg-violet-900/50 border border-violet-700/50 rounded hover:bg-violet-800/60"
+                                              >
+                                                풀기
+                                              </button>
+                                            </>
+                                          ) : (
+                                            <button
+                                              onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
+                                              className="opacity-0 group-hover/connector:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 text-[9px] text-zinc-500 border border-dashed border-zinc-700 rounded hover:text-violet-300 hover:border-violet-600 hover:bg-violet-950/30"
+                                            >
+                                              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                              </svg>
+                                              묶기
+                                            </button>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                  </React.Fragment>
                                 );
                               })}
                             </tbody>
@@ -897,6 +1001,22 @@ export default function VipExamsPage() {
               <div className="flex items-center gap-3">
                 <span className="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-300 text-sm font-mono flex items-center justify-center">{textModal.qNum}</span>
                 <span className="text-sm font-medium text-zinc-100">문항 세부 정보</span>
+                {(() => {
+                  const exam = localExams[textModal.examId] || exams.find((e) => e.id === textModal.examId);
+                  const thisQ = exam?.questions[textModal.qNum];
+                  if (!thisQ?.groupId) return null;
+                  const groupNums = Object.entries(exam!.questions)
+                    .filter(([, v]) => v.groupId === thisQ.groupId)
+                    .map(([k]) => parseInt(k)).sort((a, b) => a - b);
+                  return (
+                    <span className="flex items-center gap-1 px-2 py-0.5 bg-violet-500/20 text-violet-300 rounded-lg text-[11px]">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                      </svg>
+                      {groupNums[0]}-{groupNums[groupNums.length - 1]}번 공통지문 · 저장 시 전체 동기화
+                    </span>
+                  );
+                })()}
                 {textModal.matchResult && (
                   <span className="flex items-center gap-1 text-[11px] text-cyan-400">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
