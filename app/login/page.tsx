@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { DEFAULT_APP_BAR_TITLE, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
+import { getSafeUserLoginRedirect } from '@/lib/post-login-redirect';
+
+const KAKAO_INQUIRY_URL =
+  process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
+const INQUIRY_PHONE_DISPLAY = '010-7927-0806';
+const INQUIRY_PHONE_TEL = 'tel:01079270806';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') || '/';
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,6 +26,7 @@ function LoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ loginId, password }),
       });
       const data = await res.json();
@@ -28,8 +34,8 @@ function LoginForm() {
         setError(data?.error || '로그인에 실패했습니다.');
         return;
       }
-      router.push(from);
-      router.refresh();
+      const dest = getSafeUserLoginRedirect(searchParams.get('from'), data?.mustChangePassword === true);
+      window.location.assign(dest);
     } catch {
       setError('로그인 요청 중 오류가 발생했습니다.');
     } finally {
@@ -63,11 +69,19 @@ function LoginForm() {
               </svg>
             </div>
             <h1 className="text-xl font-bold text-white tracking-tight">
-              커스터마이징 서비스
+              {DEFAULT_APP_BAR_TITLE}
             </h1>
             <p className="text-blue-100/90 text-sm mt-1">
               계정으로 로그인
             </p>
+            <a
+              href={SOLVOOK_BRAND_PAGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2 text-xs font-medium text-amber-200/95 hover:text-amber-100 underline underline-offset-2"
+            >
+              쏠북 브랜드 페이지 →
+            </a>
           </div>
 
           {/* 폼 영역 */}
@@ -136,17 +150,26 @@ function LoginForm() {
             </p>
           </div>
         </div>
-        <p className="text-center text-slate-400 text-xs mt-6">
+        <p className="text-center text-slate-500 text-sm mt-6 leading-relaxed px-1">
           계정이 없으시면{' '}
           <a
-            href="https://open.kakao.com/o/sHuV7wSh"
+            href={KAKAO_INQUIRY_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline font-medium"
+            className="text-blue-600 hover:underline font-semibold"
           >
-            문의해 주세요
+            카카오톡 오픈채팅
           </a>
-          .
+          을 눌러 문의하시거나,
+          <br />
+          전화{' '}
+          <a href={INQUIRY_PHONE_TEL} className="text-blue-600 hover:underline font-semibold">
+            {INQUIRY_PHONE_DISPLAY}
+          </a>
+          으로 연락해 주세요.
+          <span className="block text-slate-400 text-xs mt-1.5 font-normal">
+            (오픈채팅 링크 클릭 시 카카오톡 채팅방으로 이동합니다)
+          </span>
         </p>
       </div>
     </div>

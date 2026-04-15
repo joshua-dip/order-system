@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import Link from 'next/link';
 import AppBar from './AppBar';
 import { OrderHubCard, type OrderHubCardProps } from './OrderHubCard';
+import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -10,6 +12,7 @@ interface TextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
   onMockExamSelect: () => void;
   onWorkbookSelect: () => void;
+  onUnifiedSelect?: () => void;
 }
 
 type HubEntry = Omit<OrderHubCardProps, 'bottomSlot'> & {
@@ -102,31 +105,86 @@ function IconBundle() {
   );
 }
 
+function IconGyogwaseo() {
+  return (
+    <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  );
+}
+
+function IconByok() {
+  return (
+    <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v2" />
+      <path d="M12 19v2" />
+      <path d="M3 12h2" />
+      <path d="M19 12h2" />
+      <path d="m5.6 5.6 1.4 1.4" />
+      <path d="m17 17 1.4 1.4" />
+      <path d="m17 6.6 1.4-1.4" />
+      <path d="m5.6 18.4 1.4-1.4" />
+      <circle cx="12" cy="12" r="4" />
+    </svg>
+  );
+}
+
 /* ── Hub items ─────────────────────────────────────────────── */
 
-function useHubItems(analysisUnlocked: boolean, isMember: boolean): HubEntry[] {
-  return useMemo(
-    () => [
-      {
-        id: 'mock',
-        title: '모의고사 변형문제 주문',
-        description: (<>18~40번, 41~42번, 43~45번<br />정해진 문항 구성</>),
-        icon: <IconMock /> as ReactNode,
-        accentColor: '#13294B',
-        gridClassName: 'lg:col-span-3',
-        href: '/mockexam',
-        interactive: true,
-      },
-      {
-        id: 'textbook',
-        title: '부교재 변형문제 주문',
-        description: (<>교재별 맞춤 문항 선택<br />다양한 교재 지원</>),
-        icon: <IconTextbook /> as ReactNode,
-        accentColor: '#13294B',
-        gridClassName: 'lg:col-span-3',
-        href: '/textbook',
-        interactive: true,
-      },
+function useHubSections(
+  analysisUnlocked: boolean,
+  isMember: boolean,
+  isPremiumMember: boolean
+): { primary: HubEntry[]; more: HubEntry[] } {
+  return useMemo(() => {
+    const mock: HubEntry = {
+      id: 'mock',
+      title: '모의고사 변형문제 주문',
+      description: (<>18~40번, 41~42번, 43~45번<br />정해진 문항 구성</>),
+      icon: <IconMock /> as ReactNode,
+      accentColor: '#13294B',
+      gridClassName: 'lg:col-span-2',
+      href: '/mockexam',
+      interactive: true,
+    };
+    const textbook: HubEntry = {
+      id: 'textbook',
+      title: '부교재 변형문제 주문',
+      description: (
+        <>
+          교재별 맞춤 문항 선택
+          <br />
+          다양한 교재 지원
+          <br />
+          <span className="font-semibold text-violet-600">쏠북 교재 지원</span>
+        </>
+      ),
+      icon: <IconTextbook /> as ReactNode,
+      accentColor: '#13294B',
+      gridClassName: 'lg:col-span-2',
+      href: '/textbook',
+      interactive: true,
+    };
+    const gyogwaseo: HubEntry = {
+      id: 'gyogwaseo',
+      title: '교과서 변형문제 주문',
+      description: (
+        <>
+          YBM · 쎄듀 · NE능률
+          <br />
+          교과서 맞춤 문항 선택
+          <br />
+          <span className="font-semibold text-violet-600">쏠북 교재 지원</span>
+        </>
+      ),
+      icon: <IconGyogwaseo /> as ReactNode,
+      accentColor: '#1B5E8A',
+      gridClassName: 'lg:col-span-2',
+      href: '/gyogwaseo',
+      interactive: true,
+    };
+    const more: HubEntry[] = [
       {
         id: 'workbook',
         title: '워크북 주문',
@@ -209,68 +267,380 @@ function useHubItems(analysisUnlocked: boolean, isMember: boolean): HubEntry[] {
           </a>
         ),
       },
-    ],
-    [analysisUnlocked, isMember]
-  );
+    ];
+    return { primary: [mock, textbook, gyogwaseo], more };
+  }, [analysisUnlocked, isMember, isPremiumMember]);
 }
 
 /* ── Component ─────────────────────────────────────────────── */
 
 const TextbookSelection = (_props: TextbookSelectionProps) => {
-  const [user, setUser] = useState<{ canAccessAnalysis: boolean } | null>(null);
+  const [user, setUser] = useState<{ canAccessAnalysis: boolean; isPremiumMember?: boolean } | null>(null);
+  const [premiumLoad, setPremiumLoad] = useState(true);
+  const [finalGateOpen, setFinalGateOpen] = useState(false);
+  const [byokGateOpen, setByokGateOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
         if (data?.user) {
-          setUser({ canAccessAnalysis: !!data.user.canAccessAnalysis });
+          setUser({
+            canAccessAnalysis: !!data.user.canAccessAnalysis,
+            isPremiumMember: data.user.isPremiumMember === true,
+          });
         } else {
           setUser(null);
         }
       })
-      .catch(() => setUser(null));
+      .catch(() => setUser(null))
+      .finally(() => setPremiumLoad(false));
   }, []);
 
   const isMember = user !== null;
   const analysisUnlocked = isMember && user.canAccessAnalysis;
-  const hubItems = useHubItems(analysisUnlocked, isMember);
+  const isPremiumMember = user?.isPremiumMember === true;
+  const { primary: hubPrimary, more: hubMore } = useHubSections(analysisUnlocked, isMember, isPremiumMember);
+
+  const renderHubGrid = (items: HubEntry[]) => (
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-6" role="list">
+      {items.map(
+        ({
+          id,
+          title,
+          description,
+          icon,
+          accentColor,
+          gridClassName,
+          href,
+          interactive,
+          bottomSlot,
+        }) => (
+          <div key={id} className={gridClassName} role="listitem">
+            <OrderHubCard
+              title={title}
+              description={description}
+              icon={icon}
+              accentColor={accentColor}
+              href={href}
+              interactive={interactive}
+              bottomSlot={bottomSlot}
+            />
+          </div>
+        )
+      )}
+    </div>
+  );
 
   return (
     <>
       <AppBar />
       <div className="min-h-screen motion-safe:scroll-smooth" style={{ backgroundColor: '#F8FAFC' }}>
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
-          <div
-            className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-6"
-            role="list"
-          >
-            {hubItems.map(
-              ({
-                id,
-                title,
-                description,
-                icon,
-                accentColor,
-                gridClassName,
-                href,
-                interactive,
-                bottomSlot,
-              }) => (
-                <div key={id} className={gridClassName} role="listitem">
-                  <OrderHubCard
-                    title={title}
-                    description={description}
-                    icon={icon}
-                    accentColor={accentColor}
-                    href={href}
-                    interactive={interactive}
-                    bottomSlot={bottomSlot}
-                  />
+            {/* 파이널 예비 모의고사 + 변형문제 만들기 — 나란히 강조 배너 */}
+          <div className="mb-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {premiumLoad ? (
+              <div
+                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md opacity-80 animate-pulse cursor-wait sm:px-7"
+                style={{
+                  background: 'linear-gradient(120deg, #1a1a6e 0%, #4b0082 55%, #7c3aed 100%)',
+                }}
+              >
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">파이널 예비 모의고사</span>
+                  <p className="text-sm font-medium text-purple-200">불러오는 중…</p>
                 </div>
-              )
+              </div>
+            ) : user?.isPremiumMember ? (
+              <Link
+                href="/unified"
+                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+                style={{
+                  background: 'linear-gradient(120deg, #1a1a6e 0%, #4b0082 55%, #7c3aed 100%)',
+                }}
+              >
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-gray-900 shadow">
+                      NEW
+                    </span>
+                    <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">파이널 예비 모의고사</span>
+                  </div>
+                  <p className="text-sm font-medium text-purple-200">
+                    시험 범위를 설정하고 예비 시험지를 제작하기에 가장 적합한 기능입니다
+                  </p>
+                  <p className="mt-0.5 text-xs text-purple-300">
+                    부교재 + 모의고사를 한 번에 조합 · 유형별 문항수 개별 조정 · 시험범위 저장/불러오기
+                  </p>
+                </div>
+                <div className="ml-4 flex shrink-0 flex-col items-center gap-2 sm:ml-6">
+                  <svg
+                    className="h-10 w-10 text-purple-300 transition-transform duration-200 group-hover:scale-110 sm:h-12 sm:w-12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                    <path d="M9 12h6" />
+                    <path d="M9 16h4" />
+                  </svg>
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
+                    시작하기
+                    <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setFinalGateOpen(true)}
+                className="group flex min-h-[7.5rem] w-full items-center justify-between overflow-hidden rounded-2xl px-5 py-5 text-left shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+                style={{
+                  background: 'linear-gradient(120deg, #1a1a6e 0%, #4b0082 55%, #7c3aed 100%)',
+                }}
+              >
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-gray-900 shadow">
+                      NEW
+                    </span>
+                    <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">파이널 예비 모의고사</span>
+                  </div>
+                  <p className="text-sm font-medium text-purple-200">
+                    시험 범위를 설정하고 예비 시험지를 제작하기에 가장 적합한 기능입니다
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-200">
+                    연회원 또는 월구독 회원 전용 · 클릭하면 이용 안내와 요금을 확인할 수 있습니다
+                  </p>
+                </div>
+                <div className="ml-4 flex shrink-0 flex-col items-center gap-2 sm:ml-6">
+                  <svg
+                    className="h-10 w-10 text-purple-300 transition-transform duration-200 group-hover:scale-110 sm:h-12 sm:w-12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                    <path d="M9 12h6" />
+                    <path d="M9 16h4" />
+                  </svg>
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
+                    이용 안내
+                  </span>
+                </div>
+              </button>
+            )}
+
+            {premiumLoad ? (
+              <div
+                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md opacity-80 animate-pulse cursor-wait sm:px-7"
+                style={{
+                  background: 'linear-gradient(120deg, #0c4a6e 0%, #0369a1 48%, #0d9488 100%)',
+                }}
+              >
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">변형문제 만들기</span>
+                  <p className="text-sm font-medium text-cyan-100">불러오는 중…</p>
+                </div>
+              </div>
+            ) : isPremiumMember ? (
+              <Link
+                href="/my/premium/variant-generate"
+                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+                style={{
+                  background: 'linear-gradient(120deg, #0c4a6e 0%, #0369a1 48%, #0d9488 100%)',
+                }}
+              >
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">변형문제 만들기</span>
+                  <p className="text-sm font-medium text-cyan-100">
+                    본인 Claude API 키로 지문을 넣고 초안을 생성합니다
+                  </p>
+                  <p className="mt-0.5 text-xs text-cyan-200/90">
+                    가입하면 7일 무료 · 월구독·연회원 전용 · API 키는 내 정보 탭에서만 등록(브라우저 로컬), 생성 시에만 Anthropic으로 전달됩니다
+                  </p>
+                </div>
+                <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-cyan-100 sm:ml-6">
+                  <div className="transition-transform duration-200 group-hover:scale-110 [&_svg]:h-10 [&_svg]:w-10 sm:[&_svg]:h-12 sm:[&_svg]:w-12">
+                    <IconByok />
+                  </div>
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
+                    시작하기
+                    <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setByokGateOpen(true)}
+                className="group flex min-h-[7.5rem] w-full items-center justify-between overflow-hidden rounded-2xl px-5 py-5 text-left shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+                style={{
+                  background: 'linear-gradient(120deg, #0c4a6e 0%, #0369a1 48%, #0d9488 100%)',
+                }}
+              >
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">변형문제 만들기</span>
+                  <p className="text-sm font-medium text-cyan-100">
+                    본인 Claude API 키로 지문을 넣고 초안을 생성합니다
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-100">
+                    가입하면 7일 무료 · 월구독·연회원 전용 · 클릭하면 이용 안내와 요금을 확인할 수 있습니다
+                  </p>
+                </div>
+                <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-cyan-100 sm:ml-6">
+                  <div className="transition-transform duration-200 group-hover:scale-110 [&_svg]:h-10 [&_svg]:w-10 sm:[&_svg]:h-12 sm:[&_svg]:w-12">
+                    <IconByok />
+                  </div>
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
+                    이용 안내
+                  </span>
+                </div>
+              </button>
             )}
           </div>
+
+          {finalGateOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setFinalGateOpen(false)}>
+              <div
+                className="max-w-md w-full rounded-2xl bg-white p-6 shadow-xl space-y-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-bold text-gray-900">파이널 예비 모의고사</h3>
+                {!isMember ? (
+                  <p className="text-sm text-gray-600">
+                    로그인 후 <strong>연회원</strong> 또는 <strong>월구독</strong>으로 이용할 수 있습니다.
+                    <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    이 메뉴는 <strong>연회원</strong> 또는 <strong>월구독</strong> 회원만 이용할 수 있습니다. 가입·요금 안내는 카카오톡으로 문의해 주세요.
+                    <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
+                  </p>
+                )}
+                <div className="flex flex-col gap-2">
+                  {!isMember ? (
+                    <Link
+                      href="/login?from=/unified"
+                      className="block text-center rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white hover:bg-purple-800"
+                      onClick={() => setFinalGateOpen(false)}
+                    >
+                      로그인
+                    </Link>
+                  ) : null}
+                  <Link
+                    href="/my"
+                    className="block text-center rounded-xl border border-purple-300 px-4 py-3 text-sm font-semibold text-purple-800 hover:bg-purple-50"
+                    onClick={() => setFinalGateOpen(false)}
+                  >
+                    내 정보
+                  </Link>
+                  <a
+                    href={KAKAO_INQUIRY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-center rounded-xl border border-amber-300 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-50"
+                  >
+                    카카오톡 문의
+                  </a>
+                  <button
+                    type="button"
+                    className="text-sm text-gray-500 underline"
+                    onClick={() => setFinalGateOpen(false)}
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {byokGateOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setByokGateOpen(false)}>
+              <div
+                className="max-w-md w-full rounded-2xl bg-white p-6 shadow-xl space-y-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-bold text-gray-900">변형문제 만들기</h3>
+                {!isMember ? (
+                  <p className="text-sm text-gray-600">
+                    회원 가입 후 <strong>7일간 무료</strong>로 체험할 수 있습니다. 이후에는 <strong>연회원</strong> 또는 <strong>월구독</strong>이 필요하며, 본인 Claude API 키가 필요합니다.
+                    <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    가입일 기준 <strong>7일간 무료 체험</strong>이 가능합니다. 체험 종료 후에는 <strong>연회원</strong> 또는 <strong>월구독</strong>이 필요합니다. 본인 Claude API 키로 초안을 생성합니다. 가입·요금 안내는 카카오톡으로 문의해 주세요.
+                    <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
+                  </p>
+                )}
+                <div className="flex flex-col gap-2">
+                  {!isMember ? (
+                    <Link
+                      href="/login?from=/my/premium/variant-generate"
+                      className="block text-center rounded-xl bg-sky-700 px-4 py-3 text-sm font-bold text-white hover:bg-sky-800"
+                      onClick={() => setByokGateOpen(false)}
+                    >
+                      로그인
+                    </Link>
+                  ) : null}
+                  <Link
+                    href="/my"
+                    className="block text-center rounded-xl border border-sky-300 px-4 py-3 text-sm font-semibold text-sky-900 hover:bg-sky-50"
+                    onClick={() => setByokGateOpen(false)}
+                  >
+                    내 정보
+                  </Link>
+                  <a
+                    href={KAKAO_INQUIRY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-center rounded-xl border border-amber-300 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-50"
+                  >
+                    카카오톡 문의
+                  </a>
+                  <button
+                    type="button"
+                    className="text-sm text-gray-500 underline"
+                    onClick={() => setByokGateOpen(false)}
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <section className="mt-8" aria-labelledby="hub-primary-heading">
+            <div className="mb-4">
+              <h2 id="hub-primary-heading" className="text-lg font-bold text-slate-900 tracking-tight">
+                모의고사 · 부교재 · 교과서 변형문제
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">가장 많이 이용하시는 주문입니다. 아래에서 바로 시작할 수 있어요.</p>
+            </div>
+            {renderHubGrid(hubPrimary)}
+          </section>
+
+          <section className="mt-12 border-t border-slate-200/90 pt-10" aria-labelledby="hub-more-heading">
+            <div className="mb-4">
+              <h2 id="hub-more-heading" className="text-base font-bold text-slate-800 tracking-tight">
+                다른 주문 · 서비스
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">워크북, 번호별 제작, 분석지, 서술형, 단어장, 통합 주문 등</p>
+            </div>
+            {renderHubGrid(hubMore)}
+          </section>
         </div>
       </div>
     </>

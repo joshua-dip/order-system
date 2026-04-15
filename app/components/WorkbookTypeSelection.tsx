@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
-import type { OrderGenerateExtras } from './MockExamSettings';
+import type { OrderGenerateHandler } from './MockExamSettings';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
   selectedLessons: string[];
-  onOrderGenerate: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
+  onOrderGenerate: OrderGenerateHandler;
   onBack: () => void;
   onBackToTextbook: () => void;
   onBackToLessons: () => void;
@@ -32,6 +32,8 @@ const WorkbookTypeSelection = ({
   const [myFormatApproved, setMyFormatApproved] = useState(false);
   const [formatCounts, setFormatCounts] = useState({ 강의용자료: 0, 수업용자료: 0, 변형문제: 0 });
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const orderSubmittingRef = useRef(false);
 
   const isMockExam = selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_');
 
@@ -239,7 +241,11 @@ const WorkbookTypeSelection = ({
     }
   };
 
-  const generateOrder = () => {
+  const generateOrder = async () => {
+    if (orderSubmittingRef.current) return;
+    orderSubmittingRef.current = true;
+    setOrderSubmitting(true);
+    try {
     if (selectedPackages.length === 0) {
       alert('워크북 패키지를 선택해주세요.');
       return;
@@ -368,7 +374,11 @@ ${useCustomHwp ? `
       useCustomHwp,
       isMockExam,
     };
-    onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW', { orderMeta });
+    await Promise.resolve(onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW', { orderMeta }));
+    } finally {
+      orderSubmittingRef.current = false;
+      setOrderSubmitting(false);
+    }
   };
 
   // 가격 계산 (미리보기용)
@@ -891,17 +901,18 @@ ${useCustomHwp ? `
 
                   {/* 주문서 생성 버튼 */}
                   <button
-                    onClick={generateOrder}
-                    disabled={!email.trim()}
+                    type="button"
+                    onClick={() => void generateOrder()}
+                    disabled={!email.trim() || orderSubmitting}
                     className={`w-full text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg transition-all ${
-                      email.trim() 
-                        ? 'hover:shadow-xl hover:opacity-90' 
+                      email.trim() && !orderSubmitting
+                        ? 'hover:shadow-xl hover:opacity-90'
                         : 'opacity-50 cursor-not-allowed'
                     }`}
-                    style={{ backgroundColor: email.trim() ? '#00A9E0' : '#888B8D' }}
+                    style={{ backgroundColor: email.trim() && !orderSubmitting ? '#00A9E0' : '#888B8D' }}
                   >
-                    워크북 주문서 생성하기
-                    {!email.trim() && (
+                    {orderSubmitting ? '접수 중…' : '워크북 주문서 생성하기'}
+                    {!email.trim() && !orderSubmitting && (
                       <div className="text-xs mt-1 opacity-75">이메일을 입력해주세요</div>
                     )}
                   </button>

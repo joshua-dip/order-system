@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 
 const Footer = () => {
   const pathname = usePathname();
@@ -34,7 +35,17 @@ const Footer = () => {
                 {phone && <div><span>전화: {phone}</span></div>}
               </>
             ) : null}
-            <div className="mt-3 pt-2 border-t border-gray-300">
+            <div className="mt-3 pt-2 border-t border-gray-300 space-y-2">
+              <p>
+                <a
+                  href={SOLVOOK_BRAND_PAGE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-700 underline underline-offset-2 hover:text-gray-900"
+                >
+                  쏠북(Solvook) 고미조슈아 브랜드
+                </a>
+              </p>
               <p>© 2025 Payperic. All rights reserved.</p>
             </div>
           </div>

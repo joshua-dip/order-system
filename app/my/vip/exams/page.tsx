@@ -65,10 +65,19 @@ export default function VipExamsPage() {
   const [textbooks, setTextbooks] = useState<TextbookEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [filterYear, setFilterYear] = useState(CURRENT_YEAR);
-  const [filterGrade, setFilterGrade] = useState<number>(1);
+  const [filterYear, setFilterYear] = useState<number>(() => {
+    if (typeof window === 'undefined') return CURRENT_YEAR;
+    return Number(localStorage.getItem('vipExams_year') || CURRENT_YEAR);
+  });
+  const [filterGrade, setFilterGrade] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
+    return Number(localStorage.getItem('vipExams_grade') || 1);
+  });
 
-  const [expandedExam, setExpandedExam] = useState<string | null>(null);
+  const [expandedExam, setExpandedExam] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('vipExams_expandedExam') || null;
+  });
   const [localExams, setLocalExams] = useState<Record<string, SchoolExam>>({});
 
   // 문항 유형 입력 모드: 'dropdown' | 'text'
@@ -99,13 +108,53 @@ export default function VipExamsPage() {
   } | null>(null);
   const pdfInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const xlsxInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [pdfPreview, setPdfPreview] = useState<{ examId: string; url: string; name: string } | null>(null);
+
+  const openPdfPreview = async (examId: string, name: string) => {
+    try {
+      const res = await fetch(`/api/my/vip/school-exams/${examId}/pdf-link`, { credentials: 'include' });
+      const d = await res.json();
+      if (d.ok && d.url) setPdfPreview({ examId, url: d.url, name });
+      else alert(d.error || '링크 생성 실패');
+    } catch { alert('링크를 가져올 수 없습니다.'); }
+  };
+  const bodyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // 문제본문 선택 영역을 <u>태그로 감싸기
+  const wrapSelectionWithU = useCallback(() => {
+    const el = bodyTextareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    if (start === end) return;
+    const body = el.value;
+    const selected = body.substring(start, end);
+    const newBody = body.slice(0, start) + `<u>${selected}</u>` + body.slice(end);
+    setTextModal((prev) => prev && ({ ...prev, body: newBody, bodySelection: '' }));
+    // 커서 위치 복원 (태그 뒤)
+    setTimeout(() => {
+      el.focus();
+      const newEnd = end + '<u></u>'.length;
+      el.setSelectionRange(newEnd, newEnd);
+    }, 0);
+  }, []);
 
   const [toast, setToast] = useState('');
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2500); };
 
   useEffect(() => {
     fetch('/api/my/vip/schools', { credentials: 'include' })
-      .then((r) => r.json()).then((d) => { if (d.ok) setSchools(d.schools); });
+      .then((r) => r.json()).then((d) => {
+        if (d.ok) {
+          setSchools(d.schools);
+          // 저장된 학교 복원
+          const savedSchoolId = localStorage.getItem('vipExams_schoolId');
+          if (savedSchoolId) {
+            const found = d.schools.find((s: School) => s.id === savedSchoolId);
+            if (found) setSelectedSchool(found);
+          }
+        }
+      });
   }, []);
 
   useEffect(() => {
@@ -452,6 +501,91 @@ export default function VipExamsPage() {
   const getLocal = (id: string) => localExams[id] || exams.find((e) => e.id === id)!;
   const existingTypes = new Set(exams.map((e) => e.examType));
 
+  const exportExamHtml = (exam: SchoolExam) => {
+    const local = localExams[exam.id] || exam;
+    const qNums = Object.keys(local.questions).map(Number).sort((a, b) => a - b);
+    // 그룹별로 공통 본문 한 번만 출력
+    const renderedGroups = new Set<string>();
+
+    const rows = qNums.map((n) => {
+      const q = local.questions[String(n)];
+      if (!q) return '';
+      const isSubjective = n > local.objectiveCount;
+      const groupId = q.groupId;
+      const isGroupStart = groupId && !renderedGroups.has(groupId);
+      if (groupId) renderedGroups.add(groupId);
+
+      const choiceLines = (q.choices || '').split('\n').filter(Boolean);
+      const circleNums = '①②③④⑤';
+
+      const bodyHtml = (q.questionBody || '').replace(/\n/g, '<br>').replace(/<u>(.*?)<\/u>/g, '<u>$1</u>');
+
+      return `
+        ${isGroupStart && q.questionBody ? `
+          <div class="passage">${bodyHtml}</div>
+        ` : ''}
+        <div class="question">
+          <div class="q-header">
+            <span class="q-num">${n}.</span>
+            <span class="q-title">${q.questionTitle || ''}</span>
+            <span class="q-score">[${q.score || 0}점]</span>
+          </div>
+          ${!q.questionBody || groupId ? '' : `<div class="q-body">${bodyHtml}</div>`}
+          ${choiceLines.length ? `
+            <ol class="choices">
+              ${choiceLines.map((c, i) => `<li><span class="circle">${circleNums[i] || (i+1)}</span>${c.replace(/^[①②③④⑤]\s*/, '')}</li>`).join('')}
+            </ol>
+          ` : ''}
+          ${q.summary ? `<div class="summary"><strong>요약:</strong> ${q.summary}</div>` : ''}
+          ${isSubjective ? '<div class="answer-box"></div>' : ''}
+        </div>
+      `;
+    }).join('');
+
+    const school = selectedSchool?.name || '';
+    const title = `${school} ${local.examType || ''}`;
+    const totalScore = qNums.reduce((s, n) => s + (local.questions[String(n)]?.score || 0), 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 10pt; line-height: 1.6; color: #111; padding: 20mm 15mm; }
+  h1 { font-size: 14pt; text-align: center; margin-bottom: 4px; }
+  .meta { text-align: center; font-size: 9pt; color: #555; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 8px; }
+  .passage { background: #f8f8f8; border-left: 3px solid #666; padding: 10px 12px; margin: 12px 0 8px; font-size: 9.5pt; line-height: 1.7; white-space: pre-wrap; }
+  .question { margin-bottom: 14px; page-break-inside: avoid; }
+  .q-header { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+  .q-num { font-weight: bold; min-width: 20px; }
+  .q-title { flex: 1; }
+  .q-score { font-size: 8.5pt; color: #555; white-space: nowrap; }
+  .q-body { margin: 6px 0 6px 20px; font-size: 9.5pt; line-height: 1.7; color: #222; }
+  .choices { list-style: none; margin-left: 20px; }
+  .choices li { display: flex; gap: 6px; margin-bottom: 2px; font-size: 9.5pt; }
+  .circle { min-width: 16px; }
+  .summary { margin: 4px 0 0 20px; font-size: 9pt; color: #444; border: 1px dashed #aaa; padding: 4px 8px; }
+  .answer-box { margin-top: 6px; margin-left: 20px; border: 1px solid #aaa; height: 36px; }
+  u { text-decoration: underline; }
+  @media print { body { padding: 10mm 12mm; } }
+</style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <div class="meta">총 ${qNums.length}문항 · 객관식 ${local.objectiveCount}문항 / 주관식 ${local.subjectiveCount}문항 · 총 ${totalScore}점</div>
+  ${rows}
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { alert('팝업이 차단되었습니다. 팝업을 허용해 주세요.'); return; }
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  };
+
   const calcScores = (exam: SchoolExam) => {
     const qs = Object.entries(exam.questions);
     const totalScore = qs.reduce((s, [, q]) => s + (q.score || 0), 0);
@@ -475,7 +609,12 @@ export default function VipExamsPage() {
       <div className="flex flex-wrap gap-3">
         <select
           value={selectedSchool?.id || ''}
-          onChange={(e) => setSelectedSchool(schools.find((s) => s.id === e.target.value) || null)}
+          onChange={(e) => {
+            const school = schools.find((s) => s.id === e.target.value) || null;
+            setSelectedSchool(school);
+            if (school) localStorage.setItem('vipExams_schoolId', school.id);
+            else localStorage.removeItem('vipExams_schoolId');
+          }}
           className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600 [&>option]:bg-zinc-900 [&>option]:text-zinc-100"
         >
           <option value="">학교 선택</option>
@@ -483,14 +622,14 @@ export default function VipExamsPage() {
         </select>
         <select
           value={filterYear}
-          onChange={(e) => setFilterYear(Number(e.target.value))}
+          onChange={(e) => { setFilterYear(Number(e.target.value)); localStorage.setItem('vipExams_year', e.target.value); }}
           className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600 [&>option]:bg-zinc-900 [&>option]:text-zinc-100"
         >
           {YEARS.map((y) => <option key={y} value={y}>{y}년</option>)}
         </select>
         <div className="flex rounded-xl overflow-hidden border border-zinc-800/80">
           {[1, 2, 3].map((g) => (
-            <button key={g} onClick={() => setFilterGrade(g)} className={`px-4 py-2 text-sm ${filterGrade === g ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-900/60 text-zinc-400 hover:bg-zinc-800'} transition-colors`}>{g}학년</button>
+            <button key={g} onClick={() => { setFilterGrade(g); localStorage.setItem('vipExams_grade', String(g)); }} className={`px-4 py-2 text-sm ${filterGrade === g ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-900/60 text-zinc-400 hover:bg-zinc-800'} transition-colors`}>{g}학년</button>
           ))}
         </div>
       </div>
@@ -530,7 +669,12 @@ export default function VipExamsPage() {
                     {/* Left: toggle + title */}
                     <button
                       className="flex items-center gap-3 flex-1 text-left"
-                      onClick={() => setExpandedExam(isOpen ? null : exam.id)}
+                      onClick={() => {
+                        const next = isOpen ? null : exam.id;
+                        setExpandedExam(next);
+                        if (next) localStorage.setItem('vipExams_expandedExam', next);
+                        else localStorage.removeItem('vipExams_expandedExam');
+                      }}
                     >
                       <svg className={`w-4 h-4 text-zinc-500 transition-transform shrink-0 ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -544,19 +688,24 @@ export default function VipExamsPage() {
                       <span>객관 {local.objectiveCount} / 주관 {local.subjectiveCount}</span>
                       {totalScore > 0 && <span className="text-zinc-400">총 <strong className="text-zinc-200">{totalScore}점</strong></span>}
 
+                      {/* 문항 데이터 PDF 내보내기 */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); exportExamHtml(exam); }}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/20 text-emerald-300 rounded-lg hover:bg-emerald-500/30 transition-colors"
+                        title="입력한 문항 데이터를 PDF로 내보내기"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        내보내기
+                      </button>
+
                       {/* PDF 상태 */}
                       {local.pdfPath ? (
                         <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              const res = await fetch(`/api/my/vip/school-exams/${exam.id}/pdf-link`, { credentials: 'include' });
-                              const d = await res.json();
-                              if (d.ok && d.url) window.open(d.url, '_blank');
-                              else alert(d.error || '링크 생성 실패');
-                            } catch { alert('링크를 가져올 수 없습니다.'); }
-                          }}
+                          onClick={(e) => { e.stopPropagation(); openPdfPreview(exam.id, local.pdfName || '시험지'); }}
                           className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-colors"
+                          title="업로드된 시험지 PDF 미리보기"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -607,10 +756,31 @@ export default function VipExamsPage() {
                       {local.pdfPath && (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-xs text-zinc-500">
-                            <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                            </svg>
-                            <span className="truncate max-w-[180px]">{local.pdfName}</span>
+                            {/* 다운로드 아이콘 버튼 */}
+                            <button
+                              title="PDF 다운로드"
+                              onClick={async () => {
+                                const res = await fetch(`/api/my/vip/school-exams/${exam.id}/pdf-link`, { credentials: 'include' });
+                                const d = await res.json();
+                                if (d.ok && d.url) {
+                                  const a = document.createElement('a');
+                                  a.href = d.url;
+                                  a.download = local.pdfName || 'exam.pdf';
+                                  a.click();
+                                } else alert(d.error || '다운로드 실패');
+                              }}
+                              className="text-blue-400 hover:text-blue-300 transition-colors shrink-0"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => openPdfPreview(exam.id, local.pdfName || '시험지')}
+                              className="truncate max-w-[180px] text-blue-400 hover:text-blue-300 hover:underline transition-colors text-left"
+                            >
+                              {local.pdfName}
+                            </button>
                             <button
                               onClick={() => pdfInputRefs.current[exam.id]?.click()}
                               className="text-zinc-500 hover:text-zinc-300 underline shrink-0"
@@ -865,48 +1035,36 @@ export default function VipExamsPage() {
                                       ${i + 1 === local.objectiveCount + 1 && local.subjectiveCount > 0 ? 'border-t-2 border-t-amber-500/30' : ''}
                                       ${q.groupId ? 'bg-violet-950/10' : ''}`}
                                   >
-                                    <td className="py-1.5 pl-1 pr-2">
-                                      <div className="flex items-stretch gap-1.5">
-                                        {/* 그룹 브래킷 */}
-                                        {q.groupId ? (
-                                          <div className="flex flex-col items-center w-3 shrink-0 self-stretch">
-                                            {/* 위 채움 */}
-                                            <div className={`w-px flex-1 ${isGroupStart ? 'bg-transparent' : 'bg-violet-500/50'}`} />
-                                            {/* 수평 tick */}
-                                            {isGroupStart && <div className="w-2 h-px bg-violet-500/70 mb-0" />}
-                                            {/* 수직 선 */}
-                                            <div className={`w-px ${isGroupStart && isGroupEnd ? 'h-3' : 'flex-1'} bg-violet-500/70`} />
-                                            {isGroupEnd && <div className="w-2 h-px bg-violet-500/70 mt-0" />}
-                                            {/* 아래 채움 */}
-                                            <div className={`w-px flex-1 ${isGroupEnd ? 'bg-transparent' : 'bg-violet-500/50'}`} />
-                                          </div>
-                                        ) : (
-                                          <div className="w-3 shrink-0" />
+                                    {/* 번호 셀 — 그룹이면 왼쪽에 컬러 바 */}
+                                    <td
+                                      className="py-1.5 pr-2 pl-0"
+                                      style={q.groupId ? {
+                                        borderLeft: `2px solid ${isGroupStart && isGroupEnd ? '#7c3aed99' : '#7c3aed99'}`,
+                                        paddingLeft: '6px',
+                                      } : { paddingLeft: '8px' }}
+                                    >
+                                      <div className="flex items-center gap-1.5">
+                                        {(() => {
+                                          const hasDetail = !!(q.questionTitle || q.questionBody || q.choices);
+                                          return (
+                                            <button
+                                              onClick={() => openTextModal(exam.id, qNum)}
+                                              title="클릭하여 지문 입력 및 출처 검색"
+                                              className={`font-mono text-xs leading-none transition-colors rounded px-1 py-0.5 ${
+                                                hasDetail
+                                                  ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/35'
+                                                  : 'text-zinc-500 hover:text-cyan-300'
+                                              }`}
+                                            >
+                                              {qNum}
+                                            </button>
+                                          );
+                                        })()}
+                                        {isGroupStart && q.groupId && (
+                                          <svg className="w-3 h-3 text-violet-400/70 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                          </svg>
                                         )}
-                                        {/* 번호 + 그룹 범위 뱃지 */}
-                                        <div className="flex items-center gap-1 self-center">
-                                          {(() => {
-                                            const hasDetail = !!(q.questionTitle || q.questionBody || q.choices);
-                                            return (
-                                              <button
-                                                onClick={() => openTextModal(exam.id, qNum)}
-                                                title="클릭하여 지문 입력 및 출처 검색"
-                                                className={`font-mono text-xs leading-none transition-colors rounded px-1 py-0.5 ${
-                                                  hasDetail
-                                                    ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/35'
-                                                    : 'text-zinc-500 hover:text-cyan-300'
-                                                }`}
-                                              >
-                                                {qNum}
-                                              </button>
-                                            );
-                                          })()}
-                                          {groupRange && (
-                                            <span className="text-[9px] px-1 py-0.5 rounded bg-violet-500/15 text-violet-400 font-medium leading-none border border-violet-500/30">
-                                              {groupRange}
-                                            </span>
-                                          )}
-                                        </div>
                                       </div>
                                     </td>
                                     <td className="px-2 py-1.5">
@@ -968,23 +1126,23 @@ export default function VipExamsPage() {
                                   {/* 행 사이 묶기/풀기 커넥터 (마지막 행 제외) */}
                                   {i + 1 < totalQ && (
                                     <tr className="h-0">
-                                      <td colSpan={6} className="p-0">
+                                      <td
+                                        colSpan={6}
+                                        className="p-0"
+                                        style={isGroupedWithNext ? { borderLeft: '2px solid #7c3aed99' } : undefined}
+                                      >
                                         <div className="relative flex items-center h-3 group/connector">
                                           {isGroupedWithNext ? (
-                                            <>
-                                              {/* 브래킷 연결선 (왼쪽 정렬 맞춤: pl-1 + w-3 = 16px) */}
-                                              <div className="absolute left-[16px] top-0 bottom-0 w-px bg-violet-500/50" />
-                                              <button
-                                                onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
-                                                className="absolute left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/connector:opacity-100 transition-opacity px-1.5 py-0.5 text-[9px] text-violet-300 bg-violet-900/60 border border-violet-700/50 rounded-md"
-                                              >
-                                                풀기
-                                              </button>
-                                            </>
+                                            <button
+                                              onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
+                                              className="ml-3 opacity-0 group-hover/connector:opacity-100 transition-opacity px-1.5 py-0.5 text-[9px] text-violet-400 bg-violet-900/60 border border-violet-700/50 rounded-md"
+                                            >
+                                              묶음 해제
+                                            </button>
                                           ) : (
                                             <button
                                               onClick={() => toggleGroup(exam.id, qNum, nextQNum)}
-                                              className="ml-4 opacity-0 group-hover/connector:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 text-[9px] text-zinc-500 border border-dashed border-zinc-700 rounded hover:text-violet-300 hover:border-violet-600 hover:bg-violet-950/30"
+                                              className="ml-2 opacity-0 group-hover/connector:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 text-[9px] text-zinc-500 border border-dashed border-zinc-700 rounded hover:text-violet-300 hover:border-violet-600 hover:bg-violet-950/30"
                                             >
                                               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -1028,6 +1186,45 @@ export default function VipExamsPage() {
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-emerald-600 text-zinc-100 text-sm rounded-xl shadow-lg">{toast}</div>
+      )}
+
+      {/* PDF 미리보기 모달 */}
+      {pdfPreview && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/80 backdrop-blur-sm"
+          onKeyDown={(e) => { if (e.key === 'Escape') setPdfPreview(null); }}>
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-5 py-3 bg-zinc-950 border-b border-zinc-800 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              <span className="text-sm text-zinc-200 font-medium truncate max-w-md">{pdfPreview.name}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <a href={pdfPreview.url} target="_blank" rel="noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+                새 탭
+              </a>
+              <button onClick={() => setPdfPreview(null)}
+                className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {/* iframe */}
+          <div className="flex-1 min-h-0">
+            <iframe
+              src={pdfPreview.url}
+              className="w-full h-full border-0"
+              title={pdfPreview.name}
+            />
+          </div>
+        </div>
       )}
 
       {/* 문항 세부 정보 모달 */}
@@ -1111,7 +1308,28 @@ export default function VipExamsPage() {
                 />
                 <span className="absolute right-1.5 text-[10px] text-zinc-600 pointer-events-none">점</span>
               </div>
-              {gq.title.match(/\[(\d+(?:\.\d+)?)점\]/) && <span className="text-[10px] text-emerald-400">자동</span>}
+              {/* 본문/제목에서 [X점] 태그 제거 확인 버튼 */}
+              {(() => {
+                const scorePattern = /\[\d+(?:\.\d+)?점\]/g;
+                const bodyHasTag = scorePattern.test(textModal.body);
+                scorePattern.lastIndex = 0;
+                const titleHasTag = /\[\d+(?:\.\d+)?점\]/.test(gq.title);
+                if (!bodyHasTag && !titleHasTag) return null;
+                return (
+                  <button
+                    onClick={() => {
+                      if (bodyHasTag) setTextModal((prev) => prev && ({ ...prev, body: prev.body.replace(/\[\d+(?:\.\d+)?점\]/g, '').replace(/ {2,}/g, ' ').trim() }));
+                      if (titleHasTag) updateGQ(idx, { title: gq.title.replace(/\s*\[\d+(?:\.\d+)?점\]/g, '').trim() });
+                    }}
+                    title="본문·제목에서 [X점] 태그 제거"
+                    className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </button>
+                );
+              })()}
             </div>
             {/* 선택지 */}
             <div className="flex items-center gap-1.5">
@@ -1125,7 +1343,7 @@ export default function VipExamsPage() {
               )}
             </div>
             {[1,2,3,4,5].map((n) => {
-              const val = (gq.choices.split('\n')[n-1]) ?? '';
+              const val = ((gq.choices.split('\n')[n-1]) ?? '').replace(/^[①②③④⑤]\s*/, '');
               return (
                 <div key={n} className="flex items-start gap-1">
                   <span className="text-[11px] text-zinc-600 mt-2 shrink-0">{'①②③④⑤'[n-1]}</span>
@@ -1199,9 +1417,22 @@ export default function VipExamsPage() {
                 {/* 문제본문 */}
                 <div className="flex flex-col flex-1 min-w-0 border-r border-zinc-800 p-3 gap-2 overflow-hidden">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">
-                      문제본문{isGroup && ' (공통)'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">
+                        문제본문{isGroup && ' (공통)'}
+                      </span>
+                      {/* 밑줄 태그 버튼 */}
+                      {textModal.bodySelection && (
+                        <button
+                          onClick={wrapSelectionWithU}
+                          title="선택 영역에 <u> 밑줄 태그 적용 (⌘U)"
+                          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-700/60 hover:bg-zinc-600/70 text-zinc-300 text-[11px] transition-colors border border-zinc-600/50 animate-pulse"
+                        >
+                          <span className="underline font-medium">U</span>
+                          <span className="text-zinc-500 text-[10px]">⌘U</span>
+                        </button>
+                      )}
+                    </div>
                     <button disabled={textModal.matching || textModal.body.trim().length < 15} onClick={handleMatchPassage}
                       className="flex items-center gap-1 px-2.5 py-1 bg-cyan-500/20 text-cyan-300 rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 text-[11px]">
                       {textModal.matching
@@ -1210,10 +1441,16 @@ export default function VipExamsPage() {
                       }
                     </button>
                   </div>
-                  <textarea autoFocus value={textModal.body}
+                  <textarea autoFocus ref={bodyTextareaRef} value={textModal.body}
                     onChange={(e) => setTextModal((prev) => prev && ({ ...prev, body: e.target.value, matchResult: null, noMatch: false }))}
                     onSelect={(e) => { const el = e.currentTarget; setTextModal((prev) => prev && ({ ...prev, bodySelection: el.value.substring(el.selectionStart, el.selectionEnd).trim() })); }}
                     onMouseUp={(e) => { const el = e.currentTarget; setTextModal((prev) => prev && ({ ...prev, bodySelection: el.value.substring(el.selectionStart, el.selectionEnd).trim() })); }}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === 'u') {
+                        e.preventDefault();
+                        wrapSelectionWithU();
+                      }
+                    }}
                     placeholder="지문을 붙여넣으세요..."
                     className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0"
                   />

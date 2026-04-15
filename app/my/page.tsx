@@ -4,8 +4,11 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppBar from '../components/AppBar';
+import PointChargeModal from '../components/PointChargeModal';
 import StudentManagement from '../components/StudentManagement';
 import { useTextbooksData } from '@/lib/useTextbooksData';
+import { membershipPricingOneLiner } from '@/lib/membership-pricing';
+import { hasStoredByokAnthropicKey, writeStoredByokAnthropicKey } from '@/lib/member-byok-anthropic-key-storage';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -14,12 +17,19 @@ interface AuthUser {
   role: string;
   name: string;
   email: string;
+  /** DB 비밀번호가 관리자 초기값과 동일한 일반 회원 — 내 정보에서 변경 유도 */
+  mustChangePassword?: boolean;
   dropboxFolderPath?: string;
   dropboxSharedLink?: string;
   points?: number;
   myFormatApproved?: boolean;
   annualMemberSince?: string | null;
   isAnnualMemberActive?: boolean;
+  monthlyMemberSince?: string | null;
+  monthlyMemberUntil?: string | null;
+  isMonthlyMemberActive?: boolean;
+  isPremiumMember?: boolean;
+  phone?: string;
   isVip?: boolean;
   vipSince?: string | null;
 }
@@ -81,9 +91,18 @@ function pointHistoryKindLabel(kind: string): string {
       return '포인트 지급';
     case 'admin_adjust':
       return '포인트 조정';
+    case 'point_charge':
+      return '포인트 충전';
+    case 'member_variant_hard':
+      return '변형문제(삽입-고난도)';
     default:
       return kind;
   }
+}
+
+function tossCustomerKeyFromLoginId(loginId: string): string {
+  const raw = (loginId || 'member').replace(/[^a-zA-Z0-9._@-]/g, '_').slice(0, 44);
+  return `u_${raw}`;
 }
 
 function formatPointHistoryWhen(iso: string): string {
@@ -127,6 +146,11 @@ export default function MyPage() {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const passwordSectionRef = useRef<HTMLDivElement>(null);
+  const byokApiKeySectionRef = useRef<HTMLDivElement>(null);
+  const passwordNudgeUiDone = useRef(false);
+  const [byokKeyDraft, setByokKeyDraft] = useState('');
+  const [byokKeyMessage, setByokKeyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [pastExamSchool, setPastExamSchool] = useState('');
   const [pastExamGrade, setPastExamGrade] = useState('');
@@ -176,6 +200,7 @@ export default function MyPage() {
   const [studentsCount, setStudentsCount] = useState(0);
   const [pointHistory, setPointHistory] = useState<PointHistoryEntry[]>([]);
   const [pointHistoryLoading, setPointHistoryLoading] = useState(false);
+  const [pointChargeOpen, setPointChargeOpen] = useState(false);
 
   const [annualSharedItems, setAnnualSharedItems] = useState<AnnualSharedFileItem[]>([]);
   const [annualSharedLoading, setAnnualSharedLoading] = useState(false);
@@ -210,6 +235,31 @@ export default function MyPage() {
       .catch(() => router.replace('/login?from=/my'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    if (!user?.mustChangePassword) {
+      passwordNudgeUiDone.current = false;
+      return;
+    }
+    setActiveTab('settings');
+    if (passwordNudgeUiDone.current) return;
+    passwordNudgeUiDone.current = true;
+    const t = window.setTimeout(() => {
+      passwordSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+    return () => window.clearTimeout(t);
+  }, [user?.mustChangePassword]);
+
+  useEffect(() => {
+    if (!user?.loginId) return;
+    if (typeof window === 'undefined') return;
+    if (window.location.hash !== '#byok-api-key') return;
+    setActiveTab('settings');
+    const id = window.requestAnimationFrame(() => {
+      byokApiKeySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [user?.loginId]);
 
   useEffect(() => {
     if (!user) return;
@@ -479,6 +529,12 @@ export default function MyPage() {
         setNewPassword('');
         setNewPasswordConfirm('');
         setPasswordMessage({ type: 'success', text: '비밀번호가 변경되었습니다.' });
+        try {
+          const me = await fetch('/api/auth/me', { credentials: 'include' }).then((r) => r.json());
+          if (me?.user) setUser(me.user);
+        } catch {
+          setUser((u) => (u ? { ...u, mustChangePassword: false } : null));
+        }
       } else {
         setPasswordMessage({ type: 'error', text: data?.error || '변경에 실패했습니다.' });
       }
@@ -487,6 +543,30 @@ export default function MyPage() {
     } finally {
       setPasswordSaving(false);
     }
+  };
+
+  const handleSaveByokAnthropicKey = () => {
+    setByokKeyMessage(null);
+    if (!user?.loginId) return;
+    const trimmed = byokKeyDraft.trim();
+    if (!trimmed) {
+      setByokKeyMessage({ type: 'error', text: '키를 입력한 뒤 저장해 주세요.' });
+      return;
+    }
+    writeStoredByokAnthropicKey(user.loginId, trimmed);
+    setByokKeyDraft('');
+    setByokKeyMessage({
+      type: 'success',
+      text: '이 브라우저에만 저장했습니다. 변형문제 만들기 화면에서 자동으로 사용됩니다.',
+    });
+  };
+
+  const handleClearByokAnthropicKey = () => {
+    setByokKeyMessage(null);
+    if (!user?.loginId) return;
+    writeStoredByokAnthropicKey(user.loginId, '');
+    setByokKeyDraft('');
+    setByokKeyMessage({ type: 'success', text: '이 기기에 저장된 키를 지웠습니다.' });
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -747,6 +827,28 @@ export default function MyPage() {
               <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-[#fffbeb] border border-[#fde68a]">
                 <span className="text-base">📂</span>
                 <span className="flex-1 text-[13px] text-[#92400e]">Dropbox 폴더가 아직 연결되지 않았어요. 관리자에게 문의해 주세요.</span>
+              </div>
+            )}
+
+            {user.mustChangePassword && (
+              <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-[#92400e] text-[13px] leading-relaxed">
+                <p className="font-bold text-[#78350f] mb-1">비밀번호를 변경해 주세요</p>
+                <p>
+                  아직 관리자가 안내한 <strong className="text-[#92400e]">초기 비밀번호</strong>를 사용 중입니다. 보안을 위해{' '}
+                  <strong className="text-[#92400e]">내 정보</strong> 탭의 비밀번호 변경란에서 새 비밀번호로 바꿔 주세요.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('settings');
+                    window.setTimeout(() => {
+                      passwordSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 50);
+                  }}
+                  className="mt-3 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#b45309] text-white text-[12px] font-bold hover:bg-[#92400e] transition-colors"
+                >
+                  내 정보로 이동 → 비밀번호 변경
+                </button>
               </div>
             )}
 
@@ -1147,9 +1249,12 @@ export default function MyPage() {
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <p className="text-sm font-bold text-[#0f172a] mb-2">맞춤형 자료 제작</p>
                 <p className="text-[13px] text-[#475569] mb-2">업로드하신 양식(hwp, hwpx)을 바탕으로 맞춤형 자료를 제작해 드립니다.</p>
-                <div className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-3 mb-3 leading-relaxed">
+                <div className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-3 mb-3 leading-relaxed space-y-2">
                   <p>
                     맞춤형 자료 제작은 <strong>연회원</strong> 전용입니다. 연회비·이용 절차·결제 방법 등은 <strong>카카오톡</strong>으로 문의해 주시면 안내해 드립니다.
+                  </p>
+                  <p className="text-[12px] text-amber-950/90 font-medium">
+                    참고 요금: {membershipPricingOneLiner()}
                   </p>
                 </div>
                 <ul className="text-[13px] text-[#475569] space-y-1.5 list-disc list-inside">
@@ -1163,7 +1268,7 @@ export default function MyPage() {
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
                   <p className="text-sm font-bold text-amber-800 mb-2">맞춤 HWP로 제작하시려면</p>
                   <p className="text-[13px] text-amber-900 mb-2 leading-relaxed">
-                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. 연회원 관련 문의(절차·비용 등)는 <strong>카카오톡</strong>으로 연락 주시면 안내해 드립니다.
+                    보내주신 hwp/hwpx 양식 그대로 반영해 맞춤 제작이 가능합니다. 연회원 관련 문의(절차·비용 등)는 <strong>카카오톡</strong>으로 연락 주시면 안내해 드립니다. ({membershipPricingOneLiner()})
                   </p>
                   <p className="text-[13px] text-amber-900 mb-3 leading-relaxed">
                     승인 후 이 화면에서 유형별로 올리시면 주문 시 맞춤 양식을 선택하실 수 있어요.
@@ -1513,6 +1618,84 @@ export default function MyPage() {
           {/* ━━ 내 정보 탭 ━━ */}
           {activeTab === 'settings' && (
             <div className="space-y-4">
+              {user.isPremiumMember && (
+                <div
+                  ref={byokApiKeySectionRef}
+                  id="byok-api-key"
+                  className="bg-white rounded-2xl border border-[#c7d2fe] p-5 shadow-sm shadow-indigo-50"
+                >
+                  <div className="text-sm font-bold text-[#1e1b4b] mb-1">Anthropic API 키 (변형문제)</div>
+                  <p className="text-[12px] text-[#475569] leading-relaxed mb-3">
+                    <strong className="text-[#334155]">변형문제 만들기</strong> 화면에는 키 입력란이 없습니다.{' '}
+                    <strong className="text-[#334155]">여기(내 정보 탭)에서만</strong> 등록·변경할 수 있어요. 키는{' '}
+                    <strong className="text-[#334155]">이 브라우저(기기)의 로컬 저장소</strong>에만 보관되며, 서버 DB에는
+                    저장되지 않습니다. 생성 요청 시에만 Anthropic으로 전달됩니다.
+                  </p>
+                  <ol className="list-decimal list-inside text-[12px] text-[#475569] space-y-1.5 mb-4">
+                    <li>
+                      <a
+                        href="https://console.anthropic.com/settings/keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#2563eb] font-semibold underline underline-offset-2 hover:text-[#1d4ed8]"
+                      >
+                        Anthropic Console
+                      </a>
+                      에서 API 키를 발급합니다.
+                    </li>
+                    <li>아래 입력란에 키를 붙여넣고 「이 브라우저에 저장」을 누릅니다.</li>
+                    <li>메인의 「변형문제 만들기」로 이동해 지문을 넣고 생성합니다.</li>
+                  </ol>
+                  <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] px-3 py-2.5 mb-3 text-[12px] text-[#64748b]">
+                    {user.loginId && hasStoredByokAnthropicKey(user.loginId) ? (
+                      <span className="text-[#0f766e] font-semibold">이 브라우저에 키가 저장되어 있습니다.</span>
+                    ) : (
+                      <span>아직 이 브라우저에 저장된 키가 없습니다.</span>
+                    )}
+                  </div>
+                  <label className="block">
+                    <span className="text-[12px] font-bold text-[#334155]">새 키 입력 (저장 시에만 덮어씀)</span>
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      value={byokKeyDraft}
+                      onChange={(e) => setByokKeyDraft(e.target.value)}
+                      className="mt-1 w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] font-mono outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[rgba(99,102,241,0.15)]"
+                      placeholder="sk-ant-api03-..."
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={handleSaveByokAnthropicKey}
+                      className="px-4 py-2.5 rounded-xl bg-[#4f46e5] text-white text-[13px] font-bold hover:bg-[#4338ca] transition-colors"
+                    >
+                      이 브라우저에 저장
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearByokAnthropicKey}
+                      className="px-4 py-2.5 rounded-xl border border-[#cbd5e1] text-[#475569] text-[13px] font-semibold hover:bg-[#f1f5f9] transition-colors"
+                    >
+                      저장된 키 지우기
+                    </button>
+                    <Link
+                      href="/my/premium/variant-generate"
+                      className="inline-flex items-center px-4 py-2.5 rounded-xl border-2 border-[#4f46e5] text-[#4338ca] text-[13px] font-bold hover:bg-[#eef2ff] transition-colors"
+                    >
+                      변형문제 만들기 →
+                    </Link>
+                  </div>
+                  {byokKeyMessage && (
+                    <p
+                      className={`text-sm mt-3 ${byokKeyMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}
+                    >
+                      {byokKeyMessage.text}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* 이메일 */}
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="text-sm font-bold text-[#0f172a] mb-3">이메일 주소</div>
@@ -1533,8 +1716,18 @@ export default function MyPage() {
               </div>
 
               {/* 비밀번호 변경 */}
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
-                <div className="text-sm font-bold text-[#0f172a] mb-3">비밀번호 변경</div>
+              <div
+                ref={passwordSectionRef}
+                className={`bg-white rounded-2xl border p-5 ${
+                  user.mustChangePassword ? 'border-amber-300 ring-2 ring-amber-200/80 shadow-sm shadow-amber-100' : 'border-[#e2e8f0]'
+                }`}
+              >
+                <div className="text-sm font-bold text-[#0f172a] mb-1">비밀번호 변경</div>
+                {user.mustChangePassword && (
+                  <p className="text-[12px] text-amber-800 mb-3 leading-relaxed">
+                    다른 사람이 쉽게 알 수 있는 비밀번호는 계정을 위험에 노출시킬 수 있어요. 안전한 이용을 위해 본인만 아는 새 비밀번호로 바꿔 주세요.
+                  </p>
+                )}
                 <form onSubmit={handleChangePassword} className="space-y-3">
                   <input
                     type="password"
@@ -1597,6 +1790,13 @@ export default function MyPage() {
                   <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">
                     주문 시 포인트 사용 가능
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setPointChargeOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc]"
+                  >
+                    미리 충전하기
+                  </button>
                 </div>
 
                 <div className="border-t border-[#f1f5f9] pt-4">
@@ -1633,10 +1833,15 @@ export default function MyPage() {
                           {pointHistory.map((row) => {
                             const orderNumber =
                               typeof row.meta?.orderNumber === 'string' ? row.meta.orderNumber : '';
+                            const chargePts = typeof row.meta?.points === 'number' ? row.meta.points : null;
                             const note =
-                              row.kind === 'order_spend' && orderNumber
-                                ? `주문 ${orderNumber}`
-                                : '';
+                              row.kind === 'point_charge' && chargePts != null
+                                ? `토스 결제 · ${chargePts.toLocaleString()}P`
+                                : row.kind === 'order_spend' && orderNumber
+                                  ? `주문 ${orderNumber}`
+                                  : row.kind === 'member_variant_hard'
+                                    ? '삽입-고난도 초안 생성'
+                                    : '';
                             const deltaStr =
                               row.delta > 0
                                 ? `+${row.delta.toLocaleString()}`
@@ -1724,6 +1929,14 @@ export default function MyPage() {
           </div>
         </div>
       )}
+
+      <PointChargeModal
+        open={pointChargeOpen}
+        onClose={() => setPointChargeOpen(false)}
+        customerKey={tossCustomerKeyFromLoginId(user.loginId)}
+        customerName={user.name || user.loginId}
+        customerEmail={user.email || ''}
+      />
     </>
   );
 }

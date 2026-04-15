@@ -27,7 +27,7 @@ You are generating a BRAND-NEW insertion sentence for a Korean English exam (수
 4. **Content Scope**: Do NOT introduce any new information, examples, names, or data not in the passage. Only rephrase, restate, or make explicit what is already implied.
 5. **Length**: Exactly 1 sentence, 15–35 words.
 6. **Distractor Appeal**: Include topic-level keywords from the passage so the sentence LOOKS plausible at other positions, but the demonstrative/connector should only fit at the target position.
-7. **Position**: Prefer mid-to-late passage positions (between sentences 3–5 in a 6-sentence passage). Never place at the very beginning or end.
+7. **Position & Distribution**: The correct answer MUST be one of ②③④⑤ — never ①. When generating multiple questions for the same passage, answers must be spread across ②③④⑤ in order based on 순서: 순서 1 → ②, 순서 2 → ③, 순서 3 → ④, 순서 4 → ⑤, 순서 5 → ② (repeat). Never assign the same answer position to two questions for the same passage if they can be avoided.
 8. **Self-check**: Before finalizing, verify that (a) the generated sentence does not duplicate any part of the passage, (b) the demonstrative/connector clearly points to one specific preceding sentence, and (c) removing the sentence would not break the passage flow (since it was never there originally).
 
 ## Output Format
@@ -40,7 +40,7 @@ Output the full question as a JSON object with these keys:
   "DifficultyLevel": "상",
   "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
   "Paragraph": "<generated sentence>\\n\\n<passage with ① ② ③ ④ ⑤ markers between sentences>",
-  "Options": "① ### ② ### ③ ### ④ ### ⑤",
+  "Options": "",
   "OptionType": "English",
   "CorrectAnswer": "<①~⑤>",
   "Explanation": "<한국어 해설, 600자 이하. 아래 4단계 구조를 반드시 따를 것.\n  ① '③이 정답입니다.'로 시작 (정답 번호에 맞게)\n  ② **글 전체 논리 흐름 요약** — 글이 어떤 논리 구조로 전개되는지 2~3문장으로 설명 (예: '이 글은 A라는 현상을 소개한 뒤, B라는 원인을 분석하고, C라는 결론으로 이어진다.')\n  ③ **삽입 위치 근거** — 정답 위치 앞 문장이 어떤 내용을 다루고, 주어진 문장의 지시어/연결어(this, such, however 등)가 구체적으로 무엇을 가리키며, 삽입 후 뒤 문장과 어떻게 연결되는지 설명>"
@@ -61,13 +61,15 @@ export function splitSentences(text: string): string[] {
 export function selectInsertionPosition(sentenceCount: number, version: number): number {
   if (sentenceCount <= 4) return 2;
 
-  const positions = [];
-  const start = Math.max(2, Math.floor(sentenceCount * 0.4));
-  const end = Math.min(sentenceCount - 1, Math.floor(sentenceCount * 0.8));
-  for (let i = start; i <= end; i++) positions.push(i);
+  // ②③④⑤ (positions 2–5) in order; clamp to what the passage supports.
+  // Marker ① (position 1) is always excluded.
+  // Marker ⑤ (position 5) is the last valid slot only when sentenceCount >= 6.
+  const maxPosition = Math.min(sentenceCount - 1, 5);
+  const minPosition = 2;
+  const range = maxPosition - minPosition + 1; // e.g. 4 for a 7-sentence passage → [2,3,4,5]
 
-  if (positions.length === 0) return Math.floor(sentenceCount * 0.6);
-  return positions[version % positions.length];
+  // Cycle: version 0→②, 1→③, 2→④, 3→⑤, 4→② …
+  return minPosition + (version % range);
 }
 
 /* ================================================================
@@ -89,7 +91,6 @@ export function buildFromManualSentence(input: ManualInsertionInput): Record<str
 
   const markedParts = buildMarkedParagraph(sentences);
   const paragraph = [generatedSentence, '###', markedParts].join('\n');
-  const options = circled.map((c) => `${c}`).join('\n');
   const correctCircle = circled[position - 1] ?? circled[0];
 
   return {
@@ -99,7 +100,7 @@ export function buildFromManualSentence(input: ManualInsertionInput): Record<str
     DifficultyLevel: '상',
     Question: '글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.',
     Paragraph: paragraph,
-    Options: options,
+    Options: '',
     OptionType: 'English',
     CorrectAnswer: correctCircle,
     Explanation: explanationKo,

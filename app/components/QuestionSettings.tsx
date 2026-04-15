@@ -3,8 +3,29 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import AppBar from './AppBar';
-import type { OrderGenerateExtras } from './MockExamSettings';
-import { MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
+import type { OrderGenerateExtras, OrderGenerateHandler } from './MockExamSettings';
+import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
+
+const KAKAO_INQUIRY_URL =
+  process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
+
+/** HWP 결과물 저장·분할 방식 (주문 미리보기에서 복수 선택) */
+export type HwpStorageModeKey = 'bySourceNumber' | 'byCategory' | 'byChapter' | 'byRound' | 'fullRandomPair';
+
+const HWP_STORAGE_OPTIONS: readonly { key: HwpStorageModeKey; label: string; hint: string }[] = [
+  { key: 'bySourceNumber', label: '번호별', hint: '번호(Source)마다 파일 나눔' },
+  { key: 'byCategory', label: '카테고리별', hint: '문제 유형마다 파일 나눔' },
+  { key: 'byChapter', label: '강별', hint: '강(Chapter)마다 파일 나눔' },
+  { key: 'byRound', label: '회차별', hint: '회차마다 파일 나눔' },
+  { key: 'fullRandomPair', label: '전문항랜덤', hint: '기본 순서 1벌 + 무작위 순서 1벌 추가' },
+] as const;
+
+const DEFAULT_HWP_STORAGE_MODES: HwpStorageModeKey[] = ['byChapter'];
+
+function formatHwpStorageSummary(modes: HwpStorageModeKey[]): string {
+  if (modes.length === 0) return '1파일(기본)';
+  return modes.map((k) => HWP_STORAGE_OPTIONS.find((o) => o.key === k)?.label ?? k).join(' + ');
+}
 
 type VariantTypeSummary = {
   type: string;
@@ -18,7 +39,7 @@ type VariantTypeSummary = {
 interface QuestionSettingsProps {
   selectedTextbook: string;
   selectedLessons: string[];
-  onOrderGenerate: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
+  onOrderGenerate: OrderGenerateHandler;
   onBack: () => void;
   onBackToTextbook: () => void;
 }
@@ -33,13 +54,28 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     삽입: true,
   });
   const [isMember, setIsMember] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  /** 쏠북 커스텀 요금 면제: 연회원 또는 월구독 유효 시 */
+  const [isAnnualMemberActive, setIsAnnualMemberActive] = useState(false);
+  const [isMonthlyMemberActive, setIsMonthlyMemberActive] = useState(false);
   const [myFormatApproved, setMyFormatApproved] = useState(false);
   const [useCustomHwp, setUseCustomHwp] = useState(false);
   const [formatCounts, setFormatCounts] = useState({ 강의용자료: 0, 수업용자료: 0, 변형문제: 0 });
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
   const [userPoints, setUserPoints] = useState(0);
-  const [showPointModal, setShowPointModal] = useState(false);
+  /** 주문 미리보기에서 포인트로 결제 금액 차감 여부 */
+  const [usePoints, setUsePoints] = useState(false);
   const [pointsToUse, setPointsToUse] = useState(0);
+  /** HWP 저장 방식 — 복수 선택, 기본은 강별 */
+  const [hwpStorageModes, setHwpStorageModes] = useState<HwpStorageModeKey[]>(DEFAULT_HWP_STORAGE_MODES);
+  const [hwpStorageDetailOpen, setHwpStorageDetailOpen] = useState(false);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const orderSubmittingRef = useRef(false);
+
+  /** 쏠북 교재(변형문제) — 공개 설정 */
+  const [solbookKeys, setSolbookKeys] = useState<string[]>([]);
+  const [solbookPurchaseUrl, setSolbookPurchaseUrl] = useState('');
+  const [solbookExtraFeeWon, setSolbookExtraFeeWon] = useState(DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON);
 
   const [avLoading, setAvLoading] = useState(false);
   const [avErr, setAvErr] = useState<string | null>(null);
@@ -69,14 +105,33 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
       .then((r) => r.json())
       .then((d) => {
         const u = d?.user;
+        setLoggedIn(!!u);
         setIsMember(!!u && u.role !== 'admin');
+        setIsAnnualMemberActive(!!u?.isAnnualMemberActive);
+        setIsMonthlyMemberActive(!!u?.isMonthlyMemberActive);
         setMyFormatApproved(!!u?.myFormatApproved);
         if (u?.myFormatApproved) refreshMyFormats();
         const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
         setUserPoints(pts);
       })
-      .catch(() => setIsMember(false));
+      .catch(() => {
+        setLoggedIn(false);
+        setIsMember(false);
+      });
   }, [refreshMyFormats]);
+
+  useEffect(() => {
+    fetch('/api/settings/variant-solbook', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        setSolbookKeys(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []);
+        setSolbookPurchaseUrl(typeof d?.purchaseUrl === 'string' ? d.purchaseUrl.trim() : '');
+        if (typeof d?.extraFeeWon === 'number' && Number.isFinite(d.extraFeeWon) && d.extraFeeWon >= 0) {
+          setSolbookExtraFeeWon(Math.round(d.extraFeeWon));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const loadLatestOrderOptions = async () => {
     setLoadingLatestOptions(true);
@@ -110,6 +165,13 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
       }
       if (typeof m.email === 'string' && m.email.trim()) setEmail(m.email.trim());
       if (typeof m.useCustomHwp === 'boolean') setUseCustomHwp(m.useCustomHwp);
+      if (Array.isArray(m.hwpStorageModes)) {
+        const allowed: HwpStorageModeKey[] = HWP_STORAGE_OPTIONS.map((o) => o.key);
+        const next = m.hwpStorageModes.filter(
+          (x): x is HwpStorageModeKey => typeof x === 'string' && (allowed as string[]).includes(x)
+        );
+        setHwpStorageModes(next.length > 0 ? next : DEFAULT_HWP_STORAGE_MODES);
+      }
       alert('최근 부교재 변형 옵션을 불러왔습니다.');
     } finally {
       setLoadingLatestOptions(false);
@@ -209,8 +271,24 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     if (totalQuestions >= 200) discountRate = 0.2;
     else if (totalQuestions >= 100) discountRate = 0.1;
     const discountAmount = basePrice * discountRate;
-    const totalPrice = Math.round(basePrice - discountAmount);
-    return { basePrice, totalQuestions, discountRate, discountAmount, totalPrice, isDiscounted: totalQuestions >= 100 };
+    const variantSubtotal = Math.round(basePrice - discountAmount);
+    const isSolbookTextbook = solbookKeys.includes(selectedTextbook);
+    const solbookCustomFeeWaived = isAnnualMemberActive || isMonthlyMemberActive;
+    const solbookFee =
+      isSolbookTextbook && !solbookCustomFeeWaived ? solbookExtraFeeWon : 0;
+    const totalPrice = variantSubtotal + solbookFee;
+    return {
+      basePrice,
+      totalQuestions,
+      discountRate,
+      discountAmount,
+      variantSubtotal,
+      solbookFee,
+      totalPrice,
+      isDiscounted: totalQuestions >= 100,
+      isSolbookTextbook,
+      solbookCustomFeeWaived,
+    };
   };
 
   const handleTypeChange = (type: string) => {
@@ -260,13 +338,25 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     return true;
   };
 
-  const submitOrder = (pointsUsedAmount: number) => {
+  const toggleHwpStorageMode = (key: HwpStorageModeKey) => {
+    setHwpStorageModes((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  };
+
+  const submitOrder = async (pointsUsedAmount: number) => {
+    if (orderSubmittingRef.current) return;
+    orderSubmittingRef.current = true;
+    setOrderSubmitting(true);
+    try {
     const {
       totalQuestions,
       discountRate,
       discountAmount,
       totalPrice,
       isDiscounted,
+      variantSubtotal,
+      solbookFee,
+      isSolbookTextbook,
+      solbookCustomFeeWaived,
     } = computeBookVariantPrice();
 
     const orderInsertLines: string[] = [];
@@ -285,9 +375,44 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     }
     const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
 
+    const isSolbookOrder = solbookFee > 0;
+    const solbookPurchaseLine = solbookPurchaseUrl.trim()
+      ? `교재 구매 링크(참고): ${solbookPurchaseUrl.trim()}`
+      : `교재 구매: 쏠북 링크로 구매하실 수 있습니다. (구체 URL은 운영자가 별도 안내드릴 수 있습니다.)`;
+    const solbookBlockPaid = isSolbookOrder
+      ? `
+
+5-2. 쏠북 커스텀 비용
+: ${solbookExtraFeeWon.toLocaleString()}원 (쏠북 지정 교재 주문 시 추가)
+5-3. 교재 구매 안내
+${solbookPurchaseLine}
+변형문제 제작과 별도로, 교재 본체는 쏠북(또는 안내드리는 링크)을 통해 구매하시는 절차가 있을 수 있습니다.
+5-4. 제작 착수(입금) 조건
+쏠북 커스텀 비용(${solbookExtraFeeWon.toLocaleString()}원)은 주문 제작에 들어가기 전 선입금으로 확인되어야 합니다. 입금 확인 후 제작을 진행합니다.
+5-5. 구매 링크 발송
+선입금 확인 후 1일 이내에 쏠북 구매 링크(또는 안내)를 카카오·문자·이메일 등으로 보내드립니다.`
+      : '';
+    const solbookBlockMemberWaived =
+      isSolbookTextbook && solbookCustomFeeWaived && solbookFee === 0
+        ? `
+
+5-2. 쏠북 교재
+: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 비용이 면제됩니다.
+5-3. 교재 구매 안내
+${solbookPurchaseLine}
+변형문제 제작과 별도로, 교재 본체는 쏠북(또는 안내드리는 링크)을 통해 구매하시는 절차가 있을 수 있습니다.`
+        : '';
+    const solbookBlock = solbookBlockPaid || solbookBlockMemberWaived;
+
     const pointLine = pointsUsedAmount > 0
       ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n입금하실 금액: ${Math.max(0, totalPrice - pointsUsedAmount).toLocaleString()}원`
       : '';
+
+    const priceBreakdownLine = isSolbookOrder
+      ? `\n   (문항 합계 ${variantSubtotal.toLocaleString()}원 + 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원)`
+      : isSolbookTextbook && solbookCustomFeeWaived
+        ? `\n   (문항 합계 ${variantSubtotal.toLocaleString()}원 · 연·월 회원: 쏠북 커스텀 면제)`
+        : '';
 
     const orderText = `교재: ${selectedTextbook}
 
@@ -302,7 +427,10 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
 4. 총 문항 수
 : ${totalQuestions}문항
 5. 가격
-: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${pointLine}${useCustomHwp ? `
+: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${priceBreakdownLine}${pointLine}
+
+5-1. HWP 저장 방식
+: ${formatHwpStorageSummary(hwpStorageModes)}${solbookBlock}${useCustomHwp ? `
 
 6. 커스텀 HWP 양식 사용
    나의양식 「변형문제」 양식 적용 요청 (업로드 ${formatCounts.변형문제}건)` : ''}`;
@@ -317,19 +445,36 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
       questionsPerType,
       email: email.trim(),
       useCustomHwp,
+      hwpStorageModes: [...hwpStorageModes],
+      ...(isSolbookTextbook
+        ? {
+            solbook: {
+              textbookKey: selectedTextbook,
+              extraFeeWon: solbookExtraFeeWon,
+              chargedExtraFeeWon: solbookFee,
+              purchaseUrl: solbookPurchaseUrl.trim(),
+              customFeeWaivedMember: solbookCustomFeeWaived && solbookFee === 0,
+            },
+          }
+        : {}),
     };
-    onOrderGenerate(orderText, 'BV', { orderMeta, pointsUsed: pointsUsedAmount || undefined });
+    await Promise.resolve(
+      onOrderGenerate(orderText, 'BV', { orderMeta, pointsUsed: pointsUsedAmount || undefined })
+    );
+    } finally {
+      orderSubmittingRef.current = false;
+      setOrderSubmitting(false);
+    }
   };
 
   const generateOrder = () => {
+    if (orderSubmittingRef.current) return;
     if (!validateOrder()) return;
-    if (isMember && userPoints > 0) {
-      const { totalPrice } = computeBookVariantPrice();
-      setPointsToUse(Math.min(userPoints, totalPrice));
-      setShowPointModal(true);
-    } else {
-      submitOrder(0);
-    }
+    const { totalPrice: tp } = computeBookVariantPrice();
+    const maxUsable = Math.min(userPoints, tp);
+    const effective =
+      loggedIn && usePoints && userPoints > 0 ? Math.min(Math.max(0, pointsToUse), maxUsable) : 0;
+    void submitOrder(effective);
   };
 
   const {
@@ -337,9 +482,22 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     totalQuestions,
     discountRate,
     discountAmount,
+    solbookFee,
     totalPrice,
     isDiscounted,
+    isSolbookTextbook,
+    solbookCustomFeeWaived,
   } = computeBookVariantPrice();
+
+  const maxPointUsable = Math.min(userPoints, totalPrice);
+  const pointsAppliedPreview =
+    loggedIn && usePoints && userPoints > 0 ? Math.min(Math.max(0, pointsToUse), maxPointUsable) : 0;
+  const depositAfterPoints = Math.max(0, totalPrice - pointsAppliedPreview);
+
+  useEffect(() => {
+    if (!usePoints || userPoints <= 0) return;
+    setPointsToUse((p) => Math.min(Math.max(0, p), maxPointUsable));
+  }, [usePoints, userPoints, maxPointUsable]);
 
   return (
     <>
@@ -724,6 +882,46 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                   <p className="text-sm text-gray-700">비회원 주문 · 기본 양식</p>
                 </div>
               )}
+
+              <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/90 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setHwpStorageDetailOpen((v) => !v)}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-slate-100/80 transition-colors"
+                >
+                  <span className="min-w-0">
+                    <span className="text-sm font-bold text-black">저장 방식</span>
+                    <span className="block text-xs text-slate-600 mt-0.5 truncate">{formatHwpStorageSummary(hwpStorageModes)}</span>
+                  </span>
+                  <span className="text-xs font-medium text-blue-600 shrink-0">{hwpStorageDetailOpen ? '접기' : '추가로 선택'}</span>
+                </button>
+                {hwpStorageDetailOpen ? (
+                  <div className="px-3 pb-3 pt-0 border-t border-slate-200">
+                    <p className="text-[11px] text-slate-500 pt-2 pb-2">여러 개 동시에 켤 수 있어요.</p>
+                    <ul className="space-y-2">
+                      {HWP_STORAGE_OPTIONS.map((opt) => {
+                        const checked = hwpStorageModes.includes(opt.key);
+                        return (
+                          <li key={opt.key}>
+                            <label className="flex items-start gap-2 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleHwpStorageMode(opt.key)}
+                                className="mt-0.5 w-4 h-4 rounded border-slate-400 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="flex-1 min-w-0">
+                                <span className="text-sm font-medium text-black">{opt.label}</span>
+                                <span className="block text-[11px] text-slate-500 mt-0.5">{opt.hint}</span>
+                              </span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
               
               {selectedTypes.length > 0 ? (
                 <div className="space-y-4">
@@ -741,6 +939,12 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                           ) : (
                             <span className="text-slate-600">기본 양식</span>
                           )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-start gap-2 border-b border-dashed border-green-200 pb-2 mb-2">
+                        <span className="text-black shrink-0">저장 방식:</span>
+                        <span className="font-medium text-sm text-right text-emerald-900 leading-snug">
+                          {formatHwpStorageSummary(hwpStorageModes)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -785,6 +989,45 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                           </span>
                         </div>
                       )}
+                      {isSolbookTextbook && (
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-black">쏠북 커스텀:</span>
+                            {solbookFee > 0 ? (
+                              <span className="font-medium text-violet-700">+{solbookFee.toLocaleString()}원</span>
+                            ) : solbookCustomFeeWaived ? (
+                              <span className="font-medium text-emerald-700">면제 (연회원·월구독)</span>
+                            ) : (
+                              <span className="font-medium text-gray-600">추가 없음</span>
+                            )}
+                          </div>
+                          {solbookFee > 0 && (
+                            <p className="text-[11px] leading-relaxed text-violet-950 bg-violet-50/90 border border-violet-100 rounded-lg px-2.5 py-2">
+                              <strong>월구독</strong> 또는 <strong>연회원</strong>이시면 위 쏠북 커스텀 비용은{' '}
+                              <strong className="text-emerald-800">무료(면제)</strong>입니다. 부교재 변형을 자주 이용하신다면
+                              회원으로 전환해 비용을 절약해 보세요.{' '}
+                              <Link href="/my" className="text-blue-700 underline font-semibold hover:text-blue-900">
+                                내 정보
+                              </Link>
+                              에서 회원 여부를 확인하거나,{' '}
+                              <a
+                                href={KAKAO_INQUIRY_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-700 underline font-semibold hover:text-blue-900"
+                              >
+                                카카오톡
+                              </a>
+                              으로 월구독·연회원 가입을 문의해 주세요.
+                            </p>
+                          )}
+                          {solbookCustomFeeWaived && solbookFee === 0 && (
+                            <p className="text-[11px] text-emerald-900/90 leading-relaxed">
+                              연회원·월구독 혜택으로 쏠북 커스텀 비용이 면제되었습니다.
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-black">총 가격:</span>
                         <div className="text-right">
@@ -807,15 +1050,118 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
                           )}
                         </div>
                       </div>
+
+                      <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-800 font-medium">내 포인트</span>
+                          <span className="font-bold text-indigo-700 tabular-nums">
+                            {loggedIn ? `${userPoints.toLocaleString()}P` : '—'}
+                          </span>
+                        </div>
+                        {!loggedIn && (
+                          <p className="text-xs text-gray-500 leading-snug">
+                            로그인하면 보유 포인트로 결제 금액을 줄일 수 있어요.
+                          </p>
+                        )}
+                        {loggedIn && userPoints === 0 && (
+                          <p className="text-xs text-gray-500">사용 가능한 포인트가 없습니다.</p>
+                        )}
+                        {loggedIn && userPoints > 0 && (
+                          <>
+                            <label className="flex items-start gap-2.5 cursor-pointer pt-0.5">
+                              <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                                checked={usePoints}
+                                onChange={(e) => {
+                                  const on = e.target.checked;
+                                  setUsePoints(on);
+                                  if (on) {
+                                    setPointsToUse(Math.min(userPoints, totalPrice));
+                                  } else {
+                                    setPointsToUse(0);
+                                  }
+                                }}
+                              />
+                              <span className="text-gray-800 leading-snug">
+                                포인트로 결제 금액 차감 <span className="text-gray-500">(1P = 1원)</span>
+                              </span>
+                            </label>
+                            {usePoints && (
+                              <div className="pl-0 space-y-2 border-t border-slate-200 pt-2">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs text-gray-600">사용할 포인트</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPointsToUse(maxPointUsable)}
+                                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                                  >
+                                    전액
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={maxPointUsable}
+                                    value={pointsToUse}
+                                    onChange={(e) => {
+                                      const v = Math.max(
+                                        0,
+                                        Math.min(maxPointUsable, Math.floor(Number(e.target.value) || 0)),
+                                      );
+                                      setPointsToUse(v);
+                                    }}
+                                    className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-right text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                  />
+                                  <span className="text-gray-500 text-xs shrink-0">P</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={maxPointUsable}
+                                  value={Math.min(pointsToUse, maxPointUsable)}
+                                  onChange={(e) => setPointsToUse(Number(e.target.value))}
+                                  className="w-full accent-blue-600"
+                                />
+                                <div className="flex justify-between text-[11px] text-gray-400">
+                                  <span>0P</span>
+                                  <span>{maxPointUsable.toLocaleString()}P</span>
+                                </div>
+                                {pointsAppliedPreview > 0 && (
+                                  <div className="flex justify-between items-center text-xs pt-1">
+                                    <span className="text-green-700">포인트 차감</span>
+                                    <span className="font-bold text-green-700">
+                                      -{pointsAppliedPreview.toLocaleString()}P
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between items-center border-t border-slate-200 pt-2">
+                                  <span className="text-gray-800 font-medium">입금 예정</span>
+                                  <span className="font-bold text-lg text-black tabular-nums">
+                                    {depositAfterPoints.toLocaleString()}원
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* 주문서 생성 버튼 */}
                   <button
+                    type="button"
                     onClick={generateOrder}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                    disabled={orderSubmitting}
+                    className={`w-full py-4 px-6 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                      orderSubmitting
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
+                    }`}
                   >
-                    주문서 생성하기
+                    {orderSubmitting ? '접수 중…' : '주문서 생성하기'}
                   </button>
                 </div>
               ) : (
@@ -922,115 +1268,6 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
 
       </div>
     </div>
-
-    {/* 포인트 사용 모달 */}
-    {showPointModal && (() => {
-      const { totalPrice } = computeBookVariantPrice();
-      const maxUsable = Math.min(userPoints, totalPrice);
-      const depositDue = Math.max(0, totalPrice - pointsToUse);
-      return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPointModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">포인트 사용</h3>
-              <p className="text-blue-100 text-sm mt-0.5">보유 포인트를 사용하여 결제 금액을 줄일 수 있습니다</p>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                <span className="text-gray-600 text-sm">보유 포인트</span>
-                <span className="text-lg font-bold text-blue-600">{userPoints.toLocaleString()}P</span>
-              </div>
-
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                <span className="text-gray-600 text-sm">주문 금액</span>
-                <span className="text-lg font-bold text-black">{totalPrice.toLocaleString()}원</span>
-              </div>
-
-              <div className="border-2 border-blue-200 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">사용할 포인트</label>
-                  <button
-                    type="button"
-                    onClick={() => setPointsToUse(maxUsable)}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
-                  >
-                    전액 사용
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={maxUsable}
-                    value={pointsToUse}
-                    onChange={(e) => {
-                      const v = Math.max(0, Math.min(maxUsable, Math.floor(Number(e.target.value) || 0)));
-                      setPointsToUse(v);
-                    }}
-                    className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 text-lg text-black text-right font-bold focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500"
-                  />
-                  <span className="text-gray-500 font-medium shrink-0">P</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={maxUsable}
-                  value={pointsToUse}
-                  onChange={(e) => setPointsToUse(Number(e.target.value))}
-                  className="w-full accent-blue-600"
-                />
-                <div className="flex justify-between text-[11px] text-gray-400">
-                  <span>0P</span>
-                  <span>{maxUsable.toLocaleString()}P</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl space-y-2">
-                {pointsToUse > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-green-700">포인트 차감</span>
-                    <span className="text-green-600 font-bold">-{pointsToUse.toLocaleString()}P</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-medium">입금하실 금액</span>
-                  <span className="text-2xl font-bold text-black">{depositDue.toLocaleString()}원</span>
-                </div>
-                {depositDue > 0 && (
-                  <p className="text-[11px] text-gray-500 pt-1 border-t border-green-200">
-                    입금 계좌: {MEMBER_DEPOSIT_ACCOUNT}
-                  </p>
-                )}
-                {depositDue === 0 && (
-                  <p className="text-xs text-green-700 font-medium pt-1 border-t border-green-200">
-                    전액 포인트 결제 — 별도 입금이 필요 없습니다
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="px-6 pb-5 flex gap-3">
-              <button
-                type="button"
-                onClick={() => { setShowPointModal(false); submitOrder(0); }}
-                className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
-              >
-                사용 안 함
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowPointModal(false); submitOrder(pointsToUse); }}
-                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg transition"
-              >
-                {pointsToUse > 0 ? `${pointsToUse.toLocaleString()}P 사용` : '주문하기'}
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    })()}
     </>
   );
 };

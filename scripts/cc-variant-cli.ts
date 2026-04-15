@@ -200,28 +200,37 @@ async function cmdSave(flags: Map<string, string>) {
   } catch {
     die('JSON 파싱 실패');
   }
-  if (!body || typeof body !== 'object' || Array.isArray(body)) die('루트는 객체 JSON이어야 합니다.');
-  const o = body as Record<string, unknown>;
-  const passage_id = String(o.passage_id ?? '').trim();
-  const textbook = String(o.textbook ?? '').trim();
-  const source = String(o.source ?? '').trim();
-  const type = String(o.type ?? '').trim();
-  const qd = o.question_data;
-  if (!qd || typeof qd !== 'object' || Array.isArray(qd)) die('question_data 객체가 필요합니다.');
-  const status = o.status != null ? String(o.status) : undefined;
-  const option_type = o.option_type != null ? String(o.option_type) : undefined;
+  if (!body || typeof body !== 'object') die('JSON 객체 또는 배열이 필요합니다.');
 
-  const saved = await saveGeneratedQuestionToDb({
-    passage_id,
-    textbook,
-    source,
-    type,
-    question_data: qd as Record<string, unknown>,
-    status,
-    option_type,
-  });
-  if (!saved.ok) die(saved.error);
-  out(saved);
+  const items: Record<string, unknown>[] = Array.isArray(body) ? body as Record<string, unknown>[] : [body as Record<string, unknown>];
+  if (items.length === 0) die('빈 배열입니다.');
+
+  const results: unknown[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const o = items[i];
+    if (!o || typeof o !== 'object' || Array.isArray(o)) { results.push({ index: i, ok: false, error: '객체가 아닙니다' }); continue; }
+    const passage_id = String(o.passage_id ?? '').trim();
+    const textbook = String(o.textbook ?? '').trim();
+    const source = String(o.source ?? '').trim();
+    const type = String(o.type ?? '').trim();
+    const qd = o.question_data;
+    if (!qd || typeof qd !== 'object' || Array.isArray(qd)) { results.push({ index: i, ok: false, error: 'question_data 객체가 필요합니다' }); continue; }
+    const status = o.status != null ? String(o.status) : undefined;
+    const option_type = o.option_type != null ? String(o.option_type) : undefined;
+
+    const saved = await saveGeneratedQuestionToDb({
+      passage_id,
+      textbook,
+      source,
+      type,
+      question_data: qd as Record<string, unknown>,
+      status,
+      option_type,
+    });
+    results.push({ index: i, ...saved });
+    if (items.length > 1) console.error(`  [${i + 1}/${items.length}] ${source} / ${type} → ${saved.ok ? 'OK' : saved.error}`);
+  }
+  if (items.length === 1) { out(results[0]); } else { out({ ok: true, total: items.length, saved: results.filter((r: any) => r.ok).length, results }); }
 }
 
 async function cmdRecordReview(flags: Map<string, string>) {

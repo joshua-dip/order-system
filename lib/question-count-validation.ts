@@ -375,13 +375,65 @@ export async function runQuestionCountValidation(
           orderNumber: order.orderNumber != null ? String(order.orderNumber) : null,
           flow: 'mockVariant',
         };
+      } else if (flow === 'unifiedVariant') {
+        const dbEntriesRaw = Array.isArray(m.dbEntries) ? m.dbEntries : [];
+
+        const allSelectedSources: string[] = [];
+        for (const entry of dbEntriesRaw) {
+          if (entry && typeof entry === 'object' && Array.isArray((entry as Record<string, unknown>).selectedSources)) {
+            const srcs = (entry as Record<string, unknown>).selectedSources as unknown[];
+            allSelectedSources.push(...srcs.filter((s): s is string => typeof s === 'string'));
+          }
+        }
+
+        if (allSelectedSources.length === 0) {
+          return {
+            ok: false,
+            status: 400,
+            body: { error: '통합 주문에 선택된 지문(selectedSources)이 없습니다.' },
+          };
+        }
+
+        passageDocs = (await passagesCol
+          .find({ source_key: { $in: allSelectedSources } })
+          .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
+          .toArray()) as PDoc[];
+
+        const matchedSources = new Set(
+          passageDocs.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : ''))
+        );
+        lessonsWithoutPassage = allSelectedSources.filter((s) => !matchedSources.has(s));
+        orderLessonsRequested = allSelectedSources.length;
+
+        typesToCheck =
+          selectedTypesRaw.length > 0
+            ? [...new Set(selectedTypesRaw.map((t) => t.trim()).filter(Boolean))]
+            : [...BOOK_VARIANT_QUESTION_TYPES];
+
+        // questionsPerTypeMap 기반으로 유형별 최솟값을 공통 requiredPerType으로 사용
+        const qptMap =
+          typeof m.questionsPerTypeMap === 'object' && m.questionsPerTypeMap !== null && !Array.isArray(m.questionsPerTypeMap)
+            ? (m.questionsPerTypeMap as Record<string, number>)
+            : {};
+        const perTypeValues = typesToCheck
+          .map((t) => (typeof qptMap[t] === 'number' && qptMap[t] > 0 ? Math.floor(qptMap[t]) : qpt))
+          .filter((v) => v > 0);
+        requiredPerType = perTypeValues.length > 0 ? Math.min(...perTypeValues) : qpt;
+
+        textbook = 'UV';
+        scope = 'order';
+        orderInfo = {
+          id: orderIdResolved,
+          orderNumber: order.orderNumber != null ? String(order.orderNumber) : null,
+          flow: 'unifiedVariant',
+        };
       } else {
         return {
           ok: false,
           status: 400,
           body: {
             error:
-              '문제수 검증 주문 범위는 부교재 변형(bookVariant) 또는 모의고사 변형(mockVariant)만 지원합니다. (워크북·번호별 제작 등은 orderMeta 구조가 다릅니다.)',
+              '문제수 검증 주문 범위는 부교재 변형(bookVariant), 모의고사 변형(mockVariant), 또는 통합 변형(unifiedVariant)만 지원합니다. (워크북·번호별 제작 등은 orderMeta 구조가 다릅니다.)',
             flow: flow || null,
           },
         };

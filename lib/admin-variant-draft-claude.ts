@@ -43,6 +43,8 @@ export type VariantDraftClaudeParams = {
   userHint?: string;
   typePrompt?: string;
   difficulty?: string;
+  /** 회원이 본인 키로 호출할 때 전달. 없으면 서버 ANTHROPIC_API_KEY 사용 */
+  anthropicApiKey?: string;
 };
 
 export type VariantDraftClaudeResult =
@@ -90,11 +92,14 @@ export function normalizeClaudeDraftJsonToQuestionData(
 
 export function buildVariantDraftUserMessage(params: VariantDraftClaudeParams): string {
   const { paragraph, type, userHint = '', typePrompt = '', difficulty = '중' } = params;
+  const typeT = type.trim();
+  const diff = (typeof difficulty === 'string' ? difficulty : '중').trim() || '중';
+  /** 유형 `삽입-고난도` 또는 (구버전/관리자) `삽입` + 난이도 상 */
+  const isHardInsertion = typeT === '삽입-고난도' || (diff === '상' && typeT === '삽입');
   const extra =
     (process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA && process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA.trim()) ||
     '';
 
-  const isHardInsertion = difficulty === '상' && (type === '삽입' || type.includes('삽입'));
   const hardBlock = isHardInsertion
     ? `【난이도 상 · 삽입 문장 생성 전용 규칙】\n${HARD_INSERTION_PROMPT}\n\n`
     : '';
@@ -104,7 +109,7 @@ export function buildVariantDraftUserMessage(params: VariantDraftClaudeParams): 
     ? `【무관한문장 유형 전용 규칙】\n${IRRELEVANT_SENTENCE_PROMPT}\n\n`
     : '';
 
-  return `문제 유형(type): ${type}${isHardInsertion ? ' (난이도: 상 — 새 문장 생성)' : ''}${isIrrelevant ? ' (무관한 문장 생성)' : ''}
+  return `문제 유형(type): ${type}${isHardInsertion ? ' (고난도 삽입 규칙 — 새 문장 생성)' : ''}${isIrrelevant ? ' (무관한 문장 생성)' : ''}
 ${extra ? `운영자 공통 지시(.env): ${extra}\n` : ''}${hardBlock}${irrelevantBlock}${typePrompt ? `【이 유형 전용 출제 지침】\n${typePrompt}\n\n` : ''}${userHint ? `이번 문항만의 추가 지시: ${userHint}\n` : ''}
 [지문 Paragraph]
 ${paragraph}`;
@@ -116,10 +121,15 @@ ${paragraph}`;
 export async function generateVariantDraftQuestionDataWithClaude(
   params: VariantDraftClaudeParams
 ): Promise<VariantDraftClaudeResult> {
-  const { paragraph, type, nextNum, userHint = '', typePrompt = '', difficulty = '중' } = params;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey?.trim()) {
-    return { ok: false, error: 'AI 초안 생성에는 ANTHROPIC_API_KEY 설정이 필요합니다.' };
+  const { paragraph, type, nextNum, userHint = '', typePrompt = '', difficulty = '중', anthropicApiKey } = params;
+  const apiKey = (anthropicApiKey?.trim() || process.env.ANTHROPIC_API_KEY || '').trim();
+  if (!apiKey) {
+    return {
+      ok: false,
+      error: anthropicApiKey
+        ? '유효한 Anthropic API 키가 필요합니다.'
+        : 'AI 초안 생성에는 ANTHROPIC_API_KEY 설정이 필요합니다.',
+    };
   }
   const model =
     (process.env.ANTHROPIC_SOLVE_MODEL && process.env.ANTHROPIC_SOLVE_MODEL.trim()) ||

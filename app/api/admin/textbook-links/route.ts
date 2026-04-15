@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
     const textbookKey = typeof body?.textbookKey === 'string' ? body.textbookKey.trim() : '';
     const kyoboUrl = typeof body?.kyoboUrl === 'string' ? body.kyoboUrl.trim() : '';
     const description = typeof body?.description === 'string' ? body.description.trim() : '';
-    if (!textbookKey || !kyoboUrl) {
-      return NextResponse.json({ error: 'textbookKey, kyoboUrl는 필수입니다.' }, { status: 400 });
+    if (!textbookKey) {
+      return NextResponse.json({ error: 'textbookKey는 필수입니다.' }, { status: 400 });
     }
     await col.updateOne(
       { textbookKey },

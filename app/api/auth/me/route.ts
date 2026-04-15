@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { verifyToken, COOKIE_NAME, comparePassword, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
 import { isAnnualMemberActive } from '@/lib/annual-member';
+import { isMonthlyMemberActive, isPremiumMember } from '@/lib/premium-member';
+import { getVariantTrialInfo } from '@/lib/variant-trial';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -35,8 +37,13 @@ export async function GET(request: NextRequest) {
           allowedTextbooksVariant: 1,
           points: 1,
           annualMemberSince: 1,
+          monthlyMemberSince: 1,
+          monthlyMemberUntil: 1,
+          phone: 1,
           isVip: 1,
           vipSince: 1,
+          passwordHash: 1,
+          createdAt: 1,
         },
       }
     );
@@ -50,9 +57,34 @@ export async function GET(request: NextRequest) {
     const annualMemberSinceIso =
       annualSince instanceof Date && !Number.isNaN(annualSince.getTime()) ? annualSince.toISOString() : null;
     const annualMemberActive = isAnnualMemberActive(annualSince ?? null);
+    const monthlySince = (user as { monthlyMemberSince?: Date }).monthlyMemberSince;
+    const monthlyUntil = (user as { monthlyMemberUntil?: Date }).monthlyMemberUntil;
+    const monthlyMemberSinceIso =
+      monthlySince instanceof Date && !Number.isNaN(monthlySince.getTime())
+        ? monthlySince.toISOString()
+        : null;
+    const monthlyMemberUntilIso =
+      monthlyUntil instanceof Date && !Number.isNaN(monthlyUntil.getTime())
+        ? monthlyUntil.toISOString()
+        : null;
+    const monthlyMemberActive = isMonthlyMemberActive(monthlyUntil ?? null);
+    const premium = isPremiumMember({
+      role: user.role,
+      annualSince: annualSince ?? null,
+      monthlyUntil: monthlyUntil ?? null,
+    });
+    const phoneRaw = (user as { phone?: string }).phone;
+    const phone = typeof phoneRaw === 'string' ? phoneRaw.trim() : '';
     const vipSinceRaw = (user as { vipSince?: Date }).vipSince;
     const vipSinceIso =
       vipSinceRaw instanceof Date && !Number.isNaN(vipSinceRaw.getTime()) ? vipSinceRaw.toISOString() : null;
+    const passwordHash = (user as { passwordHash?: string }).passwordHash;
+    const mustChangePassword =
+      user.role === 'user' &&
+      typeof passwordHash === 'string' &&
+      (await comparePassword(DEFAULT_MEMBER_INITIAL_PASSWORD, passwordHash));
+    const createdAtRaw = (user as { createdAt?: Date }).createdAt;
+    const variantTrial = premium ? null : getVariantTrialInfo(createdAtRaw ?? null);
     return NextResponse.json({
       user: {
         loginId: user.loginId,
@@ -72,8 +104,15 @@ export async function GET(request: NextRequest) {
         points,
         annualMemberSince: annualMemberSinceIso,
         isAnnualMemberActive: annualMemberActive,
+        monthlyMemberSince: monthlyMemberSinceIso,
+        monthlyMemberUntil: monthlyMemberUntilIso,
+        isMonthlyMemberActive: monthlyMemberActive,
+        isPremiumMember: premium,
+        phone,
         isVip: !!user.isVip,
         vipSince: vipSinceIso,
+        mustChangePassword,
+        variantTrial,
       },
     });
   } catch {
@@ -92,8 +131,15 @@ export async function GET(request: NextRequest) {
         points: 0,
         annualMemberSince: null,
         isAnnualMemberActive: false,
+        monthlyMemberSince: null,
+        monthlyMemberUntil: null,
+        isMonthlyMemberActive: false,
+        isPremiumMember: false,
+        phone: '',
         isVip: false,
         vipSince: null,
+        mustChangePassword: false,
+        variantTrial: null,
       },
     });
   }

@@ -12,15 +12,18 @@ export default function MockExamPage() {
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
   const [showOrder, setShowOrder] = useState(false);
 
-  const handleOrderGenerate = (orderText: string, orderPrefix?: string, extras?: { orderMeta?: Record<string, unknown>; pointsUsed?: number }) => {
-    saveOrderToDb(orderText, orderPrefix, extras?.pointsUsed, extras?.orderMeta).then((res) => {
-      if (res.ok && res.id) {
-        router.push('/order/done?id=' + res.id);
-      } else {
-        setGeneratedOrder(orderText);
-        setShowOrder(true);
-      }
-    });
+  const handleOrderGenerate = async (
+    orderText: string,
+    orderPrefix?: string,
+    extras?: { orderMeta?: Record<string, unknown>; pointsUsed?: number }
+  ) => {
+    const res = await saveOrderToDb(orderText, orderPrefix, extras?.pointsUsed, extras?.orderMeta);
+    if (res.ok && res.id) {
+      router.push('/order/done?id=' + res.id);
+    } else {
+      setGeneratedOrder(orderText);
+      setShowOrder(true);
+    }
   };
 
   const handleBack = () => {

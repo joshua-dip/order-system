@@ -51,10 +51,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const $set: Record<string, unknown> = { updated_at: new Date() };
 
+    const VALID_PUBLISHERS = ['YBM', '쎄듀', 'NE능률'] as const;
+    type Publisher = typeof VALID_PUBLISHERS[number];
+
     if (typeof body.textbook === 'string') $set.textbook = body.textbook.trim();
     if (typeof body.chapter === 'string') $set.chapter = body.chapter.trim();
     if (typeof body.number === 'string') $set.number = body.number.trim();
     if (typeof body.source_key === 'string') $set.source_key = body.source_key.trim();
+    if (body.publisher !== undefined) {
+      const p = typeof body.publisher === 'string' ? body.publisher.trim() : '';
+      $set.publisher = VALID_PUBLISHERS.includes(p as Publisher) ? (p as Publisher) : null;
+    }
     if (body.page !== undefined) {
       const p =
         typeof body.page === 'number'

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DEFAULT_APP_BAR_TITLE } from '@/lib/site-branding';
 
 interface AppBarProps {
   title?: string;
@@ -17,7 +18,7 @@ interface AuthUser {
   name: string;
 }
 
-const AppBar = ({ title = "커스터마이징 서비스", showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
+const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
 
@@ -75,10 +76,11 @@ const AppBar = ({ title = "커스터마이징 서비스", showBackButton = false
           </div>
 
           {/* 중앙 제목 */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
+          <div className="absolute left-1/2 -translate-x-1/2 max-w-[min(92vw,20rem)] sm:max-w-none text-center px-2">
             <button
+              type="button"
               onClick={handleHomeClick}
-              className="text-xl font-bold text-white hover:opacity-80 transition-all cursor-pointer"
+              className="text-base sm:text-xl font-bold text-white hover:opacity-80 transition-all cursor-pointer leading-tight"
             >
               {title}
             </button>

@@ -26,4 +26,6 @@ export const ORDER_PREFIX = {
   BOOK_BUNDLE: 'BB',
   /** 부교재 + 단어장 */
   BOOK_VOCABULARY: 'BL',
+  /** 통합 변형문제 (부교재+모의고사 혼합, 파이널 예비 모의고사) */
+  UNIFIED_VARIANT: 'UV',
 } as const;

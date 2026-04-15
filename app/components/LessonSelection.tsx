@@ -6,6 +6,8 @@ import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useTextbookLinks } from '@/lib/useTextbookLinks';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/variant-textbooks';
+const KAKAO_INQUIRY_URL =
+  process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
 interface LessonSelectionProps {
   selectedTextbook: string;
@@ -22,9 +24,14 @@ interface TextbookContent {
   [lessonKey: string]: LessonItem[];
 }
 
+type TextbookBranch = '부교재' | '교과서';
+
 interface TextbookStructure {
   Sheet1?: {
     부교재?: {
+      [textbookName: string]: TextbookContent;
+    };
+    교과서?: {
       [textbookName: string]: TextbookContent;
     };
   };
@@ -32,8 +39,14 @@ interface TextbookStructure {
     부교재?: {
       [textbookName: string]: TextbookContent;
     };
+    교과서?: {
+      [textbookName: string]: TextbookContent;
+    };
   };
   부교재?: {
+    [textbookName: string]: TextbookContent;
+  };
+  교과서?: {
     [textbookName: string]: TextbookContent;
   };
 }
@@ -56,6 +69,11 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [memberPrefsLoaded, setMemberPrefsLoaded] = useState(false);
   /** /api/settings/default-textbooks 응답 완료 여부 */
   const [defaultTextbooksLoaded, setDefaultTextbooksLoaded] = useState(false);
+  /** 변형문제 쏠북 교재 키 (비회원 포함 공개 API) */
+  const [solbookKeys, setSolbookKeys] = useState<string[]>([]);
+  /** settings.textbookTypeMeta 기준 쏠북 분류 — 교과서 키만 목록 상단 섹션에 사용 */
+  const [solbook교과서Keys, setSolbook교과서Keys] = useState<string[]>([]);
+  const [solbookLoaded, setSolbookLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -85,14 +103,48 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       .finally(() => setDefaultTextbooksLoaded(true));
   }, []);
 
+  useEffect(() => {
+    fetch('/api/settings/variant-solbook', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data: Record<string, unknown>) => {
+        setSolbookKeys(Array.isArray(data?.textbookKeys) ? (data.textbookKeys as string[]) : []);
+        setSolbook교과서Keys(Array.isArray(data?.교과서Keys) ? (data.교과서Keys as string[]) : []);
+      })
+      .catch(() => {
+        setSolbookKeys([]);
+        setSolbook교과서Keys([]);
+      })
+      .finally(() => setSolbookLoaded(true));
+  }, []);
+
   // 선택된 교재에 따라 강과 번호 목록 업데이트
   useEffect(() => {
     if (!textbooksData) return;
+    const ac = new AbortController();
+
     const loadTextbookData = async () => {
       try {
+        // 교과서 목록: 쏠북 출판사(YBM·쎄듀·NE능률)가 설정된 교재만 표시
+        if (selectedTextbook === '교과서_목록') {
+          if (!solbookLoaded) {
+            setTextbooks([]);
+            setFilteredTextbooks([]);
+            setShowTextbookList(true);
+            return;
+          }
+          const allSorted = [...solbookKeys].sort((a, b) => a.localeCompare(b, 'ko'));
+          const gyoSorted = [...solbook교과서Keys].sort((a, b) => a.localeCompare(b, 'ko'));
+          const textbookList =
+            gyoSorted.length > 0 ? gyoSorted.filter((k) => allSorted.includes(k)) : allSorted;
+          setTextbooks(textbookList);
+          setFilteredTextbooks(textbookList);
+          setShowTextbookList(true);
+          return;
+        }
+
         // 부교재 목록: 관리자가 설정한 기본 노출 교재만 표시 (비회원 포함). 미설정 시 전체 노출.
         if (selectedTextbook === '부교재_목록') {
-          if (!memberPrefsLoaded || !defaultTextbooksLoaded) {
+          if (!memberPrefsLoaded || !defaultTextbooksLoaded || !solbookLoaded) {
             setTextbooks([]);
             setFilteredTextbooks([]);
             setShowTextbookList(true);
@@ -110,6 +162,12 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
             textbookList = allKeys.filter((k) => VARIANT_SUPPLEMENTARY_COMMON_KEYS.includes(k));
             if (textbookList.length === 0) textbookList = [...allKeys];
           }
+          // 쏠북 교재는 API·DB에 등록된 키를 모두 노출 (변환 JSON에 아직 없어도 목록에 표시)
+          const merged = new Set([...textbookList, ...solbookKeys]);
+          const 교과서Set = new Set(solbook교과서Keys);
+          textbookList = [...merged]
+            .filter((k) => !교과서Set.has(k))
+            .sort((a, b) => a.localeCompare(b, 'ko'));
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
           setShowTextbookList(true);
@@ -117,14 +175,15 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         }
         
         // 실제 교재가 선택된 경우 목록 숨기기
-        if (selectedTextbook !== '부교재_목록') {
+        if (selectedTextbook !== '부교재_목록' && selectedTextbook !== '교과서_목록') {
           setShowTextbookList(false);
         }
         
+        let groups: { [key: string]: string[] } = {};
+
         if (selectedTextbook && textbooksData[selectedTextbook]) {
           const textbookData = textbooksData[selectedTextbook] as TextbookStructure;
-          
-          // 다양한 구조에 대응하기 위한 안전한 접근 (내부 키가 교재명(버전) 등으로 다를 수 있음)
+
           let actualData: TextbookContent | null = null;
           const pickFirstIfSingle = (sub: Record<string, TextbookContent> | undefined) => {
             if (!sub) return null;
@@ -132,42 +191,70 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
             const keys = Object.keys(sub);
             return keys.length > 0 ? sub[keys[0]] : null;
           };
-          
-          actualData = pickFirstIfSingle(textbookData.Sheet1?.부교재)
-            ?? pickFirstIfSingle(textbookData['지문 데이터']?.부교재)
-            ?? pickFirstIfSingle(textbookData.부교재);
 
-          // 위 세 경로가 모두 실패하면, 임의의 최상위 키 안에 "부교재"가 있는 구조를 탐색
-          // 예: { "06_워시메_...": { "부교재": { "교재명": { ... } } } }
+          const pickFromBranches = (branch: TextbookBranch) =>
+            pickFirstIfSingle(textbookData.Sheet1?.[branch]) ??
+            pickFirstIfSingle(textbookData['지문 데이터']?.[branch]) ??
+            pickFirstIfSingle(textbookData[branch]);
+
+          actualData = pickFromBranches('부교재') ?? pickFromBranches('교과서');
+
           if (!actualData) {
             const rawData = textbookData as Record<string, Record<string, Record<string, TextbookContent>>>;
             for (const outerKey of Object.keys(rawData)) {
               const outerVal = rawData[outerKey];
-              if (outerVal && typeof outerVal === 'object' && outerVal['부교재']) {
-                actualData = pickFirstIfSingle(outerVal['부교재']);
-                if (actualData) break;
+              if (!outerVal || typeof outerVal !== 'object') continue;
+              for (const branch of ['부교재', '교과서'] as const) {
+                if (outerVal[branch]) {
+                  actualData = pickFirstIfSingle(outerVal[branch]);
+                  if (actualData) break;
+                }
               }
+              if (actualData) break;
             }
           }
-          
+
           if (actualData) {
-            const groups: {[key: string]: string[]} = {};
-            
-            Object.keys(actualData).forEach(lessonKey => {
+            const next: { [key: string]: string[] } = {};
+            Object.keys(actualData).forEach((lessonKey) => {
               const lessonData = actualData![lessonKey];
               if (Array.isArray(lessonData)) {
-                groups[lessonKey] = [];
+                next[lessonKey] = [];
                 lessonData.forEach((item: LessonItem) => {
-                  // item.번호가 이미 "1번" 형태이므로 그대로 사용
                   const lessonItem = `${lessonKey} ${item.번호}`;
-                  groups[lessonKey].push(lessonItem);
+                  next[lessonKey].push(lessonItem);
                 });
               }
             });
-            
-            setLessonGroups(groups);
+            groups = next;
           }
         }
+
+        const needsPassageFallback =
+          selectedTextbook !== '부교재_목록' &&
+          selectedTextbook !== '교과서_목록' &&
+          Object.keys(groups).length === 0;
+
+        if (needsPassageFallback) {
+          try {
+            const res = await fetch(
+              `/api/textbooks/lesson-index?textbook=${encodeURIComponent(selectedTextbook)}`,
+              { credentials: 'same-origin', signal: ac.signal },
+            );
+            const j = (await res.json().catch(() => ({}))) as {
+              ok?: boolean;
+              groups?: Record<string, string[]>;
+            };
+            if (res.ok && j.ok && j.groups && typeof j.groups === 'object') {
+              const fromPassages = j.groups;
+              if (Object.keys(fromPassages).length > 0) groups = fromPassages;
+            }
+          } catch (e) {
+            if ((e as Error)?.name !== 'AbortError') console.warn('lesson-index 폴백 실패:', e);
+          }
+        }
+
+        setLessonGroups(groups);
       } catch (error) {
         console.error('교재 데이터 로딩 실패:', error);
         // 오류 발생 시 빈 그룹으로 설정
@@ -176,8 +263,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     };
 
     if (selectedTextbook) {
-      loadTextbookData();
+      void loadTextbookData();
     }
+    return () => ac.abort();
   }, [
     selectedTextbook,
     textbooksData,
@@ -186,6 +274,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     variantDedicatedList,
     memberPrefsLoaded,
     defaultTextbooksLoaded,
+    solbookKeys,
+    solbook교과서Keys,
+    solbookLoaded,
   ]);
 
   // 검색 필터링 로직
@@ -230,7 +321,14 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     );
   };
 
-  const prefsReady = memberPrefsLoaded && defaultTextbooksLoaded;
+  const prefsReady = memberPrefsLoaded && defaultTextbooksLoaded && solbookLoaded;
+  const listMode교과서 = showTextbookList && selectedTextbook === '교과서_목록';
+  const listScreenTitle = listMode교과서 ? '교과서 선택' : showTextbookList ? '부교재 선택' : '강과 번호 선택';
+  const listScreenSubtitle = listMode교과서
+    ? '교과서를 선택해주세요'
+    : showTextbookList
+      ? '부교재를 선택해주세요'
+      : selectedTextbook;
 
   const allLessonItems = Object.keys(lessonGroups).flatMap(key => lessonGroups[key] || []);
   const allSelected = allLessonItems.length > 0 && selectedLessons.length === allLessonItems.length;
@@ -277,17 +375,17 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       <AppBar 
         showBackButton={true} 
         onBackClick={onBack}
-        title={showTextbookList ? "부교재 선택" : "강과 번호 선택"}
+        title={listScreenTitle}
       />
       <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
-            {showTextbookList ? '부교재 선택' : '강과 번호 선택'}
+            {listScreenTitle}
           </h1>
           <p className="text-lg" style={{ color: '#888B8D' }}>
-            {showTextbookList ? '부교재를 선택해주세요' : selectedTextbook}
+            {listScreenSubtitle}
           </p>
           {showTextbookList && (
             <p className="text-sm mt-2" style={{ color: '#888B8D' }}>
@@ -398,22 +496,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                   </button>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-10">
                   {(() => {
-                    // 교재 노출 설정 > 부교재 주문제작 기본 노출 교재에서 설정한 목록을 공통 유형으로 표시. 미설정/로딩 중이면 노출된 목록 전체를 공통으로 표시.
-                    const commonSet = new Set(defaultTextbooks);
-                    // defaultTextbooks가 설정되어 있으면 그 목록과 일치하는 것만 공통, 없으면 전체를 공통으로 표시
-                    const commonTextbooks =
-                      defaultTextbooks.length > 0
-                        ? filteredTextbooks.filter((k) => commonSet.has(k))
-                        : filteredTextbooks.length > 0
-                          ? [...filteredTextbooks]
-                          : [];
-                    const nonCommon =
-                      defaultTextbooks.length > 0
-                        ? filteredTextbooks.filter((k) => !commonSet.has(k))
-                        : [];
-                    const { ebs, revised, other } = groupTextbooksByRevised(nonCommon);
                     const renderCard = (textbook: string) => (
                       <div
                         key={textbook}
@@ -449,7 +533,47 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         </div>
                       </div>
                     );
-                    return (
+
+                    if (listMode교과서) {
+                      return (
+                        <>
+                          <div className="mb-6 rounded-xl border-2 border-violet-200 bg-violet-50/90 px-4 py-4 sm:px-5 sm:py-5 text-sm text-slate-800 leading-relaxed shadow-sm">
+                            <p className="font-semibold text-violet-900 mb-2">쏠북 교재 안내</p>
+                            <p>
+                              이 메뉴의 교재는 대부분 <strong className="text-violet-950">쏠북(Solvook)</strong>과 연계됩니다.
+                              <strong className="text-slate-900"> 변형 문제 맞춤 제작</strong>은 여기서 주문하신 뒤, 제작이
+                              진행되면 <strong className="text-slate-900">교재 본체(인쇄본 등)는 쏠북에서 주문·구매</strong>하실 수
+                              있습니다.
+                            </p>
+                            <p className="mt-2 text-slate-700">
+                              주문(문제 설정) 단계에서 쏠북 커스텀 비용·입금 안내가 붙을 수 있으며,{' '}
+                              <span className="font-medium text-violet-900">월구독·연회원은 쏠북 커스텀 비용이 면제</span>
+                              됩니다.
+                            </p>
+                          </div>
+                          <div className="space-y-4">{filteredTextbooks.map(renderCard)}</div>
+                        </>
+                      );
+                    }
+
+                    // 부교재 목록: 교과서(쏠북 교과서 분류)는 별도 메뉴에서만 — 여기서는 제외된 목록만 표시
+                    const solbookSet = new Set(solbookKeys.filter((k) => filteredTextbooks.includes(k)));
+                    const commonSet = new Set(defaultTextbooks);
+                    const rawCommon =
+                      defaultTextbooks.length > 0
+                        ? filteredTextbooks.filter((k) => commonSet.has(k))
+                        : filteredTextbooks.length > 0
+                          ? [...filteredTextbooks]
+                          : [];
+                    const commonTextbooks = rawCommon.filter((k) => !solbookSet.has(k));
+                    const solbookTextbooks = filteredTextbooks.filter((k) => solbookSet.has(k));
+                    const nonCommon =
+                      defaultTextbooks.length > 0
+                        ? filteredTextbooks.filter((k) => !commonSet.has(k) && !solbookSet.has(k))
+                        : [];
+                    const { ebs, revised, other } = groupTextbooksByRevised(nonCommon);
+
+                    const 부교재Inner = (
                       <>
                         {commonTextbooks.length > 0 && (
                           <div>
@@ -458,6 +582,34 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                             </h3>
                             <div className="space-y-4">
                               {commonTextbooks.map(renderCard)}
+                            </div>
+                          </div>
+                        )}
+                        {solbookTextbooks.length > 0 && (
+                          <div>
+                            <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-violet-600">
+                              쏠북
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-2 leading-relaxed">
+                              쏠북 교재는 별도 링크에서 교재 구매가 필요할 수 있으며, 일반적으로 주문(문제 설정) 단계에서{' '}
+                              <strong className="text-gray-800">쏠북 커스텀 비용</strong>이 추가되고 입금 안내가 붙습니다.{' '}
+                              <span className="text-violet-800 font-medium">
+                                월구독 회원·연회원은 쏠북 커스텀 비용이 면제됩니다.
+                              </span>
+                            </p>
+                            <div className="mb-3">
+                              <a
+                                href={KAKAO_INQUIRY_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#FEE500] text-[#191919] text-sm font-bold shadow-sm border border-[#e6d400] hover:opacity-95 active:opacity-90 no-underline transition-opacity"
+                              >
+                                <span aria-hidden>💬</span>
+                                월구독 회원·연회원 문의하기
+                              </a>
+                            </div>
+                            <div className="space-y-4">
+                              {solbookTextbooks.map(renderCard)}
                             </div>
                           </div>
                         )}
@@ -483,7 +635,10 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         )}
                         {other.length > 0 && (
                           <div>
-                            {(commonTextbooks.length > 0 || ebs.length > 0 || revised.length > 0) && (
+                            {(commonTextbooks.length > 0 ||
+                              solbookTextbooks.length > 0 ||
+                              ebs.length > 0 ||
+                              revised.length > 0) && (
                               <h3 className="text-base font-semibold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">
                                 기타 교재
                               </h3>
@@ -495,6 +650,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         )}
                       </>
                     );
+
+                    return <div className="space-y-6">{부교재Inner}</div>;
                   })()}
                 </div>
               )}
@@ -505,22 +662,42 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
             <div className="bg-white rounded-xl shadow-md p-6">
               {selectedTextbook !== '부교재_목록' && (
                 <>
-                  <div className="mb-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                      <p className="text-blue-700 text-sm">
-                        <strong>사용법:</strong> 왼쪽을 클릭하면 강 전체 선택, 오른쪽 + 버튼을 클릭하면 개별 번호 선택이 가능해요!
-                      </p>
+                  {Object.keys(lessonGroups).length === 0 ? (
+                    <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950 leading-relaxed">
+                      {solbookKeys.includes(selectedTextbook) ? (
+                        <>
+                          <strong className="block text-amber-900 mb-1">지문 데이터 준비 전</strong>
+                          이 교재는 쏠북으로 등록되어 목록에는 보이지만, 주문용 변환 JSON과 DB 지문(passages) 어느 쪽에도
+                          강·번호 목록을 만들 수 있는 데이터가 없습니다. 지문 등록·교재명 일치 여부를 확인하거나 관리자에게
+                          문의해 주세요.
+                        </>
+                      ) : (
+                        <>
+                          <strong className="block text-amber-900 mb-1">데이터를 찾을 수 없음</strong>
+                          선택한 교재의 지문 데이터를 불러오지 못했습니다. 교재명이 시스템 데이터와 일치하는지 확인하거나
+                          관리자에게 문의해 주세요.
+                        </>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAllToggle}
-                      className="w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors mb-4 border-2 border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {allSelected ? '전체 해제' : '전체 선택 (모든 강·번호)'}
-                    </button>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="mb-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                          <p className="text-blue-700 text-sm">
+                            <strong>사용법:</strong> 왼쪽을 클릭하면 강 전체 선택, 오른쪽 + 버튼을 클릭하면 개별 번호
+                            선택이 가능해요!
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAllToggle}
+                          className="w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors mb-4 border-2 border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {allSelected ? '전체 해제' : '전체 선택 (모든 강·번호)'}
+                        </button>
+                      </div>
 
-                  <div className="space-y-3">
+                      <div className="space-y-3">
               {Object.keys(lessonGroups).map((lessonKey) => {
                 const groupLessons = lessonGroups[lessonKey];
                 const allSelected = groupLessons.every(lesson => selectedLessons.includes(lesson));
@@ -596,7 +773,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                   </div>
                 );
               })}
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>

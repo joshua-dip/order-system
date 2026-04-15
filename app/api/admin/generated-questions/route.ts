@@ -6,6 +6,8 @@ import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules
 import { variationPercentAgainstOriginal } from '@/lib/paragraph-variation';
 import { getPassageTextForVariantCompare, passageIdToValidHex } from '@/lib/passage-variant-text';
 import { buildNarrativeQuestionsFilter, mapNarrativeDocToListRow } from '@/lib/admin-narrative-questions-list';
+import { buildVariantQFilter } from '@/lib/admin-generated-questions-q-filter';
+import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -18,10 +20,6 @@ function serialize(doc: Record<string, unknown>, variation_pct?: number | null) 
   };
   if (variation_pct != null) (out as Record<string, unknown>).variation_pct = variation_pct;
   return out;
-}
-
-function escapeRegex(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function buildVariantFilter(opts: {
@@ -41,15 +39,11 @@ function buildVariantFilter(opts: {
     filter.passage_id = new ObjectId(opts.passageId);
   }
   if (opts.q) {
-    const rx = escapeRegex(opts.q);
-    filter.$or = [
-      { source: { $regex: rx, $options: 'i' } },
-      { 'question_data.Question': { $regex: rx, $options: 'i' } },
-      { 'question_data.Paragraph': { $regex: rx, $options: 'i' } },
-      { 'question_data.Options': { $regex: rx, $options: 'i' } },
-      { 'question_data.Explanation': { $regex: rx, $options: 'i' } },
-      { 'question_data.Category': { $regex: rx, $options: 'i' } },
-    ];
+    const qf = buildVariantQFilter(opts.q);
+    if (qf) {
+      const prev = filter.$and;
+      filter.$and = [...(Array.isArray(prev) ? prev : []), qf];
+    }
   }
   return filter;
 }
@@ -320,7 +314,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const textbook = typeof body.textbook === 'string' ? body.textbook.trim() : '';
     const passageIdStr = typeof body.passage_id === 'string' ? body.passage_id.trim() : '';
-    const source = typeof body.source === 'string' ? body.source.trim() : '';
+    let source = typeof body.source === 'string' ? body.source.trim() : '';
     const type = typeof body.type === 'string' ? body.type.trim() : '';
 
     if (!textbook || !passageIdStr || !ObjectId.isValid(passageIdStr)) {
@@ -329,6 +323,8 @@ export async function POST(request: NextRequest) {
     if (!source || !type) {
       return NextResponse.json({ error: 'source(출처)와 유형(type)은 필수입니다.' }, { status: 400 });
     }
+
+    source = normalizeMockVariantSourceLabel(textbook, source);
 
     let question_data: Record<string, unknown> = {};
     if (body.question_data && typeof body.question_data === 'object' && !Array.isArray(body.question_data)) {
@@ -346,6 +342,14 @@ export async function POST(request: NextRequest) {
     const difficulty = typeof body.difficulty === 'string' && body.difficulty.trim()
       ? body.difficulty.trim()
       : (typeof question_data?.DifficultyLevel === 'string' ? (question_data.DifficultyLevel as string) : '중');
+
+    if (typeof question_data.Source === 'string' && question_data.Source.trim()) {
+      question_data = {
+        ...question_data,
+        Source: normalizeMockVariantSourceLabel(textbook, question_data.Source.trim()),
+      };
+    }
+
     const error_msg =
       body.error_msg === null || body.error_msg === undefined
         ? null

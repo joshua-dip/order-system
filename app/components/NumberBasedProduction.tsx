@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AppBar from './AppBar';
 import mockExamsData from '../data/mock-exams.json';
-import type { OrderGenerateExtras } from './MockExamSettings';
+import type { OrderGenerateHandler } from './MockExamSettings';
 
 interface NumberBasedProductionProps {
   onBack: () => void;
-  onOrderGenerate?: (orderText: string, orderPrefix?: string, extras?: OrderGenerateExtras) => void;
+  onOrderGenerate?: OrderGenerateHandler;
 }
 
 interface MaterialItem {
@@ -33,6 +33,8 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
   const [step, setStep] = useState<'select-exam' | 'select-numbers' | 'select-materials'>('select-exam');
   const [isMember, setIsMember] = useState(false);
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const orderSubmittingRef = useRef(false);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -256,7 +258,11 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
   };
 
   // 주문서 생성
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (orderSubmittingRef.current) return;
+    orderSubmittingRef.current = true;
+    setOrderSubmitting(true);
+    try {
     if (selectedMaterials.length === 0) {
       alert('교재 구성을 선택해주세요.');
       return;
@@ -329,7 +335,11 @@ ${materialOrder.map((matId, index) => {
       email: email.trim(),
     };
     if (onOrderGenerate) {
-      onOrderGenerate(orderText, 'MV', { orderMeta });
+      await Promise.resolve(onOrderGenerate(orderText, 'MV', { orderMeta }));
+    }
+    } finally {
+      orderSubmittingRef.current = false;
+      setOrderSubmitting(false);
     }
   };
 
@@ -795,10 +805,16 @@ ${materialOrder.map((matId, index) => {
                     취소
                   </button>
                   <button
-                    onClick={handleGenerate}
-                    className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg"
+                    type="button"
+                    onClick={() => void handleGenerate()}
+                    disabled={orderSubmitting}
+                    className={`px-8 py-4 text-white rounded-lg transition-colors font-semibold shadow-md ${
+                      orderSubmitting
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+                    }`}
                   >
-                    주문서 생성
+                    {orderSubmitting ? '접수 중…' : '주문서 생성'}
                   </button>
                 </div>
               </>

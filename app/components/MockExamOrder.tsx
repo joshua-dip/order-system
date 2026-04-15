@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
+import type { OrderGenerateHandler } from './MockExamSettings';
 
 interface MockExamOrderProps {
-  onOrderGenerate: (orderText: string, orderPrefix?: string) => void;
+  onOrderGenerate: OrderGenerateHandler;
 }
 
 interface LessonItem {
@@ -41,6 +42,8 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
   const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const orderSubmittingRef = useRef(false);
 
   const questionTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도'];
 
@@ -137,7 +140,11 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
     }
   };
 
-  const generateOrder = () => {
+  const generateOrder = async () => {
+    if (orderSubmittingRef.current) return;
+    orderSubmittingRef.current = true;
+    setOrderSubmitting(true);
+    try {
     if (!selectedTextbook) {
       alert('교재를 선택해주세요.');
       return;
@@ -168,7 +175,11 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
 4. 가격
 : ${totalPrice.toLocaleString()}원 (총 ${totalQuestions}문항 × ${pricePerQuestion}원${isDiscounted ? ' - 100문항 이상 할인 적용' : ''})`;
 
-    onOrderGenerate(orderText, 'MV');
+    await Promise.resolve(onOrderGenerate(orderText, 'MV'));
+    } finally {
+      orderSubmittingRef.current = false;
+      setOrderSubmitting(false);
+    }
   };
 
   // 진행 단계 계산
@@ -580,10 +591,16 @@ const MockExamOrder = ({ onOrderGenerate }: MockExamOrderProps) => {
 
               {/* 주문서 생성 버튼 */}
               <button
-                onClick={generateOrder}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2"
+                type="button"
+                onClick={() => void generateOrder()}
+                disabled={orderSubmitting}
+                className={`w-full py-4 px-6 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center space-x-2 ${
+                  orderSubmitting
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
+                }`}
               >
-                <span>주문서 생성하기</span>
+                <span>{orderSubmitting ? '접수 중…' : '주문서 생성하기'}</span>
               </button>
             </>
           ) : (

@@ -1,4 +1,5 @@
 import { ObjectId, type Document } from 'mongodb';
+import { buildNarrativeQFilter } from '@/lib/admin-generated-questions-q-filter';
 
 export type ListDataScope = 'variant' | 'narrative' | 'all';
 
@@ -20,17 +21,11 @@ export function buildNarrativeQuestionsFilter(opts: {
     filter.passage_id = new ObjectId(opts.passageIdHex);
   }
   if (opts.q) {
-    const rx = escapeRegex(opts.q);
-    filter.$or = [
-      { source_file: { $regex: rx, $options: 'i' } },
-      { source_key_matched: { $regex: rx, $options: 'i' } },
-      { 'question_data.문제': { $regex: rx, $options: 'i' } },
-      { 'question_data.본문': { $regex: rx, $options: 'i' } },
-      { 'question_data.원문': { $regex: rx, $options: 'i' } },
-      { 'question_data.해설': { $regex: rx, $options: 'i' } },
-      { 'question_data.모범답안': { $regex: rx, $options: 'i' } },
-      { narrative_subtype: { $regex: rx, $options: 'i' } },
-    ];
+    const qf = buildNarrativeQFilter(opts.q);
+    if (qf) {
+      const prev = filter.$and;
+      filter.$and = [...(Array.isArray(prev) ? prev : []), qf];
+    }
   }
   return filter;
 }

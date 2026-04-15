@@ -172,7 +172,7 @@ export default function AnalysisPage() {
   if (checking) {
     return (
       <>
-        <AppBar title="커스터마이징 서비스" />
+        <AppBar />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full" />
         </div>
@@ -182,7 +182,7 @@ export default function AnalysisPage() {
 
   return (
     <>
-      <AppBar title="커스터마이징 서비스" />
+      <AppBar />
       <div className="min-h-screen py-8 px-4" style={{ backgroundColor: '#F5F5F5' }}>
         <div className="max-w-2xl mx-auto">
           <p className="mb-4">

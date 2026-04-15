@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { getSafeAdminLoginRedirect } from '@/lib/post-login-redirect';
 
 function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') || '/admin';
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,6 +19,7 @@ function AdminLoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ loginId, password }),
       });
       const data = await res.json();
@@ -27,8 +27,8 @@ function AdminLoginForm() {
         setError(data?.error || '로그인에 실패했습니다.');
         return;
       }
-      router.push(from);
-      router.refresh();
+      const dest = getSafeAdminLoginRedirect(searchParams.get('from'));
+      window.location.assign(dest);
     } catch {
       setError('로그인 요청 중 오류가 발생했습니다.');
     } finally {

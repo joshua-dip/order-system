@@ -7,9 +7,12 @@ import {
   BOOK_VARIANT_QUESTION_TYPES,
   DEFAULT_QUESTIONS_PER_VARIANT_TYPE,
 } from '@/lib/book-variant-types';
+import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { buildEnglishExamSolveUserPrompt } from '@/lib/generated-question-solve-prompt';
 import { HARD_INSERTION_PROMPT } from '@/lib/hard-insertion-generator';
 import { OpenIdFromQuery } from './OpenIdFromQuery';
+import { OpenQCountFromQuery } from './OpenQCountFromQuery';
+import { QuestionStatsModal } from './QuestionStatsModal';
 
 const VALIDATE_EXCLUDE_STORAGE = 'admin-gq-validate-excluded-types';
 /** 「+ 같은유형」 AI 초안 — 유형(type)별 추가 지침 (브라우저 저장) */
@@ -26,8 +29,8 @@ const GQ_COL_MAXS = [220, 240, 480, 280, 560, 720, 720, 280, 320, 800];
 const GQ_COL_DEFAULTS_NARROW = [72, 124, 132, 100, 190, 220, 220, 88, 96, 180];
 const GQ_COL_DEFAULTS_WIDE = [104, 140, 200, 140, 280, 320, 320, 120, 140, 260];
 
-/** 변형도 분석 → 구간별 문항 목록 페이지 URL */
-function buildVariationBucketListUrl(opts: {
+/** 변형도 분석 필터와 동일한 쿼리 문자열 (목록 페이지·API·모달 내 목록 공통) */
+function buildVariationBucketQueryString(opts: {
   textbook: string;
   typeKey: string;
   bucket: number | 'all';
@@ -37,7 +40,16 @@ function buildVariationBucketListUrl(opts: {
   if (opts.typeKey === '—') sp.set('typeEmpty', '1');
   else if (opts.typeKey.trim()) sp.set('type', opts.typeKey.trim());
   sp.set('bucket', String(opts.bucket));
-  return `/admin/generated-questions/variation-bucket?${sp.toString()}`;
+  return sp.toString();
+}
+
+/** 변형도 분석 → 구간별 문항 목록 페이지 URL */
+function buildVariationBucketListUrl(opts: {
+  textbook: string;
+  typeKey: string;
+  bucket: number | 'all';
+}): string {
+  return `/admin/generated-questions/variation-bucket?${buildVariationBucketQueryString(opts)}`;
 }
 
 type TableDensity = 'narrow' | 'wide';
@@ -512,6 +524,31 @@ export default function AdminGeneratedQuestionsPage() {
   /** 변형도 분석 모달 */
   const [variationAnalysisOpen, setVariationAnalysisOpen] = useState(false);
   const [variationAnalysisLoading, setVariationAnalysisLoading] = useState(false);
+  const [bucketAdvice, setBucketAdvice] = useState<{ type: string; bucket: number } | null>(null);
+  /** 변형도 분석 모달 안에서 구간 숫자 클릭 시 표시하는 문항 목록 */
+  const [variationInlineBucket, setVariationInlineBucket] = useState<{ typeKey: string; bucket: number } | null>(null);
+  const [variationInlineBucketLoading, setVariationInlineBucketLoading] = useState(false);
+  const [variationInlineBucketError, setVariationInlineBucketError] = useState<string | null>(null);
+  const [variationInlineBucketRows, setVariationInlineBucketRows] = useState<
+    {
+      _id: string;
+      textbook: string;
+      source: string;
+      type: string;
+      variation_pct: number;
+      paragraphPreview: string;
+      created_at: unknown;
+      passage_id: string | null;
+    }[]
+  >([]);
+  const [variationInlineBucketMeta, setVariationInlineBucketMeta] = useState<{
+    scanned: number;
+    maxScan: number;
+    maxResults: number;
+    scanStoppedReason: string;
+    bucketLabel: string;
+  } | null>(null);
+  const [variationInlineListVersion, setVariationInlineListVersion] = useState(0);
   const [variationAnalysisError, setVariationAnalysisError] = useState<string | null>(null);
   const [variationAnalysisData, setVariationAnalysisData] = useState<{
     totalScanned: number;
@@ -633,6 +670,11 @@ export default function AdminGeneratedQuestionsPage() {
   /** 어법 검증: code=blocks(밑줄 5곳 형식) 오류 문항 일괄 Claude 재생성 */
   const [grammarBlocksRegenLoading, setGrammarBlocksRegenLoading] = useState(false);
   const [grammarBlocksRegenMessage, setGrammarBlocksRegenMessage] = useState<string | null>(null);
+  /** 어법 검증: code=wrong_slot_equals_original(정답 칸 밑줄=원문 동일) 문항 일괄 재생성 */
+  const [grammarWrongSlotRegenLoading, setGrammarWrongSlotRegenLoading] = useState(false);
+  const [grammarWrongSlotRegenMessage, setGrammarWrongSlotRegenMessage] = useState<string | null>(null);
+  /** 어법 재생성 배치 크기 (사용자 조정, 최대 100) */
+  const [grammarRegenBatchSize, setGrammarRegenBatchSize] = useState(30);
   /** 메뉴 접기/펼치기 (검증 버튼 아래 나머지 메뉴) */
   const [extraMenuExpanded, setExtraMenuExpanded] = useState(false);
 
@@ -665,6 +707,7 @@ export default function AdminGeneratedQuestionsPage() {
   };
   /** 문제수 검증 — 미충족·무관문 목록 최대 행(API maxListRows, 상한 35k) */
   const [qCountMaxListRows, setQCountMaxListRows] = useState(12_000);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [qCountOpen, setQCountOpen] = useState(false);
   const [qCountLoading, setQCountLoading] = useState(false);
   const [qCountError, setQCountError] = useState<string | null>(null);
@@ -754,6 +797,34 @@ export default function AdminGeneratedQuestionsPage() {
   } | null>(null);
   /** 부족 문항 일괄 처리 완료 시 표시할 건수 (검수 창 배너) */
   const [shortageBatchFinishedCount, setShortageBatchFinishedCount] = useState<number | null>(null);
+
+  const ORDER_LOGS_PAGE_SIZE = 50;
+  type OrderProcessingLogRow = {
+    id: string;
+    batch_id: string;
+    order_id: string;
+    order_number: string;
+    textbook: string;
+    status: string;
+    reason: string;
+    processed_at: string | null;
+    shortage_count: number;
+    shortage_preview: unknown[];
+    needCreateGrandTotal: number | null;
+    pendingReviewTotal: number | null;
+    questionStatusScope: string | null;
+    validationEngineVersion: string | null;
+    order_data: Record<string, unknown> | null;
+  };
+  const [orderLogsOpen, setOrderLogsOpen] = useState(false);
+  const [orderLogsLoading, setOrderLogsLoading] = useState(false);
+  const [orderLogsError, setOrderLogsError] = useState<string | null>(null);
+  const [orderLogsTotal, setOrderLogsTotal] = useState(0);
+  const [orderLogsSkip, setOrderLogsSkip] = useState(0);
+  const [orderLogsItems, setOrderLogsItems] = useState<OrderProcessingLogRow[]>([]);
+  const [orderLogsStatusFilter, setOrderLogsStatusFilter] = useState('');
+  const [orderLogsOrderNumberFilter, setOrderLogsOrderNumberFilter] = useState('');
+
   /** 한번에 먼저 생성: Claude 초안 생성 후 자동 저장 진행 중 */
   const [batchCreatingAll, setBatchCreatingAll] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{
@@ -1428,12 +1499,41 @@ export default function AdminGeneratedQuestionsPage() {
   const handleSaveRef = useRef(handleSave);
   handleSaveRef.current = handleSave;
 
-  /** 변형문제 모달(신규·수정·부족 문항 순차): ⌘↵ / Ctrl+↵ 로 저장 */
+  const dismissPostSaveContinue = useCallback(() => {
+    postSaveFormSnapshotRef.current = null;
+    setPostSaveContinueOpen(false);
+  }, []);
+
+  /** 변형문제 모달: ⌘↵ 저장 · Esc는 위에 떠 있는 패널부터 닫기(풀기·프롬프트·저장 후 이어하기·모달) */
   useEffect(() => {
-    if (!modalOpen || narrativeReadOnly) return;
     let inFlight = false;
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (batchCreatingAll) return;
+        if (postSaveContinueOpen) {
+          e.preventDefault();
+          dismissPostSaveContinue();
+          return;
+        }
+        if (promptPreviewOpen) {
+          e.preventDefault();
+          setPromptPreviewOpen(false);
+          return;
+        }
+        if (solveOpen) {
+          e.preventDefault();
+          setSolveOpen(false);
+          return;
+        }
+        if (modalOpen) {
+          e.preventDefault();
+          setModalOpen(false);
+          setNarrativeReadOnly(false);
+        }
+        return;
+      }
       if (!(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
+      if (!modalOpen || narrativeReadOnly) return;
       e.preventDefault();
       if (inFlight) return;
       inFlight = true;
@@ -1447,12 +1547,15 @@ export default function AdminGeneratedQuestionsPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [modalOpen, narrativeReadOnly]);
-
-  const dismissPostSaveContinue = useCallback(() => {
-    postSaveFormSnapshotRef.current = null;
-    setPostSaveContinueOpen(false);
-  }, []);
+  }, [
+    modalOpen,
+    narrativeReadOnly,
+    batchCreatingAll,
+    postSaveContinueOpen,
+    promptPreviewOpen,
+    solveOpen,
+    dismissPostSaveContinue,
+  ]);
 
   const handlePostSaveContinue = () => {
     const snap = postSaveFormSnapshotRef.current;
@@ -1478,15 +1581,6 @@ export default function AdminGeneratedQuestionsPage() {
     setPassageSentencesEn(null);
     setModalOpen(true);
   };
-
-  useEffect(() => {
-    if (!postSaveContinueOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') dismissPostSaveContinue();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [postSaveContinueOpen, dismissPostSaveContinue]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('이 변형문제를 삭제할까요? 되돌릴 수 없습니다.')) return;
@@ -1960,19 +2054,26 @@ export default function AdminGeneratedQuestionsPage() {
     };
   }, [qCountOpen, qCountScope, filterTextbook, qCountOrderId, qCountQuestionStatus]);
 
-  const openQCountModal = () => {
+  function openQCountModal(prefillOrderId?: string | null) {
+    const oid = (prefillOrderId ?? '').trim();
+    const isPrefill = Boolean(oid && /^[a-f0-9]{24}$/i.test(oid));
+    if (isPrefill) {
+      setQCountScope('order');
+      setQCountOrderId(oid);
+      setQCountData(null);
+    } else {
+      setQCountData((prev) => {
+        if (!prev) return null;
+        if (prev.scope !== qCountScope) return null;
+        if (qCountScope === 'textbook') {
+          if (prev.textbook !== filterTextbook.trim()) return null;
+        } else if ((prev.order?.id ?? '') !== qCountOrderId.trim()) {
+          return null;
+        }
+        return prev;
+      });
+    }
     setQCountOpen(true);
-    // 이전 검증 결과는 유지. 다만 모달을 닫은 뒤 교재/주문 조건이 바뀌었으면 스테일하므로 비움
-    setQCountData((prev) => {
-      if (!prev) return null;
-      if (prev.scope !== qCountScope) return null;
-      if (qCountScope === 'textbook') {
-        if (prev.textbook !== filterTextbook.trim()) return null;
-      } else if ((prev.order?.id ?? '') !== qCountOrderId.trim()) {
-        return null;
-      }
-      return prev;
-    });
     setQCountError(null);
     if (textbooks.length === 0) fetchMeta();
     setQCountOrdersLoading(true);
@@ -1997,7 +2098,44 @@ export default function AdminGeneratedQuestionsPage() {
       })
       .catch(() => setQCountOrders([]))
       .finally(() => setQCountOrdersLoading(false));
-  };
+  }
+
+  const fetchOrderLogs = useCallback(
+    async (skip: number) => {
+      setOrderLogsLoading(true);
+      setOrderLogsError(null);
+      try {
+        const sp = new URLSearchParams();
+        sp.set('limit', String(ORDER_LOGS_PAGE_SIZE));
+        sp.set('skip', String(skip));
+        if (orderLogsStatusFilter.trim()) sp.set('status', orderLogsStatusFilter.trim());
+        if (orderLogsOrderNumberFilter.trim()) sp.set('order_number', orderLogsOrderNumberFilter.trim());
+        const res = await fetch(`/api/admin/order-processing-logs?${sp}`, { credentials: 'include' });
+        const d = (await res.json()) as Record<string, unknown>;
+        if (!res.ok) {
+          setOrderLogsError(typeof d.error === 'string' ? d.error : '조회 실패');
+          setOrderLogsItems([]);
+          setOrderLogsTotal(0);
+          return;
+        }
+        setOrderLogsTotal(typeof d.total === 'number' ? d.total : 0);
+        setOrderLogsSkip(typeof d.skip === 'number' ? d.skip : skip);
+        setOrderLogsItems(Array.isArray(d.items) ? (d.items as OrderProcessingLogRow[]) : []);
+      } catch {
+        setOrderLogsError('네트워크 오류');
+        setOrderLogsItems([]);
+        setOrderLogsTotal(0);
+      } finally {
+        setOrderLogsLoading(false);
+      }
+    },
+    [orderLogsStatusFilter, orderLogsOrderNumberFilter]
+  );
+
+  const openOrderLogsModal = useCallback(() => {
+    setOrderLogsOpen(true);
+    void fetchOrderLogs(0);
+  }, [fetchOrderLogs]);
 
   const openVariationAnalysisModal = () => {
     setVariationAnalysisOpen(true);
@@ -2021,6 +2159,12 @@ export default function AdminGeneratedQuestionsPage() {
       setVariationDbScanCap(null);
       setVariationDbCountLoading(false);
       setVariationDbCountError(null);
+      setVariationInlineBucket(null);
+      setVariationInlineBucketRows([]);
+      setVariationInlineBucketMeta(null);
+      setVariationInlineBucketError(null);
+      setVariationInlineBucketLoading(false);
+      setBucketAdvice(null);
       return;
     }
     let cancelled = false;
@@ -2060,6 +2204,74 @@ export default function AdminGeneratedQuestionsPage() {
       cancelled = true;
     };
   }, [variationAnalysisOpen, filterTextbook, filterType]);
+
+  const prevModalOpenForInlineBucketRef = useRef(modalOpen);
+  useEffect(() => {
+    if (
+      prevModalOpenForInlineBucketRef.current &&
+      !modalOpen &&
+      variationInlineBucket &&
+      variationAnalysisOpen
+    ) {
+      setVariationInlineListVersion((v) => v + 1);
+    }
+    prevModalOpenForInlineBucketRef.current = modalOpen;
+  }, [modalOpen, variationInlineBucket, variationAnalysisOpen]);
+
+  useEffect(() => {
+    if (!variationAnalysisOpen || !variationInlineBucket || !variationAnalysisData) return;
+    let cancelled = false;
+    const qs = buildVariationBucketQueryString({
+      textbook: variationAnalysisData.filters.textbook ?? '',
+      typeKey: variationInlineBucket.typeKey,
+      bucket: variationInlineBucket.bucket,
+    });
+    setVariationInlineBucketLoading(true);
+    setVariationInlineBucketError(null);
+    void fetch(`/api/admin/generated-questions/analyze/variation/bucket?${qs}`, { credentials: 'include' })
+      .then(async (r) => {
+        const d = (await r.json()) as Record<string, unknown>;
+        if (!r.ok) throw new Error(typeof d.error === 'string' ? d.error : '요청 실패');
+        return d;
+      })
+      .then((d) => {
+        if (cancelled) return;
+        setVariationInlineBucketRows(
+          Array.isArray(d.items)
+            ? (d.items as {
+                _id: string;
+                textbook: string;
+                source: string;
+                type: string;
+                variation_pct: number;
+                paragraphPreview: string;
+                created_at: unknown;
+                passage_id: string | null;
+              }[])
+            : []
+        );
+        setVariationInlineBucketMeta({
+          scanned: typeof d.scanned === 'number' ? d.scanned : 0,
+          maxScan: typeof d.maxScan === 'number' ? d.maxScan : 0,
+          maxResults: typeof d.maxResults === 'number' ? d.maxResults : 500,
+          scanStoppedReason: String(d.scanStoppedReason ?? ''),
+          bucketLabel: String(d.bucketLabel ?? ''),
+        });
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setVariationInlineBucketRows([]);
+          setVariationInlineBucketMeta(null);
+          setVariationInlineBucketError(e instanceof Error ? e.message : '불러오기 실패');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setVariationInlineBucketLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [variationAnalysisOpen, variationInlineBucket, variationAnalysisData, variationInlineListVersion]);
 
   const openOptionsOverlapModal = () => {
     setOptionsOverlapOpen(true);
@@ -2407,12 +2619,22 @@ export default function AdminGeneratedQuestionsPage() {
       .map((it) => it.id);
   }, [grammarVariantData]);
 
+  /** 정답 칸 밑줄이 원문과 동일한 오류(wrong_slot_equals_original) 문항 ID 목록 */
+  const grammarWrongSlotErrorIds = useMemo(() => {
+    if (!grammarVariantData?.items?.length) return [];
+    return grammarVariantData.items
+      .filter((it) => it.errors.some((e) => e.code === 'wrong_slot_equals_original'))
+      .map((it) => it.id);
+  }, [grammarVariantData]);
+
   const runGrammarBlocksBulkRegenerate = async () => {
     if (grammarBlocksErrorIds.length === 0) return;
-    const n = grammarBlocksErrorIds.length;
+    const batch = Math.min(grammarRegenBatchSize, grammarBlocksErrorIds.length);
+    const ids = grammarBlocksErrorIds.slice(0, batch);
+    const remaining = grammarBlocksErrorIds.length - batch;
     if (
       !confirm(
-        `Paragraph 밑줄 형식 오류(①~⑤·<u>) 문항 ${n}건을 passage 원문으로 Claude 재생성합니다.\n기존 문항 번호(NumQuestion)·Source·UniqueID는 유지됩니다. 시간이 다소 걸릴 수 있습니다. 계속할까요?`
+        `Paragraph 밑줄 형식 오류(①~⑤·<u>) 문항 ${ids.length}건을 passage 원문으로 Claude 재생성합니다.${remaining > 0 ? `\n(전체 ${grammarBlocksErrorIds.length}건 중 이번 ${ids.length}건. 완료 후 나머지 ${remaining}건은 다시 검증해서 재실행하세요.)` : ''}\n기존 문항 번호(NumQuestion)·Source·UniqueID는 유지됩니다. 시간이 다소 걸릴 수 있습니다. 계속할까요?`
       )
     ) {
       return;
@@ -2438,7 +2660,7 @@ export default function AdminGeneratedQuestionsPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          ids: grammarBlocksErrorIds,
+          ids,
           ...(typePrompt ? { typePrompt } : {}),
         }),
       });
@@ -2449,7 +2671,7 @@ export default function AdminGeneratedQuestionsPage() {
       }
       const ok = typeof d.succeeded === 'number' ? d.succeeded : 0;
       const fail = typeof d.failed === 'number' ? d.failed : 0;
-      setGrammarBlocksRegenMessage(`재생성 완료: 성공 ${ok}건, 실패 ${fail}건`);
+      setGrammarBlocksRegenMessage(`재생성 완료: 성공 ${ok}건, 실패 ${fail}건${remaining > 0 ? ` · 나머지 ${remaining}건은 다시 검증 후 재실행` : ''}`);
       fetchList();
       fetchMeta();
       runGrammarVariantValidate();
@@ -2457,6 +2679,64 @@ export default function AdminGeneratedQuestionsPage() {
       setGrammarVariantError('네트워크 오류');
     } finally {
       setGrammarBlocksRegenLoading(false);
+    }
+  };
+
+  /** 정답 칸 밑줄=원문 동일 문항 일괄 재생성 */
+  const runGrammarWrongSlotBulkRegenerate = async () => {
+    if (grammarWrongSlotErrorIds.length === 0) return;
+    const batch = Math.min(grammarRegenBatchSize, grammarWrongSlotErrorIds.length);
+    const ids = grammarWrongSlotErrorIds.slice(0, batch);
+    const remaining = grammarWrongSlotErrorIds.length - batch;
+    if (
+      !confirm(
+        `CorrectAnswer 번호 밑줄이 원문과 동일한 어법 문항 ${ids.length}건을 passage 원문으로 Claude 재생성합니다.${remaining > 0 ? `\n(전체 ${grammarWrongSlotErrorIds.length}건 중 이번 ${ids.length}건. 완료 후 나머지 ${remaining}건은 다시 검증해서 재실행하세요.)` : ''}\n정답 칸은 반드시 원문과 다른 형태(틀린 어법)로 생성하도록 힌트가 추가됩니다.\n기존 NumQuestion·Source·UniqueID는 유지됩니다. 계속할까요?`
+      )
+    ) {
+      return;
+    }
+    setGrammarWrongSlotRegenLoading(true);
+    setGrammarWrongSlotRegenMessage(null);
+    setGrammarVariantError(null);
+    let typePrompt = '';
+    try {
+      const raw = localStorage.getItem(TYPE_VARIANT_PROMPTS_STORAGE);
+      if (raw) {
+        const p = JSON.parse(raw) as unknown;
+        if (p && typeof p === 'object' && !Array.isArray(p) && typeof (p as Record<string, unknown>)['어법'] === 'string') {
+          typePrompt = String((p as Record<string, string>)['어법']).trim().slice(0, 12000);
+        }
+      }
+    } catch {
+      typePrompt = '';
+    }
+    try {
+      const res = await fetch('/api/admin/generated-questions/bulk-regenerate-grammar-blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          ids,
+          userHint:
+            '【중요】 정답(CorrectAnswer)으로 지정될 번호의 밑줄 표현은 반드시 원문의 해당 위치와 다른 형태(철자·품사형 등 틀린 어법)이어야 합니다. 원문과 동일한 표현을 그대로 밑줄로 쓰면 안 됩니다.',
+          ...(typePrompt ? { typePrompt } : {}),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setGrammarVariantError(typeof d.error === 'string' ? d.error : '일괄 재생성 실패');
+        return;
+      }
+      const ok = typeof d.succeeded === 'number' ? d.succeeded : 0;
+      const fail = typeof d.failed === 'number' ? d.failed : 0;
+      setGrammarWrongSlotRegenMessage(`재생성 완료: 성공 ${ok}건, 실패 ${fail}건${remaining > 0 ? ` · 나머지 ${remaining}건은 다시 검증 후 재실행` : ''}`);
+      fetchList();
+      fetchMeta();
+      runGrammarVariantValidate();
+    } catch {
+      setGrammarVariantError('네트워크 오류');
+    } finally {
+      setGrammarWrongSlotRegenLoading(false);
     }
   };
 
@@ -2762,6 +3042,8 @@ export default function AdminGeneratedQuestionsPage() {
     <div className="min-h-screen bg-slate-900 text-white">
       <Suspense fallback={null}>
         <OpenIdFromQuery enabled={!!user} openEdit={openEdit} />
+        <OpenQCountFromQuery enabled={!!user} openQCountWithOrderId={(id) => openQCountModal(id)} />
+        <QuestionStatsModal open={statsOpen} onClose={() => setStatsOpen(false)} />
       </Suspense>
       <header className="border-b border-slate-700 bg-slate-800/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -2979,8 +3261,12 @@ export default function AdminGeneratedQuestionsPage() {
                 setFilterQ(e.target.value);
                 setPage(1);
               }}
+              placeholder="예: 26년 3월 고2 영어모의고사 32번 → 출처·교재만 매칭"
               className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500"
             />
+            <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+              문장이 <span className="text-slate-400">…숫자번</span>으로 끝나면(앞부분 6자 이상) 본문·선지 검색을 하지 않아 다른 번호가 섞이지 않습니다.
+            </p>
           </div>
           <button
             type="button"
@@ -3033,12 +3319,29 @@ export default function AdminGeneratedQuestionsPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setStatsOpen(true)}
+                  className="shrink-0 bg-indigo-900/80 hover:bg-indigo-800 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-indigo-100 border border-indigo-500/40"
+                  title="교재별·유형별 문제수 시각화"
+                >
+                  문제수 시각화
+                </button>
+                <button
+                  type="button"
                   disabled={qCountLoading}
-                  onClick={openQCountModal}
+                  onClick={() => openQCountModal()}
                   className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
                   title="MongoDB passages(원문) 대비 변형문 유무·표준 11유형별 문항 수(기본 3) 검증"
                 >
                   문제수 검증
+                </button>
+                <button
+                  type="button"
+                  disabled={orderLogsLoading}
+                  onClick={openOrderLogsModal}
+                  className="shrink-0 bg-slate-700/90 hover:bg-slate-600 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-100 border border-slate-500/50"
+                  title="일괄 처리·HWP 큐 등 order_processing_logs — 행에서 문제수 검증으로 이동"
+                >
+                  주문 처리 로그
                 </button>
               </div>
             </div>
@@ -3258,11 +3561,18 @@ export default function AdminGeneratedQuestionsPage() {
                     const cat = (typeof qd.Category === 'string' ? qd.Category : '').trim();
                     const typeStr = (row.type || '').trim();
                     const showCategoryNote = cat && cat !== typeStr;
+                    const rowStatus = String(row.status ?? '').trim();
+                    const isPendingRow = rowStatus === '대기';
                     return (
                     <tr
                       key={`${row.record_kind ?? 'variant'}-${row._id}`}
                       id={`row-${row._id}`}
-                      className="border-b border-slate-700/80 hover:bg-slate-800/40"
+                      className={
+                        isPendingRow
+                          ? 'border-b border-amber-900/50 bg-amber-950/40 hover:bg-amber-950/55 border-l-[3px] border-l-amber-400/85'
+                          : 'border-b border-slate-700/80 hover:bg-slate-800/40'
+                      }
+                      title={isPendingRow ? '검수 대기(대기)' : undefined}
                     >
                       <td
                         className="px-2 py-2 align-top border-r border-slate-700/30"
@@ -3282,6 +3592,11 @@ export default function AdminGeneratedQuestionsPage() {
                             </>
                           ) : (
                             <>
+                              {isPendingRow && (
+                                <span className="text-[10px] font-bold text-amber-300/95 tracking-wide rounded px-1.5 py-0.5 bg-amber-950/80 border border-amber-600/50 w-fit">
+                                  대기
+                                </span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -3617,58 +3932,419 @@ export default function AdminGeneratedQuestionsPage() {
                     </p>
                   )}
                   <p className="text-slate-500 text-xs mb-2">
-                    <strong className="text-slate-400">문항 수·구간 숫자</strong>를 누르면 해당 문항 목록 페이지로 이동합니다. 목록에서 <strong className="text-slate-400">열기</strong>로 수정 화면을 띄울 수 있습니다(최대 500건 표시).
+                    <strong className="text-slate-400">구간 숫자</strong>를 누르면 아래에 해당 문항 목록이 열리고 <strong className="text-slate-400">수정</strong>으로 바로 편집할 수 있습니다. 저장 후에는 같은 구간 목록이 다시 불러와집니다(최대 500건 표시).{' '}
+                    <strong className="text-slate-400">전체 페이지</strong> 링크로 별도 탭에서 목록만 보기도 할 수 있습니다.
                   </p>
-                  <div className="overflow-x-auto rounded-xl border border-slate-600">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-slate-800 text-left text-slate-300 border-b border-slate-600">
-                          <th className="px-3 py-2 font-semibold">유형</th>
-                          <th className="px-3 py-2 font-semibold text-right">문항 수</th>
-                          <th className="px-3 py-2 font-semibold text-right">평균 변형도</th>
-                          <th className="px-3 py-2 font-semibold text-right">최소</th>
-                          <th className="px-3 py-2 font-semibold text-right">최대</th>
-                          {Array.from({ length: 10 }, (_, i) => (
-                            <th key={i} className="px-2 py-2 font-medium text-slate-500 text-xs text-right" title={i === 9 ? '90~100%' : `${i * 10}~${i * 10 + 9}%`}>
-                              {i === 9 ? '90~100%' : `${i * 10}~${i * 10 + 9}%`}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(variationAnalysisData.byType)
-                          .sort(([a], [b]) => (a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b, 'ko')))
-                          .map(([typeKey, stats]) => (
-                            <tr key={typeKey} className="border-b border-slate-700/50 hover:bg-slate-800/40">
-                              <td className="px-3 py-2 text-teal-200 font-medium">{typeKey}</td>
-                              <td className="px-3 py-2 text-right tabular-nums">{stats.count.toLocaleString()}</td>
-                              <td className="px-3 py-2 text-right tabular-nums text-white">{stats.avg}%</td>
-                              <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.min}%</td>
-                              <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.max}%</td>
-                              {stats.distribution.map((n, i) => (
-                                <td key={i} className="px-2 py-2 text-right tabular-nums text-slate-400 text-xs">
-                                  {n > 0 ? (
-                                    <Link
-                                      href={buildVariationBucketListUrl({
-                                        textbook: variationAnalysisData.filters.textbook ?? '',
-                                        typeKey,
-                                        bucket: i,
-                                      })}
-                                      onClick={() => setVariationAnalysisOpen(false)}
-                                      className="text-teal-300 hover:text-teal-100 underline-offset-2 hover:underline font-semibold"
-                                    >
-                                      {n.toLocaleString()}
-                                    </Link>
-                                  ) : (
-                                    '—'
-                                  )}
-                                </td>
+                  {(() => {
+                    // 유형별 특성 설정: category로 변형도 기대 수준 분류
+                    // low: 지문 원문 유지가 원칙 (선택지 변형), mid: 경미한 변형 권장, high: 적극 변형 필수
+                    const TYPE_CONFIG: Record<string, { category: 'low' | 'mid' | 'high'; minAvg: number; warnAvg: number; maxSafe: number; zeroOk: boolean; desc: string; tip: string }> = {
+                      '제목':   { category: 'low',  minAvg: 0,  warnAvg: 5,  maxSafe: 35, zeroOk: true,  desc: '글의 제목을 고르는 유형. 지문은 원문 그대로 유지하고 선택지(오답)를 변형하는 것이 원칙. 지문 변형도 0%가 정상.', tip: '지문 변형보다 오답 선택지의 매력도를 다양화하세요.' },
+                      '주제':   { category: 'low',  minAvg: 0,  warnAvg: 5,  maxSafe: 35, zeroOk: true,  desc: '글의 주제를 파악하는 유형. 지문 원문 유지가 기본이며, 선택지 변형으로 변별력 확보.', tip: '선택지의 주제 표현을 다양화하세요.' },
+                      '주장':   { category: 'low',  minAvg: 0,  warnAvg: 5,  maxSafe: 35, zeroOk: true,  desc: '필자의 주장을 파악하는 유형. 지문 원문 유지가 기본. 주장 선택지 표현 변형이 핵심.', tip: '선택지의 주장 표현을 다양화하세요.' },
+                      '함의':   { category: 'mid',  minAvg: 5,  warnAvg: 12, maxSafe: 50, zeroOk: true,  desc: '글의 함축적 의미를 추론하는 유형. 약간의 표현 변형은 권장하나 핵심 함의 근거는 보존 필수.', tip: '핵심 함의 근거 문장은 보존하고 부가 표현만 변형하세요.' },
+                      '어법':   { category: 'mid',  minAvg: 5,  warnAvg: 12, maxSafe: 40, zeroOk: false, desc: '어법 포인트(밑줄)는 반드시 유지하고 주변 문맥만 변형. 과도한 변형은 어법 포인트 훼손 위험.', tip: '밑줄 어법 포인트는 절대 보존, 나머지 표현만 변형하세요.' },
+                      '빈칸':   { category: 'high', minAvg: 15, warnAvg: 25, maxSafe: 70, zeroOk: false, desc: '빈칸에 들어갈 어휘/구를 묻는 유형. 원문 그대로면 학생이 기억으로 답할 수 있어 반드시 변형 필요.', tip: '지문 표현을 바꾸되 빈칸 핵심어와 흐름은 유지하세요.' },
+                      '순서':   { category: 'high', minAvg: 20, warnAvg: 30, maxSafe: 75, zeroOk: false, desc: '단락 배열 순서를 묻는 유형. 각 단락 내용을 변형해야 하며, 연결어·지시어 수정도 중요.', tip: '단락 첫 문장과 연결어를 중심으로 변형하세요.' },
+                      '삽입':   { category: 'high', minAvg: 15, warnAvg: 25, maxSafe: 70, zeroOk: false, desc: '문장 삽입 위치를 묻는 유형. 지문 전체를 변형해야 기억 답변 방지.', tip: '삽입 문장 및 주변 단락을 함께 변형하세요.' },
+                      '요약':   { category: 'high', minAvg: 15, warnAvg: 20, maxSafe: 45, zeroOk: false, desc: '본문 요약 빈칸 채우기 유형. 본문과 요약문 모두 변형 필수. 0% 문항이 없어야 함.', tip: '요약문 빈칸 단어와 본문 내용을 함께 변형하세요.' },
+                      '일치':   { category: 'high', minAvg: 15, warnAvg: 25, maxSafe: 65, zeroOk: false, desc: '글의 내용과 일치하는 것을 찾는 유형. 세부 사실(수치·날짜·인물)을 변형해야 기억 답변 방지.', tip: '수치·날짜·장소·인물 등 세부 사실을 변형하세요.' },
+                      '불일치': { category: 'high', minAvg: 15, warnAvg: 25, maxSafe: 65, zeroOk: false, desc: '내용과 불일치하는 선택지를 찾는 유형. 세부 정보(숫자·명칭 등) 변형이 핵심.', tip: '선택지의 세부 내용(수치·고유명사)을 변형하세요.' },
+                    };
+
+                    // 유형×구간별 평가: 유형 카테고리에 따라 같은 변형도라도 평가가 달라짐
+                    const getBucketEval = (typeKey: string, bucketIdx: number): { label: string; color: string; bgColor: string } => {
+                      const cat = TYPE_CONFIG[typeKey]?.category ?? 'high';
+                      if (cat === 'low') {
+                        if (bucketIdx <= 1) return { label: '적정', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' };
+                        if (bucketIdx <= 3) return { label: '양호', color: 'text-teal-300', bgColor: 'bg-teal-500/10' };
+                        if (bucketIdx <= 5) return { label: '주의', color: 'text-amber-300', bgColor: 'bg-amber-500/10' };
+                        if (bucketIdx <= 7) return { label: '과도', color: 'text-orange-300', bgColor: 'bg-orange-500/10' };
+                        return { label: '위험', color: 'text-rose-400', bgColor: 'bg-rose-500/10' };
+                      }
+                      if (cat === 'mid') {
+                        if (bucketIdx === 0) return { label: '양호', color: 'text-teal-300', bgColor: 'bg-teal-500/10' };
+                        if (bucketIdx <= 3) return { label: '적정', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' };
+                        if (bucketIdx <= 5) return { label: '양호', color: 'text-teal-300', bgColor: 'bg-teal-500/10' };
+                        if (bucketIdx <= 7) return { label: '과도', color: 'text-orange-300', bgColor: 'bg-orange-500/10' };
+                        return { label: '위험', color: 'text-rose-400', bgColor: 'bg-rose-500/10' };
+                      }
+                      if (bucketIdx === 0) return { label: '위험', color: 'text-rose-400', bgColor: 'bg-rose-500/10' };
+                      if (bucketIdx <= 3) return { label: '적정', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' };
+                      if (bucketIdx <= 5) return { label: '양호', color: 'text-teal-300', bgColor: 'bg-teal-500/10' };
+                      if (bucketIdx <= 7) return { label: '주의', color: 'text-amber-300', bgColor: 'bg-amber-500/10' };
+                      return { label: '위험', color: 'text-rose-400', bgColor: 'bg-rose-500/10' };
+                    };
+
+                    const getBucketAdvice = (typeKey: string, bucketIdx: number): string | null => {
+                      const bEval = getBucketEval(typeKey, bucketIdx);
+                      if (bEval.label === '적정' || bEval.label === '양호') return null;
+                      const cat = TYPE_CONFIG[typeKey]?.category ?? 'high';
+
+                      if (cat === 'low') {
+                        const subj = typeKey === '제목' ? '글의 제목' : typeKey === '주제' ? '핵심 주제' : '필자의 주장';
+                        if (bEval.label === '주의') return `${typeKey} 유형은 지문 원문 유지가 원칙입니다. 이 정도 변형이면 ${subj}이 달라질 수 있어요. 지문보다 선택지(오답) 변형에 집중하세요.`;
+                        if (bEval.label === '과도') return `지문이 과도하게 변형되어 ${subj}을 묻는 문제로서 부적절할 수 있습니다. 원래 글의 핵심 메시지가 유지되는지 해당 문항을 직접 확인하세요.`;
+                        return `지문이 거의 완전히 바뀌어 원문과 다른 글이 되었을 가능성이 높습니다. ${subj}이 유효한지 즉시 검토하세요.`;
+                      }
+
+                      if (cat === 'mid') {
+                        if (typeKey === '어법') {
+                          if (bEval.label === '과도') return '어법 포인트(밑줄 표현)가 문맥 변형으로 부자연스러워질 수 있습니다. 밑줄 표현의 어법적 정확성과 주변 문맥의 자연스러움을 재확인하세요.';
+                          return '과도한 변형으로 어법 포인트 자체가 훼손되었을 가능성이 높습니다. 밑줄 표현과 선택지를 즉시 확인하세요.';
+                        }
+                        if (bEval.label === '과도') return '핵심 함의 근거 문장이 과도한 변형으로 약해질 수 있습니다. 학생이 추론할 수 있는 근거가 유지되는지 확인하세요.';
+                        return '과도한 변형으로 함의/시사점의 근거가 사라졌을 가능성이 높습니다. 즉시 검토하세요.';
+                      }
+
+                      if (bucketIdx === 0) {
+                        const zeroAdvice: Record<string, string> = {
+                          '빈칸': '원문 그대로이면 학생이 빈칸 답을 기억할 수 있습니다. 지문 표현을 변형하되 빈칸 핵심어와 흐름은 유지하세요.',
+                          '순서': '단락이 원문과 같으면 순서를 기억할 수 있습니다. 각 단락의 첫 문장과 연결어를 중심으로 변형하세요.',
+                          '삽입': '지문이 원문과 같으면 삽입 위치를 기억할 수 있습니다. 지문 표현과 삽입 문장을 함께 변형하세요.',
+                          '요약': '요약문이 원문과 같으면 답을 기억할 수 있습니다. 본문과 요약문 빈칸 단어 모두 변형하세요.',
+                          '일치': '세부 사실이 원문 그대로이면 기억으로 답할 수 있습니다. 수치·날짜·인물 등을 변형하세요.',
+                          '불일치': '세부 정보가 원문 그대로이면 기억으로 답할 수 있습니다. 선택지 세부 내용을 변형하세요.',
+                        };
+                        return zeroAdvice[typeKey] ?? '원문 미변형 문항입니다. 기억 답변 방지를 위해 변형이 필요합니다.';
+                      }
+
+                      if (bucketIdx >= 8) {
+                        const highAdvice: Record<string, string> = {
+                          '빈칸': '원문과 너무 달라져 빈칸의 정답 근거가 사라졌을 수 있습니다. 핵심어와 논리 흐름을 확인하세요.',
+                          '순서': '단락이 너무 달라져 연결어·논리 흐름이 깨졌을 수 있습니다. 순서 판단 근거를 확인하세요.',
+                          '삽입': '문맥이 너무 달라져 삽입 위치의 논리가 무너졌을 수 있습니다. 삽입 근거를 확인하세요.',
+                          '요약': '본문이 너무 달라져 요약문 빈칸의 정답이 달라졌을 수 있습니다. 요약문과 본문의 정합성을 확인하세요.',
+                          '일치': '내용이 너무 달라져 정답 선택지가 유효하지 않을 수 있습니다. 정답을 재검증하세요.',
+                          '불일치': '내용이 너무 달라져 오답이 정답이 되거나 반대가 될 수 있습니다. 선택지 정확성을 재검증하세요.',
+                        };
+                        return highAdvice[typeKey] ?? '과도한 변형으로 의미가 왜곡되었을 수 있습니다. 즉시 검토하세요.';
+                      }
+
+                      const cautionAdvice: Record<string, string> = {
+                        '빈칸': '빈칸 주변 문맥이 크게 바뀌면 정답이 달라질 수 있습니다. 빈칸 핵심어와 논리 흐름 유지 여부를 확인하세요.',
+                        '순서': '단락이 크게 변형되면 연결어·논리 흐름이 깨질 수 있습니다. 순서 판단 근거가 유지되는지 확인하세요.',
+                        '삽입': '주변 문맥이 크게 바뀌면 삽입 위치의 논리가 달라질 수 있습니다. 삽입 근거 확인을 권장합니다.',
+                        '요약': '본문 변형이 크면 요약문 빈칸의 정답도 바뀔 수 있습니다. 요약문과 본문의 정합성 확인을 권장합니다.',
+                        '일치': '세부 정보가 크게 바뀌면 정답 선택지도 수정이 필요할 수 있습니다. 정답 근거 확인을 권장합니다.',
+                        '불일치': '세부 정보가 크게 바뀌면 오답↔정답이 바뀔 수 있습니다. 선택지 정확성 확인을 권장합니다.',
+                      };
+                      return cautionAdvice[typeKey] ?? '변형도가 높은 편입니다. 정답 근거 유지 여부를 확인하세요.';
+                    };
+
+                    const getInsights = (typeKey: string, stats: { count: number; avg: number; min: number; max: number; distribution: number[] }) => {
+                      const cfg = TYPE_CONFIG[typeKey] ?? { category: 'high' as const, minAvg: 10, warnAvg: 20, maxSafe: 70, zeroOk: false, desc: '', tip: '' };
+                      const issues: { level: 'danger' | 'warn' | 'ok' | 'info'; msg: string }[] = [];
+                      const zeroRatio = stats.count > 0 ? stats.distribution[0] / stats.count : 0;
+                      const highRatio = stats.count > 0 ? (stats.distribution[8] + stats.distribution[9]) / stats.count : 0;
+                      const spread = stats.max - stats.avg;
+
+                      if (stats.count < 10) issues.push({ level: 'info', msg: `문항 수(${stats.count})가 적어 통계 신뢰도가 낮습니다.` });
+
+                      if (cfg.category === 'low') {
+                        if (stats.avg > cfg.maxSafe && stats.count >= 5) issues.push({ level: 'danger', msg: `이 유형은 지문 원문 유지가 원칙인데 평균 변형도 ${stats.avg}%로 과도합니다. 지문 의미 왜곡 여부를 확인하세요.` });
+                        else if (stats.avg > cfg.maxSafe * 0.7 && stats.count >= 5) issues.push({ level: 'warn', msg: `지문 변형도 ${stats.avg}%로 이 유형 치고는 높은 편입니다. 선택지 변형에 집중하세요.` });
+                        if (highRatio > 0.1) issues.push({ level: 'warn', msg: `${Math.round(highRatio * 100)}%가 80%↑ — 이 유형은 지문 원문이 유지되어야 하므로 해당 문항을 확인하세요.` });
+                        if (zeroRatio > 0.8 && stats.count >= 5) issues.push({ level: 'ok', msg: `${Math.round(zeroRatio * 100)}%가 0% 구간 — 이 유형에서 원문 유지는 정상입니다.` });
+                      } else {
+                        if (!cfg.zeroOk && zeroRatio > 0.6) issues.push({ level: 'danger', msg: `${Math.round(zeroRatio * 100)}%가 변형도 0% — 원문 그대로 사용 중. ${cfg.desc ? cfg.desc.split('.')[0] + '이므로 변형이 필수입니다.' : '즉시 변형 작업이 필요합니다.'}` });
+                        else if (!cfg.zeroOk && zeroRatio > 0.3) issues.push({ level: 'warn', msg: `${Math.round(zeroRatio * 100)}%가 0% 구간. 원문 미변형 문항이 많습니다.` });
+                        if (stats.avg < cfg.minAvg && stats.count >= 10) issues.push({ level: 'danger', msg: `평균 변형도 ${stats.avg}% — 이 유형의 권장 기준(${cfg.minAvg}%↑)에 크게 못 미칩니다.` });
+                        else if (stats.avg < cfg.warnAvg && stats.count >= 10) issues.push({ level: 'warn', msg: `평균 변형도 ${stats.avg}% — 권장 수준(${cfg.warnAvg}%↑)보다 낮습니다.` });
+                        if (highRatio > 0.2) issues.push({ level: 'warn', msg: `${Math.round(highRatio * 100)}%가 변형도 80%↑ — 원문 의미가 훼손될 수 있습니다. 해당 문항 품질 검토를 권장합니다.` });
+                      }
+
+                      if (spread > 45 && stats.count >= 5) issues.push({ level: 'warn', msg: `편차 큼(평균 ${stats.avg}% / 최대 ${stats.max}%) — 소수 문항에 변형이 집중됩니다.` });
+                      if (issues.length === 0 || (issues.length === 1 && issues[0].level === 'info')) {
+                        const okMsg = cfg.category === 'low'
+                          ? `양호 — 지문 원문 유지 원칙에 부합합니다.`
+                          : `양호 — 평균 ${stats.avg}%, 0%구간 ${Math.round(zeroRatio * 100)}%로 적정 수준입니다.`;
+                        issues.push({ level: 'ok', msg: okMsg });
+                      }
+                      return { issues, cfg };
+                    };
+
+                    const entries = Object.entries(variationAnalysisData.byType).sort(([a], [b]) => (a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b, 'ko')));
+
+                    const statusDot = (typeKey: string, stats: { count: number; avg: number; min: number; max: number; distribution: number[] }) => {
+                      const { issues } = getInsights(typeKey, stats);
+                      if (issues.some(i => i.level === 'danger')) return <span className="inline-block w-2 h-2 rounded-full bg-rose-500 shrink-0" title="위험" />;
+                      if (issues.some(i => i.level === 'warn')) return <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0" title="주의" />;
+                      return <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="양호" />;
+                    };
+
+                    return (
+                      <>
+                        <div className="overflow-x-auto rounded-xl border border-slate-600">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-slate-800 text-left text-slate-300 border-b border-slate-600">
+                                <th className="px-3 py-2 font-semibold w-6"></th>
+                                <th className="px-3 py-2 font-semibold">유형</th>
+                                <th className="px-3 py-2 font-semibold text-right">문항 수</th>
+                                <th className="px-3 py-2 font-semibold text-right">평균 변형도</th>
+                                <th className="px-3 py-2 font-semibold text-right">최소</th>
+                                <th className="px-3 py-2 font-semibold text-right">최대</th>
+                                {Array.from({ length: 10 }, (_, i) => (
+                                  <th key={i} className="px-2 py-2 font-medium text-xs text-right text-slate-400">
+                                    {i === 9 ? '90~100%' : `${i * 10}~${i * 10 + 9}%`}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {entries.map(([typeKey, stats]) => (
+                                <tr key={typeKey} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                                  <td className="px-3 py-2">{statusDot(typeKey, stats)}</td>
+                                  <td className="px-3 py-2 text-teal-200 font-medium">{typeKey}</td>
+                                  <td className="px-3 py-2 text-right tabular-nums">{stats.count.toLocaleString()}</td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-white">{stats.avg}%</td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.min}%</td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-slate-400">{stats.max}%</td>
+                                  {stats.distribution.map((n, i) => {
+                                    const bEval = getBucketEval(typeKey, i);
+                                    return (
+                                      <td key={i} className="px-2 py-1.5 text-center tabular-nums text-xs">
+                                        {n > 0 ? (
+                                          <div className="flex flex-col items-center gap-0">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setBucketAdvice(null);
+                                                setVariationInlineBucket((prev) =>
+                                                  prev?.typeKey === typeKey && prev?.bucket === i ? null : { typeKey, bucket: i }
+                                                );
+                                              }}
+                                              className={`inline-block px-1.5 py-0.5 rounded font-semibold hover:brightness-125 transition-all cursor-pointer ${bEval.color} ${bEval.bgColor}`}
+                                            >
+                                              {n.toLocaleString()}
+                                            </button>
+                                            {getBucketAdvice(typeKey, i) ? (
+                                              <button
+                                                onClick={(e) => { e.stopPropagation(); setBucketAdvice(prev => prev?.type === typeKey && prev?.bucket === i ? null : { type: typeKey, bucket: i }); }}
+                                                className={`text-[8px] leading-tight mt-0.5 ${bEval.color} ${bucketAdvice?.type === typeKey && bucketAdvice?.bucket === i ? 'opacity-100 font-bold' : 'opacity-70'} hover:opacity-100 cursor-pointer underline decoration-dotted underline-offset-2`}
+                                              >{bEval.label}</button>
+                                            ) : (
+                                              <span className={`text-[8px] leading-tight mt-0.5 ${bEval.color} opacity-60`}>{bEval.label}</span>
+                                            )}
+                                          </div>
+                                        ) : <span className="text-slate-700">—</span>}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
                               ))}
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {variationInlineBucket && (
+                          <div className="mt-4 rounded-xl border border-teal-800/50 bg-slate-900/60 overflow-hidden shrink-0">
+                            <div className="px-3 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-600/80 bg-slate-800/80">
+                              <div className="min-w-0">
+                                <span className="text-sm font-semibold text-teal-200">
+                                  {variationInlineBucket.typeKey} ·{' '}
+                                  {variationInlineBucket.bucket === 9
+                                    ? '90~100%'
+                                    : `${variationInlineBucket.bucket * 10}~${variationInlineBucket.bucket * 10 + 9}%`}
+                                </span>
+                                {variationInlineBucketMeta && (
+                                  <span className="ml-2 text-[10px] text-slate-500 whitespace-nowrap">
+                                    스캔 {variationInlineBucketMeta.scanned.toLocaleString()}건 · 표시 최대{' '}
+                                    {variationInlineBucketMeta.maxResults.toLocaleString()}건
+                                    {variationInlineBucketMeta.scanStoppedReason === 'maxResults' && (
+                                      <span className="text-amber-400/90"> · 일부만 표시</span>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  disabled={variationInlineBucketLoading}
+                                  onClick={() => setVariationInlineListVersion((v) => v + 1)}
+                                  className="text-[11px] px-2 py-1 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700/80 disabled:opacity-40"
+                                >
+                                  새로고침
+                                </button>
+                                <Link
+                                  href={buildVariationBucketListUrl({
+                                    textbook: variationAnalysisData.filters.textbook ?? '',
+                                    typeKey: variationInlineBucket.typeKey,
+                                    bucket: variationInlineBucket.bucket,
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] px-2 py-1 rounded-lg border border-teal-700/50 text-teal-300 hover:bg-teal-950/40"
+                                >
+                                  전체 페이지
+                                </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => setVariationInlineBucket(null)}
+                                  className="text-[11px] px-2 py-1 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700/80"
+                                >
+                                  목록 닫기
+                                </button>
+                              </div>
+                            </div>
+                            {variationInlineBucketLoading && (
+                              <p className="p-4 text-slate-400 text-sm animate-pulse">문항 목록 불러오는 중…</p>
+                            )}
+                            {variationInlineBucketError && !variationInlineBucketLoading && (
+                              <div className="p-3 text-sm text-red-300 bg-red-950/30">{variationInlineBucketError}</div>
+                            )}
+                            {!variationInlineBucketLoading &&
+                              !variationInlineBucketError &&
+                              variationInlineBucketRows.length === 0 && (
+                                <p className="p-4 text-slate-500 text-sm">이 구간에 해당하는 문항이 없습니다.</p>
+                              )}
+                            {variationInlineBucketRows.length > 0 && (
+                              <div className="max-h-[min(380px,48vh)] overflow-y-auto overflow-x-auto">
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="bg-slate-800/90 text-left text-slate-400 border-b border-slate-600 sticky top-0 z-[1]">
+                                      <th className="px-2 py-2 font-medium">변형도</th>
+                                      <th className="px-2 py-2 font-medium">교재</th>
+                                      <th className="px-2 py-2 font-medium">유형</th>
+                                      <th className="px-2 py-2 font-medium">출처</th>
+                                      <th className="px-2 py-2 font-medium">지문 미리보기</th>
+                                      <th className="px-2 py-2 font-medium">등록</th>
+                                      <th className="px-2 py-2 font-medium">수정</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {variationInlineBucketRows.map((row) => {
+                                      const returnPath = `/admin/generated-questions/variation-bucket?${buildVariationBucketQueryString({
+                                        textbook: variationAnalysisData.filters.textbook ?? '',
+                                        typeKey: variationInlineBucket.typeKey,
+                                        bucket: variationInlineBucket.bucket,
+                                      })}`;
+                                      return (
+                                        <tr key={row._id} className="border-b border-slate-700/40 hover:bg-slate-800/50">
+                                          <td className="px-2 py-1.5 tabular-nums text-teal-300 font-medium whitespace-nowrap">
+                                            {row.variation_pct}%
+                                          </td>
+                                          <td className="px-2 py-1.5 text-slate-300 max-w-[100px] truncate" title={row.textbook}>
+                                            {row.textbook || '—'}
+                                          </td>
+                                          <td className="px-2 py-1.5 text-slate-300 whitespace-nowrap">{row.type || '—'}</td>
+                                          <td className="px-2 py-1.5 text-slate-500 max-w-[120px] truncate" title={row.source}>
+                                            {row.source || '—'}
+                                          </td>
+                                          <td className="px-2 py-1.5 text-slate-400 max-w-[220px]">{row.paragraphPreview || '—'}</td>
+                                          <td className="px-2 py-1.5 text-slate-500 whitespace-nowrap">
+                                            {formatDbCreatedAt(typeof row.created_at === 'string' ? row.created_at : null)}
+                                          </td>
+                                          <td className="px-2 py-1.5 whitespace-nowrap">
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                void openEdit(
+                                                  row._id,
+                                                  returnPath
+                                                )
+                                              }
+                                              className="text-sky-400 hover:text-sky-300 font-medium underline-offset-2 hover:underline"
+                                            >
+                                              수정
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 클릭된 구간 조언 표시 */}
+                        {bucketAdvice && (() => {
+                          const advice = getBucketAdvice(bucketAdvice.type, bucketAdvice.bucket);
+                          const bEval = getBucketEval(bucketAdvice.type, bucketAdvice.bucket);
+                          const range = bucketAdvice.bucket === 9 ? '90~100%' : `${bucketAdvice.bucket * 10}~${bucketAdvice.bucket * 10 + 9}%`;
+                          if (!advice) return null;
+                          const borderColor = bEval.label === '위험' ? 'border-rose-700/60' : bEval.label === '과도' ? 'border-orange-700/50' : 'border-amber-700/50';
+                          return (
+                            <div className={`mt-2 p-3 rounded-xl bg-slate-800/80 border ${borderColor} flex items-start gap-3 animate-in fade-in duration-200`}>
+                              <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-bold ${bEval.color} ${bEval.bgColor}`}>{bEval.label}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-slate-300">{bucketAdvice.type} · {range} 구간</div>
+                                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{advice}</p>
+                              </div>
+                              <button onClick={() => setBucketAdvice(null)} className="shrink-0 text-slate-500 hover:text-white text-lg leading-none px-1">×</button>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 유형별 평가 기준 범례 */}
+                        <div className="mt-3 space-y-2">
+                          <div className="flex flex-wrap gap-3 text-[11px]">
+                            <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold">적정</span>이 유형에 이상적인 변형 수준</span>
+                            <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 font-semibold">양호</span>허용 범위 내</span>
+                            <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-semibold">주의</span>품질 확인 권장</span>
+                            <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300 font-semibold">과도</span>의미 왜곡 가능성</span>
+                            <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 font-semibold">위험</span>즉시 검토 필요</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] text-slate-500 bg-slate-800/40 rounded-lg p-2.5">
+                            <div><span className="text-teal-300 font-semibold">제목·주제·주장</span> — 지문 원문 유지가 원칙. 0%=적정, 선택지만 변형</div>
+                            <div><span className="text-sky-300 font-semibold">함의·어법</span> — 핵심 포인트 보존, 주변 표현만 경미하게 변형</div>
+                            <div><span className="text-amber-300 font-semibold">빈칸·순서·삽입·일치·불일치·요약</span> — 기억 답변 방지를 위해 적극 변형 필수</div>
+                          </div>
+                        </div>
+
+                        {/* 유형별 진단 카드 */}
+                        <div className="mt-5 space-y-2">
+                          <div className="flex items-center gap-3">
+                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">유형별 진단</p>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-600">
+                              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />위험</span>
+                              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />주의</span>
+                              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />양호</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {entries.map(([typeKey, stats]) => {
+                              const { issues, cfg } = getInsights(typeKey, stats);
+                              const topLevel = issues.some(i => i.level === 'danger') ? 'danger' : issues.some(i => i.level === 'warn') ? 'warn' : 'ok';
+                              const border = topLevel === 'danger' ? 'border-rose-700/50' : topLevel === 'warn' ? 'border-amber-600/40' : 'border-emerald-700/35';
+                              const dot = topLevel === 'danger' ? 'bg-rose-500' : topLevel === 'warn' ? 'bg-amber-400' : 'bg-emerald-500';
+                              return (
+                                <div key={typeKey} className={`rounded-xl border bg-slate-800/50 p-3.5 space-y-2 ${border}`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+                                      <span className="text-sm font-semibold text-slate-200">{typeKey}</span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-500 tabular-nums">{stats.count}문항 · 평균 {stats.avg}%</span>
+                                  </div>
+                                  {cfg.desc && <p className="text-[11px] text-slate-400 leading-relaxed">{cfg.desc}</p>}
+                                  <ul className="space-y-1">
+                                    {issues.map((issue, i) => {
+                                      const icon = issue.level === 'danger' ? '🔴' : issue.level === 'warn' ? '🟡' : issue.level === 'ok' ? '🟢' : 'ℹ️';
+                                      const color = issue.level === 'danger' ? 'text-rose-200' : issue.level === 'warn' ? 'text-amber-200' : issue.level === 'ok' ? 'text-emerald-300' : 'text-slate-400';
+                                      return (
+                                        <li key={i} className={`text-xs leading-relaxed flex gap-1.5 ${color}`}>
+                                          <span className="shrink-0">{icon}</span><span>{issue.msg}</span>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                  {cfg.tip && (topLevel === 'danger' || topLevel === 'warn') && (
+                                    <p className="text-[11px] text-teal-400/80 bg-teal-900/20 rounded-lg px-2.5 py-1.5 leading-relaxed">
+                                      💡 {cfg.tip}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
               )}
             </div>
@@ -4196,29 +4872,63 @@ export default function AdminGeneratedQuestionsPage() {
                     <button
                       type="button"
                       onClick={runGrammarVariantValidate}
-                      disabled={grammarVariantLoading || grammarBlocksRegenLoading}
+                      disabled={grammarVariantLoading || grammarBlocksRegenLoading || grammarWrongSlotRegenLoading}
                       className="text-xs px-3 py-1.5 rounded-lg bg-indigo-800/80 hover:bg-indigo-700 text-indigo-200 disabled:opacity-50"
                     >
                       다시 검증
                     </button>
+                    {/* 배치 크기 선택 */}
+                    <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <span className="whitespace-nowrap">건씩 처리:</span>
+                      <select
+                        value={grammarRegenBatchSize}
+                        onChange={(e) => setGrammarRegenBatchSize(Number(e.target.value))}
+                        disabled={grammarBlocksRegenLoading || grammarWrongSlotRegenLoading}
+                        className="bg-slate-700 border border-slate-600 text-slate-200 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                      >
+                        {[10, 20, 30, 50, 100].map((n) => (
+                          <option key={n} value={n}>{n}건</option>
+                        ))}
+                      </select>
+                    </label>
                     <button
                       type="button"
                       onClick={runGrammarBlocksBulkRegenerate}
                       disabled={
                         grammarVariantLoading ||
                         grammarBlocksRegenLoading ||
+                        grammarWrongSlotRegenLoading ||
                         grammarBlocksErrorIds.length === 0
                       }
-                      title="오류 코드「blocks」: ①~⑤ 밑줄 형식이 아닌 Paragraph 문항만, passage 원문으로 Claude 재생성(문항 번호·Source·UniqueID 유지). 한 번에 최대 30건."
+                      title={`오류 코드「blocks」: ①~⑤ 밑줄 형식이 아닌 Paragraph 문항. passage 원문으로 Claude 재생성(문항 번호·Source·UniqueID 유지). 이번 ${Math.min(grammarRegenBatchSize, grammarBlocksErrorIds.length)}건 처리.`}
                       className="text-xs px-3 py-1.5 rounded-lg bg-rose-900/80 hover:bg-rose-800 text-rose-100 border border-rose-600/40 disabled:opacity-50"
                     >
                       {grammarBlocksRegenLoading
                         ? '재생성 중…'
-                        : `밑줄 형식 오류 ${grammarBlocksErrorIds.length}건 재생성`}
+                        : `밑줄 형식 오류 ${grammarBlocksErrorIds.length}건 중 ${Math.min(grammarRegenBatchSize, grammarBlocksErrorIds.length)}건 재생성`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={runGrammarWrongSlotBulkRegenerate}
+                      disabled={
+                        grammarVariantLoading ||
+                        grammarBlocksRegenLoading ||
+                        grammarWrongSlotRegenLoading ||
+                        grammarWrongSlotErrorIds.length === 0
+                      }
+                      title={`오류 코드「wrong_slot_equals_original」: 정답 번호 밑줄이 원문과 동일한 문항. 원문과 다른 형태(틀린 어법)로 바꾸도록 힌트를 추가해 Claude 재생성. 이번 ${Math.min(grammarRegenBatchSize, grammarWrongSlotErrorIds.length)}건 처리.`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-amber-600/40 disabled:opacity-50"
+                    >
+                      {grammarWrongSlotRegenLoading
+                        ? '재생성 중…'
+                        : `정답칸=원문 오류 ${grammarWrongSlotErrorIds.length}건 중 ${Math.min(grammarRegenBatchSize, grammarWrongSlotErrorIds.length)}건 재생성`}
                     </button>
                   </div>
                   {grammarBlocksRegenMessage && (
                     <p className="text-xs text-emerald-400/90 mb-2">{grammarBlocksRegenMessage}</p>
+                  )}
+                  {grammarWrongSlotRegenMessage && (
+                    <p className="text-xs text-emerald-400/90 mb-2">{grammarWrongSlotRegenMessage}</p>
                   )}
                   {grammarVariantData.items.length === 0 ? (
                     <p className="text-emerald-400/90 text-sm py-4">
@@ -4733,6 +5443,154 @@ export default function AdminGeneratedQuestionsPage() {
         </div>
       )}
 
+      {orderLogsOpen && (
+        <div className="fixed inset-0 z-[59] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-slate-100">주문 일괄 처리 로그</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  <code className="text-slate-500">gomijoshua.order_processing_logs</code> — 배치·HWP 큐 기록.{' '}
+                  <strong className="text-slate-300">문제수 검증</strong> 버튼으로 동일 주문의{' '}
+                  <span className="text-emerald-300/90">지금 DB 기준</span> 부족을 봅니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOrderLogsOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5 space-y-4">
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">status</label>
+                  <input
+                    value={orderLogsStatusFilter}
+                    onChange={(e) => setOrderLogsStatusFilter(e.target.value)}
+                    placeholder="queued, completed …"
+                    className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white w-40"
+                  />
+                </div>
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs text-slate-400 mb-1">주문번호 포함 검색</label>
+                  <input
+                    value={orderLogsOrderNumberFilter}
+                    onChange={(e) => setOrderLogsOrderNumberFilter(e.target.value)}
+                    placeholder="BV-2026…"
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <button
+                  type="button"
+                  disabled={orderLogsLoading}
+                  onClick={() => void fetchOrderLogs(0)}
+                  className="px-4 py-2 rounded-lg bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-sm font-medium"
+                >
+                  조회
+                </button>
+              </div>
+              {orderLogsError && (
+                <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/50 text-red-200 text-sm">{orderLogsError}</div>
+              )}
+              {orderLogsLoading && <p className="text-slate-400 text-sm animate-pulse">불러오는 중…</p>}
+              {!orderLogsLoading && !orderLogsError && (
+                <>
+                  <p className="text-xs text-slate-500">
+                    총 <strong className="text-slate-300">{orderLogsTotal.toLocaleString()}</strong>건 ·{' '}
+                    {orderLogsSkip + 1}–{Math.min(orderLogsSkip + ORDER_LOGS_PAGE_SIZE, orderLogsTotal)} 표시
+                  </p>
+                  <div className="overflow-x-auto rounded-xl border border-slate-600">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-800 text-left text-slate-400 border-b border-slate-600">
+                          <th className="px-3 py-2 font-semibold">처리 시각</th>
+                          <th className="px-3 py-2 font-semibold">주문번호</th>
+                          <th className="px-3 py-2 font-semibold">상태</th>
+                          <th className="px-3 py-2 font-semibold">부족(건)</th>
+                          <th className="px-3 py-2 font-semibold">로그 시점 needCreate</th>
+                          <th className="px-3 py-2 font-semibold">사유</th>
+                          <th className="px-3 py-2 font-semibold">작업</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orderLogsItems.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="px-3 py-8 text-center text-slate-500">
+                              로그가 없습니다.
+                            </td>
+                          </tr>
+                        ) : (
+                          orderLogsItems.map((row) => (
+                            <tr key={row.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="px-3 py-2 text-slate-400 whitespace-nowrap text-xs">
+                                {row.processed_at ? formatDbCreatedAt(row.processed_at) : '—'}
+                              </td>
+                              <td className="px-3 py-2 font-mono text-teal-200 text-xs">{row.order_number || '—'}</td>
+                              <td className="px-3 py-2">
+                                <span className="text-amber-200/90 text-xs">{row.status || '—'}</span>
+                              </td>
+                              <td className="px-3 py-2 tabular-nums text-slate-300">{row.shortage_count}</td>
+                              <td className="px-3 py-2 text-xs text-slate-400">
+                                {row.needCreateGrandTotal != null ? row.needCreateGrandTotal : '—'}
+                              </td>
+                              <td className="px-3 py-2 text-slate-400 text-xs max-w-xs truncate" title={row.reason}>
+                                {row.reason || '—'}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {row.order_id && /^[a-f0-9]{24}$/i.test(row.order_id) ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOrderLogsOpen(false);
+                                      openQCountModal(row.order_id);
+                                    }}
+                                    className="text-cyan-400 hover:text-cyan-300 text-xs font-medium underline-offset-2 hover:underline"
+                                  >
+                                    문제수 검증
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-600 text-xs">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={orderLogsLoading || orderLogsSkip <= 0}
+                        onClick={() => void fetchOrderLogs(Math.max(0, orderLogsSkip - ORDER_LOGS_PAGE_SIZE))}
+                        className="px-3 py-1.5 rounded-lg border border-slate-600 text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+                      >
+                        이전
+                      </button>
+                      <button
+                        type="button"
+                        disabled={orderLogsLoading || orderLogsSkip + ORDER_LOGS_PAGE_SIZE >= orderLogsTotal}
+                        onClick={() => void fetchOrderLogs(orderLogsSkip + ORDER_LOGS_PAGE_SIZE)}
+                        className="px-3 py-1.5 rounded-lg border border-slate-600 text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+                      >
+                        다음
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-600 font-mono">
+                      딥링크: /admin/generated-questions?qCountOrderId=&lt;order_id&gt;
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {qCountOpen && (
         <div className="fixed inset-0 z-[59] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
           <div className="bg-slate-800 border border-cyan-700/40 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
@@ -4746,6 +5604,12 @@ export default function AdminGeneratedQuestionsPage() {
                   <strong className="text-cyan-200">부교재 변형 주문서(bookVariant)</strong>에 담긴 지문만
                   골라 검증할 수 있습니다. 주문 기준은 주문서의 유형·유형별 문항수를 그대로 반영합니다.{' '}
                   <span className="text-slate-500">passage_id 없이만 등록된 변형은 제외됩니다.</span>
+                </p>
+                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed border-t border-slate-700/50 pt-2">
+                  주문 범위 집계는 MCP <code className="text-slate-400">variant_get_shortage</code>와 동일한{' '}
+                  <code className="text-slate-400">runQuestionCountValidation</code> 엔진입니다. 로그의{' '}
+                  <code className="text-slate-400">shortage_details</code>는 기록 시점 스냅샷이며, 여기서 검증 실행 시{' '}
+                  <strong className="text-slate-400">지금 DB 기준</strong>으로 다시 집계됩니다.
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -6000,7 +6864,7 @@ export default function AdminGeneratedQuestionsPage() {
       )}
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
           <div className="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-slate-800 border-b border-slate-600 px-5 py-4 flex justify-between items-center z-10">
               <div className="flex items-center gap-3">
@@ -6086,10 +6950,11 @@ export default function AdminGeneratedQuestionsPage() {
                         onChange={(e) => {
                           const id = e.target.value;
                           const row = passagePickerItems.find((p) => p.id === id);
+                          const rawSrc = row?.sourceForDb ?? '';
                           setForm((f) => ({
                             ...f,
                             passage_id: id,
-                            source: row?.sourceForDb ?? '',
+                            source: normalizeMockVariantSourceLabel(f.textbook, rawSrc),
                           }));
                         }}
                         disabled={!form.textbook.trim() || passagePickerLoading}
@@ -6168,7 +7033,7 @@ export default function AdminGeneratedQuestionsPage() {
                         value={form.source}
                         onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}
                         className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
-                        placeholder="예: 01강 기출 예제"
+                        placeholder="부교재: 01강 기출 예제 / 모의고사: 26년 3월 고2 영어모의고사 34번 (번호 앞 중점·복붙 — 제거는 저장 시)"
                       />
                     </div>
                   </>
@@ -6581,7 +7446,7 @@ export default function AdminGeneratedQuestionsPage() {
                   {saving ? '저장 중…' : '저장'}
                   {!saving ? (
                     <span className="text-[10px] font-normal text-violet-200/80 tabular-nums hidden sm:inline">
-                      ⌘↵ / Ctrl↵
+                      ⌘↵ 저장 · Esc 닫기
                     </span>
                   ) : null}
                 </button>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { verifyToken, hashPassword, COOKIE_NAME } from '@/lib/auth';
+import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,6 +51,18 @@ export async function GET(request: NextRequest) {
         const date = d instanceof Date ? d : new Date(d);
         return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
       })(),
+      monthlyMemberSince: (() => {
+        const d = (u as { monthlyMemberSince?: Date }).monthlyMemberSince;
+        if (!d) return null;
+        const date = d instanceof Date ? d : new Date(d);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+      })(),
+      monthlyMemberUntil: (() => {
+        const d = (u as { monthlyMemberUntil?: Date }).monthlyMemberUntil;
+        if (!d) return null;
+        const date = d instanceof Date ? d : new Date(d);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+      })(),
       isVip: !!(u as { isVip?: boolean }).isVip,
       vipSince: (() => {
         const d = (u as { vipSince?: Date }).vipSince;
@@ -82,7 +94,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '관리자만 이용할 수 있습니다.' }, { status: 403 });
     }
 
-    const DEFAULT_PASSWORD = '123456';
     const body = await request.json();
     const loginId = typeof body?.loginId === 'string' ? body.loginId.trim() : '';
     const name = typeof body?.name === 'string' ? body.name.trim() : '';
@@ -115,7 +126,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const passwordHash = await hashPassword(DEFAULT_PASSWORD);
+    const passwordHash = await hashPassword(DEFAULT_MEMBER_INITIAL_PASSWORD);
     await users.createIndex({ loginId: 1 }, { unique: true }).catch(() => {});
     await users.insertOne({
       loginId,
@@ -137,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      message: '일반 계정이 생성되었습니다. (초기 비밀번호: 123456)',
+      message: `일반 계정이 생성되었습니다. (초기 비밀번호: ${DEFAULT_MEMBER_INITIAL_PASSWORD})`,
       loginId,
       name: name || loginId,
       email: email || '',

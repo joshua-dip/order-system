@@ -5,6 +5,9 @@ const SALT_ROUNDS = 10;
 const COOKIE_NAME = 'admin_session';
 const JWT_EXP = '7d';
 
+/** 관리자 빠른 계정 생성·비밀번호 초기화에 쓰는 일반 회원 초기 비밀번호(서버에서만 사용). */
+export const DEFAULT_MEMBER_INITIAL_PASSWORD = '123456';
+
 function getSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET || process.env.JWT_SECRET || 'next-order-admin-secret';
   return new TextEncoder().encode(secret);

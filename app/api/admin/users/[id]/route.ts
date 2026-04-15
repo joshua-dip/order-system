@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
-import { verifyToken, hashPassword, COOKIE_NAME } from '@/lib/auth';
+import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { recordPointLedger } from '@/lib/point-ledger';
-
-const DEFAULT_PASSWORD = '123456';
 
 async function requireAdmin(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -108,6 +106,35 @@ export async function PATCH(
     if (points !== undefined) updates.points = points;
     if (supplementaryNote !== undefined) updates.supplementaryNote = supplementaryNote;
     if (hasAnnualMemberSince && annualMemberSinceValue !== undefined) updates.annualMemberSince = annualMemberSinceValue;
+
+    const hasMonthlyMemberSince = 'monthlyMemberSince' in body;
+    let monthlyMemberSinceValue: Date | null | undefined = undefined;
+    if (hasMonthlyMemberSince) {
+      const v = body.monthlyMemberSince;
+      if (v === null || v === '' || (typeof v === 'string' && v.trim() === ''))
+        monthlyMemberSinceValue = null;
+      else if (typeof v === 'string') {
+        const d = new Date(v.trim());
+        monthlyMemberSinceValue = Number.isNaN(d.getTime()) ? undefined : d;
+      }
+    }
+    const hasMonthlyMemberUntil = 'monthlyMemberUntil' in body;
+    let monthlyMemberUntilValue: Date | null | undefined = undefined;
+    if (hasMonthlyMemberUntil) {
+      const v = body.monthlyMemberUntil;
+      if (v === null || v === '' || (typeof v === 'string' && v.trim() === ''))
+        monthlyMemberUntilValue = null;
+      else if (typeof v === 'string') {
+        const d = new Date(v.trim());
+        monthlyMemberUntilValue = Number.isNaN(d.getTime()) ? undefined : d;
+      }
+    }
+    if (hasMonthlyMemberSince && monthlyMemberSinceValue !== undefined) {
+      updates.monthlyMemberSince = monthlyMemberSinceValue;
+    }
+    if (hasMonthlyMemberUntil && monthlyMemberUntilValue !== undefined) {
+      updates.monthlyMemberUntil = monthlyMemberUntilValue;
+    }
     if (body?.isVip === true) {
       updates.isVip = true;
       if (!(target as { vipSince?: Date }).vipSince) updates.vipSince = new Date();
@@ -120,7 +147,7 @@ export async function PATCH(
       updates.points = current + addPoints;
     }
     if (resetPassword) {
-      updates.passwordHash = await hashPassword(DEFAULT_PASSWORD);
+      updates.passwordHash = await hashPassword(DEFAULT_MEMBER_INITIAL_PASSWORD);
     }
 
     const mongoOp: Record<string, unknown> = {};

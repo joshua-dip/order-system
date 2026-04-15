@@ -9,6 +9,7 @@ import {
   GRAMMAR_VARIANT_OPTIONS_FIXED,
   VARIANT_DRAFT_GRAMMAR_RULES,
 } from '@/lib/variant-draft-grammar-rules';
+import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 
 export const maxDuration = 120;
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     const textbook = String(src.textbook ?? '').trim();
-    const source = String(src.source ?? '').trim();
+    const source = normalizeMockVariantSourceLabel(textbook, String(src.source ?? '').trim());
     const type = String(src.type ?? '').trim();
     const option_type = String(src.option_type ?? 'English').trim() || 'English';
 
@@ -91,7 +92,10 @@ export async function POST(request: NextRequest) {
     if (mode === 'blank') {
       question_data = {
         순서: nextNum,
-        Source: typeof srcQd.Source === 'string' ? srcQd.Source : '',
+        Source:
+          typeof srcQd.Source === 'string'
+            ? normalizeMockVariantSourceLabel(textbook, srcQd.Source)
+            : '',
         NumQuestion: nextNum,
         Category: typeof srcQd.Category === 'string' ? srcQd.Category : '',
         Question: '',
@@ -180,7 +184,10 @@ ${paragraph}`;
       }
       question_data = {
         순서: typeof parsed.순서 === 'number' ? parsed.순서 : nextNum,
-        Source: typeof parsed.Source === 'string' ? parsed.Source : '',
+        Source:
+          typeof parsed.Source === 'string'
+            ? normalizeMockVariantSourceLabel(textbook, parsed.Source)
+            : '',
         NumQuestion: typeof parsed.NumQuestion === 'number' ? parsed.NumQuestion : nextNum,
         Category: typeof parsed.Category === 'string' ? parsed.Category : String(srcQd.Category ?? ''),
         Question: questionText,

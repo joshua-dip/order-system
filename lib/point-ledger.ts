@@ -2,8 +2,14 @@ import type { Db, ObjectId } from 'mongodb';
 
 export const POINT_LEDGER_COLLECTION = 'point_ledger';
 
-/** 주문 사용 | 관리자 추가 지급 | 관리자 직접 설정(증감) */
-export type PointLedgerKind = 'order_spend' | 'admin_grant' | 'admin_adjust';
+/** 주문 사용 | 관리자 추가 지급 | 관리자 직접 설정(증감) | 토스 결제 포인트 충전 */
+export type PointLedgerKind =
+  | 'order_spend'
+  | 'admin_grant'
+  | 'admin_adjust'
+  | 'point_charge'
+  /** 변형문제 만들기 — 삽입-고난도 초안 생성 */
+  | 'member_variant_hard';
 
 export type PointLedgerInsert = {
   userId: ObjectId;

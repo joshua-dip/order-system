@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "./components/Footer";
 import SiteVisitTracker from "./components/SiteVisitTracker";
+import { DEFAULT_APP_BAR_TITLE } from "@/lib/site-branding";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "커스터마이징 서비스",
-  description: "맞춤형 문제 제작 및 주문서 자동 생성",
+  title: DEFAULT_APP_BAR_TITLE,
+  description: "부교재·모의고사 변형문제 등 교재 맞춤 주문",
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",

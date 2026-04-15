@@ -10,7 +10,7 @@ import {
 /** 어법 Paragraph 밑줄 형식 오류 등 일괄 재생성 — 한 요청에 여러 Claude 호출 */
 export const maxDuration = 300;
 
-const MAX_IDS = 30;
+const MAX_IDS = 100;
 
 type Body = {
   ids?: unknown;

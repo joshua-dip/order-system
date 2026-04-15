@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       months,
-      note: '주문번호 날짜·completedAt 모두 없으면 월별에서 제외됩니다. VAT 별도.',
+      note: '주문번호 날짜·completedAt 모두 없으면 월별에서 제외됩니다.',
     });
   } catch (err) {
     console.error('revenue-by-month:', err);

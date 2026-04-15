@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { comparePassword, createToken, COOKIE_NAME } from '@/lib/auth';
+import { comparePassword, createToken, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   if (!process.env.MONGODB_URI) {
@@ -43,13 +43,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const role = typeof user.role === 'string' && user.role ? user.role : 'admin';
+    const mustChangePassword =
+      role === 'user' &&
+      typeof user.passwordHash === 'string' &&
+      (await comparePassword(DEFAULT_MEMBER_INITIAL_PASSWORD, user.passwordHash));
+
     const token = await createToken({
       sub: user._id.toString(),
       loginId: user.loginId,
-      role: user.role || 'admin',
+      role,
     });
 
-    const res = NextResponse.json({ ok: true, loginId: user.loginId });
+    const res = NextResponse.json({ ok: true, loginId: user.loginId, role, mustChangePassword });
     res.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

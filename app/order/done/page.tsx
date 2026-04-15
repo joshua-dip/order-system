@@ -101,7 +101,7 @@ function OrderDoneContent() {
   if (loading) {
     return (
       <>
-        <AppBar title="커스터마이징 서비스" />
+        <AppBar />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full" />
         </div>
@@ -112,7 +112,7 @@ function OrderDoneContent() {
   if (error || !order) {
     return (
       <>
-        <AppBar title="커스터마이징 서비스" />
+        <AppBar />
         <div className="min-h-screen py-8 px-4 bg-gray-50">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-gray-600 mb-4">{error || '주문을 불러올 수 없습니다.'}</p>
@@ -127,7 +127,7 @@ function OrderDoneContent() {
 
   return (
     <>
-      <AppBar title="커스터마이징 서비스" />
+      <AppBar />
       <div className="min-h-screen py-8 px-4" style={{ backgroundColor: '#F5F5F5' }}>
         <div className="max-w-2xl mx-auto">
           <p className="text-center mb-4">
@@ -264,7 +264,7 @@ export default function OrderDonePage() {
   return (
     <Suspense fallback={
       <>
-        <AppBar title="커스터마이징 서비스" />
+        <AppBar />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full" />
         </div>

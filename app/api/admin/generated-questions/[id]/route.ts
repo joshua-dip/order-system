@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
+import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, passage_id, ...rest } = doc;
@@ -54,7 +55,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const $set: Record<string, unknown> = { updated_at: new Date() };
 
     if (typeof body.textbook === 'string') $set.textbook = body.textbook.trim();
-    if (typeof body.source === 'string') $set.source = body.source.trim();
+    if (typeof body.source === 'string') {
+      const tbForNorm =
+        typeof body.textbook === 'string'
+          ? body.textbook.trim()
+          : String((existing as { textbook?: unknown }).textbook ?? '').trim();
+      $set.source = normalizeMockVariantSourceLabel(tbForNorm, body.source.trim());
+    }
     if (typeof body.type === 'string') $set.type = body.type.trim();
     if (typeof body.option_type === 'string') $set.option_type = body.option_type.trim();
     if (typeof body.difficulty === 'string') $set.difficulty = body.difficulty.trim();
@@ -92,6 +99,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         $set.question_data = {
           ...($set.question_data as Record<string, unknown>),
           Options: GRAMMAR_VARIANT_OPTIONS_FIXED,
+        };
+      }
+      const qd = $set.question_data as Record<string, unknown>;
+      const tbForQd =
+        typeof $set.textbook === 'string'
+          ? ($set.textbook as string)
+          : String((existing as { textbook?: unknown }).textbook ?? '').trim();
+      if (typeof qd.Source === 'string' && qd.Source.trim()) {
+        $set.question_data = {
+          ...qd,
+          Source: normalizeMockVariantSourceLabel(tbForQd, qd.Source.trim()),
         };
       }
     }

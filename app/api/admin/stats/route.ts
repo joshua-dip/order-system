@@ -32,17 +32,12 @@ export async function GET(request: NextRequest) {
 
     const todayKey = koreaDateKey(now);
     const [
-      userOrderCounts,
       userLastOrderDates,
       newMembersThisMonth,
       newOrdersThisWeek,
       completedForRevenue,
       siteToday,
     ] = await Promise.all([
-      db.collection('orders').aggregate<{ _id: string; count: number }>([
-        { $match: { loginId: { $exists: true, $ne: null } } },
-        { $group: { _id: '$loginId', count: { $sum: 1 } } },
-      ]).toArray(),
       db.collection('orders').aggregate<{ _id: string; lastAt: Date }>([
         { $match: { loginId: { $exists: true, $ne: null } } },
         { $sort: { createdAt: -1 } },
@@ -53,7 +48,7 @@ export async function GET(request: NextRequest) {
       db
         .collection('orders')
         .find({ status: 'completed' })
-        .project({ orderText: 1, revenueWon: 1, completedAt: 1, orderNumber: 1 })
+        .project({ orderText: 1, revenueWon: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
         .toArray(),
       db.collection<SiteStatsDaily>('site_stats_daily').findOne({ _id: todayKey }),
     ]);
@@ -61,6 +56,9 @@ export async function GET(request: NextRequest) {
     const thisYearMonth = koreaYearMonthKey(now);
     let revenueTotal = 0;
     let revenueThisMonth = 0;
+    /** 완료 주문만, 회원 loginId 기준 건수·매출(원) */
+    const orderCountByLoginId: Record<string, number> = {};
+    const revenueByLoginId: Record<string, number> = {};
     for (const o of completedForRevenue) {
       const amount = effectiveOrderRevenueWon(o);
       revenueTotal += amount;
@@ -68,12 +66,11 @@ export async function GET(request: NextRequest) {
       if (monthKey === thisYearMonth) {
         revenueThisMonth += amount;
       }
+      const lid = (o as { loginId?: string | null }).loginId;
+      if (!lid || typeof lid !== 'string') continue;
+      orderCountByLoginId[lid] = (orderCountByLoginId[lid] ?? 0) + 1;
+      revenueByLoginId[lid] = (revenueByLoginId[lid] ?? 0) + amount;
     }
-
-    const orderCountByLoginId: Record<string, number> = {};
-    userOrderCounts.forEach((row) => {
-      orderCountByLoginId[row._id] = row.count;
-    });
 
     const lastOrderDateByLoginId: Record<string, string> = {};
     userLastOrderDates.forEach((row) => {
@@ -84,7 +81,10 @@ export async function GET(request: NextRequest) {
     const uv = typeof siteToday?.uniqueVisitors === 'number' ? siteToday.uniqueVisitors : 0;
 
     return NextResponse.json({
+      /** status=completed 주문만 loginId별 건수 */
       orderCountByLoginId,
+      /** status=completed 주문만 loginId별 매출(원) 합계 */
+      revenueByLoginId,
       lastOrderDateByLoginId,
       newMembersThisMonth,
       newOrdersThisWeek,

@@ -160,6 +160,7 @@ export async function GET(request: NextRequest) {
           page: 1,
           page_label: 1,
           order: 1,
+          publisher: 1,
           'content.original': 1,
           created_at: 1,
           updated_at: 1,
@@ -249,8 +250,15 @@ export async function POST(request: NextRequest) {
           ? parseInt(body.order, 10) || 0
           : 0;
 
+    const VALID_PUBLISHERS = ['YBM', '쎄듀', 'NE능률'] as const;
+    type Publisher = typeof VALID_PUBLISHERS[number];
+    const publisherRaw = typeof body.publisher === 'string' ? body.publisher.trim() : '';
+    const publisher: Publisher | undefined = VALID_PUBLISHERS.includes(publisherRaw as Publisher)
+      ? (publisherRaw as Publisher)
+      : undefined;
+
     const now = new Date();
-    const doc = {
+    const doc: Record<string, unknown> = {
       textbook,
       chapter,
       number,
@@ -262,9 +270,11 @@ export async function POST(request: NextRequest) {
       created_at: now,
       updated_at: now,
     };
+    if (publisher) doc.publisher = publisher;
 
     const db = await getDb('gomijoshua');
-    const r = await db.collection('passages').insertOne(doc);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const r = await db.collection('passages').insertOne(doc as any);
     const inserted = await db.collection('passages').findOne({ _id: r.insertedId });
     return NextResponse.json({ ok: true, item: inserted ? serialize(inserted as Record<string, unknown>) : null });
   } catch (e) {

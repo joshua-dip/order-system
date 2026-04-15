@@ -9,6 +9,8 @@ import { recordPointLedger } from '@/lib/point-ledger';
 
 const COLLECTION = 'orders';
 
+type OrderNumberCounterDoc = { _id: string; n: number };
+
 /** 회원 주문 시 주문서에 안내할 입금 계좌 */
 const MEMBER_DEPOSIT_ACCOUNT = '110493861106 신한은행 박준규(페이퍼릭)';
 
@@ -79,16 +81,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 접두어-YYYYMMDD-NNN 형식 주문번호 생성 (접두어: 재료+제품 2글자, 예: MV, BV, MW)
+    // 접두어-YYYYMMDD-NNN 형식 주문번호 — 일별 카운터를 원자적으로 올려 동시 요청 시 번호 충돌 방지
     const now = new Date();
     const pad = (n: number, d = 2) => String(n).padStart(d, '0');
     const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const todayCount = await collection.countDocuments({
-      createdAt: { $gte: dayStart, $lt: dayEnd },
-    });
-    const orderNumber = `${orderPrefix}-${datePart}-${pad(todayCount + 1, 3)}`;
+    const counterColl = db.collection<OrderNumberCounterDoc>('orderNumberCounters');
+    const counterKey = `${orderPrefix}_${datePart}`;
+
+    let orderNumber = '';
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const updated = await counterColl.findOneAndUpdate(
+        { _id: counterKey },
+        { $inc: { n: 1 } },
+        { upsert: true, returnDocument: 'after' }
+      );
+      const n = updated && typeof updated.n === 'number' ? updated.n : attempt + 1;
+      const candidate = `${orderPrefix}-${datePart}-${pad(n, 3)}`;
+      const clash = await collection.findOne({ orderNumber: candidate }, { projection: { _id: 1 } });
+      if (!clash) {
+        orderNumber = candidate;
+        break;
+      }
+      if (attempt === 199) {
+        return NextResponse.json(
+          { error: '주문번호를 할당하지 못했습니다. 잠시 후 다시 시도해 주세요.' },
+          { status: 503 }
+        );
+      }
+    }
+
+    if (!orderNumber) {
+      return NextResponse.json(
+        { error: '주문번호를 할당하지 못했습니다. 잠시 후 다시 시도해 주세요.' },
+        { status: 503 }
+      );
+    }
 
     // 회원 주문 시 주문서 끝에 입금 계좌 안내 추가 (이미 포함되어 있으면 제외)
     let finalOrderText = orderText;

@@ -7,6 +7,9 @@ import { PassageFolderScopeBar, type PassageAdminFolder } from '@/app/components
 import { TextbookLinkFolderScopeBar, type TextbookLinkFolder } from '@/app/components/admin/TextbookLinkFolderScopeBar';
 import { passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
 
+const SOLBOOK_PUBLISHERS = ['YBM', '쎄듀', 'NE능률'] as const;
+type SolbookPublisher = typeof SOLBOOK_PUBLISHERS[number];
+
 type PassageListItem = {
   _id: string;
   textbook: string;
@@ -16,6 +19,7 @@ type PassageListItem = {
   page?: number;
   page_label?: string;
   order?: number;
+  publisher?: SolbookPublisher | null;
   content?: { original?: string };
   created_at?: string;
   updated_at?: string;
@@ -23,6 +27,7 @@ type PassageListItem = {
 };
 
 type PassageFull = PassageListItem & {
+  publisher?: SolbookPublisher | null;
   content?: {
     original?: string;
     translation?: string;
@@ -42,9 +47,361 @@ const emptyForm = {
   page: '',
   page_label: '',
   order: '0',
+  publisher: '' as SolbookPublisher | '',
   original: '',
   translation: '',
 };
+
+/* ── 교재 JSON 데이터 구조 패널 ────────────────────────────────────── */
+
+type TextbookJsonTree = Record<string, Record<string, unknown>>;
+
+function buildSummaryTree(raw: Record<string, unknown>): TextbookJsonTree {
+  const out: TextbookJsonTree = {};
+  for (const [tbKey, tbVal] of Object.entries(raw)) {
+    if (!tbVal || typeof tbVal !== 'object') continue;
+    // 최상위 키 수준 집계 (강 목록)
+    const chapterMap: Record<string, unknown> = {};
+    const collectChapters = (obj: Record<string, unknown>, depth = 0) => {
+      if (depth > 5) return;
+      for (const [k, v] of Object.entries(obj)) {
+        if (k === '부교재' && v && typeof v === 'object') {
+          const inner = v as Record<string, unknown>;
+          for (const [tbk, tbv] of Object.entries(inner)) {
+            if (tbk === tbKey || !tbv || typeof tbv !== 'object') continue;
+            collectChapters(tbv as Record<string, unknown>, depth + 1);
+          }
+          // 같은 교재키 하위
+          if (inner[tbKey] && typeof inner[tbKey] === 'object') {
+            const chapters = inner[tbKey] as Record<string, unknown>;
+            for (const [ck, cv] of Object.entries(chapters)) {
+              chapterMap[ck] = Array.isArray(cv) ? `${cv.length}개 번호` : typeof cv;
+            }
+          }
+          continue;
+        }
+        if (Array.isArray(v)) {
+          chapterMap[k] = `${v.length}개 번호`;
+        } else if (v && typeof v === 'object') {
+          collectChapters(v as Record<string, unknown>, depth + 1);
+        } else {
+          chapterMap[k] = v;
+        }
+      }
+    };
+    collectChapters(tbVal as Record<string, unknown>);
+    out[tbKey] = chapterMap;
+  }
+  return out;
+}
+
+/* ── 쏠북 교재 구분 패널 ────────────────────────────────────────────── */
+
+const SOLBOOK_TYPE_LABELS: Record<string, string> = {
+  교과서: '교과서',
+  부교재: '부교재',
+};
+
+function SolbookTypePanelSection({
+  publisherByTextbook,
+  textbookTypeByTextbook,
+  textbookTypeSavingKey,
+  onSave,
+  msg,
+}: {
+  publisherByTextbook: Record<string, string | null>;
+  textbookTypeByTextbook: Record<string, '교과서' | '부교재' | null>;
+  textbookTypeSavingKey: string | null;
+  onSave: (key: string, type: '교과서' | '부교재' | '') => Promise<void>;
+  msg: { type: 'ok' | 'err'; text: string } | null;
+}) {
+  const [open, setOpen] = useState(true);
+  const [search, setSearch] = useState('');
+
+  // publisher가 설정된 교재 + textbookType이 설정된 교재 합집합
+  // (지문이 없어 publisher가 passages에 없는 교재도 type 설정이 있으면 표시)
+  const solbookKeySet = new Set<string>([
+    ...Object.entries(publisherByTextbook).filter(([, pub]) => !!pub).map(([k]) => k),
+    ...Object.keys(textbookTypeByTextbook),
+  ]);
+  const solbookKeys = [...solbookKeySet].sort((a, b) => a.localeCompare(b, 'ko'));
+
+  const filtered = search.trim()
+    ? solbookKeys.filter((k) => k.toLowerCase().includes(search.toLowerCase()))
+    : solbookKeys;
+
+  const typeColor = (t: '교과서' | '부교재' | null) => {
+    if (t === '교과서') return 'text-amber-300';
+    if (t === '부교재') return 'text-orange-300';
+    return 'text-slate-500';
+  };
+
+  return (
+    <section className="bg-slate-800/50 border border-slate-700 rounded-xl mb-6 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/80 transition-colors"
+      >
+        <div>
+          <h2 className="text-base font-bold text-white">
+            쏠북 교재 구분 관리
+            <span className="ml-2 text-xs font-normal text-slate-400">
+              (교과서 / 부교재)
+            </span>
+          </h2>
+          <p className="text-slate-400 text-xs mt-0.5">
+            쏠북 출판사가 지정된 교재의 교과서·부교재 구분을 설정합니다.{' '}
+            <code className="text-amber-200/90">passages.textbookType</code>
+          </p>
+        </div>
+        <span className="text-slate-400 shrink-0">{open ? '▼' : '▶'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-700/80 px-4 pb-4">
+          {solbookKeys.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">
+              설정된 쏠북 교재가 없습니다.{' '}
+              <span className="text-slate-400">위 "교재 메타데이터 관리"에서 출판사를 설정하거나, 여기서 직접 교과서/부교재를 지정하세요.</span>
+            </p>
+          ) : (
+            <>
+              <div className="py-3">
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="교재명 검색…"
+                  className="w-full max-w-xs bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                />
+              </div>
+              {msg && (
+                <p className={`text-sm mb-2 ${msg.type === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {msg.text}
+                </p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {filtered.map((key) => {
+                  const currentType = textbookTypeByTextbook[key] ?? null;
+                  const isSaving = textbookTypeSavingKey === key;
+                  const publisher = publisherByTextbook[key];
+                  return (
+                    <div
+                      key={key}
+                      className="flex flex-col gap-1.5 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium text-white leading-tight line-clamp-2" title={key}>
+                          {key}
+                        </p>
+                        <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold bg-slate-700 text-slate-300">
+                          {publisher}
+                        </span>
+                      </div>
+                      <div className="flex gap-1.5 mt-0.5">
+                        {(['교과서', '부교재'] as const).map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            disabled={isSaving}
+                            onClick={() => onSave(key, currentType === t ? '' : t)}
+                            className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all disabled:opacity-50 ${
+                              currentType === t
+                                ? t === '교과서'
+                                  ? 'bg-amber-500 text-white shadow'
+                                  : 'bg-orange-600 text-white shadow'
+                                : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'
+                            }`}
+                          >
+                            {SOLBOOK_TYPE_LABELS[t]}
+                          </button>
+                        ))}
+                      </div>
+                      <p className={`text-[10px] ${typeColor(currentType)}`}>
+                        {currentType ? `현재: ${currentType}` : '미지정'}
+                        {isSaving && ' · 저장 중…'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TextbookJsonPanel() {
+  const [open, setOpen] = useState(false);
+  const [raw, setRaw] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'tree' | 'json'>('tree');
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [jsonSearch, setJsonSearch] = useState('');
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setErr(null);
+    fetch('/api/textbooks')
+      .then((r) => r.json())
+      .then((d) => setRaw(d as Record<string, unknown>))
+      .catch(() => setErr('데이터를 불러오지 못했습니다.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (open && !raw) load();
+  }, [open, raw, load]);
+
+  const summaryTree = useMemo(() => (raw ? buildSummaryTree(raw) : {}), [raw]);
+
+  const topKeys = useMemo(() => Object.keys(summaryTree).sort((a, b) => a.localeCompare(b, 'ko')), [summaryTree]);
+
+  const filteredKeys = useMemo(() => {
+    if (!jsonSearch.trim()) return topKeys;
+    const q = jsonSearch.toLowerCase();
+    return topKeys.filter((k) => {
+      if (k.toLowerCase().includes(q)) return true;
+      const chapters = summaryTree[k] || {};
+      return Object.keys(chapters).some((ck) => ck.toLowerCase().includes(q));
+    });
+  }, [topKeys, jsonSearch, summaryTree]);
+
+  const toggleKey = (k: string) =>
+    setExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+
+  return (
+    <section className="bg-slate-800/50 border border-slate-700 rounded-xl mb-6 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/80 transition-colors"
+      >
+        <div>
+          <h2 className="text-base font-bold text-white">교재 JSON 데이터 구조</h2>
+          <p className="text-slate-400 text-xs mt-0.5">
+            <code className="text-amber-200/90">/api/textbooks</code>
+            {' '}— MongoDB{' '}
+            <code className="text-amber-200/90">converted_textbook_json</code>
+            {' '}/ converted_data.json. 주문 화면에서 강·번호 목록을 이 데이터에서 읽습니다.
+          </p>
+        </div>
+        <span className="text-slate-400 shrink-0">{open ? '▼' : '▶'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-700/80 px-4 pb-4">
+          <div className="flex flex-wrap gap-2 items-center py-3">
+            <button
+              type="button"
+              onClick={load}
+              disabled={loading}
+              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm disabled:opacity-50"
+            >
+              {loading ? '불러오는 중…' : '새로고침'}
+            </button>
+            <div className="flex rounded-lg overflow-hidden border border-slate-600 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('tree')}
+                className={`px-3 py-1.5 ${viewMode === 'tree' ? 'bg-slate-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              >
+                트리 보기
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('json')}
+                className={`px-3 py-1.5 ${viewMode === 'json' ? 'bg-slate-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              >
+                JSON 원본
+              </button>
+            </div>
+            {raw && (
+              <span className="text-slate-500 text-xs">
+                총 {topKeys.length}개 교재
+              </span>
+            )}
+          </div>
+
+          {err && <p className="text-red-400 text-sm mb-3">{err}</p>}
+
+          {raw && viewMode === 'tree' && (
+            <div>
+              <div className="mb-3">
+                <input
+                  type="search"
+                  value={jsonSearch}
+                  onChange={(e) => setJsonSearch(e.target.value)}
+                  placeholder="교재명·강 검색…"
+                  className="w-full max-w-sm bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-slate-500"
+                />
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-slate-700 font-mono text-xs">
+                {filteredKeys.length === 0 ? (
+                  <p className="px-4 py-6 text-slate-500 text-center">검색 결과 없음</p>
+                ) : (
+                  filteredKeys.map((tbKey) => {
+                    const chapters = summaryTree[tbKey] || {};
+                    const chapterKeys = Object.keys(chapters);
+                    const isExpanded = expandedKeys.has(tbKey);
+                    return (
+                      <div key={tbKey} className="border-b border-slate-700/60 last:border-0">
+                        <button
+                          type="button"
+                          onClick={() => toggleKey(tbKey)}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-800/60 text-left"
+                        >
+                          <span className="text-slate-500 w-3 shrink-0">{isExpanded ? '▼' : '▶'}</span>
+                          <span className="text-emerald-300 flex-1 truncate">{JSON.stringify(tbKey)}</span>
+                          <span className="text-slate-500 shrink-0">{chapterKeys.length}강</span>
+                        </button>
+                        {isExpanded && (
+                          <div className="bg-slate-900/40 pl-8 pr-3 pb-2">
+                            {chapterKeys.length === 0 ? (
+                              <p className="text-slate-500 py-1">강 데이터 없음</p>
+                            ) : (
+                              chapterKeys.map((ck) => (
+                                <div key={ck} className="flex items-center gap-2 py-0.5">
+                                  <span className="text-sky-300 flex-1">{JSON.stringify(ck)}</span>
+                                  <span className="text-amber-200/70">{String(chapters[ck])}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {raw && viewMode === 'json' && (
+            <div className="relative">
+              <pre className="max-h-[60vh] overflow-auto rounded-lg border border-slate-700 bg-slate-950 p-3 text-xs text-green-200 font-mono whitespace-pre-wrap break-all">
+                {JSON.stringify(raw, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {!raw && !loading && !err && (
+            <p className="text-slate-500 text-sm py-4 text-center">패널을 열면 자동으로 데이터를 불러옵니다.</p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function AdminPassagesPage() {
   const router = useRouter();
@@ -70,9 +427,13 @@ export default function AdminPassagesPage() {
   const [advancedJson, setAdvancedJson] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  /** MongoDB textbook_links — 부교재/워크북 「교재 확인」버튼 */
+  /** MongoDB textbook_links + 출판사 — 교재 메타데이터 종합 관리 */
   const [linksPanelOpen, setLinksPanelOpen] = useState(true);
   const [linkDrafts, setLinkDrafts] = useState<Record<string, { kyoboUrl: string; description: string }>>({});
+  const [publisherByTextbook, setPublisherByTextbook] = useState<Record<string, SolbookPublisher | null>>({});
+  const [publisherSavingKey, setPublisherSavingKey] = useState<string | null>(null);
+  const [textbookTypeByTextbook, setTextbookTypeByTextbook] = useState<Record<string, '교과서' | '부교재' | null>>({});
+  const [textbookTypeSavingKey, setTextbookTypeSavingKey] = useState<string | null>(null);
   const [linksLoading, setLinksLoading] = useState(false);
   const [linkSearch, setLinkSearch] = useState('');
   const [linkSavingKey, setLinkSavingKey] = useState<string | null>(null);
@@ -119,11 +480,83 @@ export default function AdminPassagesPage() {
       .catch(() => setTextbookLinkAssignments({}));
   }, []);
 
+  const fetchPublisherByTextbook = useCallback(() => {
+    fetch('/api/admin/passages/publisher-by-textbook', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.publishers && typeof d.publishers === 'object') {
+          setPublisherByTextbook(d.publishers as Record<string, SolbookPublisher | null>);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const fetchTextbookTypeByTextbook = useCallback(() => {
+    fetch('/api/admin/passages/textbook-type-by-textbook', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.textbookTypes && typeof d.textbookTypes === 'object') {
+          setTextbookTypeByTextbook(d.textbookTypes as Record<string, '교과서' | '부교재' | null>);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveTextbookTypeForTextbook = async (textbookKey: string, textbookType: '교과서' | '부교재' | '') => {
+    setTextbookTypeSavingKey(textbookKey);
+    setLinkMsg(null);
+    try {
+      const res = await fetch('/api/admin/passages/textbook-type-by-textbook', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbookKey, textbookType: textbookType || null }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        setLinkMsg({ type: 'err', text: j.error || '구분 저장 실패' });
+        return;
+      }
+      setTextbookTypeByTextbook((prev) => ({ ...prev, [textbookKey]: (textbookType as '교과서' | '부교재') || null }));
+      setLinkMsg({ type: 'ok', text: `「${textbookKey}」 구분이 ${j.textbookType ?? '미지정'}으로 저장됐습니다.` });
+    } catch {
+      setLinkMsg({ type: 'err', text: '요청 실패' });
+    } finally {
+      setTextbookTypeSavingKey(null);
+    }
+  };
+
+  const savePublisherForTextbook = async (textbookKey: string, publisher: SolbookPublisher | '') => {
+    setPublisherSavingKey(textbookKey);
+    setLinkMsg(null);
+    try {
+      const res = await fetch('/api/admin/passages/publisher-by-textbook', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbookKey, publisher: publisher || null }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        setLinkMsg({ type: 'err', text: j.error || '출판사 저장 실패' });
+        return;
+      }
+      setPublisherByTextbook((prev) => ({ ...prev, [textbookKey]: (publisher as SolbookPublisher) || null }));
+      setLinkMsg({ type: 'ok', text: `「${textbookKey}」 출판사 저장됨 (${j.modifiedCount}건 업데이트)` });
+    } catch {
+      setLinkMsg({ type: 'err', text: '요청 실패' });
+    } finally {
+      setPublisherSavingKey(null);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     fetchAdminTextbookLinks();
     fetchTextbookLinkAssignments();
-  }, [user, fetchAdminTextbookLinks, fetchTextbookLinkAssignments]);
+    fetchPublisherByTextbook();
+    fetchTextbookTypeByTextbook();
+  }, [user, fetchAdminTextbookLinks, fetchTextbookLinkAssignments, fetchPublisherByTextbook, fetchTextbookTypeByTextbook]);
 
   useEffect(() => {
     setLinkDrafts((prev) => {
@@ -147,10 +580,6 @@ export default function AdminPassagesPage() {
 
   const saveTextbookLink = async (textbookKey: string) => {
     const d = linkDrafts[textbookKey];
-    if (!d?.kyoboUrl?.trim()) {
-      alert('구매 링크(URL)를 입력해 주세요.');
-      return;
-    }
     setLinkSavingKey(textbookKey);
     setLinkMsg(null);
     try {
@@ -320,6 +749,7 @@ export default function AdminPassagesPage() {
         page: it.page != null ? String(it.page) : '',
         page_label: it.page_label || '',
         order: it.order != null ? String(it.order) : '0',
+        publisher: (SOLBOOK_PUBLISHERS as readonly string[]).includes(it.publisher ?? '') ? (it.publisher as SolbookPublisher) : '',
         original: c.original || '',
         translation: c.translation || '',
       });
@@ -368,6 +798,7 @@ export default function AdminPassagesPage() {
         page: form.page.trim() ? parseInt(form.page, 10) : undefined,
         page_label: form.page_label.trim(),
         order: form.order.trim() ? parseInt(form.order, 10) : 0,
+        publisher: form.publisher || null,
         original: form.original,
         translation: form.translation,
       };
@@ -464,12 +895,18 @@ export default function AdminPassagesPage() {
             <h1 className="text-xl font-bold text-white">원문 관리</h1>
             <p className="text-slate-400 text-sm mt-0.5">MongoDB · gomijoshua.passages</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap justify-end">
             <Link
               href="/admin"
               className="text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg border border-slate-600 hover:border-slate-500"
             >
               ← 관리자 홈
+            </Link>
+            <Link
+              href="/admin/generated-questions"
+              className="text-teal-200 hover:text-white text-sm font-semibold px-3 py-2 rounded-lg border border-teal-600/45 hover:border-teal-400/60 bg-teal-950/25"
+            >
+              변형문제 관리 →
             </Link>
             <button
               type="button"
@@ -490,10 +927,12 @@ export default function AdminPassagesPage() {
             className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/80 transition-colors"
           >
             <div>
-              <h2 className="text-base font-bold text-white">교재 구매 링크 (YES24·교보문고 등)</h2>
+              <h2 className="text-base font-bold text-white">교재 메타데이터 관리</h2>
               <p className="text-slate-400 text-xs mt-0.5">
-                아래에 등록된 원문 교재명 기준으로 링크를 넣으면, 부교재·워크북 주문 화면의 「교재 확인」에 반영됩니다. MongoDB{' '}
+                출판사(쏠북 포함 여부) · 구매 링크 · 폴더 분류를 교재 단위로 관리합니다. MongoDB{' '}
                 <code className="text-amber-200/90">textbook_links</code>
+                {' '}·{' '}
+                <code className="text-amber-200/90">passages.publisher</code>
               </p>
             </div>
             <span className="text-slate-400 shrink-0">{linksPanelOpen ? '▼' : '▶'}</span>
@@ -510,7 +949,7 @@ export default function AdminPassagesPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => fetchAdminTextbookLinks()}
+                  onClick={() => { fetchAdminTextbookLinks(); fetchPublisherByTextbook(); fetchTextbookTypeByTextbook(); }}
                   disabled={linksLoading}
                   className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm disabled:opacity-50"
                 >
@@ -537,6 +976,8 @@ export default function AdminPassagesPage() {
                   <thead className="sticky top-0 bg-slate-900 z-[1] border-b border-slate-600">
                     <tr className="text-left text-slate-400">
                       <th className="px-3 py-2 font-medium w-[min(14rem,28vw)]">교재명 (passages)</th>
+                      <th className="px-3 py-2 font-medium w-28">쏠북 출판사</th>
+                      <th className="px-3 py-2 font-medium w-28">교과서/부교재</th>
                       <th className="px-3 py-2 font-medium min-w-[7rem]">폴더</th>
                       <th className="px-3 py-2 font-medium min-w-[200px]">구매 URL</th>
                       <th className="px-3 py-2 font-medium min-w-[140px]">설명(툴팁)</th>
@@ -546,7 +987,7 @@ export default function AdminPassagesPage() {
                   <tbody>
                     {linkRowKeys.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                           {textbooks.length === 0
                             ? '등록된 교재가 없습니다. 원문을 먼저 등록하면 교재명이 여기에 나타납니다.'
                             : '검색 결과가 없습니다.'}
@@ -556,16 +997,68 @@ export default function AdminPassagesPage() {
                       linkRowKeys.map((key) => {
                         const draft = linkDrafts[key] ?? { kyoboUrl: '', description: '' };
                         const hasSaved = !!draft.kyoboUrl?.trim();
+                        const currentPublisher = publisherByTextbook[key] ?? null;
+                        const isSavingPublisher = publisherSavingKey === key;
+                        const currentTextbookType = textbookTypeByTextbook[key] ?? null;
+                        const isSolbook = !!currentPublisher;
+                        const isSavingType = textbookTypeSavingKey === key;
+                        const hasPassages = (textbooks as string[]).includes(key);
                         return (
-                          <tr key={key} className="border-b border-slate-700/60 align-top hover:bg-slate-900/40">
+                          <tr key={key} className={`border-b border-slate-700/60 align-top hover:bg-slate-900/40 ${!hasPassages ? 'bg-red-950/20' : ''}`}>
                             <td className="px-3 py-2 text-slate-200">
-                              <span className="line-clamp-3" title={key}>
+                              <span className={`line-clamp-3 ${!hasPassages ? 'text-slate-400' : ''}`} title={key}>
                                 {key}
                               </span>
-                              {hasSaved && (
-                                <span className="ml-1 inline-block text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">
-                                  등록됨
-                                </span>
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {!hasPassages && (
+                                  <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-800/50">
+                                    지문 없음
+                                  </span>
+                                )}
+                                {hasSaved && (
+                                  <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">
+                                    링크 등록됨
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              <select
+                                value={currentPublisher ?? ''}
+                                disabled={isSavingPublisher}
+                                onChange={(e) => savePublisherForTextbook(key, e.target.value as SolbookPublisher | '')}
+                                className="w-full bg-slate-900 border border-slate-600 rounded px-1.5 py-1 text-xs text-white disabled:opacity-50"
+                              >
+                                <option value="">없음</option>
+                                {SOLBOOK_PUBLISHERS.map((p) => (
+                                  <option key={p} value={p}>
+                                    {p}
+                                  </option>
+                                ))}
+                              </select>
+                              {isSavingPublisher && (
+                                <span className="text-[10px] text-slate-500 mt-0.5 block">저장 중…</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              {isSolbook ? (
+                                <>
+                                  <select
+                                    value={currentTextbookType ?? ''}
+                                    disabled={isSavingType}
+                                    onChange={(e) => saveTextbookTypeForTextbook(key, e.target.value as '교과서' | '부교재' | '')}
+                                    className="w-full bg-slate-900 border border-slate-600 rounded px-1.5 py-1 text-xs text-white disabled:opacity-50"
+                                  >
+                                    <option value="">미지정</option>
+                                    <option value="교과서">교과서</option>
+                                    <option value="부교재">부교재</option>
+                                  </select>
+                                  {isSavingType && (
+                                    <span className="text-[10px] text-slate-500 mt-0.5 block">저장 중…</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-[10px] text-slate-600">—</span>
                               )}
                             </td>
                             <td className="px-3 py-2 align-top">
@@ -624,11 +1117,23 @@ export default function AdminPassagesPage() {
                 </table>
               </div>
               <p className="text-slate-500 text-xs mt-2">
-                교재명은 passages에 저장된 문자열과 정확히 같아야 주문 화면에서 매칭됩니다.
+                교재명은 passages에 저장된 문자열과 정확히 같아야 주문 화면에서 매칭됩니다. 쏠북 출판사 변경 시 해당 교재의 모든 지문에 일괄 적용됩니다.
               </p>
             </div>
           )}
         </section>
+
+        {/* 쏠북 교재 구분 (교과서/부교재) 관리 패널 */}
+        <SolbookTypePanelSection
+          publisherByTextbook={publisherByTextbook}
+          textbookTypeByTextbook={textbookTypeByTextbook}
+          textbookTypeSavingKey={textbookTypeSavingKey}
+          onSave={saveTextbookTypeForTextbook}
+          msg={linkMsg}
+        />
+
+        {/* 교재 JSON 데이터 구조 패널 */}
+        <TextbookJsonPanel />
 
         {user && (
           <div className="mb-6">
@@ -710,6 +1215,7 @@ export default function AdminPassagesPage() {
                   <th className="px-3 py-3 font-medium w-24">강</th>
                   <th className="px-3 py-3 font-medium w-28">번호</th>
                   <th className="px-3 py-3 font-medium w-14">p.</th>
+                  <th className="px-3 py-3 font-medium w-20">출판사</th>
                   <th className="px-3 py-3 font-medium min-w-[128px]">폴더</th>
                   <th className="px-3 py-3 font-medium min-w-[200px]">원문 미리보기</th>
                   <th className="px-3 py-3 font-medium w-32 text-right">작업</th>
@@ -718,13 +1224,13 @@ export default function AdminPassagesPage() {
               <tbody>
                 {listLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
                       불러오는 중…
                     </td>
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
                       데이터가 없습니다. 필터를 바꾸거나 새 원문을 추가해 보세요.
                     </td>
                   </tr>
@@ -737,6 +1243,15 @@ export default function AdminPassagesPage() {
                       <td className="px-3 py-2 text-slate-300 align-top">{row.chapter}</td>
                       <td className="px-3 py-2 text-slate-300 align-top">{row.number}</td>
                       <td className="px-3 py-2 text-slate-400 align-top">{row.page ?? '—'}</td>
+                      <td className="px-3 py-2 align-top">
+                        {row.publisher ? (
+                          <span className="inline-block text-[11px] px-1.5 py-0.5 rounded bg-sky-900/50 text-sky-300 font-medium">
+                            {row.publisher}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 text-xs">—</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2 align-top">
                         <select
                           value={row.folder_id || ''}
@@ -882,6 +1397,24 @@ export default function AdminPassagesPage() {
                     onChange={(e) => setForm((f) => ({ ...f, order: e.target.value }))}
                     className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
                   />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">쏠북 출판사</label>
+                  <select
+                    value={form.publisher}
+                    onChange={(e) => setForm((f) => ({ ...f, publisher: e.target.value as SolbookPublisher | '' }))}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">없음 (쏠북 미포함)</option>
+                    {SOLBOOK_PUBLISHERS.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    선택하면 이 교재의 지문이 쏠북 업로드 대상 교재로 자동 포함됩니다.
+                  </p>
                 </div>
               </div>
               <div>

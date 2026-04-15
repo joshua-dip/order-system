@@ -2,8 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import Link from 'next/link';
 import { ESSAY_CATEGORIES } from '../data/essay-categories';
+import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
+import { isAnnualMemberActive } from '@/lib/annual-member';
+import { isMonthlyMemberActive } from '@/lib/premium-member';
 
 interface EssayTypeItem {
   id: string;
@@ -47,6 +51,8 @@ interface ListUser {
   points?: number;
   supplementaryNote?: string;
   annualMemberSince?: string | null;
+  monthlyMemberSince?: string | null;
+  monthlyMemberUntil?: string | null;
   isVip?: boolean;
   vipSince?: string | null;
   createdAt: string;
@@ -74,6 +80,9 @@ interface AdminOrder {
   orderNumber: string | null;
   fileUrl: string | null;
   dropboxFolderCreated?: boolean;
+  hasOrderMeta?: boolean;
+  /** orderMeta.flow (예: unifiedVariant, textbook 등) */
+  orderMetaFlow?: string | null;
   /** 상태「완료」 시 주문서에서 파싱·저장된 금액(원) */
   revenueWon?: number | null;
   /** 회원 주문 시 주문에 사용한 포인트(원). 0이면 미사용 */
@@ -83,6 +92,33 @@ interface AdminOrder {
   /** 포인트 사용 시 실입금액(추정). API 전용 */
   paymentDueWon?: number | null;
   completedAt?: string | null;
+}
+
+/** 주문번호 앞 2글자 접두어 (BV, MV …) */
+function orderNumberPrefix(orderNumber: string | null | undefined): string {
+  if (!orderNumber || orderNumber.trim().length < 2) return '—';
+  const m = orderNumber.trim().match(/^([A-Za-z]{2})/);
+  return m ? m[1].toUpperCase() : orderNumber.trim().slice(0, 2).toUpperCase();
+}
+
+function buildOrderAnalytics(list: AdminOrder[]) {
+  const byStatus: Record<string, number> = {};
+  const byFlow: Record<string, number> = {};
+  let completedRevenue = 0;
+  let pointsUsedTotal = 0;
+  for (const o of list) {
+    const s = o.status || 'pending';
+    byStatus[s] = (byStatus[s] || 0) + 1;
+    const flow = (o.orderMetaFlow && String(o.orderMetaFlow).trim()) || '—';
+    byFlow[flow] = (byFlow[flow] || 0) + 1;
+    if (s === 'completed' && typeof o.revenueWon === 'number' && o.revenueWon >= 0) {
+      completedRevenue += o.revenueWon;
+    }
+    const pu = o.pointsUsed ?? 0;
+    if (pu > 0) pointsUsedTotal += pu;
+  }
+  const flowEntries = Object.entries(byFlow).sort((a, b) => b[1] - a[1]);
+  return { byStatus, byFlow: flowEntries, completedRevenue, pointsUsedTotal, total: list.length };
 }
 
 const MESSAGE_PRESETS: { id: string; label: string; getMessage: (u: ListUser) => string }[] = [
@@ -115,6 +151,23 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: '취소됨',
 };
 
+/** orderMeta.flow → 관리자 화면용 짧은 한글 */
+const ORDER_FLOW_LABELS: Record<string, string> = {
+  bookVariant: '부교재 변형',
+  mockVariant: '모의고사 변형',
+  unifiedVariant: '파이널 예비 모의',
+  workbook: '워크북',
+  bookBundle: '통합(번들)',
+  numberBased: '번호별 교재',
+  vocabulary: '단어장',
+  '—': '미분류·구버전',
+};
+
+function orderFlowLabel(flow: string | null | undefined): string {
+  const f = flow != null && String(flow).trim() !== '' ? String(flow).trim() : '—';
+  return ORDER_FLOW_LABELS[f] ?? f;
+}
+
 const AVATAR_COLORS = [
   'from-[#00A9E0] to-[#0070b8]',
   'from-[#7c6ff7] to-[#5b52d4]',
@@ -136,16 +189,48 @@ function formatAdminFileSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+/** 주문 목록(다크) — 원형 표시 */
+const STATUS_DOT_CLASS: Record<string, string> = {
+  pending: 'border border-slate-500/90 text-slate-400 bg-slate-800/90',
+  accepted: 'border border-sky-500/60 text-sky-300 bg-sky-950/60',
+  payment_confirmed:
+    'border-2 border-emerald-400 text-emerald-200 bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.22)]',
+  in_progress: 'border border-amber-500/70 text-amber-200 bg-amber-950/50',
+  completed: 'border border-teal-400/80 text-teal-100 bg-teal-900/45',
+  cancelled: 'border border-slate-600 text-slate-500 bg-slate-800/80',
+};
+
+/** 주문 목록(다크) — 상태 글자색 (입금 확인은 주문 접수와 확실히 구분) */
+const STATUS_LABEL_TEXT_CLASS: Record<string, string> = {
+  pending: 'text-slate-400',
+  accepted: 'text-sky-300',
+  payment_confirmed: 'text-emerald-300 font-semibold',
+  in_progress: 'text-amber-200',
+  completed: 'text-teal-200',
+  cancelled: 'text-slate-500',
+};
+
+/** 모달·작은 뱃지용 pill (다크 배경 기준) */
 const STATUS_BADGE_CLASS: Record<string, string> = {
-  pending: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-blue-100 text-blue-800',
-  payment_confirmed: 'bg-indigo-100 text-indigo-800',
-  in_progress: 'bg-amber-100 text-amber-800',
-  completed: 'bg-emerald-100 text-emerald-800',
-  cancelled: 'bg-gray-100 text-gray-600',
+  pending: 'bg-slate-700/90 text-slate-300 ring-1 ring-slate-500/50',
+  accepted: 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-500/40',
+  payment_confirmed: 'bg-emerald-500/25 text-emerald-100 ring-1 ring-emerald-400/55 font-semibold',
+  in_progress: 'bg-amber-500/20 text-amber-100 ring-1 ring-amber-500/45',
+  completed: 'bg-teal-500/20 text-teal-50 ring-1 ring-teal-400/50',
+  cancelled: 'bg-slate-700 text-slate-500 ring-1 ring-slate-600',
 };
 
 type SectionType = 'dashboard' | 'orders' | 'members' | 'exams' | 'passageUpload' | 'settings' | 'essayTypes';
+
+type MemberSegmentFilter =
+  | 'all'
+  | 'annual_active'
+  | 'monthly_active'
+  | 'vip'
+  | 'dropbox_yes'
+  | 'dropbox_no';
+
+type MemberSortOrder = 'default' | 'orders_desc' | 'revenue_desc';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -154,7 +239,10 @@ export default function AdminDashboardPage() {
   const [section, setSection] = useState<SectionType>('dashboard');
 
   const [stats, setStats] = useState<{
+    /** 완료(status=completed) 주문만 loginId별 건수 */
     orderCountByLoginId: Record<string, number>;
+    /** 완료 주문만 loginId별 매출(원) */
+    revenueByLoginId?: Record<string, number>;
     lastOrderDateByLoginId?: Record<string, string>;
     newMembersThisMonth: number;
     newOrdersThisWeek: number;
@@ -186,6 +274,8 @@ export default function AdminDashboardPage() {
   const [editPointsAdd, setEditPointsAdd] = useState('');
   const [editSupplementaryNote, setEditSupplementaryNote] = useState('');
   const [editAnnualMemberSince, setEditAnnualMemberSince] = useState('');
+  const [editMonthlyMemberSince, setEditMonthlyMemberSince] = useState('');
+  const [editMonthlyMemberUntil, setEditMonthlyMemberUntil] = useState('');
   const [editIsVip, setEditIsVip] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editMessage, setEditMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -196,6 +286,9 @@ export default function AdminDashboardPage() {
   const messagePopoverRef = useRef<HTMLDivElement>(null);
   const [createDropboxFolderId, setCreateDropboxFolderId] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
+  /** 회원 목록: 전체·등급·드롭박스 연결 여부 */
+  const [memberSegmentFilter, setMemberSegmentFilter] = useState<MemberSegmentFilter>('all');
+  const [memberSortOrder, setMemberSortOrder] = useState<MemberSortOrder>('default');
   const [editingPathId, setEditingPathId] = useState<string | null>(null);
   const [editingPathValue, setEditingPathValue] = useState('');
   const [pathSavingId, setPathSavingId] = useState<string | null>(null);
@@ -238,6 +331,12 @@ export default function AdminDashboardPage() {
   const [defaultTextbooksList, setDefaultTextbooksList] = useState<string[]>([]);
   const [defaultTextbooksSelected, setDefaultTextbooksSelected] = useState<string[]>([]);
   const [defaultTextbooksSaving, setDefaultTextbooksSaving] = useState(false);
+
+  /** 변형문제 쏠북 교재(부교재 주문 /textbook) */
+  const [variantSolbookKeys, setVariantSolbookKeys] = useState<string[]>([]);
+  const [variantSolbookPurchaseUrl, setVariantSolbookPurchaseUrl] = useState('');
+  const [variantSolbookExtraFeeWon, setVariantSolbookExtraFeeWon] = useState(DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON);
+  const [variantSolbookSaving, setVariantSolbookSaving] = useState(false);
 
   const [annualSharedItems, setAnnualSharedItems] = useState<AdminAnnualSharedItem[]>([]);
   const [annualSharedLoading, setAnnualSharedLoading] = useState(false);
@@ -283,6 +382,11 @@ export default function AdminDashboardPage() {
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [orderSearch, setOrderSearch] = useState('');
   const [orderDetailModal, setOrderDetailModal] = useState<AdminOrder | null>(null);
+  /** 주문 관리 모달: 표에서 드롭박스 열 vs 상태 열 진입 구분 */
+  const [orderDetailTab, setOrderDetailTab] = useState<'dropbox' | 'status'>('status');
+  /** 주문 요약 열에서 「전문」 클릭 시 주문서 본문만 팝업 */
+  const [orderTextPreviewModal, setOrderTextPreviewModal] = useState<AdminOrder | null>(null);
+  const [orderTextPreviewCopied, setOrderTextPreviewCopied] = useState(false);
   const [fileUrlInput, setFileUrlInput] = useState('');
   const [statusInput, setStatusInput] = useState('');
   const [fileUrlSavingId, setFileUrlSavingId] = useState<string | null>(null);
@@ -291,6 +395,10 @@ export default function AdminDashboardPage() {
   const [assignSavingId, setAssignSavingId] = useState<string | null>(null);
   const [deleteSavingId, setDeleteSavingId] = useState<string | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  /** 최근 주문 표: 현재 표시 목록에서 다중 선택 후 일괄 삭제 */
+  const [orderBulkSelectedIds, setOrderBulkSelectedIds] = useState<Set<string>>(() => new Set());
+  const [bulkDeletingOrders, setBulkDeletingOrders] = useState(false);
+  const orderSelectAllRef = useRef<HTMLInputElement>(null);
   const [createOrderFolderId, setCreateOrderFolderId] = useState<string | null>(null);
   const [copiedLinkOrderId, setCopiedLinkOrderId] = useState<string | null>(null);
   const [copiedOrderNumberId, setCopiedOrderNumberId] = useState<string | null>(null);
@@ -328,7 +436,7 @@ export default function AdminDashboardPage() {
 
   const fetchOrders = useCallback(() => {
     setRecentOrdersLoading(true);
-    fetch('/api/admin/orders', { credentials: 'include' })
+    fetch('/api/admin/orders?limit=100', { credentials: 'include' })
       .then((r) => {
         if (!r.ok) return r.json().then((d) => { setDataError(d?.error || '주문 목록을 불러올 수 없습니다.'); return null; });
         return r.json();
@@ -356,6 +464,10 @@ export default function AdminDashboardPage() {
         if (d && d.orderCountByLoginId != null)
           setStats({
             orderCountByLoginId: d.orderCountByLoginId || {},
+            revenueByLoginId:
+              d.revenueByLoginId != null && typeof d.revenueByLoginId === 'object' && !Array.isArray(d.revenueByLoginId)
+                ? (d.revenueByLoginId as Record<string, number>)
+                : {},
             lastOrderDateByLoginId: d.lastOrderDateByLoginId || {},
             newMembersThisMonth: d.newMembersThisMonth ?? 0,
             newOrdersThisWeek: d.newOrdersThisWeek ?? 0,
@@ -449,6 +561,18 @@ export default function AdminDashboardPage() {
           .then((r) => r.json())
           .then((d) => setDefaultTextbooks(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []))
           .catch(() => setDefaultTextbooks([]));
+        fetch('/api/admin/settings/variant-solbook', { credentials: 'include', cache: 'no-store' })
+          .then((r) => r.json())
+          .then((d) => {
+            setVariantSolbookKeys(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []);
+            setVariantSolbookPurchaseUrl(typeof d?.purchaseUrl === 'string' ? d.purchaseUrl : '');
+            const fee =
+              typeof d?.extraFeeWon === 'number' && Number.isFinite(d.extraFeeWon) && d.extraFeeWon >= 0
+                ? Math.round(d.extraFeeWon)
+                : DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON;
+            setVariantSolbookExtraFeeWon(fee);
+          })
+          .catch(() => {});
       })
       .catch(() => router.replace('/admin/login'))
       .finally(() => setLoading(false));
@@ -534,6 +658,8 @@ export default function AdminDashboardPage() {
     setEditPointsAdd('');
     setEditSupplementaryNote(u.supplementaryNote ?? '');
     setEditAnnualMemberSince(u.annualMemberSince ?? '');
+    setEditMonthlyMemberSince(u.monthlyMemberSince ?? '');
+    setEditMonthlyMemberUntil(u.monthlyMemberUntil ?? '');
     setEditIsVip(!!u.isVip);
     setEditMessage(null);
   };
@@ -544,7 +670,20 @@ export default function AdminDashboardPage() {
     setEditMessage(null);
     setEditSaving(true);
     try {
-      const body: { name?: string; email?: string; phone?: string; dropboxFolderPath?: string; dropboxSharedLink?: string; myFormatApproved?: boolean; resetPassword?: boolean; addPoints?: number; supplementaryNote?: string; annualMemberSince?: string | null } = {};
+      const body: {
+        name?: string;
+        email?: string;
+        phone?: string;
+        dropboxFolderPath?: string;
+        dropboxSharedLink?: string;
+        myFormatApproved?: boolean;
+        resetPassword?: boolean;
+        addPoints?: number;
+        supplementaryNote?: string;
+        annualMemberSince?: string | null;
+        monthlyMemberSince?: string | null;
+        monthlyMemberUntil?: string | null;
+      } = {};
       if (editName !== editUser.name) body.name = editName;
       if (editEmail !== editUser.email) body.email = editEmail;
       const storedPhoneDigits = (editUser.phone ?? '').replace(/\D/g, '');
@@ -554,6 +693,12 @@ export default function AdminDashboardPage() {
       if (editMyFormatApproved !== !!editUser.myFormatApproved) body.myFormatApproved = editMyFormatApproved;
       if (editSupplementaryNote !== (editUser.supplementaryNote ?? '')) body.supplementaryNote = editSupplementaryNote;
       if (editAnnualMemberSince !== (editUser.annualMemberSince ?? '')) body.annualMemberSince = editAnnualMemberSince.trim() || null;
+      if (editMonthlyMemberSince !== (editUser.monthlyMemberSince ?? '')) {
+        body.monthlyMemberSince = editMonthlyMemberSince.trim() || null;
+      }
+      if (editMonthlyMemberUntil !== (editUser.monthlyMemberUntil ?? '')) {
+        body.monthlyMemberUntil = editMonthlyMemberUntil.trim() || null;
+      }
       if (editIsVip !== !!editUser.isVip) (body as Record<string, unknown>).isVip = editIsVip;
       if (editResetPassword) body.resetPassword = true;
       const addPointsNum = editPointsAdd.trim() !== '' ? parseInt(editPointsAdd.trim(), 10) : NaN;
@@ -624,6 +769,22 @@ export default function AdminDashboardPage() {
     }
   };
 
+  /** 주문 표: 1행 연월일 · 2행 시각 */
+  const formatOrderDateTwoLines = (d: string) => {
+    try {
+      const dt = new Date(d);
+      const dateLine = dt.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+      const timeLine = dt.toLocaleTimeString('ko-KR', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return { dateLine, timeLine };
+    } catch {
+      return { dateLine: d, timeLine: '' };
+    }
+  };
+
   const daysAgo = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / (24 * 60 * 60 * 1000));
     if (diff === 0) return '오늘';
@@ -639,6 +800,17 @@ export default function AdminDashboardPage() {
     end.setFullYear(end.getFullYear() + 1);
     const fmt = (d: Date) => d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/,'');
     return { label: `연회원 ~${fmt(end)}`, title: `유효기간: ${fmt(start)} ~ ${fmt(end)}` };
+  };
+
+  const listUserAnnualActive = (u: ListUser) => isAnnualMemberActive(u.annualMemberSince ?? null);
+  const listUserMonthlyActive = (u: ListUser) => isMonthlyMemberActive(u.monthlyMemberUntil ?? null);
+
+  const formatMonthlyMemberValidity = (until: string | null | undefined) => {
+    if (!until || until.trim() === '') return null;
+    const end = new Date(until);
+    if (Number.isNaN(end.getTime())) return null;
+    const fmt = (d: Date) => d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
+    return { label: `월구독 ~${fmt(end)}`, title: `만료: ${fmt(end)}` };
   };
 
   const handleResetPassword = async (userId: string) => {
@@ -803,6 +975,36 @@ export default function AdminDashboardPage() {
       alert('요청 중 오류가 발생했습니다.');
     } finally {
       setDefaultTextbooksSaving(false);
+    }
+  };
+
+  const saveVariantSolbookSettings = async () => {
+    setVariantSolbookSaving(true);
+    try {
+      const res = await fetch('/api/admin/settings/variant-solbook', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          purchaseUrl: variantSolbookPurchaseUrl.trim(),
+          extraFeeWon: variantSolbookExtraFeeWon,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setVariantSolbookKeys(Array.isArray(data.textbookKeys) ? data.textbookKeys : variantSolbookKeys);
+        setVariantSolbookPurchaseUrl(typeof data.purchaseUrl === 'string' ? data.purchaseUrl : variantSolbookPurchaseUrl);
+        if (typeof data.extraFeeWon === 'number' && Number.isFinite(data.extraFeeWon)) {
+          setVariantSolbookExtraFeeWon(Math.round(data.extraFeeWon));
+        }
+        alert('변형문제 쏠북 설정을 저장했습니다.');
+      } else {
+        alert((data?.error as string) || '저장에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setVariantSolbookSaving(false);
     }
   };
 
@@ -1360,8 +1562,9 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const openOrderDetail = (o: AdminOrder) => {
+  const openOrderDetail = (o: AdminOrder, tab: 'dropbox' | 'status' = 'status') => {
     setOrderDetailModal(o);
+    setOrderDetailTab(tab);
     setFileUrlInput(o.fileUrl ?? '');
     setStatusInput(o.status || 'pending');
     setAssignLoginId(users[0]?.loginId ?? '');
@@ -1491,6 +1694,7 @@ export default function AdminDashboardPage() {
         setRecentOrders((prev) => prev.filter((o) => o.id !== orderDetailModal.id));
         setUserOrders((prev) => prev.filter((o) => o.id !== orderDetailModal.id));
         setOrderDetailModal(null);
+        setOrderDetailTab('status');
       } else {
         alert(data?.error || '삭제에 실패했습니다.');
       }
@@ -1501,8 +1705,12 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleDeleteOrderById = async (orderId: string) => {
-    if (!confirm('이 주문을 목록에서 삭제할까요? 삭제 후에는 복구할 수 없습니다.')) return;
+  const handleDeleteOrderById = async (orderId: string, status: string = 'pending') => {
+    const isCancelled = (status || 'pending') === 'cancelled';
+    const confirmMsg = isCancelled
+      ? '이 주문을 목록에서 삭제할까요? 삭제 후에는 복구할 수 없습니다.'
+      : '이 주문은 취소 처리되지 않은 상태입니다.\n\n관리자 권한으로 DB에서 영구 삭제하면 복구할 수 없습니다. 삭제할까요?';
+    if (!confirm(confirmMsg)) return;
     setDeleteOrderId(orderId);
     try {
       const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE', credentials: 'include' });
@@ -1510,7 +1718,16 @@ export default function AdminDashboardPage() {
       if (res.ok && data.ok) {
         setRecentOrders((prev) => prev.filter((o) => o.id !== orderId));
         setUserOrders((prev) => prev.filter((o) => o.id !== orderId));
-        if (orderDetailModal?.id === orderId) setOrderDetailModal(null);
+        setOrderBulkSelectedIds((prev) => {
+          if (!prev.has(orderId)) return prev;
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
+        if (orderDetailModal?.id === orderId) {
+          setOrderDetailModal(null);
+          setOrderDetailTab('status');
+        }
       } else {
         alert(data?.error || '삭제에 실패했습니다.');
       }
@@ -1518,6 +1735,59 @@ export default function AdminDashboardPage() {
       alert('요청 중 오류가 발생했습니다.');
     } finally {
       setDeleteOrderId(null);
+    }
+  };
+
+  const handleBulkDeleteOrders = async () => {
+    const ids = Array.from(orderBulkSelectedIds);
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    const rows = recentOrders.filter((o) => idSet.has(o.id));
+    const nonCancelled = rows.filter((o) => (o.status || 'pending') !== 'cancelled').length;
+    const tail =
+      nonCancelled > 0
+        ? `\n\n취소되지 않은 주문 ${nonCancelled}건이 포함되어 있습니다.`
+        : '';
+    if (!confirm(`선택한 ${ids.length}건을 DB에서 영구 삭제할까요? 복구할 수 없습니다.${tail}`)) return;
+
+    setBulkDeletingOrders(true);
+    const succeeded: string[] = [];
+    const failed: string[] = [];
+    try {
+      const results = await Promise.allSettled(
+        ids.map((id) =>
+          fetch(`/api/orders/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data?.ok) throw new Error(typeof data?.error === 'string' ? data.error : 'fail');
+            return id;
+          })
+        )
+      );
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') succeeded.push(ids[i]);
+        else failed.push(ids[i]);
+      });
+      if (succeeded.length > 0) {
+        const ok = new Set(succeeded);
+        setRecentOrders((prev) => prev.filter((o) => !ok.has(o.id)));
+        setUserOrders((prev) => prev.filter((o) => !ok.has(o.id)));
+        setOrderBulkSelectedIds((prev) => {
+          const next = new Set(prev);
+          succeeded.forEach((id) => next.delete(id));
+          return next;
+        });
+        if (orderDetailModal && ok.has(orderDetailModal.id)) {
+          setOrderDetailModal(null);
+          setOrderDetailTab('status');
+        }
+      }
+      if (failed.length > 0) {
+        alert(`삭제에 실패한 주문이 ${failed.length}건 있습니다. 나머지는 삭제되었을 수 있습니다.`);
+      }
+    } catch {
+      alert('일괄 삭제 요청 중 오류가 발생했습니다.');
+    } finally {
+      setBulkDeletingOrders(false);
     }
   };
 
@@ -1749,11 +2019,43 @@ export default function AdminDashboardPage() {
     if (!q) return true;
     const num = (o.orderNumber ?? '').toLowerCase();
     const lid = (o.loginId ?? '').toLowerCase();
-    return num.includes(q) || lid.includes(q);
+    const text = (o.orderText ?? '').toLowerCase().slice(0, 800);
+    return num.includes(q) || lid.includes(q) || text.includes(q);
   });
 
   const displayOrders = section === 'dashboard' ? recentOrders.slice(0, 8) : filteredOrders;
-  const orderCountFor = (loginIdKey: string) => stats?.orderCountByLoginId?.[loginIdKey] ?? 0;
+  const displayOrderIdsKey = displayOrders.map((o) => o.id).join('|');
+
+  useEffect(() => {
+    const visible =
+      displayOrderIdsKey === '' ? new Set<string>() : new Set(displayOrderIdsKey.split('|'));
+    setOrderBulkSelectedIds((prev) => {
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (visible.has(id)) next.add(id);
+      }
+      if (next.size === prev.size) {
+        for (const id of prev) {
+          if (!next.has(id)) return next;
+        }
+        return prev;
+      }
+      return next;
+    });
+  }, [displayOrderIdsKey]);
+
+  const allVisibleOrdersSelected =
+    displayOrders.length > 0 && displayOrders.every((o) => orderBulkSelectedIds.has(o.id));
+  const someVisibleOrdersSelected = displayOrders.some((o) => orderBulkSelectedIds.has(o.id));
+
+  useEffect(() => {
+    const el = orderSelectAllRef.current;
+    if (el) el.indeterminate = someVisibleOrdersSelected && !allVisibleOrdersSelected;
+  }, [someVisibleOrdersSelected, allVisibleOrdersSelected]);
+
+  const orderAnalytics = buildOrderAnalytics(displayOrders);
+  const completedOrderCountFor = (loginIdKey: string) => stats?.orderCountByLoginId?.[loginIdKey] ?? 0;
+  const completedOrderRevenueFor = (loginIdKey: string) => stats?.revenueByLoginId?.[loginIdKey] ?? 0;
   const lastOrderDateFor = (loginIdKey: string) => stats?.lastOrderDateByLoginId?.[loginIdKey] ?? null;
 
   const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }).replace(/\. /g, '.').replace('.', ' ');
@@ -1989,7 +2291,7 @@ export default function AdminDashboardPage() {
               <p className="text-slate-500 text-xs mt-1">
                 누적(완료) <span className="text-slate-400 tabular-nums">{typeof stats?.revenueTotal === 'number' ? `${stats.revenueTotal.toLocaleString()}원` : '—'}</span>
                 <span className="block text-slate-600 mt-0.5">
-                  이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱 · VAT 별도
+                  이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱
                 </span>
               </p>
             </button>
@@ -2039,7 +2341,18 @@ export default function AdminDashboardPage() {
           <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden mb-8">
             <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3 flex-wrap">
               <h2 className="font-bold text-lg text-white">최근 주문 요청</h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                {orderBulkSelectedIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void handleBulkDeleteOrders()}
+                    disabled={bulkDeletingOrders || !!deleteOrderId}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-800/70 bg-red-950/50 text-red-200 hover:bg-red-900/50 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="체크한 주문만 일괄 영구 삭제"
+                  >
+                    {bulkDeletingOrders ? '삭제 중…' : `선택 삭제 (${orderBulkSelectedIds.size})`}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -2087,21 +2400,118 @@ export default function AdminDashboardPage() {
                 </ul>
               </div>
             )}
+            {section === 'orders' && recentOrders.length > 0 && (
+              <div className="px-5 py-3 border-b border-slate-700 flex flex-wrap items-center gap-3 bg-slate-800/80">
+                <div className="flex rounded-lg overflow-hidden bg-slate-700">
+                  {(['all', 'pending', 'completed'] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setOrderFilter(f)}
+                      className={`px-4 py-2 text-sm font-medium ${orderFilter === f ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      {f === 'all' ? '전체' : f === 'pending' ? '미처리' : '완료'}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="주문번호·아이디·주문내용 검색"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 w-56 max-w-full focus:ring-2 focus:ring-slate-500"
+                />
+              </div>
+            )}
+            {!recentOrdersLoading && displayOrders.length > 0 && (
+              <div className="px-5 py-3 border-b border-slate-700 bg-slate-900/50">
+                <p className="text-xs font-semibold text-slate-400 mb-2">목록 기준 요약 (현재 표시 {orderAnalytics.total}건)</p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {(['pending', 'accepted', 'payment_confirmed', 'in_progress', 'completed', 'cancelled'] as const).map((st) => {
+                    const n = orderAnalytics.byStatus[st] ?? 0;
+                    if (n === 0) return null;
+                    const lab = STATUS_LABELS[st] || st;
+                    return (
+                      <span key={st} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-[11px] text-slate-300 border border-slate-600">
+                        <span className="text-slate-500">{lab}</span>
+                        <span className="font-mono text-cyan-300">{n}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
+                  <span>
+                    완료 건 매출 합계:{' '}
+                    <strong className="text-emerald-300 tabular-nums">{orderAnalytics.completedRevenue.toLocaleString()}원</strong>
+                    <span className="text-slate-600"> (표시 목록 중 status=완료)</span>
+                  </span>
+                  {orderAnalytics.pointsUsedTotal > 0 ? (
+                    <span>
+                      표시 목록 포인트 사용 합:{' '}
+                      <strong className="text-sky-300 tabular-nums">{orderAnalytics.pointsUsedTotal.toLocaleString()}P</strong>
+                    </span>
+                  ) : null}
+                </div>
+                {orderAnalytics.byFlow.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-700/80">
+                    <p className="text-[11px] text-slate-400 font-medium">주문 플로우</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">표시 목록 기준 건수 · 원문 코드는 칩에 마우스를 올리면 표시</p>
+                    <div className="flex flex-wrap gap-2 mt-1.5">
+                      {orderAnalytics.byFlow.map(([flow, cnt]) => (
+                        <span
+                          key={flow}
+                          title={flow === '—' ? 'flow 미지정' : `orderMeta.flow = ${flow}`}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-800/95 text-[11px] border border-slate-600/90"
+                        >
+                          <span className="text-slate-100 font-medium">{orderFlowLabel(flow === '—' ? null : flow)}</span>
+                          <span className="text-fuchsia-300 tabular-nums font-semibold">{cnt}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {recentOrdersLoading ? (
               <div className="p-8 text-center text-slate-500">불러오는 중…</div>
             ) : displayOrders.length === 0 ? (
               <div className="p-8 text-center text-slate-500">주문이 없습니다.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-700 text-slate-400">
-                      <th className="text-left py-3 px-5">주문번호</th>
-                      <th className="text-left py-3 px-5">회원</th>
-                      <th className="text-left py-3 px-5">주문 내용</th>
-                      <th className="text-left py-3 px-5">금액</th>
-                      <th className="text-left py-3 px-5">상태</th>
-                      <th className="text-left py-3 px-5">드롭박스</th>
+                <table className="w-full text-sm min-w-[960px]">
+                  <thead className="sticky top-0 z-[1] bg-slate-800 shadow-sm">
+                    <tr className="border-b border-slate-700 text-slate-400 text-xs">
+                      <th className="w-10 py-3 px-2 text-center align-middle">
+                        <input
+                          ref={orderSelectAllRef}
+                          type="checkbox"
+                          checked={allVisibleOrdersSelected}
+                          onChange={() => {
+                            setOrderBulkSelectedIds(() => {
+                              if (displayOrders.length === 0) return new Set();
+                              if (allVisibleOrdersSelected) return new Set();
+                              return new Set(displayOrders.map((o) => o.id));
+                            });
+                          }}
+                          disabled={!!deleteOrderId || bulkDeletingOrders}
+                          className="h-3.5 w-3.5 rounded border-slate-500 text-cyan-600 focus:ring-cyan-500/40"
+                          title="현재 표에 보이는 주문만 전체 선택/해제"
+                          aria-label="현재 목록 주문 전체 선택"
+                        />
+                      </th>
+                      <th className="text-left py-3 px-3 min-w-[7.25rem]">접수일시</th>
+                      <th className="text-left py-3 px-2 min-w-[6.5rem]">
+                        <span className="block">유형</span>
+                        <span className="block text-[10px] font-normal text-slate-500 mt-0.5">접두 · 플로우</span>
+                      </th>
+                      <th className="text-left py-3 px-3 min-w-[8.5rem]">주문번호</th>
+                      <th className="text-left py-3 px-3 min-w-[6rem]">회원</th>
+                      <th className="text-left py-3 px-3 min-w-[12rem] max-w-[28rem] w-[22%]">주문 요약</th>
+                      <th className="text-right py-3 px-2 whitespace-nowrap w-[4rem]">포인트</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap w-[5.5rem]">금액</th>
+                      <th className="text-left py-3 px-2 min-w-[5.5rem]">상태</th>
+                      <th className="text-left py-3 px-2 min-w-[7.25rem]">완료일</th>
+                      <th className="text-left py-3 px-2 min-w-[11rem]">드롭박스</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2128,8 +2538,55 @@ export default function AdminDashboardPage() {
                         return chunks.join(' · ');
                       })();
                       return (
-                      <tr key={o.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                        <td className="py-3 px-5">
+                      <tr key={o.id} className="border-b border-slate-700/50 hover:bg-slate-700/40 align-top text-xs group/row">
+                        <td className="py-2.5 px-2 align-middle text-center w-10">
+                          <input
+                            type="checkbox"
+                            checked={orderBulkSelectedIds.has(o.id)}
+                            onChange={() => {
+                              setOrderBulkSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(o.id)) next.delete(o.id);
+                                else next.add(o.id);
+                                return next;
+                              });
+                            }}
+                            disabled={!!deleteOrderId || bulkDeletingOrders}
+                            className="h-3.5 w-3.5 rounded border-slate-500 text-cyan-600 focus:ring-cyan-500/40"
+                            aria-label={`주문 ${o.orderNumber ?? o.id} 일괄 삭제 대상에 포함`}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                        <td
+                          className="py-2.5 px-3 text-slate-400 align-top leading-snug"
+                          title={formatDateTime(o.createdAt)}
+                        >
+                          {(() => {
+                            const { dateLine, timeLine } = formatOrderDateTwoLines(o.createdAt);
+                            return (
+                              <>
+                                <span className="block text-slate-300 text-[11px]">{dateLine}</span>
+                                <span className="block text-slate-500 text-[10px] tabular-nums mt-0.5">{timeLine}</span>
+                              </>
+                            );
+                          })()}
+                        </td>
+                        <td className="py-2.5 px-2 align-top" title={o.orderMetaFlow ? `flow: ${o.orderMetaFlow}` : undefined}>
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <span className="inline-flex items-center justify-center w-9 font-mono text-[11px] font-bold text-cyan-200 bg-cyan-950/50 border border-cyan-800/60 rounded-md py-0.5 px-1 tabular-nums shrink-0">
+                              {orderNumberPrefix(o.orderNumber)}
+                            </span>
+                            <span className="text-[11px] text-slate-200 font-medium leading-snug">
+                              {orderFlowLabel(o.orderMetaFlow)}
+                            </span>
+                            {o.orderMetaFlow && !ORDER_FLOW_LABELS[o.orderMetaFlow] ? (
+                              <span className="text-[9px] text-amber-200/85 font-mono truncate" title="라벨 미등록 플로우">
+                                {o.orderMetaFlow}
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 align-top">
                           <div className="flex items-center gap-1.5 min-w-0">
                             {o.orderNumber ? (
                               <button
@@ -2189,21 +2646,51 @@ export default function AdminDashboardPage() {
                             </a>
                           </div>
                         </td>
-                        <td className="py-3 px-5 text-slate-300">
+                        <td className="py-2.5 px-3 text-slate-300 align-top">
                           {o.loginId ? (
                             <>
                               <span className="text-white font-medium">{member?.name ?? '—'}</span>
-                              <span className="text-slate-500 text-xs ml-1">({o.loginId})</span>
+                              <span className="text-slate-500 text-[11px] ml-1">({o.loginId})</span>
                             </>
                           ) : (
                             '비회원'
                           )}
                         </td>
-                        <td className="py-3 px-5 text-slate-400 max-w-[200px] truncate" title={o.orderText?.slice(0, 200)}>
-                          {o.orderText?.replace(/\s+/g, ' ').slice(0, 40) || '—'}
-                          {(o.orderText?.length ?? 0) > 40 ? '…' : ''}
+                        <td className="py-2.5 px-3 text-slate-400 align-top min-w-0">
+                          <div className="flex items-start gap-2 min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (o.orderText?.trim()) setOrderTextPreviewModal(o);
+                              }}
+                              disabled={!o.orderText?.trim()}
+                              className="line-clamp-3 break-words text-[11px] leading-relaxed flex-1 min-w-0 text-left rounded-md -m-0.5 p-0.5 hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                              title={o.orderText?.trim() ? '클릭하면 주문 전문 팝업' : '주문 본문 없음'}
+                            >
+                              {o.orderText?.replace(/\s+/g, ' ').trim().slice(0, 280) || '—'}
+                              {o.orderText && o.orderText.length > 280 ? '…' : ''}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (o.orderText?.trim()) setOrderTextPreviewModal(o);
+                                else openOrderDetail(o);
+                              }}
+                              className="shrink-0 mt-0.5 px-1.5 py-0.5 rounded border border-slate-500/80 text-[10px] text-slate-300 hover:bg-slate-600/80 hover:text-white"
+                              title={o.orderText?.trim() ? '주문 전문 팝업' : '주문 관리(링크·상태)'}
+                            >
+                              전문
+                            </button>
+                          </div>
                         </td>
-                        <td className="py-3 px-5 text-slate-300 tabular-nums text-xs align-top" title={amountTitle}>
+                        <td className="py-2.5 px-2 text-right text-slate-400 tabular-nums whitespace-nowrap align-top">
+                          {(o.pointsUsed ?? 0) > 0 ? (
+                            <span className="text-sky-300/90">{(o.pointsUsed ?? 0).toLocaleString()}</span>
+                          ) : (
+                            <span className="text-slate-600">—</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-2 text-slate-300 tabular-nums text-xs align-top" title={amountTitle}>
                           {orderCompleted ? (
                             o.revenueWon != null && o.revenueWon >= 0 ? (
                               pointsUsedOnOrder > 0 ? (
@@ -2237,29 +2724,64 @@ export default function AdminDashboardPage() {
                             <span className="text-slate-600">—</span>
                           )}
                         </td>
-                        <td className="py-3 px-5">
-                          {(o.status || 'pending') === 'cancelled' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteOrderById(o.id)}
-                              disabled={!!deleteOrderId}
-                              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-red-400 text-xs disabled:opacity-50 cursor-pointer"
-                              title="클릭하면 주문 삭제"
-                            >
-                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${STATUS_BADGE_CLASS.cancelled}`}>○</span>
-                              {deleteOrderId === o.id ? '삭제 중…' : '취소됨'}
-                            </button>
+                        <td className="py-2.5 px-2 align-top">
+                          <div className="flex flex-col items-start gap-1.5">
+                            {(o.status || 'pending') === 'cancelled' ? (
+                              <div className="inline-flex items-center gap-1.5 text-slate-400 text-xs" title="취소된 주문">
+                                <span
+                                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${STATUS_DOT_CLASS.cancelled}`}
+                                >
+                                  ○
+                                </span>
+                                <span className="text-slate-400">취소됨</span>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="inline-flex items-center">
+                                  <span
+                                    className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0 ${STATUS_DOT_CLASS[o.status || 'pending'] || STATUS_DOT_CLASS.pending}`}
+                                    title={o.statusLabel}
+                                  >
+                                    {o.statusLabel === '완료' ? '✓' : o.statusLabel === '제작 중' ? '◐' : '○'}
+                                  </span>
+                                  <span
+                                    className={`ml-1.5 text-xs ${STATUS_LABEL_TEXT_CLASS[o.status || 'pending'] || 'text-slate-300'}`}
+                                  >
+                                    {o.statusLabel}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => openOrderDetail(o, 'status')}
+                                  className="inline-flex items-center justify-center px-2 py-1 rounded-md border border-slate-500/80 hover:bg-slate-600 text-slate-200 text-[10px] font-semibold"
+                                  title="주문 상태 변경"
+                                >
+                                  상태
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td
+                          className="py-2.5 px-2 text-slate-500 align-top leading-snug"
+                          title={o.completedAt ? formatDateTime(o.completedAt) : ''}
+                        >
+                          {o.completedAt ? (
+                            (() => {
+                              const { dateLine, timeLine } = formatOrderDateTwoLines(o.completedAt);
+                              return (
+                                <>
+                                  <span className="block text-slate-400 text-[11px]">{dateLine}</span>
+                                  <span className="block text-slate-500 text-[10px] tabular-nums mt-0.5">{timeLine}</span>
+                                </>
+                              );
+                            })()
                           ) : (
-                            <>
-                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || 'bg-gray-100 text-gray-700'}`} title={o.statusLabel}>
-                                {o.statusLabel === '완료' ? '✓' : o.statusLabel === '제작 중' ? '◐' : '○'}
-                              </span>
-                              <span className="ml-1.5 text-slate-300 text-xs">{o.statusLabel}</span>
-                            </>
+                            <span className="text-slate-600">—</span>
                           )}
                         </td>
-                        <td className="py-3 px-5">
-                          <div className="flex flex-wrap items-center gap-2">
+                        <td className="py-2.5 px-2 align-top">
+                          <div className="inline-flex flex-row flex-wrap items-center gap-1">
                             {o.fileUrl ? (
                               <button
                                 type="button"
@@ -2273,75 +2795,55 @@ export default function AdminDashboardPage() {
                                     setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
                                   }
                                 }}
-                                className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs font-medium cursor-pointer"
-                                title="클릭하면 링크 복사"
+                                className="inline-flex items-center justify-center gap-0.5 px-2 py-1 rounded-md bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50 text-[10px] font-semibold cursor-pointer border border-emerald-800/50"
+                                title="공유 링크 복사"
                               >
-                                {copiedLinkOrderId === o.id ? '✓ 복사됨' : '√ 링크 완료'}
+                                {copiedLinkOrderId === o.id ? '복사됨' : '링크'}
                               </button>
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => openOrderDetail(o)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-600 hover:bg-slate-500 text-slate-200 text-xs font-medium"
+                                onClick={() => openOrderDetail(o, 'dropbox')}
+                                className="inline-flex items-center justify-center px-2 py-1 rounded-md bg-slate-600 hover:bg-slate-500 text-slate-100 text-[10px] font-semibold"
+                                title="드롭박스 공유 링크 등록·수정"
                               >
-                                🔗 링크 등록
+                                링크
                               </button>
                             )}
                             {o.fileUrl ? (
-                              <a href={o.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-medium" title="드롭박스 폴더 열기">
-                                📁 폴더 보기
+                              <a
+                                href={o.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center px-2 py-1 rounded-md border border-cyan-600/50 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-200 text-[10px] font-semibold"
+                                title="드롭박스에서 폴더 열기"
+                              >
+                                폴더
                               </a>
                             ) : o.dropboxFolderCreated ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-500 text-xs font-medium" title="폴더 생성됨 · 링크 등록 시 폴더 보기 가능">
-                                ✓ 폴더 생성됨
+                              <span
+                                className="inline-flex items-center justify-center px-2 py-1 text-slate-500 text-[10px] font-medium border border-slate-600/50 rounded-md"
+                                title="폴더 생성됨 · 링크 등록 후 폴더 열기"
+                              >
+                                폴더✓
                               </span>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => handleCreateOrderFolder(o.id)}
                                 disabled={!!createOrderFolderId}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-500 hover:bg-slate-600 text-slate-300 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="주문번호로 Dropbox 폴더 생성"
+                                className="inline-flex items-center justify-center px-2 py-1 rounded-md border border-slate-500 hover:bg-slate-600 text-slate-200 text-[10px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Dropbox 폴더 생성"
                               >
-                                {createOrderFolderId === o.id ? '생성 중…' : '📁 폴더 만들기'}
+                                {createOrderFolderId === o.id ? '…' : '생성'}
                               </button>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => openOrderDetail(o)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-500 hover:bg-slate-600 text-slate-300 text-xs font-medium"
-                            >
-                              상태 변경
-                            </button>
                           </div>
                         </td>
                       </tr>
                     );})}
                   </tbody>
                 </table>
-              </div>
-            )}
-            {section === 'orders' && recentOrders.length > 0 && (
-              <div className="px-5 py-3 border-t border-slate-700 flex flex-wrap items-center gap-3">
-                <div className="flex rounded-lg overflow-hidden bg-slate-700">
-                  {(['all', 'pending', 'completed'] as const).map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setOrderFilter(f)}
-                      className={`px-4 py-2 text-sm font-medium ${orderFilter === f ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      {f === 'all' ? '전체' : f === 'pending' ? '미처리' : '완료'}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  placeholder="주문번호·아이디 검색"
-                  value={orderSearch}
-                  onChange={(e) => setOrderSearch(e.target.value)}
-                  className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 w-48 focus:ring-2 focus:ring-slate-500"
-                />
               </div>
             )}
           </div>
@@ -2604,6 +3106,72 @@ export default function AdminDashboardPage() {
                     </button>
                   </div>
                 </div>
+
+                <div className="border border-violet-700/50 rounded-xl p-4 bg-violet-950/20">
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p className="font-semibold text-white">변형문제 쏠북 교재</p>
+                      <p className="text-slate-400 text-sm mt-1">
+                        부교재 변형 주문(/textbook)에서 「쏠북」 섹션에만 노출됩니다. 선택 시 주문 금액에 추가 요금이 붙고 주문서에 구매·입금 안내가 추가됩니다.
+                      </p>
+                      <div className="mt-2 p-2.5 bg-slate-800/60 border border-slate-600 rounded-lg">
+                        <p className="text-slate-400 text-xs mb-1.5 font-medium">
+                          자동 집계 — 원문 관리에서 출판사(YBM·쎄듀·NE능률)가 설정된 교재
+                        </p>
+                        {variantSolbookKeys.length === 0 ? (
+                          <p className="text-slate-500 text-xs italic">지정된 교재 없음 (원문 관리 → 출판사 설정)</p>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {variantSolbookKeys.map((k) => (
+                              <span key={k} className="inline-block px-2 py-0.5 rounded-full bg-violet-900/60 text-violet-300 text-xs border border-violet-700/50">
+                                {k}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-slate-500 text-[11px] mt-1.5">
+                        교재 추가·제거는 <a href="/admin/passages" className="text-violet-400 underline">원문 관리</a>에서 각 지문의 출판사를 설정하면 자동 반영됩니다.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-xs font-medium mb-1">쏠북 구매 안내 URL (선택)</label>
+                      <input
+                        type="url"
+                        value={variantSolbookPurchaseUrl}
+                        onChange={(e) => setVariantSolbookPurchaseUrl(e.target.value)}
+                        placeholder="https://…"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm outline-none focus:border-violet-500"
+                      />
+                      <p className="text-slate-500 text-[11px] mt-1">비우면 주문서에는 별도 안내 문구로 표시됩니다.</p>
+                    </div>
+                    <div className="max-w-xs">
+                      <label className="block text-slate-400 text-xs font-medium mb-1">쏠북 추가 요금 (원)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={100}
+                        value={variantSolbookExtraFeeWon}
+                        onChange={(e) => {
+                          const n = Math.round(Number(e.target.value));
+                          setVariantSolbookExtraFeeWon(
+                            Number.isFinite(n) && n >= 0 ? n : DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON
+                          );
+                        }}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm outline-none focus:border-violet-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={saveVariantSolbookSettings}
+                      disabled={variantSolbookSaving}
+                      className="self-start px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-semibold hover:bg-violet-500 disabled:opacity-50"
+                    >
+                      {variantSolbookSaving ? '저장 중…' : '설정 저장'}
+                    </button>
+                  </div>
+                </div>
+
                 <div className="border border-slate-600 rounded-xl p-4 bg-slate-700/30">
                   <p className="font-semibold text-slate-300">분석지 · 서술형</p>
                   <p className="text-slate-500 text-sm mt-1">회원별로 허용된 교재는 회원 관리에서 각 회원의 「교재 선택하기」로 설정합니다. 관리자가 허용한 메뉴와 교재만 해당 회원에게 노출됩니다.</p>
@@ -2843,7 +3411,7 @@ export default function AdminDashboardPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between gap-4 flex-wrap mb-5">
               <h2 className="text-lg font-bold text-white tracking-tight">회원 관리</h2>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none">🔍</span>
                   <input
@@ -2854,6 +3422,33 @@ export default function AdminDashboardPage() {
                     className="pl-9 pr-3 py-2 w-48 bg-[#1a1d27] border border-[#2e3248] rounded-lg text-slate-200 text-sm outline-none focus:border-cyan-500"
                   />
                 </div>
+                <label className="flex items-center gap-2 text-slate-400 text-xs shrink-0">
+                  <span className="hidden sm:inline">구분</span>
+                  <select
+                    value={memberSegmentFilter}
+                    onChange={(e) => setMemberSegmentFilter(e.target.value as MemberSegmentFilter)}
+                    className="py-2 px-3 bg-[#1a1d27] border border-[#2e3248] rounded-lg text-slate-200 text-sm outline-none focus:border-cyan-500 min-w-[10.5rem]"
+                  >
+                    <option value="all">전체 회원</option>
+                    <option value="annual_active">유효 연회원</option>
+                    <option value="monthly_active">유효 월구독</option>
+                    <option value="vip">VIP</option>
+                    <option value="dropbox_yes">드롭박스 연결</option>
+                    <option value="dropbox_no">드롭박스 미설정</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-2 text-slate-400 text-xs shrink-0">
+                  <span className="hidden sm:inline">정렬</span>
+                  <select
+                    value={memberSortOrder}
+                    onChange={(e) => setMemberSortOrder(e.target.value as MemberSortOrder)}
+                    className="py-2 px-3 bg-[#1a1d27] border border-[#2e3248] rounded-lg text-slate-200 text-sm outline-none focus:border-cyan-500 min-w-[9rem]"
+                  >
+                    <option value="default">아이디순</option>
+                    <option value="orders_desc">완료 주문 건수순</option>
+                    <option value="revenue_desc">완료 주문 금액순</option>
+                  </select>
+                </label>
                 <button type="button" onClick={() => document.getElementById('quick-create')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-[#00A9E0] text-white border-0 rounded-lg text-sm font-semibold hover:opacity-90">
                   ＋ 계정 추가
                 </button>
@@ -2938,17 +3533,63 @@ export default function AdminDashboardPage() {
               </div>
             )}
             {!usersLoading && users.length > 0 && (
-              <div className="flex gap-2.5 mb-5 flex-wrap">
-                {[
-                  { label: `전체 ${users.length}명`, color: 'bg-[#00A9E0]' },
-                  { label: `드롭박스 연결 ${users.filter((u) => u.dropboxFolderPath?.trim()).length}명`, color: 'bg-[#22c55e]' },
-                  { label: `미설정 ${users.filter((u) => !u.dropboxFolderPath?.trim()).length}명`, color: 'bg-[#f59e0b]' },
-                ].map(({ label, color }) => (
-                  <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-[#2e3248] bg-[#1a1d27] text-slate-400">
-                    <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
-                    {label}
-                  </span>
-                ))}
+              <div className="space-y-2.5 mb-5">
+                <div className="flex gap-2.5 flex-wrap items-center">
+                  {[
+                    { id: 'all' as const, short: '전체', count: users.length, color: 'bg-[#00A9E0]' },
+                    { id: 'annual_active' as const, short: '연회원(유효)', count: users.filter((u) => listUserAnnualActive(u)).length, color: 'bg-violet-500' },
+                    { id: 'monthly_active' as const, short: '월구독(유효)', count: users.filter((u) => listUserMonthlyActive(u)).length, color: 'bg-fuchsia-500' },
+                    { id: 'vip' as const, short: 'VIP', count: users.filter((u) => u.isVip).length, color: 'bg-amber-500' },
+                    { id: 'dropbox_yes' as const, short: '드롭박스 연결', count: users.filter((u) => u.dropboxFolderPath?.trim()).length, color: 'bg-[#22c55e]' },
+                    { id: 'dropbox_no' as const, short: '미설정', count: users.filter((u) => !u.dropboxFolderPath?.trim()).length, color: 'bg-[#f59e0b]' },
+                  ].map(({ id, short, count, color }) => {
+                    const active = memberSegmentFilter === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setMemberSegmentFilter(id)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                          active
+                            ? 'border-cyan-500/55 bg-cyan-500/12 text-slate-100 ring-1 ring-cyan-500/35'
+                            : 'border-[#2e3248] bg-[#1a1d27] text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${color}`} />
+                        {short} {count}명
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2 flex-wrap items-center">
+                  <span className="text-slate-500 text-[11px] font-medium shrink-0">정렬</span>
+                  {(
+                    [
+                      { id: 'default' as const, label: '아이디순' },
+                      { id: 'orders_desc' as const, label: '완료 건수순' },
+                      { id: 'revenue_desc' as const, label: '완료 금액순' },
+                    ] as const
+                  ).map(({ id, label }) => {
+                    const active = memberSortOrder === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setMemberSortOrder(id)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                          active
+                            ? 'border-amber-500/50 bg-amber-500/10 text-amber-100 ring-1 ring-amber-500/30'
+                            : 'border-[#2e3248] bg-[#1a1d27] text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${id === 'default' ? 'bg-slate-400' : id === 'orders_desc' ? 'bg-cyan-400' : 'bg-emerald-400'}`}
+                        />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
             {usersLoading ? (
@@ -2956,7 +3597,7 @@ export default function AdminDashboardPage() {
             ) : (() => {
               const qRaw = memberSearch.trim().toLowerCase();
               const qDigits = qRaw.replace(/\D/g, '');
-              const filtered = qRaw
+              const bySearch = qRaw
                 ? users.filter((u) => {
                     const login = (u.loginId || '').toLowerCase();
                     const name = (u.name || '').toLowerCase();
@@ -2970,12 +3611,50 @@ export default function AdminDashboardPage() {
                     );
                   })
                 : users;
-              if (filtered.length === 0) {
-                return <div className="py-16 text-center text-slate-500">{qRaw ? '검색 결과가 없습니다' : '등록된 회원이 없습니다.'}</div>;
+              let filtered = bySearch;
+              switch (memberSegmentFilter) {
+                case 'annual_active':
+                  filtered = bySearch.filter((u) => listUserAnnualActive(u));
+                  break;
+                case 'monthly_active':
+                  filtered = bySearch.filter((u) => listUserMonthlyActive(u));
+                  break;
+                case 'vip':
+                  filtered = bySearch.filter((u) => !!u.isVip);
+                  break;
+                case 'dropbox_yes':
+                  filtered = bySearch.filter((u) => !!u.dropboxFolderPath?.trim());
+                  break;
+                case 'dropbox_no':
+                  filtered = bySearch.filter((u) => !u.dropboxFolderPath?.trim());
+                  break;
+                default:
+                  break;
+              }
+              const lidKey = (u: ListUser) => u.loginId || '';
+              const displayMembers = [...filtered].sort((a, b) => {
+                const la = lidKey(a);
+                const lb = lidKey(b);
+                if (memberSortOrder === 'orders_desc') {
+                  const d = completedOrderCountFor(lb) - completedOrderCountFor(la);
+                  return d !== 0 ? d : la.localeCompare(lb, 'ko');
+                }
+                if (memberSortOrder === 'revenue_desc') {
+                  const d = completedOrderRevenueFor(lb) - completedOrderRevenueFor(la);
+                  return d !== 0 ? d : la.localeCompare(lb, 'ko');
+                }
+                return la.localeCompare(lb, 'ko');
+              });
+              if (displayMembers.length === 0) {
+                const noMatch =
+                  qRaw || memberSegmentFilter !== 'all'
+                    ? '검색어 또는 필터 조건에 맞는 회원이 없습니다.'
+                    : '등록된 회원이 없습니다.';
+                return <div className="py-16 text-center text-slate-500">{noMatch}</div>;
               }
               return (
                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>
-                  {filtered.map((u, i) => {
+                  {displayMembers.map((u, i) => {
                     const isUnset = !u.dropboxFolderPath?.trim();
                     const isEditingPath = editingPathId === u.id;
                     const pathVal = isEditingPath ? editingPathValue : (u.dropboxFolderPath ?? '');
@@ -2995,15 +3674,34 @@ export default function AdminDashboardPage() {
                               )}
                             </p>
                             <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
-                              {formatAnnualMemberValidity(u.annualMemberSince) ? (
+                              {listUserAnnualActive(u) && formatAnnualMemberValidity(u.annualMemberSince) ? (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-500/15 text-violet-300 border border-violet-500/30" title={formatAnnualMemberValidity(u.annualMemberSince)!.title}>{formatAnnualMemberValidity(u.annualMemberSince)!.label}</span>
-                              ) : (
+                              ) : u.annualMemberSince && !listUserAnnualActive(u) ? (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500 border border-slate-600" title="연회원 기간 만료">연회원(만료)</span>
+                              ) : null}
+                              {listUserMonthlyActive(u) && formatMonthlyMemberValidity(u.monthlyMemberUntil) ? (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/30" title={formatMonthlyMemberValidity(u.monthlyMemberUntil)!.title}>{formatMonthlyMemberValidity(u.monthlyMemberUntil)!.label}</span>
+                              ) : u.monthlyMemberUntil && !listUserMonthlyActive(u) ? (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500 border border-slate-600" title="월구독 만료">월구독(만료)</span>
+                              ) : null}
+                              {!listUserAnnualActive(u) && !listUserMonthlyActive(u) && !u.annualMemberSince && !u.monthlyMemberUntil ? (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500">일반</span>
-                              )}
+                              ) : null}
                               {u.isVip && (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">VIP</span>
                               )}
-                              <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400">주문 {orderCountFor(u.loginId)}건</span>
+                              <span
+                                className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                title="상태가 완료된 주문만 집계"
+                              >
+                                완료 {completedOrderCountFor(u.loginId)}건
+                              </span>
+                              <span
+                                className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                title="완료 주문 매출 합계(원)"
+                              >
+                                매출 {completedOrderRevenueFor(u.loginId).toLocaleString('ko-KR')}원
+                              </span>
                               {lastOrderDateFor(u.loginId) && (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDateTime(lastOrderDateFor(u.loginId)!)}>최근 주문 {daysAgo(lastOrderDateFor(u.loginId)!)}</span>
                               )}
@@ -3411,12 +4109,116 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* 주문 요약 — 전문 팝업 */}
+      {orderTextPreviewModal && (
+        <div
+          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/65 p-4"
+          onClick={() => {
+            setOrderTextPreviewModal(null);
+            setOrderTextPreviewCopied(false);
+          }}
+        >
+          <div
+            className="bg-slate-800 rounded-xl shadow-xl max-w-3xl w-full max-h-[88vh] flex flex-col border border-slate-600 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-slate-700 shrink-0 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-white text-lg">주문 전문</h3>
+                <p className="text-slate-400 text-sm mt-1 font-mono break-all">
+                  {orderTextPreviewModal.orderNumber || '—'} · {orderTextPreviewModal.loginId || '비회원'}
+                </p>
+                <p className="text-slate-500 text-xs mt-0.5">{orderFlowLabel(orderTextPreviewModal.orderMetaFlow)}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const t = orderTextPreviewModal.orderText ?? '';
+                    try {
+                      await navigator.clipboard.writeText(t);
+                      setOrderTextPreviewCopied(true);
+                      setTimeout(() => setOrderTextPreviewCopied(false), 2000);
+                    } catch {
+                      setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-xs font-medium border border-slate-500"
+                >
+                  {orderTextPreviewCopied ? '복사됨' : '전체 복사'}
+                </button>
+                <a
+                  href={`/order/done?id=${orderTextPreviewModal.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg border border-cyan-600/50 bg-cyan-950/40 text-cyan-200 text-xs font-medium hover:bg-cyan-900/50"
+                >
+                  주문서 페이지
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const o = orderTextPreviewModal;
+                    setOrderTextPreviewModal(null);
+                    setOrderTextPreviewCopied(false);
+                    openOrderDetail(o);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+                >
+                  주문 관리
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderTextPreviewModal(null);
+                    setOrderTextPreviewCopied(false);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto p-4">
+              <pre className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-slate-200 font-sans bg-slate-900/60 border border-slate-700 rounded-lg p-4">
+                {orderTextPreviewModal.orderText?.trim() || '(주문 본문 없음)'}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Order detail modal */}
       {orderDetailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-700">
+          <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-700">
             <h3 className="font-bold text-white mb-1">주문 관리</h3>
-            <p className="text-slate-400 text-sm mb-4 font-mono">{orderDetailModal.orderNumber} · {orderDetailModal.loginId || '비회원'}</p>
+            <p className="text-slate-400 text-sm mb-3 font-mono break-all">{orderDetailModal.orderNumber} · {orderDetailModal.loginId || '비회원'}</p>
+
+            <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-4 p-0.5 bg-slate-900/40" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={orderDetailTab === 'dropbox'}
+                onClick={() => setOrderDetailTab('dropbox')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  orderDetailTab === 'dropbox' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                드롭박스
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={orderDetailTab === 'status'}
+                onClick={() => setOrderDetailTab('status')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  orderDetailTab === 'status' ? 'bg-slate-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                주문 상태
+              </button>
+            </div>
 
             {!orderDetailModal.loginId && users.length > 0 && (
               <div className="mb-4 p-4 rounded-lg bg-slate-700/50 border border-slate-600">
@@ -3443,75 +4245,95 @@ export default function AdminDashboardPage() {
               </div>
             )}
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-slate-400 text-sm mb-1">상태 변경</label>
-                <select value={statusInput} onChange={(e) => setStatusInput(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm">
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                <button type="button" onClick={handleSaveStatus} disabled={statusSavingId === orderDetailModal.id} className="mt-2 px-3 py-1.5 bg-slate-600 text-white text-sm rounded-lg hover:bg-slate-500 disabled:opacity-50">
-                  {statusSavingId === orderDetailModal.id ? '저장 중…' : '상태 저장'}
-                </button>
-                {orderDetailModal.status === 'completed' && (
-                  <div className="mt-2 text-[11px] text-slate-500 leading-relaxed space-y-1">
-                    <p>
-                      매출 반영액(실입금 기준):{' '}
-                      {orderDetailModal.revenueWon != null && orderDetailModal.revenueWon >= 0 ? (
-                        <span
-                          className={
-                            (orderDetailModal.pointsUsed ?? 0) > 0
-                              ? 'text-sky-400/90 tabular-nums font-medium'
-                              : 'text-emerald-400/90 tabular-nums'
-                          }
-                        >
-                          {(orderDetailModal.pointsUsed ?? 0) > 0
-                            ? (
-                                orderDetailModal.paymentDueWon ??
-                                orderDetailModal.revenueWon
-                              ).toLocaleString()
-                            : orderDetailModal.revenueWon.toLocaleString()}
-                          원
-                        </span>
-                      ) : (
-                        <span className="text-amber-400/90">주문서에서 금액을 찾지 못함</span>
-                      )}
-                    </p>
-                    {(orderDetailModal.pointsUsed ?? 0) > 0 ? (
-                      <>
-                        {orderDetailModal.orderGrossWon != null &&
-                        orderDetailModal.orderGrossWon > 0 ? (
-                          <p className="text-slate-400">
-                            주문 총액:{' '}
-                            <span className="text-slate-300 tabular-nums">
-                              {orderDetailModal.orderGrossWon.toLocaleString()}원
+            <div className="min-h-[8rem]">
+              {orderDetailTab === 'status' ? (
+                <div className="space-y-3">
+                  <p className="text-slate-500 text-xs">접수·제작·완료·취소 등 주문 상태만 여기서 저장합니다.</p>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-1">상태</label>
+                    <select value={statusInput} onChange={(e) => setStatusInput(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm">
+                      {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={handleSaveStatus} disabled={statusSavingId === orderDetailModal.id} className="mt-2 px-3 py-1.5 bg-slate-600 text-white text-sm rounded-lg hover:bg-slate-500 disabled:opacity-50">
+                      {statusSavingId === orderDetailModal.id ? '저장 중…' : '상태 저장'}
+                    </button>
+                    {orderDetailModal.status === 'completed' && (
+                      <div className="mt-2 text-[11px] text-slate-500 leading-relaxed space-y-1">
+                        <p>
+                          매출 반영액(실입금 기준):{' '}
+                          {orderDetailModal.revenueWon != null && orderDetailModal.revenueWon >= 0 ? (
+                            <span
+                              className={
+                                (orderDetailModal.pointsUsed ?? 0) > 0
+                                  ? 'text-sky-400/90 tabular-nums font-medium'
+                                  : 'text-emerald-400/90 tabular-nums'
+                              }
+                            >
+                              {(orderDetailModal.pointsUsed ?? 0) > 0
+                                ? (
+                                    orderDetailModal.paymentDueWon ??
+                                    orderDetailModal.revenueWon
+                                  ).toLocaleString()
+                                : orderDetailModal.revenueWon.toLocaleString()}
+                              원
                             </span>
-                          </p>
-                        ) : null}
-                        <p className="text-sky-400/80">
-                          포인트 사용:{' '}
-                          <span className="tabular-nums">
-                            {(orderDetailModal.pointsUsed ?? 0).toLocaleString()}원
-                          </span>
+                          ) : (
+                            <span className="text-amber-400/90">주문서에서 금액을 찾지 못함</span>
+                          )}
                         </p>
-                      </>
-                    ) : null}
+                        {(orderDetailModal.pointsUsed ?? 0) > 0 ? (
+                          <>
+                            {orderDetailModal.orderGrossWon != null &&
+                            orderDetailModal.orderGrossWon > 0 ? (
+                              <p className="text-slate-400">
+                                주문 총액:{' '}
+                                <span className="text-slate-300 tabular-nums">
+                                  {orderDetailModal.orderGrossWon.toLocaleString()}원
+                                </span>
+                              </p>
+                            ) : null}
+                            <p className="text-sky-400/80">
+                              포인트 사용:{' '}
+                              <span className="tabular-nums">
+                                {(orderDetailModal.pointsUsed ?? 0).toLocaleString()}원
+                              </span>
+                            </p>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-slate-400 text-sm mb-1">드롭박스 공유 링크</label>
-                <input type="url" value={fileUrlInput} onChange={(e) => setFileUrlInput(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" />
-                <button type="button" onClick={handleSaveFileUrl} disabled={fileUrlSavingId === orderDetailModal.id} className="mt-2 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500 disabled:opacity-50">
-                  {fileUrlSavingId === orderDetailModal.id ? '저장 중…' : '링크 저장'}
-                </button>
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-slate-500 text-xs">
+                    완료된 작업물 Dropbox 공유 URL만 여기서 등록합니다. 폴더 생성은 목록의 <strong className="text-slate-400">생성</strong> 버튼을 사용하세요.
+                  </p>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-1">공유 링크 (URL)</label>
+                    <input type="url" value={fileUrlInput} onChange={(e) => setFileUrlInput(e.target.value)} placeholder="https://www.dropbox.com/..." className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" />
+                    <button type="button" onClick={handleSaveFileUrl} disabled={fileUrlSavingId === orderDetailModal.id} className="mt-2 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500 disabled:opacity-50">
+                      {fileUrlSavingId === orderDetailModal.id ? '저장 중…' : '링크 저장'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="mt-6 flex gap-2">
-              <a href={`/order/done?id=${orderDetailModal.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center px-4 py-2 border border-slate-600 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700">주문서 보기</a>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <a href={`/order/done?id=${orderDetailModal.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[7rem] text-center px-4 py-2 border border-slate-600 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700">주문서 보기</a>
               <button type="button" onClick={handleDeleteOrder} disabled={deleteSavingId === orderDetailModal.id} className="px-4 py-2 bg-red-600/80 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50">{deleteSavingId === orderDetailModal.id ? '삭제 중…' : '삭제'}</button>
-              <button type="button" onClick={() => setOrderDetailModal(null)} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">닫기</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderDetailModal(null);
+                  setOrderDetailTab('status');
+                }}
+                className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500"
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
@@ -3529,7 +4351,15 @@ export default function AdminDashboardPage() {
             ) : (
               <div className="overflow-y-auto flex-1 border border-slate-600 rounded-lg mt-2">
                 <table className="w-full text-sm">
-                  <thead><tr className="bg-slate-700/50 text-slate-400"><th className="text-left py-2 px-3">주문번호</th><th className="text-left py-2 px-3">일시</th><th className="text-left py-2 px-3">상태</th><th className="text-left py-2 px-3">관리</th></tr></thead>
+                  <thead>
+                    <tr className="bg-slate-700/50 text-slate-400">
+                      <th className="text-left py-2 px-3">주문번호</th>
+                      <th className="text-left py-2 px-3">일시</th>
+                      <th className="text-left py-2 px-3">상태</th>
+                      <th className="text-left py-2 px-3">관리</th>
+                      <th className="text-right py-2 px-3 whitespace-nowrap">삭제</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {userOrders.map((o) => (
                       <tr key={o.id} className="border-t border-slate-700">
@@ -3596,9 +4426,9 @@ export default function AdminDashboardPage() {
                         <td className="py-2 px-3 text-slate-400">{formatDateTime(o.createdAt)}</td>
                         <td className="py-2 px-3">
                           {(o.status || 'pending') === 'cancelled' ? (
-                            <button type="button" onClick={() => handleDeleteOrderById(o.id)} disabled={!!deleteOrderId} className="text-slate-500 hover:text-red-400 text-xs disabled:opacity-50">
-                              {deleteOrderId === o.id ? '삭제 중…' : '취소됨'}
-                            </button>
+                            <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium text-slate-400 bg-slate-700/80 border border-slate-600">
+                              취소됨
+                            </span>
                           ) : (
                             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE_CLASS[o.status || 'pending'] || ''}`}>{o.statusLabel}</span>
                           )}
@@ -3612,6 +4442,25 @@ export default function AdminDashboardPage() {
                           ) : (
                             <button type="button" onClick={() => handleCreateOrderFolder(o.id)} disabled={!!createOrderFolderId} className="ml-2 text-slate-400 hover:text-white text-xs disabled:opacity-50">폴더 만들기</button>
                           )}
+                        </td>
+                        <td className="py-2 px-3 text-right align-middle">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrderById(o.id, o.status || 'pending')}
+                            disabled={!!deleteOrderId}
+                            className={`inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold disabled:opacity-50 ${
+                              (o.status || 'pending') === 'cancelled'
+                                ? 'border border-red-900/50 bg-red-950/30 text-red-300 hover:bg-red-900/40'
+                                : 'border border-slate-600 bg-slate-700/40 text-slate-300 hover:bg-slate-600 hover:text-white'
+                            }`}
+                            title={
+                              (o.status || 'pending') === 'cancelled'
+                                ? '취소된 주문 영구 삭제'
+                                : '관리자 권한으로 영구 삭제 (확인 후 진행)'
+                            }
+                          >
+                            {deleteOrderId === o.id ? '삭제 중…' : '삭제'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -3665,6 +4514,41 @@ export default function AdminDashboardPage() {
                 {editAnnualMemberSince && (
                   <input type="date" value={editAnnualMemberSince} onChange={(e) => setEditAnnualMemberSince(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
                 )}
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-1">월구독</label>
+                <label className="flex items-center gap-2 cursor-pointer text-slate-300 text-sm mb-1.5">
+                  <input
+                    type="checkbox"
+                    checked={!!editMonthlyMemberUntil}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setEditMonthlyMemberSince('');
+                        setEditMonthlyMemberUntil('');
+                      } else if (!editMonthlyMemberUntil) {
+                        const end = new Date();
+                        end.setDate(end.getDate() + 30);
+                        setEditMonthlyMemberSince(new Date().toISOString().slice(0, 10));
+                        setEditMonthlyMemberUntil(end.toISOString().slice(0, 10));
+                      }
+                    }}
+                    className="rounded border-slate-500 text-slate-600 bg-slate-700"
+                  />
+                  월구독 설정 (만료일까지 유효, 연회원과 별도)
+                </label>
+                {editMonthlyMemberUntil && (
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-xs text-slate-500">시작일</span>
+                      <input type="date" value={editMonthlyMemberSince} onChange={(e) => setEditMonthlyMemberSince(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500">만료일</span>
+                      <input type="date" value={editMonthlyMemberUntil} onChange={(e) => setEditMonthlyMemberUntil(e.target.value)} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-slate-500 mt-1">{membershipPricingOneLiner()}</p>
               </div>
               <div>
                 <label className="block text-slate-400 text-sm mb-1">VIP</label>
@@ -3744,6 +4628,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* 부교재 기본 노출 교재 모달 */}
+
       {defaultTextbooksModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col border border-slate-700">
