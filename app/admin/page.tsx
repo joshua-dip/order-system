@@ -8,6 +8,7 @@ import { ESSAY_CATEGORIES } from '../data/essay-categories';
 import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
 import { isAnnualMemberActive } from '@/lib/annual-member';
 import { isMonthlyMemberActive } from '@/lib/premium-member';
+import { isEbsTextbook } from '@/lib/textbookSort';
 
 interface EssayTypeItem {
   id: string;
@@ -1091,13 +1092,29 @@ export default function AdminDashboardPage() {
     setTextbooksModalLoading(true);
     fetch('/api/textbooks')
       .then((r) => r.json())
-      .then((data) => {
+      .then(async (data) => {
         if (data && typeof data === 'object' && !data.error) {
           let keys = Object.keys(data);
           if (mode === 'workbook' || mode === 'variant') {
             keys = keys.filter((k) => !/^고[123]_/.test(k));
-            setTextbookListForModal(keys);
+            /** EBS·쏠북 교재는 전 회원 공개이므로 회원별 체크 목록에서 제외 */
+            const solbookSet = new Set<string>();
+            try {
+              const sr = await fetch('/api/settings/variant-solbook', { cache: 'no-store' });
+              const sj = (await sr.json()) as { textbookKeys?: unknown };
+              if (Array.isArray(sj.textbookKeys)) {
+                for (const k of sj.textbookKeys) {
+                  if (typeof k === 'string' && k.trim()) solbookSet.add(k.trim());
+                }
+              }
+            } catch {
+              /* 목록만 제한; 실패 시 쏠북 집합 없이 EBS만 제외 */
+            }
+            keys = keys
+              .filter((k) => !isEbsTextbook(k) && !solbookSet.has(k))
+              .sort((a, b) => a.localeCompare(b, 'ko'));
             if (mode === 'workbook') {
+              setTextbookListForModal(keys);
               if (Array.isArray(u.allowedTextbooksWorkbook)) {
                 setSelectedTextbooksForModal(
                   u.allowedTextbooksWorkbook.filter((t) => keys.includes(t))
@@ -1108,12 +1125,22 @@ export default function AdminDashboardPage() {
                 setSelectedTextbooksForModal([...keys]);
               }
             } else if (Array.isArray(u.allowedTextbooksVariant)) {
-              setSelectedTextbooksForModal(
-                u.allowedTextbooksVariant.filter((t) => keys.includes(t))
+              const saved = u.allowedTextbooksVariant.filter((t): t is string => typeof t === 'string');
+              const orphans = saved.filter(
+                (t) =>
+                  !keys.includes(t) &&
+                  !/^고[123]_/.test(t) &&
+                  !isEbsTextbook(t) &&
+                  !solbookSet.has(t)
               );
+              const list = [...keys, ...orphans].sort((a, b) => a.localeCompare(b, 'ko'));
+              setTextbookListForModal(list);
+              setSelectedTextbooksForModal(saved.filter((t) => list.includes(t)));
             } else if (legacy.length > 0) {
+              setTextbookListForModal(keys);
               setSelectedTextbooksForModal(keys.filter((k) => legacy.includes(k)));
             } else {
+              setTextbookListForModal(keys);
               setSelectedTextbooksForModal([...keys]);
             }
           } else {
@@ -3783,6 +3810,7 @@ export default function AdminDashboardPage() {
                               <code className="text-slate-400">lib/workbook-textbooks.ts</code>의{' '}
                               <code className="text-slate-400">WORKBOOK_SUPPLEMENTARY_COMMON_KEYS</code>에 넣습니다.
                               여기서는 그 외 <strong className="text-slate-400">이 회원만</strong> 볼 추가 교재를 고릅니다.
+                              EBS·쏠북 교재는 전 회원 공개라 선택 목록에 없습니다.
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                               <button
@@ -3827,6 +3855,7 @@ export default function AdminDashboardPage() {
                               <code className="text-slate-400">lib/variant-textbooks.ts</code>의{' '}
                               <code className="text-slate-400">VARIANT_SUPPLEMENTARY_COMMON_KEYS</code>에 넣습니다.
                               여기서는 <strong className="text-slate-400">이 회원만</strong> 부교재 변형문제 주문(/textbook) 화면에서 볼 추가 교재를 고릅니다.
+                              EBS·쏠북 교재는 전 회원 공개라 선택 목록에 없습니다.
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                               <button
@@ -4857,15 +4886,18 @@ export default function AdminDashboardPage() {
               <p className="text-slate-400 text-xs mt-1">
                 {editingTextbooksMode === 'workbook' ? (
                   <>
-                    모의고사(고1_/고2_/고3_)는 제외된 목록입니다. 저장 시 이 회원에게는{' '}
+                    모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
+                    회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
                     <strong className="text-slate-300">공통 교재(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
                     워크북 부교재로 보입니다.
                   </>
                 ) : editingTextbooksMode === 'variant' ? (
                   <>
-                    모의고사(고1_/고2_/고3_)는 제외된 목록입니다. 저장 시 이 회원에게는{' '}
+                    모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
+                    회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
                     <strong className="text-slate-300">공통 교재(VARIANT_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
-                    부교재 변형문제 주문 화면에 보입니다.
+                    부교재 변형문제 주문(/textbook) 화면의「회원 전용 추가」범위로 쓰입니다. 변환 JSON에만 있는 키 중
+                    위에 해당하지 않는 교재만 체크할 수 있습니다.
                   </>
                 ) : (
                   <>

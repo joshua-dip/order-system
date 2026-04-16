@@ -161,6 +161,40 @@ export default function MemberVariantGeneratePage() {
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [keyInfoOpen]);
 
+  /** 초안 만들기 전 필수 입력 — API 키는 상단에 이미 표시되므로, 저장된 경우 체크리스트에서 생략 */
+  const generateReadinessSteps = useMemo(() => {
+    const base = [
+      {
+        key: 'paragraph' as const,
+        done: charCount >= 10,
+        label: '영어 지문 10자 이상',
+        hint: '지문을 붙여 넣거나 소스에서 불러오세요.',
+        scrollId: 'variant-step-paragraph',
+      },
+      {
+        key: 'types' as const,
+        done: selectedTypes.length > 0,
+        label: '문제 유형 1개 이상',
+        hint: '아래에서 만들 유형을 선택하세요.',
+        scrollId: 'variant-step-types',
+      },
+    ];
+    if (byokKeyStored) return base;
+    return [
+      ...base,
+      {
+        key: 'api' as const,
+        done: false,
+        label: 'API 키 등록',
+        hint: '내 정보(탭)에서 키를 저장해야 합니다.',
+        scrollId: 'variant-editor-top',
+      },
+    ];
+  }, [charCount, selectedTypes.length, byokKeyStored]);
+
+  const canGenerate = generateReadinessSteps.every((s) => s.done);
+  const firstBlockingStep = generateReadinessSteps.find((s) => !s.done) ?? null;
+
   const toggleType = (t: string) => {
     setSelectedTypes((prev) =>
       prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
@@ -391,38 +425,6 @@ export default function MemberVariantGeneratePage() {
     );
   };
 
-  /** 초안 만들기 전 필수 입력 (순서대로 안내) */
-  const generateReadinessSteps = useMemo(
-    () =>
-      [
-        {
-          key: 'paragraph',
-          done: charCount >= 10,
-          label: '영어 지문 10자 이상',
-          hint: '지문을 붙여 넣거나 소스에서 불러오세요.',
-          scrollId: 'variant-step-paragraph',
-        },
-        {
-          key: 'types',
-          done: selectedTypes.length > 0,
-          label: '문제 유형 1개 이상',
-          hint: '아래에서 만들 유형을 선택하세요.',
-          scrollId: 'variant-step-types',
-        },
-        {
-          key: 'api',
-          done: byokKeyStored,
-          label: 'API 키 등록',
-          hint: '내 정보(탭)에서 키를 저장해야 합니다.',
-          scrollId: 'variant-editor-top',
-        },
-      ] as const,
-    [charCount, selectedTypes.length, byokKeyStored],
-  );
-
-  const canGenerate = generateReadinessSteps.every((s) => s.done);
-  const firstBlockingStep = generateReadinessSteps.find((s) => !s.done) ?? null;
-
   const renderVariantTypeChip = (t: string) => {
     const active = selectedTypes.includes(t);
     return (
@@ -616,31 +618,26 @@ export default function MemberVariantGeneratePage() {
                 ))}
 
                 {PAID_VARIANT_TYPES.length > 0 && (
-                  <div
-                    id="variant-step-paid-types"
-                    className="mt-4 rounded-xl border border-amber-200/90 bg-gradient-to-b from-amber-50/90 to-amber-50/40 p-3.5 ring-1 ring-amber-100/80"
-                  >
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-amber-900/90">포인트 사용 유형</p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-amber-950/85">
-                      아래 유형만 초안 1개를 만들 때마다 포인트가 차감됩니다. 부족하면 해당 유형 초안만 건너뜁니다.
-                    </p>
-                    <ul className="mt-2 space-y-1 text-[11px] text-amber-950/90">
+                  <div id="variant-step-hard-types">
+                    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">고난도</p>
+                    <p className="mb-2 text-[11px] leading-relaxed text-slate-500">
                       {PAID_VARIANT_TYPES.map((t) => {
                         const cost = variantTypePointCostPerDraft(t);
                         return (
-                          <li key={t}>
-                            <strong>{t}</strong>
+                          <span key={t}>
+                            <span className="font-semibold text-slate-700">{t}</span>
                             {cost != null ? (
-                              <>
+                              <span>
                                 {' '}
-                                · 초안 1개당 <strong>{cost}포인트</strong>
-                              </>
-                            ) : null}
-                          </li>
+                                초안 1개당 <span className="font-bold text-slate-700">{cost}포인트</span> 차감.
+                              </span>
+                            ) : null}{' '}
+                          </span>
                         );
                       })}
-                    </ul>
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      포인트가 부족하면 해당 유형 초안만 건너뜁니다.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
                       {PAID_VARIANT_TYPES.map((t) => renderVariantTypeChip(t))}
                     </div>
                   </div>
@@ -737,8 +734,8 @@ export default function MemberVariantGeneratePage() {
                                   {step.label}
                                 </span>
                                 {!step.done && isNext && (
-                                  <span className="rounded-full bg-amber-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
-                                    지금
+                                  <span className="rounded-full bg-amber-600 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white">
+                                    우선
                                   </span>
                                 )}
                               </span>

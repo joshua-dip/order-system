@@ -18,6 +18,7 @@ export const VARIANT_SUPPLEMENTARY_COMMON_KEYS: string[] = [];
 /**
  * `VARIANT_SUPPLEMENTARY_COMMON_KEYS` ∪ `allowedTextbooksVariant` 에 포함된 키만 남깁니다.
  * (모의고사 키 고1_/고2_/고3_ 제외)
+ * 변환 JSON(`allKeys`)에 아직 없어도 허용 목록에만 있으면 맨 뒤에 붙여 반환합니다.
  */
 export function filterVariantSupplementaryTextbookKeys(
   allKeys: string[],
@@ -26,5 +27,15 @@ export function filterVariantSupplementaryTextbookKeys(
   const suppKeys = allKeys.filter((k) => !isVariantMockExamTextbookKey(k));
   const common = new Set(VARIANT_SUPPLEMENTARY_COMMON_KEYS);
   const allow = new Set<string>([...common, ...opts.allowedTextbooksVariant]);
-  return suppKeys.filter((k) => allow.has(k));
+  const fromData = suppKeys.filter((k) => allow.has(k));
+  /** 허용 집합에는 있으나 아직 변환 JSON 키에 없는 교재(회원 전용 선행 등록 등) — 모의고사 키만 제외 */
+  const allowOnlyKeys = [...new Set([...opts.allowedTextbooksVariant, ...VARIANT_SUPPLEMENTARY_COMMON_KEYS])].filter(
+    (k): k is string =>
+      typeof k === 'string' &&
+      k.trim() !== '' &&
+      !isVariantMockExamTextbookKey(k) &&
+      allow.has(k) &&
+      !fromData.includes(k),
+  );
+  return [...fromData, ...allowOnlyKeys];
 }
