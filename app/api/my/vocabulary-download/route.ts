@@ -6,7 +6,8 @@ import path from 'path';
 import fs from 'fs';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
-import { isAnnualMemberActive } from '@/lib/annual-member';
+import { hasAnnualMemberMenuAccess } from '@/lib/premium-member';
+import { isMockExamPassageTextbookStored } from '@/lib/member-variant-passage-sources';
 import {
   passageAnalysisFileNameForPassageId,
   type PassageStateStored,
@@ -608,9 +609,11 @@ export async function POST(request: NextRequest) {
   const db = await getDb('gomijoshua');
   const user = await db.collection('users').findOne(
     { _id: new ObjectId(payload.sub) },
-    { projection: { annualMemberSince: 1 } },
+    { projection: { annualMemberSince: 1, signupPremiumTrialUntil: 1 } },
   );
-  if (!user || !isAnnualMemberActive((user as { annualMemberSince?: Date }).annualMemberSince ?? null)) {
+  const since = (user as { annualMemberSince?: Date } | null)?.annualMemberSince;
+  const trialUntil = (user as { signupPremiumTrialUntil?: Date } | null)?.signupPremiumTrialUntil;
+  if (!user || !hasAnnualMemberMenuAccess({ annualSince: since ?? null, signupPremiumTrialUntil: trialUntil ?? null })) {
     return NextResponse.json({ error: '연회원만 이용할 수 있습니다.' }, { status: 403 });
   }
 
@@ -636,6 +639,9 @@ export async function POST(request: NextRequest) {
     };
 
     if (!params.textbook) return NextResponse.json({ error: '교재명이 필요합니다.' }, { status: 400 });
+    if (!isMockExamPassageTextbookStored(params.textbook)) {
+      return NextResponse.json({ error: '모의고사 교재만 선택할 수 있습니다.' }, { status: 400 });
+    }
 
     const { passages, vocabByFile } = await loadVocabulary(db, params.textbook, params.selectedLessons);
     if (passages.length === 0) return NextResponse.json({ error: '해당 조건의 지문이 없습니다.' }, { status: 404 });

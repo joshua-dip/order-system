@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
-import { isAnnualMemberActive } from '@/lib/annual-member';
+import { hasAnnualMemberMenuAccess } from '@/lib/premium-member';
+import { isMockExamPassageTextbookStored } from '@/lib/member-variant-passage-sources';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -14,9 +15,11 @@ export async function GET(request: NextRequest) {
   const db = await getDb('gomijoshua');
   const user = await db.collection('users').findOne(
     { _id: new ObjectId(payload.sub) },
-    { projection: { annualMemberSince: 1 } },
+    { projection: { annualMemberSince: 1, signupPremiumTrialUntil: 1 } },
   );
-  if (!user || !isAnnualMemberActive((user as { annualMemberSince?: Date }).annualMemberSince ?? null)) {
+  const since = (user as { annualMemberSince?: Date } | null)?.annualMemberSince;
+  const trialUntil = (user as { signupPremiumTrialUntil?: Date } | null)?.signupPremiumTrialUntil;
+  if (!user || !hasAnnualMemberMenuAccess({ annualSince: since ?? null, signupPremiumTrialUntil: trialUntil ?? null })) {
     return NextResponse.json({ error: '연회원 전용' }, { status: 403 });
   }
 
@@ -49,8 +52,8 @@ export async function GET(request: NextRequest) {
   const lessonMap: Record<string, Record<string, string[]>> = {};
 
   for (const p of passages) {
-    const tb = p.textbook as string;
-    if (!tb) continue;
+    const tb = typeof p.textbook === 'string' ? p.textbook.trim() : '';
+    if (!tb || !isMockExamPassageTextbookStored(tb)) continue;
     tbSet.add(tb);
 
     if (!lessonMap[tb]) lessonMap[tb] = {};

@@ -9,6 +9,7 @@ import StudentManagement from '../components/StudentManagement';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { hasStoredByokAnthropicKey, writeStoredByokAnthropicKey } from '@/lib/member-byok-anthropic-key-storage';
+import { isMockExamPassageTextbookStored } from '@/lib/member-variant-passage-sources';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -29,6 +30,9 @@ interface AuthUser {
   monthlyMemberUntil?: string | null;
   isMonthlyMemberActive?: boolean;
   isPremiumMember?: boolean;
+  /** 관리자 생성 계정 등: 월·연 프리미엄 기능 7일 체험 */
+  signupPremiumTrialUntil?: string | null;
+  signupPremiumTrialActive?: boolean;
   phone?: string;
   isVip?: boolean;
   vipSince?: string | null;
@@ -95,6 +99,10 @@ function pointHistoryKindLabel(kind: string): string {
       return '포인트 충전';
     case 'member_variant_hard':
       return '변형문제(삽입-고난도)';
+    case 'member_variant_refund':
+      return '변형문제(포인트 환급)';
+    case 'order_cancel_refund':
+      return '주문 취소 환급';
     default:
       return kind;
   }
@@ -110,6 +118,21 @@ function formatPointHistoryWhen(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function mongoObjectIdFromMeta(meta: Record<string, unknown>): string | null {
+  const raw = meta.orderId;
+  if (typeof raw !== 'string') return null;
+  const t = raw.trim();
+  return /^[a-f\d]{24}$/i.test(t) ? t : null;
+}
+
+function resolvePointHistoryOrderDetailId(
+  meta: Record<string, unknown>,
+  orderNumber: string,
+  orderIdByNumber: Map<string, string>
+): string | null {
+  return mongoObjectIdFromMeta(meta) ?? orderIdByNumber.get(orderNumber) ?? null;
 }
 
 function formatFileSize(bytes: number): string {
@@ -201,6 +224,20 @@ export default function MyPage() {
   const [pointHistory, setPointHistory] = useState<PointHistoryEntry[]>([]);
   const [pointHistoryLoading, setPointHistoryLoading] = useState(false);
   const [pointChargeOpen, setPointChargeOpen] = useState(false);
+
+  const orderIdByOrderNumber = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const o of orders) {
+      if (o.orderNumber && !m.has(o.orderNumber)) m.set(o.orderNumber, o.id);
+    }
+    return m;
+  }, [orders]);
+
+  /** 단어장·무료공유자료: 유효 연회원 또는 가입 프리미엄 체험 */
+  const annualMenuUnlocked = useMemo(
+    () => !!(user?.isAnnualMemberActive || user?.signupPremiumTrialActive),
+    [user?.isAnnualMemberActive, user?.signupPremiumTrialActive],
+  );
 
   const [annualSharedItems, setAnnualSharedItems] = useState<AnnualSharedFileItem[]>([]);
   const [annualSharedLoading, setAnnualSharedLoading] = useState(false);
@@ -312,26 +349,26 @@ export default function MyPage() {
   }, [user, activeTab]);
 
   useEffect(() => {
-    if (!user?.isAnnualMemberActive || activeTab !== 'annualShared') return;
+    if (!annualMenuUnlocked || activeTab !== 'annualShared') return;
     setAnnualSharedLoading(true);
     fetch('/api/my/annual-shared-files', { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => setAnnualSharedItems(Array.isArray(data.items) ? data.items : []))
       .catch(() => setAnnualSharedItems([]))
       .finally(() => setAnnualSharedLoading(false));
-  }, [user?.isAnnualMemberActive, activeTab]);
+  }, [annualMenuUnlocked, activeTab]);
 
   useEffect(() => {
-    if (user && user.isAnnualMemberActive !== true && (activeTab === 'annualShared' || activeTab === 'vocabulary')) {
+    if (user && !annualMenuUnlocked && (activeTab === 'annualShared' || activeTab === 'vocabulary')) {
       setActiveTab('orders');
     }
     if (user && !user.isVip && activeTab === 'vip') {
       setActiveTab('orders');
     }
-  }, [user, activeTab]);
+  }, [user, activeTab, annualMenuUnlocked]);
 
   useEffect(() => {
-    if (!user?.isAnnualMemberActive || activeTab !== 'vocabulary') return;
+    if (!annualMenuUnlocked || activeTab !== 'vocabulary') return;
     fetch('/api/my/vocabulary-textbooks', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
@@ -339,7 +376,7 @@ export default function MyPage() {
         if (d.lessonMap) setVocabDbLessonMap(d.lessonMap);
       })
       .catch(() => {});
-  }, [user?.isAnnualMemberActive, activeTab]);
+  }, [annualMenuUnlocked, activeTab]);
 
   /* ── 단어장: 교재 목록 ── */
   interface VocabTextbookContent { [lessonKey: string]: { 번호: string }[] }
@@ -357,14 +394,24 @@ export default function MyPage() {
   const vocabTextbookList = useMemo(() => {
     const set = new Set<string>();
     if (vocabTextbooksData) {
-      Object.keys(vocabTextbooksData).forEach((k) => {
-        if (k.startsWith('고1_') || k.startsWith('고2_') || k.startsWith('고3_')) return;
-        if (/영어모의고사/.test(k) || /EBS|수능특강/.test(k)) set.add(k);
-      });
+      for (const k of Object.keys(vocabTextbooksData)) {
+        if (isMockExamPassageTextbookStored(k)) set.add(k);
+      }
     }
-    for (const tb of vocabDbTextbooks) set.add(tb);
-    return Array.from(set).sort();
+    for (const tb of vocabDbTextbooks) {
+      if (isMockExamPassageTextbookStored(tb)) set.add(tb);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'ko'));
   }, [vocabTextbooksData, vocabDbTextbooks]);
+
+  useEffect(() => {
+    if (vocabSelectedTextbook && !vocabTextbookList.includes(vocabSelectedTextbook)) {
+      setVocabSelectedTextbook('');
+      setVocabLessonGroups({});
+      setVocabSelectedLessons([]);
+      setVocabExpandedLessons([]);
+    }
+  }, [vocabTextbookList, vocabSelectedTextbook]);
 
   useEffect(() => {
     if (!vocabSelectedTextbook) {
@@ -465,7 +512,7 @@ export default function MyPage() {
       { key: 'exam', label: '기출문제', icon: '📤' },
       { key: 'myFormat', label: '나의양식', icon: '📄' },
     ];
-    if (user?.isAnnualMemberActive) {
+    if (annualMenuUnlocked) {
       base.push({ key: 'annualShared', label: '무료공유자료', icon: '📥' });
       base.push({ key: 'vocabulary', label: '단어장', icon: '📖' });
     }
@@ -474,7 +521,7 @@ export default function MyPage() {
     }
     base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
     return base;
-  }, [user?.isAnnualMemberActive, user?.isVip, orders.length, studentsCount]);
+  }, [annualMenuUnlocked, user?.isVip, orders.length, studentsCount]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -786,6 +833,18 @@ export default function MyPage() {
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                       정회원
+                    </span>
+                  )}
+                  {user.signupPremiumTrialActive && (
+                    <span
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200"
+                      title={
+                        user.signupPremiumTrialUntil
+                          ? `월·연 회원 기능 무료 체험 · ${new Date(user.signupPremiumTrialUntil).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}까지`
+                          : '월·연 회원 기능 무료 체험'
+                      }
+                    >
+                      7일 무료 체험 중
                     </span>
                   )}
                   {user.isVip && (
@@ -1353,7 +1412,7 @@ export default function MyPage() {
           )}
 
           {/* ━━ 연회원 무료공유자료 ━━ */}
-          {activeTab === 'annualShared' && user.isAnnualMemberActive && (
+          {activeTab === 'annualShared' && annualMenuUnlocked && (
             <div className="space-y-4">
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <p className="text-sm font-bold text-[#0f172a] mb-1">무료 공유 자료</p>
@@ -1406,18 +1465,19 @@ export default function MyPage() {
           )}
 
           {/* ━━ 단어장 탭 ━━ */}
-          {activeTab === 'vocabulary' && user.isAnnualMemberActive && (
+          {activeTab === 'vocabulary' && annualMenuUnlocked && (
             <div className="space-y-4">
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <p className="text-sm font-bold text-[#0f172a] mb-1">단어장 다운로드</p>
                 <p className="text-[12px] text-[#94a3b8] leading-relaxed">
-                  교재·지문 선택 후 CEFR 난이도, 포함 항목을 설정하여 엑셀·PDF·시험지로 다운로드하세요.
+                  <strong className="text-[#64748b]">공식 모의고사</strong> 교재만 선택할 수 있어요. 지문·CEFR·포함 항목을 설정한 뒤 엑셀·PDF·시험지로 내려받습니다.
                 </p>
               </div>
 
               {/* 교재 선택 */}
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <label className="block text-sm font-bold text-[#0f172a] mb-2">교재 선택</label>
+                <p className="text-[11px] text-[#94a3b8] mb-2">부교재(EBS 등)는 목록에 포함되지 않습니다.</p>
                 <select
                   value={vocabSelectedTextbook}
                   onChange={(e) => setVocabSelectedTextbook(e.target.value)}
@@ -1839,9 +1899,13 @@ export default function MyPage() {
                                 ? `토스 결제 · ${chargePts.toLocaleString()}P`
                                 : row.kind === 'order_spend' && orderNumber
                                   ? `주문 ${orderNumber}`
-                                  : row.kind === 'member_variant_hard'
-                                    ? '삽입-고난도 초안 생성'
-                                    : '';
+                                  : row.kind === 'order_cancel_refund'
+                                    ? orderNumber
+                                      ? `취소 환급 · ${orderNumber}`
+                                      : '주문 취소 환급'
+                                    : row.kind === 'member_variant_hard'
+                                      ? '삽입-고난도 초안 생성'
+                                      : '';
                             const deltaStr =
                               row.delta > 0
                                 ? `+${row.delta.toLocaleString()}`
@@ -1868,7 +1932,31 @@ export default function MyPage() {
                                   {row.balanceAfter.toLocaleString()} P
                                 </td>
                                 <td className="px-3 py-2.5 text-[#64748b] align-top break-words max-w-[200px]">
-                                  {note}
+                                  {(row.kind === 'order_spend' || row.kind === 'order_cancel_refund') &&
+                                  orderNumber ? (
+                                    <>
+                                      {row.kind === 'order_cancel_refund' ? '취소 환급 · ' : '주문 '}
+                                      {(() => {
+                                        const detailId = resolvePointHistoryOrderDetailId(
+                                          row.meta,
+                                          orderNumber,
+                                          orderIdByOrderNumber
+                                        );
+                                        return detailId ? (
+                                          <Link
+                                            href={`/order/done?id=${encodeURIComponent(detailId)}`}
+                                            className="text-[#2563eb] font-semibold hover:underline font-mono"
+                                          >
+                                            {orderNumber}
+                                          </Link>
+                                        ) : (
+                                          <span className="font-mono text-[#64748b]">{orderNumber}</span>
+                                        );
+                                      })()}
+                                    </>
+                                  ) : (
+                                    note
+                                  )}
                                 </td>
                               </tr>
                             );

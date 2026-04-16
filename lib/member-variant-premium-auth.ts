@@ -10,6 +10,7 @@ type PremiumUser = {
   role?: string;
   annualMemberSince?: Date | null;
   monthlyMemberUntil?: Date | null;
+  signupPremiumTrialUntil?: Date | null;
   createdAt?: Date | null;
 };
 
@@ -38,7 +39,7 @@ export async function requirePremiumMemberVariant(
   const db = await getDb('gomijoshua');
   const user = await db.collection('users').findOne(
     { _id: userId },
-    { projection: { role: 1, annualMemberSince: 1, monthlyMemberUntil: 1, createdAt: 1 } },
+    { projection: { role: 1, annualMemberSince: 1, monthlyMemberUntil: 1, signupPremiumTrialUntil: 1, createdAt: 1 } },
   );
   if (!user) {
     return { ok: false, response: NextResponse.json({ error: '사용자를 찾을 수 없습니다.' }, { status: 404 }) };
@@ -48,6 +49,7 @@ export async function requirePremiumMemberVariant(
     role: user.role,
     annualSince: (user as { annualMemberSince?: Date }).annualMemberSince ?? null,
     monthlyUntil: (user as { monthlyMemberUntil?: Date }).monthlyMemberUntil ?? null,
+    signupPremiumTrialUntil: (user as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil ?? null,
   });
 
   if (!premium) {

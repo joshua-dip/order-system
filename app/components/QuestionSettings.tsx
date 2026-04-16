@@ -5,6 +5,13 @@ import Link from 'next/link';
 import AppBar from './AppBar';
 import type { OrderGenerateExtras, OrderGenerateHandler } from './MockExamSettings';
 import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
+import {
+  loadBookVariantPresets,
+  saveBookVariantPreset,
+  deleteBookVariantPreset,
+  type BookVariantPresetRow,
+  type BookVariantPresetPayloadV1,
+} from '@/lib/book-variant-order-presets';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -58,10 +65,16 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
   /** 쏠북 커스텀 요금 면제: 연회원 또는 월구독 유효 시 */
   const [isAnnualMemberActive, setIsAnnualMemberActive] = useState(false);
   const [isMonthlyMemberActive, setIsMonthlyMemberActive] = useState(false);
+  const [signupPremiumTrialActive, setSignupPremiumTrialActive] = useState(false);
   const [myFormatApproved, setMyFormatApproved] = useState(false);
   const [useCustomHwp, setUseCustomHwp] = useState(false);
   const [formatCounts, setFormatCounts] = useState({ 강의용자료: 0, 수업용자료: 0, 변형문제: 0 });
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
+  const [orderOptionsMenuOpen, setOrderOptionsMenuOpen] = useState(false);
+  const [presetRows, setPresetRows] = useState<BookVariantPresetRow[]>([]);
+  const [savePresetOpen, setSavePresetOpen] = useState(false);
+  const [savePresetName, setSavePresetName] = useState('');
+  const orderOptionsWrapRef = useRef<HTMLDivElement>(null);
   const [userPoints, setUserPoints] = useState(0);
   /** 주문 미리보기에서 포인트로 결제 금액 차감 여부 */
   const [usePoints, setUsePoints] = useState(false);
@@ -109,6 +122,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
         setIsMember(!!u && u.role !== 'admin');
         setIsAnnualMemberActive(!!u?.isAnnualMemberActive);
         setIsMonthlyMemberActive(!!u?.isMonthlyMemberActive);
+        setSignupPremiumTrialActive(!!u?.signupPremiumTrialActive);
         setMyFormatApproved(!!u?.myFormatApproved);
         if (u?.myFormatApproved) refreshMyFormats();
         const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
@@ -133,51 +147,6 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
       .catch(() => {});
   }, []);
 
-  const loadLatestOrderOptions = async () => {
-    setLoadingLatestOptions(true);
-    try {
-      const res = await fetch('/api/my/latest-order-options?flow=bookVariant', { credentials: 'include' });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || '불러오기에 실패했습니다.');
-        return;
-      }
-      const m = data.orderMeta as Record<string, unknown> | null;
-      if (!m || m.flow !== 'bookVariant') {
-        alert('저장된 최근 부교재 변형 주문 옵션이 없습니다.');
-        return;
-      }
-      if (typeof m.selectedTextbook === 'string' && m.selectedTextbook !== selectedTextbook) {
-        if (!confirm(`저장된 주문은 교재「${m.selectedTextbook}」입니다. 현재 교재와 다릅니다. 유형·문항수·이메일만 적용할까요?`)) return;
-      }
-      if (Array.isArray(m.selectedTypes) && m.selectedTypes.length > 0) {
-        setSelectedTypes(m.selectedTypes.filter((t): t is string => typeof t === 'string'));
-      }
-      if (m.orderInsertExplanation && typeof m.orderInsertExplanation === 'object' && m.orderInsertExplanation !== null) {
-        const o = m.orderInsertExplanation as { 순서?: boolean; 삽입?: boolean };
-        setOrderInsertExplanation({
-          순서: typeof o.순서 === 'boolean' ? o.순서 : true,
-          삽입: typeof o.삽입 === 'boolean' ? o.삽입 : true,
-        });
-      }
-      if (typeof m.questionsPerType === 'number' && m.questionsPerType >= 1 && m.questionsPerType <= 3) {
-        setQuestionsPerType(m.questionsPerType);
-      }
-      if (typeof m.email === 'string' && m.email.trim()) setEmail(m.email.trim());
-      if (typeof m.useCustomHwp === 'boolean') setUseCustomHwp(m.useCustomHwp);
-      if (Array.isArray(m.hwpStorageModes)) {
-        const allowed: HwpStorageModeKey[] = HWP_STORAGE_OPTIONS.map((o) => o.key);
-        const next = m.hwpStorageModes.filter(
-          (x): x is HwpStorageModeKey => typeof x === 'string' && (allowed as string[]).includes(x)
-        );
-        setHwpStorageModes(next.length > 0 ? next : DEFAULT_HWP_STORAGE_MODES);
-      }
-      alert('최근 부교재 변형 옵션을 불러왔습니다.');
-    } finally {
-      setLoadingLatestOptions(false);
-    }
-  };
-
   // 문제 샘플 데이터 로드
   useEffect(() => {
     const loadQuestionSamples = async () => {
@@ -197,6 +166,149 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
   const advancedTypes = ['삽입-고난도'];
   const questionTypes = [...standardTypes, ...advancedTypes];
   const ORDER_INSERT_TYPES = new Set(['순서', '삽입']);
+
+  const applyOrderMetaToForm = useCallback(
+    (
+      m: Record<string, unknown>,
+      opts?: { allowEmptyQuestionTypes?: boolean; allowEmptyEmail?: boolean }
+    ) => {
+      const allowEmptyTypes = !!opts?.allowEmptyQuestionTypes;
+      const allowEmptyEmail = !!opts?.allowEmptyEmail;
+      if (Array.isArray(m.selectedTypes)) {
+        const next = m.selectedTypes.filter((t): t is string => typeof t === 'string');
+        if (next.length > 0 || allowEmptyTypes) setSelectedTypes(next);
+      }
+      if (m.orderInsertExplanation && typeof m.orderInsertExplanation === 'object' && m.orderInsertExplanation !== null) {
+        const o = m.orderInsertExplanation as { 순서?: boolean; 삽입?: boolean };
+        setOrderInsertExplanation({
+          순서: typeof o.순서 === 'boolean' ? o.순서 : true,
+          삽입: typeof o.삽입 === 'boolean' ? o.삽입 : true,
+        });
+      }
+      if (typeof m.questionsPerType === 'number' && m.questionsPerType >= 1 && m.questionsPerType <= 3) {
+        setQuestionsPerType(m.questionsPerType);
+      }
+      if (typeof m.email === 'string') {
+        const t = m.email.trim();
+        if (t || allowEmptyEmail) setEmail(t);
+      }
+      if (typeof m.useCustomHwp === 'boolean') setUseCustomHwp(m.useCustomHwp);
+      if (Array.isArray(m.hwpStorageModes)) {
+        const allowed: HwpStorageModeKey[] = HWP_STORAGE_OPTIONS.map((o) => o.key);
+        const next = m.hwpStorageModes.filter(
+          (x): x is HwpStorageModeKey => typeof x === 'string' && (allowed as string[]).includes(x)
+        );
+        setHwpStorageModes(next.length > 0 ? next : DEFAULT_HWP_STORAGE_MODES);
+      }
+    },
+    []
+  );
+
+  const loadLatestOrderOptions = async () => {
+    setLoadingLatestOptions(true);
+    try {
+      const res = await fetch('/api/my/latest-order-options?flow=bookVariant', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '불러오기에 실패했습니다.');
+        return;
+      }
+      const m = data.orderMeta as Record<string, unknown> | null;
+      if (!m || m.flow !== 'bookVariant') {
+        alert('저장된 최근 부교재 변형 주문 옵션이 없습니다.');
+        return;
+      }
+      if (typeof m.selectedTextbook === 'string' && m.selectedTextbook !== selectedTextbook) {
+        if (!confirm(`저장된 주문은 교재「${m.selectedTextbook}」입니다. 현재 교재와 다릅니다. 유형·문항수·이메일만 적용할까요?`)) return;
+      }
+      applyOrderMetaToForm(m, { allowEmptyQuestionTypes: false, allowEmptyEmail: false });
+      alert('최근 부교재 변형 옵션을 불러왔습니다.');
+    } finally {
+      setLoadingLatestOptions(false);
+      setOrderOptionsMenuOpen(false);
+    }
+  };
+
+  const refreshPresetRows = useCallback(() => {
+    setPresetRows(loadBookVariantPresets());
+  }, []);
+
+  const applyNamedPreset = useCallback(
+    (row: BookVariantPresetRow) => {
+      if (row.textbookAtSave !== selectedTextbook) {
+        if (
+          !confirm(
+            `저장 당시 교재는「${row.textbookAtSave}」입니다. 현재「${selectedTextbook}」와 다릅니다. 유형·문항·이메일·HWP 설정만 적용할까요?`
+          )
+        )
+          return;
+      }
+      const { payload } = row;
+      applyOrderMetaToForm(
+        {
+          selectedTypes: payload.selectedTypes,
+          orderInsertExplanation: payload.orderInsertExplanation,
+          questionsPerType: payload.questionsPerType,
+          email: payload.email,
+          useCustomHwp: payload.useCustomHwp,
+          hwpStorageModes: payload.hwpStorageModes,
+        },
+        { allowEmptyQuestionTypes: true, allowEmptyEmail: true }
+      );
+      setUsePoints(payload.usePoints);
+      setPointsToUse(Math.max(0, payload.pointsToUse));
+      setOrderOptionsMenuOpen(false);
+      alert(`「${row.name}」옵션을 적용했습니다.`);
+    },
+    [applyOrderMetaToForm, selectedTextbook]
+  );
+
+  const handleConfirmSavePreset = () => {
+    try {
+      const payload: BookVariantPresetPayloadV1 = {
+        v: 1,
+        selectedTypes: [...selectedTypes],
+        orderInsertExplanation: { ...orderInsertExplanation },
+        questionsPerType,
+        email: email.trim(),
+        useCustomHwp,
+        hwpStorageModes: [...hwpStorageModes],
+        usePoints,
+        pointsToUse,
+      };
+      saveBookVariantPreset(savePresetName, selectedTextbook, payload);
+      refreshPresetRows();
+      setSavePresetOpen(false);
+      setSavePresetName('');
+      alert('이 브라우저에 저장했습니다. 「주문 옵션」에서 이름을 눌러 불러올 수 있어요.');
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '저장에 실패했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    setPresetRows(loadBookVariantPresets());
+  }, []);
+
+  useEffect(() => {
+    if (!orderOptionsMenuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (orderOptionsWrapRef.current && !orderOptionsWrapRef.current.contains(e.target as Node)) {
+        setOrderOptionsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [orderOptionsMenuOpen]);
+
+  useEffect(() => {
+    if (!savePresetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSavePresetOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [savePresetOpen]);
 
   useEffect(() => {
     if (selectedLessons.length === 0 || selectedTypes.length === 0) {
@@ -273,7 +385,8 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     const discountAmount = basePrice * discountRate;
     const variantSubtotal = Math.round(basePrice - discountAmount);
     const isSolbookTextbook = solbookKeys.includes(selectedTextbook);
-    const solbookCustomFeeWaived = isAnnualMemberActive || isMonthlyMemberActive;
+    const solbookCustomFeeWaived =
+      isAnnualMemberActive || isMonthlyMemberActive || signupPremiumTrialActive;
     const solbookFee =
       isSolbookTextbook && !solbookCustomFeeWaived ? solbookExtraFeeWon : 0;
     const totalPrice = variantSubtotal + solbookFee;
@@ -583,15 +696,94 @@ ${solbookPurchaseLine}
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <h4 className="text-lg font-medium text-black">문제 유형 선택</h4>
                   <div className="flex flex-wrap items-center gap-2">
-                    {isMember && (
-                      <button
-                        type="button"
-                        onClick={loadLatestOrderOptions}
-                        disabled={loadingLatestOptions}
-                        className="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc] hover:bg-[#bae6fd] disabled:opacity-60 whitespace-nowrap"
-                      >
-                        {loadingLatestOptions ? '불러오는 중…' : '📥 최신 주문 옵션'}
-                      </button>
+                    {loggedIn && (
+                      <>
+                        <div className="relative" ref={orderOptionsWrapRef}>
+                          <button
+                            type="button"
+                            onClick={() => setOrderOptionsMenuOpen((o) => !o)}
+                            disabled={loadingLatestOptions}
+                            className="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc] hover:bg-[#bae6fd] disabled:opacity-60 whitespace-nowrap"
+                          >
+                            {loadingLatestOptions ? '불러오는 중…' : '📥 주문 옵션 ▼'}
+                          </button>
+                          {orderOptionsMenuOpen && (
+                            <div
+                              className="absolute right-0 top-full z-30 mt-1 min-w-[240px] max-w-[min(92vw,320px)] rounded-xl border border-sky-200 bg-white py-1.5 text-left shadow-lg"
+                              role="menu"
+                            >
+                              {isMember && (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="block w-full px-3 py-2.5 text-left text-sm text-sky-950 hover:bg-sky-50 disabled:opacity-50"
+                                  disabled={loadingLatestOptions}
+                                  onClick={() => void loadLatestOrderOptions()}
+                                >
+                                  직전 완료 주문(서버에서 불러오기)
+                                </button>
+                              )}
+                              {isMember && <div className="mx-2 my-1 border-t border-gray-100" />}
+                              <p className="px-3 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                                이 브라우저에 저장한 이름
+                              </p>
+                              {presetRows.length === 0 ? (
+                                <p className="px-3 pb-2 text-[11px] leading-snug text-gray-500">
+                                  아직 없습니다. 오른쪽 「현재 옵션 저장」으로 이름을 정해 저장하세요.
+                                </p>
+                              ) : (
+                                <ul className="max-h-56 overflow-y-auto py-0.5">
+                                  {presetRows.map((row) => (
+                                    <li key={row.id} className="flex items-stretch gap-0 border-t border-gray-50 first:border-t-0">
+                                      <button
+                                        type="button"
+                                        role="menuitem"
+                                        className="min-w-0 flex-1 px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-50"
+                                        onClick={() => applyNamedPreset(row)}
+                                      >
+                                        <span className="font-medium">{row.name}</span>
+                                        <span className="mt-0.5 block text-[10px] text-gray-400">
+                                          {new Date(row.savedAt).toLocaleString('ko-KR', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                          })}
+                                          {row.textbookAtSave !== selectedTextbook ? ' · 교재 다름' : ''}
+                                        </span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="shrink-0 px-2.5 text-lg leading-none text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                        aria-label={`${row.name} 삭제`}
+                                        title="삭제"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!confirm(`「${row.name}」저장 옵션을 삭제할까요?`)) return;
+                                          deleteBookVariantPreset(row.id);
+                                          refreshPresetRows();
+                                        }}
+                                      >
+                                        ×
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSavePresetName('');
+                            setSavePresetOpen(true);
+                          }}
+                          className="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-teal-300 bg-white text-teal-800 hover:bg-teal-50 whitespace-nowrap"
+                        >
+                          💾 현재 옵션 저장…
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={handleAllTypesToggle}
@@ -605,9 +797,9 @@ ${solbookPurchaseLine}
                     </button>
                   </div>
                 </div>
-                {isMember && (
+                {loggedIn && (
                   <p className="text-[11px] text-gray-500 mb-3">
-                    회원 전용 · 직전 부교재 변형 주문의 유형·문항 수·이메일·HWP 사용 여부를 불러옵니다
+                    {isMember ? '회원: 서버에 있는 직전 완료 주문을 불러오거나, ' : ''}이름으로 저장한 옵션은 이 기기(브라우저)에만 보관됩니다. 다른 PC에서는 보이지 않습니다.
                   </p>
                 )}
                 {/* 기본 유형 */}
@@ -1268,6 +1460,63 @@ ${solbookPurchaseLine}
 
       </div>
     </div>
+
+    {savePresetOpen && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="preset-save-title"
+        onClick={() => setSavePresetOpen(false)}
+      >
+        <div
+          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 id="preset-save-title" className="text-lg font-bold text-gray-900">
+            현재 옵션 저장
+          </h3>
+          <p className="mt-2 text-xs text-gray-600 leading-relaxed">
+            문제 유형, 문항 수, 이메일, HWP 방식, 포인트 사용 여부 등이 저장됩니다. 교재와 강·번호는 이 화면에서 이미 고른 값이 유지됩니다.
+          </p>
+          <label className="mt-4 block text-xs font-semibold text-gray-700" htmlFor="preset-name-input">
+            저장할 이름
+          </label>
+          <input
+            id="preset-name-input"
+            type="text"
+            value={savePresetName}
+            onChange={(e) => setSavePresetName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleConfirmSavePreset();
+              }
+            }}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-400"
+            placeholder="예: 내신 대비 풀세트"
+            maxLength={80}
+            autoFocus
+          />
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+              onClick={() => setSavePresetOpen(false)}
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700"
+              onClick={handleConfirmSavePreset}
+            >
+              저장
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 };

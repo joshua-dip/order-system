@@ -3,7 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isEbsTextbook } from '@/lib/textbookSort';
 
+const KAKAO_INQUIRY_URL =
+  process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
+
 type MetaItem = { id: string; chapter: string; number: string; source_key: string };
+
+type MockGrade = '고1' | '고2' | '고3';
+
+/** mock-exams.json 최상위 키 → 학년 */
+const MOCK_EXAMS_SECTION_TO_GRADE: Record<string, MockGrade> = {
+  고1모의고사: '고1',
+  고2모의고사: '고2',
+  고3모의고사: '고3',
+};
 
 type Props = {
   disabled?: boolean;
@@ -13,7 +25,12 @@ type Props = {
 
 export default function VariantSourceLoader({ disabled, onApply, currentParagraph }: Props) {
   const [open, setOpen] = useState(false);
-  const [mockKeys, setMockKeys] = useState<string[]>([]);
+  const [mockByGrade, setMockByGrade] = useState<Record<MockGrade, string[]>>({
+    고1: [],
+    고2: [],
+    고3: [],
+  });
+  const [mockGrade, setMockGrade] = useState<MockGrade>('고1');
   const [tbData, setTbData] = useState<Record<string, unknown> | null>(null);
   const [kind, setKind] = useState<'ebs' | 'mock'>('ebs');
   const [textbook, setTextbook] = useState('');
@@ -27,15 +44,29 @@ export default function VariantSourceLoader({ disabled, onApply, currentParagrap
   useEffect(() => {
     import('@/app/data/mock-exams.json')
       .then((mod: unknown) => {
-        const m = mod as { default?: Record<string, string[]> } & Record<string, string[]>;
+        const m = mod as { default?: Record<string, unknown> } & Record<string, unknown>;
         const d = m.default ?? m;
-        const list: string[] = [];
-        for (const arr of Object.values(d)) {
-          if (Array.isArray(arr)) list.push(...arr);
+        const next: Record<MockGrade, string[]> = { 고1: [], 고2: [], 고3: [] };
+        for (const [sectionKey, grade] of Object.entries(MOCK_EXAMS_SECTION_TO_GRADE)) {
+          const arr = d[sectionKey];
+          if (Array.isArray(arr)) {
+            for (const item of arr) {
+              if (typeof item === 'string' && item.trim()) next[grade].push(item.trim());
+            }
+          }
         }
-        setMockKeys(list);
+        for (const g of ['고1', '고2', '고3'] as MockGrade[]) {
+          next[g].sort((a, b) => a.localeCompare(b, 'ko'));
+        }
+        setMockByGrade(next);
       })
-      .catch(() => setMockKeys([]));
+      .catch(() =>
+        setMockByGrade({
+          고1: [],
+          고2: [],
+          고3: [],
+        }),
+      );
   }, []);
 
   useEffect(() => {
@@ -52,15 +83,15 @@ export default function VariantSourceLoader({ disabled, onApply, currentParagrap
 
   const textbookOptions = useMemo(() => {
     if (kind === 'ebs') return [...ebsTextbooks].sort((a, b) => a.localeCompare(b, 'ko'));
-    return [...mockKeys].sort((a, b) => a.localeCompare(b, 'ko'));
-  }, [kind, ebsTextbooks, mockKeys]);
+    return mockByGrade[mockGrade] ?? [];
+  }, [kind, ebsTextbooks, mockByGrade, mockGrade]);
 
   useEffect(() => {
     if (!open) return;
     const first = textbookOptions[0] ?? '';
     setTextbook((prev) => (prev && textbookOptions.includes(prev) ? prev : first));
     setSearch('');
-  }, [open, kind, textbookOptions]);
+  }, [open, kind, mockGrade, textbookOptions]);
 
   const loadMeta = useCallback(async (tb: string) => {
     if (!tb.trim()) {
@@ -211,8 +242,32 @@ export default function VariantSourceLoader({ disabled, onApply, currentParagrap
                 </button>
               </div>
 
+              {kind === 'mock' && (
+                <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-violet-100 bg-violet-50/60 p-1">
+                  {(['고1', '고2', '고3'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setMockGrade(g)}
+                      className={`rounded-xl py-2 text-sm font-bold transition ${
+                        mockGrade === g
+                          ? 'bg-white text-violet-800 shadow-sm ring-1 ring-violet-200/80'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <label className="block">
-                <span className="text-xs font-bold text-slate-600">교재</span>
+                <span className="text-xs font-bold text-slate-600">
+                  교재
+                  {kind === 'mock' && (
+                    <span className="ml-1.5 font-normal text-slate-400">({mockGrade} 모의고사)</span>
+                  )}
+                </span>
                 <select
                   value={textbook}
                   onChange={(e) => setTextbook(e.target.value)}
@@ -262,6 +317,27 @@ export default function VariantSourceLoader({ disabled, onApply, currentParagrap
                 {!metaLoading && metaItems.length > 0 && (
                   <p className="mt-1 text-[11px] text-slate-400">
                     {filteredMeta.length}/{metaItems.length}건 표시
+                  </p>
+                )}
+                {!metaLoading && textbook && metaItems.length === 0 && !metaError && (
+                  <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/95 px-3 py-3 text-[13px] leading-relaxed text-amber-950">
+                    <p className="font-bold text-amber-950">이 교재에는 아직 등록된 지문이 없어요.</p>
+                    <p className="mt-1.5 text-xs text-amber-900/90">
+                      지문 등록·추가를 원하시면 카카오톡으로 문의해 주세요. 교재명과 번호·회차를 알려주시면 안내해 드릴게요.
+                    </p>
+                    <a
+                      href={KAKAO_INQUIRY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#FEE500] px-3 py-2.5 text-xs font-bold text-[#191919] no-underline transition hover:opacity-90"
+                    >
+                      카카오톡 문의하기
+                    </a>
+                  </div>
+                )}
+                {!metaLoading && metaItems.length > 0 && filteredMeta.length === 0 && search.trim() !== '' && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    검색과 일치하는 지문이 없습니다. 검색어를 지우거나 바꿔 보세요.
                   </p>
                 )}
               </div>

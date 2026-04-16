@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { parseOrderRevenueFromOrderText } from '@/lib/order-revenue';
+import { tryRefundPointsAfterOrderCancelled } from '@/lib/refund-order-points-on-cancel';
 
 const COLLECTION = 'orders';
 
@@ -97,6 +98,11 @@ export async function PATCH(
         );
       }
 
+      const prevStatus = typeof existing.status === 'string' ? existing.status : 'pending';
+      if (newStatus === 'cancelled' && prevStatus !== 'cancelled') {
+        await tryRefundPointsAfterOrderCancelled(db, existing);
+      }
+
       return NextResponse.json({
         ok: true,
         revenueWon: newStatus === 'completed' ? parsedRevenue : null,
@@ -149,10 +155,25 @@ export async function PATCH(
       }
     }
 
-    await collection.updateOne(
-      { _id: new ObjectId(id) },
+    const cancelRes = await collection.updateOne(
+      { _id: new ObjectId(id), status: 'pending' },
       { $set: { status: 'cancelled' } }
     );
+    if (cancelRes.matchedCount === 0) {
+      const again = await collection.findOne({ _id: new ObjectId(id) }, { projection: { status: 1 } });
+      if (!again) {
+        return NextResponse.json({ error: '주문을 찾을 수 없습니다.' }, { status: 404 });
+      }
+      if ((again.status || 'pending') === 'cancelled') {
+        return NextResponse.json({ ok: true });
+      }
+      return NextResponse.json(
+        { error: '관리자 수락 이후에는 주문 취소가 불가능합니다.' },
+        { status: 403 }
+      );
+    }
+
+    await tryRefundPointsAfterOrderCancelled(db, order);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

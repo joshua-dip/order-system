@@ -1,6 +1,6 @@
 import { markdownToHwpx } from 'kordoc';
 import type { MemberVariantExportDoc } from '@/lib/member-variant-export-build';
-import { flattenMemberQuestionData, safeExportText } from '@/lib/member-variant-export-build';
+import { exportPlainText, flattenMemberQuestionData } from '@/lib/member-variant-export-build';
 
 function str(v: unknown): string {
   return typeof v === 'string' ? v : '';
@@ -8,7 +8,7 @@ function str(v: unknown): string {
 
 /** 마크다운 펜스와 충돌하지 않도록 가변 길이 백틱 펜스 */
 function mdFencedBlock(text: string): string {
-  const t = safeExportText(text);
+  const t = exportPlainText(text);
   if (!t) return '';
   let fence = '```';
   while (t.includes(fence)) fence += '`';
@@ -21,7 +21,7 @@ export function memberVariantExportDocsToMarkdown(docs: MemberVariantExportDoc[]
   for (let i = 0; i < docs.length; i++) {
     const d = docs[i];
     const f = flattenMemberQuestionData(d.question_data ?? {});
-    const head = `${i + 1}. [${safeExportText(str(d.type))}] (${safeExportText(str(d.difficulty))}) · ${safeExportText(str(d.textbook))}`;
+    const head = `${i + 1}. [${exportPlainText(str(d.type))}] (${exportPlainText(str(d.difficulty))}) · ${exportPlainText(str(d.textbook))}`;
     parts.push(`## ${head}`, '');
     if (f.question) {
       parts.push('### 발문', '', mdFencedBlock(f.question), '');
@@ -32,7 +32,7 @@ export function memberVariantExportDocsToMarkdown(docs: MemberVariantExportDoc[]
     if (f.optionsDisplay) {
       parts.push('### 선택지', '', mdFencedBlock(f.optionsDisplay), '');
     }
-    parts.push(`**정답:** ${safeExportText(f.answer) || '—'}`, '');
+    parts.push(`**정답:** ${exportPlainText(f.answer) || '—'}`, '');
     if (f.explanation) {
       parts.push('### 해설', '', mdFencedBlock(f.explanation), '');
     }

@@ -41,7 +41,16 @@ export async function POST(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(payload.sub) },
-      { projection: { role: 1, annualMemberSince: 1, monthlyMemberUntil: 1, phone: 1, createdAt: 1 } },
+      {
+        projection: {
+          role: 1,
+          annualMemberSince: 1,
+          monthlyMemberUntil: 1,
+          signupPremiumTrialUntil: 1,
+          phone: 1,
+          createdAt: 1,
+        },
+      },
     );
     if (!user) {
       return NextResponse.json({ error: '사용자를 찾을 수 없습니다.' }, { status: 404 });
@@ -50,6 +59,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
       annualSince: (user as { annualMemberSince?: Date }).annualMemberSince ?? null,
       monthlyUntil: (user as { monthlyMemberUntil?: Date }).monthlyMemberUntil ?? null,
+      signupPremiumTrialUntil: (user as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil ?? null,
     });
     if (!premium) {
       const trial = getVariantTrialInfo((user as { createdAt?: Date }).createdAt ?? null);

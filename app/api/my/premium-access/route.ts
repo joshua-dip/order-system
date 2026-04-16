@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(payload.sub) },
-      { projection: { role: 1, annualMemberSince: 1, monthlyMemberUntil: 1 } },
+      { projection: { role: 1, annualMemberSince: 1, monthlyMemberUntil: 1, signupPremiumTrialUntil: 1 } },
     );
     if (!user) {
       return NextResponse.json({ ok: true, loggedIn: false, isPremiumMember: false });
@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
       role: user.role,
       annualSince: (user as { annualMemberSince?: Date }).annualMemberSince ?? null,
       monthlyUntil: (user as { monthlyMemberUntil?: Date }).monthlyMemberUntil ?? null,
+      signupPremiumTrialUntil: (user as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil ?? null,
     });
     return NextResponse.json({
       ok: true,

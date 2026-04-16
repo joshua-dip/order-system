@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { ESSAY_CATEGORIES } from '../data/essay-categories';
 import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
 import { isAnnualMemberActive } from '@/lib/annual-member';
-import { isMonthlyMemberActive } from '@/lib/premium-member';
+import { isMonthlyMemberActive, isSignupPremiumTrialActive } from '@/lib/premium-member';
 import { isEbsTextbook } from '@/lib/textbookSort';
 
 interface EssayTypeItem {
@@ -54,6 +54,8 @@ interface ListUser {
   annualMemberSince?: string | null;
   monthlyMemberSince?: string | null;
   monthlyMemberUntil?: string | null;
+  /** 관리자 생성 시 부여되는 월·연 기능 무료 체험 만료 시각(ISO) */
+  signupPremiumTrialUntil?: string | null;
   isVip?: boolean;
   vipSince?: string | null;
   createdAt: string;
@@ -227,6 +229,7 @@ type MemberSegmentFilter =
   | 'all'
   | 'annual_active'
   | 'monthly_active'
+  | 'signup_trial'
   | 'vip'
   | 'dropbox_yes'
   | 'dropbox_no';
@@ -629,7 +632,10 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setMessage({ type: 'success', text: `계정이 생성되었습니다. (아이디: ${data.loginId}, 초기 비밀번호: 123456)` });
+        setMessage({
+          type: 'success',
+          text: `계정이 생성되었습니다. (아이디: ${data.loginId}, 초기 비밀번호: 123456) 월·연 회원 기능은 7일간 무료로 이용할 수 있습니다.`,
+        });
         setLoginId('');
         setName('');
         setEmail('');
@@ -805,6 +811,8 @@ export default function AdminDashboardPage() {
 
   const listUserAnnualActive = (u: ListUser) => isAnnualMemberActive(u.annualMemberSince ?? null);
   const listUserMonthlyActive = (u: ListUser) => isMonthlyMemberActive(u.monthlyMemberUntil ?? null);
+  const listUserSignupPremiumTrialActive = (u: ListUser) =>
+    isSignupPremiumTrialActive(u.signupPremiumTrialUntil ?? null);
 
   const formatMonthlyMemberValidity = (until: string | null | undefined) => {
     if (!until || until.trim() === '') return null;
@@ -3459,6 +3467,7 @@ export default function AdminDashboardPage() {
                     <option value="all">전체 회원</option>
                     <option value="annual_active">유효 연회원</option>
                     <option value="monthly_active">유효 월구독</option>
+                    <option value="signup_trial">7일 프리미엄 체험 중</option>
                     <option value="vip">VIP</option>
                     <option value="dropbox_yes">드롭박스 연결</option>
                     <option value="dropbox_no">드롭박스 미설정</option>
@@ -3488,6 +3497,10 @@ export default function AdminDashboardPage() {
             <div id="quick-create" className="bg-slate-800 rounded-xl border border-slate-700 p-5 mb-5">
               <h2 className="font-bold text-lg text-white mb-4">빠른 계정 생성</h2>
               <p className="text-slate-400 text-sm mb-4">초기 비밀번호는 <strong className="text-slate-300">123456</strong>으로 통일됩니다.</p>
+              <div className="mb-4 rounded-lg border border-teal-600/40 bg-teal-950/40 px-3 py-2.5 text-[13px] leading-relaxed text-teal-100/95">
+                <strong className="text-teal-200">생성 직후 7일간</strong> 월구독·연회원과 동일한 프리미엄 기능(변형문제 만들기, 단어장, 무료공유자료 등)을 무료로 쓸 수 있습니다. 회원 카드에는{' '}
+                <span className="rounded bg-teal-900/80 px-1.5 py-0.5 font-semibold text-teal-200">7일 무료 체험 중</span>으로 표시됩니다.
+              </div>
               <form onSubmit={handleCreateUser} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                 <div>
                   <label className="block text-slate-400 text-xs mb-1">아이디 *</label>
@@ -3566,6 +3579,12 @@ export default function AdminDashboardPage() {
                     { id: 'all' as const, short: '전체', count: users.length, color: 'bg-[#00A9E0]' },
                     { id: 'annual_active' as const, short: '연회원(유효)', count: users.filter((u) => listUserAnnualActive(u)).length, color: 'bg-violet-500' },
                     { id: 'monthly_active' as const, short: '월구독(유효)', count: users.filter((u) => listUserMonthlyActive(u)).length, color: 'bg-fuchsia-500' },
+                    {
+                      id: 'signup_trial' as const,
+                      short: '7일 체험',
+                      count: users.filter((u) => listUserSignupPremiumTrialActive(u)).length,
+                      color: 'bg-teal-500',
+                    },
                     { id: 'vip' as const, short: 'VIP', count: users.filter((u) => u.isVip).length, color: 'bg-amber-500' },
                     { id: 'dropbox_yes' as const, short: '드롭박스 연결', count: users.filter((u) => u.dropboxFolderPath?.trim()).length, color: 'bg-[#22c55e]' },
                     { id: 'dropbox_no' as const, short: '미설정', count: users.filter((u) => !u.dropboxFolderPath?.trim()).length, color: 'bg-[#f59e0b]' },
@@ -3646,6 +3665,9 @@ export default function AdminDashboardPage() {
                 case 'monthly_active':
                   filtered = bySearch.filter((u) => listUserMonthlyActive(u));
                   break;
+                case 'signup_trial':
+                  filtered = bySearch.filter((u) => listUserSignupPremiumTrialActive(u));
+                  break;
                 case 'vip':
                   filtered = bySearch.filter((u) => !!u.isVip);
                   break;
@@ -3711,7 +3733,19 @@ export default function AdminDashboardPage() {
                               ) : u.monthlyMemberUntil && !listUserMonthlyActive(u) ? (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500 border border-slate-600" title="월구독 만료">월구독(만료)</span>
                               ) : null}
-                              {!listUserAnnualActive(u) && !listUserMonthlyActive(u) && !u.annualMemberSince && !u.monthlyMemberUntil ? (
+                              {listUserSignupPremiumTrialActive(u) ? (
+                                <span
+                                  className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/15 text-teal-200 border border-teal-500/35"
+                                  title={
+                                    u.signupPremiumTrialUntil
+                                      ? `월·연 기능 무료 체험 · ${new Date(u.signupPremiumTrialUntil).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}까지`
+                                      : '월·연 기능 무료 체험'
+                                  }
+                                >
+                                  7일 무료 체험 중
+                                </span>
+                              ) : null}
+                              {!listUserAnnualActive(u) && !listUserMonthlyActive(u) && !listUserSignupPremiumTrialActive(u) && !u.annualMemberSince && !u.monthlyMemberUntil ? (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500">일반</span>
                               ) : null}
                               {u.isVip && (

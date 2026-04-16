@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
-import { isAnnualMemberActive } from '@/lib/annual-member';
+import { hasAnnualMemberMenuAccess } from '@/lib/premium-member';
 
 const COLLECTION = 'annualSharedFiles';
 
 /**
- * 연회원(유효기간 내)만 — 무료공유자료 목록(다운로드 URL 없이 id만)
+ * 유효 연회원 또는 가입 7일 프리미엄 체험 중 — 무료공유자료 목록(다운로드 URL 없이 id만)
  */
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -19,10 +19,11 @@ export async function GET(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(payload.sub) },
-      { projection: { annualMemberSince: 1 } }
+      { projection: { annualMemberSince: 1, signupPremiumTrialUntil: 1 } }
     );
     const since = (user as { annualMemberSince?: Date } | null)?.annualMemberSince;
-    if (!isAnnualMemberActive(since ?? null)) {
+    const trialUntil = (user as { signupPremiumTrialUntil?: Date } | null)?.signupPremiumTrialUntil;
+    if (!hasAnnualMemberMenuAccess({ annualSince: since ?? null, signupPremiumTrialUntil: trialUntil ?? null })) {
       return NextResponse.json({ error: '연회원 전용 메뉴입니다.' }, { status: 403 });
     }
 

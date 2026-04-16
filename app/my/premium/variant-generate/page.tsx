@@ -72,6 +72,18 @@ export default function MemberVariantGeneratePage() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const msgTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 유형 칩 러버밴드(드래그) 선택 */
+  const variantChipMarqueeRef = useRef<HTMLDivElement>(null);
+  const marqueeSuppressClickRef = useRef(false);
+  const marqueeDragRef = useRef<{
+    startX: number;
+    startY: number;
+    active: boolean;
+    pointerId: number;
+  } | null>(null);
+  const [marqueeBox, setMarqueeBox] = useState<null | { left: number; top: number; width: number; height: number }>(
+    null,
+  );
 
   const charCount = paragraph.length;
   const wordCount = useMemo(
@@ -87,6 +99,18 @@ export default function MemberVariantGeneratePage() {
   }, []);
 
   useEffect(() => { autoGrow(); }, [paragraph, autoGrow]);
+
+  /** 언마운트·탭 이탈 시 드래그 리스너 정리 */
+  const marqueeListenersCleanupRef = useRef<(() => void) | null>(null);
+  useEffect(
+    () => () => {
+      marqueeListenersCleanupRef.current?.();
+      marqueeListenersCleanupRef.current = null;
+      setMarqueeBox(null);
+      document.body.style.userSelect = '';
+    },
+    [],
+  );
 
   const scrollTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -200,6 +224,112 @@ export default function MemberVariantGeneratePage() {
       prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
     );
   };
+
+  const marqueeRectFromPoints = useCallback((x0: number, y0: number, x1: number, y1: number) => {
+    const left = Math.min(x0, x1);
+    const top = Math.min(y0, y1);
+    const width = Math.max(1, Math.abs(x1 - x0));
+    const height = Math.max(1, Math.abs(y1 - y0));
+    return { left, top, width, height };
+  }, []);
+
+  const rectIntersectsMarquee = useCallback(
+    (chip: DOMRect, box: { left: number; top: number; width: number; height: number }) => {
+      const bx2 = box.left + box.width;
+      const by2 = box.top + box.height;
+      return chip.left < bx2 && chip.right > box.left && chip.top < by2 && chip.bottom > box.top;
+    },
+    [],
+  );
+
+  const handleVariantChipMarqueePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0 || busy) return;
+      const root = variantChipMarqueeRef.current;
+      if (!root?.contains(e.target as Node)) return;
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      marqueeDragRef.current = { startX, startY, active: false, pointerId: e.pointerId };
+
+      const onMove = (ev: PointerEvent) => {
+        const d = marqueeDragRef.current;
+        if (!d) return;
+        const dx = ev.clientX - d.startX;
+        const dy = ev.clientY - d.startY;
+        if (!d.active && dx * dx + dy * dy >= 25) {
+          d.active = true;
+          try {
+            root.setPointerCapture(ev.pointerId);
+          } catch {
+            /* ignore */
+          }
+          document.body.style.userSelect = 'none';
+        }
+        if (d.active) {
+          setMarqueeBox(marqueeRectFromPoints(d.startX, d.startY, ev.clientX, ev.clientY));
+        }
+      };
+
+      const finish = (ev: PointerEvent) => {
+        marqueeListenersCleanupRef.current = null;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', finish);
+        window.removeEventListener('pointercancel', finish);
+        document.body.style.userSelect = '';
+        const d = marqueeDragRef.current;
+        marqueeDragRef.current = null;
+        try {
+          if (root.hasPointerCapture(ev.pointerId)) root.releasePointerCapture(ev.pointerId);
+        } catch {
+          /* ignore */
+        }
+
+        if (d?.active) {
+          const box = marqueeRectFromPoints(d.startX, d.startY, ev.clientX, ev.clientY);
+          setMarqueeBox(null);
+          const nodes = root.querySelectorAll<HTMLElement>('[data-type-chip]');
+          const hits: string[] = [];
+          for (const node of nodes) {
+            const typ = node.getAttribute('data-type');
+            if (!typ) continue;
+            if (rectIntersectsMarquee(node.getBoundingClientRect(), box)) hits.push(typ);
+          }
+          if (hits.length > 0) {
+            marqueeSuppressClickRef.current = true;
+            setSelectedTypes((prev) => {
+              const next = new Set(prev);
+              for (const h of hits) next.add(h);
+              return [...next];
+            });
+            setTimeout(() => {
+              marqueeSuppressClickRef.current = false;
+            }, 0);
+          }
+        } else {
+          setMarqueeBox(null);
+        }
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', finish);
+      window.addEventListener('pointercancel', finish);
+      marqueeListenersCleanupRef.current = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', finish);
+        window.removeEventListener('pointercancel', finish);
+        document.body.style.userSelect = '';
+        try {
+          if (root.hasPointerCapture(e.pointerId)) root.releasePointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
+        marqueeDragRef.current = null;
+        setMarqueeBox(null);
+      };
+    },
+    [busy, marqueeRectFromPoints, rectIntersectsMarquee],
+  );
 
   const handleResetForm = () => {
     const hasDirty =
@@ -431,12 +561,18 @@ export default function MemberVariantGeneratePage() {
       <button
         key={t}
         type="button"
-        onClick={() => toggleType(t)}
+        data-type-chip
+        data-type={t}
+        disabled={busy}
+        onClick={() => {
+          if (marqueeSuppressClickRef.current) return;
+          toggleType(t);
+        }}
         className={`rounded-full px-3 py-1 text-xs font-bold transition ${
           active
             ? 'bg-violet-600 text-white shadow-sm shadow-violet-400/20'
             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-        }`}
+        } disabled:opacity-50`}
       >
         {active && (
           <svg className="-ml-0.5 mr-0.5 inline-block h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -452,6 +588,19 @@ export default function MemberVariantGeneratePage() {
   return (
     <>
       <AppBar title="변형문제 만들기" showBackButton />
+
+      {marqueeBox && (
+        <div
+          className="pointer-events-none fixed z-[160] box-border rounded-sm border-2 border-violet-500 bg-violet-500/15 shadow-md ring-1 ring-violet-400/30"
+          style={{
+            left: marqueeBox.left,
+            top: marqueeBox.top,
+            width: marqueeBox.width,
+            height: marqueeBox.height,
+          }}
+          aria-hidden
+        />
+      )}
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-violet-50/30 pb-10">
         <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 md:py-8">
@@ -604,8 +753,29 @@ export default function MemberVariantGeneratePage() {
               <h2 className="text-sm font-bold text-slate-900">유형 · 메모</h2>
             </div>
             <div className="space-y-4 p-4">
-              {/* 유형 — 소그룹 */}
-              <div className="space-y-3">
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2.5 text-[11px] leading-relaxed text-emerald-950">
+                <p className="font-bold text-emerald-900">포인트 안내</p>
+                <p className="mt-1 text-emerald-900/95">
+                  <strong className="text-emerald-950">내용 파악</strong>(주제·제목·주장),{' '}
+                  <strong className="text-emerald-950">세부 정보</strong>(일치·불일치),{' '}
+                  <strong className="text-emerald-950">추론</strong>(함의·빈칸·요약),{' '}
+                  <strong className="text-emerald-950">언어·구조</strong>(어법·순서·삽입·무관한문장) 유형은 초안을 만들 때{' '}
+                  <span className="font-bold text-emerald-950">포인트가 차감되지 않습니다.</span>
+                  {PAID_VARIANT_TYPES.length > 0 ? (
+                    <>
+                      {' '}
+                      아래 <strong className="text-emerald-950">고난도</strong>에 있는 유형만 포인트가 사용돼요.
+                    </>
+                  ) : null}
+                </p>
+              </div>
+
+              {/* 유형 — 소그룹 (드래그로 다중 선택) */}
+              <div
+                ref={variantChipMarqueeRef}
+                className="relative space-y-3 select-none"
+                onPointerDown={handleVariantChipMarqueePointerDown}
+              >
                 {TYPE_GROUPS.map((g) => (
                   <div key={g.label}>
                     <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">{g.label}</p>
@@ -642,6 +812,11 @@ export default function MemberVariantGeneratePage() {
                     </div>
                   </div>
                 )}
+
+                <p className="text-[11px] leading-relaxed text-slate-400">
+                  화면 캡처처럼 <strong className="text-slate-600">드래그하여 사각형을 그리면</strong> 겹치는 유형이 한꺼번에
+                  선택됩니다. 개별 선택은 칩을 눌러 주세요.
+                </p>
 
                 {selectedTypes.length > 1 && (
                   <p className="text-[11px] text-slate-500">
@@ -874,7 +1049,7 @@ export default function MemberVariantGeneratePage() {
             </button>
             {myListOpen && (
               <div className="mt-2">
-                <MyMemberVariants refreshKey={listRefreshKey} />
+                <MyMemberVariants refreshKey={listRefreshKey} listMode="preview" />
               </div>
             )}
           </section>

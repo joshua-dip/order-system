@@ -38,6 +38,38 @@ const VOCABULARY_PACKAGES = [
   },
 ] as const;
 
+/** UI 안내용 — 가격은 VOCABULARY_PACKAGES와 동일하게 유지 */
+const VOCABULARY_PACKAGE_GUIDE: Record<
+  (typeof VOCABULARY_PACKAGES)[number]['id'],
+  {
+    oneLine: string;
+    bullets: string[];
+    recommend: string;
+    note?: string;
+  }
+> = {
+  basic: {
+    oneLine: '지문에 나온 핵심 단어와 뜻만 정리해, 빠른 암기·복습에 맞춘 구성입니다.',
+    bullets: [
+      '표제어(영단어)와 한국어 뜻(의미) 중심',
+      '열 수를 줄여 한눈에 훑기 좋은 단어장',
+      '동의어·반의어는 별도 열로 넣지 않습니다',
+    ],
+    recommend: '시험 직전 요약, 숙제용 단어 목록, 짧은 시간에 양을 많이 돌리고 싶을 때',
+  },
+  detailed: {
+    oneLine: '뜻에 더해 동의어·반의어까지 넣어, 어휘를 넓히고 시험 대비 폭을 넓힙니다.',
+    bullets: [
+      '표제어 + 한국어 뜻',
+      '동의어(synonym) — 비슷한 말뜻의 단어·표현',
+      '반의어(antonym) — 반대말뜻·대비되는 표현(지문·사전 데이터에 있을 때)',
+      '기본형보다 열이 많아 한 단어당 정보가 풍부합니다',
+    ],
+    recommend: '내신·수능식 어휘 문제, 빈칸·유의어 고르기 대비, 단어를 깊게 익히고 싶을 때',
+    note: '동의어·반의어는 지문 분석 DB에 해당 정보가 있을 때 반영됩니다. 없는 단어는 뜻만 표시될 수 있어요.',
+  },
+};
+
 /* ────────── 유틸 ────────── */
 
 function pickFirstContent(key: string, data: TextbookStructure): TextbookContent | null {
@@ -237,10 +269,66 @@ export default function VocabularyOrderPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h1 className="text-2xl font-bold text-gray-800">단어장 주문 제작</h1>
             <p className="text-gray-500 text-sm mt-1">교재·지문별 맞춤 단어장을 제작 주문합니다.</p>
-            <div className="mt-3 flex gap-4 text-sm text-gray-600">
+            <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-600">
               <span className="bg-teal-50 text-teal-700 rounded-lg px-3 py-1 font-medium">기본형 300원/지문</span>
               <span className="bg-teal-50 text-teal-700 rounded-lg px-3 py-1 font-medium">상세형 500원/지문</span>
             </div>
+
+            {/* 기본형 vs 상세형 비교 */}
+            <div className="mt-4 rounded-xl border border-gray-200 bg-slate-50/90 p-4 sm:p-5">
+              <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="text-teal-600" aria-hidden>📋</span>
+                기본형과 상세형, 이렇게 다릅니다
+              </h3>
+              <div className="overflow-x-auto -mx-1">
+                <table className="w-full min-w-[280px] text-left text-xs sm:text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-white/80">
+                      <th className="py-2.5 px-2 font-semibold text-gray-600 w-[28%]">구분</th>
+                      <th className="py-2.5 px-2 font-semibold text-teal-800">기본형</th>
+                      <th className="py-2.5 px-2 font-semibold text-teal-900">상세형</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-700">
+                    <tr className="border-b border-gray-100 align-top">
+                      <td className="py-2.5 px-2 font-medium text-gray-600">포함 내용</td>
+                      <td className="py-2.5 px-2">단어(표제어) + 뜻</td>
+                      <td className="py-2.5 px-2">단어 + 뜻 + 동의어 + 반의어</td>
+                    </tr>
+                    <tr className="border-b border-gray-100 align-top">
+                      <td className="py-2.5 px-2 font-medium text-gray-600">동의어·반의어</td>
+                      <td className="py-2.5 px-2 text-gray-500">없음 (뜻 중심)</td>
+                      <td className="py-2.5 px-2">있음 (데이터가 있을 때)</td>
+                    </tr>
+                    <tr className="border-b border-gray-100 align-top">
+                      <td className="py-2.5 px-2 font-medium text-gray-600">가격</td>
+                      <td className="py-2.5 px-2 font-semibold text-teal-700">300원/지문</td>
+                      <td className="py-2.5 px-2 font-semibold text-teal-800">500원/지문</td>
+                    </tr>
+                    <tr className="align-top">
+                      <td className="py-2.5 px-2 font-medium text-gray-600">이럴 때</td>
+                      <td className="py-2.5 px-2 text-gray-600 leading-snug">{VOCABULARY_PACKAGE_GUIDE.basic.recommend}</td>
+                      <td className="py-2.5 px-2 text-gray-600 leading-snug">{VOCABULARY_PACKAGE_GUIDE.detailed.recommend}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-[11px] sm:text-xs text-gray-500 leading-relaxed">
+                지문 1개(번호 1개)마다 위 금액이 부과됩니다. 상세형은 열이 많아 제작·검수에 더 들어가 200원이 추가됩니다.
+              </p>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/95 px-4 py-3 text-sm leading-relaxed text-emerald-950">
+              <strong className="font-semibold text-emerald-900">모의고사 단어장</strong>은 이 유료 주문과 별도로{' '}
+              <strong className="font-semibold text-emerald-900">무료</strong>로 제공하고 있습니다. 공식 영어 모의고사
+              지문을 대상으로 한 단어장·시험지는 마이페이지의 단어장에서 받으실 수 있어요.{' '}
+              <Link href="/my" className="font-semibold text-teal-700 underline decoration-teal-300 underline-offset-2 hover:text-teal-900">
+                마이페이지 → 단어장
+              </Link>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              이 화면의 주문은 <strong className="text-gray-700">부교재</strong> 등 허용된 교재 지문에 대한 제작 의뢰입니다.
+            </p>
           </div>
 
           {/* 1. 교재 선택 */}
@@ -325,25 +413,40 @@ export default function VocabularyOrderPage() {
           {selectedLessons.length > 0 && (
             <div className="bg-white rounded-2xl shadow p-6 space-y-4">
               <h2 className="font-bold text-gray-800">3. 단어장 유형</h2>
+              <p className="text-xs text-gray-500 -mt-2">
+                아래 카드에도 요약이 있습니다. 위쪽 &quot;기본형과 상세형&quot; 표와 함께 보시면 선택이 쉬워요.
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {VOCABULARY_PACKAGES.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setSelectedPackage(p.id as 'basic' | 'detailed')}
-                    className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                      selectedPackage === p.id
-                        ? 'border-teal-500 bg-teal-50'
-                        : 'border-gray-200 bg-white hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-gray-800">{p.name}</span>
-                      <span className="text-sm font-semibold text-teal-600">{p.price.toLocaleString()}원/지문</span>
-                    </div>
-                    <p className="text-xs text-gray-500">{p.description}</p>
-                  </button>
-                ))}
+                {VOCABULARY_PACKAGES.map((p) => {
+                  const g = VOCABULARY_PACKAGE_GUIDE[p.id];
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPackage(p.id as 'basic' | 'detailed')}
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                        selectedPackage === p.id
+                          ? 'border-teal-500 bg-teal-50'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="font-bold text-gray-800">{p.name}</span>
+                        <span className="text-sm font-semibold text-teal-600 shrink-0">{p.price.toLocaleString()}원/지문</span>
+                      </div>
+                      <p className="text-xs font-medium text-gray-600 mb-2">{p.description}</p>
+                      <p className="text-[11px] text-gray-600 leading-relaxed mb-2">{g.oneLine}</p>
+                      <ul className="text-[11px] text-gray-600 space-y-1 list-disc list-inside leading-relaxed">
+                        {g.bullets.map((line, idx) => (
+                          <li key={`${p.id}-${idx}`}>{line}</li>
+                        ))}
+                      </ul>
+                      {g.note ? (
+                        <p className="mt-2 text-[10px] text-gray-500 leading-relaxed border-t border-gray-200/80 pt-2">{g.note}</p>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

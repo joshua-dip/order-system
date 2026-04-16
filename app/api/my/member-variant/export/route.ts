@@ -10,6 +10,8 @@ import {
 } from '@/lib/member-variant-export-build';
 import { buildMemberVariantHwpxBuffer } from '@/lib/member-variant-hwpx-build';
 
+export const maxDuration = 60;
+
 const MAX_IDS = 100;
 
 type ExportFormat = 'xlsx' | 'pdf' | 'docx' | 'hwpx';

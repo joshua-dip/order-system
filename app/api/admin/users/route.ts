@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
+import { SIGNUP_PREMIUM_TRIAL_DAYS } from '@/lib/premium-member';
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,6 +71,12 @@ export async function GET(request: NextRequest) {
         const date = d instanceof Date ? d : new Date(d as string);
         return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
       })(),
+      signupPremiumTrialUntil: (() => {
+        const d = (u as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil;
+        if (!d) return null;
+        const date = d instanceof Date ? d : new Date(d);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString();
+      })(),
       createdAt: u.createdAt,
     }));
 
@@ -127,6 +134,10 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(DEFAULT_MEMBER_INITIAL_PASSWORD);
+    const now = new Date();
+    const signupPremiumTrialUntil = new Date(
+      now.getTime() + SIGNUP_PREMIUM_TRIAL_DAYS * 24 * 60 * 60 * 1000,
+    );
     await users.createIndex({ loginId: 1 }, { unique: true }).catch(() => {});
     await users.insertOne({
       loginId,
@@ -143,7 +154,8 @@ export async function POST(request: NextRequest) {
       allowedTextbooksEssay: [],
       points: 0,
       supplementaryNote: '',
-      createdAt: new Date(),
+      createdAt: now,
+      signupPremiumTrialUntil,
     });
 
     return NextResponse.json({

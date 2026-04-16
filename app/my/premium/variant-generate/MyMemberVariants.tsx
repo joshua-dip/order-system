@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { BOOK_VARIANT_QUESTION_TYPES } from '@/lib/book-variant-types';
 import QuestionFriendlyPreview from './QuestionFriendlyPreview';
 
@@ -45,6 +46,18 @@ const COLUMN_META: { key: ColumnKey; label: string; defaultOn: boolean }[] = [
 
 const LS_COLUMNS = 'memberVariantColumnVis:v1';
 
+/** API `textbook` / `source` 빈 값 필터와 동일 */
+const FILTER_EMPTY = '__none__';
+
+type FilterMeta = {
+  textbooks: string[];
+  sources: string[];
+  statuses: string[];
+  difficulties: string[];
+  hasEmptyTextbook: boolean;
+  hasEmptySource: boolean;
+};
+
 function loadColumnVisibility(): Record<ColumnKey, boolean> {
   const base: Record<ColumnKey, boolean> = {} as Record<ColumnKey, boolean>;
   for (const c of COLUMN_META) base[c.key] = c.defaultOn;
@@ -64,6 +77,8 @@ function loadColumnVisibility(): Record<ColumnKey, boolean> {
 
 type Props = {
   refreshKey: number;
+  /** preview: 최신 10건만 + 전체 보기 링크 / full: 기존 페이지네이션(25건) */
+  listMode?: 'preview' | 'full';
 };
 
 type DetailMeta = {
@@ -88,15 +103,26 @@ function formatShortDate(iso: string | null): string {
   return new Date(iso).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-export default function MyMemberVariants({ refreshKey }: Props) {
+export default function MyMemberVariants({ refreshKey, listMode = 'full' }: Props) {
+  const isPreview = listMode === 'preview';
+  const pageLimit = isPreview ? 10 : 25;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [items, setItems] = useState<Row[]>([]);
   const [skip, setSkip] = useState(0);
-  const limit = 25;
   const [typeFilter, setTypeFilter] = useState('');
+  const [textbookFilter, setTextbookFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('');
   const [pageSearch, setPageSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filterMeta, setFilterMeta] = useState<FilterMeta | null>(null);
+  const [scopedSources, setScopedSources] = useState<string[] | null>(null);
+  const [scopedSourcesLoading, setScopedSourcesLoading] = useState(false);
+  const [scopedHasEmptySource, setScopedHasEmptySource] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -135,6 +161,76 @@ export default function MyMemberVariants({ refreshKey }: Props) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [statusLegendOpen]);
 
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(pageSearch.trim()), 320);
+    return () => window.clearTimeout(t);
+  }, [pageSearch]);
+
+  useEffect(() => {
+    fetch('/api/my/member-variant/questions/filters', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.ok === true) {
+          setFilterMeta({
+            textbooks: Array.isArray(d.textbooks) ? d.textbooks : [],
+            sources: Array.isArray(d.sources) ? d.sources : [],
+            statuses: Array.isArray(d.statuses) ? d.statuses : [],
+            difficulties: Array.isArray(d.difficulties) ? d.difficulties : [],
+            hasEmptyTextbook: d.hasEmptyTextbook === true,
+            hasEmptySource: d.hasEmptySource === true,
+          });
+        } else {
+          setFilterMeta({
+            textbooks: [],
+            sources: [],
+            statuses: [],
+            difficulties: [],
+            hasEmptyTextbook: false,
+            hasEmptySource: false,
+          });
+        }
+      })
+      .catch(() =>
+        setFilterMeta({
+          textbooks: [],
+          sources: [],
+          statuses: [],
+          difficulties: [],
+          hasEmptyTextbook: false,
+          hasEmptySource: false,
+        }),
+      );
+  }, [refreshKey]);
+
+  useEffect(() => {
+    if (!textbookFilter) {
+      setScopedSources(null);
+      setScopedSourcesLoading(false);
+      setScopedHasEmptySource(false);
+      return;
+    }
+    setScopedSources(null);
+    setScopedSourcesLoading(true);
+    const qs = new URLSearchParams();
+    qs.set('textbook', textbookFilter);
+    fetch(`/api/my/member-variant/questions/filters?${qs}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.ok === true && Array.isArray(d.sources)) {
+          setScopedSources(d.sources);
+          setScopedHasEmptySource(d.hasEmptySource === true);
+        } else {
+          setScopedSources([]);
+          setScopedHasEmptySource(false);
+        }
+      })
+      .catch(() => {
+        setScopedSources([]);
+        setScopedHasEmptySource(false);
+      })
+      .finally(() => setScopedSourcesLoading(false));
+  }, [textbookFilter, refreshKey]);
+
   const persistCols = useCallback((next: Record<ColumnKey, boolean>) => {
     setColVis(next);
     try {
@@ -149,8 +245,13 @@ export default function MyMemberVariants({ refreshKey }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const qs = new URLSearchParams({ skip: String(nextSkip), limit: String(limit) });
+        const qs = new URLSearchParams({ skip: String(nextSkip), limit: String(pageLimit) });
         if (typeFilter) qs.set('type', typeFilter);
+        if (textbookFilter) qs.set('textbook', textbookFilter);
+        if (sourceFilter) qs.set('source', sourceFilter);
+        if (statusFilter) qs.set('status', statusFilter);
+        if (difficultyFilter) qs.set('difficulty', difficultyFilter);
+        if (debouncedSearch) qs.set('search', debouncedSearch);
         const res = await fetch(`/api/my/member-variant/questions?${qs}`, { credentials: 'include' });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -184,45 +285,72 @@ export default function MyMemberVariants({ refreshKey }: Props) {
         setLoading(false);
       }
     },
-    [typeFilter],
+    [
+      typeFilter,
+      textbookFilter,
+      sourceFilter,
+      statusFilter,
+      difficultyFilter,
+      debouncedSearch,
+      pageLimit,
+    ],
   );
 
   useEffect(() => {
     void load(0);
-  }, [refreshKey, typeFilter, load]);
-
-  const displayRows = useMemo(() => {
-    const q = pageSearch.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (r) =>
-        r.textbook.toLowerCase().includes(q) ||
-        r.question_preview.toLowerCase().includes(q) ||
-        r.source.toLowerCase().includes(q) ||
-        r.type.toLowerCase().includes(q) ||
-        r.answer_preview.toLowerCase().includes(q),
-    );
-  }, [items, pageSearch]);
+  }, [
+    refreshKey,
+    typeFilter,
+    textbookFilter,
+    sourceFilter,
+    statusFilter,
+    difficultyFilter,
+    debouncedSearch,
+    load,
+  ]);
 
   const selectedOnPage = useMemo(() => {
-    return displayRows.filter((r) => selectedIds.has(r.id));
-  }, [displayRows, selectedIds]);
+    return items.filter((r) => selectedIds.has(r.id));
+  }, [items, selectedIds]);
 
-  const allOnPageSelected =
-    displayRows.length > 0 && selectedOnPage.length === displayRows.length;
+  const allOnPageSelected = items.length > 0 && selectedOnPage.length === items.length;
   const someOnPageSelected = selectedOnPage.length > 0 && !allOnPageSelected;
+
+  const hasActiveFilters = Boolean(
+    typeFilter ||
+      textbookFilter ||
+      sourceFilter ||
+      statusFilter ||
+      difficultyFilter ||
+      debouncedSearch,
+  );
+
+  const sourceOptions = useMemo(() => {
+    if (!textbookFilter) return filterMeta?.sources ?? [];
+    if (scopedSourcesLoading && scopedSources === null) return [];
+    return scopedSources ?? [];
+  }, [textbookFilter, scopedSources, scopedSourcesLoading, filterMeta?.sources]);
+
+  const resetFilters = () => {
+    setTypeFilter('');
+    setTextbookFilter('');
+    setSourceFilter('');
+    setStatusFilter('');
+    setDifficultyFilter('');
+    setPageSearch('');
+  };
 
   const toggleSelectAllPage = () => {
     if (allOnPageSelected) {
       setSelectedIds((prev) => {
         const next = new Set(prev);
-        for (const r of displayRows) next.delete(r.id);
+        for (const r of items) next.delete(r.id);
         return next;
       });
     } else {
       setSelectedIds((prev) => {
         const next = new Set(prev);
-        for (const r of displayRows) next.add(r.id);
+        for (const r of items) next.add(r.id);
         return next;
       });
     }
@@ -444,35 +572,134 @@ export default function MyMemberVariants({ refreshKey }: Props) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white shadow-md ring-1 ring-slate-100">
       <div className="border-b border-slate-100 px-5 py-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-          <label className="block flex-1 text-xs font-bold text-slate-600">
-            유형으로 좁히기
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setPageSearch('');
-              }}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="block text-xs font-bold text-slate-600">
+              유형
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              >
+                <option value="">전체</option>
+                {BOOK_VARIANT_QUESTION_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-600">
+              교재
+              <select
+                value={textbookFilter}
+                onChange={(e) => {
+                  setTextbookFilter(e.target.value);
+                  setSourceFilter('');
+                }}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              >
+                <option value="">전체</option>
+                {filterMeta?.hasEmptyTextbook ? (
+                  <option value={FILTER_EMPTY}>(교재 없음)</option>
+                ) : null}
+                {(filterMeta?.textbooks ?? []).map((tb) => (
+                  <option key={tb} value={tb}>
+                    {tb.length > 42 ? `${tb.slice(0, 42)}…` : tb}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-600">
+              출처
+              <span className="mt-0.5 block text-[10px] font-normal text-slate-400">
+                교재를 고르면 해당 교재에만 있는 출처로 목록이 줄어듭니다.
+              </span>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                disabled={!!textbookFilter && scopedSourcesLoading}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 disabled:opacity-60"
+              >
+                <option value="">전체</option>
+                {(textbookFilter ? scopedHasEmptySource : filterMeta?.hasEmptySource) ? (
+                  <option value={FILTER_EMPTY}>(출처 없음)</option>
+                ) : null}
+                {sourceOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {s.length > 48 ? `${s.slice(0, 48)}…` : s}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-600">
+              상태
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              >
+                <option value="">전체</option>
+                {(filterMeta?.statuses ?? []).map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-600">
+              난이도
+              <select
+                value={difficultyFilter}
+                onChange={(e) => setDifficultyFilter(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              >
+                <option value="">전체</option>
+                {(filterMeta?.difficulties ?? []).map((df) => (
+                  <option key={df} value={df}>
+                    {df}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-600 sm:col-span-2 lg:col-span-1">
+              키워드 검색
+              <input
+                value={pageSearch}
+                onChange={(e) => setPageSearch(e.target.value)}
+                placeholder="발문·지문·교재·출처·유형 (전체 문항에서 검색)"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              />
+            </label>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center xl:flex-col">
+            <button
+              type="button"
+              onClick={resetFilters}
+              disabled={!hasActiveFilters}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40"
             >
-              <option value="">전체 유형</option>
-              {BOOK_VARIANT_QUESTION_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block flex-1 text-xs font-bold text-slate-600">
-            이 페이지에서 검색
-            <input
-              value={pageSearch}
-              onChange={(e) => setPageSearch(e.target.value)}
-              placeholder="교재·출처·미리보기·정답"
-              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-            />
-          </label>
+              필터·검색 초기화
+            </button>
+            {isPreview && (
+              <Link
+                href="/my/premium/member-variants"
+                className="rounded-xl bg-violet-600 px-4 py-2.5 text-center text-xs font-bold text-white shadow-sm shadow-violet-500/20 transition hover:bg-violet-700"
+              >
+                전체 목록 보기
+              </Link>
+            )}
+          </div>
         </div>
+        {isPreview && (
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            이 목록에는 <strong className="text-slate-700">최신 10개</strong>만 빠르게 보여 드려요. 나머지는{' '}
+            <Link href="/my/premium/member-variants" className="font-bold text-violet-700 underline decoration-violet-200 underline-offset-2 hover:text-violet-900">
+              전체 목록 보기
+            </Link>
+            에서 확인할 수 있어요.
+          </p>
+        )}
       </div>
 
       <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
@@ -483,7 +710,7 @@ export default function MyMemberVariants({ refreshKey }: Props) {
             </span>
             <button
               type="button"
-              disabled={displayRows.length === 0 || loading}
+              disabled={items.length === 0 || loading}
               onClick={() => toggleSelectAllPage()}
               className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
             >
@@ -567,8 +794,24 @@ export default function MyMemberVariants({ refreshKey }: Props) {
           <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
         ) : items.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-12 text-center">
-            <p className="text-sm font-medium text-slate-600">아직 저장된 문항이 없습니다.</p>
-            <p className="mt-2 text-xs text-slate-500">위에서 지문을 넣고 생성한 뒤 「저장하기」를 눌러 보세요.</p>
+            {hasActiveFilters ? (
+              <>
+                <p className="text-sm font-medium text-slate-700">조건에 맞는 문항이 없습니다.</p>
+                <p className="mt-2 text-xs text-slate-500">교재·출처·유형·상태·난이도 또는 검색어를 바꿔 보세요.</p>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-4 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white hover:bg-violet-700"
+                >
+                  필터·검색 초기화
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-slate-600">아직 저장된 문항이 없습니다.</p>
+                <p className="mt-2 text-xs text-slate-500">위에서 지문을 넣고 생성한 뒤 「저장하기」를 눌러 보세요.</p>
+              </>
+            )}
           </div>
         ) : (
           <>
@@ -630,7 +873,7 @@ export default function MyMemberVariants({ refreshKey }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayRows.map((row) => (
+                  {items.map((row) => (
                     <tr
                       key={row.id}
                       className="cursor-pointer border-b border-slate-50 transition last:border-0 hover:bg-violet-50/50"
@@ -655,7 +898,7 @@ export default function MyMemberVariants({ refreshKey }: Props) {
             </div>
 
             <div className="space-y-3 md:hidden">
-              {displayRows.map((row) => (
+              {items.map((row) => (
                 <div
                   key={row.id}
                   className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition hover:border-violet-200 hover:bg-violet-50/30"
@@ -731,33 +974,48 @@ export default function MyMemberVariants({ refreshKey }: Props) {
               ))}
             </div>
 
-            {pageSearch && displayRows.length === 0 && (
-              <p className="mt-4 text-center text-sm text-slate-500">검색 조건에 맞는 문항이 이 페이지에 없습니다.</p>
-            )}
-
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500">
-              <span>
-                총 <strong className="text-slate-800">{total}</strong>건 ·{' '}
-                <strong className="text-slate-800">{skip + 1}</strong>–{Math.min(skip + items.length, total)}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={skip <= 0 || loading}
-                  onClick={() => void load(Math.max(0, skip - limit))}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-                >
-                  이전
-                </button>
-                <button
-                  type="button"
-                  disabled={skip + items.length >= total || loading}
-                  onClick={() => void load(skip + limit)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-                >
-                  다음
-                </button>
-              </div>
+              {isPreview ? (
+                <>
+                  <span>
+                    전체 <strong className="text-slate-800">{total}</strong>건 중{' '}
+                    <strong className="text-slate-800">최신 {Math.min(total, pageLimit)}건</strong>만 표시
+                  </span>
+                  {total > pageLimit ? (
+                    <Link
+                      href="/my/premium/member-variants"
+                      className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100"
+                    >
+                      나머지 {total - pageLimit}건 보기 →
+                    </Link>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <span>
+                    총 <strong className="text-slate-800">{total}</strong>건 ·{' '}
+                    <strong className="text-slate-800">{skip + 1}</strong>–{Math.min(skip + items.length, total)}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={skip <= 0 || loading}
+                      onClick={() => void load(Math.max(0, skip - pageLimit))}
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                    >
+                      이전
+                    </button>
+                    <button
+                      type="button"
+                      disabled={skip + items.length >= total || loading}
+                      onClick={() => void load(skip + pageLimit)}
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                    >
+                      다음
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}

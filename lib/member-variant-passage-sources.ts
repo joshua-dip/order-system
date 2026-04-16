@@ -53,4 +53,18 @@ export function isPassageDocTextbookAllowedForMemberVariant(storedTextbook: stri
   return false;
 }
 
+/**
+ * passages.textbook 기준 **공식 모의고사**만 (EBS 부교재 등 제외).
+ * 마이페이지 단어장 교재 목록 등에 사용.
+ */
+export function isMockExamPassageTextbookStored(storedTextbook: string): boolean {
+  const t = storedTextbook.trim();
+  if (!t || isEbsTextbook(t)) return false;
+  if (MOCK_EXAM_TEXTBOOK_KEYS.has(t)) return true;
+  for (const orderKey of MOCK_EXAM_TEXTBOOK_KEYS) {
+    if (mockExamOrderKeyToPassageTextbookCandidates(orderKey).includes(t)) return true;
+  }
+  return false;
+}
+
 export { MOCK_EXAM_TEXTBOOK_KEYS };

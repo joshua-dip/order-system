@@ -56,17 +56,39 @@ export async function POST(request: NextRequest) {
 
   const ownerId = new ObjectId(payload.sub);
   let hardInsertionDebited = false;
+  /** 차감 원장을 DB에 쓴 뒤에만 true — 환불 시 +원장 필요 여부 */
+  let hardInsertionSpendLedgerWritten = false;
   let generationCommitted = false;
   let balanceAfterHardDebit = 0;
 
-  const refundHardInsertionPoints = async (db: Db) => {
+  const refundHardInsertionPoints = async (db: Db, writeRefundLedger: boolean) => {
     if (!hardInsertionDebited) return;
     try {
-      await db.collection('users').updateOne({ _id: ownerId }, { $inc: { points: VARIANT_HARD_INSERTION_POINT_COST } });
+      const refundResult = await db.collection('users').findOneAndUpdate(
+        { _id: ownerId },
+        { $inc: { points: VARIANT_HARD_INSERTION_POINT_COST } },
+        { returnDocument: 'after' },
+      );
+      const newPts = (refundResult?.value as { points?: unknown } | null)?.points;
+      if (
+        writeRefundLedger &&
+        hardInsertionSpendLedgerWritten &&
+        typeof newPts === 'number' &&
+        Number.isFinite(newPts)
+      ) {
+        await recordPointLedger(db, {
+          userId: ownerId,
+          delta: VARIANT_HARD_INSERTION_POINT_COST,
+          balanceAfter: newPts,
+          kind: 'member_variant_refund',
+          meta: { reason: 'draft_generation_failed_or_error' },
+        });
+      }
     } catch (refundErr) {
       console.error('member-variant generate: 포인트 환불 실패', refundErr);
     }
     hardInsertionDebited = false;
+    hardInsertionSpendLedgerWritten = false;
   };
 
   try {
@@ -74,7 +96,16 @@ export async function POST(request: NextRequest) {
     const usersColl = db.collection('users');
     const user = await usersColl.findOne(
       { _id: ownerId },
-      { projection: { role: 1, annualMemberSince: 1, monthlyMemberUntil: 1, phone: 1, createdAt: 1 } },
+      {
+        projection: {
+          role: 1,
+          annualMemberSince: 1,
+          monthlyMemberUntil: 1,
+          signupPremiumTrialUntil: 1,
+          phone: 1,
+          createdAt: 1,
+        },
+      },
     );
     if (!user) {
       return NextResponse.json({ error: '사용자를 찾을 수 없습니다.' }, { status: 404 });
@@ -83,6 +114,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
       annualSince: (user as { annualMemberSince?: Date }).annualMemberSince ?? null,
       monthlyUntil: (user as { monthlyMemberUntil?: Date }).monthlyMemberUntil ?? null,
+      signupPremiumTrialUntil: (user as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil ?? null,
     });
     if (!premium) {
       const trial = getVariantTrialInfo((user as { createdAt?: Date }).createdAt ?? null);
@@ -125,6 +157,26 @@ export async function POST(request: NextRequest) {
     });
     const nextNum = await getNextMemberQuestionNum({ passage_id, source, type });
 
+    if (hardInsertionDebited) {
+      try {
+        await recordPointLedger(db, {
+          userId: ownerId,
+          delta: -VARIANT_HARD_INSERTION_POINT_COST,
+          balanceAfter: balanceAfterHardDebit,
+          kind: 'member_variant_hard',
+          meta: { type: '삽입-고난도', passage_id: String(passage_id) },
+        });
+        hardInsertionSpendLedgerWritten = true;
+      } catch (ledgerErr) {
+        console.error('member-variant generate: 차감 원장 기록 실패 — 포인트 환급', ledgerErr);
+        await refundHardInsertionPoints(db, false);
+        return NextResponse.json(
+          { error: '포인트 사용 내역을 저장하지 못했습니다. 차감된 포인트는 되돌려졌습니다. 잠시 후 다시 시도해 주세요.' },
+          { status: 503 },
+        );
+      }
+    }
+
     const ai = await generateVariantDraftQuestionDataWithClaude({
       paragraph,
       type,
@@ -135,25 +187,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!ai.ok) {
-      await refundHardInsertionPoints(db);
+      await refundHardInsertionPoints(db, true);
       return NextResponse.json({ error: ai.error }, { status: 422 });
     }
 
     generationCommitted = true;
-
-    if (hardInsertionDebited) {
-      try {
-        await recordPointLedger(db, {
-          userId: ownerId,
-          delta: -VARIANT_HARD_INSERTION_POINT_COST,
-          balanceAfter: balanceAfterHardDebit,
-          kind: 'member_variant_hard',
-          meta: { type: '삽입-고난도', passage_id: String(passage_id) },
-        });
-      } catch (ledgerErr) {
-        console.error('member-variant generate: point_ledger 기록 실패', ledgerErr);
-      }
-    }
 
     return NextResponse.json({
       ok: true,
@@ -169,7 +207,7 @@ export async function POST(request: NextRequest) {
     if (hardInsertionDebited && !generationCommitted) {
       try {
         const db = await getDb('gomijoshua');
-        await refundHardInsertionPoints(db);
+        await refundHardInsertionPoints(db, true);
       } catch {
         /* ignore */
       }

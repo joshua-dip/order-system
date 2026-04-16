@@ -3,7 +3,11 @@ import { ObjectId } from 'mongodb';
 import { verifyToken, COOKIE_NAME, comparePassword, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
 import { isAnnualMemberActive } from '@/lib/annual-member';
-import { isMonthlyMemberActive, isPremiumMember } from '@/lib/premium-member';
+import {
+  isMonthlyMemberActive,
+  isPremiumMember,
+  isSignupPremiumTrialActive,
+} from '@/lib/premium-member';
 import { getVariantTrialInfo } from '@/lib/variant-trial';
 
 export async function GET(request: NextRequest) {
@@ -39,6 +43,7 @@ export async function GET(request: NextRequest) {
           annualMemberSince: 1,
           monthlyMemberSince: 1,
           monthlyMemberUntil: 1,
+          signupPremiumTrialUntil: 1,
           phone: 1,
           isVip: 1,
           vipSince: 1,
@@ -68,10 +73,17 @@ export async function GET(request: NextRequest) {
         ? monthlyUntil.toISOString()
         : null;
     const monthlyMemberActive = isMonthlyMemberActive(monthlyUntil ?? null);
+    const signupTrialUntilRaw = (user as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil;
+    const signupPremiumTrialUntilIso =
+      signupTrialUntilRaw instanceof Date && !Number.isNaN(signupTrialUntilRaw.getTime())
+        ? signupTrialUntilRaw.toISOString()
+        : null;
+    const signupPremiumTrialActive = isSignupPremiumTrialActive(signupTrialUntilRaw ?? null);
     const premium = isPremiumMember({
       role: user.role,
       annualSince: annualSince ?? null,
       monthlyUntil: monthlyUntil ?? null,
+      signupPremiumTrialUntil: signupTrialUntilRaw ?? null,
     });
     const phoneRaw = (user as { phone?: string }).phone;
     const phone = typeof phoneRaw === 'string' ? phoneRaw.trim() : '';
@@ -108,6 +120,8 @@ export async function GET(request: NextRequest) {
         monthlyMemberUntil: monthlyMemberUntilIso,
         isMonthlyMemberActive: monthlyMemberActive,
         isPremiumMember: premium,
+        signupPremiumTrialUntil: signupPremiumTrialUntilIso,
+        signupPremiumTrialActive,
         phone,
         isVip: !!user.isVip,
         vipSince: vipSinceIso,
@@ -135,6 +149,8 @@ export async function GET(request: NextRequest) {
         monthlyMemberUntil: null,
         isMonthlyMemberActive: false,
         isPremiumMember: false,
+        signupPremiumTrialUntil: null,
+        signupPremiumTrialActive: false,
         phone: '',
         isVip: false,
         vipSince: null,

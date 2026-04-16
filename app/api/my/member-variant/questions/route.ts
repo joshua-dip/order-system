@@ -6,6 +6,60 @@ import { requirePremiumMemberVariant } from '@/lib/member-variant-premium-auth';
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 100;
 
+const EMPTY_MARKER = '__none__';
+
+function buildListFilter(
+  ownerUserId: unknown,
+  opts: {
+    type?: string;
+    textbook?: string;
+    source?: string;
+    status?: string;
+    difficulty?: string;
+    search?: string;
+  }
+): Record<string, unknown> {
+  const parts: Record<string, unknown>[] = [{ ownerUserId }];
+
+  if (opts.type) parts.push({ type: opts.type });
+
+  if (opts.textbook === EMPTY_MARKER) {
+    parts.push({
+      $or: [{ textbook: { $exists: false } }, { textbook: null }, { textbook: '' }],
+    });
+  } else if (opts.textbook) {
+    parts.push({ textbook: opts.textbook });
+  }
+
+  if (opts.source === EMPTY_MARKER) {
+    parts.push({
+      $or: [{ source: { $exists: false } }, { source: null }, { source: '' }],
+    });
+  } else if (opts.source) {
+    parts.push({ source: opts.source });
+  }
+
+  if (opts.status) parts.push({ status: opts.status });
+  if (opts.difficulty) parts.push({ difficulty: opts.difficulty });
+
+  if (opts.search) {
+    const esc = opts.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(esc, 'i');
+    parts.push({
+      $or: [
+        { textbook: re },
+        { source: re },
+        { type: re },
+        { 'question_data.Question': re },
+        { 'question_data.Paragraph': re },
+      ],
+    });
+  }
+
+  if (parts.length === 1) return parts[0]!;
+  return { $and: parts };
+}
+
 function previewParagraph(s: string, max = 160): string {
   const t = s.replace(/\s+/g, ' ').trim();
   if (t.length <= max) return t;
@@ -29,12 +83,25 @@ export async function GET(request: NextRequest) {
   let skip = parseInt(sp.get('skip') ?? '', 10);
   if (!Number.isFinite(skip) || skip < 0) skip = 0;
   const typeParam = sp.get('type')?.trim() ?? '';
+  const textbookParam = sp.get('textbook')?.trim() ?? '';
+  const sourceParam = sp.get('source')?.trim() ?? '';
+  const statusParam = sp.get('status')?.trim() ?? '';
+  const difficultyParam = sp.get('difficulty')?.trim() ?? '';
+  const searchParam = sp.get('search')?.trim() ?? '';
+  const search =
+    searchParam.length > 0 && searchParam.length <= 200 ? searchParam.slice(0, 200) : '';
 
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection(MEMBER_GENERATED_QUESTIONS_COLLECTION);
-    const filter: Record<string, unknown> = { ownerUserId: auth.userId };
-    if (typeParam) filter.type = typeParam;
+    const filter = buildListFilter(auth.userId, {
+      type: typeParam || undefined,
+      textbook: textbookParam || undefined,
+      source: sourceParam || undefined,
+      status: statusParam || undefined,
+      difficulty: difficultyParam || undefined,
+      search: search || undefined,
+    });
 
     const [total, rows] = await Promise.all([
       col.countDocuments(filter),
