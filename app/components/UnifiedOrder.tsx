@@ -126,6 +126,59 @@ function buildMockLessonGroups(displayName: string): Record<string, string[]> {
   };
 }
 
+function flattenLessonGroups(groups: Record<string, string[]>): string[] {
+  return Object.values(groups).flat();
+}
+
+/**
+ * 예전/외부 저장본에서 `selectedSources`가 `${textbookKey} 18번` 형태인 경우가 있어,
+ * 현재 lessonGroups의 `${displayName} 18번`과 맞지 않아 체크가 안 보이는 문제를 보정한다.
+ */
+function remapOrphanMockSource(
+  orphan: string,
+  textbookKey: string,
+  displayName: string,
+  validSources: string[]
+): string | null {
+  const t = orphan.trim();
+  if (validSources.includes(t)) return t;
+  const prefix = `${textbookKey.trim()} `;
+  if (t.startsWith(prefix)) {
+    const suffix = t.slice(prefix.length).trimStart();
+    const c = `${displayName} ${suffix}`;
+    if (validSources.includes(c)) return c;
+  }
+  const last = t.split(/\s+/).pop() ?? '';
+  if (last && MOCK_EXAM_NUMBERS.includes(last)) {
+    const c = `${displayName} ${last}`;
+    if (validSources.includes(c)) return c;
+  }
+  return null;
+}
+
+function sanitizeMockExamEntry(entry: DbEntry): DbEntry {
+  if (entry.type !== 'mockexam') return entry;
+  const valid = flattenLessonGroups(entry.lessonGroups);
+  if (valid.length === 0) return entry;
+  const next: string[] = [];
+  const seen = new Set<string>();
+  for (const s of entry.selectedSources) {
+    if (valid.includes(s)) {
+      if (!seen.has(s)) {
+        seen.add(s);
+        next.push(s);
+      }
+      continue;
+    }
+    const m = remapOrphanMockSource(s, entry.textbookKey, entry.displayName, valid);
+    if (m && !seen.has(m)) {
+      seen.add(m);
+      next.push(m);
+    }
+  }
+  return { ...entry, selectedSources: next };
+}
+
 /* ────────────────────────────────────────────────────────── */
 /*  localStorage 시험범위 헬퍼                                 */
 /* ────────────────────────────────────────────────────────── */
@@ -337,7 +390,8 @@ export default function UnifiedOrder() {
       prev.map((e) => {
         if (e.id !== dbId) return e;
         const groupSources = e.lessonGroups[groupKey] ?? [];
-        if (multi) {
+        /* 모의고사는 그룹이 시험 전체 1개라, 부교재처럼 "강당 1개만" 로직을 쓰면 번호별 선택이 불가능함 → 항상 토글 */
+        if (e.type === 'mockexam' || multi) {
           const has = e.selectedSources.includes(source);
           return {
             ...e,
@@ -445,18 +499,21 @@ export default function UnifiedOrder() {
     } else {
       setToast(`"${preset.name}" 불러오기 완료`);
     }
-    const restored: DbEntry[] = withoutSolbook.map((e) => ({
-      id: `${e.type}-${Date.now()}-${Math.random()}`,
-      type: e.type,
-      textbookKey: e.textbookKey,
-      displayName: e.displayName,
-      textbookCategory: e.type === 'textbook' ? e.textbookCategory : undefined,
-      lessonGroups:
-        e.type === 'textbook'
-          ? extractLessonGroups(textbooksData, e.textbookKey)
-          : buildMockLessonGroups(e.displayName),
-      selectedSources: e.selectedSources,
-    }));
+    const restored: DbEntry[] = withoutSolbook.map((e) => {
+      const base: DbEntry = {
+        id: `${e.type}-${Date.now()}-${Math.random()}`,
+        type: e.type,
+        textbookKey: e.textbookKey,
+        displayName: e.displayName,
+        textbookCategory: e.type === 'textbook' ? e.textbookCategory : undefined,
+        lessonGroups:
+          e.type === 'textbook'
+            ? extractLessonGroups(textbooksData, e.textbookKey)
+            : buildMockLessonGroups(e.displayName),
+        selectedSources: e.selectedSources,
+      };
+      return e.type === 'mockexam' ? sanitizeMockExamEntry(base) : base;
+    });
     setDbEntries(restored);
     setShowPresets(false);
     setPhase(2);
@@ -938,7 +995,10 @@ export default function UnifiedOrder() {
             {/* 다음 단계 */}
             <div className="flex justify-end">
               <button
-                onClick={() => setPhase(2)}
+                onClick={() => {
+                  setDbEntries((prev) => prev.map(sanitizeMockExamEntry));
+                  setPhase(2);
+                }}
                 disabled={dbEntries.length === 0}
                 className="rounded-xl bg-purple-700 px-8 py-3 font-bold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
               >
@@ -974,7 +1034,9 @@ export default function UnifiedOrder() {
                   개 지문 선택됨
                 </span>
                 <p className="mt-0.5 text-[11px] text-gray-500 leading-snug">
-                  같은 강 안에서 여러 번호를 고르려면 <kbd className="rounded border border-gray-300 bg-gray-100 px-1 font-mono text-[10px]">⌘</kbd> 또는{' '}
+                  <span className="text-gray-600">모의고사 번호는 클릭할 때마다 선택·해제됩니다.</span>{' '}
+                  부교재는 같은 강 안에서 여러 번호를 고르려면{' '}
+                  <kbd className="rounded border border-gray-300 bg-gray-100 px-1 font-mono text-[10px]">⌘</kbd> 또는{' '}
                   <kbd className="rounded border border-gray-300 bg-gray-100 px-1 font-mono text-[10px]">Ctrl</kbd> 을 누른 채 클릭하세요.
                 </p>
               </div>
@@ -991,7 +1053,10 @@ export default function UnifiedOrder() {
                   시험범위로 저장
                 </button>
                 <button
-                  onClick={() => setPhase(3)}
+                  onClick={() => {
+                    setDbEntries((prev) => prev.map(sanitizeMockExamEntry));
+                    setPhase(3);
+                  }}
                   disabled={totalSources === 0}
                   className="rounded-lg bg-purple-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-purple-800 disabled:opacity-40 transition-colors"
                 >
@@ -1145,19 +1210,34 @@ export default function UnifiedOrder() {
                                         key={src}
                                         htmlFor={passCbId}
                                         className="flex items-center gap-1 cursor-pointer group select-none"
-                                        title="일반 클릭: 이 강에서는 이 지문만 선택 · ⌘ 또는 Ctrl+클릭: 여러 지문 추가·해제"
+                                        title={
+                                          entry.type === 'mockexam'
+                                            ? '클릭할 때마다 선택·해제'
+                                            : '일반 클릭: 이 강에서는 이 지문만 선택 · ⌘ 또는 Ctrl+클릭: 여러 지문 추가·해제'
+                                        }
                                       >
-                                        <input
+                                        {/*
+                                          네이티브 checkbox + readOnly + preventDefault 조합은
+                                          일부 브라우저에서 DOM checked와 페인트가 어긋나 다른 곳 클릭 후에야 반영되는 현상이 있어
+                                          커스텀 토글 버튼(role=checkbox)으로 대체함.
+                                        */}
+                                        <button
                                           id={passCbId}
-                                          type="checkbox"
-                                          checked={checked}
-                                          readOnly
+                                          type="button"
+                                          role="checkbox"
+                                          aria-checked={checked}
+                                          aria-label={`${label} ${checked ? '선택됨' : '선택 안 됨'}`}
                                           onClick={(e) => {
-                                            e.preventDefault();
                                             pickSourceWithModifier(entry.id, groupKey, src, e.metaKey || e.ctrlKey);
                                           }}
-                                          className="h-3.5 w-3.5 shrink-0 rounded text-purple-600 focus:ring-purple-500"
-                                        />
+                                          className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[8px] font-bold leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-0 ${
+                                            checked
+                                              ? 'border-purple-600 bg-purple-600 text-white'
+                                              : 'border-gray-400 bg-white text-transparent hover:border-purple-400'
+                                          }`}
+                                        >
+                                          ✓
+                                        </button>
                                         <span className="text-xs text-gray-600 group-hover:text-purple-700 truncate">
                                           {label}
                                         </span>
@@ -1371,33 +1451,38 @@ export default function UnifiedOrder() {
             </div>
           )}
 
-          {/* 순서·삽입 해설 옵션 */}
-          {(selectedTypes.includes('순서') || selectedTypes.includes('삽입') || selectedTypes.includes('삽입-고난도')) && (
+          {/* 순서·삽입 해설 옵션 — 삽입-고난도만 선택 시에는 해당 유형이 없어 빈 박스가 되므로 순서/삽입이 있을 때만 표시 */}
+          {(selectedTypes.includes('순서') || selectedTypes.includes('삽입')) && (
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <h2 className="font-bold text-gray-800 mb-3">순서·삽입 해설 포함 여부</h2>
-              <div className="space-y-2">
+              <h2 className="font-bold text-gray-800 mb-1">순서·삽입 해설 포함 여부</h2>
+              <p className="text-xs text-gray-500 mb-4">
+                순서·삽입 유형을 고르신 경우에만 적용됩니다. 체크하면 해설 포함(80원/문항), 해제하면 문제·답만(50원/문항)으로 주문서에 반영됩니다.
+              </p>
+              <div className="space-y-4">
                 {(['순서', '삽입'] as const).map((t) =>
                   selectedTypes.includes(t) ? (
-                    <div key={t} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{t} 유형 해설</span>
-                      <div className="flex gap-2">
-                        {[true, false].map((v) => (
-                          <button
-                            key={String(v)}
-                            onClick={() =>
-                              setOrderInsertExplanation((prev) => ({ ...prev, [t]: v }))
-                            }
-                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                              orderInsertExplanation[t] === v
-                                ? 'bg-purple-600 text-white'
-                                : 'border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
-                            }`}
-                          >
-                            {v ? '포함 (80원)' : '미포함 (50원)'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <label
+                      key={t}
+                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 transition-colors hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        checked={orderInsertExplanation[t]}
+                        onChange={(e) =>
+                          setOrderInsertExplanation((prev) => ({ ...prev, [t]: e.target.checked }))
+                        }
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="text-sm font-semibold text-gray-800">{t}</span>
+                        <span className="text-sm text-gray-700"> 유형 — 해설 포함</span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          {orderInsertExplanation[t]
+                            ? '해설 포함으로 제작 · 문항당 80원'
+                            : '문제·답만(해설 제외) · 문항당 50원'}
+                        </span>
+                      </span>
+                    </label>
                   ) : null
                 )}
               </div>
