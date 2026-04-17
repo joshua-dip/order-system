@@ -282,15 +282,27 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                         onClick={() => onTextbookSelect(textbook)}
                         className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3 border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-1">
                               {textbook}
                             </h3>
                             <p className="text-xs text-gray-500">클릭하여 선택</p>
+                            {textbookLinks[textbook]?.extraUrl?.trim() ? (
+                              <a
+                                href={textbookLinks[textbook].extraUrl!.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="mt-1 inline-block max-w-full truncate text-[11px] font-medium text-violet-700 hover:text-violet-900 underline underline-offset-2"
+                                title={textbookLinks[textbook].extraLabel || '추가 링크'}
+                              >
+                                {textbookLinks[textbook].extraLabel?.trim() || '추가 링크'}
+                              </a>
+                            ) : null}
                           </div>
-                          {textbookLinks[textbook]?.kyoboUrl && (
-                            <div className="ml-3">
+                          {textbookLinks[textbook]?.kyoboUrl?.trim() ? (
+                            <div className="ml-auto shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -302,7 +314,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                                 📖 교재 확인
                               </button>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     );

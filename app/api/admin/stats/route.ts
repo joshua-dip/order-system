@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       db
         .collection('orders')
         .find({ status: 'completed' })
-        .project({ orderText: 1, revenueWon: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
+        .project({ orderText: 1, revenueWon: 1, orderMeta: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
         .toArray(),
       db.collection<SiteStatsDaily>('site_stats_daily').findOne({ _id: todayKey }),
     ]);

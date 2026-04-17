@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTextbooksData } from '@/lib/useTextbooksData';
@@ -56,6 +56,17 @@ interface ExamScopePreset {
   name: string;
   dbEntries: Omit<DbEntry, 'id' | 'lessonGroups'>[];
   savedAt: string;
+}
+
+/** 마이페이지 「학교 관리」에서 학년도·학기별로 저장한 범위 */
+interface SchoolExamSlot {
+  id: string;
+  schoolId: string;
+  schoolName: string;
+  schoolYear: string;
+  semester: string;
+  dbEntries: ExamScopePreset['dbEntries'];
+  updatedAt: string;
 }
 
 interface TextbookContent {
@@ -272,6 +283,7 @@ export default function UnifiedOrder() {
   const [savingScope, setSavingScope] = useState(false);
   const [scopeName, setScopeName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [schoolSlots, setSchoolSlots] = useState<SchoolExamSlot[]>([]);
 
   /* ── Phase2: 펼침 상태 ── */
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -288,6 +300,17 @@ export default function UnifiedOrder() {
   const [userPoints, setUserPoints] = useState(0);
   const [pointsToUse, setPointsToUse] = useState(0);
   const [showPointModal, setShowPointModal] = useState(false);
+  const [solbookRetailGuideText, setSolbookRetailGuideText] = useState('');
+
+  const hasSolbookInOrder = useMemo(
+    () =>
+      dbEntries.some(
+        (e) =>
+          e.type === 'textbook' &&
+          (e.textbookCategory === 'solbook-textbook' || e.textbookCategory === 'solbook-suppl')
+      ),
+    [dbEntries]
+  );
 
   /* ── 토스트 ── */
   const [toast, setToast] = useState('');
@@ -310,6 +333,23 @@ export default function UnifiedOrder() {
       })
       .finally(() => setAuthChecked(true));
   }, []);
+
+  useEffect(() => {
+    if (!premiumOk) return;
+    fetch('/api/settings/variant-solbook', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        setSolbookRetailGuideText(
+          typeof d?.retailPriceGuideText === 'string' ? d.retailPriceGuideText.trim() : ''
+        );
+      })
+      .catch(() => {});
+  }, [premiumOk]);
+
+  useEffect(() => {
+    if (!hasSolbookInOrder) return;
+    setPointsToUse(0);
+  }, [hasSolbookInOrder]);
 
   useEffect(() => {
     import('@/app/data/mock-exams.json').then((mod) => {
@@ -335,6 +375,34 @@ export default function UnifiedOrder() {
   useEffect(() => {
     loadPresets();
   }, [loadPresets]);
+
+  const loadSchoolSlots = useCallback(async () => {
+    try {
+      const res = await fetch('/api/my/school-exam-scopes', { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.slots)) {
+        setSchoolSlots(
+          data.slots.map((s: Record<string, unknown>) => ({
+            id: String(s.id ?? ''),
+            schoolId: String(s.schoolId ?? ''),
+            schoolName: String(s.schoolName ?? ''),
+            schoolYear: String(s.schoolYear ?? ''),
+            semester: String(s.semester ?? ''),
+            dbEntries: (Array.isArray(s.dbEntries) ? s.dbEntries : []) as ExamScopePreset['dbEntries'],
+            updatedAt: String(s.updatedAt ?? ''),
+          }))
+        );
+      } else {
+        setSchoolSlots([]);
+      }
+    } catch {
+      setSchoolSlots([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (phase === 1) void loadSchoolSlots();
+  }, [phase, loadSchoolSlots]);
 
   /* ── DB 추가 핸들러 ── */
   const handleAddTextbook = (key: string, category: 'ebs' | 'solbook-textbook' | 'solbook-suppl') => {
@@ -559,7 +627,8 @@ export default function UnifiedOrder() {
     return sum + pricePerQuestion(t) * cnt * totalSources;
   }, 0);
 
-  const finalPrice = Math.max(0, totalPrice - pointsToUse);
+  const effectivePointsDeduction = hasSolbookInOrder ? 0 : pointsToUse;
+  const finalPrice = Math.max(0, totalPrice - effectivePointsDeduction);
 
   /* ── 주문 제출 ── */
   const handleSubmit = async () => {
@@ -588,7 +657,18 @@ export default function UnifiedOrder() {
       `순서·삽입 해설: 순서 ${orderInsertExplanation.순서 ? '포함' : '미포함'}, 삽입 ${orderInsertExplanation.삽입 ? '포함' : '미포함'}`,
       `이메일: ${email.trim()}`,
       `총 지문 수: ${totalSources}개`,
-      `예상 금액: ${finalPrice.toLocaleString()}원`,
+      `예상 금액(변형 제작료): ${finalPrice.toLocaleString()}원`,
+      ...(hasSolbookInOrder
+        ? [
+            '',
+            '[ 쏠북 교재 포함 시 안내 ]',
+            '· 위 금액은 변형 문제 제작·연동에 대한 금액이며, 쏠북에서 판매하는 교재 본체(인쇄본·전자본 등) 구매 대금은 포함되지 않습니다.',
+            '· 쏠북 교재가 시험 범위에 포함된 경우 포인트 사용은 적용되지 않습니다.',
+            solbookRetailGuideText.trim()
+              ? `· 쏠북 교재 본체 예상 금액(참고): ${solbookRetailGuideText.trim()}`
+              : '· 교재 본체 가격은 쏠북 정책에 따르므로, 쏠북 또는 안내 링크에서 확인해 주세요.',
+          ]
+        : []),
     ].join('\n');
 
     const orderMeta = {
@@ -605,9 +685,23 @@ export default function UnifiedOrder() {
       questionsPerTypeMap,
       orderInsertExplanation,
       email: email.trim(),
+      ...(hasSolbookInOrder
+        ? {
+            solbookOrderNotes: {
+              pointsDisabled: true,
+              depositScopeNote: '변형 제작료만 입금 대상(쏠북 교재 본체 별도)',
+              retailPriceGuideText: solbookRetailGuideText || undefined,
+            },
+          }
+        : {}),
     };
 
-    const res = await saveOrderToDb(orderText, 'UV', pointsToUse || undefined, orderMeta);
+    const res = await saveOrderToDb(
+      orderText,
+      'UV',
+      hasSolbookInOrder ? undefined : pointsToUse || undefined,
+      orderMeta
+    );
     if (res.ok && res.id) {
       router.push('/order/done?id=' + res.id);
     } else {
@@ -766,7 +860,7 @@ export default function UnifiedOrder() {
             <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50 p-5">
               <h2 className="text-base font-bold text-purple-900 mb-1">어떻게 사용하나요?</h2>
               <ol className="text-sm text-purple-700 space-y-1 list-decimal list-inside">
-                <li>부교재 또는 모의고사를 추가해 시험 범위를 구성합니다</li>
+                <li>부교재 또는 모의고사를 추가해 시험 범위를 구성합니다 (마이페이지 「학교 관리」에 저장해 두면 아래에서 바로 불러올 수 있습니다)</li>
                 <li>다음 단계에서 강·번호별로 출제할 지문을 선택합니다</li>
                 <li>원하는 유형과 유형별 문항 수를 설정하고 주문합니다</li>
               </ol>
@@ -817,6 +911,46 @@ export default function UnifiedOrder() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* 학교·학기별 저장 범위 (마이페이지 학교 관리) */}
+            {schoolSlots.length > 0 && (
+              <div className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+                <h2 className="font-bold text-gray-800 mb-1">학교·학기 저장 범위</h2>
+                <p className="text-xs text-gray-500 mb-3">
+                  마이페이지 「학교 관리」에서 학년도·학기마다 연결한 시험 범위를 바로 불러옵니다.
+                </p>
+                <div className="space-y-2">
+                  {schoolSlots.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-indigo-100 bg-indigo-50/90 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-800">{slot.schoolName}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {slot.schoolYear}년 · {slot.semester} · 교재·모의 {slot.dbEntries.length}줄
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          applyPreset({
+                            id: slot.id,
+                            name: `${slot.schoolName} · ${slot.schoolYear} · ${slot.semester}`,
+                            dbEntries: slot.dbEntries,
+                            savedAt: slot.updatedAt || new Date().toISOString(),
+                          })
+                        }
+                        disabled={tbLoading}
+                        className="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        불러오기
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1312,7 +1446,9 @@ export default function UnifiedOrder() {
   /*  Phase 3: 문제 설정                                       */
   /* ──────────────────────────────────────────────────────── */
 
-  const pointsMax = Math.min(userPoints, Math.floor(totalPrice / 10) * 10);
+  const pointsMax = hasSolbookInOrder
+    ? 0
+    : Math.min(userPoints, Math.floor(totalPrice / 10) * 10);
 
   return (
     <>
@@ -1489,8 +1625,8 @@ export default function UnifiedOrder() {
             </div>
           )}
 
-          {/* 포인트 */}
-          {isMember && userPoints > 0 && (
+          {/* 포인트 — 쏠북 교재가 시험 범위에 있으면 쏠북 가격 정책과 충돌을 피하기 위해 비활성 */}
+          {isMember && userPoints > 0 && !hasSolbookInOrder && (
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
@@ -1504,6 +1640,24 @@ export default function UnifiedOrder() {
                   {pointsToUse > 0 ? `${pointsToUse.toLocaleString()}P 사용 중` : '사용하기'}
                 </button>
               </div>
+            </div>
+          )}
+          {hasSolbookInOrder && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-5 shadow-sm text-sm text-amber-950 leading-relaxed">
+              <p className="font-bold text-amber-900 mb-1">쏠북 교재가 포함된 주문</p>
+              <p>
+                쏠북에서 판매하는 교재 본체 금액은 이 화면의 금액에 포함되지 않으며,{' '}
+                <strong>포인트 사용도 적용되지 않습니다.</strong> 아래 금액은 변형 문제 제작료만 해당합니다.
+              </p>
+              {solbookRetailGuideText.trim() ? (
+                <p className="mt-2 text-amber-900/95">
+                  <span className="font-semibold">교재 본체 예상 금액(참고):</span> {solbookRetailGuideText.trim()}
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-amber-900/85">
+                  교재 본체 소비자가는 교재·옵션에 따라 달라지므로 쏠북 또는 구매 안내 링크에서 확인해 주세요.
+                </p>
+              )}
             </div>
           )}
 
@@ -1524,23 +1678,29 @@ export default function UnifiedOrder() {
             <h2 className="font-bold text-purple-900 mb-3">주문 금액</h2>
             <div className="space-y-1 text-sm text-purple-800">
               <div className="flex justify-between">
-                <span>소계</span>
+                <span>소계 (변형 제작)</span>
                 <span>{totalPrice.toLocaleString()}원</span>
               </div>
-              {pointsToUse > 0 && (
+              {effectivePointsDeduction > 0 && (
                 <div className="flex justify-between text-green-700">
                   <span>포인트 할인</span>
-                  <span>− {pointsToUse.toLocaleString()}원</span>
+                  <span>− {effectivePointsDeduction.toLocaleString()}원</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-base text-purple-900 border-t border-purple-200 pt-2 mt-2">
-                <span>최종 금액</span>
+                <span>{hasSolbookInOrder ? '입금 대상(제작료)' : '최종 금액'}</span>
                 <span>{finalPrice.toLocaleString()}원</span>
               </div>
             </div>
+            {hasSolbookInOrder && (
+              <p className="mt-2 text-[11px] leading-relaxed text-purple-900/90">
+                위 입금은 <strong>변형 문제 제작·연동</strong>에 해당하는 금액입니다. 쏠북 교재 본체는 쏠북에서 별도로
+                구매하시면 됩니다.
+              </p>
+            )}
             {finalPrice > 0 && (
               <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs text-purple-700">
-                <p className="font-bold mb-0.5">입금 계좌</p>
+                <p className="font-bold mb-0.5">입금 계좌 (제작료)</p>
                 <p className="font-mono">{MEMBER_DEPOSIT_ACCOUNT}</p>
               </div>
             )}

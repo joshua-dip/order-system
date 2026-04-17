@@ -1,8 +1,24 @@
+/** 단어장 주문(orderMeta)에 저장된 합계 */
+function parseVocabularyTotalFromOrderMeta(orderMeta: unknown): number | null {
+  if (!orderMeta || typeof orderMeta !== 'object' || Array.isArray(orderMeta)) return null;
+  const m = orderMeta as Record<string, unknown>;
+  if (m.flow !== 'vocabulary') return null;
+  const tp = m.totalPrice;
+  if (typeof tp === 'number' && Number.isFinite(tp) && tp >= 0) return Math.round(tp);
+  return null;
+}
+
 /**
  * 주문서(orderText)에서 실매출(원) 추출 — 플로우별 문구 패턴.
- * 우선순위: 실입금액 → 최종금액 → 고정 번호 항목(가격/금액) → 총·기본 금액
+ * 우선순위: orderMeta(단어장 totalPrice) → 실입금액 → 최종금액 → 고정 번호 항목(가격/금액) → 총·기본 금액
  */
-export function parseOrderRevenueFromOrderText(text: string | null | undefined): number | null {
+export function parseOrderRevenueFromOrderText(
+  text: string | null | undefined,
+  orderMeta?: unknown
+): number | null {
+  const fromMeta = parseVocabularyTotalFromOrderMeta(orderMeta);
+  if (fromMeta != null && fromMeta > 0) return fromMeta;
+
   if (!text || typeof text !== 'string') return null;
   const t = text.replace(/\r\n/g, '\n');
 
@@ -14,6 +30,8 @@ export function parseOrderRevenueFromOrderText(text: string | null | undefined):
   const patterns: RegExp[] = [
     /입금하실\s*금액\s*[:：]?\s*([\d,]+)\s*원/i,
     /최종\s*금액\s*[:：]?\s*([\d,]+)\s*원/,
+    // 단어장(BL): "3. 가격\n: 3지문 × 3,000원 = 9,000원"
+    /(?:단어장\s*주문서[\s\S]*?)(?:^|\n)3\.\s*가격\s*\n:\s*.+?=\s*([\d,]+)\s*원/m,
     /(?:^|\n)5\.\s*가격\s*\n:\s*([\d,]+)\s*원/m,
     /(?:^|\n)4\.\s*금액\s*[:：]?\s*([\d,]+)\s*원/m,
     /총\s*금액\s*[:：]?\s*([\d,]+)\s*원/,
@@ -96,14 +114,39 @@ export function startOfKoreaMonth(ref = new Date()): Date {
   return new Date(`${y}-${mo}-01T00:00:00+09:00`);
 }
 
+/**
+ * 부교재 변형(BV) + 쏠북 연계 주문: orderMeta.solbook.chargedExtraFeeWon 이 있으면
+ * 통계·관리자 매출은 이 금액만 집계(변형 문항 제작료는 쏠북 정책과 별도로 취급).
+ */
+export function getBookVariantSolbookAccounting(
+  orderMeta: unknown
+): { chargedCustomWon: number } | null {
+  if (!orderMeta || typeof orderMeta !== 'object' || Array.isArray(orderMeta)) return null;
+  const m = orderMeta as Record<string, unknown>;
+  if (m.flow !== 'bookVariant') return null;
+  const sb = m.solbook;
+  if (!sb || typeof sb !== 'object' || Array.isArray(sb)) return null;
+  const charged = (sb as Record<string, unknown>).chargedExtraFeeWon;
+  if (typeof charged !== 'number' || !Number.isFinite(charged) || charged < 0) return null;
+  return { chargedCustomWon: Math.round(charged) };
+}
+
+/**
+ * 통계·관리자 목록의 「매출」숫자.
+ * 쏠북 연계 BV는 solbook.chargedExtraFeeWon 만, 그 외는 기존(저장값 또는 주문서 파싱).
+ */
 export function effectiveOrderRevenueWon(order: {
   revenueWon?: unknown;
   orderText?: unknown;
+  orderMeta?: unknown;
 }): number {
+  const sol = getBookVariantSolbookAccounting(order.orderMeta);
+  if (sol) return sol.chargedCustomWon;
   const stored = order.revenueWon;
   if (typeof stored === 'number' && Number.isFinite(stored) && stored >= 0) return stored;
   const parsed = parseOrderRevenueFromOrderText(
-    typeof order.orderText === 'string' ? order.orderText : ''
+    typeof order.orderText === 'string' ? order.orderText : '',
+    order.orderMeta
   );
   return parsed ?? 0;
 }

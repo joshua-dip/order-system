@@ -80,13 +80,21 @@ export async function GET() {
         부교재Keys,
         purchaseUrl: normalized.purchaseUrl,
         extraFeeWon: normalized.extraFeeWon,
+        retailPriceGuideText: normalized.retailPriceGuideText,
       },
       { headers: NO_STORE_HEADERS }
     );
   } catch (err) {
     console.error('variant-solbook settings GET:', err);
     return NextResponse.json(
-      { textbookKeys: [], 교과서Keys: [], 부교재Keys: [], purchaseUrl: '', extraFeeWon: 3000 },
+      {
+        textbookKeys: [],
+        교과서Keys: [],
+        부교재Keys: [],
+        purchaseUrl: '',
+        extraFeeWon: 3000,
+        retailPriceGuideText: '',
+      },
       { status: 200, headers: NO_STORE_HEADERS }
     );
   }

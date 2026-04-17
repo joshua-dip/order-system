@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         textbookKeys: sortedKeys,
         purchaseUrl: normalized.purchaseUrl,
         extraFeeWon: normalized.extraFeeWon,
+        retailPriceGuideText: normalized.retailPriceGuideText,
       },
       { headers: NO_STORE_HEADERS }
     );
@@ -52,12 +53,17 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 });
   }
   try {
+    const db = await getDb('gomijoshua');
+    const existingDoc = await db.collection('settings').findOne({ _id: SETTINGS_ID } as any);
+    const prev = normalizeVariantSolbookValue(existingDoc?.value);
+
     const body = await request.json();
     const textbookKeys = Array.isArray(body.textbookKeys)
       ? body.textbookKeys.filter((k: unknown): k is string => typeof k === 'string')
-      : [];
-    const purchaseUrl = typeof body.purchaseUrl === 'string' ? body.purchaseUrl.trim() : '';
-    let extraFeeWon = DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON;
+      : prev.textbookKeys;
+    const purchaseUrl =
+      typeof body.purchaseUrl === 'string' ? body.purchaseUrl.trim() : prev.purchaseUrl;
+    let extraFeeWon = prev.extraFeeWon;
     if (body.extraFeeWon !== undefined) {
       const n =
         typeof body.extraFeeWon === 'number'
@@ -67,8 +73,11 @@ export async function PUT(request: NextRequest) {
             : NaN;
       if (Number.isFinite(n) && n >= 0) extraFeeWon = Math.round(n);
     }
-    const value = { textbookKeys, purchaseUrl, extraFeeWon };
-    const db = await getDb('gomijoshua');
+    const retailPriceGuideText =
+      typeof body.retailPriceGuideText === 'string'
+        ? body.retailPriceGuideText.trim()
+        : prev.retailPriceGuideText;
+    const value = { textbookKeys, purchaseUrl, extraFeeWon, retailPriceGuideText };
     await db.collection('settings').updateOne(
       { _id: SETTINGS_ID } as any,
       { $set: { value, updatedAt: new Date() } },

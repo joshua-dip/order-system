@@ -429,7 +429,14 @@ export default function AdminPassagesPage() {
 
   /** MongoDB textbook_links + 출판사 — 교재 메타데이터 종합 관리 */
   const [linksPanelOpen, setLinksPanelOpen] = useState(true);
-  const [linkDrafts, setLinkDrafts] = useState<Record<string, { kyoboUrl: string; description: string }>>({});
+  type LinkDraftRow = { kyoboUrl: string; description: string; extraUrl: string; extraLabel: string };
+  const emptyLinkDraft = (): LinkDraftRow => ({
+    kyoboUrl: '',
+    description: '',
+    extraUrl: '',
+    extraLabel: '',
+  });
+  const [linkDrafts, setLinkDrafts] = useState<Record<string, LinkDraftRow>>({});
   const [publisherByTextbook, setPublisherByTextbook] = useState<Record<string, SolbookPublisher | null>>({});
   const [publisherSavingKey, setPublisherSavingKey] = useState<string | null>(null);
   const [textbookTypeByTextbook, setTextbookTypeByTextbook] = useState<Record<string, '교과서' | '부교재' | null>>({});
@@ -449,16 +456,21 @@ export default function AdminPassagesPage() {
       .then((r) => r.json())
       .then((d) => {
         if (!d.links || typeof d.links !== 'object') return;
-        const map = d.links as Record<string, { kyoboUrl?: string; description?: string }>;
-        const next: Record<string, { kyoboUrl: string; description: string }> = {};
+        const map = d.links as Record<
+          string,
+          { kyoboUrl?: string; description?: string; extraUrl?: string; extraLabel?: string }
+        >;
+        const next: Record<string, LinkDraftRow> = {};
         for (const [k, v] of Object.entries(map)) {
           next[k] = {
             kyoboUrl: typeof v?.kyoboUrl === 'string' ? v.kyoboUrl : '',
             description: typeof v?.description === 'string' ? v.description : '',
+            extraUrl: typeof v?.extraUrl === 'string' ? v.extraUrl : '',
+            extraLabel: typeof v?.extraLabel === 'string' ? v.extraLabel : '',
           };
         }
         setLinkDrafts((prev) => {
-          const out: Record<string, { kyoboUrl: string; description: string }> = { ...next };
+          const out: Record<string, LinkDraftRow> = { ...next };
           for (const k of Object.keys(prev)) {
             if (!(k in out)) out[k] = prev[k];
           }
@@ -562,20 +574,24 @@ export default function AdminPassagesPage() {
     setLinkDrafts((prev) => {
       const next = { ...prev };
       for (const t of textbooks) {
-        if (!(t in next)) next[t] = { kyoboUrl: '', description: '' };
+        if (!(t in next)) next[t] = emptyLinkDraft();
       }
       return next;
     });
   }, [textbooks]);
 
-  const setLinkField = (textbookKey: string, field: 'kyoboUrl' | 'description', value: string) => {
-    setLinkDrafts((prev) => ({
-      ...prev,
-      [textbookKey]: {
-        kyoboUrl: field === 'kyoboUrl' ? value : prev[textbookKey]?.kyoboUrl ?? '',
-        description: field === 'description' ? value : prev[textbookKey]?.description ?? '',
-      },
-    }));
+  const setLinkField = (
+    textbookKey: string,
+    field: keyof LinkDraftRow,
+    value: string
+  ) => {
+    setLinkDrafts((prev) => {
+      const cur = prev[textbookKey] ?? emptyLinkDraft();
+      return {
+        ...prev,
+        [textbookKey]: { ...cur, [field]: value },
+      };
+    });
   };
 
   const saveTextbookLink = async (textbookKey: string) => {
@@ -622,7 +638,7 @@ export default function AdminPassagesPage() {
       }
       setLinkDrafts((prev) => ({
         ...prev,
-        [textbookKey]: { kyoboUrl: '', description: '' },
+        [textbookKey]: emptyLinkDraft(),
       }));
       setLinkMsg({ type: 'ok', text: '삭제했습니다.' });
     } catch {
@@ -979,7 +995,7 @@ export default function AdminPassagesPage() {
                       <th className="px-3 py-2 font-medium w-28">쏠북 출판사</th>
                       <th className="px-3 py-2 font-medium w-28">교과서/부교재</th>
                       <th className="px-3 py-2 font-medium min-w-[7rem]">폴더</th>
-                      <th className="px-3 py-2 font-medium min-w-[200px]">구매 URL</th>
+                      <th className="px-3 py-2 font-medium min-w-[200px]">구매 URL / 추가 링크</th>
                       <th className="px-3 py-2 font-medium min-w-[140px]">설명(툴팁)</th>
                       <th className="px-3 py-2 font-medium w-36 text-right">작업</th>
                     </tr>
@@ -995,8 +1011,8 @@ export default function AdminPassagesPage() {
                       </tr>
                     ) : (
                       linkRowKeys.map((key) => {
-                        const draft = linkDrafts[key] ?? { kyoboUrl: '', description: '' };
-                        const hasSaved = !!draft.kyoboUrl?.trim();
+                        const draft = linkDrafts[key] ?? emptyLinkDraft();
+                        const hasSaved = !!(draft.kyoboUrl?.trim() || draft.extraUrl?.trim());
                         const currentPublisher = publisherByTextbook[key] ?? null;
                         const isSavingPublisher = publisherSavingKey === key;
                         const currentTextbookType = textbookTypeByTextbook[key] ?? null;
@@ -1075,11 +1091,23 @@ export default function AdminPassagesPage() {
                                 ))}
                               </select>
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 space-y-1.5">
                               <input
                                 value={draft.kyoboUrl}
                                 onChange={(e) => setLinkField(key, 'kyoboUrl', e.target.value)}
-                                placeholder="https://..."
+                                placeholder="구매 URL (YES24 등)"
+                                className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white font-mono"
+                              />
+                              <input
+                                value={draft.extraLabel}
+                                onChange={(e) => setLinkField(key, 'extraLabel', e.target.value)}
+                                placeholder="추가 링크 제목 (예: [쏠북링크] …)"
+                                className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white"
+                              />
+                              <input
+                                value={draft.extraUrl}
+                                onChange={(e) => setLinkField(key, 'extraUrl', e.target.value)}
+                                placeholder="추가 URL (블로그·안내)"
                                 className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white font-mono"
                               />
                             </td>
@@ -1117,7 +1145,7 @@ export default function AdminPassagesPage() {
                 </table>
               </div>
               <p className="text-slate-500 text-xs mt-2">
-                교재명은 passages에 저장된 문자열과 정확히 같아야 주문 화면에서 매칭됩니다. 쏠북 출판사 변경 시 해당 교재의 모든 지문에 일괄 적용됩니다.
+                교재명은 passages에 저장된 문자열과 정확히 같아야 주문 화면에서 매칭됩니다. 추가 링크·제목은 구매 URL이 없어도 등록할 수 있으며, 교과서 자료 주문(/gyogwaseo) 목록에서는 <strong className="text-slate-200">쏠북 구매·안내</strong>용 주 버튼으로 쓰입니다. 쏠북 출판사 변경 시 해당 교재의 모든 지문에 일괄 적용됩니다.
               </p>
             </div>
           )}

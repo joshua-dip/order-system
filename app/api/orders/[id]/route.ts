@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { parseOrderRevenueFromOrderText } from '@/lib/order-revenue';
+import { parseOrderRevenueFromOrderText, getBookVariantSolbookAccounting } from '@/lib/order-revenue';
 import { tryRefundPointsAfterOrderCancelled } from '@/lib/refund-order-points-on-cancel';
 
 const COLLECTION = 'orders';
@@ -84,9 +84,18 @@ export async function PATCH(
 
       const now = new Date();
       let parsedRevenue: number | null = null;
+      let orderGrossWon: number | null = null;
+      let solbookAccountingSplit = false;
       if (newStatus === 'completed') {
         const text = typeof existing.orderText === 'string' ? existing.orderText : '';
-        parsedRevenue = parseOrderRevenueFromOrderText(text);
+        const om = (existing as { orderMeta?: unknown }).orderMeta;
+        const gross = parseOrderRevenueFromOrderText(text, om);
+        const solAcc = getBookVariantSolbookAccounting(om);
+        parsedRevenue = solAcc ? solAcc.chargedCustomWon : gross;
+        if (solAcc) {
+          solbookAccountingSplit = true;
+          orderGrossWon = gross != null && gross > 0 ? gross : null;
+        }
         await col.updateOne(
           { _id: new ObjectId(id) },
           { $set: { status: newStatus, revenueWon: parsedRevenue, completedAt: now } }
@@ -107,6 +116,9 @@ export async function PATCH(
         ok: true,
         revenueWon: newStatus === 'completed' ? parsedRevenue : null,
         completedAt: newStatus === 'completed' ? now.toISOString() : null,
+        ...(newStatus === 'completed' && solbookAccountingSplit
+          ? { orderGrossWon, solbookAccountingSplit: true }
+          : {}),
       });
     }
 

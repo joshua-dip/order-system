@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { validateExamScopeDbEntries } from '@/lib/validate-exam-scope-db-entries';
 
 const COLLECTION = 'exam_scopes';
 const MAX_PRESETS = 20;
@@ -62,8 +63,9 @@ export async function POST(request: NextRequest) {
   if (!name) {
     return NextResponse.json({ error: '시험범위 이름을 입력해주세요.' }, { status: 400 });
   }
-  if (!Array.isArray(body.dbEntries) || body.dbEntries.length === 0) {
-    return NextResponse.json({ error: 'DB 항목이 없습니다.' }, { status: 400 });
+  const scopeErr = validateExamScopeDbEntries(body.dbEntries);
+  if (scopeErr) {
+    return NextResponse.json({ error: scopeErr }, { status: 400 });
   }
 
   try {

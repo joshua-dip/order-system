@@ -168,14 +168,14 @@ function useHubSections(
     };
     const gyogwaseo: HubEntry = {
       id: 'gyogwaseo',
-      title: '교과서 변형문제 주문',
+      title: '교과서 자료 주문',
       description: (
         <>
-          YBM · 쎄듀 · NE능률
+          <span className="font-semibold text-violet-700">쏠북 정식 교재·구매</span>를 먼저 안내드립니다
           <br />
-          교과서 맞춤 문항 선택
+          맞춤은 강·시험 범위·유형을 골라 주문
           <br />
-          <span className="font-semibold text-violet-600">쏠북 교재 지원</span>
+          <span className="font-semibold text-slate-600">통합 주문</span>으로 변형·워크북·분석지·단어장 등 조합도 가능
         </>
       ),
       icon: <IconGyogwaseo /> as ReactNode,
@@ -251,7 +251,7 @@ function useHubSections(
         id: 'bundle',
         title: '통합 주문',
         description: isMember
-          ? (<>교재 하나로 변형·워크북·서술형·분석지를<br />한 번에 주문</>)
+          ? (<>교과서·부교재 하나를 기준으로<br />변형·워크북·서술형·분석지·단어장 등을<br />원하는 조합으로 한 번에 담기</>)
           : (<>회원 전용 서비스입니다<br />로그인 후 이용해 주세요</>),
         icon: <IconBundle /> as ReactNode,
         accentColor: '#7C3AED',
@@ -497,7 +497,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                     본인 Claude API 키로 지문을 넣고 초안을 생성합니다
                   </p>
                   <p className="mt-0.5 text-xs text-amber-100">
-                    가입하면 7일 무료 · 월구독·연회원 전용 · 클릭하면 이용 안내와 요금을 확인할 수 있습니다
+                    로그인 없이 바로 사용 가능
                   </p>
                 </div>
                 <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-cyan-100 sm:ml-6">
@@ -575,49 +575,77 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               >
                 <h3 className="text-lg font-bold text-gray-900">변형문제 만들기</h3>
                 {!isMember ? (
-                  <p className="text-sm text-gray-600">
-                    회원 가입 후 <strong>7일간 무료</strong>로 체험할 수 있습니다. 이후에는 <strong>연회원</strong> 또는 <strong>월구독</strong>이 필요하며, 본인 Claude API 키가 필요합니다.
-                    <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
-                  </p>
+                  <>
+                    <p className="text-sm text-gray-600">
+                      본인 Claude API 키로 <strong>로그인 없이 바로</strong> 변형문제를 체험할 수 있습니다.
+                      <br />
+                      저장·내보내기(HWP/Excel)는 월구독 회원 전용입니다.
+                      <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/variant"
+                        className="block text-center rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700"
+                        onClick={() => setByokGateOpen(false)}
+                      >
+                        로그인 없이 체험하기
+                      </Link>
+                      <Link
+                        href="/login?from=/my/premium/variant-generate"
+                        className="block text-center rounded-xl border border-sky-300 px-4 py-3 text-sm font-semibold text-sky-900 hover:bg-sky-50"
+                        onClick={() => setByokGateOpen(false)}
+                      >
+                        로그인 (저장 기능 포함)
+                      </Link>
+                      <a
+                        href={KAKAO_INQUIRY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-center rounded-xl border border-amber-300 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-50"
+                      >
+                        카카오톡 문의
+                      </a>
+                      <button
+                        type="button"
+                        className="text-sm text-gray-500 underline"
+                        onClick={() => setByokGateOpen(false)}
+                      >
+                        닫기
+                      </button>
+                    </div>
+                  </>
                 ) : (
-                  <p className="text-sm text-gray-600">
-                    가입일 기준 <strong>7일간 무료 체험</strong>이 가능합니다. 체험 종료 후에는 <strong>연회원</strong> 또는 <strong>월구독</strong>이 필요합니다. 본인 Claude API 키로 초안을 생성합니다. 가입·요금 안내는 카카오톡으로 문의해 주세요.
-                    <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
-                  </p>
+                  <>
+                    <p className="text-sm text-gray-600">
+                      가입일 기준 <strong>7일간 무료 체험</strong>이 가능합니다. 체험 종료 후에는 <strong>연회원</strong> 또는 <strong>월구독</strong>이 필요합니다. 본인 Claude API 키로 초안을 생성합니다.
+                      <span className="block text-xs text-gray-500 mt-2">{membershipPricingOneLiner()}</span>
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/my"
+                        className="block text-center rounded-xl bg-sky-700 px-4 py-3 text-sm font-bold text-white hover:bg-sky-800"
+                        onClick={() => setByokGateOpen(false)}
+                      >
+                        내 정보 (구독·API 키 설정)
+                      </Link>
+                      <a
+                        href={KAKAO_INQUIRY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-center rounded-xl border border-amber-300 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-50"
+                      >
+                        카카오톡 문의
+                      </a>
+                      <button
+                        type="button"
+                        className="text-sm text-gray-500 underline"
+                        onClick={() => setByokGateOpen(false)}
+                      >
+                        닫기
+                      </button>
+                    </div>
+                  </>
                 )}
-                <div className="flex flex-col gap-2">
-                  {!isMember ? (
-                    <Link
-                      href="/login?from=/my/premium/variant-generate"
-                      className="block text-center rounded-xl bg-sky-700 px-4 py-3 text-sm font-bold text-white hover:bg-sky-800"
-                      onClick={() => setByokGateOpen(false)}
-                    >
-                      로그인
-                    </Link>
-                  ) : null}
-                  <Link
-                    href="/my"
-                    className="block text-center rounded-xl border border-sky-300 px-4 py-3 text-sm font-semibold text-sky-900 hover:bg-sky-50"
-                    onClick={() => setByokGateOpen(false)}
-                  >
-                    내 정보
-                  </Link>
-                  <a
-                    href={KAKAO_INQUIRY_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-center rounded-xl border border-amber-300 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-50"
-                  >
-                    카카오톡 문의
-                  </a>
-                  <button
-                    type="button"
-                    className="text-sm text-gray-500 underline"
-                    onClick={() => setByokGateOpen(false)}
-                  >
-                    닫기
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -625,7 +653,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
           <section className="mt-8" aria-labelledby="hub-primary-heading">
             <div className="mb-4">
               <h2 id="hub-primary-heading" className="text-lg font-bold text-slate-900 tracking-tight">
-                모의고사 · 부교재 · 교과서 변형문제
+                모의고사 · 부교재 · 교과서 자료 주문
               </h2>
               <p className="mt-1 text-sm text-slate-600">가장 많이 이용하시는 주문입니다. 아래에서 바로 시작할 수 있어요.</p>
             </div>

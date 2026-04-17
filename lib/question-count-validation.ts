@@ -44,6 +44,21 @@ export function parseQuestionStatusScope(raw: string | null | undefined): Questi
   return 'all';
 }
 
+/**
+ * 문제수 검증 집계·대기 건수: `option_type`이 English인 문항만 포함.
+ * (필드 없음·null·빈 문자열은 English로 간주 — 레거시 호환.)
+ */
+export function matchGeneratedQuestionOptionTypeEnglish(): Document {
+  return {
+    $or: [
+      { option_type: 'English' },
+      { option_type: { $exists: false } },
+      { option_type: null },
+      { option_type: '' },
+    ],
+  };
+}
+
 /** API/스냅샷 공통 — 목록은 전체 행 포함(화면은 잘라서 표시) */
 export type QuestionCountValidationPayload = {
   ok: true;
@@ -62,7 +77,7 @@ export type QuestionCountValidationPayload = {
   noQuestions: NoQuestionRow[];
   underfilled: UnderfilledRow[];
   /**
-   * 검증 범위 지문에 연결된 변형문 중 status=대기 건수.
+   * 검증 범위 지문에 연결된 변형문 중 status=대기 이고 option_type=English(또는 미설정) 건수.
    * 검수·풀이 후 `variant_review_pending_record`(정답 일치 시 완료) 대상.
    */
   pendingReviewTotal: number;
@@ -96,8 +111,11 @@ async function aggregateCountsByPassageAndType(
     return new Map<string, Map<string, number>>();
   }
   const idStrings = ids.map((id) => id.toString());
-  const passageMatch: Document = {
+  const passageIdMatch: Document = {
     $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
+  };
+  const passageMatch: Document = {
+    $and: [passageIdMatch, matchGeneratedQuestionOptionTypeEnglish()],
   };
   const match: Document =
     questionStatus === 'all'
@@ -145,6 +163,34 @@ async function aggregateCountsByPassageAndType(
   return countMap;
 }
 
+async function aggregatePassageAnyDocCount(
+  gqCol: Collection<Document>,
+  ids: ObjectId[]
+): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (ids.length === 0) return out;
+  const idStrings = ids.map((id) => id.toString());
+  const agg = await gqCol
+    .aggregate([
+      {
+        $match: {
+          $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
+        },
+      },
+      {
+        $group: {
+          _id: { $toString: '$passage_id' },
+          c: { $sum: 1 },
+        },
+      },
+    ])
+    .toArray();
+  for (const row of agg) {
+    out.set(String(row._id ?? ''), Number(row.c) || 0);
+  }
+  return out;
+}
+
 async function aggregateStatusBreakdownByPassageAndType(
   gqCol: Collection<Document>,
   ids: ObjectId[]
@@ -153,7 +199,10 @@ async function aggregateStatusBreakdownByPassageAndType(
   if (ids.length === 0) return out;
   const idStrings = ids.map((id) => id.toString());
   const passageMatch: Document = {
-    $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
+    $and: [
+      { $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }] },
+      matchGeneratedQuestionOptionTypeEnglish(),
+    ],
   };
   const agg = await gqCol
     .aggregate([
@@ -492,20 +541,25 @@ export async function runQuestionCountValidation(
 
     const ids = passageDocs.map((p) => p._id as ObjectId);
     const idStrings = ids.map((id) => id.toString());
-    const countMap = await aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope);
+    const [countMap, passageAnyDocCount] = await Promise.all([
+      aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope),
+      aggregatePassageAnyDocCount(gqCol, ids),
+    ]);
 
     const { noQuestionsFull, underfilledFull: underfilledRaw } = buildQuestionCountReport(
       passageDocs,
       countMap,
       typesToCheck,
       requiredPerType,
-      textbook
+      textbook,
+      passageAnyDocCount
     );
 
     const passagePendingMatch: Document = {
       $and: [
         { $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }] },
         { status: '대기' },
+        matchGeneratedQuestionOptionTypeEnglish(),
       ],
     };
 

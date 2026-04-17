@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 import { requireAdmin } from '@/lib/admin-auth';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 import { variationPercentAgainstOriginal } from '@/lib/paragraph-variation';
@@ -360,6 +361,9 @@ export async function POST(request: NextRequest) {
     if (type === '어법') {
       question_data = { ...question_data, Options: GRAMMAR_VARIANT_OPTIONS_FIXED };
     }
+
+    const enriched = enrichQuestionDataWithExplanationIfEmpty(question_data, type);
+    if (enriched) question_data = enriched;
 
     const now = new Date();
     const doc = {

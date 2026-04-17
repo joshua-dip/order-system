@@ -49,9 +49,18 @@ interface QuestionSettingsProps {
   onOrderGenerate: OrderGenerateHandler;
   onBack: () => void;
   onBackToTextbook: () => void;
+  /** /gyogwaseo 에서만 전달 — 쏠북 우선·통합 주문 안내 */
+  orderFlow?: 'gyogwaseo';
 }
 
-const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, onBack, onBackToTextbook }: QuestionSettingsProps) => {
+const QuestionSettings = ({
+  selectedTextbook,
+  selectedLessons,
+  onOrderGenerate,
+  onBack,
+  onBackToTextbook,
+  orderFlow,
+}: QuestionSettingsProps) => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [email, setEmail] = useState<string>('');
@@ -89,6 +98,7 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
   const [solbookKeys, setSolbookKeys] = useState<string[]>([]);
   const [solbookPurchaseUrl, setSolbookPurchaseUrl] = useState('');
   const [solbookExtraFeeWon, setSolbookExtraFeeWon] = useState(DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON);
+  const [solbookRetailGuideText, setSolbookRetailGuideText] = useState('');
 
   const [avLoading, setAvLoading] = useState(false);
   const [avErr, setAvErr] = useState<string | null>(null);
@@ -143,6 +153,9 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
         if (typeof d?.extraFeeWon === 'number' && Number.isFinite(d.extraFeeWon) && d.extraFeeWon >= 0) {
           setSolbookExtraFeeWon(Math.round(d.extraFeeWon));
         }
+        setSolbookRetailGuideText(
+          typeof d?.retailPriceGuideText === 'string' ? d.retailPriceGuideText.trim() : ''
+        );
       })
       .catch(() => {});
   }, []);
@@ -492,34 +505,42 @@ const QuestionSettings = ({ selectedTextbook, selectedLessons, onOrderGenerate, 
     const solbookPurchaseLine = solbookPurchaseUrl.trim()
       ? `교재 구매 링크(참고): ${solbookPurchaseUrl.trim()}`
       : `교재 구매: 쏠북 링크로 구매하실 수 있습니다. (구체 URL은 운영자가 별도 안내드릴 수 있습니다.)`;
+    const solbookRetailLine =
+      solbookRetailGuideText.trim().length > 0
+        ? `쏠북 교재 본체 예상 금액(참고): ${solbookRetailGuideText.trim()}`
+        : '쏠북 교재 본체 소비자가는 교재·옵션에 따라 달라지므로, 쏠북 또는 위 구매 링크에서 확인해 주세요.';
     const solbookBlockPaid = isSolbookOrder
       ? `
 
-5-2. 쏠북 커스텀 비용
-: ${solbookExtraFeeWon.toLocaleString()}원 (쏠북 지정 교재 주문 시 추가)
-5-3. 교재 구매 안내
+5-2. 금액 구분 (쏠북 연계)
+- 변형 문항 제작 합계: ${variantSubtotal.toLocaleString()}원 (고미조슈아 입금·제작 대상)
+- 쏠북 커스텀(추가): ${solbookExtraFeeWon.toLocaleString()}원 (고미조슈아 입금·제작 대상)
+- 교재 본체(인쇄본·전자본 등): 쏠북에서 별도 결제 — 아래 금액에 포함되지 않습니다.
+5-3. 교재 본체(쏠북) 안내
 ${solbookPurchaseLine}
-변형문제 제작과 별도로, 교재 본체는 쏠북(또는 안내드리는 링크)을 통해 구매하시는 절차가 있을 수 있습니다.
-5-4. 제작 착수(입금) 조건
-쏠북 커스텀 비용(${solbookExtraFeeWon.toLocaleString()}원)은 주문 제작에 들어가기 전 선입금으로 확인되어야 합니다. 입금 확인 후 제작을 진행합니다.
+${solbookRetailLine}
+5-4. 제작 착수(입금) — 고미조슈아 측
+위 「변형 문항 제작」+「쏠북 커스텀」에 해당하는 금액(${totalPrice.toLocaleString()}원)만 계좌 입금 확인 후 제작을 진행합니다. 교재 본체 구매 대금은 이 입금에 포함되지 않습니다.
 5-5. 구매 링크 발송
-선입금 확인 후 1일 이내에 쏠북 구매 링크(또는 안내)를 카카오·문자·이메일 등으로 보내드립니다.`
+입금 확인 후 1일 이내에 쏠북 구매 링크(또는 안내)를 카카오·문자·이메일 등으로 보내드릴 수 있습니다.`
       : '';
     const solbookBlockMemberWaived =
       isSolbookTextbook && solbookCustomFeeWaived && solbookFee === 0
         ? `
 
-5-2. 쏠북 교재
-: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 비용이 면제됩니다.
-5-3. 교재 구매 안내
+5-2. 쏠북 교재 (연·월 회원)
+: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 비용이 면제되어, 고미조슈아 입금 대상은 변형 문항 제작 합계(${variantSubtotal.toLocaleString()}원)입니다.
+5-3. 교재 본체(쏠북) 안내
 ${solbookPurchaseLine}
-변형문제 제작과 별도로, 교재 본체는 쏠북(또는 안내드리는 링크)을 통해 구매하시는 절차가 있을 수 있습니다.`
+${solbookRetailLine}
+변형문제 제작과 별도로, 교재 본체는 쏠북(또는 안내드리는 링크)을 통해 구매하시면 됩니다.`
         : '';
     const solbookBlock = solbookBlockPaid || solbookBlockMemberWaived;
 
-    const pointLine = pointsUsedAmount > 0
-      ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n입금하실 금액: ${Math.max(0, totalPrice - pointsUsedAmount).toLocaleString()}원`
-      : '';
+    const pointLine =
+      pointsUsedAmount > 0 && !isSolbookTextbook
+        ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n입금하실 금액(제작료): ${Math.max(0, totalPrice - pointsUsedAmount).toLocaleString()}원`
+        : '';
 
     const priceBreakdownLine = isSolbookOrder
       ? `\n   (문항 합계 ${variantSubtotal.toLocaleString()}원 + 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원)`
@@ -539,8 +560,8 @@ ${solbookPurchaseLine}
 : ${questionsPerType}문항씩
 4. 총 문항 수
 : ${totalQuestions}문항
-5. 가격
-: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${priceBreakdownLine}${pointLine}
+5. 가격 (고미조슈아 변형 제작·쏠북 커스텀 합산)
+: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 교재 본체(쏠북 판매가)는 별도이며, 포인트 사용은 적용되지 않습니다.' : ''}
 
 5-1. HWP 저장 방식
 : ${formatHwpStorageSummary(hwpStorageModes)}${solbookBlock}${useCustomHwp ? `
@@ -566,7 +587,9 @@ ${solbookPurchaseLine}
               extraFeeWon: solbookExtraFeeWon,
               chargedExtraFeeWon: solbookFee,
               purchaseUrl: solbookPurchaseUrl.trim(),
+              retailPriceGuideText: solbookRetailGuideText.trim(),
               customFeeWaivedMember: solbookCustomFeeWaived && solbookFee === 0,
+              pointsDisabled: true,
             },
           }
         : {}),
@@ -583,10 +606,10 @@ ${solbookPurchaseLine}
   const generateOrder = () => {
     if (orderSubmittingRef.current) return;
     if (!validateOrder()) return;
-    const { totalPrice: tp } = computeBookVariantPrice();
+    const { totalPrice: tp, isSolbookTextbook: sb } = computeBookVariantPrice();
     const maxUsable = Math.min(userPoints, tp);
     const effective =
-      loggedIn && usePoints && userPoints > 0 ? Math.min(Math.max(0, pointsToUse), maxUsable) : 0;
+      loggedIn && usePoints && userPoints > 0 && !sb ? Math.min(Math.max(0, pointsToUse), maxUsable) : 0;
     void submitOrder(effective);
   };
 
@@ -602,15 +625,23 @@ ${solbookPurchaseLine}
     solbookCustomFeeWaived,
   } = computeBookVariantPrice();
 
-  const maxPointUsable = Math.min(userPoints, totalPrice);
+  const maxPointUsable = isSolbookTextbook ? 0 : Math.min(userPoints, totalPrice);
   const pointsAppliedPreview =
-    loggedIn && usePoints && userPoints > 0 ? Math.min(Math.max(0, pointsToUse), maxPointUsable) : 0;
+    loggedIn && usePoints && userPoints > 0 && !isSolbookTextbook
+      ? Math.min(Math.max(0, pointsToUse), maxPointUsable)
+      : 0;
   const depositAfterPoints = Math.max(0, totalPrice - pointsAppliedPreview);
 
   useEffect(() => {
-    if (!usePoints || userPoints <= 0) return;
+    if (!isSolbookTextbook) return;
+    setUsePoints(false);
+    setPointsToUse(0);
+  }, [isSolbookTextbook]);
+
+  useEffect(() => {
+    if (!usePoints || userPoints <= 0 || isSolbookTextbook) return;
     setPointsToUse((p) => Math.min(Math.max(0, p), maxPointUsable));
-  }, [usePoints, userPoints, maxPointUsable]);
+  }, [usePoints, userPoints, maxPointUsable, isSolbookTextbook]);
 
   return (
     <>
@@ -664,6 +695,20 @@ ${solbookPurchaseLine}
             </div>
           </div>
         </div>
+
+        {orderFlow === 'gyogwaseo' ? (
+          <div className="max-w-4xl mx-auto mb-6 rounded-xl border border-violet-200 bg-violet-50/90 px-4 py-3.5 sm:px-5 text-sm text-violet-950 shadow-sm">
+            <p className="font-semibold text-violet-950">교과서 자료 주문 — 유형·문항 맞춤</p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-violet-900/95">
+              이 단계에서는 선택하신 강·지문에 대한 <strong className="text-violet-950">변형 문항 조합</strong>을 정합니다.
+              교재 본체는 앞 단계의 쏠북 안내를 참고해 주시고, 단어장·워크북·분석지 등을 한꺼번에 담으시려면{' '}
+              <Link href="/bundle" className="font-semibold underline decoration-violet-400 underline-offset-2 hover:text-violet-800">
+                통합 주문
+              </Link>
+              을 이용해 보세요.
+            </p>
+          </div>
+        ) : null}
 
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1244,97 +1289,125 @@ ${solbookPurchaseLine}
                       </div>
 
                       <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-800 font-medium">내 포인트</span>
-                          <span className="font-bold text-indigo-700 tabular-nums">
-                            {loggedIn ? `${userPoints.toLocaleString()}P` : '—'}
-                          </span>
-                        </div>
-                        {!loggedIn && (
-                          <p className="text-xs text-gray-500 leading-snug">
-                            로그인하면 보유 포인트로 결제 금액을 줄일 수 있어요.
-                          </p>
-                        )}
-                        {loggedIn && userPoints === 0 && (
-                          <p className="text-xs text-gray-500">사용 가능한 포인트가 없습니다.</p>
-                        )}
-                        {loggedIn && userPoints > 0 && (
-                          <>
-                            <label className="flex items-start gap-2.5 cursor-pointer pt-0.5">
-                              <input
-                                type="checkbox"
-                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
-                                checked={usePoints}
-                                onChange={(e) => {
-                                  const on = e.target.checked;
-                                  setUsePoints(on);
-                                  if (on) {
-                                    setPointsToUse(Math.min(userPoints, totalPrice));
-                                  } else {
-                                    setPointsToUse(0);
-                                  }
-                                }}
-                              />
-                              <span className="text-gray-800 leading-snug">
-                                포인트로 결제 금액 차감 <span className="text-gray-500">(1P = 1원)</span>
+                        {isSolbookTextbook ? (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2.5 text-xs text-amber-950 leading-relaxed">
+                            <p className="font-semibold text-amber-900 mb-1">쏠북 연계 교재</p>
+                            <p>
+                              쏠북 가격 정책과의 혼선을 막기 위해 <strong>포인트 사용은 불가</strong>입니다. 아래 총액은
+                              변형 제작·쏠북 커스텀(해당 시)만 해당하며, 교재 본체는 쏠북에서 별도 구매합니다.
+                            </p>
+                            {solbookRetailGuideText.trim() ? (
+                              <p className="mt-2">
+                                <span className="font-semibold">교재 본체 예상 금액(참고):</span>{' '}
+                                {solbookRetailGuideText.trim()}
+                              </p>
+                            ) : (
+                              <p className="mt-2 text-amber-900/90">
+                                교재 본체 소비자가는 쏠북 또는 구매 안내 링크에서 확인해 주세요.
+                              </p>
+                            )}
+                            <div className="flex justify-between items-center border-t border-amber-200/80 pt-2 mt-2">
+                              <span className="text-gray-800 font-medium">입금 예정(제작료)</span>
+                              <span className="font-bold text-lg text-black tabular-nums">
+                                {depositAfterPoints.toLocaleString()}원
                               </span>
-                            </label>
-                            {usePoints && (
-                              <div className="pl-0 space-y-2 border-t border-slate-200 pt-2">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-xs text-gray-600">사용할 포인트</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setPointsToUse(maxPointUsable)}
-                                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
-                                  >
-                                    전액
-                                  </button>
-                                </div>
-                                <div className="flex items-center gap-2">
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-800 font-medium">내 포인트</span>
+                              <span className="font-bold text-indigo-700 tabular-nums">
+                                {loggedIn ? `${userPoints.toLocaleString()}P` : '—'}
+                              </span>
+                            </div>
+                            {!loggedIn && (
+                              <p className="text-xs text-gray-500 leading-snug">
+                                로그인하면 보유 포인트로 결제 금액을 줄일 수 있어요.
+                              </p>
+                            )}
+                            {loggedIn && userPoints === 0 && (
+                              <p className="text-xs text-gray-500">사용 가능한 포인트가 없습니다.</p>
+                            )}
+                            {loggedIn && userPoints > 0 && (
+                              <>
+                                <label className="flex items-start gap-2.5 cursor-pointer pt-0.5">
                                   <input
-                                    type="number"
-                                    min={0}
-                                    max={maxPointUsable}
-                                    value={pointsToUse}
+                                    type="checkbox"
+                                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                                    checked={usePoints}
                                     onChange={(e) => {
-                                      const v = Math.max(
-                                        0,
-                                        Math.min(maxPointUsable, Math.floor(Number(e.target.value) || 0)),
-                                      );
-                                      setPointsToUse(v);
+                                      const on = e.target.checked;
+                                      setUsePoints(on);
+                                      if (on) {
+                                        setPointsToUse(Math.min(userPoints, totalPrice));
+                                      } else {
+                                        setPointsToUse(0);
+                                      }
                                     }}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-right text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-blue-300"
                                   />
-                                  <span className="text-gray-500 text-xs shrink-0">P</span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={0}
-                                  max={maxPointUsable}
-                                  value={Math.min(pointsToUse, maxPointUsable)}
-                                  onChange={(e) => setPointsToUse(Number(e.target.value))}
-                                  className="w-full accent-blue-600"
-                                />
-                                <div className="flex justify-between text-[11px] text-gray-400">
-                                  <span>0P</span>
-                                  <span>{maxPointUsable.toLocaleString()}P</span>
-                                </div>
-                                {pointsAppliedPreview > 0 && (
-                                  <div className="flex justify-between items-center text-xs pt-1">
-                                    <span className="text-green-700">포인트 차감</span>
-                                    <span className="font-bold text-green-700">
-                                      -{pointsAppliedPreview.toLocaleString()}P
-                                    </span>
+                                  <span className="text-gray-800 leading-snug">
+                                    포인트로 결제 금액 차감 <span className="text-gray-500">(1P = 1원)</span>
+                                  </span>
+                                </label>
+                                {usePoints && (
+                                  <div className="pl-0 space-y-2 border-t border-slate-200 pt-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-xs text-gray-600">사용할 포인트</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setPointsToUse(maxPointUsable)}
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                                      >
+                                        전액
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={maxPointUsable}
+                                        value={pointsToUse}
+                                        onChange={(e) => {
+                                          const v = Math.max(
+                                            0,
+                                            Math.min(maxPointUsable, Math.floor(Number(e.target.value) || 0)),
+                                          );
+                                          setPointsToUse(v);
+                                        }}
+                                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-right text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                      />
+                                      <span className="text-gray-500 text-xs shrink-0">P</span>
+                                    </div>
+                                    <input
+                                      type="range"
+                                      min={0}
+                                      max={maxPointUsable}
+                                      value={Math.min(pointsToUse, maxPointUsable)}
+                                      onChange={(e) => setPointsToUse(Number(e.target.value))}
+                                      className="w-full accent-blue-600"
+                                    />
+                                    <div className="flex justify-between text-[11px] text-gray-400">
+                                      <span>0P</span>
+                                      <span>{maxPointUsable.toLocaleString()}P</span>
+                                    </div>
+                                    {pointsAppliedPreview > 0 && (
+                                      <div className="flex justify-between items-center text-xs pt-1">
+                                        <span className="text-green-700">포인트 차감</span>
+                                        <span className="font-bold text-green-700">
+                                          -{pointsAppliedPreview.toLocaleString()}P
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between items-center border-t border-slate-200 pt-2">
+                                      <span className="text-gray-800 font-medium">입금 예정</span>
+                                      <span className="font-bold text-lg text-black tabular-nums">
+                                        {depositAfterPoints.toLocaleString()}원
+                                      </span>
+                                    </div>
                                   </div>
                                 )}
-                                <div className="flex justify-between items-center border-t border-slate-200 pt-2">
-                                  <span className="text-gray-800 font-medium">입금 예정</span>
-                                  <span className="font-bold text-lg text-black tabular-nums">
-                                    {depositAfterPoints.toLocaleString()}원
-                                  </span>
-                                </div>
-                              </div>
+                              </>
                             )}
                           </>
                         )}

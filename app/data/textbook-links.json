@@ -110,5 +110,11 @@
   "EBS 수능특강Q 미니모의고사 영어 Jump": {
     "kyoboUrl": "https://product.kyobobook.co.kr/detail/S000214507250",
     "description": "EBS 수능특강Q 미니모의고사 영어 Jump(2026)"
+  },
+  "영어I_YBM박준언_변형문제_강별": {
+    "kyoboUrl": "",
+    "description": "YBM 박준언 영어I 변형문제(강별) — 쏠북 안내",
+    "extraUrl": "https://blog.naver.com/englishcloud_/224253913588",
+    "extraLabel": "[쏠북링크] 영어I_YBM박준언_변형문제_강별"
   }
 }

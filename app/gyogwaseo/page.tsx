@@ -76,6 +76,7 @@ export default function GyogwaseoPage() {
           onOrderGenerate={handleOrderGenerate}
           onBack={handleBackToLessons}
           onBackToTextbook={handleBackToLessons}
+          orderFlow="gyogwaseo"
         />
       );
 

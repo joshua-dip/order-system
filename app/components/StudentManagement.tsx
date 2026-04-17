@@ -6,20 +6,26 @@ import Link from 'next/link';
 export interface MyStudent {
   id: string;
   school: string;
+  schoolId?: string;
   grade: string;
   name: string;
   createdAt: string;
 }
 
+type SchoolRow = { id: string; name: string };
+
 type Props = {
   /** 목록 건수 변경 시 상단 탭 배지용 */
   onCountChange?: (count: number) => void;
+  /** 학교 미등록 시 학교 관리 탭으로 안내 */
+  onOpenSchoolTab?: () => void;
 };
 
-export default function StudentManagement({ onCountChange }: Props) {
+export default function StudentManagement({ onCountChange, onOpenSchoolTab }: Props) {
   const [students, setStudents] = useState<MyStudent[]>([]);
+  const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [school, setSchool] = useState('');
+  const [schoolId, setSchoolId] = useState('');
   const [grade, setGrade] = useState('');
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -46,20 +52,31 @@ export default function StudentManagement({ onCountChange }: Props) {
     fetchStudents();
   }, [fetchStudents]);
 
+  useEffect(() => {
+    fetch('/api/my/schools', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setSchools(Array.isArray(d.schools) ? d.schools : []))
+      .catch(() => setSchools([]));
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+    if (!schoolId) {
+      setMessage({ type: 'error', text: '학교를 선택해 주세요. (학교 관리에서 먼저 등록)' });
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch('/api/my/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ school, grade, name }),
+        body: JSON.stringify({ schoolId, grade, name }),
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setSchool('');
+        setSchoolId('');
         setGrade('');
         setName('');
         setMessage({ type: 'success', text: '학생이 추가되었습니다.' });
@@ -102,24 +119,47 @@ export default function StudentManagement({ onCountChange }: Props) {
         <div className="px-5 py-4 border-b border-[#f1f5f9]">
           <p className="text-sm font-bold text-[#0f172a]">학생 추가</p>
           <p className="text-[12px] text-[#94a3b8] mt-0.5">
-            학교·학년·이름을 입력해 학생을 등록한 뒤, 아래 메뉴에서 성적·변형문제 채점을 관리할 수 있습니다.
+            <strong>학교 관리</strong>에서 등록한 학교를 고른 뒤 학년·이름을 입력합니다.
           </p>
         </div>
+        {schools.length === 0 && (
+          <div className="mx-5 mb-0 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            등록된 학교가 없습니다.{' '}
+            {onOpenSchoolTab ? (
+              <button
+                type="button"
+                onClick={onOpenSchoolTab}
+                className="font-bold text-amber-900 underline underline-offset-2"
+              >
+                학교 관리
+              </button>
+            ) : (
+              <span className="font-semibold">학교 관리</span>
+            )}
+            탭에서 학교를 먼저 추가해 주세요.
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="stu-school" className="block text-xs font-semibold text-[#475569] mb-1.5">
                 학교
               </label>
-              <input
+              <select
                 id="stu-school"
-                type="text"
-                value={school}
-                onChange={(e) => setSchool(e.target.value)}
-                placeholder="예: OO고등학교"
-                className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                value={schoolId}
+                onChange={(e) => setSchoolId(e.target.value)}
+                className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)] bg-white"
                 required
-              />
+                disabled={schools.length === 0}
+              >
+                <option value="">학교 선택</option>
+                {schools.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label htmlFor="stu-grade" className="block text-xs font-semibold text-[#475569] mb-1.5">
@@ -166,7 +206,7 @@ export default function StudentManagement({ onCountChange }: Props) {
           )}
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || schools.length === 0}
             className="w-full sm:w-auto px-6 py-3 rounded-xl text-[13px] font-bold bg-[#2563eb] text-white hover:bg-[#1d4ed8] disabled:opacity-50 transition-colors"
           >
             {submitting ? '추가 중…' : '학생 추가'}

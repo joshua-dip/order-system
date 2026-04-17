@@ -4,6 +4,7 @@ import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
+import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, passage_id, ...rest } = doc;
@@ -112,6 +113,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           Source: normalizeMockVariantSourceLabel(tbForQd, qd.Source.trim()),
         };
       }
+      const effTypeForExpl =
+        typeof $set.type === 'string'
+          ? ($set.type as string).trim()
+          : String((existing as { type?: unknown }).type ?? '').trim();
+      const qdForExpl = $set.question_data as Record<string, unknown>;
+      const explEnriched = enrichQuestionDataWithExplanationIfEmpty(qdForExpl, effTypeForExpl);
+      if (explEnriched) $set.question_data = explEnriched;
     }
 
     await col.updateOne({ _id: new ObjectId(id) }, { $set });

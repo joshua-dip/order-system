@@ -46,15 +46,11 @@ export async function POST(request: NextRequest) {
 
     if (body?.links && typeof body.links === 'object' && !Array.isArray(body.links)) {
       const links = body.links as TextbookLinksMap;
-      const entries = Object.entries(links).filter(
-        ([k, v]) =>
-          typeof k === 'string' &&
-          k.trim() &&
-          v &&
-          typeof v === 'object' &&
-          typeof (v as { kyoboUrl?: string }).kyoboUrl === 'string' &&
-          typeof (v as { description?: string }).description === 'string'
-      );
+      const entries = Object.entries(links).filter(([k, v]) => {
+        if (typeof k !== 'string' || !k.trim() || !v || typeof v !== 'object') return false;
+        const o = v as { kyoboUrl?: string; description?: string; extraUrl?: string; extraLabel?: string };
+        return typeof o.kyoboUrl === 'string' && typeof o.description === 'string';
+      });
       if (entries.length === 0) {
         return NextResponse.json({ error: '유효한 links 항목이 없습니다.' }, { status: 400 });
       }
@@ -67,6 +63,15 @@ export async function POST(request: NextRequest) {
                 textbookKey,
                 kyoboUrl: String(v.kyoboUrl).trim(),
                 description: String(v.description).trim(),
+                ...(typeof (v as { extraUrl?: string }).extraUrl === 'string'
+                  ? {
+                      extraUrl: (v as { extraUrl: string }).extraUrl.trim(),
+                      extraLabel:
+                        typeof (v as { extraLabel?: string }).extraLabel === 'string'
+                          ? (v as { extraLabel: string }).extraLabel.trim()
+                          : '',
+                    }
+                  : {}),
                 updatedAt: now,
               },
             },
@@ -84,11 +89,17 @@ export async function POST(request: NextRequest) {
     if (!textbookKey) {
       return NextResponse.json({ error: 'textbookKey는 필수입니다.' }, { status: 400 });
     }
-    await col.updateOne(
-      { textbookKey },
-      { $set: { textbookKey, kyoboUrl, description, updatedAt: now } },
-      { upsert: true }
-    );
+    const setDoc: Record<string, unknown> = {
+      textbookKey,
+      kyoboUrl,
+      description,
+      updatedAt: now,
+    };
+    if ('extraUrl' in body || 'extraLabel' in body) {
+      setDoc.extraUrl = typeof body?.extraUrl === 'string' ? body.extraUrl.trim() : '';
+      setDoc.extraLabel = typeof body?.extraLabel === 'string' ? body.extraLabel.trim() : '';
+    }
+    await col.updateOne({ textbookKey }, { $set: setDoc }, { upsert: true });
     await col.createIndex({ textbookKey: 1 }, { unique: true }).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (e) {

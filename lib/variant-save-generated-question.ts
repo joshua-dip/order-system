@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
+import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 
 /** 삽입·삽입-고난도 유형: Options는 위치 번호만 */
 const INSERTION_OPTIONS_FIXED = '①\n②\n③\n④\n⑤';
@@ -73,6 +74,9 @@ export async function saveGeneratedQuestionToDb(
       Source: normalizeMockVariantSourceLabel(textbook, question_data.Source.trim()),
     };
   }
+
+  const enrichedQd = enrichQuestionDataWithExplanationIfEmpty(question_data, type);
+  if (enrichedQd) question_data = enrichedQd;
 
   const now = new Date();
   const difficulty = type === '삽입-고난도'

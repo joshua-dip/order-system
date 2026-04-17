@@ -497,7 +497,9 @@ export default function BundlePage() {
           {/* 헤더 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h1 className="text-2xl font-bold text-gray-800">통합 주문서</h1>
-            <p className="text-gray-500 text-sm mt-1">교재 하나를 선택하고, 변형문제·워크북·서술형·분석지·단어장을 한 번에 주문하세요.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              교과서·부교재 중 하나를 고른 뒤, 변형문제·워크북·서술형·분석지·단어장 등 필요한 항목만 골라 한 번에 담을 수 있습니다.
+            </p>
           </div>
 
           {/* 1. 교재 선택 */}

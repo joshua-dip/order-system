@@ -17,6 +17,7 @@
  *   npx tsx scripts/cc-variant-cli.ts save --json path/to/question.json
  *   cat question.json | npx tsx scripts/cc-variant-cli.ts save --json -
  *   record-review --id <generated_question_id> --answer "2" --response "풀이 요약" [--attempt 1]
+ *   record-review-bulk --textbook "교재명" [--dry-run]  — 대기 문항마다 DB 정답으로 record-review(검수 로그+완료)
  *
  * save용 JSON 예시:
  *   { "passage_id","textbook","source","type","question_data":{...}, "status":"대기", "option_type":"English" }
@@ -32,7 +33,10 @@ import {
   sliceQuestionCountPayloadForApi,
 } from '@/lib/question-count-validation';
 import { saveGeneratedQuestionToDb } from '@/lib/variant-save-generated-question';
-import { recordReviewLogFromClaudeCode } from '@/lib/generated-question-review-cc';
+import {
+  getQuestionDataForReview,
+  recordReviewLogFromClaudeCode,
+} from '@/lib/generated-question-review-cc';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -250,6 +254,65 @@ async function cmdRecordReview(flags: Map<string, string>) {
   out(result);
 }
 
+async function cmdRecordReviewBulk(flags: Map<string, string>) {
+  const textbook = (flags.get('textbook') ?? '').trim();
+  if (!textbook) die('record-review-bulk: --textbook "교재명" 이 필요합니다.');
+  const dryRun = (flags.get('dry-run') ?? '') === 'true';
+
+  const db = await getDb('gomijoshua');
+  const col = db.collection('generated_questions');
+  const docs = await col
+    .find({ status: '대기', textbook })
+    .sort({ created_at: 1 })
+    .toArray();
+
+  const summary = {
+    ok: true,
+    textbook,
+    dryRun,
+    total: docs.length,
+    status_updated_to_complete: 0,
+    skipped_no_correct_answer: 0,
+    failed: [] as { id: string; error?: string; is_correct?: boolean | null }[],
+  };
+
+  for (let i = 0; i < docs.length; i++) {
+    const doc = docs[i];
+    const id = String(doc._id);
+    const { correctAnswer } = getQuestionDataForReview(doc.question_data);
+    if (!correctAnswer.trim()) {
+      summary.skipped_no_correct_answer += 1;
+      continue;
+    }
+    if (dryRun) {
+      summary.status_updated_to_complete += 1;
+      continue;
+    }
+    const result = await recordReviewLogFromClaudeCode({
+      generated_question_id: id,
+      claude_answer: correctAnswer,
+      claude_response:
+        '(일괄) DB 저장 정답으로 record-review — cc-variant-cli record-review-bulk',
+      admin_login_id: 'cc-variant-bulk',
+      attemptNumber: 1,
+    });
+    if (!result.ok) {
+      summary.failed.push({ id, error: result.error });
+      continue;
+    }
+    if (result.status_updated_to_complete) {
+      summary.status_updated_to_complete += 1;
+    } else if (result.is_correct !== true) {
+      summary.failed.push({ id, is_correct: result.is_correct });
+    }
+    if ((i + 1) % 50 === 0) {
+      console.error(`  record-review-bulk: ${i + 1}/${docs.length}…`);
+    }
+  }
+
+  out(summary);
+}
+
 function argvAfterScript(): string[] {
   const raw = process.argv.slice(2);
   const first = raw[0] ?? '';
@@ -277,7 +340,8 @@ async function main() {
   shortage --order-id <ObjectId> | shortage --order-number BV-… [동일 옵션]
   단축: BV-20260331-002  또는  claude:BV-20260331-002  → shortage --order-number … 와 동일
   save --json <파일|- >
-  record-review --id <generated_question_id> --answer "정답 표현" [--response "풀이"] [--attempt 1]`);
+  record-review --id <generated_question_id> --answer "정답 표현" [--response "풀이"] [--attempt 1]
+  record-review-bulk --textbook "교재명" [--dry-run true]`);
     process.exit(cmd ? 0 : 1);
   }
 
@@ -303,6 +367,9 @@ async function main() {
       break;
     case 'record-review':
       await cmdRecordReview(flags);
+      break;
+    case 'record-review-bulk':
+      await cmdRecordReviewBulk(flags);
       break;
     default:
       die(`알 수 없는 명령: ${cmd} (--help 참고)`);

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import AppBar from '../components/AppBar';
 import PointChargeModal from '../components/PointChargeModal';
 import StudentManagement from '../components/StudentManagement';
+import SchoolScopeManagement from '../components/SchoolScopeManagement';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { hasStoredByokAnthropicKey, writeStoredByokAnthropicKey } from '@/lib/member-byok-anthropic-key-storage';
@@ -152,7 +153,7 @@ interface AnnualSharedFileItem {
   uploadedAt: string | null;
 }
 
-type TabKey = 'orders' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'settings';
+type TabKey = 'orders' | 'schools' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -508,6 +509,7 @@ export default function MyPage() {
   const tabs = useMemo(() => {
     const base: { key: TabKey; label: string; icon: string; count?: number }[] = [
       { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
+      { key: 'schools', label: '학교 관리', icon: '🏫' },
       { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
       { key: 'exam', label: '기출문제', icon: '📤' },
       { key: 'myFormat', label: '나의양식', icon: '📄' },
@@ -1024,9 +1026,15 @@ export default function MyPage() {
             </div>
           )}
 
+          {/* ━━ 학교 관리 탭 ━━ */}
+          {activeTab === 'schools' && <SchoolScopeManagement />}
+
           {/* ━━ 학생 관리 탭 ━━ */}
           {activeTab === 'students' && (
-            <StudentManagement onCountChange={setStudentsCount} />
+            <StudentManagement
+              onCountChange={setStudentsCount}
+              onOpenSchoolTab={() => setActiveTab('schools')}
+            />
           )}
 
           {/* ━━ 기출문제 탭 (하위: 업로드 / 조회) ━━ */}
@@ -1694,12 +1702,12 @@ export default function MyPage() {
                   <ol className="list-decimal list-inside text-[12px] text-[#475569] space-y-1.5 mb-4">
                     <li>
                       <a
-                        href="https://console.anthropic.com/settings/keys"
+                        href="https://platform.claude.com/settings/keys"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#2563eb] font-semibold underline underline-offset-2 hover:text-[#1d4ed8]"
                       >
-                        Anthropic Console
+                        Claude Platform
                       </a>
                       에서 API 키를 발급합니다.
                     </li>

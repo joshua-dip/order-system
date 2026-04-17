@@ -44,7 +44,9 @@ export function buildQuestionCountReport(
   countMap: Map<string, Map<string, number>>,
   typesToCheck: readonly string[],
   requiredPerType: number,
-  textbookFallback: string
+  textbookFallback: string,
+  /** 지문당 변형문 총건(option_type 무관). 있으면 `countMap`이 English만 집계일 때도 미생성 오판을 막는다. */
+  passageAnyDocCount?: Map<string, number> | null
 ): { noQuestionsFull: NoQuestionRow[]; underfilledFull: UnderfilledRow[] } {
   const noQuestionsFull: NoQuestionRow[] = [];
   const underfilledFull: UnderfilledRow[] = [];
@@ -60,7 +62,9 @@ export function buildQuestionCountReport(
       `${String(p.chapter ?? '')} ${String(p.number ?? '')}`.trim() ||
       pid;
 
-    if (totalDocs === 0) {
+    const anyPassage =
+      passageAnyDocCount != null ? (passageAnyDocCount.get(pid) ?? 0) > 0 : totalDocs > 0;
+    if (!anyPassage) {
       noQuestionsFull.push({
         passageId: pid,
         textbook: String(p.textbook ?? textbookFallback),
