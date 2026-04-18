@@ -88,25 +88,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: ai.error }, { status: 422 });
     }
 
-    // fire-and-forget 로그 저장 — 사용자 응답을 지연시키지 않는다
-    void (async () => {
-      try {
-        await ensureGuestGeneratedIndexes();
-        const detected = await detectPassageSource(paragraph).catch(() => null);
-        await saveGuestGeneratedQuestion({
-          paragraph,
-          type,
-          difficulty,
-          question_data: ai.question_data,
-          detected,
-          ip: ipHeader,
-          userAgent,
-          apiKeyHint,
-        });
-      } catch (e) {
-        console.error('variant/generate guest-log bg task:', e);
-      }
-    })();
+    // Vercel Lambda는 return 즉시 함수가 종료되므로 응답 전에 await해서 로그를 보장한다
+    try {
+      await ensureGuestGeneratedIndexes();
+      const detected = await detectPassageSource(paragraph).catch(() => null);
+      await saveGuestGeneratedQuestion({
+        paragraph,
+        type,
+        difficulty,
+        question_data: ai.question_data,
+        detected,
+        ip: ipHeader,
+        userAgent,
+        apiKeyHint,
+      });
+    } catch (e) {
+      console.error('variant/generate guest-log:', e);
+    }
 
     return NextResponse.json({
       ok: true,
