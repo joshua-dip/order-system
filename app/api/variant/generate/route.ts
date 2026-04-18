@@ -10,6 +10,8 @@ import {
 } from '@/lib/guest-generated-questions-store';
 import { isGuestRequestBlocked } from '@/lib/guest-variant-blocklist';
 
+export const maxDuration = 60;
+
 const TYPE_SET = new Set<string>(BOOK_VARIANT_QUESTION_TYPES);
 
 /**
@@ -91,7 +93,12 @@ export async function POST(request: NextRequest) {
     // Vercel Lambda는 return 즉시 함수가 종료되므로 응답 전에 await해서 로그를 보장한다
     try {
       await ensureGuestGeneratedIndexes();
-      const detected = await detectPassageSource(paragraph).catch(() => null);
+      // detectPassageSource 는 전체 passages 를 로드해 느릴 수 있으므로 8초 타임아웃 설정
+      const detectWithTimeout = Promise.race([
+        detectPassageSource(paragraph),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 8_000)),
+      ]);
+      const detected = await detectWithTimeout.catch(() => null);
       await saveGuestGeneratedQuestion({
         paragraph,
         type,

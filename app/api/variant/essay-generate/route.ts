@@ -63,7 +63,11 @@ export async function POST(request: NextRequest) {
     // Vercel Lambda는 return 즉시 함수가 종료되므로 응답 전에 await해서 로그를 보장한다
     try {
       await ensureGuestGeneratedIndexes();
-      const detected = await detectPassageSource(paragraph).catch(() => null);
+      const detectWithTimeout = Promise.race([
+        detectPassageSource(paragraph),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 8_000)),
+      ]);
+      const detected = await detectWithTimeout.catch(() => null);
       await saveGuestGeneratedQuestion({
         paragraph,
         type,
