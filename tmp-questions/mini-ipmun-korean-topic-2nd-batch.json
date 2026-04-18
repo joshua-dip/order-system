@@ -1,0 +1,102 @@
+[
+  {
+    "passage_id": "69e05cfa72a886137cd84297",
+    "textbook": "얇고 빠른 미니 모의고사 입문",
+    "source": "05강 03번",
+    "type": "주제",
+    "option_type": "Korean",
+    "status": "완료",
+    "question_data": {
+      "순서": null,
+      "Source": "05강 03번",
+      "NumQuestion": "2번",
+      "Category": "주제",
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Is listening to customer feedback really critical to the success of your business? Henry Ford, a founder of the car industry, famously claimed, “If I had asked people what they wanted, they would have said faster horses.” It is true that we cannot innovate by simply doing whatever customers want. But it is only one side of the issue. A bigger problem is that, in most cases, customers themselves don’t know what they want. You can demonstrate this for yourself quite easily. Think about some of your favorite movies. Now try to explain why you like them. Most of us have preferences that we can’t explain in detail. Therefore, a successful business does not just ask customers what they want. It figures out what they want before they know it themselves.",
+      "Options": "① 고객의 말만 따르는 것만으로는 혁신이 불가능하다는 점과 숨은 니즈를 읽어야 함\n② 영화 산업이 소비자 조사 산업에 끼치는 영향\n③ 설문조사 기법의 통계적 신뢰도와 표본 오차 문제\n④ 헨리 포드 이후 자동차 대량생산 방식의 변천\n⑤ 온라인 리뷰가 기업 이미지에 미치는 단기 효과",
+      "OptionType": "Korean",
+      "CorrectAnswer": "①",
+      "Explanation": "① 고객의 말만 따르는 것만으로는 혁신이 불가능하다는 점과 숨은 니즈를 읽어야 함\n*해설: 글은 고객 의견이 항상 정답은 아니라고 한 뒤, 더 큰 문제로 고객 스스로도 원하는 바를 설명하지 못함을 들고, 성공한 기업은 묻기만 하지 않고 스스로 깨닫기 전에 니즈를 알아낸다고 말합니다. ①이 이 두 층(혁신의 한계·선제적 니즈 파악)을 함께 담습니다."
+    }
+  },
+  {
+    "passage_id": "69e05cfa72a886137cd84298",
+    "textbook": "얇고 빠른 미니 모의고사 입문",
+    "source": "05강 04번",
+    "type": "주제",
+    "option_type": "Korean",
+    "status": "완료",
+    "question_data": {
+      "순서": null,
+      "Source": "05강 04번",
+      "NumQuestion": "2번",
+      "Category": "주제",
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "The “big-fish-little-pond effect” is a phenomenon that has a big impact on how people view their ability and performance. If a fish is in a small pond, it will feel relatively big because of its environment. Likewise, if you are in an environment where the people around you are low performing, you will feel more positive about your own abilities. However, if you are surrounded by people who are high achieving, your perception of your abilities will get worse. In a recent study, Professor Thomas Götz tested this phenomenon. He found that math students feel better about themselves when they are in classes with low achievers than when they are in classes with high achievers. In other words, being around high achievers can be emotionally stressful for other students.",
+      "Options": "① 비교 집단의 성취 수준에 따라 달라지는 자기능력에 대한 정서적 부담\n② 수학 성적 향상을 위한 교실 편성의 경제적 비용\n③ 교사의 기대 효과가 학생 자아존중감에 미치는 장기적 변화\n④ 소규모 학급 운영이 학업 스트레스를 줄이는 메커니즘\n⑤ 고등학교 수학 교과서 난이도 조정의 필요성",
+      "OptionType": "Korean",
+      "CorrectAnswer": "①",
+      "Explanation": "① 비교 집단의 성취 수준에 따라 달라지는 자기능력에 대한 정서적 부담\n*해설: ‘큰 연못의 작은 물고기’ 효과로, 주변이 저성취면 자기능력 인식이 좋아지고 고성취면 나빠진다는 점을 설명한 뒤, 괴츠 교수의 연구로 수학 수업 맥락을 예로 들며 마지막에 고성취자 옆에 있을 때 정서적 스트레스가 된다고 정리합니다."
+    }
+  },
+  {
+    "passage_id": "69e05cfa72a886137cd8429b",
+    "textbook": "얇고 빠른 미니 모의고사 입문",
+    "source": "05강 10번",
+    "type": "주제",
+    "option_type": "Korean",
+    "status": "완료",
+    "question_data": {
+      "순서": null,
+      "Source": "05강 10번",
+      "NumQuestion": "2번",
+      "Category": "주제",
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Most people are very busy and find it difficult to schedule time to exercise. But working out in the early morning solves this problem. The biggest benefit is that light exercise activates your sleepy brain, allowing you to concentrate better and making you feel refreshed. And since most people don’t do much in the early morning, exercising is unlikely to create a scheduling conflict. At first, it may be difficult to get used to waking up earlier. But if you make exercise part of your routine, it can add consistency to your life. While starting isn’t easy, you’ll thank yourself once you see the results.",
+      "Options": "① 바쁜 일정 속 운동 시간 확보를 돕는 이른 아침 운동과 루틴화의 효과\n② 체중 감량을 위한 식이조절과 유산소 운동의 병행 전략\n③ 헬스장 회원권 가격 비교와 선택 기준\n④ 수면 시간 단축이 업무 생산성에 미치는 부정적 영향\n⑤ 점심시간 스트레칭이 소화기 건강에 주는 이점",
+      "OptionType": "Korean",
+      "CorrectAnswer": "①",
+      "Explanation": "① 바쁜 일정 속 운동 시간 확보를 돕는 이른 아침 운동과 루틴화의 효과\n*해설: 글은 바빠서 운동이 어렵다는 문제를 아침 운동으로 해결할 수 있다고 말하고, 뇌 각성·일정 충돌 감소·루틴을 통한 일관성 등을 엮어 설명합니다."
+    }
+  },
+  {
+    "passage_id": "69e05cfa72a886137cd8429e",
+    "textbook": "얇고 빠른 미니 모의고사 입문",
+    "source": "06강 04번",
+    "type": "주제",
+    "option_type": "Korean",
+    "status": "완료",
+    "question_data": {
+      "순서": null,
+      "Source": "06강 04번",
+      "NumQuestion": "2번",
+      "Category": "주제",
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "In Australia, the term “tall poppy syndrome” refers to the tendency to speak badly about people who are very successful. This kind of behavior can seriously hurt talented and creative people who haven’t done anything wrong. It is partially caused by the mistaken idea that there is a limited amount of success available. Therefore, if one person is too successful, then everyone else suffers. This, of course, is not true. To stop this kind of behavior, we must change the way we view success. How successful we are has no connection to how successful others are. We should support those who have done well, and we should expect their support when we succeed.",
+      "Options": "① 성공을 제로섬으로 보는 오해에서 비롯된 비난과 상호 지지의 태도로의 전환\n② 호주 연예 산업의 경쟁 구조와 여론 형성 과정\n③ 창의성 평가 지표를 둘러싼 학계 논쟁\n④ 소셜 미디어 악플 규제 입법의 국제 비교\n⑤ 기업 내 성과급 제도의 공정성 문제",
+      "OptionType": "Korean",
+      "CorrectAnswer": "①",
+      "Explanation": "① 성공을 제로섬으로 보는 오해에서 비롯된 비난과 상호 지지의 태도로의 전환\n*해설: 톨 파피 증후군으로 성공자를 깎아내리는 태도를 소개하고, 성공이 한정되어 있다는 잘못된 믿음을 지적한 뒤, 타인의 성공과 무관하다는 시각과 서로 응원해야 한다고 제안합니다."
+    }
+  },
+  {
+    "passage_id": "69e05cfa72a886137cd8429f",
+    "textbook": "얇고 빠른 미니 모의고사 입문",
+    "source": "06강 05번",
+    "type": "주제",
+    "option_type": "Korean",
+    "status": "완료",
+    "question_data": {
+      "순서": null,
+      "Source": "06강 05번",
+      "NumQuestion": "2번",
+      "Category": "주제",
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Earthquakes happen when parts of the earth’s crust push against each other and release powerful vibrations. Frost quakes are similar, but they are smaller and involve different forces of nature. The essential fact behind frost quakes is that water expands when it freezes. Therefore, when water gathers underground and the temperature suddenly falls, the ground expands because of the water inside it. This pressure cracks the ground, making vibrations and loud sounds. Frost quakes require special conditions. For example, there must be a large amount of water in the ground, and the temperature has to drop so quickly that the water freezes before it can escape.",
+      "Options": "① 지진과 달리 얼음 팽창이 만드는 작은 지반 진동인 프로스트 퀘이 생기는 원리와 조건\n② 판 경계에서 방출되는 지진 에너지의 측정 방법\n③ 지하수 오염이 암반 균열에 미치는 화학적 영향\n④ 건물 내진 설계에서 감쇠 장치의 역할\n⑤ 겨울철 도로 제설제 사용이 토양에 미치는 영향",
+      "OptionType": "Korean",
+      "CorrectAnswer": "①",
+      "Explanation": "① 지진과 달리 얼음 팽창이 만드는 작은 지반 진동인 프로스트 퀘이 생기는 원리와 조건\n*해설: 지진과 대비해 프로스트 퀘이 더 작고 다른 자연력에 의한다고 한 뒤, 물이 얼 때 부피가 늘어 지반이 갈라지며 진동·소리가 난다는 과정과, 많은 수분·급격한 온도 하강 등 조건을 설명합니다."
+    }
+  }
+]

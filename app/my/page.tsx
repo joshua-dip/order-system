@@ -166,6 +166,9 @@ export default function MyPage() {
   const [editEmail, setEditEmail] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailMessage, setEmailMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editPhone, setEditPhone] = useState('');
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneMessage, setPhoneMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -269,6 +272,7 @@ export default function MyPage() {
         }
         setUser(data.user);
         setEditEmail(data.user.email ?? '');
+        setEditPhone(data.user.phone ?? '');
       })
       .catch(() => router.replace('/login?from=/my'))
       .finally(() => setLoading(false));
@@ -552,6 +556,30 @@ export default function MyPage() {
       setEmailMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
     } finally {
       setEmailSaving(false);
+    }
+  };
+
+  const handleSavePhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneMessage(null);
+    setPhoneSaving(true);
+    try {
+      const res = await fetch('/api/my/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: editPhone }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setUser((u) => (u ? { ...u, phone: editPhone } : null));
+        setPhoneMessage({ type: 'success', text: '전화번호가 저장되었습니다.' });
+      } else {
+        setPhoneMessage({ type: 'error', text: data?.error || '저장에 실패했습니다.' });
+      }
+    } catch {
+      setPhoneMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setPhoneSaving(false);
     }
   };
 
@@ -1780,6 +1808,29 @@ export default function MyPage() {
                 </form>
                 {emailMessage && (
                   <p className={`text-sm mt-2 ${emailMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{emailMessage.text}</p>
+                )}
+              </div>
+
+              {/* 전화번호 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <div className="text-sm font-bold text-[#0f172a] mb-1">전화번호</div>
+                <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                  변형문제 저장 시 식별을 위해 사용됩니다. 숫자만 입력해도 됩니다.
+                </p>
+                <form onSubmit={handleSavePhone} className="flex gap-2 items-center">
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="예: 010-1234-5678"
+                    className="flex-1 px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)]"
+                  />
+                  <button type="submit" disabled={phoneSaving} className="px-5 py-3 bg-[#2563eb] text-white rounded-xl text-[13px] font-bold shrink-0 hover:bg-[#1d4ed8] disabled:opacity-70 transition-colors">
+                    {phoneSaving ? '저장 중…' : '저장'}
+                  </button>
+                </form>
+                {phoneMessage && (
+                  <p className={`text-sm mt-2 ${phoneMessage.type === 'success' ? 'text-[#16a34a]' : 'text-red-600'}`}>{phoneMessage.text}</p>
                 )}
               </div>
 

@@ -8,6 +8,7 @@ import { useTextbookLinks } from '@/lib/useTextbookLinks';
 import { filterWorkbookSupplementaryTextbookKeys, WORKBOOK_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/workbook-textbooks';
 import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
+import { parseMockExamKey } from '@/lib/mock-exam-key';
 
 interface WorkbookTextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
@@ -71,15 +72,16 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
     if (selectedGrade) {
       const gradeKey = `${selectedGrade}모의고사` as keyof typeof mockExamsData;
       const exams = mockExamsData[gradeKey] || [];
-      
-      // 연도 추출 (고1_2025_10월 형식에서 2025 추출)
-      const years = Array.from(new Set(
-        exams.map(exam => {
-          const match = exam.match(/_(\d{4})_/);
-          return match ? match[1] : '';
-        }).filter(year => year !== '')
-      )).sort((a, b) => Number(b) - Number(a)); // 최신순 정렬
-      
+
+      const years = Array.from(
+        new Set(
+          exams
+            .map((exam) => parseMockExamKey(exam)?.year)
+            .filter((y): y is number => typeof y === 'number')
+            .map((y) => String(y))
+        )
+      ).sort((a, b) => Number(b) - Number(a));
+
       setAvailableYears(years);
       setSelectedYear('');
       setSelectedMonth('');
@@ -92,22 +94,23 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
     }
   }, [selectedGrade]);
 
-  // 연도 선택 시 월 목록 업데이트
+  // 연도 선택 시 월(시험) 목록 업데이트 — 라벨은 "M월 [형] [(메모)]", 값은 mock-exams.json 의 원본 키
   useEffect(() => {
     if (selectedGrade && selectedYear) {
       const gradeKey = `${selectedGrade}모의고사` as keyof typeof mockExamsData;
       const exams = mockExamsData[gradeKey] || [];
-      
-      // 선택된 연도의 월 추출
+
       const months = exams
-        .filter(exam => exam.includes(`_${selectedYear}_`))
-        .map(exam => {
-          // "고1_2025_10월(경기도)" 형식에서 "10월(경기도)" 추출
-          const match = exam.match(/_(\d{2}월[^_]*)/);
-          return match ? match[1] : '';
+        .map((exam) => {
+          const p = parseMockExamKey(exam);
+          if (!p || p.year == null || String(p.year) !== selectedYear) return null;
+          const monthLabel = p.month != null ? `${p.month}월` : exam;
+          const variant = p.variant ? ` ${p.variant}` : '';
+          const note = p.note ? ` (${p.note})` : p.bracketNote ? ` (${p.bracketNote})` : '';
+          return `${monthLabel}${variant}${note}|||${exam}`;
         })
-        .filter(month => month !== '');
-      
+        .filter((s): s is string => s !== null);
+
       setAvailableMonths(months);
       setSelectedMonth('');
     } else {
@@ -116,11 +119,11 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
     }
   }, [selectedGrade, selectedYear]);
 
-  // 모의고사 선택 완료 처리
+  // 모의고사 선택 완료 처리 — selectedMonth 는 "라벨|||원본키" 형식
   const handleMockExamSelect = () => {
     if (selectedGrade && selectedYear && selectedMonth) {
-      // "고1_2025_10월(경기도)" 형식으로 조합
-      const examName = `${selectedGrade}_${selectedYear}_${selectedMonth}`;
+      const sep = selectedMonth.indexOf('|||');
+      const examName = sep >= 0 ? selectedMonth.slice(sep + 3) : selectedMonth;
       onTextbookSelect(examName);
     }
   };
@@ -458,19 +461,23 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
-                      {availableMonths.map((month) => (
-                        <button
-                          key={month}
-                          onClick={() => setSelectedMonth(month)}
-                          className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 text-sm ${
-                            selectedMonth === month
-                              ? 'bg-blue-600 text-white shadow-md scale-105'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow'
-                          }`}
-                        >
-                          {month}
-                        </button>
-                      ))}
+                      {availableMonths.map((month) => {
+                        const sep = month.indexOf('|||');
+                        const label = sep >= 0 ? month.slice(0, sep) : month;
+                        return (
+                          <button
+                            key={month}
+                            onClick={() => setSelectedMonth(month)}
+                            className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 text-sm ${
+                              selectedMonth === month
+                                ? 'bg-blue-600 text-white shadow-md scale-105'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -486,7 +493,10 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                   }`}
                 >
                   {selectedGrade && selectedYear && selectedMonth
-                    ? `${selectedGrade} ${selectedYear}년 ${selectedMonth} 선택`
+                    ? `${selectedGrade} ${selectedYear}년 ${(() => {
+                        const sep = selectedMonth.indexOf('|||');
+                        return sep >= 0 ? selectedMonth.slice(0, sep) : selectedMonth;
+                      })()} 선택`
                     : '학년, 연도, 시험을 모두 선택해주세요'}
                 </button>
               </div>

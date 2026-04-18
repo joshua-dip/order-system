@@ -9,6 +9,7 @@ import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT, ORDER_FOOTER_MESSAGE } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 import { ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES } from '@/app/data/essay-categories';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 /* ────────── 타입 ────────── */
 
@@ -155,9 +156,7 @@ export default function BundlePage() {
 
   const textbookList = useMemo(() => {
     if (!textbooksData || !currentUser) return [];
-    const allKeys = Object.keys(textbooksData).filter(
-      (k) => !k.startsWith('고1_') && !k.startsWith('고2_') && !k.startsWith('고3_'),
-    );
+    const allKeys = Object.keys(textbooksData).filter((k) => !isMockExamTextbookKey(k));
     const sets = [
       currentUser.allowedTextbooksVariant,
       currentUser.allowedTextbooksWorkbook,

@@ -4,7 +4,10 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BOOK_VARIANT_QUESTION_TYPES } from '@/lib/book-variant-types';
+import { MEMBER_ESSAY_QUESTION_TYPES } from '@/lib/member-essay-draft-claude';
 import QuestionFriendlyPreview from '@/app/my/premium/variant-generate/QuestionFriendlyPreview';
+import EssayQuestionPreview from '@/app/my/premium/variant-generate/EssayQuestionPreview';
+
 
 type LogRow = {
   _id: string;
@@ -424,11 +427,16 @@ export default function GuestVariantLogsPage() {
             className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm"
           >
             <option value="">전체</option>
-            {BOOK_VARIANT_QUESTION_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
+            <optgroup label="객관식">
+              {BOOK_VARIANT_QUESTION_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </optgroup>
+            <optgroup label="서술형">
+              {MEMBER_ESSAY_QUESTION_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </optgroup>
           </select>
         </div>
         <div>
@@ -1085,7 +1093,15 @@ function ExpandedLog({
         <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">생성된 변형문제</p>
         <div className="rounded border border-slate-700 bg-slate-900 p-3 max-h-[32rem] overflow-auto">
           {row.question_data ? (
-            <QuestionFriendlyPreview data={row.question_data} editable={false} />
+            (MEMBER_ESSAY_QUESTION_TYPES as readonly string[]).includes(row.type ?? '') ? (
+              <EssayQuestionPreview
+                data={row.question_data}
+                editable={false}
+                questionType={row.type}
+              />
+            ) : (
+              <QuestionFriendlyPreview data={row.question_data} editable={false} />
+            )
           ) : (
             <p className="text-slate-500 text-sm">—</p>
           )}
@@ -1181,7 +1197,16 @@ function PromoteModal({
             )}
           </div>
           <div className="rounded border border-slate-700 bg-slate-950 p-3">
-            <QuestionFriendlyPreview data={qd} editable={true} onDataChange={setQd} />
+            {(MEMBER_ESSAY_QUESTION_TYPES as readonly string[]).includes(row.type ?? '') ? (
+              <EssayQuestionPreview
+                data={qd}
+                editable={true}
+                onDataChange={setQd}
+                questionType={row.type}
+              />
+            ) : (
+              <QuestionFriendlyPreview data={qd} editable={true} onDataChange={setQd} />
+            )}
           </div>
           {err && <p className="text-rose-400 text-sm">{err}</p>}
           <div className="flex justify-end gap-2">

@@ -8,6 +8,7 @@ import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
 import { saveOrderToDb } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 const PRICE_PER_ITEM = 500; // 지문당 500원
@@ -136,12 +137,9 @@ export default function AnalysisPage() {
       return;
     }
     const totalPrice = selectedLessons.length * PRICE_PER_ITEM;
-    const prefix =
-      selectedTextbook.startsWith('고1_') ||
-      selectedTextbook.startsWith('고2_') ||
-      selectedTextbook.startsWith('고3_')
-        ? ORDER_PREFIX.MOCK_ANALYSIS
-        : ORDER_PREFIX.BOOK_ANALYSIS;
+    const prefix = isMockExamTextbookKey(selectedTextbook)
+      ? ORDER_PREFIX.MOCK_ANALYSIS
+      : ORDER_PREFIX.BOOK_ANALYSIS;
 
     const orderText = `분석지 주문서 (PDF 제공)
 

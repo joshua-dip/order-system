@@ -11,6 +11,7 @@ import { isEbsTextbook } from '@/lib/textbookSort';
 import { ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES } from '@/app/data/essay-categories';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
+import { isMockExamTextbookKey, parseMockExamKey } from '@/lib/mock-exam-key';
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 const MOCK_PASSAGE_KEY = '번호';
 
@@ -84,9 +85,7 @@ export default function EssayPage() {
     const allKeys = textbooksData ? Object.keys(textbooksData) : [];
     const ebs = allKeys.filter((k) => isEbsTextbook(k));
     const mock = mockExamKeys;
-    const 부교재All = allKeys.filter(
-      (k) => !isEbsTextbook(k) && !k.startsWith('고1_') && !k.startsWith('고2_') && !k.startsWith('고3_')
-    );
+    const 부교재All = allKeys.filter((k) => !isEbsTextbook(k) && !isMockExamTextbookKey(k));
     const 부교재 =
       allowedTextbooksEssay !== undefined
         ? 부교재All.filter((k) => allowedTextbooksEssay.includes(k))
@@ -102,7 +101,10 @@ export default function EssayPage() {
   const mockYears = useMemo(() => {
     if (!mockGrade || !mockExamsByGrade[mockGrade]) return [];
     const years = new Set(
-      mockExamsByGrade[mockGrade].map((k) => k.split('_')[1]).filter(Boolean)
+      mockExamsByGrade[mockGrade]
+        .map((k) => parseMockExamKey(k)?.year)
+        .filter((y): y is number => typeof y === 'number')
+        .map((y) => String(y))
     );
     return [...years].sort((a, b) => Number(b) - Number(a));
   }, [mockGrade, mockExamsByGrade]);
@@ -110,8 +112,14 @@ export default function EssayPage() {
   const mockMonths = useMemo(() => {
     if (!mockGrade || !mockYear || !mockExamsByGrade[mockGrade]) return [];
     return mockExamsByGrade[mockGrade]
-      .filter((k) => k.split('_')[1] === mockYear)
-      .map((k) => ({ key: k, label: k.split('_').slice(2).join('_') }));
+      .filter((k) => String(parseMockExamKey(k)?.year ?? '') === mockYear)
+      .map((k) => {
+        const p = parseMockExamKey(k);
+        const monthLabel = p?.month != null ? `${p.month}월` : k;
+        const variant = p?.variant ? ` ${p.variant}` : '';
+        const note = p?.note ? ` (${p.note})` : p?.bracketNote ? ` (${p.bracketNote})` : '';
+        return { key: k, label: `${monthLabel}${variant}${note}` };
+      });
   }, [mockGrade, mockYear, mockExamsByGrade]);
 
   const sortTypesWithTypeCodeFirst = (types: EssayTypeItem[]) => {
@@ -364,12 +372,9 @@ export default function EssayPage() {
       return;
     }
 
-    const prefix =
-      selectedTextbook.startsWith('고1_') ||
-      selectedTextbook.startsWith('고2_') ||
-      selectedTextbook.startsWith('고3_')
-        ? ORDER_PREFIX.MOCK_ESSAY
-        : ORDER_PREFIX.BOOK_ESSAY;
+    const prefix = isMockExamTextbookKey(selectedTextbook)
+      ? ORDER_PREFIX.MOCK_ESSAY
+      : ORDER_PREFIX.BOOK_ESSAY;
 
     const by대분류 = selectedTypePrices.reduce<Record<string, typeof selectedTypePrices>>((acc, t) => {
       if (!acc[t.대분류]) acc[t.대분류] = [];

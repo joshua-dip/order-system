@@ -7,6 +7,7 @@ import {
   buildMemberVariantDocxBuffer,
   buildMemberVariantPdfBuffer,
   buildMemberVariantXlsxBuffer,
+  type ExportMode,
 } from '@/lib/member-variant-export-build';
 import { buildMemberVariantHwpxBuffer } from '@/lib/member-variant-hwpx-build';
 
@@ -15,6 +16,10 @@ export const maxDuration = 60;
 const MAX_IDS = 100;
 
 type ExportFormat = 'xlsx' | 'pdf' | 'docx' | 'hwpx';
+
+function parseMode(v: unknown): ExportMode {
+  return v === 'student' ? 'student' : 'teacher';
+}
 
 function parseFormat(v: unknown): ExportFormat | null {
   if (v === 'xlsx' || v === 'pdf' || v === 'docx' || v === 'hwpx') return v;
@@ -33,6 +38,7 @@ export async function POST(request: NextRequest) {
   }
 
   const format = parseFormat((body as { format?: unknown })?.format);
+  const mode = parseMode((body as { mode?: unknown })?.mode);
   const rawIds = (body as { ids?: unknown })?.ids;
   if (!format) {
     return NextResponse.json({ error: 'format은 xlsx, pdf, docx, hwpx 중 하나여야 합니다.' }, { status: 400 });
@@ -75,10 +81,11 @@ export async function POST(request: NextRequest) {
     found.sort((a, b) => (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0));
 
     const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const modeSuffix = mode === 'student' ? '_학생용' : '_교사용';
 
     if (format === 'xlsx') {
       const buf = await buildMemberVariantXlsxBuffer(found);
-      const nameKo = `회원변형문항_${stamp}.xlsx`;
+      const nameKo = `회원변형문항${modeSuffix}_${stamp}.xlsx`;
       return new NextResponse(new Uint8Array(buf), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -88,8 +95,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (format === 'pdf') {
-      const buf = await buildMemberVariantPdfBuffer(found);
-      const nameKo = `회원변형문항_${stamp}.pdf`;
+      const buf = await buildMemberVariantPdfBuffer(found, mode);
+      const nameKo = `회원변형문항${modeSuffix}_${stamp}.pdf`;
       return new NextResponse(new Uint8Array(buf), {
         headers: {
           'Content-Type': 'application/pdf',
@@ -99,8 +106,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (format === 'hwpx') {
-      const buf = await buildMemberVariantHwpxBuffer(found);
-      const nameKo = `회원변형문항_${stamp}.hwpx`;
+      const buf = await buildMemberVariantHwpxBuffer(found, mode);
+      const nameKo = `회원변형문항${modeSuffix}_${stamp}.hwpx`;
       return new NextResponse(new Uint8Array(buf), {
         headers: {
           'Content-Type': 'application/x-hwpx',
@@ -109,8 +116,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const buf = await buildMemberVariantDocxBuffer(found);
-    const nameKo = `회원변형문항_${stamp}.docx`;
+    const buf = await buildMemberVariantDocxBuffer(found, mode);
+    const nameKo = `회원변형문항${modeSuffix}_${stamp}.docx`;
     return new NextResponse(new Uint8Array(buf), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

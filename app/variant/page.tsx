@@ -9,6 +9,8 @@ import {
   writeStoredByokAnthropicKey,
 } from '@/lib/member-byok-anthropic-key-storage';
 import QuestionFriendlyPreview from '@/app/my/premium/variant-generate/QuestionFriendlyPreview';
+import EssayQuestionPreview from '@/app/my/premium/variant-generate/EssayQuestionPreview';
+import { MEMBER_ESSAY_QUESTION_TYPES } from '@/lib/member-essay-draft-claude';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -62,6 +64,16 @@ const TYPE_GROUPS: { label: string; items: TypeMeta[] }[] = [
 
 const ALL_TYPES: TypeMeta[] = TYPE_GROUPS.flatMap((g) => g.items);
 
+/** 서술형 — 요약문 본문 어휘 찾기 (첫 번째 유형만) */
+const ESSAY_TYPE: TypeMeta = {
+  key: '요약문본문어휘',
+  label: '요약문 본문 어휘 찾기',
+  desc: '본문에서 단어를 직접 찾아 요약문 빈칸 완성 (변형 가능)',
+  icon: 'note',
+};
+
+type PageMode = 'multiple-choice' | 'essay';
+
 const SAMPLE_PARAGRAPH = `Most people think that creativity is something you are born with — that you either have it or you don't. But research suggests otherwise. Studies have repeatedly shown that creativity is a skill, much like playing the piano or speaking a foreign language. The more you practice it, the better you become. What truly separates highly creative people from the rest is not raw talent, but their willingness to explore unfamiliar ideas, fail repeatedly, and try again. In short, creativity grows through deliberate effort, not through waiting for inspiration to strike.`;
 
 const PROGRESS_STAGES = [
@@ -85,6 +97,7 @@ export default function VariantTryPage() {
   const router = useRouter();
   const [paragraph, setParagraph] = useState('');
   const [selectedType, setSelectedType] = useState('주제');
+  const [pageMode, setPageMode] = useState<PageMode>('multiple-choice');
   const [busy, setBusy] = useState(false);
   const [stageIdx, setStageIdx] = useState(0);
   const [message, setMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -255,6 +268,49 @@ export default function VariantTryPage() {
     }
   };
 
+  const handleEssayGenerate = async () => {
+    setMessage(null);
+    if (charCount < 10) {
+      showMessage({ kind: 'err', text: '영어 지문을 10자 이상 입력해 주세요.' });
+      textareaRef.current?.focus();
+      return;
+    }
+    if (!apiKey) {
+      showMessage({ kind: 'err', text: 'Anthropic API 키를 먼저 등록해 주세요.' });
+      setShowKeyInput(true);
+      apiSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setBusy(true);
+    setDraft(null);
+    try {
+      const res = await fetch('/api/variant/essay-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-anthropic-api-key': apiKey },
+        body: JSON.stringify({ paragraph: paragraph.trim(), type: ESSAY_TYPE.key }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showMessage({ kind: 'err', text: typeof data?.error === 'string' ? data.error : '생성에 실패했습니다.' });
+        return;
+      }
+      const qd =
+        data.question_data && typeof data.question_data === 'object' && !Array.isArray(data.question_data)
+          ? (data.question_data as Record<string, unknown>)
+          : null;
+      if (!qd) {
+        showMessage({ kind: 'err', text: '응답 형식 오류입니다.' });
+        return;
+      }
+      setDraft({ type: ESSAY_TYPE.key, question_data: qd });
+      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    } catch {
+      showMessage({ kind: 'err', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const stepDone = {
     key: apiKeySaved,
     paragraph: charCount >= 10,
@@ -263,8 +319,9 @@ export default function VariantTryPage() {
   const stepFlags = [stepDone.key, stepDone.paragraph, stepDone.type, !!draft];
   const firstIncompleteIdx = stepFlags.findIndex((d) => !d);
   const currentStepIdx = firstIncompleteIdx === -1 ? -1 : firstIncompleteIdx;
-  const canGenerate = stepDone.key && stepDone.paragraph && stepDone.type && !busy;
-  const selectedTypeMeta = ALL_TYPES.find((t) => t.key === selectedType);
+  const canGenerate = stepDone.key && stepDone.paragraph && !busy &&
+    (pageMode === 'essay' || stepDone.type);
+  const selectedTypeMeta = pageMode === 'essay' ? ESSAY_TYPE : ALL_TYPES.find((t) => t.key === selectedType);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -399,48 +456,99 @@ export default function VariantTryPage() {
 
         {/* 3. 유형 선택 */}
         <section ref={typeSectionRef} className="scroll-mt-32">
-          <SectionHeader num={3} title="문제 유형 선택" done={stepDone.type} />
-          <div className="mt-3 space-y-4">
-            {TYPE_GROUPS.map((group) => (
-              <div key={group.label}>
-                <p className="text-xs font-bold text-slate-500 mb-2 px-1 uppercase tracking-wider">
-                  {group.label}
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {group.items.map((t) => {
-                    const active = selectedType === t.key;
-                    return (
-                      <button
-                        key={t.key}
-                        type="button"
-                        onClick={() => setSelectedType(t.key)}
-                        className={`group relative overflow-hidden rounded-2xl border-2 p-3 text-left transition-all ${
-                          active
-                            ? 'border-violet-600 bg-violet-600 text-white shadow-md scale-[1.02]'
-                            : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:bg-violet-50/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icon
-                            name={t.icon}
-                            className={`h-4 w-4 ${active ? 'text-white' : 'text-violet-500'}`}
-                          />
-                          <span className="text-sm font-bold">{t.label}</span>
-                        </div>
-                        <p
-                          className={`text-[11px] leading-snug ${
-                            active ? 'text-violet-100' : 'text-slate-500'
+          <SectionHeader
+            num={3}
+            title="문제 유형 선택"
+            done={pageMode === 'essay' ? true : stepDone.type}
+          />
+
+          {/* 객관식 / 서술형 탭 */}
+          <div className="mt-3 mb-4 flex rounded-xl overflow-hidden border border-slate-200 bg-slate-100 p-1 gap-1">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => { setPageMode('multiple-choice'); setDraft(null); }}
+              className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${
+                pageMode === 'multiple-choice'
+                  ? 'bg-white text-violet-700 shadow-sm ring-1 ring-violet-200'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              객관식 (13유형)
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => { setPageMode('essay'); setDraft(null); }}
+              className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${
+                pageMode === 'essay'
+                  ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              서술형 (요약문)
+            </button>
+          </div>
+
+          {/* 객관식 유형 카드 */}
+          {pageMode === 'multiple-choice' && (
+            <div className="space-y-4">
+              {TYPE_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <p className="text-xs font-bold text-slate-500 mb-2 px-1 uppercase tracking-wider">
+                    {group.label}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {group.items.map((t) => {
+                      const active = selectedType === t.key;
+                      return (
+                        <button
+                          key={t.key}
+                          type="button"
+                          onClick={() => setSelectedType(t.key)}
+                          className={`group relative overflow-hidden rounded-2xl border-2 p-3 text-left transition-all ${
+                            active
+                              ? 'border-violet-600 bg-violet-600 text-white shadow-md scale-[1.02]'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:bg-violet-50/50'
                           }`}
                         >
-                          {t.desc}
-                        </p>
-                      </button>
-                    );
-                  })}
+                          <div className="flex items-center gap-2 mb-1">
+                            <Icon name={t.icon} className={`h-4 w-4 ${active ? 'text-white' : 'text-violet-500'}`} />
+                            <span className="text-sm font-bold">{t.label}</span>
+                          </div>
+                          <p className={`text-[11px] leading-snug ${active ? 'text-violet-100' : 'text-slate-500'}`}>
+                            {t.desc}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* 서술형 유형 카드 */}
+          {pageMode === 'essay' && (
+            <div>
+              <p className="text-[11px] text-slate-500 mb-3 px-1 leading-relaxed">
+                지문을 읽고 본문에서 단어를 찾아 요약문의 빈칸을 완성하는 서술형 문항입니다.
+              </p>
+              <button
+                type="button"
+                className="w-full rounded-2xl border-2 border-emerald-600 bg-emerald-600 text-white p-4 text-left shadow-md scale-[1.01] cursor-default"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon name="note" className="h-4 w-4 text-white" />
+                  <span className="text-sm font-bold">{ESSAY_TYPE.label}</span>
+                  <svg className="ml-auto h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-[11px] leading-snug text-emerald-100">{ESSAY_TYPE.desc}</p>
+              </button>
+            </div>
+          )}
         </section>
 
         {/* 메시지 */}
@@ -469,6 +577,7 @@ export default function VariantTryPage() {
                     setDraft(null);
                     typeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
+                  pageMode={pageMode}
                 />
               )}
             </div>
@@ -493,6 +602,7 @@ export default function VariantTryPage() {
                     setDraft(null);
                     typeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
+                  pageMode={pageMode}
                 />
               </div>
             ) : (
@@ -524,16 +634,18 @@ export default function VariantTryPage() {
             </div>
             <button
               type="button"
-              onClick={() => void handleGenerate()}
+              onClick={() => void (pageMode === 'essay' ? handleEssayGenerate() : handleGenerate())}
               disabled={!canGenerate}
               className={`flex-1 sm:flex-none sm:min-w-[260px] inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 text-base font-bold transition-all ${
                 canGenerate
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98]'
+                  ? pageMode === 'essay'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98]'
+                    : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
             >
               {selectedTypeMeta && <Icon name={selectedTypeMeta.icon} className="h-5 w-5" />}
-              「{selectedTypeMeta?.label}」 변형문제 만들기
+              「{selectedTypeMeta?.label}」 {pageMode === 'essay' ? '서술형 만들기' : '변형문제 만들기'}
             </button>
           </div>
         </div>
@@ -693,33 +805,44 @@ function ResultPanel({
   draft,
   onClose,
   onTryAnother,
+  pageMode,
 }: {
   draft: DraftItem;
   onClose: () => void;
   onTryAnother: () => void;
+  pageMode: PageMode;
 }) {
+  const isEssay = (MEMBER_ESSAY_QUESTION_TYPES as readonly string[]).includes(draft.type);
   return (
     <div className="space-y-4 anim-fade-slide-bottom">
       {/* 성공 헤더 */}
-      <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg text-center">
+      <div className={`rounded-3xl p-6 text-white shadow-lg text-center bg-gradient-to-br ${isEssay ? 'from-emerald-500 to-teal-600' : 'from-emerald-500 to-teal-600'}`}>
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
           <Icon name="check" className="h-7 w-7 text-white" />
         </div>
-        <h2 className="text-xl font-black">변형문제가 완성됐어요!</h2>
+        <h2 className="text-xl font-black">{isEssay ? '서술형 문제가 완성됐어요!' : '변형문제가 완성됐어요!'}</h2>
         <p className="text-sm text-emerald-100 mt-1">「{draft.type}」 유형</p>
       </div>
 
       {/* 결과 본문 */}
-      <div className="rounded-3xl border-2 border-violet-200 bg-white p-5 shadow-sm">
-        <QuestionFriendlyPreview data={draft.question_data} editable={false} />
+      <div className={`rounded-3xl border-2 bg-white p-5 shadow-sm ${isEssay ? 'border-emerald-200' : 'border-violet-200'}`}>
+        {isEssay ? (
+          <EssayQuestionPreview
+            data={draft.question_data}
+            editable={false}
+            questionType={draft.type}
+          />
+        ) : (
+          <QuestionFriendlyPreview data={draft.question_data} editable={false} />
+        )}
 
         <div className="mt-6 flex flex-col sm:flex-row gap-2">
           <button
             type="button"
             onClick={onTryAnother}
-            className="flex-1 rounded-2xl bg-violet-600 py-3 text-sm font-bold text-white hover:bg-violet-700 transition-colors"
+            className={`flex-1 rounded-2xl py-3 text-sm font-bold text-white transition-colors ${isEssay ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-violet-600 hover:bg-violet-700'}`}
           >
-            ← 다른 유형도 만들어보기
+            ← {isEssay ? '다시 만들어보기' : '다른 유형도 만들어보기'}
           </button>
           <button
             type="button"

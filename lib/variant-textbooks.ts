@@ -3,9 +3,11 @@
  * 워크북 부교재와 동일하게: 공통 키 ∪ 회원 전용 목록.
  */
 
-/** 모의고사용 키(고1_/고2_/고3_) — 변형 부교재 목록에서 제외 */
+import { isMockExamTextbookKey } from './mock-exam-key';
+
+/** 모의고사용 키(고1_/고2_/고3_ 옛 표기 + "YY년 M월 고N 영어모의고사" 신표기) — 변형 부교재 목록에서 제외 */
 export function isVariantMockExamTextbookKey(key: string): boolean {
-  return /^고[123]_/.test(key);
+  return isMockExamTextbookKey(key);
 }
 
 /**

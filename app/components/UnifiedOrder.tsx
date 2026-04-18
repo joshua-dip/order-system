@@ -8,6 +8,7 @@ import { isEbsTextbook } from '@/lib/textbookSort';
 import { BOOK_VARIANT_QUESTION_TYPES } from '@/lib/book-variant-types';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
+import { mockExamDisplayLabel } from '@/lib/mock-exam-key';
 import AppBar from './AppBar';
 
 /* ────────────────────────────────────────────────────────── */
@@ -24,12 +25,9 @@ const MOCK_EXAM_NUMBERS = [
 const LS_KEY = 'exam_scope_presets';
 const MAX_LS_PRESETS = 5;
 
-/** "고1_2026_03월(서울시)" → "26년 3월 고1 영어모의고사" */
+/** mock-exams.json 키(신·구표기 모두) → 화면 표시용 라벨 */
 function mockExamDisplayName(key: string): string {
-  const m = key.match(/^고(\d)_(\d{4})_(\d{2})월/);
-  if (!m) return key;
-  const [, grade, year, month] = m;
-  return `${Number(year) - 2000}년 ${Number(month)}월 고${grade} 영어모의고사`;
+  return mockExamDisplayLabel(key);
 }
 
 function pricePerQuestion(type: string): number {

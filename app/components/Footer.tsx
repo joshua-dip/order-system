@@ -17,10 +17,10 @@ const Footer = () => {
   const hasBusinessInfo = companyName || repName || bizNumber || address || phone;
 
   return (
-    <footer className="py-4 mt-auto" style={{ backgroundColor: '#F5C6CB', color: '#333' }}>
+    <footer className="py-4 mt-auto bg-slate-50 text-slate-600 border-t border-slate-200">
       <div className="container mx-auto px-4">
-        <div className="border-t border-gray-400 mt-4 pt-4">
-          <div className="text-center text-xs text-gray-600 space-y-2">
+        <div className="pt-2">
+          <div className="text-center text-[11px] text-slate-500 space-y-1.5">
             {hasBusinessInfo ? (
               <>
                 {companyName && <div className="font-semibold text-sm mb-2">{companyName}</div>}
@@ -35,18 +35,18 @@ const Footer = () => {
                 {phone && <div><span>전화: {phone}</span></div>}
               </>
             ) : null}
-            <div className="mt-3 pt-2 border-t border-gray-300 space-y-2">
+            <div className={`${hasBusinessInfo ? 'mt-2 pt-2 border-t border-slate-200' : ''} space-y-1.5`}>
               <p>
                 <a
                   href={SOLVOOK_BRAND_PAGE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-700 underline underline-offset-2 hover:text-gray-900"
+                  className="text-slate-600 underline underline-offset-2 hover:text-slate-900"
                 >
                   쏠북(Solvook) 고미조슈아 브랜드
                 </a>
               </p>
-              <p>© 2025 Payperic. All rights reserved.</p>
+              <p className="text-slate-400">© 2025 Payperic. All rights reserved.</p>
             </div>
           </div>
         </div>

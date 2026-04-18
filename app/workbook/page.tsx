@@ -9,6 +9,7 @@ import WorkbookTypeSelection from '../components/WorkbookTypeSelection';
 import OrderDisplay from '../components/OrderDisplay';
 import AppBar from '../components/AppBar';
 import { saveOrderToDb } from '@/lib/orders';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 type PageStep = 'textbook' | 'lessons' | 'mockexam_numbers' | 'types' | 'order';
 
@@ -23,7 +24,7 @@ export default function WorkbookPage() {
     setSelectedTextbook(textbook);
     
     // 모의고사인지 부교재인지 구분
-    if (textbook.startsWith('고1_') || textbook.startsWith('고2_') || textbook.startsWith('고3_')) {
+    if (isMockExamTextbookKey(textbook)) {
       // 모의고사는 번호 선택 단계로
       setCurrentStep('mockexam_numbers');
     } else {
@@ -68,7 +69,7 @@ export default function WorkbookPage() {
 
   const handleBackToLessons = () => {
     // 모의고사인지 확인
-    if (selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_')) {
+    if (isMockExamTextbookKey(selectedTextbook)) {
       setCurrentStep('mockexam_numbers');
     } else {
       setCurrentStep('lessons');

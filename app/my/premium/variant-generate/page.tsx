@@ -22,8 +22,10 @@ import {
   shouldShowVariantGenerateNotice,
 } from '@/lib/variant-generate-notice-dismiss';
 import QuestionFriendlyPreview from './QuestionFriendlyPreview';
+import EssayQuestionPreview from './EssayQuestionPreview';
 import VariantSourceLoader from './VariantSourceLoader';
 import MemberVariantsMini from './MemberVariantsMini';
+import { MEMBER_ESSAY_QUESTION_TYPES } from '@/lib/member-essay-draft-claude';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -76,6 +78,24 @@ const TYPE_GROUPS: { label: string; items: TypeMeta[] }[] = [
 ];
 
 const ALL_TYPES: TypeMeta[] = TYPE_GROUPS.flatMap((g) => g.items);
+
+/** 서술형 유형 메타 */
+const ESSAY_TYPE_META: TypeMeta[] = [
+  {
+    key: '요약문본문어휘',
+    label: '요약문 본문 어휘 찾기',
+    desc: '본문에서 단어를 직접 찾아 요약문 빈칸 완성 (변형 가능)',
+    icon: 'note',
+  },
+  {
+    key: '요약문조건영작배열',
+    label: '요약문 조건 영작 (배열)',
+    desc: '주어진 단어를 올바른 순서로 배열하여 요약문 완성',
+    icon: 'note',
+  },
+];
+
+type PageMode = 'multiple-choice' | 'essay';
 
 const PAID_VARIANT_TYPES = (BOOK_VARIANT_QUESTION_TYPES as readonly string[]).filter((t) =>
   variantTypeRequiresHardInsertionPoints(t),
@@ -134,6 +154,10 @@ export default function MemberVariantGeneratePage() {
   const [perTypeResults, setPerTypeResults] = useState<PerTypeResult[]>([]);
   /** 저장 성공 직후 1회 강조용 */
   const [lastSavedIds, setLastSavedIds] = useState<string[]>([]);
+  /** 객관식 / 서술형 모드 */
+  const [pageMode, setPageMode] = useState<PageMode>('multiple-choice');
+  /** 서술형 선택 유형 (단일 선택) */
+  const [selectedEssayType, setSelectedEssayType] = useState<string>('요약문본문어휘');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typeSectionRef = useRef<HTMLDivElement>(null);
@@ -390,6 +414,73 @@ export default function MemberVariantGeneratePage() {
     setLastSavedIds([]);
   };
 
+  const handleEssayGenerate = async () => {
+    setMessage(null);
+    setPerTypeResults([]);
+    setLastSavedIds([]);
+    if (charCount < 10) {
+      showMessage({ kind: 'err', text: '지문을 먼저 입력해 주세요.' });
+      return;
+    }
+    const apiKey = loginId ? readStoredByokAnthropicKey(loginId) : '';
+    if (!apiKey) {
+      showMessage({ kind: 'err', text: 'API 키가 없습니다. 내 정보(탭)에서 키를 저장해 주세요.' });
+      return;
+    }
+    if (!(MEMBER_ESSAY_QUESTION_TYPES as readonly string[]).includes(selectedEssayType)) {
+      showMessage({ kind: 'err', text: '유효한 서술형 유형을 선택해 주세요.' });
+      return;
+    }
+    setBusy(true);
+    setEditMode(false);
+    setDrafts([]);
+    const tb = textbook.trim() || '회원지문';
+    const src = source.trim() || '직접입력';
+    const hint = userHint.trim() || undefined;
+    try {
+      const res = await fetch('/api/my/member-variant/essay-generate', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-anthropic-api-key': apiKey },
+        body: JSON.stringify({
+          paragraph,
+          textbook: tb,
+          source: src,
+          type: selectedEssayType,
+          userHint: hint,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showMessage({
+          kind: 'err',
+          text: typeof data?.error === 'string' ? data.error : '생성에 실패했습니다.',
+        });
+        return;
+      }
+      const pid = typeof data.passage_id === 'string' ? data.passage_id : '';
+      const qd =
+        data.question_data && typeof data.question_data === 'object' && !Array.isArray(data.question_data)
+          ? (data.question_data as Record<string, unknown>)
+          : null;
+      if (!pid || !qd) {
+        showMessage({ kind: 'err', text: '응답 형식 오류' });
+        return;
+      }
+      setDrafts([{ type: selectedEssayType, passage_id: pid, question_data: qd }]);
+      setActiveDraftIdx(0);
+      showMessage({ kind: 'ok', text: '서술형 초안이 준비되었습니다. 확인 후 저장하세요.' }, true);
+      setTimeout(() => {
+        mobileResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 180);
+    } catch {
+      showMessage({ kind: 'err', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setBusy(false);
+      setProgress(null);
+    }
+  };
+
   const handleGenerate = async () => {
     setMessage(null);
     setPerTypeResults([]);
@@ -610,7 +701,7 @@ export default function MemberVariantGeneratePage() {
 
   /* ---------- Step indicator state ---------- */
   const stepParagraph = charCount >= 10;
-  const stepType = selectedTypes.length > 0;
+  const stepType = pageMode === 'essay' ? !!selectedEssayType : selectedTypes.length > 0;
   const stepGenerated = drafts.length > 0 || lastSavedIds.length > 0;
   const stepSaved = lastSavedIds.length > 0;
   const stepFlags = [stepParagraph, stepType, stepGenerated, stepSaved];
@@ -801,14 +892,57 @@ export default function MemberVariantGeneratePage() {
             </div>
           </section>
 
+          {/* 모드 탭 — 객관식 / 서술형 */}
+          <div className="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setPageMode('multiple-choice');
+                setDrafts([]);
+                setMessage(null);
+                setLastSavedIds([]);
+              }}
+              disabled={busy}
+              className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${
+                pageMode === 'multiple-choice'
+                  ? 'bg-white text-violet-700 shadow-sm ring-1 ring-violet-200'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              객관식 (13유형)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPageMode('essay');
+                setDrafts([]);
+                setMessage(null);
+                setLastSavedIds([]);
+                setSelectedEssayType('요약문본문어휘');
+              }}
+              disabled={busy}
+              className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${
+                pageMode === 'essay'
+                  ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              서술형 (요약문)
+            </button>
+          </div>
+
           {/* 2. 유형 */}
           <section ref={typeSectionRef} id="variant-step-types" className="scroll-mt-32">
             <SectionHeader
               num={2}
-              title={`문제 유형 (${selectedTypes.length}개 선택)`}
-              done={stepType}
+              title={
+                pageMode === 'essay'
+                  ? '서술형 유형'
+                  : `문제 유형 (${selectedTypes.length}개 선택)`
+              }
+              done={pageMode === 'essay' ? !!selectedEssayType : stepType}
               right={
-                selectedTypes.length > 0 ? (
+                pageMode === 'multiple-choice' && selectedTypes.length > 0 ? (
                   <button
                     type="button"
                     onClick={() => setSelectedTypes([])}
@@ -819,6 +953,46 @@ export default function MemberVariantGeneratePage() {
                 ) : null
               }
             />
+
+            {/* ── 서술형 모드 유형 카드 ── */}
+            {pageMode === 'essay' && (
+              <div className="mt-3 space-y-3">
+                <p className="px-1 text-[11px] leading-relaxed text-slate-500">
+                  지문을 요약하는 영어 문장을 완성하는 서술형 문항입니다. 유형에 따라 조건 충족 영작 또는 단어 배열 방식으로 출제됩니다.
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {ESSAY_TYPE_META.map((t) => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setSelectedEssayType(t.key)}
+                      className={`rounded-2xl border-2 p-4 text-left transition disabled:opacity-50 ${
+                        selectedEssayType === t.key
+                          ? 'scale-[1.02] border-emerald-600 bg-emerald-600 text-white shadow-md'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/50'
+                      }`}
+                    >
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="text-sm font-bold">{t.label}</span>
+                        {selectedEssayType === t.key && (
+                          <svg className="ml-auto h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <p className={`text-[11px] leading-snug ${selectedEssayType === t.key ? 'text-emerald-100' : 'text-slate-500'}`}>
+                        {t.desc}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── 객관식 모드 유형 카드 ── */}
+            {pageMode === 'multiple-choice' && (
+            <>
             <p className="mt-2 px-1 text-[11px] leading-relaxed text-slate-500">
               카드를 클릭하거나 <strong className="text-slate-700">사각형을 드래그</strong>해 여러 유형을 한번에 선택할 수 있어요.
               여러 유형을 고르면 하나씩 순차 생성됩니다.
@@ -886,6 +1060,8 @@ export default function MemberVariantGeneratePage() {
                 </div>
               )}
             </div>
+            </>
+            )}
           </section>
 
           {/* 3. 추가 정보 */}
@@ -1115,20 +1291,26 @@ export default function MemberVariantGeneratePage() {
             </div>
             <button
               type="button"
-              onClick={() => void handleGenerate()}
+              onClick={() =>
+                pageMode === 'essay' ? void handleEssayGenerate() : void handleGenerate()
+              }
               disabled={!canGenerate}
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all sm:flex-none sm:min-w-[260px] sm:text-[15px] ${
                 canGenerate
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98]'
+                  ? pageMode === 'essay'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98]'
+                    : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98]'
                   : 'cursor-not-allowed bg-slate-200 text-slate-400'
               }`}
             >
               <Icon name="sparkle" className="h-5 w-5" />
-              {selectedTypes.length > 1
-                ? `${selectedTypes.length}개 유형 초안 만들기`
-                : selectedTypes.length === 1
-                  ? `「${selectedTypes[0]}」 초안 만들기`
-                  : '초안 만들기'}
+              {pageMode === 'essay'
+                ? `「${selectedEssayType}」 초안 만들기`
+                : selectedTypes.length > 1
+                  ? `${selectedTypes.length}개 유형 초안 만들기`
+                  : selectedTypes.length === 1
+                    ? `「${selectedTypes[0]}」 초안 만들기`
+                    : '초안 만들기'}
             </button>
           </div>
         </div>
@@ -1476,11 +1658,20 @@ function ResultPanel({
           </div>
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-3">
-          <QuestionFriendlyPreview
-            data={d.question_data}
-            editable={editMode}
-            onDataChange={(updated) => onUpdateDraft(i, updated)}
-          />
+          {(MEMBER_ESSAY_QUESTION_TYPES as readonly string[]).includes(d.type) ? (
+            <EssayQuestionPreview
+              data={d.question_data}
+              editable={editMode}
+              onDataChange={(updated) => onUpdateDraft(i, updated)}
+              questionType={d.type}
+            />
+          ) : (
+            <QuestionFriendlyPreview
+              data={d.question_data}
+              editable={editMode}
+              onDataChange={(updated) => onUpdateDraft(i, updated)}
+            />
+          )}
         </div>
       </div>
 

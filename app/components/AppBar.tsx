@@ -43,6 +43,16 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
       window.location.href = '/';
     }
   };
+
+  // 사용자 영역 표시 정책 — 데스크톱·모바일 동일하게:
+  //  · 이름(name) 또는 로그인아이디(loginId) 한 번
+  //  · 역할(관리자/내정보) 작은 배지 한 번
+  //  · 단, 표시 이름이 역할 텍스트와 동일하면 배지 생략 → "관리자 관리자" 중복 방지
+  const displayName = (user?.name || user?.loginId || '').trim();
+  const roleLabel = user?.role === 'admin' ? '관리자' : '내정보';
+  const showRoleBadge = !!displayName && displayName !== roleLabel;
+  const myHref = user?.role === 'admin' ? '/admin' : '/my';
+
   return (
     <header className="shadow-md sticky top-0 z-50" style={{ backgroundColor: '#13294B', borderBottom: '1px solid #888B8D' }}>
       <div className="container mx-auto px-4">
@@ -90,25 +100,18 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                {user.role === 'admin' ? (
-                  <Link
-                    href="/admin"
-                    className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
-                    style={{ backgroundColor: 'transparent', color: 'white' }}
-                  >
-                    <span>{user.name || user.loginId}</span>
-                    <span className="opacity-80">관리자</span>
-                  </Link>
-                ) : (
-                  <Link
-                    href="/my"
-                    className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
-                    style={{ backgroundColor: 'transparent', color: 'white' }}
-                  >
-                    <span>{user.name || user.loginId}</span>
-                    <span className="opacity-80">내정보</span>
-                  </Link>
-                )}
+                <Link
+                  href={myHref}
+                  className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                  style={{ backgroundColor: 'transparent', color: 'white' }}
+                >
+                  <span className="font-semibold">{displayName}</span>
+                  {showRoleBadge && (
+                    <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide opacity-90">
+                      {roleLabel}
+                    </span>
+                  )}
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -153,11 +156,16 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
               {user ? (
                 <>
                   <Link
-                    href={user.role === 'admin' ? '/admin' : '/my'}
-                    className="flex items-center px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                    href={myHref}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
                     style={{ backgroundColor: 'transparent', color: 'white' }}
                   >
-                    {user.role === 'admin' ? '관리자' : (user.name || user.loginId)}
+                    <span className="font-semibold truncate max-w-[6rem]">{displayName}</span>
+                    {showRoleBadge && (
+                      <span className="rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide opacity-90">
+                        {roleLabel}
+                      </span>
+                    )}
                   </Link>
                   <button
                     type="button"

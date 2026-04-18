@@ -93,6 +93,14 @@ type DetailMeta = {
 
 type ExportFormat = 'xlsx' | 'pdf' | 'docx' | 'hwpx';
 
+const EXPORT_FORMATS: ExportFormat[] = ['xlsx', 'pdf', 'docx', 'hwpx'];
+const EXPORT_META: Record<ExportFormat, { label: string; short: string; badge: string; tip: string }> = {
+  xlsx: { label: '엑셀', short: 'XLS', badge: 'bg-emerald-600', tip: '엑셀(.xlsx)로 내려받습니다.' },
+  pdf: { label: 'PDF', short: 'PDF', badge: 'bg-rose-600', tip: 'PDF로 내려받습니다.' },
+  docx: { label: 'Word', short: 'DOC', badge: 'bg-indigo-600', tip: 'MS Word(.docx)로 내려받습니다.' },
+  hwpx: { label: 'HWPX', short: 'HWP', badge: 'bg-violet-600', tip: '한컴 한글에서 바로 열 수 있는 OWPML(.hwpx) 파일로 내려받습니다.' },
+};
+
 function statusStyle(status: string): string {
   if (status === '완료') return 'bg-emerald-50 text-emerald-800 ring-emerald-100';
   if (status === '대기') return 'bg-amber-50 text-amber-900 ring-amber-100';
@@ -145,6 +153,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [exportMode, setExportMode] = useState<'student' | 'teacher'>('teacher');
   /** 상세에서 GPT/Claude 검수 안내 표시 */
   const [reviewChannel, setReviewChannel] = useState<null | 'gpt' | 'claude'>(null);
   const [statusLegendOpen, setStatusLegendOpen] = useState(false);
@@ -482,7 +491,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format, ids }),
+        body: JSON.stringify({ format, ids, mode: exportMode }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -493,7 +502,8 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const ext =
         format === 'xlsx' ? 'xlsx' : format === 'pdf' ? 'pdf' : format === 'hwpx' ? 'hwpx' : 'docx';
-      const base = `회원변형문항_${stamp}`;
+      const modeSuffix = exportMode === 'student' ? '_학생용' : '_교사용';
+      const base = `회원변형문항${modeSuffix}_${stamp}`;
       const filename = `${base}.${ext}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -608,8 +618,27 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white shadow-md ring-1 ring-slate-100">
-      <div className="border-b border-slate-100 px-5 py-3">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+      <div className="border-b border-slate-100 px-5 py-4">
+        {/* 1열 — 키워드 검색 풀폭 (가장 자주 쓰는 입력) */}
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-bold text-slate-600">키워드 검색</span>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
+              </svg>
+            </span>
+            <input
+              value={pageSearch}
+              onChange={(e) => setPageSearch(e.target.value)}
+              placeholder="발문·지문·교재·출처·유형으로 전체 문항 검색"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+        </label>
+
+        {/* 2열 — 셀렉트 5개 (sm 2열 / lg 3열) + 우측 액션 */}
+        <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="block text-xs font-bold text-slate-600">
               유형
@@ -618,7 +647,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               >
-                <option value="">전체</option>
+                <option value="">전체 유형</option>
                 {BOOK_VARIANT_QUESTION_TYPES.map((t) => (
                   <option key={t} value={t}>
                     {t}
@@ -636,7 +665,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
                 }}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               >
-                <option value="">전체</option>
+                <option value="">전체 교재</option>
                 {filterMeta?.hasEmptyTextbook ? (
                   <option value={FILTER_EMPTY}>(교재 없음)</option>
                 ) : null}
@@ -648,9 +677,15 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
               </select>
             </label>
             <label className="block text-xs font-bold text-slate-600">
-              출처
-              <span className="mt-0.5 block text-[10px] font-normal text-slate-400">
-                교재를 고르면 해당 교재에만 있는 출처로 목록이 줄어듭니다.
+              <span className="inline-flex items-center gap-1">
+                출처
+                <span
+                  className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-slate-200 bg-white text-[9px] font-bold text-slate-500"
+                  title="교재를 먼저 고르면 그 교재에 있는 출처로만 목록이 줄어듭니다."
+                  aria-label="출처 필터 안내"
+                >
+                  i
+                </span>
               </span>
               <select
                 value={sourceFilter}
@@ -658,7 +693,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
                 disabled={!!textbookFilter && scopedSourcesLoading}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 disabled:opacity-60"
               >
-                <option value="">전체</option>
+                <option value="">전체 출처</option>
                 {(textbookFilter ? scopedHasEmptySource : filterMeta?.hasEmptySource) ? (
                   <option value={FILTER_EMPTY}>(출처 없음)</option>
                 ) : null}
@@ -676,7 +711,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               >
-                <option value="">전체</option>
+                <option value="">전체 상태</option>
                 {(filterMeta?.statuses ?? []).map((st) => (
                   <option key={st} value={st}>
                     {st}
@@ -691,7 +726,7 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
                 onChange={(e) => setDifficultyFilter(e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               >
-                <option value="">전체</option>
+                <option value="">전체 난이도</option>
                 {(filterMeta?.difficulties ?? []).map((df) => (
                   <option key={df} value={df}>
                     {df}
@@ -699,23 +734,17 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
                 ))}
               </select>
             </label>
-            <label className="block text-xs font-bold text-slate-600 sm:col-span-2 lg:col-span-1">
-              키워드 검색
-              <input
-                value={pageSearch}
-                onChange={(e) => setPageSearch(e.target.value)}
-                placeholder="발문·지문·교재·출처·유형 (전체 문항에서 검색)"
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-              />
-            </label>
           </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center xl:flex-col">
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
             <button
               type="button"
               onClick={resetFilters}
               disabled={!hasActiveFilters}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-300 disabled:hover:bg-white disabled:hover:text-slate-700"
             >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m0 0a8.003 8.003 0 01-15.357-2" />
+              </svg>
               필터·검색 초기화
             </button>
             {isPreview && (
@@ -754,71 +783,56 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
               {allOnPageSelected ? '이 페이지 선택 해제' : '이 페이지 전체 선택'}
             </button>
           </div>
-          <div className="relative flex flex-wrap items-center gap-2" ref={colMenuRef}>
-            <button
-              type="button"
-              onClick={() => setColMenuOpen((o) => !o)}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50"
-            >
-              열 표시 ({visibleColCount})
-            </button>
-            {colMenuOpen && (
-              <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">테이블 열</p>
-                <ul className="max-h-64 space-y-2 overflow-auto text-xs">
-                  {COLUMN_META.map((c) => (
-                    <li key={c.key}>
-                      <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-700">
-                        <input
-                          type="checkbox"
-                          checked={colVis[c.key]}
-                          onChange={() => persistCols({ ...colVis, [c.key]: !colVis[c.key] })}
-                          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
-                        />
-                        {c.label}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <button
-              type="button"
-              disabled={selectedIds.size === 0 || exporting !== null}
-              onClick={() => void runExport('xlsx')}
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-40"
-            >
-              {exporting === 'xlsx' ? '…' : '엑셀'}
-            </button>
-            <button
-              type="button"
-              disabled={selectedIds.size === 0 || exporting !== null}
-              onClick={() => void runExport('pdf')}
-              className="rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700 disabled:opacity-40"
-            >
-              {exporting === 'pdf' ? '…' : 'PDF'}
-            </button>
-            <button
-              type="button"
-              disabled={selectedIds.size === 0 || exporting !== null}
-              onClick={() => void runExport('docx')}
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-indigo-700 disabled:opacity-40"
-            >
-              {exporting === 'docx' ? '…' : 'Word'}
-            </button>
-            <button
-              type="button"
-              disabled={selectedIds.size === 0 || exporting !== null}
-              onClick={() => void runExport('hwpx')}
-              className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-1.5 text-[11px] font-bold text-violet-900 hover:bg-violet-100 disabled:opacity-40"
-            >
-              {exporting === 'hwpx' ? '…' : 'HWPX'}
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 학생용/교사용 토글 */}
+            <div className="flex rounded-lg overflow-hidden border border-slate-200 bg-white shadow-sm text-[11px] font-bold shrink-0">
+              <button
+                type="button"
+                onClick={() => setExportMode('student')}
+                className={`px-3 py-1.5 transition ${exportMode === 'student' ? 'bg-sky-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                title="학생용 — 정답·해설 제외"
+              >
+                학생용
+              </button>
+              <button
+                type="button"
+                onClick={() => setExportMode('teacher')}
+                className={`px-3 py-1.5 transition ${exportMode === 'teacher' ? 'bg-violet-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                title="교사용 — 정답·해설 포함"
+              >
+                교사용
+              </button>
+            </div>
+            {EXPORT_FORMATS.map((fmt) => {
+              const meta = EXPORT_META[fmt];
+              const disabled = selectedIds.size === 0 || exporting !== null;
+              const tip =
+                selectedIds.size === 0
+                  ? '항목을 먼저 선택하세요'
+                  : fmt === 'hwpx'
+                    ? 'HWPX(한컴 한글) — 서식이 단순화될 수 있습니다.'
+                    : meta.tip;
+              return (
+                <button
+                  key={fmt}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => void runExport(fmt)}
+                  title={tip}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <span
+                    className={`inline-flex h-4 min-w-[1.75rem] items-center justify-center rounded px-1 text-[9px] font-extrabold uppercase tracking-wide text-white ${meta.badge}`}
+                    aria-hidden
+                  >
+                    {meta.short}
+                  </span>
+                  <span>{exporting === fmt ? '내보내는 중…' : meta.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-          HWPX는 한컴 한글에서 바로 열 수 있는 OWPML(.hwpx) 파일로 내려받습니다. 서식은 단순화되어 있을 수 있습니다.
-        </p>
       </div>
 
       <div className="p-4">
@@ -830,28 +844,90 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
         ) : error ? (
           <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
         ) : items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-12 text-center">
+          <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center shadow-sm">
             {hasActiveFilters ? (
               <>
-                <p className="text-sm font-medium text-slate-700">조건에 맞는 문항이 없습니다.</p>
-                <p className="mt-2 text-xs text-slate-500">교재·출처·유형·상태·난이도 또는 검색어를 바꿔 보세요.</p>
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-slate-800">조건에 맞는 문항이 없습니다.</p>
+                <p className="mt-1.5 text-xs text-slate-500">교재·출처·유형·상태·난이도 또는 검색어를 바꿔 보세요.</p>
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="mt-4 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white hover:bg-violet-700"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-violet-700"
                 >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m0 0a8.003 8.003 0 01-15.357-2" />
+                  </svg>
                   필터·검색 초기화
                 </button>
               </>
             ) : (
               <>
-                <p className="text-sm font-medium text-slate-600">아직 저장된 문항이 없습니다.</p>
-                <p className="mt-2 text-xs text-slate-500">위에서 지문을 넣고 생성한 뒤 「저장하기」를 눌러 보세요.</p>
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M9 8h6M5 21h14a2 2 0 002-2V7l-5-5H5a2 2 0 00-2 2v15a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-slate-800">아직 저장된 문항이 없습니다.</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                  지문을 넣고 변형문제를 만든 뒤 「저장하기」를 누르면 여기에 모입니다.
+                </p>
+                <Link
+                  href="/my/premium/variant-generate"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-violet-700"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  변형문제 만들기로 이동
+                </Link>
               </>
             )}
           </div>
         ) : (
           <>
+            {/* 테이블 우상단 — 열 표시 (다운로드 액션과 분리해 성격 구분) */}
+            <div className="mb-2 hidden items-center justify-end md:flex">
+              <div className="relative" ref={colMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setColMenuOpen((o) => !o)}
+                  aria-expanded={colMenuOpen}
+                  title="테이블 열 표시 설정"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  열 표시 ({visibleColCount})
+                </button>
+                {colMenuOpen && (
+                  <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">테이블 열</p>
+                    <ul className="max-h-64 space-y-2 overflow-auto text-xs">
+                      {COLUMN_META.map((c) => (
+                        <li key={c.key}>
+                          <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={colVis[c.key]}
+                              onChange={() => persistCols({ ...colVis, [c.key]: !colVis[c.key] })}
+                              className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                            />
+                            {c.label}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="hidden overflow-x-auto overflow-hidden rounded-2xl border border-slate-100 md:block">
               <table className="w-full min-w-[640px] text-left text-sm">
                 <thead>

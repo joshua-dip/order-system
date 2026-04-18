@@ -8,6 +8,7 @@ import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT, ORDER_FOOTER_MESSAGE } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 /* ────────── 타입 ────────── */
 
@@ -102,9 +103,7 @@ export default function VocabularyOrderPage() {
   /* ── 교재 목록 ── */
   const textbookList = useMemo(() => {
     if (!textbooksData || !currentUser) return [];
-    const allKeys = Object.keys(textbooksData).filter(
-      (k) => !k.startsWith('고1_') && !k.startsWith('고2_') && !k.startsWith('고3_'),
-    );
+    const allKeys = Object.keys(textbooksData).filter((k) => !isMockExamTextbookKey(k));
     const allowed = currentUser.allowedTextbooks;
     if (!allowed || allowed.length === 0) return allKeys;
     const set = new Set(allowed);

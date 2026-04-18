@@ -16,6 +16,77 @@ async function requireAdmin(request: NextRequest) {
   return { error: null, payload };
 }
 
+function mapUser(u: Record<string, unknown>) {
+  const toDateStr = (v: unknown, withTime = false): string | null => {
+    if (!v) return null;
+    const d = v instanceof Date ? v : new Date(v as string);
+    if (Number.isNaN(d.getTime())) return null;
+    return withTime ? d.toISOString() : d.toISOString().slice(0, 10);
+  };
+  const oid = u._id as ObjectId;
+  return {
+    id: oid.toString(),
+    loginId: u.loginId,
+    name: (u.name as string | undefined) ?? (u.loginId as string),
+    email: (u.email as string | undefined) ?? '',
+    phone: (u.phone as string | undefined) ?? '',
+    dropboxFolderPath: (u.dropboxFolderPath as string | undefined) ?? '',
+    dropboxSharedLink: (u.dropboxSharedLink as string | undefined) ?? '',
+    canAccessAnalysis: !!(u.canAccessAnalysis),
+    canAccessEssay: !!(u.canAccessEssay),
+    myFormatApproved: !!(u.myFormatApproved),
+    allowedTextbooks: Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
+    allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis)
+      ? u.allowedTextbooksAnalysis
+      : Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
+    allowedTextbooksEssay: Array.isArray(u.allowedTextbooksEssay)
+      ? u.allowedTextbooksEssay
+      : Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
+    allowedTextbooksWorkbook: Array.isArray(u.allowedTextbooksWorkbook)
+      ? (u.allowedTextbooksWorkbook as unknown[]).filter((x): x is string => typeof x === 'string')
+      : undefined,
+    allowedTextbooksVariant: Array.isArray(u.allowedTextbooksVariant)
+      ? (u.allowedTextbooksVariant as unknown[]).filter((x): x is string => typeof x === 'string')
+      : undefined,
+    allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
+    points: typeof u.points === 'number' && (u.points as number) >= 0 ? (u.points as number) : 0,
+    supplementaryNote: typeof u.supplementaryNote === 'string' ? u.supplementaryNote : '',
+    annualMemberSince: toDateStr(u.annualMemberSince),
+    monthlyMemberSince: toDateStr(u.monthlyMemberSince),
+    monthlyMemberUntil: toDateStr(u.monthlyMemberUntil),
+    isVip: !!(u.isVip),
+    vipSince: toDateStr(u.vipSince),
+    signupPremiumTrialUntil: toDateStr(u.signupPremiumTrialUntil, true),
+    createdAt: u.createdAt,
+  };
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { error } = await requireAdmin(request);
+    if (error) return error;
+    const { id } = await params;
+    if (!id || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: '유효하지 않은 ID입니다.' }, { status: 400 });
+    }
+    const db = await getDb('gomijoshua');
+    const u = await db.collection('users').findOne(
+      { _id: new ObjectId(id), role: 'user' },
+      { projection: { passwordHash: 0 } }
+    );
+    if (!u) {
+      return NextResponse.json({ error: '사용자를 찾을 수 없습니다.' }, { status: 404 });
+    }
+    return NextResponse.json({ user: mapUser(u as Record<string, unknown>) });
+  } catch (err) {
+    console.error('관리자 단건 사용자 조회 실패:', err);
+    return NextResponse.json({ error: '조회 중 오류가 발생했습니다.' }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

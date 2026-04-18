@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import type { OrderGenerateHandler } from './MockExamSettings';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
@@ -35,7 +36,7 @@ const WorkbookTypeSelection = ({
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const orderSubmittingRef = useRef(false);
 
-  const isMockExam = selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_');
+  const isMockExam = isMockExamTextbookKey(selectedTextbook);
 
   const refreshMyFormats = useCallback(() => {
     fetch('/api/my/my-format-upload', { credentials: 'include' })

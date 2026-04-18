@@ -17,6 +17,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const email = typeof body?.email === 'string' ? body.email.trim() : undefined;
     const newPassword = typeof body?.password === 'string' ? body.password : undefined;
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : undefined;
 
     const db = await getDb('gomijoshua');
     const users = db.collection('users');
@@ -24,6 +25,7 @@ export async function PATCH(request: NextRequest) {
 
     const updates: Record<string, unknown> = {};
     if (email !== undefined) updates.email = email;
+    if (phone !== undefined) updates.phone = phone;
     if (newPassword !== undefined) {
       if (newPassword.length < 4) {
         return NextResponse.json(

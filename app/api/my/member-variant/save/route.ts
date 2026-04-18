@@ -73,12 +73,6 @@ export async function POST(request: NextRequest) {
 
     const phoneRaw = (user as { phone?: string }).phone;
     const ownerPhone = typeof phoneRaw === 'string' ? phoneRaw.trim() : '';
-    if (!ownerPhone.replace(/\D/g, '')) {
-      return NextResponse.json(
-        { error: '문항 저장을 위해 내정보에 전화번호를 등록해 주세요. (관리자에게 요청)' },
-        { status: 400 },
-      );
-    }
 
     const ownerId = new ObjectId(payload.sub);
     const passage_id = new ObjectId(passageIdStr);

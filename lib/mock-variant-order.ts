@@ -1,38 +1,52 @@
 import type { Collection, Document } from 'mongodb';
+import { parseMockExamKey } from './mock-exam-key';
 
 export type MockExamSelection = { exam: string; numbers: string[] };
 
 /**
- * 주문 orderMeta.exam( mock-exams.json 키 )와 passages.textbook(엑셀·관리자 등록명)이 다를 때 대비.
- * 예: 고1_2026_03월(서울시) → 원문 키 + 26년 3월 고1 영어모의고사 + 2026년 3월 고1 영어모의고사
- *                             + 26년 3월 고1 영어모의고사 (서울시) (지역 접미사 포함 업로드 대응)
+ * 주문 orderMeta.exam ↔ passages.textbook 매칭.
+ *
+ * 입력은 신표기("26년 3월 고1 영어모의고사") 또는 옛 키("고1_2026_03월(서울시)") 중 하나일 수 있고,
+ * passages 에는 둘 중 어느 표기로 저장돼 있을지 모르므로 가능한 후보를 모두 만들어 둔다.
  */
 export function mockExamOrderKeyToPassageTextbookCandidates(orderExamKey: string): string[] {
   const raw = orderExamKey.trim();
   if (!raw) return [];
   const out = new Set<string>([raw]);
 
-  const cleaned = raw.replace(/\[[^\]]*]\s*$/, '').trim();
-  const m = cleaned.match(/^고([123])_(\d{4})_(\d{1,2})월(?:\(([^)]*)\))?$/);
-  if (m) {
-    const grade = m[1];
-    const yyyy = parseInt(m[2], 10);
-    const mo = parseInt(m[3], 10);
-    const region = (m[4] ?? '').trim();
-    if (Number.isFinite(yyyy) && Number.isFinite(mo) && mo >= 1 && mo <= 12) {
-      const yy = String(yyyy % 100).padStart(2, '0');
-      const moP = String(mo).padStart(2, '0');
-      const bases = [
-        `${yy}년 ${mo}월 고${grade} 영어모의고사`,
-        `${yy}년 ${moP}월 고${grade} 영어모의고사`,
-        `${yyyy}년 ${mo}월 고${grade} 영어모의고사`,
-        `${yyyy}년 ${moP}월 고${grade} 영어모의고사`,
-      ];
-      for (const b of bases) out.add(b);
-      if (region) {
-        for (const b of bases) out.add(`${b} (${region})`);
-      }
+  const parsed = parseMockExamKey(raw);
+  if (!parsed || !parsed.grade || parsed.year == null || parsed.month == null) return [...out];
+
+  const grade = parsed.grade.replace('고', '');
+  const yyyy = parsed.year;
+  const mo = parsed.month;
+  const yy = String(yyyy % 100).padStart(2, '0');
+  const moP = String(mo).padStart(2, '0');
+
+  const bases = [
+    `${yy}년 ${mo}월 고${grade} 영어모의고사`,
+    `${yy}년 ${moP}월 고${grade} 영어모의고사`,
+    `${yyyy}년 ${mo}월 고${grade} 영어모의고사`,
+    `${yyyy}년 ${moP}월 고${grade} 영어모의고사`,
+  ];
+  for (const b of bases) out.add(b);
+
+  // 옛 키에서 변환된 경우 — 지역(note)·메모(bracketNote) 접미사 변형도 포함
+  const noteParts: string[] = [];
+  if (parsed.bracketNote) noteParts.push(parsed.bracketNote);
+  if (noteParts.length > 0) {
+    for (const b of bases) out.add(`${b} (${noteParts.join(', ')})`);
+  }
+  if (parsed.format === 'old' && parsed.note) {
+    for (const b of bases) out.add(`${b} (${parsed.note})`);
+    if (parsed.bracketNote) {
+      for (const b of bases) out.add(`${b} (${parsed.note}, ${parsed.bracketNote})`);
     }
+  }
+
+  // 신표기 → 옛 키 후보까지 추가 (passages 에 옛 키로 남아있는 항목 대비)
+  if (parsed.format === 'new') {
+    out.add(`고${grade}_${yyyy}_${moP}월`);
   }
 
   return [...out];

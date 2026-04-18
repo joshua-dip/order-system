@@ -2273,6 +2273,12 @@ export default function AdminDashboardPage() {
           >
             + 계정 생성
           </button>
+          <Link
+            href="/admin/users"
+            className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+          >
+            회원상세관리
+          </Link>
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
           <button
             type="button"
@@ -3863,6 +3869,7 @@ export default function AdminDashboardPage() {
                     const pathVal = isEditingPath ? editingPathValue : (u.dropboxFolderPath ?? '');
                     return (
                       <div
+                        key={u.id}
                         id={`member-card-${u.id}`}
                         className={`scroll-mt-6 rounded-2xl overflow-hidden border transition-colors ${isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}
                       >

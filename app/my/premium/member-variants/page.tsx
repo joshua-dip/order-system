@@ -52,7 +52,7 @@ function MemberVariantsListInner() {
   if (deniedReason === 'login') {
     return (
       <>
-        <AppBar title="내가 만든 문항" showBackButton />
+        <AppBar showBackButton />
         <div className="flex min-h-[60vh] items-center justify-center px-4">
           <p className="text-sm text-slate-600">로그인 페이지로 이동합니다…</p>
         </div>
@@ -63,7 +63,7 @@ function MemberVariantsListInner() {
   if (deniedReason === 'premium') {
     return (
       <>
-        <AppBar title="내가 만든 문항" showBackButton />
+        <AppBar showBackButton />
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-violet-50/40 px-4 py-14">
           <div className="mx-auto max-w-md rounded-3xl border border-violet-100 bg-white p-10 text-center shadow-xl shadow-violet-200/25">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl">🔐</div>
@@ -93,8 +93,8 @@ function MemberVariantsListInner() {
 
   return (
     <>
-      <AppBar title="내가 만든 문항" showBackButton />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-violet-50/30 pb-12">
+      <AppBar showBackButton />
+      <div className="bg-gradient-to-b from-slate-50 via-white to-violet-50/30 pb-10">
         <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 md:py-8">
           <header className="space-y-1">
             <p className="text-xs font-bold uppercase tracking-wider text-violet-600">변형문제 만들기</p>

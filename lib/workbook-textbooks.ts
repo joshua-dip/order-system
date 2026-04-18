@@ -12,9 +12,11 @@ export const WORKBOOK_SUPPLEMENTARY_COMMON_KEYS: string[] = [
   // 예: 'EBS 수능특강 영어독해',
 ];
 
-/** 모의고사 워크북용 키(고1_/고2_/고3_ 접두) 여부 */
+import { isMockExamTextbookKey } from './mock-exam-key';
+
+/** 모의고사 워크북용 키(옛 표기 + 신표기 모두 인식) */
 export function isWorkbookMockExamTextbookKey(key: string): boolean {
-  return /^고[123]_/.test(key);
+  return isMockExamTextbookKey(key);
 }
 
 /**

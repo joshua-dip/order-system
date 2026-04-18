@@ -13,6 +13,7 @@ import WorkbookTypeSelection from './components/WorkbookTypeSelection';
 import OrderDisplay from './components/OrderDisplay';
 import AppBar from './components/AppBar';
 import { saveOrderToDb } from '@/lib/orders';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 type PageStep = 'selection' | 'textbook' | 'lessons' | 'questions' | 'mockexam' | 'workbook_textbook' | 'workbook_lessons' | 'workbook_mockexam_numbers' | 'workbook_types' | 'order';
 type OrderType = 'textbook' | 'mockexam' | 'workbook';
@@ -50,7 +51,7 @@ export default function Home() {
     if (textbook === '워크북_목록') {
       // 워크북 교재 목록 표시 로직 (나중에 구현)
       setCurrentStep('workbook_textbook');
-    } else if (textbook.startsWith('고1_') || textbook.startsWith('고2_') || textbook.startsWith('고3_')) {
+    } else if (isMockExamTextbookKey(textbook)) {
       // 모의고사는 번호 선택 단계로
       setCurrentStep('workbook_mockexam_numbers');
     } else {
@@ -126,7 +127,7 @@ export default function Home() {
 
   const handleBackToWorkbookLessons = () => {
     // 모의고사인지 확인
-    if (selectedTextbook.startsWith('고1_') || selectedTextbook.startsWith('고2_') || selectedTextbook.startsWith('고3_')) {
+    if (isMockExamTextbookKey(selectedTextbook)) {
       setCurrentStep('workbook_mockexam_numbers');
     } else {
       setCurrentStep('workbook_lessons');
