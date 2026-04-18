@@ -79,6 +79,8 @@ type Props = {
   refreshKey: number;
   /** preview: 최신 10건만 + 전체 보기 링크 / full: 기존 페이지네이션(25건) */
   listMode?: 'preview' | 'full';
+  /** 목록 내 특정 문항을 잠깐 강조하고 그 위치로 스크롤 (방금 저장한 문항 등) */
+  highlightVariantId?: string;
 };
 
 type DetailMeta = {
@@ -103,9 +105,17 @@ function formatShortDate(iso: string | null): string {
   return new Date(iso).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-export default function MyMemberVariants({ refreshKey, listMode = 'full' }: Props) {
+export default function MyMemberVariants({ refreshKey, listMode = 'full', highlightVariantId }: Props) {
   const isPreview = listMode === 'preview';
   const pageLimit = isPreview ? 10 : 25;
+  /** 방금 저장한 행을 몇 초간 강조 — CSS 하이라이트를 토글 */
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rowRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const setRowRef = useCallback((id: string, el: HTMLElement | null) => {
+    if (el) rowRefs.current.set(id, el);
+    else rowRefs.current.delete(id);
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -308,6 +318,33 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full' }: Prop
     debouncedSearch,
     load,
   ]);
+
+  /** highlightVariantId가 지정되고 해당 id가 현재 목록에 있으면 스크롤 + 하이라이트 */
+  useEffect(() => {
+    if (!highlightVariantId) return;
+    if (!items.some((r) => r.id === highlightVariantId)) return;
+    const el = rowRefs.current.get(highlightVariantId);
+    if (el) {
+      const t = window.setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 120);
+      return () => window.clearTimeout(t);
+    }
+  }, [highlightVariantId, items]);
+
+  useEffect(() => {
+    if (!highlightVariantId) return;
+    if (!items.some((r) => r.id === highlightVariantId)) return;
+    setFlashId(highlightVariantId);
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    flashTimeoutRef.current = setTimeout(() => setFlashId(null), 2800);
+    return () => {
+      if (flashTimeoutRef.current) {
+        clearTimeout(flashTimeoutRef.current);
+        flashTimeoutRef.current = null;
+      }
+    };
+  }, [highlightVariantId, items]);
 
   const selectedOnPage = useMemo(() => {
     return items.filter((r) => selectedIds.has(r.id));
@@ -876,7 +913,12 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full' }: Prop
                   {items.map((row) => (
                     <tr
                       key={row.id}
-                      className="cursor-pointer border-b border-slate-50 transition last:border-0 hover:bg-violet-50/50"
+                      ref={(el) => setRowRef(row.id, el)}
+                      className={`cursor-pointer border-b border-slate-50 transition last:border-0 ${
+                        flashId === row.id
+                          ? 'bg-amber-50 ring-2 ring-amber-400 ring-offset-[-2px] anim-fade-slide-top'
+                          : 'hover:bg-violet-50/50'
+                      }`}
                       onClick={() => void openDetail(row.id)}
                     >
                       <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
@@ -901,7 +943,12 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full' }: Prop
               {items.map((row) => (
                 <div
                   key={row.id}
-                  className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition hover:border-violet-200 hover:bg-violet-50/30"
+                  ref={(el) => setRowRef(row.id, el)}
+                  className={`rounded-2xl border p-4 transition ${
+                    flashId === row.id
+                      ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-300 anim-fade-slide-top'
+                      : 'border-slate-100 bg-slate-50/50 hover:border-violet-200 hover:bg-violet-50/30'
+                  }`}
                 >
                   <div className="flex gap-3">
                     <input

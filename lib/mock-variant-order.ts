@@ -5,6 +5,7 @@ export type MockExamSelection = { exam: string; numbers: string[] };
 /**
  * 주문 orderMeta.exam( mock-exams.json 키 )와 passages.textbook(엑셀·관리자 등록명)이 다를 때 대비.
  * 예: 고1_2026_03월(서울시) → 원문 키 + 26년 3월 고1 영어모의고사 + 2026년 3월 고1 영어모의고사
+ *                             + 26년 3월 고1 영어모의고사 (서울시) (지역 접미사 포함 업로드 대응)
  */
 export function mockExamOrderKeyToPassageTextbookCandidates(orderExamKey: string): string[] {
   const raw = orderExamKey.trim();
@@ -12,18 +13,25 @@ export function mockExamOrderKeyToPassageTextbookCandidates(orderExamKey: string
   const out = new Set<string>([raw]);
 
   const cleaned = raw.replace(/\[[^\]]*]\s*$/, '').trim();
-  const m = cleaned.match(/^고([123])_(\d{4})_(\d{1,2})월(?:\([^)]*\))?$/);
+  const m = cleaned.match(/^고([123])_(\d{4})_(\d{1,2})월(?:\(([^)]*)\))?$/);
   if (m) {
     const grade = m[1];
     const yyyy = parseInt(m[2], 10);
     const mo = parseInt(m[3], 10);
+    const region = (m[4] ?? '').trim();
     if (Number.isFinite(yyyy) && Number.isFinite(mo) && mo >= 1 && mo <= 12) {
       const yy = String(yyyy % 100).padStart(2, '0');
       const moP = String(mo).padStart(2, '0');
-      out.add(`${yy}년 ${mo}월 고${grade} 영어모의고사`);
-      out.add(`${yy}년 ${moP}월 고${grade} 영어모의고사`);
-      out.add(`${yyyy}년 ${mo}월 고${grade} 영어모의고사`);
-      out.add(`${yyyy}년 ${moP}월 고${grade} 영어모의고사`);
+      const bases = [
+        `${yy}년 ${mo}월 고${grade} 영어모의고사`,
+        `${yy}년 ${moP}월 고${grade} 영어모의고사`,
+        `${yyyy}년 ${mo}월 고${grade} 영어모의고사`,
+        `${yyyy}년 ${moP}월 고${grade} 영어모의고사`,
+      ];
+      for (const b of bases) out.add(b);
+      if (region) {
+        for (const b of bases) out.add(`${b} (${region})`);
+      }
     }
   }
 

@@ -12,6 +12,75 @@ import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
+/** 교과서 키(`공통영어1_NE능률민병천`)를 학년·출판사·저자로 분해해 카드에 노출 */
+type GyogwaseoKeyMeta = {
+  subject: string;
+  publisher: string;
+  author: string;
+  raw: string;
+};
+
+const PUBLISHER_KEYS = [
+  'NE능률', 'YBM', '능률', '천재교육', '천재', '비상교육', '비상',
+  '동아출판', '동아', '미래엔', '지학사', '금성', '교학사', '다락원', '천재교과서',
+] as const;
+
+const PUBLISHER_STYLE: Record<string, { stripe: string; badge: string }> = {
+  'NE능률': { stripe: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  '능률':   { stripe: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  'YBM':    { stripe: 'bg-sky-500',     badge: 'bg-sky-50 text-sky-700 border-sky-200' },
+  '천재':   { stripe: 'bg-rose-500',    badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+  '천재교육': { stripe: 'bg-rose-500',  badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+  '천재교과서': { stripe: 'bg-rose-500', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+  '비상':   { stripe: 'bg-orange-500',  badge: 'bg-orange-50 text-orange-700 border-orange-200' },
+  '비상교육': { stripe: 'bg-orange-500',badge: 'bg-orange-50 text-orange-700 border-orange-200' },
+  '동아':   { stripe: 'bg-indigo-500',  badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  '동아출판': { stripe: 'bg-indigo-500',badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  '미래엔': { stripe: 'bg-cyan-500',    badge: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+  '지학사': { stripe: 'bg-amber-500',   badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  '금성':   { stripe: 'bg-yellow-500',  badge: 'bg-yellow-50 text-yellow-800 border-yellow-200' },
+  '교학사': { stripe: 'bg-lime-500',    badge: 'bg-lime-50 text-lime-700 border-lime-200' },
+  '다락원': { stripe: 'bg-fuchsia-500', badge: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200' },
+  '기타':   { stripe: 'bg-slate-400',   badge: 'bg-slate-100 text-slate-700 border-slate-200' },
+};
+
+function parseGyogwaseoKey(raw: string): GyogwaseoKeyMeta {
+  const idx = raw.indexOf('_');
+  let subject = '';
+  let rest = raw;
+  if (idx > 0) {
+    subject = raw.slice(0, idx).trim();
+    rest = raw.slice(idx + 1).trim();
+  }
+  let publisher = '';
+  let author = '';
+  for (const p of PUBLISHER_KEYS) {
+    if (rest.startsWith(p)) {
+      publisher = p;
+      author = rest.slice(p.length).trim();
+      break;
+    }
+  }
+  if (!publisher) {
+    publisher = '기타';
+    author = rest;
+  }
+  return { subject: subject || '교과서', publisher, author, raw };
+}
+
+/** 학년/과목 정렬: 공통영어1·2 → 영어I·II → 그 외 */
+const SUBJECT_ORDER = [
+  '공통영어1', '공통영어2',
+  '영어', '영어I', '영어II',
+  '영어 독해와 작문', '영어독해와작문',
+  '영어 회화', '영어회화',
+  '진로영어', '실용영어', '직무영어', '심화영어',
+];
+function subjectOrderIdx(s: string): number {
+  const i = SUBJECT_ORDER.indexOf(s);
+  return i === -1 ? 999 : i;
+}
+
 /** 교과서 목록: 쏠북·구매 안내 링크 우선(extra → kyobo → 쏠북 매장) */
 function solbookPurchaseCta(links: {
   kyoboUrl?: string;
@@ -86,6 +155,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTextbookList, setShowTextbookList] = useState(false);
+  /** 교과서 화면: 학년/과목 필터 (전체 = 빈 문자열) */
+  const [gyogwaseoSubjectFilter, setGyogwaseoSubjectFilter] = useState<string>('');
   /** 관리자가 회원 전용 변형문제 부교재 목록을 저장한 경우에만 true */
   const [variantDedicatedActive, setVariantDedicatedActive] = useState(false);
   const [variantDedicatedList, setVariantDedicatedList] = useState<string[]>([]);
@@ -364,47 +435,62 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const renderGyogwaseoCard = (textbook: string) => {
     const links = textbookLinks[textbook];
     const cta = solbookPurchaseCta(links);
+    const meta = parseGyogwaseoKey(textbook);
+    const style = PUBLISHER_STYLE[meta.publisher] ?? PUBLISHER_STYLE['기타'];
     return (
       <div
         key={textbook}
-        className="rounded-xl border-2 border-violet-100 bg-white p-4 sm:p-5 shadow-sm transition-shadow hover:shadow-md"
+        className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg"
       >
-        <h3 className="text-base font-semibold text-gray-900 leading-snug">{textbook}</h3>
-        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-          정식 교재·세트는 쏠북에서 확인하시고, 원하시는 맞춤 조합만 필요하면 아래에서 강·시험 범위를 골라 주문해 주세요.
-        </p>
-        <a
-          href={cta.primaryHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 flex w-full items-center justify-center rounded-lg bg-violet-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2"
-        >
-          {cta.primaryLabel}
-        </a>
-        {cta.secondary ? (
-          <a
-            href={cta.secondary.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 block text-center text-xs font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900"
-          >
-            {cta.secondary.label}
-          </a>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => selectTextbookAndOpenLessons(textbook)}
-          className="mt-3 w-full rounded-lg border-2 border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:border-violet-300 hover:bg-violet-50/60"
-        >
-          이 교재로 맞춤 자료만 주문하기
-        </button>
-        <p className="mt-2.5 text-center text-[11px] leading-relaxed text-slate-500">
-          변형·워크북·분석지·단어장 등 여러 종류를 한 번에 담으려면{' '}
-          <Link href="/bundle" className="font-semibold text-violet-700 underline underline-offset-2 hover:text-violet-900">
-            통합 주문
-          </Link>
-          을 이용해 보세요.
-        </p>
+        <span className={`absolute inset-y-0 left-0 w-1.5 ${style.stripe}`} aria-hidden />
+        <div className="flex flex-1 flex-col p-5 pl-6">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+              {meta.subject}
+            </span>
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold ${style.badge}`}>
+              {meta.publisher}
+            </span>
+          </div>
+          <h3 className="mt-2.5 text-lg font-bold leading-tight text-slate-900">
+            {meta.author || meta.subject}
+            <span className="ml-1.5 text-xs font-medium text-slate-400">대표저자</span>
+          </h3>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+            정식 교재 본체는 <span className="font-semibold text-violet-700">쏠북</span>에서, 강·시험 범위 맞춤 자료는 여기서 받습니다.
+          </p>
+
+          <div className="mt-auto pt-4 space-y-2">
+            <a
+              href={cta.primaryHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-br from-violet-600 to-violet-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-violet-700 hover:to-violet-800 hover:shadow-md focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2"
+            >
+              <span>📘</span>
+              <span>{cta.primaryLabel}</span>
+              <span aria-hidden>→</span>
+            </a>
+            {cta.secondary ? (
+              <a
+                href={cta.secondary.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center text-[11px] font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900"
+              >
+                {cta.secondary.label}
+              </a>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => selectTextbookAndOpenLessons(textbook)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:border-violet-400 hover:bg-violet-50 hover:text-violet-800"
+            >
+              <span>✂️</span>
+              <span>이 교재로 맞춤 자료 주문</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -514,7 +600,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         )}
 
         {/* 교재 목록 또는 강과 번호 선택 */}
-        <div className="max-w-4xl mx-auto mb-8">
+        <div className={`${listMode교과서 ? 'max-w-5xl' : 'max-w-4xl'} mx-auto mb-8`}>
           {showTextbookList ? (
             /* 부교재 목록 */
             <div>
@@ -626,47 +712,144 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                     );
 
                     if (listMode교과서) {
+                      const subjects = Array.from(
+                        new Set(filteredTextbooks.map((k) => parseGyogwaseoKey(k).subject))
+                      ).sort((a, b) => {
+                        const oa = subjectOrderIdx(a);
+                        const ob = subjectOrderIdx(b);
+                        if (oa !== ob) return oa - ob;
+                        return a.localeCompare(b, 'ko');
+                      });
+
+                      const visibleTextbooks = gyogwaseoSubjectFilter
+                        ? filteredTextbooks.filter(
+                            (k) => parseGyogwaseoKey(k).subject === gyogwaseoSubjectFilter
+                          )
+                        : filteredTextbooks;
+
+                      const grouped = new Map<string, string[]>();
+                      visibleTextbooks.forEach((k) => {
+                        const s = parseGyogwaseoKey(k).subject;
+                        if (!grouped.has(s)) grouped.set(s, []);
+                        grouped.get(s)!.push(k);
+                      });
+                      const groupedSorted = [...grouped.entries()].sort((a, b) => {
+                        const oa = subjectOrderIdx(a[0]);
+                        const ob = subjectOrderIdx(b[0]);
+                        if (oa !== ob) return oa - ob;
+                        return a[0].localeCompare(b[0], 'ko');
+                      });
+
                       return (
                         <>
-                          <div className="mb-6 space-y-3">
-                            <div className="rounded-xl border-2 border-violet-300 bg-gradient-to-br from-violet-600 to-violet-800 px-4 py-4 sm:px-5 sm:py-5 text-sm text-white shadow-md leading-relaxed">
-                              <p className="text-xs font-bold uppercase tracking-wide text-violet-100/90">1단계 · 우선</p>
-                              <p className="mt-1 font-semibold text-[15px] sm:text-base">쏠북에서 교재·세트 구매를 먼저 확인해 주세요</p>
-                              <p className="mt-2 text-violet-50/95 text-[13px]">
-                                각 교재 카드의 <strong className="text-white">보라색 버튼</strong>으로 구매·안내 페이지로
-                                이동합니다. 표준 구성으로 충분하면 추가 맞춤 주문 없이 이용하실 수 있어요.
-                              </p>
+                          {/* 두 갈래 안내: 컴팩트 히어로 카드 */}
+                          <div className="mb-6 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 shadow-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-violet-100">
                               <a
                                 href={SOLVOOK_BRAND_PAGE_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-violet-800 shadow hover:bg-violet-50"
+                                className="group flex items-start gap-3 p-4 sm:p-5 hover:bg-violet-50/50 transition-colors"
                               >
-                                쏠북 매장 전체 보기
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white text-lg shadow-md">
+                                  📘
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-bold uppercase tracking-wider text-violet-700">step 1 · 우선</p>
+                                  <p className="mt-0.5 text-sm font-bold text-slate-900">쏠북에서 정식 세트 보기</p>
+                                  <p className="mt-1 text-[12px] leading-relaxed text-slate-600">
+                                    표준 구성이 필요하면 여기서 끝. 카드의 보라 버튼이 같은 동작입니다.
+                                  </p>
+                                  <span className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-semibold text-violet-700 group-hover:text-violet-900">
+                                    매장 전체 보기 <span aria-hidden>→</span>
+                                  </span>
+                                </div>
                               </a>
-                            </div>
-                            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:px-5 text-sm text-slate-700 leading-relaxed">
-                              <p className="font-semibold text-slate-900">2단계 · 맞춤이 필요할 때</p>
-                              <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-600">
-                                <li>
-                                  <strong className="text-slate-800">강·시험 범위만</strong> 골라 자료를 받으시려면 카드의{' '}
-                                  <strong className="text-slate-800">「맞춤 자료만 주문하기」</strong>를 눌러 주세요.
-                                </li>
-                                <li>
-                                  <strong className="text-slate-800">단어장·워크북·분석지·변형문제 등</strong> 여러 종류를 한
-                                  번에 조합하시려면{' '}
-                                  <Link
-                                    href="/bundle"
-                                    className="font-semibold text-violet-700 underline underline-offset-2 hover:text-violet-900"
-                                  >
-                                    통합 주문
-                                  </Link>
-                                  을 이용해 보세요.
-                                </li>
-                              </ul>
+                              <Link
+                                href="/bundle"
+                                className="group flex items-start gap-3 p-4 sm:p-5 hover:bg-fuchsia-50/40 transition-colors"
+                              >
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-white text-lg shadow-md">
+                                  ✂️
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">step 2 · 맞춤</p>
+                                  <p className="mt-0.5 text-sm font-bold text-slate-900">강·범위 맞춤 자료 만들기</p>
+                                  <p className="mt-1 text-[12px] leading-relaxed text-slate-600">
+                                    단어장·분석지·변형문제까지 한 번에 묶으려면 통합 주문으로.
+                                  </p>
+                                  <span className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-semibold text-slate-800 group-hover:text-slate-950">
+                                    통합 주문 가기 <span aria-hidden>→</span>
+                                  </span>
+                                </div>
+                              </Link>
                             </div>
                           </div>
-                          <div className="space-y-4">{filteredTextbooks.map(renderGyogwaseoCard)}</div>
+
+                          {/* 학년/과목 필터 칩 */}
+                          {subjects.length > 1 && (
+                            <div className="mb-5 flex flex-wrap items-center gap-1.5">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mr-1">과목</span>
+                              <button
+                                type="button"
+                                onClick={() => setGyogwaseoSubjectFilter('')}
+                                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${
+                                  gyogwaseoSubjectFilter === ''
+                                    ? 'border-slate-800 bg-slate-800 text-white'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'
+                                }`}
+                              >
+                                전체 <span className="ml-0.5 opacity-70">{filteredTextbooks.length}</span>
+                              </button>
+                              {subjects.map((s) => {
+                                const count = filteredTextbooks.filter((k) => parseGyogwaseoKey(k).subject === s).length;
+                                const active = gyogwaseoSubjectFilter === s;
+                                return (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setGyogwaseoSubjectFilter(active ? '' : s)}
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${
+                                      active
+                                        ? 'border-violet-700 bg-violet-700 text-white'
+                                        : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:text-violet-800'
+                                    }`}
+                                  >
+                                    {s} <span className="ml-0.5 opacity-70">{count}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* 학년별 섹션 + 카드 그리드 */}
+                          <div className="space-y-8">
+                            {groupedSorted.map(([subject, keys]) => (
+                              <section key={subject}>
+                                <div className="mb-3 flex items-baseline justify-between gap-2 border-b border-slate-200 pb-2">
+                                  <h3 className="text-base font-bold text-slate-900">{subject}</h3>
+                                  <span className="text-xs font-medium text-slate-500">{keys.length}종</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {keys.map(renderGyogwaseoCard)}
+                                </div>
+                              </section>
+                            ))}
+                          </div>
+
+                          {/* 도움이 필요할 때: 카카오 문의 */}
+                          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p className="text-xs text-slate-600">목록에 없는 교재 · 출판사가 필요하신가요?</p>
+                            <a
+                              href={KAKAO_INQUIRY_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#FEE500] px-3 py-1.5 text-xs font-bold text-[#191919] border border-[#e6d400] hover:opacity-95"
+                            >
+                              <span aria-hidden>💬</span>
+                              카카오톡 문의
+                            </a>
+                          </div>
                         </>
                       );
                     }
@@ -706,7 +889,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                               쏠북
                             </h3>
                             <p className="text-sm text-gray-600 mb-2 leading-relaxed">
-                              쏠북 교재는 별도 링크에서 교재 본체를 구매하시면 됩니다.{' '}
+                              쏠북 교재의{' '}
+                              <strong className="text-gray-800">본체</strong>는{' '}
                               <a
                                 href={SOLVOOK_BRAND_PAGE_URL}
                                 target="_blank"
@@ -715,15 +899,14 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                               >
                                 쏠북 매장
                               </a>
-                              에 이미 올라와 있는 자료도 있으니 먼저 둘러보시고, 표준 구성으로 부족할 때만 이곳에서{' '}
-                              <strong className="text-gray-800">맞춤(커스텀) 변형</strong> 주문을 검토해 보시면 됩니다.
-                              주문(문제 설정) 단계에서는 <strong className="text-gray-800">변형 제작·쏠북 커스텀</strong>{' '}
-                              요금이 안내되며, <strong className="text-gray-900">이 금액만 고미조슈아 입금 대상</strong>
-                              입니다(교재 본체 금액 아님).{' '}
+                              에서 직접 구매하셔야 합니다. 매장에 올라와 있는 표준 구성을 먼저 둘러보시고, 원하는 형태가 없을 때만 이곳에서{' '}
+                              <strong className="text-gray-800">맞춤(커스텀) 변형</strong> 주문을 진행해 주세요.{' '}
+                              <strong className="text-gray-900">결제는 두 곳으로 나뉘어</strong>, 교재 본체 금액은 쏠북에서,{' '}
+                              <strong className="text-gray-800">변형 제작·쏠북 커스텀 요금</strong>은 이곳에서 결제됩니다.{' '}
                               <span className="text-violet-800 font-medium">
                                 월구독 회원·연회원은 쏠북 커스텀 비용이 면제됩니다.
                               </span>{' '}
-                              쏠북 연계 주문에서는 포인트 사용이 적용되지 않습니다.
+                              쏠북 연계 주문에서는 포인트가 사용되지 않습니다.
                             </p>
                             <div className="mb-3">
                               <a

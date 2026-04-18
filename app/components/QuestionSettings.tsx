@@ -513,14 +513,14 @@ const QuestionSettings = ({
       ? `
 
 5-2. 금액 구분 (쏠북 연계)
-- 변형 문항 제작 합계: ${variantSubtotal.toLocaleString()}원 (고미조슈아 입금·제작 대상)
-- 쏠북 커스텀(추가): ${solbookExtraFeeWon.toLocaleString()}원 (고미조슈아 입금·제작 대상)
-- 교재 본체(인쇄본·전자본 등): 쏠북에서 별도 결제 — 아래 금액에 포함되지 않습니다.
+- 쏠북 커스텀 수수료(이곳 입금): ${solbookExtraFeeWon.toLocaleString()}원 — 고미조슈아 계좌로 입금
+- 변형 문항 제작 합계(쏠북 결제): ${variantSubtotal.toLocaleString()}원 — 쏠북에서 교재와 함께 결제
+- 교재 본체(인쇄본·전자본 등): 쏠북에서 별도 결제
 5-3. 교재 본체(쏠북) 안내
 ${solbookPurchaseLine}
 ${solbookRetailLine}
-5-4. 제작 착수(입금) — 고미조슈아 측
-위 「변형 문항 제작」+「쏠북 커스텀」에 해당하는 금액(${totalPrice.toLocaleString()}원)만 계좌 입금 확인 후 제작을 진행합니다. 교재 본체 구매 대금은 이 입금에 포함되지 않습니다.
+5-4. 제작 착수(입금)
+위 「쏠북 커스텀 수수료」 ${solbookExtraFeeWon.toLocaleString()}원을 계좌 입금해 주시면, 확인 후 제작을 시작합니다. 변형 제작비와 교재 본체 대금은 쏠북에서 결제하시므로 이 입금에 포함되지 않습니다.
 5-5. 구매 링크 발송
 입금 확인 후 1일 이내에 쏠북 구매 링크(또는 안내)를 카카오·문자·이메일 등으로 보내드릴 수 있습니다.`
       : '';
@@ -529,7 +529,7 @@ ${solbookRetailLine}
         ? `
 
 5-2. 쏠북 교재 (연·월 회원)
-: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 비용이 면제되어, 고미조슈아 입금 대상은 변형 문항 제작 합계(${variantSubtotal.toLocaleString()}원)입니다.
+: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 수수료가 면제되어, 고미조슈아로 별도 입금하실 금액이 없습니다. 변형 문항 제작 합계(${variantSubtotal.toLocaleString()}원)와 교재 본체 대금은 쏠북에서 결제해 주세요.
 5-3. 교재 본체(쏠북) 안내
 ${solbookPurchaseLine}
 ${solbookRetailLine}
@@ -543,9 +543,9 @@ ${solbookRetailLine}
         : '';
 
     const priceBreakdownLine = isSolbookOrder
-      ? `\n   (문항 합계 ${variantSubtotal.toLocaleString()}원 + 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원)`
+      ? `\n   (이곳 입금: 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
       : isSolbookTextbook && solbookCustomFeeWaived
-        ? `\n   (문항 합계 ${variantSubtotal.toLocaleString()}원 · 연·월 회원: 쏠북 커스텀 면제)`
+        ? `\n   (이곳 입금: 0원 — 연·월 회원 쏠북 커스텀 면제 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
         : '';
 
     const orderText = `교재: ${selectedTextbook}
@@ -560,8 +560,10 @@ ${solbookRetailLine}
 : ${questionsPerType}문항씩
 4. 총 문항 수
 : ${totalQuestions}문항
-5. 가격 (고미조슈아 변형 제작·쏠북 커스텀 합산)
-: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 교재 본체(쏠북 판매가)는 별도이며, 포인트 사용은 적용되지 않습니다.' : ''}
+5. 가격
+: ${isSolbookTextbook
+    ? `${solbookFee.toLocaleString()}원 (이곳 입금 — 쏠북 커스텀 수수료${solbookCustomFeeWaived ? ' · 연·월 회원 면제' : ''})`
+    : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제하시며, 포인트 사용은 적용되지 않습니다.' : ''}
 
 5-1. HWP 저장 방식
 : ${formatHwpStorageSummary(hwpStorageModes)}${solbookBlock}${useCustomHwp ? `
@@ -1265,53 +1267,117 @@ ${solbookRetailLine}
                           )}
                         </div>
                       )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-black">총 가격:</span>
-                        <div className="text-right">
-                          {isDiscounted ? (
-                            <>
-                              <div className="line-through text-gray-400 text-sm">
-                                {basePrice.toLocaleString()}원
+                      {!isSolbookTextbook && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-black">총 가격:</span>
+                          <div className="text-right">
+                            {isDiscounted ? (
+                              <>
+                                <div className="line-through text-gray-400 text-sm">
+                                  {basePrice.toLocaleString()}원
+                                </div>
+                                <div className="font-bold text-2xl text-red-600">
+                                  {totalPrice.toLocaleString()}원
+                                  <span className="text-green-600 text-sm ml-2">
+                                    ({(discountRate * 100)}% 할인)
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="font-bold text-2xl text-black">
+                                {totalPrice.toLocaleString()}원
                               </div>
-                              <div className="font-bold text-2xl text-red-600">
-                                {totalPrice.toLocaleString()}원 
-                                <span className="text-green-600 text-sm ml-2">
-                                  ({(discountRate * 100)}% 할인)
-                                </span>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="font-bold text-2xl text-black">
-                              {totalPrice.toLocaleString()}원
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-sm">
                         {isSolbookTextbook ? (
-                          <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2.5 text-xs text-amber-950 leading-relaxed">
-                            <p className="font-semibold text-amber-900 mb-1">쏠북 연계 교재</p>
-                            <p>
-                              쏠북 가격 정책과의 혼선을 막기 위해 <strong>포인트 사용은 불가</strong>입니다. 아래 총액은
-                              변형 제작·쏠북 커스텀(해당 시)만 해당하며, 교재 본체는 쏠북에서 별도 구매합니다.
-                            </p>
-                            {solbookRetailGuideText.trim() ? (
-                              <p className="mt-2">
-                                <span className="font-semibold">교재 본체 예상 금액(참고):</span>{' '}
-                                {solbookRetailGuideText.trim()}
-                              </p>
-                            ) : (
-                              <p className="mt-2 text-amber-900/90">
-                                교재 본체 소비자가는 쏠북 또는 구매 안내 링크에서 확인해 주세요.
-                              </p>
-                            )}
-                            <div className="flex justify-between items-center border-t border-amber-200/80 pt-2 mt-2">
-                              <span className="text-gray-800 font-medium">입금 예정(제작료)</span>
-                              <span className="font-bold text-lg text-black tabular-nums">
-                                {depositAfterPoints.toLocaleString()}원
-                              </span>
+                          <div className="space-y-3">
+                            {/* ① 이곳 입금 (쏠북 커스텀 비용만) */}
+                            <div className="rounded-xl border-2 border-violet-300 bg-white px-3.5 py-3 shadow-sm">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white">1</span>
+                                <span className="text-[13px] font-bold text-violet-900">이곳에서 결제 (쏠북 커스텀 비용)</span>
+                              </div>
+                              {solbookFee > 0 ? (
+                                <>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-slate-700">쏠북 커스텀 수수료</span>
+                                    <span className="text-xl font-extrabold text-violet-700 tabular-nums">
+                                      {solbookFee.toLocaleString()}원
+                                    </span>
+                                  </div>
+                                  <p className="mt-1.5 text-[11px] text-slate-500 leading-snug">
+                                    이 금액만 고미조슈아 계좌로 입금됩니다.
+                                  </p>
+                                </>
+                              ) : solbookCustomFeeWaived ? (
+                                <>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-slate-700">쏠북 커스텀 수수료</span>
+                                    <span className="text-lg font-bold text-emerald-700 tabular-nums">
+                                      면제 (0원)
+                                    </span>
+                                  </div>
+                                  <p className="mt-1.5 text-[11px] text-emerald-700 leading-snug">
+                                    연회원·월구독 혜택으로 면제 — 별도 입금이 필요 없습니다.
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-slate-700">쏠북 커스텀 수수료</span>
+                                    <span className="text-lg font-bold text-slate-700 tabular-nums">
+                                      0원
+                                    </span>
+                                  </div>
+                                  <p className="mt-1.5 text-[11px] text-slate-500 leading-snug">
+                                    이 교재는 추가 커스텀 수수료가 없습니다.
+                                  </p>
+                                </>
+                              )}
                             </div>
+
+                            {/* ② 쏠북에서 결제 (변형 제작 + 교재 본체) */}
+                            <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-bold text-white">2</span>
+                                <span className="text-[13px] font-bold text-amber-900">쏠북에서 결제 (예상)</span>
+                              </div>
+                              <div className="space-y-1.5 text-xs text-amber-950">
+                                <div className="flex justify-between items-start gap-2">
+                                  <span className="shrink-0">변형 제작비</span>
+                                  <span className="text-right tabular-nums font-semibold">
+                                    {basePrice.toLocaleString()}원
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-start gap-2">
+                                  <span className="shrink-0">교재 본체 가격</span>
+                                  <span className="text-right tabular-nums font-semibold">
+                                    {solbookRetailGuideText.trim() || '쏠북 매장에서 확인'}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-amber-800/80 leading-snug pt-1">
+                                  변형 제작비와 교재 본체 대금은 모두 쏠북에서 결제하시며, 이곳 입금 금액에 포함되지 않습니다.
+                                </p>
+                              </div>
+                              {solbookPurchaseUrl.trim() && (
+                                <a
+                                  href={solbookPurchaseUrl.trim()}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors no-underline"
+                                >
+                                  쏠북에서 결제하기 →
+                                </a>
+                              )}
+                            </div>
+
+                            <p className="text-[11px] text-slate-500 leading-snug px-1">
+                              ※ 쏠북 가격 정책과의 혼선 방지를 위해 쏠북 연계 주문은 포인트 사용이 불가합니다.
+                            </p>
                           </div>
                         ) : (
                           <>

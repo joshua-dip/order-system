@@ -427,6 +427,14 @@ export default function AdminPassagesPage() {
   const [advancedJson, setAdvancedJson] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  /** 엑셀 일괄 업로드 (교재 구조 → converted_data.json) */
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadSaving, setUploadSaving] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [uploadFromDbTextbook, setUploadFromDbTextbook] = useState('');
+  const [uploadFromDbSaving, setUploadFromDbSaving] = useState(false);
+
   /** MongoDB textbook_links + 출판사 — 교재 메타데이터 종합 관리 */
   const [linksPanelOpen, setLinksPanelOpen] = useState(true);
   type LinkDraftRow = { kyoboUrl: string; description: string; extraUrl: string; extraLabel: string };
@@ -744,6 +752,81 @@ export default function AdminPassagesPage() {
     setModalOpen(true);
   };
 
+  const openUploadModal = () => {
+    setUploadFile(null);
+    setUploadMessage(null);
+    setUploadFromDbTextbook(filterTextbook || '');
+    setUploadModalOpen(true);
+  };
+
+  const handleUploadExcel = async () => {
+    if (!uploadFile) {
+      setUploadMessage({ type: 'error', text: '엑셀 파일을 선택해 주세요.' });
+      return;
+    }
+    setUploadMessage(null);
+    setUploadSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      const res = await fetch('/api/admin/passage-upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setUploadMessage({
+          type: 'success',
+          text: `교재 "${data.textbookName}"가 지문 데이터(converted_data.json)에 반영되었습니다. 목록에서 확인해 보세요.`,
+        });
+        setUploadFile(null);
+      } else {
+        setUploadMessage({
+          type: 'error',
+          text: data?.error || data?.detail || '업로드에 실패했습니다.',
+        });
+      }
+    } catch {
+      setUploadMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setUploadSaving(false);
+    }
+  };
+
+  const handleUploadFromDb = async () => {
+    if (!uploadFromDbTextbook.trim()) {
+      setUploadMessage({ type: 'error', text: 'MongoDB에서 가져올 교재명을 입력해 주세요.' });
+      return;
+    }
+    setUploadMessage(null);
+    setUploadFromDbSaving(true);
+    try {
+      const res = await fetch('/api/admin/passage-upload/from-passages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ textbook: uploadFromDbTextbook.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setUploadMessage({
+          type: 'success',
+          text: `교재 "${data.textbook}"를 MongoDB 원문(passages) 기준으로 converted_data.json에 반영했습니다. (강 ${data.lessonCount}개 · 원문 ${data.passageCount}건)`,
+        });
+      } else {
+        setUploadMessage({
+          type: 'error',
+          text: data?.error || '불러오기에 실패했습니다.',
+        });
+      }
+    } catch {
+      setUploadMessage({ type: 'error', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setUploadFromDbSaving(false);
+    }
+  };
+
   const openEdit = async (id: string) => {
     setEditingId(id);
     setShowAdvanced(false);
@@ -924,6 +1007,14 @@ export default function AdminPassagesPage() {
             >
               변형문제 관리 →
             </Link>
+            <button
+              type="button"
+              onClick={openUploadModal}
+              className="text-sky-100 hover:text-white text-sm font-semibold px-3 py-2 rounded-lg border border-sky-600/50 hover:border-sky-400/70 bg-sky-950/30"
+              title="엑셀(.xlsx)로 교재 구조(강·번호)를 일괄 업로드하거나, MongoDB 원문 → converted_data.json으로 동기화합니다."
+            >
+              📁 지문 업로드
+            </button>
             <button
               type="button"
               onClick={openCreate}
@@ -1502,6 +1593,113 @@ export default function AdminPassagesPage() {
                   className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold disabled:opacity-50"
                 >
                   {saving ? '저장 중…' : '저장'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {uploadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
+          <div className="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-slate-800 border-b border-slate-600 px-5 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-bold">지문 업로드</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  교재 구조(강 · 번호)를 일괄 등록합니다. 본문/번역은 등록 후 개별 편집에서 입력하세요.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUploadModalOpen(false)}
+                className="text-slate-400 hover:text-white text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {uploadMessage && (
+                <div
+                  className={`text-sm rounded-lg px-3 py-2 border ${
+                    uploadMessage.type === 'success'
+                      ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-200'
+                      : 'bg-rose-950/40 border-rose-700/50 text-rose-200'
+                  }`}
+                >
+                  {uploadMessage.text}
+                </div>
+              )}
+
+              <section className="border border-slate-600 rounded-xl p-4 bg-slate-900/40">
+                <h3 className="text-sm font-bold text-white">① 엑셀 파일로 업로드</h3>
+                <p className="text-xs text-slate-400 mt-1 mb-3">
+                  열 구조(교재 / 강·회차 / 번호)를 갖춘{' '}
+                  <code className="text-amber-200/90">.xlsx</code> 또는{' '}
+                  <code className="text-amber-200/90">.xls</code> 파일을 선택하세요. 파일명이 교재명이 됩니다.
+                </p>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-700 file:text-white hover:file:bg-sky-600"
+                />
+                {uploadFile && (
+                  <p className="text-xs text-slate-400 mt-2">
+                    선택됨: <span className="text-slate-200">{uploadFile.name}</span> ({(uploadFile.size / 1024).toFixed(1)} KB)
+                  </p>
+                )}
+                <div className="flex justify-end mt-3">
+                  <button
+                    type="button"
+                    disabled={uploadSaving || !uploadFile}
+                    onClick={handleUploadExcel}
+                    className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold disabled:opacity-50"
+                  >
+                    {uploadSaving ? '업로드 중…' : '엑셀 업로드'}
+                  </button>
+                </div>
+              </section>
+
+              <section className="border border-slate-600 rounded-xl p-4 bg-slate-900/40">
+                <h3 className="text-sm font-bold text-white">② MongoDB 원문 → 교재 구조 동기화</h3>
+                <p className="text-xs text-slate-400 mt-1 mb-3">
+                  이미 <code className="text-amber-200/90">passages</code> 컬렉션에 저장된 교재의 강·번호를{' '}
+                  <code className="text-amber-200/90">converted_data.json</code>에 반영합니다. 새 원문을 직접 추가한 뒤
+                  주문 화면에 반영해야 할 때 사용하세요.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    list="upload-textbook-options"
+                    value={uploadFromDbTextbook}
+                    onChange={(e) => setUploadFromDbTextbook(e.target.value)}
+                    placeholder="교재명 입력 (예: 2027수능특강 영어(2026))"
+                    className="flex-1 min-w-[260px] bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  />
+                  <datalist id="upload-textbook-options">
+                    {textbooks.map((tb) => (
+                      <option key={tb} value={tb} />
+                    ))}
+                  </datalist>
+                  <button
+                    type="button"
+                    disabled={uploadFromDbSaving || !uploadFromDbTextbook.trim()}
+                    onClick={handleUploadFromDb}
+                    className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold disabled:opacity-50"
+                  >
+                    {uploadFromDbSaving ? '동기화 중…' : 'DB → 교재 구조 반영'}
+                  </button>
+                </div>
+              </section>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setUploadModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
+                >
+                  닫기
                 </button>
               </div>
             </div>

@@ -681,6 +681,25 @@ export default function AdminDashboardPage() {
     }
   };
 
+  /** 주문 표 등에서 이름 클릭 시 하단 회원 카드로 스크롤 (필터·검색을 해당 회원이 보이도록 맞춤) */
+  const scrollToMemberCard = useCallback((u: ListUser) => {
+    const anchorId = `member-card-${u.id}`;
+    setMemberSegmentFilter('all');
+    setMemberSortOrder('default');
+    const q = (u.loginId || u.name || '').trim();
+    setMemberSearch(q);
+    const run = () => {
+      document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+    run();
+    requestAnimationFrame(run);
+    window.setTimeout(() => {
+      const el = document.getElementById(anchorId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      else alert('회원 카드를 화면에서 찾지 못했습니다. 회원 목록을 새로고침한 뒤 다시 시도해 주세요.');
+    }, 120);
+  }, []);
+
   const openEdit = (u: ListUser) => {
     setEditUser(u);
     setEditName(u.name);
@@ -2233,6 +2252,12 @@ export default function AdminDashboardPage() {
           >
             Claude Code 검수 로그
           </Link>
+          <Link
+            href="/admin/guest-variant-logs"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40 mt-1"
+          >
+            비회원 변형 로그
+          </Link>
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
           <button
             type="button"
@@ -2766,9 +2791,9 @@ export default function AdminDashboardPage() {
                               {member ? (
                                 <button
                                   type="button"
-                                  onClick={() => openEdit(member)}
+                                  onClick={() => scrollToMemberCard(member)}
                                   className="text-left text-white font-medium hover:text-cyan-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 rounded"
-                                  title="회원 카드(계정 수정) 열기"
+                                  title="하단 회원 관리의 해당 회원 카드로 이동 · 카드에서 ✏️로 계정 수정"
                                 >
                                   {member.name}
                                 </button>
@@ -3261,7 +3286,7 @@ export default function AdminDashboardPage() {
                     <div>
                       <p className="font-semibold text-white">변형문제 쏠북 교재</p>
                       <p className="text-slate-400 text-sm mt-1">
-                        부교재 변형 주문(/textbook)에서 「쏠북」 섹션에만 노출됩니다. 변형 제작·쏠북 커스텀 요금만 고미조슈아 입금 대상이며, 교재 본체는 쏠북에서 별도 구매입니다. 아래「교재 본체 안내 문구」는 주문 화면·주문서에 표시됩니다.
+                        부교재 변형 주문(/textbook)에서 「쏠북」 섹션에만 노출됩니다. 변형 제작·쏠북 커스텀 요금만 본 사이트에서 결제되며, 교재 본체는 쏠북에서 별도 구매입니다. 아래「교재 본체 안내 문구」는 주문 화면·주문서에 표시됩니다.
                       </p>
                       <div className="mt-2 p-2.5 bg-slate-800/60 border border-slate-600 rounded-lg">
                         <p className="text-slate-400 text-xs mb-1.5 font-medium">
@@ -3837,7 +3862,10 @@ export default function AdminDashboardPage() {
                     const isEditingPath = editingPathId === u.id;
                     const pathVal = isEditingPath ? editingPathValue : (u.dropboxFolderPath ?? '');
                     return (
-                      <div key={u.id} className={`rounded-2xl overflow-hidden border transition-colors ${isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}>
+                      <div
+                        id={`member-card-${u.id}`}
+                        className={`scroll-mt-6 rounded-2xl overflow-hidden border transition-colors ${isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}
+                      >
                         <div className="p-4 flex items-start gap-3">
                           <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-base font-extrabold text-white shrink-0 bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>
                             {(u.name || u.loginId).charAt(0).toUpperCase()}

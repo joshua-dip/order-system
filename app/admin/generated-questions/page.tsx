@@ -192,6 +192,39 @@ function splitParagraphIntoPreviewSentences(text: string): string[] {
 
 const GRAMMAR_MARKS = ['①', '②', '③', '④', '⑤'] as const;
 
+function isHamyiQuestionType(formType: string, questionJson: string): boolean {
+  let cat = '';
+  try {
+    const q = JSON.parse(questionJson) as Record<string, unknown>;
+    cat = typeof q.Category === 'string' ? q.Category.trim() : '';
+  } catch {
+    /* ignore */
+  }
+  for (const s of [formType.trim(), cat]) {
+    if (s === '함의' || s.includes('함의')) return true;
+  }
+  return false;
+}
+
+/** 함의·어법 등 Paragraph에 `<u>` 밑줄 태그를 쓰는 유형 — JSON 편집 도우미 표시 */
+function isHamyiOrGrammarQuestionType(formType: string, questionJson: string): boolean {
+  return isHamyiQuestionType(formType, questionJson) || isGrammarQuestionType(formType, questionJson);
+}
+
+function isGrammarQuestionType(formType: string, questionJson: string): boolean {
+  let cat = '';
+  try {
+    const q = JSON.parse(questionJson) as Record<string, unknown>;
+    cat = typeof q.Category === 'string' ? q.Category.trim() : '';
+  } catch {
+    /* ignore */
+  }
+  for (const s of [formType.trim(), cat]) {
+    if (s === '어법' || s.includes('어법')) return true;
+  }
+  return false;
+}
+
 function normalizeCircledAnswer(raw: string | undefined): string | null {
   const t = String(raw ?? '').trim();
   const d = t.match(/^([1-5])$/);
@@ -1259,6 +1292,113 @@ export default function AdminGeneratedQuestionsPage() {
     questionJsonTextareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => questionJsonTextareaRef.current?.focus(), 300);
   };
+
+  /** JSON 편집창 선택 구간을 `<u>…</u>`로 감쌈 (직접 태그 입력 대신) */
+  const wrapQuestionJsonSelectionWithUTags = useCallback(() => {
+    const el = questionJsonTextareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    if (start === end) {
+      alert('JSON 편집창에서 밑줄로 표시할 글자를 드래그로 선택한 뒤 다시 눌러 주세요.');
+      return;
+    }
+    const body = questionJson;
+    const selected = body.slice(start, end);
+    if (/<\s*u\s*>/i.test(selected) || /<\s*\/\s*u\s*>/i.test(selected)) {
+      alert('선택한 구간에 이미 <u> 태그가 있습니다. 제거는 「밑줄 태그 제거」를 사용하세요.');
+      return;
+    }
+    const wrapped = `<u>${selected}</u>`;
+    const next = body.slice(0, start) + wrapped + body.slice(end);
+    setQuestionJson(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + wrapped.length;
+      el.setSelectionRange(caret, caret);
+    });
+  }, [questionJson]);
+
+  /** 선택 구간 안의 `<u>` `</u>`만 제거(내용은 유지) */
+  const stripQuestionJsonSelectionUTags = useCallback(() => {
+    const el = questionJsonTextareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    if (start === end) {
+      alert('태그를 지울 구간을 드래그로 선택한 뒤 다시 눌러 주세요.');
+      return;
+    }
+    const body = questionJson;
+    const selected = body.slice(start, end);
+    const stripped = selected.replace(/<\/?u\s*>/gi, '');
+    if (stripped === selected) {
+      alert('선택한 구간에 <u> 태그가 없습니다.');
+      return;
+    }
+    const next = body.slice(0, start) + stripped + body.slice(end);
+    setQuestionJson(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + stripped.length;
+      el.setSelectionRange(caret, caret);
+    });
+  }, [questionJson]);
+
+  /** 어법: 선택한 표현을 `① <u>…</u>` 형태로 삽입(동그라미와 태그 사이 공백 1칸) */
+  const wrapQuestionJsonSelectionGrammarMarkAndU = useCallback(
+    (mark: (typeof GRAMMAR_MARKS)[number]) => {
+      const el = questionJsonTextareaRef.current;
+      if (!el) return;
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      if (start === end) {
+        alert('JSON 편집창에서 밑줄로 넣을 영문 표현만 드래그로 선택한 뒤, 원하는 번호(①~⑤)를 눌러 주세요.');
+        return;
+      }
+      const body = questionJson;
+      const selected = body.slice(start, end);
+      const inner = selected.trim();
+      if (!inner) {
+        alert('선택한 내용이 비어 있습니다.');
+        return;
+      }
+      if (/<\s*u\s*>/i.test(inner) || /<\s*\/\s*u\s*>/i.test(inner)) {
+        alert('이미 <u> 태그가 포함된 구간입니다. 먼저 「밑줄 태그 제거」로 정리한 뒤 다시 시도하세요.');
+        return;
+      }
+      const wrapped = `${mark} <u>${inner}</u>`;
+      const next = body.slice(0, start) + wrapped + body.slice(end);
+      setQuestionJson(next);
+      requestAnimationFrame(() => {
+        el.focus();
+        const caret = start + wrapped.length;
+        el.setSelectionRange(caret, caret);
+      });
+    },
+    [questionJson]
+  );
+
+  /** 함의: Paragraph 첫 `<u>…</u>` 구절로 발문(Question) 자동 채우기 (API 초안 정규화와 동일 문구) */
+  const syncHamyiQuestionFromParagraphUnderline = useCallback(() => {
+    let qd: Record<string, unknown>;
+    try {
+      qd = JSON.parse(questionJson) as Record<string, unknown>;
+    } catch {
+      alert('JSON 형식이 올바른지 확인한 뒤 다시 시도하세요.');
+      return;
+    }
+    const para = typeof qd.Paragraph === 'string' ? qd.Paragraph : '';
+    const uMatch = para.match(/<u>([\s\S]*?)<\/u>/i);
+    const underlinedText = uMatch ? uMatch[1]!.trim() : '';
+    if (!underlinedText) {
+      alert('Paragraph에 <u>…</u> 밑줄 구절이 한 곳 이상 있어야 합니다.');
+      return;
+    }
+    const questionText = `밑줄 친 "${underlinedText}" 표현이 다음 글에서 의미하는 바로 가장 적절한 것은?`;
+    const next = { ...qd, Question: questionText };
+    setQuestionJson(JSON.stringify(next, null, 2));
+  }, [questionJson]);
 
   const isVariationBucketReturnPath = useCallback((path: string) => {
     const q = path.indexOf('?');
@@ -7294,6 +7434,63 @@ export default function AdminGeneratedQuestionsPage() {
                   같은 교재·출처·passage·type 조합에서는 유형당 총 {DEFAULT_QUESTIONS_PER_VARIANT_TYPE}문항(행)이 되도록 NumQuestion·순서를
                   맞추면 됩니다.
                 </p>
+                {!narrativeReadOnly && isHamyiOrGrammarQuestionType(form.type, questionJson) && (
+                  <div className="mb-2 rounded-lg border border-violet-800/40 bg-violet-950/25 px-3 py-2 space-y-2">
+                    <p className="text-[11px] text-violet-200/95 leading-relaxed">
+                      <strong className="text-violet-100">함의·어법</strong>은 DB·검증에 <code className="text-slate-400">&lt;u&gt;</code> 태그가
+                      필요합니다. 아래에서 선택만 하고 태그는 자동으로 넣을 수 있습니다. (하단 <strong className="text-violet-100">저장</strong>은
+                      서버에 반영하는 버튼과 별개입니다.)
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={draftLoading || saving || explanationOnlyLoading}
+                        onClick={wrapQuestionJsonSelectionWithUTags}
+                        className="text-[11px] px-2.5 py-1.5 rounded-lg bg-violet-700 hover:bg-violet-600 text-white font-semibold disabled:opacity-50 border border-violet-500/40"
+                        title="JSON 편집창에서 텍스트를 선택한 뒤 클릭 → 선택 구간을 <u>…</u>로 감쌉니다. Mac: ⌘U"
+                      >
+                        밑줄 태그 적용
+                      </button>
+                      <button
+                        type="button"
+                        disabled={draftLoading || saving || explanationOnlyLoading}
+                        onClick={stripQuestionJsonSelectionUTags}
+                        className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-500/60 bg-slate-800/80 text-slate-200 hover:bg-slate-700 font-medium disabled:opacity-50"
+                        title="선택 구간에서 <u> </u> 태그만 제거합니다."
+                      >
+                        밑줄 태그 제거
+                      </button>
+                      {isHamyiQuestionType(form.type, questionJson) && (
+                        <button
+                          type="button"
+                          disabled={draftLoading || saving || explanationOnlyLoading}
+                          onClick={syncHamyiQuestionFromParagraphUnderline}
+                          className="text-[11px] px-2.5 py-1.5 rounded-lg border border-emerald-600/50 bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/50 font-semibold disabled:opacity-50"
+                          title="Paragraph의 첫 <u>…</u> 내용으로 발문(Question)을 표준 문장으로 맞춥니다."
+                        >
+                          함의: 발문 자동
+                        </button>
+                      )}
+                    </div>
+                    {isGrammarQuestionType(form.type, questionJson) && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5 border-t border-violet-800/30">
+                        <span className="text-[10px] text-slate-400 shrink-0 mr-1">어법 번호+밑줄:</span>
+                        {GRAMMAR_MARKS.map((mk) => (
+                          <button
+                            key={mk}
+                            type="button"
+                            disabled={draftLoading || saving || explanationOnlyLoading}
+                            onClick={() => wrapQuestionJsonSelectionGrammarMarkAndU(mk)}
+                            className="min-w-[2rem] text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-amber-100 hover:bg-slate-700 font-mono disabled:opacity-50"
+                            title={`선택한 표현을 「${mk} <u>…</u>」형태로 바꿉니다.`}
+                          >
+                            {mk}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {(() => {
                   let para = '';
                   let category = '';
@@ -7384,6 +7581,14 @@ export default function AdminGeneratedQuestionsPage() {
                   ref={questionJsonTextareaRef}
                   value={questionJson}
                   onChange={(e) => setQuestionJson(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (!narrativeReadOnly && isHamyiOrGrammarQuestionType(form.type, questionJson)) {
+                      if ((e.metaKey || e.ctrlKey) && (e.key === 'u' || e.key === 'U')) {
+                        e.preventDefault();
+                        wrapQuestionJsonSelectionWithUTags();
+                      }
+                    }
+                  }}
                   rows={18}
                   className="w-full bg-slate-950 border border-violet-900/50 rounded-lg px-3 py-2 text-xs text-green-200 font-mono"
                 />
