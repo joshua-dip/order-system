@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppBar from '@/app/components/AppBar';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import MyMemberVariants from '../variant-generate/MyMemberVariants';
@@ -10,8 +10,10 @@ import MyMemberVariants from '../variant-generate/MyMemberVariants';
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
-export default function MemberVariantsListPage() {
+function MemberVariantsListInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get('focus') || undefined;
   const [loading, setLoading] = useState(true);
   const [deniedReason, setDeniedReason] = useState<null | 'login' | 'premium'>(null);
 
@@ -107,9 +109,26 @@ export default function MemberVariantsListPage() {
               </Link>
             </p>
           </header>
-          <MyMemberVariants refreshKey={0} listMode="full" />
+          <MyMemberVariants refreshKey={0} listMode="full" highlightVariantId={focusId} />
         </div>
       </div>
     </>
+  );
+}
+
+export default function MemberVariantsListPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          <div className="w-full max-w-xs rounded-3xl bg-white p-10 text-center shadow-xl">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-violet-200 border-t-violet-600" />
+            <p className="mt-4 text-sm font-medium text-slate-600">준비하는 중…</p>
+          </div>
+        </div>
+      }
+    >
+      <MemberVariantsListInner />
+    </Suspense>
   );
 }

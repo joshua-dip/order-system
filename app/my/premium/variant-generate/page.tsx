@@ -23,26 +23,87 @@ import {
 } from '@/lib/variant-generate-notice-dismiss';
 import QuestionFriendlyPreview from './QuestionFriendlyPreview';
 import VariantSourceLoader from './VariantSourceLoader';
-import MyMemberVariants from './MyMemberVariants';
+import MemberVariantsMini from './MemberVariantsMini';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
-const TYPE_GROUPS: { label: string; types: string[] }[] = [
-  { label: '내용 파악', types: ['주제', '제목', '주장'] },
-  { label: '세부 정보', types: ['일치', '불일치'] },
-  { label: '추론', types: ['함의', '빈칸', '요약'] },
-  /** 포인트 차감 유형(예: 삽입-고난도)은 아래 `포인트 사용 유형` 블록에서만 노출 */
-  { label: '언어·구조', types: ['어법', '순서', '삽입', '무관한문장'] },
+type IconName =
+  | 'target' | 'heading' | 'quote' | 'check' | 'x' | 'bulb' | 'puzzle' | 'note'
+  | 'search' | 'order' | 'insert' | 'block'
+  | 'key' | 'shield' | 'sparkle' | 'gem' | 'book' | 'save' | 'download' | 'bolt'
+  | 'arrowRight' | 'plus' | 'lock' | 'list' | 'refresh';
+
+type TypeMeta = {
+  key: string;
+  label: string;
+  desc: string;
+  icon: IconName;
+};
+
+const TYPE_GROUPS: { label: string; items: TypeMeta[] }[] = [
+  {
+    label: '내용 파악',
+    items: [
+      { key: '주제', label: '주제', desc: '글의 핵심 주제 묻기', icon: 'target' },
+      { key: '제목', label: '제목', desc: '글에 어울리는 제목', icon: 'heading' },
+      { key: '주장', label: '주장', desc: '필자가 말하려는 주장', icon: 'quote' },
+    ],
+  },
+  {
+    label: '세부 정보',
+    items: [
+      { key: '일치', label: '일치', desc: '글과 일치하는 것', icon: 'check' },
+      { key: '불일치', label: '불일치', desc: '글과 일치하지 않는 것', icon: 'x' },
+    ],
+  },
+  {
+    label: '추론',
+    items: [
+      { key: '함의', label: '함의', desc: '밑줄 친 표현의 함축 의미', icon: 'bulb' },
+      { key: '빈칸', label: '빈칸', desc: '빈칸에 들어갈 말 추론', icon: 'puzzle' },
+      { key: '요약', label: '요약', desc: '한 문장으로 요약', icon: 'note' },
+    ],
+  },
+  {
+    label: '언어·구조',
+    items: [
+      { key: '어법', label: '어법', desc: '문법 오류 찾기', icon: 'search' },
+      { key: '순서', label: '순서', desc: '문단 순서 배열', icon: 'order' },
+      { key: '삽입', label: '삽입', desc: '주어진 문장 위치', icon: 'insert' },
+      { key: '무관한문장', label: '무관한문장', desc: '글의 흐름과 무관한 문장', icon: 'block' },
+    ],
+  },
 ];
+
+const ALL_TYPES: TypeMeta[] = TYPE_GROUPS.flatMap((g) => g.items);
 
 const PAID_VARIANT_TYPES = (BOOK_VARIANT_QUESTION_TYPES as readonly string[]).filter((t) =>
   variantTypeRequiresHardInsertionPoints(t),
 );
 
+const PROGRESS_STAGES = [
+  '지문을 분석하는 중',
+  '핵심 아이디어를 추출하는 중',
+  '변형문제를 작성하는 중',
+  '선택지·해설을 다듬는 중',
+];
+
 type VariantDraftItem = {
   type: string;
   passage_id: string;
   question_data: Record<string, unknown>;
+};
+
+type GenerationProgress = {
+  current: number;
+  total: number;
+  currentLabel: string;
+};
+
+type PerTypeResult = {
+  type: string;
+  ok: boolean;
+  error?: string;
 };
 
 export default function MemberVariantGeneratePage() {
@@ -66,13 +127,24 @@ export default function MemberVariantGeneratePage() {
   const [editMode, setEditMode] = useState(false);
   /** 초안이 여러 개일 때 보고 있는 인덱스 */
   const [activeDraftIdx, setActiveDraftIdx] = useState(0);
-  const [myListOpen, setMyListOpen] = useState(false);
-  const [keyInfoOpen, setKeyInfoOpen] = useState(false);
-  const keyInfoWrapRef = useRef<HTMLDivElement>(null);
+
+  /** 생성 진행률 (다중 유형 처리) */
+  const [progress, setProgress] = useState<GenerationProgress | null>(null);
+  const [stageIdx, setStageIdx] = useState(0);
+  const [perTypeResults, setPerTypeResults] = useState<PerTypeResult[]>([]);
+  /** 저장 성공 직후 1회 강조용 */
+  const [lastSavedIds, setLastSavedIds] = useState<string[]>([]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const typeSectionRef = useRef<HTMLDivElement>(null);
+  const paragraphSectionRef = useRef<HTMLDivElement>(null);
+  const previewAnchorRef = useRef<HTMLDivElement>(null);
+  const mobileResultRef = useRef<HTMLDivElement>(null);
+  const myListRef = useRef<HTMLDivElement>(null);
   const msgTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** 유형 칩 러버밴드(드래그) 선택 */
+  const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /** 유형 카드 러버밴드(드래그) 다중 선택 */
   const variantChipMarqueeRef = useRef<HTMLDivElement>(null);
   const marqueeSuppressClickRef = useRef(false);
   const marqueeDragRef = useRef<{
@@ -95,7 +167,7 @@ export default function MemberVariantGeneratePage() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.max(100, Math.min(el.scrollHeight, 500))}px`;
+    el.style.height = `${Math.max(120, Math.min(el.scrollHeight, 480))}px`;
   }, []);
 
   useEffect(() => { autoGrow(); }, [paragraph, autoGrow]);
@@ -120,7 +192,7 @@ export default function MemberVariantGeneratePage() {
     if (msgTimeoutRef.current) clearTimeout(msgTimeoutRef.current);
     setMessage(msg);
     if (autoHide) {
-      msgTimeoutRef.current = setTimeout(() => setMessage(null), 5000);
+      msgTimeoutRef.current = setTimeout(() => setMessage(null), 6000);
     }
   }, []);
 
@@ -171,53 +243,24 @@ export default function MemberVariantGeneratePage() {
     return () => window.removeEventListener('storage', onStorage);
   }, [loginId]);
 
+  /** 생성 중 단계 문구 롤링 */
   useEffect(() => {
-    if (!byokKeyStored) setKeyInfoOpen(false);
-  }, [byokKeyStored]);
-
-  useEffect(() => {
-    if (!keyInfoOpen) return;
-    const onPointerDown = (e: PointerEvent) => {
-      const el = keyInfoWrapRef.current;
-      if (el && !el.contains(e.target as Node)) setKeyInfoOpen(false);
+    if (busy) {
+      setStageIdx(0);
+      stageTimerRef.current = setInterval(() => {
+        setStageIdx((i) => (i + 1) % PROGRESS_STAGES.length);
+      }, 1800);
+    } else if (stageTimerRef.current) {
+      clearInterval(stageTimerRef.current);
+      stageTimerRef.current = null;
+    }
+    return () => {
+      if (stageTimerRef.current) {
+        clearInterval(stageTimerRef.current);
+        stageTimerRef.current = null;
+      }
     };
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [keyInfoOpen]);
-
-  /** 초안 만들기 전 필수 입력 — API 키는 상단에 이미 표시되므로, 저장된 경우 체크리스트에서 생략 */
-  const generateReadinessSteps = useMemo(() => {
-    const base = [
-      {
-        key: 'paragraph' as const,
-        done: charCount >= 10,
-        label: '영어 지문 10자 이상',
-        hint: '지문을 붙여 넣거나 소스에서 불러오세요.',
-        scrollId: 'variant-step-paragraph',
-      },
-      {
-        key: 'types' as const,
-        done: selectedTypes.length > 0,
-        label: '문제 유형 1개 이상',
-        hint: '아래에서 만들 유형을 선택하세요.',
-        scrollId: 'variant-step-types',
-      },
-    ];
-    if (byokKeyStored) return base;
-    return [
-      ...base,
-      {
-        key: 'api' as const,
-        done: false,
-        label: 'API 키 등록',
-        hint: '내 정보(탭)에서 키를 저장해야 합니다.',
-        scrollId: 'variant-editor-top',
-      },
-    ];
-  }, [charCount, selectedTypes.length, byokKeyStored]);
-
-  const canGenerate = generateReadinessSteps.every((s) => s.done);
-  const firstBlockingStep = generateReadinessSteps.find((s) => !s.done) ?? null;
+  }, [busy]);
 
   const toggleType = (t: string) => {
     setSelectedTypes((prev) =>
@@ -257,7 +300,7 @@ export default function MemberVariantGeneratePage() {
         if (!d) return;
         const dx = ev.clientX - d.startX;
         const dy = ev.clientY - d.startY;
-        if (!d.active && dx * dx + dy * dy >= 25) {
+        if (!d.active && dx * dx + dy * dy >= 36) {
           d.active = true;
           try {
             root.setPointerCapture(ev.pointerId);
@@ -343,10 +386,14 @@ export default function MemberVariantGeneratePage() {
     setDrafts([]);
     setMessage(null);
     setEditMode(false);
+    setPerTypeResults([]);
+    setLastSavedIds([]);
   };
 
   const handleGenerate = async () => {
     setMessage(null);
+    setPerTypeResults([]);
+    setLastSavedIds([]);
     if (charCount < 10) {
       showMessage({ kind: 'err', text: '지문을 먼저 입력해 주세요.' });
       return;
@@ -373,10 +420,11 @@ export default function MemberVariantGeneratePage() {
     }
     const hint = userHint.trim() || undefined;
     const successes: VariantDraftItem[] = [];
-    const failures: string[] = [];
+    const results: PerTypeResult[] = [];
     try {
       for (let i = 0; i < types.length; i++) {
         const type = types[i];
+        setProgress({ current: i + 1, total: types.length, currentLabel: type });
         const res = await fetch('/api/my/member-variant/generate', {
           method: 'POST',
           credentials: 'include',
@@ -385,7 +433,7 @@ export default function MemberVariantGeneratePage() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          failures.push(`${type}: ${typeof data?.error === 'string' ? data.error : '실패'}`);
+          results.push({ type, ok: false, error: typeof data?.error === 'string' ? data.error : '실패' });
           continue;
         }
         const pid = typeof data.passage_id === 'string' ? data.passage_id : '';
@@ -393,7 +441,7 @@ export default function MemberVariantGeneratePage() {
           ? (data.question_data as Record<string, unknown>)
           : null;
         if (!pid || !qd) {
-          failures.push(`${type}: 응답 형식 오류`);
+          results.push({ type, ok: false, error: '응답 형식 오류' });
           continue;
         }
         successes.push({
@@ -401,36 +449,43 @@ export default function MemberVariantGeneratePage() {
           passage_id: pid,
           question_data: qd,
         });
+        results.push({ type, ok: true });
       }
 
+      setPerTypeResults(results);
       if (successes.length === 0) {
+        const firstErr = results.find((r) => !r.ok);
         showMessage({
           kind: 'err',
-          text: failures.length ? failures.join(' ') : '만들기에 실패했습니다.',
+          text: firstErr?.error ? `만들기 실패: ${firstErr.error}` : '만들기에 실패했습니다.',
         });
         return;
       }
       setDrafts(successes);
       setActiveDraftIdx(0);
-      if (failures.length > 0) {
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length > 0) {
         showMessage({
           kind: 'ok',
-          text: `${successes.length}개 초안을 만들었습니다. 일부 유형은 실패했습니다: ${failures.join(' ')}`,
-        });
+          text: `${successes.length}개 초안 완료. ${failed.length}개 유형은 실패했습니다.`,
+        }, true);
       } else {
         showMessage({
           kind: 'ok',
           text:
             successes.length > 1
-              ? `${successes.length}개 유형의 초안이 준비되었습니다. 확인 후 저장하세요.`
+              ? `${successes.length}개 유형의 초안이 준비되었습니다.`
               : '초안이 준비되었습니다. 확인 후 저장하세요.',
-        });
+        }, true);
       }
-      setTimeout(() => scrollTo('variant-preview'), 150);
+      setTimeout(() => {
+        mobileResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 180);
     } catch {
       showMessage({ kind: 'err', text: '요청 중 오류가 발생했습니다.' });
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
 
@@ -444,6 +499,7 @@ export default function MemberVariantGeneratePage() {
     setEditMode(false);
     const tb = textbook.trim() || '회원지문';
     const src = source.trim() || '직접입력';
+    const savedIds: string[] = [];
     try {
       for (let i = 0; i < drafts.length; i++) {
         const d = drafts[i];
@@ -468,18 +524,41 @@ export default function MemberVariantGeneratePage() {
           });
           return;
         }
+        if (typeof data.inserted_id === 'string') savedIds.push(data.inserted_id);
       }
-      showMessage({ kind: 'ok', text: drafts.length > 1 ? `${drafts.length}개 문항을 저장했습니다.` : '저장 완료!' }, true);
+      showMessage(
+        { kind: 'ok', text: drafts.length > 1 ? `${drafts.length}개 문항을 저장했습니다.` : '저장 완료!' },
+        true,
+      );
       setDrafts([]);
+      setLastSavedIds(savedIds);
       setListRefreshKey((k) => k + 1);
-      setMyListOpen(true);
-      setTimeout(() => scrollTo('my-member-variants'), 200);
     } catch {
       showMessage({ kind: 'err', text: '요청 중 오류가 발생했습니다.' });
     } finally {
       setBusy(false);
     }
   };
+
+  /** 결과 패널 → 자세히 보기 페이지로 이동 (방금 저장 항목 자동 강조) */
+  const jumpToList = useCallback(() => {
+    const focusId = lastSavedIds[0];
+    const href = focusId
+      ? `/my/premium/member-variants?focus=${encodeURIComponent(focusId)}`
+      : '/my/premium/member-variants';
+    router.push(href);
+  }, [lastSavedIds, router]);
+
+  /** 다른 유형 더 만들기 — 저장 후 초안은 비어있음, 유형만 초기화하고 지문·설정은 유지 */
+  const handleMakeMore = useCallback(() => {
+    setLastSavedIds([]);
+    setPerTypeResults([]);
+    setDrafts([]);
+    setSelectedTypes(['주제']);
+    setTimeout(() => {
+      typeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }, []);
 
   /* ---------- Early returns ---------- */
   if (loading) {
@@ -510,7 +589,9 @@ export default function MemberVariantGeneratePage() {
         <AppBar title="변형문제 만들기" showBackButton />
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-violet-50/40 px-4 py-14">
           <div className="mx-auto max-w-md rounded-3xl border border-violet-100 bg-white p-10 text-center shadow-xl shadow-violet-200/25">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl">🔐</div>
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+              <Icon name="lock" className="h-6 w-6" />
+            </div>
             <h1 className="text-xl font-bold text-slate-900">체험 기간 만료</h1>
             <p className="mt-3 text-sm leading-relaxed text-slate-600">
               가입 후 7일 무료 체험이 끝났습니다. 계속 사용하려면 <strong>월구독</strong> 또는 <strong>연회원</strong>으로 가입해 주세요.
@@ -527,66 +608,27 @@ export default function MemberVariantGeneratePage() {
     );
   }
 
-  /* ---------- Toast ---------- */
-  const Toast = ({ inline }: { inline?: boolean }) => {
-    if (!message) return null;
-    return (
-      <div
-        className={`pointer-events-auto rounded-2xl px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur ${
-          inline ? '' : 'max-w-md'
-        } ${
-          message.kind === 'ok'
-            ? 'border border-emerald-200 bg-emerald-50/95 text-emerald-900'
-            : 'border border-red-200 bg-red-50/95 text-red-800'
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <span className="min-w-0 flex-1">{message.text}</span>
-          {message.kind === 'ok' && myListOpen && (
-            <button type="button" onClick={() => scrollTo('my-member-variants')} className="shrink-0 text-xs font-bold text-emerald-700 underline underline-offset-2 hover:text-emerald-900">
-              목록 보기
-            </button>
-          )}
-          <button type="button" onClick={() => setMessage(null)} className="shrink-0 text-slate-400 hover:text-slate-600" aria-label="닫기">
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-      </div>
-    );
-  };
+  /* ---------- Step indicator state ---------- */
+  const stepParagraph = charCount >= 10;
+  const stepType = selectedTypes.length > 0;
+  const stepGenerated = drafts.length > 0 || lastSavedIds.length > 0;
+  const stepSaved = lastSavedIds.length > 0;
+  const stepFlags = [stepParagraph, stepType, stepGenerated, stepSaved];
+  const firstIncompleteIdx = stepFlags.findIndex((d) => !d);
+  const currentStepIdx = firstIncompleteIdx === -1 ? -1 : firstIncompleteIdx;
 
-  const renderVariantTypeChip = (t: string) => {
-    const active = selectedTypes.includes(t);
-    return (
-      <button
-        key={t}
-        type="button"
-        data-type-chip
-        data-type={t}
-        disabled={busy}
-        onClick={() => {
-          if (marqueeSuppressClickRef.current) return;
-          toggleType(t);
-        }}
-        className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-          active
-            ? 'bg-violet-600 text-white shadow-sm shadow-violet-400/20'
-            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-        } disabled:opacity-50`}
-      >
-        {active && (
-          <svg className="-ml-0.5 mr-0.5 inline-block h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-        {t}
-      </button>
-    );
-  };
+  const canGenerate = byokKeyStored && stepParagraph && stepType && !busy;
+  const generateHintMsg = !byokKeyStored
+    ? 'API 키를 먼저 등록해 주세요 (내 정보)'
+    : !stepParagraph
+      ? '영어 지문을 10자 이상 입력해 주세요'
+      : !stepType
+        ? '문제 유형을 1개 이상 선택해 주세요'
+        : '';
 
-  /* ---------- Main UI ---------- */
+  /* ---------- Render ---------- */
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-violet-50/30">
       <AppBar title="변형문제 만들기" showBackButton />
 
       {marqueeBox && (
@@ -602,99 +644,106 @@ export default function MemberVariantGeneratePage() {
         />
       )}
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-violet-50/30 pb-10">
-        <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 md:py-8">
-
-          {/* --- 안내 배너 --- */}
-          {noticeVisible && (
-            <div className="rounded-2xl border border-indigo-400/30 bg-indigo-900 px-5 py-4 text-sm text-indigo-100 shadow-lg shadow-indigo-950/20">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-                <div className="min-w-0 flex-1 space-y-2 leading-relaxed">
-                  <p>
-                    <strong className="text-white">API 키는 이 화면에서 입력하지 않습니다.</strong>{' '}
-                    <Link href="/my#byok-api-key" className="font-semibold text-amber-200 underline hover:text-white">내 정보(탭)</Link>
-                    에서 등록해 주세요. 키는 이 기기에만 저장됩니다.
-                  </p>
-                  <p className="text-xs text-indigo-300">
-                    {byokKeyStored
-                      ? <span className="font-semibold text-emerald-300">저장된 키를 사용합니다.</span>
-                      : <span className="text-amber-200">키가 아직 없습니다.</span>}
-                    {' '}({membershipPricingOneLiner()})
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  <button type="button" onClick={() => { dismissVariantGenerateNoticeThisSession(); setNoticeVisible(false); }} className="rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20">닫기</button>
-                  <button type="button" onClick={() => { dismissVariantGenerateNoticeForTodayKst(); setNoticeVisible(false); }} className="rounded-xl bg-amber-400 px-4 py-2 text-xs font-bold text-indigo-950 hover:bg-amber-300">오늘 숨기기</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* --- 체험 기간 배너 --- */}
-          {!isPremium && trialDaysLeft !== null && (
-            <div className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-3.5 text-sm font-medium shadow-sm ${
-              trialDaysLeft <= 2 ? 'border border-red-200 bg-red-50 text-red-900'
-                : trialDaysLeft <= 4 ? 'border border-amber-200 bg-amber-50 text-amber-900'
-                  : 'border border-sky-200 bg-sky-50 text-sky-900'
-            }`}>
-              <span>
-                {trialDaysLeft <= 1 ? '무료 체험이 오늘 종료됩니다.' : `무료 체험 ${trialDaysLeft}일 남았습니다.`}
-                {' '}구독하면 제한 없이 사용할 수 있어요.
+      {/* 상단 얇은 알림 바 — 안내/체험 통합 */}
+      {(noticeVisible || (!isPremium && trialDaysLeft !== null)) && (
+        <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 via-indigo-50/60 to-violet-50/80">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2 text-xs">
+            {!isPremium && trialDaysLeft !== null && (
+              <span
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-bold ${
+                  trialDaysLeft <= 2 ? 'bg-red-100 text-red-800' : trialDaysLeft <= 4 ? 'bg-amber-100 text-amber-900' : 'bg-sky-100 text-sky-900'
+                }`}
+              >
+                <Icon name="sparkle" className="h-3 w-3" />
+                {trialDaysLeft <= 1 ? '무료 체험 오늘 종료' : `무료 체험 ${trialDaysLeft}일 남음`}
               </span>
-              <Link href="/my" className={`shrink-0 rounded-xl px-4 py-1.5 text-xs font-bold text-white ${
-                trialDaysLeft <= 2 ? 'bg-red-600 hover:bg-red-700' : trialDaysLeft <= 4 ? 'bg-amber-600 hover:bg-amber-700' : 'bg-sky-600 hover:bg-sky-700'
-              }`}>구독하기</Link>
+            )}
+            {noticeVisible && (
+              <span className="min-w-0 flex-1 text-slate-700">
+                API 키는{' '}
+                <Link href="/my#byok-api-key" className="font-bold text-violet-700 underline decoration-violet-200 underline-offset-2 hover:text-violet-900">
+                  내 정보
+                </Link>
+                에서 등록하며 이 기기에만 저장됩니다. {byokKeyStored ? (
+                  <strong className="text-emerald-700">키 준비됨</strong>
+                ) : (
+                  <strong className="text-amber-700">키 필요</strong>
+                )}
+              </span>
+            )}
+            <div className="ml-auto flex shrink-0 gap-1.5">
+              {!isPremium && trialDaysLeft !== null && (
+                <Link
+                  href="/my"
+                  className={`rounded-full px-3 py-1 font-bold text-white ${
+                    trialDaysLeft <= 2 ? 'bg-red-600 hover:bg-red-700' : trialDaysLeft <= 4 ? 'bg-amber-600 hover:bg-amber-700' : 'bg-sky-600 hover:bg-sky-700'
+                  }`}
+                >
+                  구독
+                </Link>
+              )}
+              {noticeVisible && (
+                <button
+                  type="button"
+                  onClick={() => { dismissVariantGenerateNoticeThisSession(); setNoticeVisible(false); }}
+                  className="rounded-full border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  닫기
+                </button>
+              )}
+              {noticeVisible && (
+                <button
+                  type="button"
+                  onClick={() => { dismissVariantGenerateNoticeForTodayKst(); setNoticeVisible(false); }}
+                  className="rounded-full bg-slate-900 px-2.5 py-1 font-bold text-white hover:bg-slate-800"
+                >
+                  오늘 숨기기
+                </button>
+              )}
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          {/* --- 헤더 --- */}
+      {/* STEP INDICATOR (sticky) */}
+      <div className="sticky top-16 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 py-3">
+          <StepIndicator
+            steps={[
+              { num: 1, label: '지문 입력', done: stepParagraph, onClick: () => textareaRef.current?.focus() },
+              { num: 2, label: '유형 선택', done: stepType, onClick: () => paragraphSectionRef.current && typeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) },
+              { num: 3, label: '초안 생성', done: stepGenerated },
+              { num: 4, label: '저장·Export', done: stepSaved, onClick: () => stepSaved ? jumpToList() : undefined },
+            ]}
+            currentIdx={currentStepIdx}
+          />
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-6 pb-32 lg:grid lg:grid-cols-12 lg:gap-8">
+
+        {/* ===== 좌측: 입력 ===== */}
+        <div className="space-y-6 lg:col-span-7">
+
+          {/* 헤더 */}
           <header id="variant-editor-top" className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-violet-600">{isPremium ? 'Premium' : '무료 체험'}</p>
               <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">변형문제 만들기</h1>
-              <p className="mt-2 text-sm text-slate-600">지문과 유형을 정하면 AI 초안을 받을 수 있어요.</p>
+              <p className="mt-2 text-sm text-slate-600">
+                지문과 유형을 정하면 AI 초안이 우측에 표시됩니다. 여러 유형을 한 번에 만들고, 저장 즉시 내보내기·검수까지 이어 가세요.
+              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
               {byokKeyStored ? (
-                <div ref={keyInfoWrapRef} className="relative flex items-center gap-1">
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 ring-1 ring-emerald-100">
-                    API 키 준비됨
-                  </span>
-                  <button
-                    type="button"
-                    aria-expanded={keyInfoOpen}
-                    aria-label="API 키 변경 안내"
-                    onClick={() => setKeyInfoOpen((o) => !o)}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 shadow-sm transition hover:bg-emerald-50"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                      <circle cx="12" cy="12" r="10" />
-                      <path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
-                    </svg>
-                  </button>
-                  {keyInfoOpen && (
-                    <div
-                      role="tooltip"
-                      className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3.5 text-left text-xs leading-relaxed text-slate-600 shadow-lg ring-1 ring-slate-100"
-                    >
-                      <p>
-                        API 키를 바꾸려면{' '}
-                        <Link
-                          href="/my#byok-api-key"
-                          className="font-bold text-violet-700 underline decoration-violet-200 underline-offset-2 hover:text-violet-900"
-                          onClick={() => setKeyInfoOpen(false)}
-                        >
-                          내 정보
-                        </Link>
-                        의 <strong className="text-slate-800">내 정보(탭)</strong>에서 등록·삭제할 수 있어요. 이
-                        브라우저에만 저장됩니다.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 ring-1 ring-emerald-100">
+                  <Icon name="key" className="h-3.5 w-3.5" />
+                  API 키 준비
+                </span>
               ) : (
                 <>
-                  <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 ring-1 ring-amber-100">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 ring-1 ring-amber-100">
+                    <Icon name="key" className="h-3.5 w-3.5" />
                     API 키 필요
                   </span>
                   <Link
@@ -708,124 +757,141 @@ export default function MemberVariantGeneratePage() {
             </div>
           </header>
 
-          {/* --- 지문 --- */}
-          <section
-            id="variant-step-paragraph"
-            className="scroll-mt-20 rounded-2xl border border-slate-200/80 bg-white shadow-md ring-1 ring-slate-100"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-gradient-to-r from-violet-50/80 to-white px-5 py-3">
-              <h2 className="text-sm font-bold text-slate-900">영어 지문</h2>
-              <VariantSourceLoader
-                disabled={busy}
-                currentParagraph={paragraph}
-                onApply={({ paragraph: p, textbook: tb, source: src }) => { setParagraph(p); setTextbook(tb); setSource(src); }}
-              />
-            </div>
-            <div className="p-4">
+          {/* 1. 지문 */}
+          <section ref={paragraphSectionRef} id="variant-step-paragraph" className="scroll-mt-32">
+            <SectionHeader num={1} title="영어 지문" done={stepParagraph} />
+            <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2.5">
+                <div className="flex items-center gap-3 text-xs">
+                  <span className={charCount >= 10 ? 'font-bold text-emerald-600' : 'text-slate-400'}>
+                    {charCount.toLocaleString()}자
+                  </span>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-slate-500">{wordCount.toLocaleString()}단어</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {charCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void navigator.clipboard.writeText(paragraph)}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-violet-700"
+                    >
+                      복사
+                    </button>
+                  )}
+                  <VariantSourceLoader
+                    disabled={busy}
+                    currentParagraph={paragraph}
+                    onApply={({ paragraph: p, textbook: tb, source: src }) => {
+                      setParagraph(p);
+                      setTextbook(tb);
+                      setSource(src);
+                    }}
+                  />
+                </div>
+              </div>
               <textarea
                 ref={textareaRef}
                 value={paragraph}
                 onChange={(e) => setParagraph(e.target.value)}
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/40 px-4 py-3 font-mono text-sm leading-relaxed text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100"
-                style={{ minHeight: 100 }}
-                placeholder="지문 전체를 붙여 넣거나, 소스 불러오기를 사용하세요."
+                placeholder="이곳에 영어 지문을 붙여 넣거나, 소스 불러오기에서 EBS·모의고사 지문을 가져오세요."
+                className="w-full resize-none px-5 py-4 text-[15px] leading-relaxed text-slate-800 placeholder-slate-400 focus:outline-none"
+                style={{ minHeight: 120 }}
               />
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                <span>
-                  글자 <strong className="text-slate-700">{charCount.toLocaleString()}</strong> · 단어 약{' '}
-                  <strong className="text-slate-700">{wordCount.toLocaleString()}</strong>
-                </span>
-                {charCount > 0 && (
-                  <button type="button" onClick={() => void navigator.clipboard.writeText(paragraph)} className="font-semibold text-violet-700 underline decoration-violet-200 underline-offset-2 hover:text-violet-900">
-                    지문 복사
-                  </button>
-                )}
-              </div>
             </div>
           </section>
 
-          {/* --- 유형·메모 --- */}
-          <section
-            id="variant-step-types"
-            className="scroll-mt-20 rounded-2xl border border-slate-200/80 bg-white shadow-md ring-1 ring-slate-100"
-          >
-            <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-violet-50/30 px-5 py-3">
-              <h2 className="text-sm font-bold text-slate-900">유형 · 메모</h2>
+          {/* 2. 유형 */}
+          <section ref={typeSectionRef} id="variant-step-types" className="scroll-mt-32">
+            <SectionHeader
+              num={2}
+              title={`문제 유형 (${selectedTypes.length}개 선택)`}
+              done={stepType}
+              right={
+                selectedTypes.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTypes([])}
+                    className="text-[11px] font-semibold text-slate-400 underline decoration-slate-300 underline-offset-2 hover:text-red-500"
+                  >
+                    선택 해제
+                  </button>
+                ) : null
+              }
+            />
+            <p className="mt-2 px-1 text-[11px] leading-relaxed text-slate-500">
+              카드를 클릭하거나 <strong className="text-slate-700">사각형을 드래그</strong>해 여러 유형을 한번에 선택할 수 있어요.
+              여러 유형을 고르면 하나씩 순차 생성됩니다.
+            </p>
+
+            <div
+              ref={variantChipMarqueeRef}
+              className="relative mt-3 select-none space-y-5"
+              onPointerDown={handleVariantChipMarqueePointerDown}
+            >
+              {TYPE_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">{group.label}</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {group.items
+                      .filter((t) => (BOOK_VARIANT_QUESTION_TYPES as readonly string[]).includes(t.key))
+                      .map((t) => (
+                        <TypeCard
+                          key={t.key}
+                          meta={t}
+                          active={selectedTypes.includes(t.key)}
+                          disabled={busy}
+                          onClick={() => {
+                            if (marqueeSuppressClickRef.current) return;
+                            toggleType(t.key);
+                          }}
+                        />
+                      ))}
+                  </div>
+                </div>
+              ))}
+
+              {PAID_VARIANT_TYPES.length > 0 && (
+                <div id="variant-step-hard-types">
+                  <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">고난도</p>
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 ring-1 ring-amber-200">
+                      포인트 차감
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {PAID_VARIANT_TYPES.map((typeKey) => {
+                      const cost = variantTypePointCostPerDraft(typeKey);
+                      const meta: TypeMeta = {
+                        key: typeKey,
+                        label: typeKey,
+                        desc: cost != null ? `1개당 ${cost}P` : '고난도',
+                        icon: 'bolt',
+                      };
+                      return (
+                        <TypeCard
+                          key={typeKey}
+                          meta={meta}
+                          active={selectedTypes.includes(typeKey)}
+                          disabled={busy}
+                          paid
+                          onClick={() => {
+                            if (marqueeSuppressClickRef.current) return;
+                            toggleType(typeKey);
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="space-y-4 p-4">
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2.5 text-[11px] leading-relaxed text-emerald-950">
-                <p className="font-bold text-emerald-900">포인트 안내</p>
-                <p className="mt-1 text-emerald-900/95">
-                  <strong className="text-emerald-950">내용 파악</strong>(주제·제목·주장),{' '}
-                  <strong className="text-emerald-950">세부 정보</strong>(일치·불일치),{' '}
-                  <strong className="text-emerald-950">추론</strong>(함의·빈칸·요약),{' '}
-                  <strong className="text-emerald-950">언어·구조</strong>(어법·순서·삽입·무관한문장) 유형은 초안을 만들 때{' '}
-                  <span className="font-bold text-emerald-950">포인트가 차감되지 않습니다.</span>
-                  {PAID_VARIANT_TYPES.length > 0 ? (
-                    <>
-                      {' '}
-                      아래 <strong className="text-emerald-950">고난도</strong>에 있는 유형만 포인트가 사용돼요.
-                    </>
-                  ) : null}
-                </p>
-              </div>
+          </section>
 
-              {/* 유형 — 소그룹 (드래그로 다중 선택) */}
-              <div
-                ref={variantChipMarqueeRef}
-                className="relative space-y-3 select-none"
-                onPointerDown={handleVariantChipMarqueePointerDown}
-              >
-                {TYPE_GROUPS.map((g) => (
-                  <div key={g.label}>
-                    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">{g.label}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {g.types
-                        .filter((t) => (BOOK_VARIANT_QUESTION_TYPES as readonly string[]).includes(t))
-                        .map((t) => renderVariantTypeChip(t))}
-                    </div>
-                  </div>
-                ))}
-
-                {PAID_VARIANT_TYPES.length > 0 && (
-                  <div id="variant-step-hard-types">
-                    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">고난도</p>
-                    <p className="mb-2 text-[11px] leading-relaxed text-slate-500">
-                      {PAID_VARIANT_TYPES.map((t) => {
-                        const cost = variantTypePointCostPerDraft(t);
-                        return (
-                          <span key={t}>
-                            <span className="font-semibold text-slate-700">{t}</span>
-                            {cost != null ? (
-                              <span>
-                                {' '}
-                                초안 1개당 <span className="font-bold text-slate-700">{cost}포인트</span> 차감.
-                              </span>
-                            ) : null}{' '}
-                          </span>
-                        );
-                      })}
-                      포인트가 부족하면 해당 유형 초안만 건너뜁니다.
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {PAID_VARIANT_TYPES.map((t) => renderVariantTypeChip(t))}
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-[11px] leading-relaxed text-slate-400">
-                  화면 캡처처럼 <strong className="text-slate-600">드래그하여 사각형을 그리면</strong> 겹치는 유형이 한꺼번에
-                  선택됩니다. 개별 선택은 칩을 눌러 주세요.
-                </p>
-
-                {selectedTypes.length > 1 && (
-                  <p className="text-[11px] text-slate-500">
-                    선택한 유형마다 초안을 하나씩 만듭니다. 유형이 많으면 시간이 조금 더 걸릴 수 있어요.
-                  </p>
-                )}
-              </div>
-
-              {/* 교재/출처 — placeholder */}
+          {/* 3. 추가 정보 */}
+          <section className="scroll-mt-32">
+            <SectionHeader num={3} title="교재 · 출처 · 메모 (선택)" done={false} optional />
+            <div className="mt-3 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="text-xs font-bold text-slate-600">교재 이름</span>
@@ -847,14 +913,25 @@ export default function MemberVariantGeneratePage() {
                 </label>
               </div>
               <label className="block">
-                <span className="text-xs font-bold text-slate-600">추가 메모 <span className="font-normal text-slate-400">(선택)</span></span>
-                <textarea value={userHint} onChange={(e) => setUserHint(e.target.value)} rows={2} placeholder="예: 보기 길이, 톤, 피하고 싶은 주제 등" className="mt-1 w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+                <span className="text-xs font-bold text-slate-600">
+                  추가 메모 <span className="font-normal text-slate-400">(AI에 힌트로 전달됩니다)</span>
+                </span>
+                <textarea
+                  value={userHint}
+                  onChange={(e) => setUserHint(e.target.value)}
+                  rows={2}
+                  placeholder="예: 보기 길이, 톤, 피하고 싶은 주제 등"
+                  className="mt-1 w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                />
               </label>
-
-              {/* 입력 초기화 — 텍스트 링크 */}
               {(paragraph.trim() || textbook.trim() || source.trim() || drafts.length > 0) && (
                 <div className="text-right">
-                  <button type="button" disabled={busy} onClick={handleResetForm} className="text-xs font-medium text-slate-400 underline decoration-slate-300 underline-offset-2 hover:text-red-500 disabled:opacity-50">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={handleResetForm}
+                    className="text-[11px] font-medium text-slate-400 underline decoration-slate-300 underline-offset-2 hover:text-red-500 disabled:opacity-50"
+                  >
                     입력 초기화
                   </button>
                 </div>
@@ -862,205 +939,806 @@ export default function MemberVariantGeneratePage() {
             </div>
           </section>
 
-          {/* --- 초안 만들기 (필수 입력 체크) — 하단 고정바 대신 인라인 --- */}
-          {drafts.length === 0 && (
-            <section className="scroll-mt-20 rounded-2xl border border-violet-200/60 bg-gradient-to-br from-white to-violet-50/40 p-4 shadow-md ring-1 ring-violet-100 sm:p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:gap-5">
-                <div className="flex shrink-0 flex-col justify-center sm:w-auto">
-                  <button
-                    type="button"
-                    disabled={busy || !canGenerate}
-                    onClick={() => void handleGenerate()}
-                    className="w-full min-w-[10rem] rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-105 disabled:pointer-events-none disabled:opacity-45 sm:w-auto sm:py-4 sm:text-[15px]"
-                  >
-                    {busy ? '만드는 중…' : '초안 만들기'}
-                  </button>
-                </div>
-                <div className="min-w-0 flex-1 rounded-xl border border-slate-200/80 bg-white/90 px-3 py-3 sm:px-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">입력 순서</p>
-                  <ul className="mt-2 space-y-2">
-                    {generateReadinessSteps.map((step, idx) => {
-                      const isNext = firstBlockingStep?.key === step.key;
-                      return (
-                        <li key={step.key}>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => scrollTo(step.scrollId)}
-                            className={`flex w-full items-start gap-2.5 rounded-lg px-2 py-1.5 text-left transition ${
-                              step.done
-                                ? 'bg-emerald-50/80 text-emerald-900'
-                                : isNext
-                                  ? 'bg-amber-50 ring-2 ring-amber-300/80 hover:bg-amber-100/90'
-                                  : 'bg-slate-50/90 text-slate-600 hover:bg-slate-100'
-                            } ${!busy ? 'cursor-pointer' : ''} disabled:cursor-wait disabled:opacity-70`}
-                          >
-                            <span
-                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                                step.done ? 'bg-emerald-500 text-white' : 'border-2 border-slate-300 bg-white text-slate-500'
-                              }`}
-                              aria-hidden
-                            >
-                              {step.done ? '✓' : idx + 1}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="flex flex-wrap items-center gap-1.5">
-                                <span className={`text-xs font-bold ${step.done ? 'text-emerald-900' : 'text-slate-800'}`}>
-                                  {step.label}
-                                </span>
-                                {!step.done && isNext && (
-                                  <span className="rounded-full bg-amber-600 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white">
-                                    우선
-                                  </span>
-                                )}
-                              </span>
-                              {!step.done && (
-                                <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{step.hint}</span>
-                              )}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
-              {message && (
-                <div className="mt-4">
-                  <Toast />
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* --- 초안 미리보기 --- */}
-          {drafts.length > 0 && (
-            <section
-              id="variant-preview"
-              className="scroll-mt-20 rounded-2xl border border-slate-200/80 bg-white shadow-md ring-1 ring-slate-100"
+          {/* 인라인 메시지 */}
+          {message && (
+            <div
+              className={`rounded-2xl border px-4 py-3 text-sm font-semibold anim-fade-slide-top ${
+                message.kind === 'ok'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  : 'border-red-200 bg-red-50 text-red-700'
+              }`}
             >
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-emerald-50/80 to-white px-5 py-3">
-                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
-                  <h2 className="text-sm font-bold text-slate-900">
-                    만든 초안{drafts.length > 1 ? ` (${drafts.length}개)` : ''}
-                  </h2>
-                  {drafts.length > 1 && (
-                    <div className="flex items-center gap-0.5 rounded-xl border border-slate-200/90 bg-white p-0.5 shadow-sm">
-                      <button
-                        type="button"
-                        aria-label="이전 초안"
-                        disabled={activeDraftIdx <= 0}
-                        onClick={() => setActiveDraftIdx((k) => Math.max(0, k - 1))}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-slate-600 transition hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-30"
-                      >
-                        ‹
-                      </button>
-                      <span className="min-w-[3.25rem] select-none text-center text-xs font-bold tabular-nums text-slate-600">
-                        {activeDraftIdx + 1} / {drafts.length}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="다음 초안"
-                        disabled={activeDraftIdx >= drafts.length - 1}
-                        onClick={() => setActiveDraftIdx((k) => Math.min(drafts.length - 1, k + 1))}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-slate-600 transition hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-30"
-                      >
-                        ›
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleGenerate()}
-                    className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-900 transition hover:bg-violet-100 disabled:opacity-50"
-                  >
-                    다시 만들기
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditMode(!editMode)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                      editMode
-                        ? 'bg-violet-600 text-white hover:bg-violet-700'
-                        : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    {editMode ? '수정 완료' : '수정하기'}
-                  </button>
-                </div>
+              <div className="flex items-start gap-2">
+                <span className="min-w-0 flex-1">{message.text}</span>
+                <button
+                  type="button"
+                  onClick={() => setMessage(null)}
+                  className="shrink-0 text-slate-400 hover:text-slate-600"
+                  aria-label="닫기"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <div className="p-4">
-                {(() => {
-                  const i = drafts.length > 1 ? activeDraftIdx : 0;
-                  const d = drafts[i];
-                  if (!d) return null;
-                  return (
-                    <div
-                      key={`${d.type}-${d.passage_id}-${i}`}
-                      className="rounded-xl border border-slate-100 bg-slate-50/40 p-4"
-                    >
-                      <p className="mb-3 text-xs font-bold text-violet-700">유형: {d.type}</p>
-                      <QuestionFriendlyPreview
-                        data={d.question_data}
-                        editable={editMode}
-                        onDataChange={(updated) => {
-                          setDrafts((prev) =>
-                            prev.map((x, j) => (j === i ? { ...x, question_data: updated } : x)),
-                          );
-                        }}
-                      />
-                    </div>
-                  );
-                })()}
-              </div>
-              <div className="space-y-3 border-t border-slate-100 bg-gradient-to-r from-emerald-50/60 to-white px-5 py-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleSave()}
-                    className="rounded-2xl bg-emerald-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    {drafts.length > 1 ? `전부 저장 (${drafts.length}개)` : '저장하기'}
-                  </button>
-                  {message && <Toast />}
-                </div>
-              </div>
-            </section>
+            </div>
           )}
 
-          {/* --- 내가 만든 문항 (접기/펴기) --- */}
-          <section id="my-member-variants" className="scroll-mt-20">
+          {/* 모바일 결과 영역 (lg 미만) */}
+          <div ref={mobileResultRef} className="lg:hidden">
+            {busy ? (
+              <GeneratingPanel
+                stageIdx={stageIdx}
+                progress={progress}
+                selectedCount={selectedTypes.length}
+              />
+            ) : drafts.length > 0 ? (
+              <ResultPanel
+                drafts={drafts}
+                activeIdx={activeDraftIdx}
+                onActiveIdx={setActiveDraftIdx}
+                editMode={editMode}
+                onEditMode={setEditMode}
+                busy={busy}
+                onSave={() => void handleSave()}
+                onRegenerate={() => void handleGenerate()}
+                onUpdateDraft={(i, updated) =>
+                  setDrafts((prev) => prev.map((x, j) => (j === i ? { ...x, question_data: updated } : x)))
+                }
+                failedResults={perTypeResults.filter((r) => !r.ok)}
+              />
+            ) : lastSavedIds.length > 0 ? (
+              <SavedSuccessPanel
+                savedCount={lastSavedIds.length}
+                onJumpList={jumpToList}
+                onMakeMore={handleMakeMore}
+                onReset={handleResetForm}
+              />
+            ) : (
+              <IdlePreviewPanel
+                hasKey={byokKeyStored}
+                hasParagraph={stepParagraph}
+                hasType={stepType}
+                selectedCount={selectedTypes.length}
+                firstSelected={selectedTypes[0] ? ALL_TYPES.find((t) => t.key === selectedTypes[0]) : undefined}
+              />
+            )}
+          </div>
+
+          {/* 결과 앵커 (sticky 스크롤 기준점) */}
+          <div ref={previewAnchorRef} className="h-0" />
+        </div>
+
+        {/* ===== 우측: 결과/미리보기 (lg+ sticky) ===== */}
+        <aside className="hidden lg:col-span-5 lg:block">
+          <div className="sticky top-32 space-y-4">
+            {busy ? (
+              <GeneratingPanel
+                stageIdx={stageIdx}
+                progress={progress}
+                selectedCount={selectedTypes.length}
+              />
+            ) : drafts.length > 0 ? (
+              <ResultPanel
+                drafts={drafts}
+                activeIdx={activeDraftIdx}
+                onActiveIdx={setActiveDraftIdx}
+                editMode={editMode}
+                onEditMode={setEditMode}
+                busy={busy}
+                onSave={() => void handleSave()}
+                onRegenerate={() => void handleGenerate()}
+                onUpdateDraft={(i, updated) =>
+                  setDrafts((prev) => prev.map((x, j) => (j === i ? { ...x, question_data: updated } : x)))
+                }
+                failedResults={perTypeResults.filter((r) => !r.ok)}
+              />
+            ) : lastSavedIds.length > 0 ? (
+              <SavedSuccessPanel
+                savedCount={lastSavedIds.length}
+                onJumpList={jumpToList}
+                onMakeMore={handleMakeMore}
+                onReset={handleResetForm}
+              />
+            ) : (
+              <IdlePreviewPanel
+                hasKey={byokKeyStored}
+                hasParagraph={stepParagraph}
+                hasType={stepType}
+                selectedCount={selectedTypes.length}
+                firstSelected={selectedTypes[0] ? ALL_TYPES.find((t) => t.key === selectedTypes[0]) : undefined}
+              />
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* ===== 내가 만든 문항 (슬림 미리보기) ===== */}
+      <div ref={myListRef} id="my-member-variants" className="mx-auto max-w-6xl scroll-mt-20 px-4 pb-20">
+        <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+            <span className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <Icon name="list" className="h-4 w-4 text-violet-600" />
+              내가 만든 문항
+              {lastSavedIds.length > 0 && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 anim-fade-slide-top">
+                  방금 저장 {lastSavedIds.length}건
+                </span>
+              )}
+            </span>
+            <Link
+              href={
+                lastSavedIds[0]
+                  ? `/my/premium/member-variants?focus=${encodeURIComponent(lastSavedIds[0])}`
+                  : '/my/premium/member-variants'
+              }
+              className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-800 transition hover:border-violet-400 hover:bg-violet-100"
+            >
+              자세히 보기
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+          <div className="border-t border-slate-100">
+            <MemberVariantsMini
+              refreshKey={listRefreshKey}
+              highlightVariantId={lastSavedIds[0]}
+            />
+          </div>
+        </div>
+
+        <p className="mt-4 text-center text-[11px] text-slate-400">
+          <button
+            type="button"
+            className="underline decoration-slate-300 underline-offset-2 hover:text-slate-600"
+            onClick={() => { resetVariantGenerateNoticeDismissals(); setNoticeVisible(true); }}
+          >
+            안내 다시 보기
+          </button>
+        </p>
+      </div>
+
+      {/* ===== 하단 고정 CTA ===== */}
+      {!busy && drafts.length === 0 && lastSavedIds.length === 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+            <div className="hidden min-w-0 flex-1 sm:block">
+              {canGenerate ? (
+                <p className="truncate text-sm text-slate-600">
+                  <strong className="text-violet-700">지문 {charCount.toLocaleString()}자</strong> ·{' '}
+                  <strong className="text-violet-700">유형 {selectedTypes.length}개</strong> 준비 완료
+                </p>
+              ) : (
+                <p className="truncate text-xs text-slate-500">{generateHintMsg}</p>
+              )}
+            </div>
             <button
               type="button"
-              onClick={() => setMyListOpen(!myListOpen)}
-              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 text-left shadow-sm ring-1 ring-slate-100 transition hover:bg-slate-50"
+              onClick={() => void handleGenerate()}
+              disabled={!canGenerate}
+              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all sm:flex-none sm:min-w-[260px] sm:text-[15px] ${
+                canGenerate
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98]'
+                  : 'cursor-not-allowed bg-slate-200 text-slate-400'
+              }`}
             >
-              <span className="text-sm font-bold text-slate-900">내가 만든 문항</span>
-              <svg
-                className={`h-5 w-5 text-slate-400 transition-transform ${myListOpen ? 'rotate-180' : ''}`}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              <Icon name="sparkle" className="h-5 w-5" />
+              {selectedTypes.length > 1
+                ? `${selectedTypes.length}개 유형 초안 만들기`
+                : selectedTypes.length === 1
+                  ? `「${selectedTypes[0]}」 초안 만들기`
+                  : '초안 만들기'}
             </button>
-            {myListOpen && (
-              <div className="mt-2">
-                <MyMemberVariants refreshKey={listRefreshKey} listMode="preview" />
-              </div>
-            )}
-          </section>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-          <p className="pb-4 text-center text-[11px] text-slate-400">
-            <button type="button" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-600" onClick={() => { resetVariantGenerateNoticeDismissals(); setNoticeVisible(true); }}>
-              안내 다시 보기
+/* ==========================================================
+   보조 컴포넌트
+   ========================================================== */
+
+type StepItem = { num: number; label: string; done: boolean; onClick?: () => void };
+
+function StepIndicator({ steps, currentIdx }: { steps: StepItem[]; currentIdx: number }) {
+  return (
+    <ol className="flex items-center justify-between gap-1 text-xs">
+      {steps.map((s, i) => {
+        const isCurrent = i === currentIdx;
+        const isDone = s.done;
+        const interactive = !!s.onClick;
+        const next = steps[i + 1];
+        const lineActive = isDone && (next?.done || i + 1 === currentIdx);
+        return (
+          <li key={s.num} className="flex min-w-0 flex-1 items-center gap-2">
+            <button
+              type="button"
+              onClick={s.onClick}
+              disabled={!interactive}
+              className={`group flex min-w-0 items-center gap-2 ${interactive ? 'cursor-pointer' : 'cursor-default'}`}
+            >
+              <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
+                {isCurrent && (
+                  <>
+                    <span className="absolute inset-0 rounded-full bg-violet-400 opacity-50 animate-ping" />
+                    <span className="absolute inset-0 rounded-full ring-2 ring-violet-400" />
+                  </>
+                )}
+                <span
+                  className={`relative flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 ${
+                    isDone
+                      ? 'bg-violet-600 text-white shadow-sm'
+                      : isCurrent
+                        ? 'scale-110 bg-white text-violet-700 ring-1 ring-violet-300'
+                        : 'bg-slate-100 text-slate-400'
+                  }`}
+                >
+                  {isDone ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                      <path d="M5 12.5l5 5 9-11" />
+                    </svg>
+                  ) : (
+                    s.num
+                  )}
+                </span>
+              </span>
+              <span
+                className={`hidden truncate font-semibold transition-colors duration-300 sm:inline ${
+                  isDone ? 'text-slate-800' : isCurrent ? 'text-violet-700' : 'text-slate-400 group-hover:text-slate-500'
+                }`}
+              >
+                {s.label}
+              </span>
+              {isCurrent && (
+                <span className="anim-fade-slide-bottom hidden items-center gap-1 rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white md:inline-flex">
+                  지금
+                </span>
+              )}
             </button>
-          </p>
+            {i < steps.length - 1 && (
+              <span className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                <span
+                  className="absolute inset-y-0 left-0 bg-violet-500 transition-all duration-700 ease-out"
+                  style={{ width: lineActive ? '100%' : isDone ? '60%' : '0%' }}
+                />
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function SectionHeader({
+  num,
+  title,
+  done,
+  optional,
+  right,
+}: {
+  num: number;
+  title: string;
+  done: boolean;
+  optional?: boolean;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+      <div className="flex items-center gap-2">
+        <span
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
+            done ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-500'
+          }`}
+        >
+          {done ? '✓' : num}
+        </span>
+        <h2 className="text-sm font-bold text-slate-800">{title}</h2>
+        {optional && (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">선택</span>
+        )}
+      </div>
+      {right && <div className="shrink-0">{right}</div>}
+    </div>
+  );
+}
+
+function TypeCard({
+  meta,
+  active,
+  disabled,
+  paid,
+  onClick,
+}: {
+  meta: TypeMeta;
+  active: boolean;
+  disabled?: boolean;
+  paid?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-type-chip
+      data-type={meta.key}
+      disabled={disabled}
+      onClick={onClick}
+      className={`group relative overflow-hidden rounded-2xl border-2 p-3 text-left transition-all disabled:opacity-50 ${
+        active
+          ? paid
+            ? 'scale-[1.02] border-amber-500 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md'
+            : 'scale-[1.02] border-violet-600 bg-violet-600 text-white shadow-md'
+          : paid
+            ? 'border-amber-200 bg-amber-50/40 text-amber-900 hover:border-amber-400 hover:bg-amber-50'
+            : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:bg-violet-50/50'
+      }`}
+    >
+      <div className="mb-1 flex items-center gap-2">
+        <Icon
+          name={meta.icon}
+          className={`h-4 w-4 ${active ? 'text-white' : paid ? 'text-amber-600' : 'text-violet-500'}`}
+        />
+        <span className="text-sm font-bold">{meta.label}</span>
+        {active && (
+          <svg className="ml-auto h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </div>
+      <p
+        className={`text-[11px] leading-snug ${
+          active ? (paid ? 'text-amber-50' : 'text-violet-100') : paid ? 'text-amber-700' : 'text-slate-500'
+        }`}
+      >
+        {meta.desc}
+      </p>
+    </button>
+  );
+}
+
+function GeneratingPanel({
+  stageIdx,
+  progress,
+  selectedCount,
+}: {
+  stageIdx: number;
+  progress: GenerationProgress | null;
+  selectedCount: number;
+}) {
+  const total = progress?.total ?? selectedCount ?? 1;
+  const current = progress?.current ?? 0;
+  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  return (
+    <div className="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-indigo-50 p-6 shadow-sm anim-fade-slide-bottom">
+      <div className="flex flex-col items-center text-center">
+        <div className="relative mb-4">
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600" />
+          <Icon name="sparkle" className="absolute inset-0 m-auto h-6 w-6 text-violet-600" />
+        </div>
+        {total > 1 ? (
+          <>
+            <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+              {current} / {total} 유형 처리 중
+            </p>
+            <p className="mt-1 text-base font-bold text-slate-800">
+              「{progress?.currentLabel ?? '…'}」 작성 중
+            </p>
+            <div className="mt-3 h-2 w-full max-w-[260px] overflow-hidden rounded-full bg-violet-100">
+              <div
+                className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+              {progress?.currentLabel ?? '변형문제'} 생성 중
+            </p>
+            <p className="mt-1 text-lg font-bold text-slate-800" key={stageIdx}>
+              {PROGRESS_STAGES[stageIdx]}…
+            </p>
+          </>
+        )}
+        <div className="mt-4 flex gap-1.5">
+          {PROGRESS_STAGES.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all ${
+                i <= stageIdx ? 'w-6 bg-violet-600' : 'w-3 bg-violet-200'
+              }`}
+            />
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-slate-500">
+          보통 10~30초 정도 걸립니다. 잠시만 기다려 주세요.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ResultPanel({
+  drafts,
+  activeIdx,
+  onActiveIdx,
+  editMode,
+  onEditMode,
+  busy,
+  onSave,
+  onRegenerate,
+  onUpdateDraft,
+  failedResults,
+}: {
+  drafts: VariantDraftItem[];
+  activeIdx: number;
+  onActiveIdx: (i: number) => void;
+  editMode: boolean;
+  onEditMode: (v: boolean) => void;
+  busy: boolean;
+  onSave: () => void;
+  onRegenerate: () => void;
+  onUpdateDraft: (i: number, updated: Record<string, unknown>) => void;
+  failedResults: PerTypeResult[];
+}) {
+  const i = Math.min(activeIdx, drafts.length - 1);
+  const d = drafts[i];
+  if (!d) return null;
+  const multi = drafts.length > 1;
+
+  return (
+    <div className="space-y-3 anim-fade-slide-bottom">
+      {/* 성공 헤더 */}
+      <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+            <Icon name="check" className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-black sm:text-lg">
+              {multi ? `${drafts.length}개 초안 준비 완료` : '초안이 준비되었어요!'}
+            </h2>
+            <p className="text-xs text-emerald-100">
+              확인 후 저장하면 내 문항에 「대기」로 추가됩니다
+            </p>
+          </div>
         </div>
       </div>
-    </>
+
+      {/* 실패 요약 */}
+      {failedResults.length > 0 && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-xs anim-fade-slide-top">
+          <p className="font-bold text-red-800">
+            {failedResults.length}개 유형은 실패했습니다
+          </p>
+          <ul className="mt-1.5 space-y-0.5 text-red-700">
+            {failedResults.map((r) => (
+              <li key={r.type}>
+                <strong>{r.type}</strong>: {r.error ?? '실패'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 초안 탭 */}
+      {multi && (
+        <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5">
+          {drafts.map((x, idx) => {
+            const active = idx === i;
+            return (
+              <button
+                key={`${x.type}-${idx}`}
+                type="button"
+                onClick={() => onActiveIdx(idx)}
+                className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${
+                  active ? 'bg-violet-600 text-white shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {idx + 1}. {x.type}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 본문 */}
+      <div className="rounded-3xl border-2 border-violet-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-[11px] font-bold text-violet-800">
+            <Icon name="sparkle" className="h-3 w-3" />
+            {d.type}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={onRegenerate}
+              className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-violet-700 transition hover:bg-violet-50 disabled:opacity-50"
+            >
+              <Icon name="refresh" className="h-3 w-3" />
+              다시 만들기
+            </button>
+            <button
+              type="button"
+              onClick={() => onEditMode(!editMode)}
+              className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition ${
+                editMode
+                  ? 'bg-violet-600 text-white hover:bg-violet-700'
+                  : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {editMode ? '수정 완료' : '수정'}
+            </button>
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-3">
+          <QuestionFriendlyPreview
+            data={d.question_data}
+            editable={editMode}
+            onDataChange={(updated) => onUpdateDraft(i, updated)}
+          />
+        </div>
+      </div>
+
+      {/* 저장 CTA */}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onSave}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50"
+      >
+        <Icon name="save" className="h-5 w-5" />
+        {multi ? `${drafts.length}개 전부 저장` : '저장하기'}
+      </button>
+      <p className="text-center text-[11px] text-slate-500">
+        저장하면 내보내기(HWP·Excel)와 검수 기능을 바로 사용할 수 있어요.
+      </p>
+    </div>
   );
+}
+
+function SavedSuccessPanel({
+  savedCount,
+  onJumpList,
+  onMakeMore,
+  onReset,
+}: {
+  savedCount: number;
+  onJumpList: () => void;
+  onMakeMore: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="space-y-3 anim-fade-slide-bottom">
+      <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-green-600 p-6 text-white shadow-lg">
+        <div className="flex items-start gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+            <Icon name="save" className="h-6 w-6 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-black">
+              {savedCount > 1 ? `${savedCount}개 문항 저장 완료` : '저장 완료!'}
+            </h2>
+            <p className="mt-1 text-sm text-emerald-100">
+              상태는 <strong className="text-white">「대기」</strong>로 표시됩니다. 검수를 마치면 완료로 바꿔 주세요.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <button
+          type="button"
+          onClick={onJumpList}
+          className="inline-flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 px-4 py-3.5 text-left transition hover:border-violet-400 hover:bg-violet-100/50"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-violet-900">
+              <Icon name="download" className="h-4 w-4" />
+              자세히 보기 · Export · 검수
+            </p>
+            <p className="mt-0.5 text-[11px] text-violet-700">
+              「내가 만든 문항」 페이지에서 HWP · Excel · Word · PDF 내보내기와 GPT/Claude 검수까지
+            </p>
+          </div>
+          <Icon name="arrowRight" className="h-5 w-5 shrink-0 text-violet-600" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onMakeMore}
+          className="inline-flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:bg-slate-50"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+              <Icon name="plus" className="h-4 w-4 text-violet-600" />
+              같은 지문으로 다른 유형 더 만들기
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              지문·교재·출처는 유지하고 유형만 새로 고르기
+            </p>
+          </div>
+          <Icon name="arrowRight" className="h-5 w-5 shrink-0 text-slate-400" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:bg-slate-50"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+              <Icon name="refresh" className="h-4 w-4 text-slate-500" />
+              처음부터 다시
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">입력 전부 초기화</p>
+          </div>
+          <Icon name="arrowRight" className="h-5 w-5 shrink-0 text-slate-400" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function IdlePreviewPanel({
+  hasKey,
+  hasParagraph,
+  hasType,
+  selectedCount,
+  firstSelected,
+}: {
+  hasKey: boolean;
+  hasParagraph: boolean;
+  hasType: boolean;
+  selectedCount: number;
+  firstSelected: TypeMeta | undefined;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white p-6 text-center">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
+          <Icon name={firstSelected?.icon ?? 'sparkle'} className="h-6 w-6" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-800">
+          {selectedCount > 1
+            ? `${selectedCount}개 유형의 변형문제가 여기에`
+            : `「${firstSelected?.label ?? '주제'}」 변형문제가 여기에`}
+        </h3>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+          {firstSelected?.desc ?? '지문과 유형을 고르면 바로 표시됩니다'}
+        </p>
+
+        <div className="mt-5 space-y-1.5 text-left">
+          <ProgressLine done={hasKey} text="API 키 등록 (내 정보에서)" />
+          <ProgressLine done={hasParagraph} text="영어 지문 10자 이상" />
+          <ProgressLine done={hasType} text="문제 유형 선택" />
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 to-indigo-50 p-4">
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-violet-600">
+          프리미엄 슈퍼파워
+        </h4>
+        <ul className="space-y-1.5 text-xs text-slate-700">
+          {[
+            { icon: 'bolt' as IconName, t: '여러 유형을 한 번에 선택해 한 지문으로 3~12문항 연속 생성' },
+            { icon: 'book' as IconName, t: 'EBS·모의고사 지문을 소스 불러오기로 바로 채우기' },
+            { icon: 'save' as IconName, t: '저장한 문항은 DB에 남고 「대기→완료」 검수 워크플로 연동' },
+            { icon: 'download' as IconName, t: 'HWP · Excel · Word · PDF로 바로 내보내기' },
+          ].map((it) => (
+            <li key={it.t} className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-violet-600/10 text-violet-700">
+                <Icon name={it.icon} className="h-2.5 w-2.5" />
+              </span>
+              <span className="leading-relaxed">{it.t}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function ProgressLine({ done, text }: { done: boolean; text: string }) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold ${
+        done ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-400'
+      }`}
+    >
+      <span
+        className={`flex h-4 w-4 items-center justify-center rounded-full ${
+          done ? 'bg-emerald-500 text-white' : 'border border-slate-300'
+        }`}
+      >
+        {done && (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-2.5 w-2.5"
+          >
+            <path d="M5 12.5l5 5 9-11" />
+          </svg>
+        )}
+      </span>
+      {text}
+    </div>
+  );
+}
+
+/* ───────────── 아이콘 ───────────── */
+
+function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {
+  const props = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.6,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    className,
+    'aria-hidden': true,
+  };
+  switch (name) {
+    case 'target':
+      return (<svg {...props}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>);
+    case 'heading':
+      return (<svg {...props}><path d="M5 6h14" /><path d="M5 12h10" /><path d="M5 18h14" /></svg>);
+    case 'quote':
+      return (<svg {...props}><path d="M4 8.5C4 7.1 5.1 6 6.5 6h11C18.9 6 20 7.1 20 8.5v6c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4H6.5C5.1 17 4 15.9 4 14.5z" /></svg>);
+    case 'check':
+      return (<svg {...props}><circle cx="12" cy="12" r="9" /><path d="M8 12.5l3 3 5-6" /></svg>);
+    case 'x':
+      return (<svg {...props}><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" /></svg>);
+    case 'bulb':
+      return (<svg {...props}><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 00-4 10.5c1 1 1.5 2 1.5 3v.5h5V16.5c0-1 .5-2 1.5-3A6 6 0 0012 3z" /></svg>);
+    case 'puzzle':
+      return (<svg {...props}><path d="M5 9V6a1 1 0 011-1h4a2 2 0 014 0h4a1 1 0 011 1v4a2 2 0 010 4v4a1 1 0 01-1 1h-4a2 2 0 01-4 0H6a1 1 0 01-1-1v-4a2 2 0 010-4z" /></svg>);
+    case 'note':
+      return (<svg {...props}><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M8 9h8M8 13h8M8 17h5" /></svg>);
+    case 'search':
+      return (<svg {...props}><circle cx="11" cy="11" r="6" /><path d="M16 16l4 4" /></svg>);
+    case 'order':
+      return (<svg {...props}><path d="M4 7h2M4 12h2M4 17h2" /><path d="M9 7h11M9 12h11M9 17h11" /></svg>);
+    case 'insert':
+      return (<svg {...props}><path d="M3 12h18" /><path d="M12 6v12" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /></svg>);
+    case 'block':
+      return (<svg {...props}><circle cx="12" cy="12" r="9" /><path d="M5.5 5.5l13 13" /></svg>);
+    case 'key':
+      return (<svg {...props}><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9" /><path d="M16 7l3 3" /></svg>);
+    case 'shield':
+      return (<svg {...props}><path d="M12 3l8 3v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" /></svg>);
+    case 'sparkle':
+      return (<svg {...props}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" /><path d="M19 17l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" /></svg>);
+    case 'gem':
+      return (<svg {...props}><path d="M6 4h12l3 6-9 11L3 10z" /><path d="M3 10h18M9 4l3 6 3-6M12 10v11" /></svg>);
+    case 'book':
+      return (<svg {...props}><path d="M4 4h7a3 3 0 013 3v13a2 2 0 00-2-2H4z" /><path d="M20 4h-7a3 3 0 00-3 3v13a2 2 0 012-2h8z" /></svg>);
+    case 'save':
+      return (<svg {...props}><path d="M5 5a2 2 0 012-2h8l4 4v12a2 2 0 01-2 2H7a2 2 0 01-2-2z" /><path d="M8 3v5h7" /><circle cx="12" cy="14" r="2" /></svg>);
+    case 'download':
+      return (<svg {...props}><path d="M12 4v12" /><path d="M7 11l5 5 5-5" /><path d="M5 20h14" /></svg>);
+    case 'bolt':
+      return (<svg {...props}><path d="M13 3L5 14h6l-1 7 8-11h-6z" /></svg>);
+    case 'arrowRight':
+      return (<svg {...props}><path d="M5 12h14" /><path d="M13 6l6 6-6 6" /></svg>);
+    case 'plus':
+      return (<svg {...props}><path d="M12 5v14M5 12h14" /></svg>);
+    case 'lock':
+      return (<svg {...props}><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>);
+    case 'list':
+      return (<svg {...props}><path d="M8 6h13M8 12h13M8 18h13" /><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none" /><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none" /></svg>);
+    case 'refresh':
+      return (<svg {...props}><path d="M4 4v6h6" /><path d="M20 20v-6h-6" /><path d="M5 14a8 8 0 0013.5 3.5L20 16" /><path d="M19 10A8 8 0 005.5 6.5L4 8" /></svg>);
+    default:
+      return null;
+  }
 }
