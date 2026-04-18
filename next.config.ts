@@ -11,11 +11,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
   outputFileTracingRoot: __dirname,
-  serverExternalPackages: ["pdfkit", "kordoc"],
-  /** Vercel 등 standalone 빌드에서 fs로 읽는 한글 폰트가 번들에 포함되도록 */
+  serverExternalPackages: ["pdfkit", "kordoc", "xlsx", "docx"],
+  /** Vercel 등 standalone 빌드에서 fs로 읽는 한글 폰트 + pdfkit 내장 데이터가 번들에 포함되도록 */
   outputFileTracingIncludes: {
-    "/api/my/member-variant/export": ["./lib/fonts/**/*"],
-    "app/api/my/member-variant/export/route": ["./lib/fonts/**/*"],
+    "/api/my/member-variant/export": [
+      "./lib/fonts/**/*",
+      "./node_modules/pdfkit/js/data/**/*",
+    ],
   },
 };
 

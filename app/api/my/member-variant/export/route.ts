@@ -125,7 +125,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (e) {
-    console.error('member-variant export:', e);
-    return NextResponse.json({ error: '파일을 만들지 못했습니다.' }, { status: 500 });
+    const msg = e instanceof Error ? e.message : String(e);
+    const stack = e instanceof Error ? (e.stack ?? '') : '';
+    console.error('member-variant export:', msg, stack);
+    return NextResponse.json(
+      { error: '파일을 만들지 못했습니다.', detail: msg },
+      { status: 500 },
+    );
   }
 }
