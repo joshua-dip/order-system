@@ -29,6 +29,5 @@ export function getMetadataBase(): URL {
   return new URL('http://localhost:3000');
 }
 
-/** 쏠북(Solvook) 등 외부 브랜드/스토어 페이지 — 미설정 시 기본 쏠북 매장 */
-export const SOLVOOK_BRAND_PAGE_URL =
-  process.env.NEXT_PUBLIC_SOLVOOK_BRAND_URL?.trim() || 'https://solvook.com/@gomijoshua';
+/** 쏠북(Solvook) 고미조슈아 브랜드 페이지 */
+export const SOLVOOK_BRAND_PAGE_URL = 'https://solvook.com/@gomijoshua';
