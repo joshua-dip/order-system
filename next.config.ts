@@ -11,11 +11,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
   outputFileTracingRoot: __dirname,
-  // kordoc는 제거: serverExternal로 두면 Amplify 파일 트레이싱이 cfb 등 하위 deps를
-  // 누락시켜 런타임 500. webpack 번들링하면 cfb·jszip 등이 자동 포함됨.
-  // kordoc는 순수 JS(바이너리 없음)라 번들링 안전.
+  // kordoc는 webpack 번들 대상 (cfb/canvas 동적 require 문제 회피 위해 serverExternal 제외).
+  // hwpx 생성은 kordoc 대신 jszip 직접 구현으로 교체.
   serverExternalPackages: ["pdfkit", "xlsx", "docx"],
-  /** Vercel 등 standalone 빌드에서 fs로 읽는 한글 폰트 + pdfkit 내장 데이터가 번들에 포함되도록 */
+  /** Amplify SSR Lambda 번들에 fs로 읽는 파일들 명시 포함 */
   outputFileTracingIncludes: {
     "/api/my/member-variant/export": [
       "./lib/fonts/**/*",
