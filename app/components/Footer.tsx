@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
+import { getPublicSiteUrl, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 
 const Footer = () => {
   const pathname = usePathname();
@@ -15,6 +15,7 @@ const Footer = () => {
   const address = process.env.NEXT_PUBLIC_FOOTER_ADDRESS ?? '';
   const phone = process.env.NEXT_PUBLIC_FOOTER_PHONE ?? '';
   const hasBusinessInfo = companyName || repName || bizNumber || address || phone;
+  const siteUrl = getPublicSiteUrl();
 
   return (
     <footer className="py-4 mt-auto bg-slate-50 text-slate-600 border-t border-slate-200">
@@ -36,17 +37,37 @@ const Footer = () => {
               </>
             ) : null}
             <div className={`${hasBusinessInfo ? 'mt-2 pt-2 border-t border-slate-200' : ''} space-y-1.5`}>
-              <p>
-                <a
-                  href={SOLVOOK_BRAND_PAGE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-600 underline underline-offset-2 hover:text-slate-900"
-                >
-                  쏠북(Solvook) 고미조슈아 브랜드
-                </a>
-              </p>
-              <p className="text-slate-400">© 2025 Payperic. All rights reserved.</p>
+              {siteUrl ? (
+                <p>
+                  <a
+                    href={siteUrl}
+                    className="text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                  >
+                    고미조슈아 홈
+                  </a>
+                  <span className="text-slate-300 mx-2">·</span>
+                  <a
+                    href={SOLVOOK_BRAND_PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                  >
+                    쏠북(Solvook) 브랜드
+                  </a>
+                </p>
+              ) : (
+                <p>
+                  <a
+                    href={SOLVOOK_BRAND_PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                  >
+                    쏠북(Solvook) 고미조슈아 브랜드
+                  </a>
+                </p>
+              )}
+              <p className="text-slate-400">© {new Date().getFullYear()} Payperic. All rights reserved.</p>
             </div>
           </div>
         </div>
