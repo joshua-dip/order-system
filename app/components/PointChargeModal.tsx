@@ -56,6 +56,7 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
       const payment = tossPayments.payment({ customerKey });
 
       const origin = window.location.origin;
+      // 토스 v2 통합결제창(카드·간편결제) — https://docs.tosspayments.com/guides/v2/payment-window/integration
       await payment.requestPayment({
         method: 'CARD',
         amount: { currency: 'KRW', value: amount },
@@ -65,6 +66,12 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
         failUrl: `${origin}/my/point-charge/fail`,
         customerEmail: customerEmail.trim() || 'member@solvook.local',
         customerName: (customerName.trim() || '회원').slice(0, 50),
+        card: {
+          useEscrow: false,
+          flowMode: 'DEFAULT',
+          useCardPoint: false,
+          useAppCardOnly: false,
+        },
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -102,7 +109,7 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
         </div>
         <div className="px-5 py-4 space-y-3">
           <p className="text-[13px] text-[#64748b] leading-relaxed">
-            1P = 1원 기준으로 충전합니다. 고액 패키지는 결제 금액에 할인이 적용됩니다. 결제는 토스페이먼츠 카드창으로 진행됩니다.
+            1P = 1원 기준으로 충전합니다. 고액 패키지는 결제 금액에 할인이 적용됩니다. 결제는 토스페이먼츠 통합결제창(카드·간편결제)으로 진행됩니다.
           </p>
           {isTestKey && (
             <p className="text-[12px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
