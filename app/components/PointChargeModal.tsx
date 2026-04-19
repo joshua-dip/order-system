@@ -8,7 +8,7 @@ import {
   type PointChargePackage,
   type PointChargeTierId,
 } from '@/lib/point-charge-packages';
-import { getTossPaymentsClientKeyPublic } from '@/lib/toss-payments-env';
+import { getTossPaymentsClientKeyPublic, tossWidgetKeyRejectionMessage } from '@/lib/toss-payments-env';
 
 type Props = {
   open: boolean;
@@ -28,11 +28,16 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
 
   const clientKey = getTossPaymentsClientKeyPublic();
   const isTestKey = clientKey.startsWith('test_ck_');
+  const widgetKeyError = tossWidgetKeyRejectionMessage(clientKey);
 
   const startPay = async () => {
     setError(null);
     if (!clientKey) {
       setError('결제 연동 키가 설정되지 않았습니다. 관리자에게 문의해 주세요.');
+      return;
+    }
+    if (widgetKeyError) {
+      setError(widgetKeyError);
       return;
     }
     const pkg = POINT_CHARGE_PACKAGES.find((p) => p.id === selected);
@@ -111,7 +116,12 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
           <p className="text-[13px] text-[#64748b] leading-relaxed">
             1P = 1원 기준으로 충전합니다. 고액 패키지는 결제 금액에 할인이 적용됩니다. 결제는 토스페이먼츠 통합결제창(카드·간편결제)으로 진행됩니다.
           </p>
-          {isTestKey && (
+          {widgetKeyError && (
+            <p className="text-[12px] text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
+              {widgetKeyError}
+            </p>
+          )}
+          {isTestKey && !widgetKeyError && (
             <p className="text-[12px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
               테스트 클라이언트 키로 연결됨 — 실제 과금 없이 결제 흐름만 확인할 수 있습니다.
             </p>
@@ -162,7 +172,7 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
           <button
             type="button"
             onClick={() => void startPay()}
-            disabled={busy}
+            disabled={busy || !!widgetKeyError}
             className="px-4 py-2.5 rounded-xl bg-[#0064ff] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50"
           >
             {busy ? '처리 중…' : '결제하기'}
