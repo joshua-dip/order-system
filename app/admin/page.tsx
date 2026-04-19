@@ -405,6 +405,13 @@ export default function AdminDashboardPage() {
   const [assignSavingId, setAssignSavingId] = useState<string | null>(null);
   const [deleteSavingId, setDeleteSavingId] = useState<string | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  /** 이메일 발송 모달 */
+  const [emailModal, setEmailModal] = useState<AdminOrder | null>(null);
+  const [emailTo, setEmailTo] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResult, setEmailResult] = useState<{ ok: boolean; msg: string } | null>(null);
   /** 최근 주문 표: 현재 표시 목록에서 다중 선택 후 일괄 삭제 */
   const [orderBulkSelectedIds, setOrderBulkSelectedIds] = useState<Set<string>>(() => new Set());
   /** 쏠북 BV 금액: 박스 클릭으로 합계·비고 펼침/접기 */
@@ -1654,6 +1661,40 @@ export default function AdminDashboardPage() {
     setFileUrlInput(o.fileUrl ?? '');
     setStatusInput(o.status || 'pending');
     setAssignLoginId(users[0]?.loginId ?? '');
+  };
+
+  const openEmailModal = (o: AdminOrder) => {
+    const linkedUser = o.loginId ? users.find((u) => u.loginId === o.loginId) : null;
+    const orderNum = o.orderNumber ?? `주문 ${o.id.slice(-6)}`;
+    setEmailModal(o);
+    setEmailTo(linkedUser?.email ?? '');
+    setEmailSubject(`[주문서] ${orderNum} 주문 내역 안내`);
+    setEmailMessage('');
+    setEmailResult(null);
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailModal) return;
+    setEmailSending(true);
+    setEmailResult(null);
+    try {
+      const res = await fetch(`/api/admin/orders/${emailModal.id}/send-email`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: emailTo, subject: emailSubject, message: emailMessage }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailResult({ ok: false, msg: data.error || '발송 실패' });
+      } else {
+        setEmailResult({ ok: true, msg: '이메일이 발송되었습니다.' });
+      }
+    } catch {
+      setEmailResult({ ok: false, msg: '네트워크 오류가 발생했습니다.' });
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   const handleSaveFileUrl = async () => {
@@ -4575,6 +4616,17 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
               <a href={`/order/done?id=${orderDetailModal.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[7rem] text-center px-4 py-2 border border-slate-600 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700">주문서 보기</a>
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderDetailModal(null);
+                  setOrderDetailTab('status');
+                  openEmailModal(orderDetailModal);
+                }}
+                className="px-4 py-2 bg-indigo-700 text-white rounded-lg text-sm font-medium hover:bg-indigo-600"
+              >
+                ✉ 이메일
+              </button>
               <button type="button" onClick={handleDeleteOrder} disabled={deleteSavingId === orderDetailModal.id} className="px-4 py-2 bg-red-600/80 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50">{deleteSavingId === orderDetailModal.id ? '삭제 중…' : '삭제'}</button>
               <button
                 type="button"
@@ -4585,6 +4637,97 @@ export default function AdminDashboardPage() {
                 className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500"
               >
                 닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email send modal */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-700">
+            <h3 className="font-bold text-white mb-1">이메일 발송</h3>
+            <p className="text-slate-400 text-sm mb-4 font-mono break-all">
+              {emailModal.orderNumber ?? emailModal.id}
+              {emailModal.loginId && ` · ${emailModal.loginId}`}
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">받는 사람 (이메일)</label>
+                <input
+                  type="email"
+                  value={emailTo}
+                  onChange={(e) => setEmailTo(e.target.value)}
+                  placeholder="customer@example.com"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">제목</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">추가 메시지 (선택)</label>
+                <textarea
+                  value={emailMessage}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  rows={3}
+                  placeholder="안녕하세요, 작업이 완료되었습니다. …"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 resize-none"
+                />
+              </div>
+              <p className="text-slate-500 text-xs">
+                주문번호 · 일시 · 상태 · 주문 내용{emailModal.fileUrl ? ' · 파일 링크' : ''}가 자동으로 포함됩니다.
+              </p>
+            </div>
+
+            {emailResult && (
+              <div className={`mt-3 px-3 py-2 rounded-lg text-sm ${emailResult.ok ? 'bg-emerald-900/50 text-emerald-300' : 'bg-red-900/50 text-red-300'}`}>
+                {emailResult.msg}
+                {!emailResult.ok && emailResult.msg.includes('RESEND_API_KEY') && (
+                  <p className="mt-1 text-xs text-red-400">
+                    .env.local에 <code className="bg-slate-700 px-1 rounded">RESEND_API_KEY=re_xxx</code>와{' '}
+                    <code className="bg-slate-700 px-1 rounded">RESEND_FROM_EMAIL=noreply@yourdomain.com</code>을 추가하세요.
+                    (<a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="underline">resend.com</a>에서 무료 API 키 발급)
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* mailto 대안 */}
+            {emailTo && (
+              <div className="mt-3">
+                <a
+                  href={`mailto:${encodeURIComponent(emailTo)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(`${emailMessage ? emailMessage + '\n\n' : ''}주문번호: ${emailModal.orderNumber ?? emailModal.id}\n상태: ${emailModal.statusLabel}\n\n주문서 보기: ${typeof window !== 'undefined' ? window.location.origin : ''}/order/done?id=${emailModal.id}`)}`}
+                  className="text-indigo-400 hover:text-indigo-300 text-xs underline"
+                >
+                  메일 앱으로 직접 열기 →
+                </a>
+              </div>
+            )}
+
+            <div className="mt-5 flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setEmailModal(null)}
+                className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 text-sm hover:bg-slate-700"
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={emailSending || !emailTo.trim()}
+                className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 disabled:opacity-50"
+              >
+                {emailSending ? '발송 중…' : '✉ 발송'}
               </button>
             </div>
           </div>
