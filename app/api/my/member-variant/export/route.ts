@@ -3,13 +3,6 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { MEMBER_GENERATED_QUESTIONS_COLLECTION } from '@/lib/member-variant-storage';
 import { requirePremiumMemberVariant } from '@/lib/member-variant-premium-auth';
-import {
-  buildMemberVariantDocxBuffer,
-  buildMemberVariantPdfBuffer,
-  buildMemberVariantXlsxBuffer,
-  type ExportMode,
-} from '@/lib/member-variant-export-build';
-import { buildMemberVariantHwpxBuffer } from '@/lib/member-variant-hwpx-build';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,9 +10,21 @@ export const maxDuration = 60;
 
 const MAX_IDS = 100;
 
+type ExportFormat = 'xlsx' | 'pdf' | 'docx' | 'hwpx';
+type ExportMode = 'student' | 'teacher';
+
+function parseMode(v: unknown): ExportMode {
+  return v === 'student' ? 'student' : 'teacher';
+}
+
+function parseFormat(v: unknown): ExportFormat | null {
+  if (v === 'xlsx' || v === 'pdf' || v === 'docx' || v === 'hwpx') return v;
+  return null;
+}
+
 /**
- * Buffer/Uint8Array 어느 것이 와도 Amplify SSR이 바이너리로 안전하게 직렬화하도록
- * Content-Length 까지 명시한 응답을 만든다.
+ * Buffer → ArrayBuffer 변환 후 Content-Length 명시한 응답.
+ * Amplify SSR Lambda의 바이너리 직렬화 안정화를 위해 Content-Length 필수.
  */
 function binaryResponse(
   buf: Buffer,
@@ -27,7 +32,6 @@ function binaryResponse(
   filenameAscii: string,
   filenameUtf8: string,
 ): NextResponse {
-  // Buffer → 자체 영역만 잘라낸 순수 ArrayBuffer로 변환 (BodyInit 타입 호환)
   const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   return new NextResponse(ab as ArrayBuffer, {
     headers: {
@@ -37,17 +41,6 @@ function binaryResponse(
       'Cache-Control': 'no-store',
     },
   });
-}
-
-type ExportFormat = 'xlsx' | 'pdf' | 'docx' | 'hwpx';
-
-function parseMode(v: unknown): ExportMode {
-  return v === 'student' ? 'student' : 'teacher';
-}
-
-function parseFormat(v: unknown): ExportFormat | null {
-  if (v === 'xlsx' || v === 'pdf' || v === 'docx' || v === 'hwpx') return v;
-  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -107,7 +100,10 @@ export async function POST(request: NextRequest) {
     const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const modeSuffix = mode === 'student' ? '_학생용' : '_교사용';
 
+    // 포맷별 dynamic import: 특정 라이브러리(pdfkit·kordoc)가 Lambda에서
+    // 못 찾히더라도 해당 포맷만 실패하고 나머지는 정상 동작하도록 격리.
     if (format === 'xlsx') {
+      const { buildMemberVariantXlsxBuffer } = await import('@/lib/member-variant-export-build');
       const buf = await buildMemberVariantXlsxBuffer(found);
       return binaryResponse(
         buf,
@@ -118,6 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (format === 'pdf') {
+      const { buildMemberVariantPdfBuffer } = await import('@/lib/member-variant-export-build');
       const buf = await buildMemberVariantPdfBuffer(found, mode);
       return binaryResponse(
         buf,
@@ -128,6 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (format === 'hwpx') {
+      const { buildMemberVariantHwpxBuffer } = await import('@/lib/member-variant-hwpx-build');
       const buf = await buildMemberVariantHwpxBuffer(found, mode);
       return binaryResponse(
         buf,
@@ -137,6 +135,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // docx
+    const { buildMemberVariantDocxBuffer } = await import('@/lib/member-variant-export-build');
     const buf = await buildMemberVariantDocxBuffer(found, mode);
     return binaryResponse(
       buf,

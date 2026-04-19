@@ -1,15 +1,8 @@
-import * as XLSX from 'xlsx';
-import PDFDocument from 'pdfkit';
-import {
-  Document,
-  Packer,
-  Paragraph as DocxParagraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from 'docx';
 import path from 'path';
 import fs from 'fs';
+
+// pdfkit·xlsx·docx는 각 빌드 함수 내부에서 dynamic import.
+// 파일 자체를 import해도 무거운 라이브러리가 즉시 로드되지 않도록 격리.
 
 const CIRCLED: Record<string, string> = {
   '①': '(1)',
@@ -129,7 +122,6 @@ export function flattenEssayQuestionData(
   add('조건', 'Conditions');
   add('요약문 틀', 'SummaryFrame');
 
-  // 배열형: 단어 뱅크 표시
   if (Array.isArray(qd.WordBank)) {
     const words = (qd.WordBank as unknown[]).filter((w): w is string => typeof w === 'string');
     if (words.length > 0) {
@@ -169,21 +161,9 @@ export function flattenMemberQuestionData(qd: Record<string, unknown>): {
 }
 
 export async function buildMemberVariantXlsxBuffer(docs: MemberVariantExportDoc[]): Promise<Buffer> {
+  const XLSX = await import('xlsx');
   const rows: (string | number)[][] = [
-    [
-      '번호',
-      '유형',
-      '난이도',
-      '교재',
-      '출처',
-      '상태',
-      '저장일시',
-      '발문',
-      '지문',
-      '선택지',
-      '정답',
-      '해설',
-    ],
+    ['번호', '유형', '난이도', '교재', '출처', '상태', '저장일시', '발문', '지문', '선택지', '정답', '해설'],
   ];
   for (let i = 0; i < docs.length; i++) {
     const d = docs[i];
@@ -218,13 +198,16 @@ export async function buildMemberVariantDocxBuffer(
   docs: MemberVariantExportDoc[],
   mode: ExportMode = 'teacher',
 ): Promise<Buffer> {
+  const { Document, Packer, Paragraph: DocxParagraph, TextRun, HeadingLevel, AlignmentType } =
+    await import('docx');
+
   const sections = docs.map((doc, idx) => {
     const qd = doc.question_data ?? {};
     const docType = str(doc.type);
     const isEssay = isEssayQuestionType(docType);
     const header = `${idx + 1}. [${exportPlainText(docType)}] (${exportPlainText(str(doc.difficulty))}) · ${exportPlainText(str(doc.textbook))}`;
 
-    const children: DocxParagraph[] = [
+    const children: InstanceType<typeof DocxParagraph>[] = [
       new DocxParagraph({
         children: [new TextRun({ text: header, bold: true, size: 22 })],
         spacing: { after: 120 },
@@ -337,6 +320,7 @@ export async function buildMemberVariantPdfBuffer(
   docs: MemberVariantExportDoc[],
   mode: ExportMode = 'teacher',
 ): Promise<Buffer> {
+  const { default: PDFDocument } = await import('pdfkit');
   const fontBuf = await getKoreanFontBuffer();
   const pdfDoc = new PDFDocument({ size: 'A4', margins: { top: 50, bottom: 50, left: 50, right: 50 } });
   pdfDoc.registerFont('Korean', fontBuf);
