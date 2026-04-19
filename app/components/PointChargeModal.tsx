@@ -8,6 +8,7 @@ import {
   type PointChargePackage,
   type PointChargeTierId,
 } from '@/lib/point-charge-packages';
+import { getTossPaymentsClientKeyPublic } from '@/lib/toss-payments-env';
 
 type Props = {
   open: boolean;
@@ -25,7 +26,7 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
 
   if (!open) return null;
 
-  const clientKey = (process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY ?? '').trim();
+  const clientKey = getTossPaymentsClientKeyPublic();
   const isTestKey = clientKey.startsWith('test_ck_');
 
   const startPay = async () => {

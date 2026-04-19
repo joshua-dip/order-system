@@ -1,3 +1,5 @@
+import { getTossPaymentsSecretKey } from '@/lib/toss-payments-env';
+
 /**
  * 토스페이먼츠 결제 승인 (서버 전용). 시크릿 키는 클라이언트에 노출하지 마세요.
  * @see https://docs.tosspayments.com/reference#confirm-payment
@@ -7,7 +9,7 @@ export async function tossConfirmPayment(params: {
   orderId: string;
   amount: number;
 }): Promise<{ ok: true; raw: unknown } | { ok: false; message: string; status: number }> {
-  const secret = process.env.TOSS_PAYMENTS_SECRET_KEY?.trim();
+  const secret = getTossPaymentsSecretKey();
   if (!secret) {
     return { ok: false, message: '결제 서버 설정이 없습니다.', status: 503 };
   }
