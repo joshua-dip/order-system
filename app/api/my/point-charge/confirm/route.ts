@@ -6,6 +6,11 @@ import { recordPointLedger } from '@/lib/point-ledger';
 import { tossConfirmPayment } from '@/lib/toss-payments-server';
 import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+/** 토스 승인 API + DB 반영까지 여유 */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) {

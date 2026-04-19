@@ -6,6 +6,9 @@ import { getDb } from '@/lib/mongodb';
 import { amountWonForPackage, getPointChargePackage, type PointChargeTierId } from '@/lib/point-charge-packages';
 import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const VALID_TIERS: PointChargeTierId[] = ['p10k', 'p30k', 'p50k', 'p100k'];
 
 export async function POST(request: NextRequest) {

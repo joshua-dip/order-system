@@ -26,6 +26,7 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
   if (!open) return null;
 
   const clientKey = (process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY ?? '').trim();
+  const isTestKey = clientKey.startsWith('test_ck_');
 
   const startPay = async () => {
     setError(null);
@@ -102,6 +103,11 @@ export default function PointChargeModal({ open, onClose, customerKey, customerN
           <p className="text-[13px] text-[#64748b] leading-relaxed">
             1P = 1원 기준으로 충전합니다. 고액 패키지는 결제 금액에 할인이 적용됩니다. 결제는 토스페이먼츠 카드창으로 진행됩니다.
           </p>
+          {isTestKey && (
+            <p className="text-[12px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              테스트 클라이언트 키로 연결됨 — 실제 과금 없이 결제 흐름만 확인할 수 있습니다.
+            </p>
+          )}
           <div className="grid grid-cols-1 gap-2">
             {POINT_CHARGE_PACKAGES.map((p: PointChargePackage) => {
               const pay = amountWonForPackage(p);

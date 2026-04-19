@@ -11,6 +11,8 @@ frontend:
         - env | grep -e MONGODB_URI >> .env.production || true
         - env | grep -e AUTH_SECRET >> .env.production || true
         - env | grep -e NEXT_PUBLIC_ >> .env.production || true
+        # 토스페이먼츠 시크릿(NEXT_PUBLIC_ 접두사 없음) — 포인트 충전 승인 API에 필요
+        - env | grep -e TOSS_ >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next
