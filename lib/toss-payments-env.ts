@@ -31,12 +31,27 @@ export function isTossWidgetClientKey(clientKey: string): boolean {
   return k.includes('_gck_') || /^test_gck_/i.test(k) || /^live_gck_/i.test(k);
 }
 
-/** 위젯 키일 때 안내 문구, 아니면 null */
+/** 위젯 클라이언트 키일 때 안내 문구, 아니면 null */
 export function tossWidgetKeyRejectionMessage(clientKey: string): string | null {
   if (!isTossWidgetClientKey(clientKey)) return null;
   return (
     '지금 넣은 키는 결제위젯용입니다. 개발자센터 → API 키 → API 개별 연동에서 발급한 ' +
     '클라이언트 키(test_ck_ / live_ck_)와 짝이 맞는 시크릿 키(test_sk_ / live_sk_)로 바꿔 주세요. ' +
     '결제창(SDK) 연동은 결제위젯 키(live_gck_ 등)를 지원하지 않습니다.'
+  );
+}
+
+/** 결제위젯 시크릿(live_gsk_ 등) — 승인 API는 API 개별 시크릿(live_sk_)만 사용 */
+export function isTossWidgetSecretKey(secretKey: string): boolean {
+  const k = secretKey.trim();
+  if (!k) return false;
+  return k.includes('_gsk_') || /^test_gsk_/i.test(k) || /^live_gsk_/i.test(k);
+}
+
+export function tossWidgetSecretRejectionMessage(secretKey: string): string | null {
+  if (!isTossWidgetSecretKey(secretKey)) return null;
+  return (
+    '시크릿 키가 결제위젯용(live_gsk_ 등)입니다. API 개별 연동의 시크릿 키(live_sk_ / test_sk_)를 넣어 주세요. ' +
+    '클라이언트 키(live_ck_)와 반드시 같은 블록에서 복사하세요.'
   );
 }
