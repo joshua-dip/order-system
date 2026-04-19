@@ -126,6 +126,15 @@ export async function POST(
   const subjectOverride = typeof body.subject === 'string' ? body.subject.trim() : '';
   const extraMessage = typeof body.message === 'string' ? body.message.trim() : '';
 
+  // 첨부파일: [{ filename, content(base64), contentType }]
+  type AttachmentInput = { filename?: string; content?: string; contentType?: string };
+  const rawAttachments = Array.isArray(body.attachments)
+    ? (body.attachments as unknown[]).filter(
+        (a): a is AttachmentInput =>
+          typeof a === 'object' && a !== null && typeof (a as AttachmentInput).content === 'string',
+      )
+    : [];
+
   if (!to) {
     return NextResponse.json({ error: '받는 사람 이메일이 필요합니다.' }, { status: 400 });
   }
@@ -184,7 +193,19 @@ export async function POST(
   const { Resend } = await import('resend');
   const resend = new Resend(apiKey);
 
-  const result = await resend.emails.send({ from, to, subject, html });
+  const attachments = rawAttachments.map((a) => ({
+    filename: a.filename || '첨부파일',
+    content: Buffer.from(a.content!, 'base64'),
+    content_type: a.contentType || 'application/octet-stream',
+  }));
+
+  const result = await resend.emails.send({
+    from,
+    to,
+    subject,
+    html,
+    attachments: attachments.length > 0 ? attachments : undefined,
+  });
 
   if (result.error) {
     console.error('send-email resend error:', result.error);

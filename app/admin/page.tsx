@@ -412,6 +412,8 @@ export default function AdminDashboardPage() {
   const [emailMessage, setEmailMessage] = useState('');
   const [emailSending, setEmailSending] = useState(false);
   const [emailResult, setEmailResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  type EmailAttachment = { filename: string; content: string; contentType: string; size: number };
+  const [emailAttachments, setEmailAttachments] = useState<EmailAttachment[]>([]);
   /** 최근 주문 표: 현재 표시 목록에서 다중 선택 후 일괄 삭제 */
   const [orderBulkSelectedIds, setOrderBulkSelectedIds] = useState<Set<string>>(() => new Set());
   /** 쏠북 BV 금액: 박스 클릭으로 합계·비고 펼침/접기 */
@@ -1671,6 +1673,7 @@ export default function AdminDashboardPage() {
     setEmailSubject(`[주문서] ${orderNum} 주문 내역 안내`);
     setEmailMessage('');
     setEmailResult(null);
+    setEmailAttachments([]);
   };
 
   const handleSendEmail = async () => {
@@ -1682,7 +1685,7 @@ export default function AdminDashboardPage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: emailTo, subject: emailSubject, message: emailMessage }),
+        body: JSON.stringify({ to: emailTo, subject: emailSubject, message: emailMessage, attachments: emailAttachments }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -4683,6 +4686,51 @@ export default function AdminDashboardPage() {
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 resize-none"
                 />
               </div>
+              {/* 파일 첨부 */}
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">파일 첨부 (선택, 각 5 MB 이하)</label>
+                <input
+                  type="file"
+                  multiple
+                  className="block w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-600 file:text-slate-200 hover:file:bg-slate-500 cursor-pointer"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    const MAX = 5 * 1024 * 1024;
+                    const oversized = files.filter((f) => f.size > MAX);
+                    if (oversized.length > 0) {
+                      alert(`5 MB 초과 파일은 첨부할 수 없습니다: ${oversized.map((f) => f.name).join(', ')}`);
+                      e.target.value = '';
+                      return;
+                    }
+                    Promise.all(
+                      files.map(
+                        (file) =>
+                          new Promise<EmailAttachment>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              const dataUrl = reader.result as string;
+                              const base64 = dataUrl.split(',')[1];
+                              resolve({ filename: file.name, content: base64, contentType: file.type || 'application/octet-stream', size: file.size });
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                          }),
+                      ),
+                    ).then((attachments) => setEmailAttachments(attachments));
+                  }}
+                />
+                {emailAttachments.length > 0 && (
+                  <ul className="mt-1.5 space-y-1">
+                    {emailAttachments.map((a, i) => (
+                      <li key={i} className="flex items-center justify-between text-xs text-slate-400 bg-slate-700 rounded px-2 py-1">
+                        <span className="truncate">{a.filename} <span className="text-slate-500">({(a.size / 1024).toFixed(0)} KB)</span></span>
+                        <button type="button" onClick={() => setEmailAttachments((prev) => prev.filter((_, j) => j !== i))} className="ml-2 text-slate-500 hover:text-red-400 flex-shrink-0">✕</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               <p className="text-slate-500 text-xs">
                 주문번호 · 일시 · 상태 · 주문 내용{emailModal.fileUrl ? ' · 파일 링크' : ''}가 자동으로 포함됩니다.
               </p>
