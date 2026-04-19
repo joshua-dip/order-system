@@ -494,8 +494,12 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
         body: JSON.stringify({ format, ids, mode: exportMode }),
       });
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        window.alert(typeof j?.error === 'string' ? j.error : '보내기에 실패했습니다.');
+        const j = await res.json().catch(() => ({} as Record<string, unknown>));
+        const err = typeof j?.error === 'string' ? j.error : '보내기에 실패했습니다.';
+        const detail = typeof (j as Record<string, unknown>)?.detail === 'string'
+          ? `\n\n[원인] ${(j as Record<string, string>).detail}`
+          : `\n\n[HTTP ${res.status}]`;
+        window.alert(`${err}${detail}`);
         return;
       }
       const blob = await res.blob();

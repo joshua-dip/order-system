@@ -11,9 +11,33 @@ import {
 } from '@/lib/member-variant-export-build';
 import { buildMemberVariantHwpxBuffer } from '@/lib/member-variant-hwpx-build';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const MAX_IDS = 100;
+
+/**
+ * Buffer/Uint8Array 어느 것이 와도 Amplify SSR이 바이너리로 안전하게 직렬화하도록
+ * Content-Length 까지 명시한 응답을 만든다.
+ */
+function binaryResponse(
+  buf: Buffer,
+  contentType: string,
+  filenameAscii: string,
+  filenameUtf8: string,
+): NextResponse {
+  // Buffer → 자체 영역만 잘라낸 순수 ArrayBuffer로 변환 (BodyInit 타입 호환)
+  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  return new NextResponse(ab as ArrayBuffer, {
+    headers: {
+      'Content-Type': contentType,
+      'Content-Length': String(buf.byteLength),
+      'Content-Disposition': `attachment; filename="${filenameAscii}"; filename*=UTF-8''${encodeURIComponent(filenameUtf8)}`,
+      'Cache-Control': 'no-store',
+    },
+  });
+}
 
 type ExportFormat = 'xlsx' | 'pdf' | 'docx' | 'hwpx';
 
@@ -85,45 +109,41 @@ export async function POST(request: NextRequest) {
 
     if (format === 'xlsx') {
       const buf = await buildMemberVariantXlsxBuffer(found);
-      const nameKo = `회원변형문항${modeSuffix}_${stamp}.xlsx`;
-      return new NextResponse(new Uint8Array(buf), {
-        headers: {
-          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Disposition': `attachment; filename="member-variant-${stamp}.xlsx"; filename*=UTF-8''${encodeURIComponent(nameKo)}`,
-        },
-      });
+      return binaryResponse(
+        buf,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        `member-variant-${stamp}.xlsx`,
+        `회원변형문항${modeSuffix}_${stamp}.xlsx`,
+      );
     }
 
     if (format === 'pdf') {
       const buf = await buildMemberVariantPdfBuffer(found, mode);
-      const nameKo = `회원변형문항${modeSuffix}_${stamp}.pdf`;
-      return new NextResponse(new Uint8Array(buf), {
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="member-variant-${stamp}.pdf"; filename*=UTF-8''${encodeURIComponent(nameKo)}`,
-        },
-      });
+      return binaryResponse(
+        buf,
+        'application/pdf',
+        `member-variant-${stamp}.pdf`,
+        `회원변형문항${modeSuffix}_${stamp}.pdf`,
+      );
     }
 
     if (format === 'hwpx') {
       const buf = await buildMemberVariantHwpxBuffer(found, mode);
-      const nameKo = `회원변형문항${modeSuffix}_${stamp}.hwpx`;
-      return new NextResponse(new Uint8Array(buf), {
-        headers: {
-          'Content-Type': 'application/x-hwpx',
-          'Content-Disposition': `attachment; filename="member-variant-${stamp}.hwpx"; filename*=UTF-8''${encodeURIComponent(nameKo)}`,
-        },
-      });
+      return binaryResponse(
+        buf,
+        'application/x-hwpx',
+        `member-variant-${stamp}.hwpx`,
+        `회원변형문항${modeSuffix}_${stamp}.hwpx`,
+      );
     }
 
     const buf = await buildMemberVariantDocxBuffer(found, mode);
-    const nameKo = `회원변형문항${modeSuffix}_${stamp}.docx`;
-    return new NextResponse(new Uint8Array(buf), {
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'Content-Disposition': `attachment; filename="member-variant-${stamp}.docx"; filename*=UTF-8''${encodeURIComponent(nameKo)}`,
-      },
-    });
+    return binaryResponse(
+      buf,
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      `member-variant-${stamp}.docx`,
+      `회원변형문항${modeSuffix}_${stamp}.docx`,
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const stack = e instanceof Error ? (e.stack ?? '') : '';
