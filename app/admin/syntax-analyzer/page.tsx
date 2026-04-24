@@ -177,6 +177,15 @@ export default function AdminSyntaxAnalyzerPage() {
     fetchLinkAssignments();
   }, [user, fetchTextbooks, fetchLinkFolders, fetchLinkAssignments]);
 
+  useEffect(() => {
+    if (!filterTextbook) return;
+    if (!textbooks.includes(filterTextbook)) {
+      setFilterTextbook('');
+      setSelectedPassage(null);
+      setSentences([]);
+    }
+  }, [textbooks, filterTextbook]);
+
   const textbooksForPicker = useMemo(() => {
     const sorted = [...textbooks].sort((a, b) => a.localeCompare(b, 'ko'));
     if (!linkFolderScope) return sorted;
@@ -373,6 +382,9 @@ export default function AdminSyntaxAnalyzerPage() {
               </div>
               <div>
                 <label className="block text-xs text-slate-400 mb-1">교재 (선택)</label>
+                <p className="text-[10px] text-slate-500 mb-1.5 leading-relaxed">
+                  단어장 탭에서 추출·저장된 지문이 하나라도 있는 교재만 목록에 나옵니다.
+                </p>
                 <select
                   value={filterTextbook}
                   onChange={(e) => {

@@ -1,4 +1,4 @@
-import { ObjectId, type Collection, type Document } from 'mongodb';
+import { ObjectId, type Collection, type Document, type Db } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import {
   BOOK_VARIANT_QUESTION_TYPES,
@@ -11,6 +11,7 @@ import {
   type UnderfilledStatusBreakdown,
 } from '@/lib/question-count-report';
 import { passagesForMockVariantOrder } from '@/lib/mock-variant-order';
+import { GENERATED_WORKBOOKS_COLLECTION } from '@/lib/generated-workbooks-types';
 
 /** 목록 API/화면에 기본으로 내려주는 최대 행 수 */
 export const QUESTION_COUNT_DEFAULT_LIST_ROWS = 12_000;
@@ -105,7 +106,8 @@ export type QuestionCountValidationError = {
 async function aggregateCountsByPassageAndType(
   gqCol: Collection<Document>,
   ids: ObjectId[],
-  questionStatus: QuestionStatusScope
+  questionStatus: QuestionStatusScope,
+  db?: Db,
 ) {
   if (ids.length === 0) {
     return new Map<string, Map<string, number>>();
@@ -160,12 +162,55 @@ async function aggregateCountsByPassageAndType(
     if (!countMap.has(pid)) countMap.set(pid, new Map());
     countMap.get(pid)!.set(typ, Number(row.c) || 0);
   }
+
+  // dual-read: generated_workbooks 에서 워크북어법 카운트 병합
+  if (db) {
+    try {
+      const wbStatusMatch: Document =
+        questionStatus === 'all'
+          ? {}
+          : questionStatus === '완료'
+            ? { status: 'reviewed' }
+            : questionStatus === '대기'
+              ? { status: 'draft' }
+              : {};
+      const wbAgg = await db
+        .collection(GENERATED_WORKBOOKS_COLLECTION)
+        .aggregate([
+          {
+            $match: {
+              passage_id: { $in: ids },
+              deleted_at: null,
+              ...wbStatusMatch,
+            },
+          },
+          {
+            $group: {
+              _id: { $toString: '$passage_id' },
+              c: { $sum: 1 },
+            },
+          },
+        ])
+        .toArray();
+      for (const row of wbAgg) {
+        const pid = String(row._id ?? '');
+        const c = Number(row.c) || 0;
+        if (!countMap.has(pid)) countMap.set(pid, new Map());
+        const m = countMap.get(pid)!;
+        m.set('워크북어법', (m.get('워크북어법') ?? 0) + c);
+      }
+    } catch {
+      // generated_workbooks 가 아직 없는 환경에서는 무시
+    }
+  }
+
   return countMap;
 }
 
 async function aggregatePassageAnyDocCount(
   gqCol: Collection<Document>,
-  ids: ObjectId[]
+  ids: ObjectId[],
+  db?: Db,
 ): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (ids.length === 0) return out;
@@ -188,6 +233,26 @@ async function aggregatePassageAnyDocCount(
   for (const row of agg) {
     out.set(String(row._id ?? ''), Number(row.c) || 0);
   }
+
+  // dual-read: generated_workbooks 카운트 병합
+  if (db) {
+    try {
+      const wbAgg = await db
+        .collection(GENERATED_WORKBOOKS_COLLECTION)
+        .aggregate([
+          { $match: { passage_id: { $in: ids }, deleted_at: null } },
+          { $group: { _id: { $toString: '$passage_id' }, c: { $sum: 1 } } },
+        ])
+        .toArray();
+      for (const row of wbAgg) {
+        const pid = String(row._id ?? '');
+        out.set(pid, (out.get(pid) ?? 0) + (Number(row.c) || 0));
+      }
+    } catch {
+      // generated_workbooks 미존재 환경에서 무시
+    }
+  }
+
   return out;
 }
 
@@ -496,6 +561,130 @@ export async function runQuestionCountValidation(
         };
       }
       textbook = textbookParam;
+
+      // 기출기반 교재 여부 확인
+      const examLink = await db
+        .collection('textbook_links')
+        .findOne({ textbookKey: textbook, isExamBased: true }, { projection: { _id: 1 } });
+      const isExamBased = Boolean(examLink);
+
+      if (isExamBased) {
+        // 기출기반 교재: original_passage_id로 generated_questions 조회
+        const rawDocs = await passagesCol
+          .find({ textbook })
+          .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1, original_passage_id: 1 })
+          .toArray();
+
+        // queryIds: original_passage_id 우선, 없으면 self
+        const examToOrigMap = new Map<string, string>(); // examId hex → origId hex
+        const queryIdMap = new Map<string, ObjectId>(); // hex → ObjectId (dedup)
+        for (const p of rawDocs) {
+          const examHex = (p._id as ObjectId).toHexString();
+          if (p.original_passage_id) {
+            let origId: ObjectId;
+            try {
+              origId = p.original_passage_id instanceof ObjectId
+                ? p.original_passage_id
+                : new ObjectId(String(p.original_passage_id));
+            } catch { origId = p._id as ObjectId; }
+            const origHex = origId.toHexString();
+            examToOrigMap.set(examHex, origHex);
+            queryIdMap.set(origHex, origId);
+          } else {
+            queryIdMap.set(examHex, p._id as ObjectId);
+          }
+        }
+        const queryIds = [...queryIdMap.values()];
+
+        const [rawCountMap, rawAnyCount] = await Promise.all([
+          aggregateCountsByPassageAndType(gqCol, queryIds, questionStatusScope, db),
+          aggregatePassageAnyDocCount(gqCol, queryIds, db),
+        ]);
+
+        // countMap/anyCount 키를 exam passage ID로 리맵
+        const countMap = new Map<string, Map<string, number>>();
+        const passageAnyDocCount = new Map<string, number>();
+        for (const p of rawDocs) {
+          const examHex = (p._id as ObjectId).toHexString();
+          const lookupHex = examToOrigMap.get(examHex) ?? examHex;
+          const typeCounts = rawCountMap.get(lookupHex);
+          if (typeCounts) countMap.set(examHex, typeCounts);
+          const anyCount = rawAnyCount.get(lookupHex) ?? 0;
+          if (anyCount > 0) passageAnyDocCount.set(examHex, anyCount);
+        }
+
+        passageDocs = rawDocs as PDoc[];
+
+        const { noQuestionsFull, underfilledFull: underfilledRaw } = buildQuestionCountReport(
+          passageDocs,
+          countMap,
+          typesToCheck,
+          requiredPerType,
+          textbook,
+          passageAnyDocCount
+        );
+
+        const queryIdsArr = queryIds;
+        const queryIdStrings = queryIdsArr.map((id) => id.toString());
+        const passagePendingMatch: Document = {
+          $and: [
+            { $or: [{ passage_id: { $in: queryIdsArr } }, { passage_id: { $in: queryIdStrings } }] },
+            { status: '대기' },
+            matchGeneratedQuestionOptionTypeEnglish(),
+          ],
+        };
+
+        let underfilledFull = underfilledRaw;
+        const [pendingReviewTotal, breakdownMap] = await Promise.all([
+          gqCol.countDocuments(passagePendingMatch),
+          questionStatusScope === 'all'
+            ? aggregateStatusBreakdownByPassageAndType(gqCol, queryIdsArr)
+            : Promise.resolve(null as Map<string, Map<string, UnderfilledStatusBreakdown>> | null),
+        ]);
+
+        if (questionStatusScope === 'all' && breakdownMap) {
+          // breakdownMap keys are origId hex — remap to exam passage IDs for underfilled rows
+          const origToExamMap = new Map<string, string>();
+          for (const [examHex, origHex] of examToOrigMap) origToExamMap.set(origHex, examHex);
+          underfilledFull = underfilledRaw.map((row) => {
+            const lookupId = origToExamMap.get(row.passageId) ?? row.passageId;
+            const b = breakdownMap.get(lookupId)?.get(row.type)
+              ?? breakdownMap.get(row.passageId)?.get(row.type);
+            const statusBreakdown: UnderfilledStatusBreakdown = b ?? {
+              완료: 0, 대기: 0, 검수불일치: 0, 기타: row.count,
+            };
+            return { ...row, statusBreakdown };
+          });
+        }
+
+        const needCreateShortBySum = underfilledFull.reduce((s, r) => s + r.shortBy, 0);
+        const needCreateFromEmptyPassagesTotal = noQuestionsFull.length * typesToCheck.length * requiredPerType;
+        const needCreateGrandTotal = needCreateShortBySum + needCreateFromEmptyPassagesTotal;
+
+        return {
+          ok: true,
+          scope,
+          textbook,
+          questionStatusScope,
+          requiredPerType,
+          typesChecked: typesToCheck,
+          passageCount: passageDocs.length,
+          standardTypes: [...BOOK_VARIANT_QUESTION_TYPES],
+          noQuestionsTotal: noQuestionsFull.length,
+          underfilledTotal: underfilledFull.length,
+          noQuestionsTruncated: noQuestionsFull.length > QUESTION_COUNT_DEFAULT_LIST_ROWS,
+          underfilledTruncated: underfilledFull.length > QUESTION_COUNT_DEFAULT_LIST_ROWS,
+          noQuestions: noQuestionsFull,
+          underfilled: underfilledFull,
+          pendingReviewTotal,
+          needCreateShortBySum,
+          needCreateFromEmptyPassagesTotal,
+          needCreateGrandTotal,
+          pendingInScopeTotal: pendingReviewTotal,
+          order: null,
+        };
+      }
+
       passageDocs = (await passagesCol
         .find({ textbook })
         .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
@@ -542,8 +731,8 @@ export async function runQuestionCountValidation(
     const ids = passageDocs.map((p) => p._id as ObjectId);
     const idStrings = ids.map((id) => id.toString());
     const [countMap, passageAnyDocCount] = await Promise.all([
-      aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope),
-      aggregatePassageAnyDocCount(gqCol, ids),
+      aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope, db),
+      aggregatePassageAnyDocCount(gqCol, ids, db),
     ]);
 
     const { noQuestionsFull, underfilledFull: underfilledRaw } = buildQuestionCountReport(

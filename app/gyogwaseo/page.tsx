@@ -65,6 +65,7 @@ export default function GyogwaseoPage() {
           onLessonsSelect={handleLessonsSelect}
           onBack={handleBackToHome}
           onTextbookSelect={handleTextbookSelect}
+          flow="gyogwaseo"
         />
       );
 
@@ -170,6 +171,7 @@ export default function GyogwaseoPage() {
           onLessonsSelect={handleLessonsSelect}
           onBack={handleBackToHome}
           onTextbookSelect={handleTextbookSelect}
+          flow="gyogwaseo"
         />
       );
   }

@@ -155,8 +155,11 @@ export default function BundlePage() {
   const [selectedTextbook, setSelectedTextbook] = useState('');
 
   const textbookList = useMemo(() => {
-    if (!textbooksData || !currentUser) return [];
+    if (!textbooksData) return null; // null = 아직 로딩 중
     const allKeys = Object.keys(textbooksData).filter((k) => !isMockExamTextbookKey(k));
+    if (!currentUser) return null; // currentUser 아직 로딩 중
+    // 관리자는 모든 교재 표시
+    if (currentUser.role === 'admin') return allKeys;
     const sets = [
       currentUser.allowedTextbooksVariant,
       currentUser.allowedTextbooksWorkbook,
@@ -504,7 +507,7 @@ export default function BundlePage() {
           {/* 1. 교재 선택 */}
           <div className="bg-white rounded-2xl shadow p-6 space-y-3">
             <h2 className="font-bold text-gray-800">1. 교재 선택</h2>
-            {dataLoading ? (
+            {dataLoading || textbookList === null ? (
               <p className="text-gray-400 text-sm">교재 목록 로딩 중…</p>
             ) : dataError || !textbooksData ? (
               <p className="text-red-500 text-sm">교재 데이터를 불러올 수 없습니다.</p>

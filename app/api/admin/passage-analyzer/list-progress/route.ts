@@ -26,10 +26,26 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb('gomijoshua');
     const fileNames = unique.map((id) => passageAnalysisFileNameForPassageId(id));
+    // passageStates.main 전체를 가져오면 vocabularyList 등 대용량 필드까지 딸려와 느림.
+    // 진행률 계산에 필요한 필드만 좁혀서 projection — 배열은 $slice:1(존재 여부 확인용).
     const docs = await db
       .collection(COL)
       .find({ fileName: { $in: fileNames } })
-      .project({ fileName: 1, passageStates: 1 })
+      .project({
+        fileName: 1,
+        'passageStates.main.manualStepStatus': 1,
+        'passageStates.main.analysisResults': 1,
+        'passageStates.main.topicHighlightedSentences': { $slice: 1 },
+        'passageStates.main.essayHighlightedSentences': { $slice: 1 },
+        'passageStates.main.grammarSelectedWords': { $slice: 1 },
+        'passageStates.main.grammarSelectedRanges': { $slice: 1 },
+        'passageStates.main.contextSelectedWords': { $slice: 1 },
+        'passageStates.main.grammarTags': { $slice: 1 },
+        'passageStates.main.vocabularyList': { $slice: 1 },
+        'passageStates.main.sentenceBreaks': 1,
+        'passageStates.main.svocData': 1,
+        'passageStates.main.syntaxPhrases': 1,
+      })
       .toArray();
 
     const progress: Record<string, number> = {};

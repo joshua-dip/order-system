@@ -1,7 +1,12 @@
 /**
  * 로그인 성공 후 이동 경로. 오픈 리다이렉트·로그인 페이지 루프 방지.
  */
-export function getSafeUserLoginRedirect(fromParam: string | null, mustChangePassword: boolean): string {
+export function getSafeUserLoginRedirect(fromParam: string | null, mustChangePassword: boolean, role?: string): string {
+  if (role === 'student') {
+    const raw = (fromParam ?? '').trim();
+    if (raw && raw.startsWith('/my/student')) return raw;
+    return '/my/student';
+  }
   if (mustChangePassword) return '/my';
   const raw = (fromParam ?? '').trim();
   if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/';

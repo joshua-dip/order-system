@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import AppBar from './AppBar';
+import SolbookLessonLinksModal from './SolbookLessonLinksModal';
 import type { OrderGenerateExtras, OrderGenerateHandler } from './MockExamSettings';
 import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
 import {
@@ -99,6 +100,9 @@ const QuestionSettings = ({
   const [solbookPurchaseUrl, setSolbookPurchaseUrl] = useState('');
   const [solbookExtraFeeWon, setSolbookExtraFeeWon] = useState(DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON);
   const [solbookRetailGuideText, setSolbookRetailGuideText] = useState('');
+  /** 강별 쏠북 링크 맵 */
+  const [solbookLessonLinksMap, setSolbookLessonLinksMap] = useState<Record<string, { groupTitle?: string; groupUrl?: string; groupLabel?: string; lessons: import('@/lib/solbook-lesson-links-store').SolbookLessonLink[] }>>({});
+  const [solbookLinksModalOpen, setSolbookLinksModalOpen] = useState(false);
 
   const [avLoading, setAvLoading] = useState(false);
   const [avErr, setAvErr] = useState<string | null>(null);
@@ -156,6 +160,15 @@ const QuestionSettings = ({
         setSolbookRetailGuideText(
           typeof d?.retailPriceGuideText === 'string' ? d.retailPriceGuideText.trim() : ''
         );
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/settings/solbook-lesson-links', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.map && typeof d.map === 'object') setSolbookLessonLinksMap(d.map);
       })
       .catch(() => {});
   }, []);
@@ -645,8 +658,20 @@ ${solbookRetailLine}
     setPointsToUse((p) => Math.min(Math.max(0, p), maxPointUsable));
   }, [usePoints, userPoints, maxPointUsable, isSolbookTextbook]);
 
+  const _solbookLessonLinksData = solbookLessonLinksMap[selectedTextbook];
+
   return (
     <>
+      <SolbookLessonLinksModal
+        open={solbookLinksModalOpen}
+        onClose={() => setSolbookLinksModalOpen(false)}
+        textbookKey={selectedTextbook}
+        groupTitle={_solbookLessonLinksData?.groupTitle}
+        groupUrl={_solbookLessonLinksData?.groupUrl}
+        groupLabel={_solbookLessonLinksData?.groupLabel}
+        lessons={_solbookLessonLinksData?.lessons ?? []}
+        selectedLessonKeys={selectedLessons}
+      />
       <AppBar 
         showBackButton={true} 
         onBackClick={onBack}
@@ -1363,16 +1388,34 @@ ${solbookRetailLine}
                                   변형 제작비와 교재 본체 대금은 모두 쏠북에서 결제하시며, 이곳 입금 금액에 포함되지 않습니다.
                                 </p>
                               </div>
-                              {solbookPurchaseUrl.trim() && (
-                                <a
-                                  href={solbookPurchaseUrl.trim()}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors no-underline"
-                                >
-                                  쏠북에서 결제하기 →
-                                </a>
-                              )}
+                              {(() => {
+                                const lessonLinks = solbookLessonLinksMap[selectedTextbook];
+                                const hasLessonLinks = !!(lessonLinks?.lessons?.length);
+                                if (hasLessonLinks) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => setSolbookLinksModalOpen(true)}
+                                      className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors"
+                                    >
+                                      쏠북에서 결제하기 → ({lessonLinks.lessons.length}개 강)
+                                    </button>
+                                  );
+                                }
+                                if (solbookPurchaseUrl.trim()) {
+                                  return (
+                                    <a
+                                      href={solbookPurchaseUrl.trim()}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors no-underline"
+                                    >
+                                      쏠북에서 결제하기 →
+                                    </a>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
 
                             <p className="text-[11px] text-slate-500 leading-snug px-1">

@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { generateVariantDraftQuestionDataWithClaude } from '@/lib/admin-variant-draft-claude';
+import { generateWorkbookGrammarQuestion } from '@/lib/workbook-grammar-claude';
 
 /** Vercel 등: Claude 응답이 길 수 있음. Pro에서 maxDuration 적용. Hobby(10초)는 타임아웃 가능 */
 export const maxDuration = 120;
@@ -88,6 +89,24 @@ export async function POST(request: NextRequest) {
       .toArray();
     const prevMax = typeof maxAgg[0]?.m === 'number' && Number.isFinite(maxAgg[0].m) ? maxAgg[0].m : 0;
     const nextNum = prevMax + 1;
+
+    // 워크북어법은 전용 생성 로직 사용
+    if (type === '워크북어법') {
+      const maxPoints =
+        typeof body.maxPoints === 'number' ? Math.min(8, Math.max(1, body.maxPoints)) : 4;
+      try {
+        const wb = await generateWorkbookGrammarQuestion({ passage: paragraph, maxPoints });
+        return NextResponse.json({
+          ok: true,
+          nextNum,
+          question_data: wb.questionData,
+          pointCount: wb.questionData.GrammarPoints.length,
+        });
+      } catch (wbErr) {
+        const msg = wbErr instanceof Error ? wbErr.message : String(wbErr);
+        return NextResponse.json({ error: msg }, { status: 422 });
+      }
+    }
 
     const ai = await generateVariantDraftQuestionDataWithClaude({
       paragraph,

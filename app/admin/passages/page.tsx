@@ -16,6 +16,7 @@ type PassageListItem = {
   chapter: string;
   number: string;
   source_key?: string;
+  passage_source?: string;
   page?: number;
   page_label?: string;
   order?: number;
@@ -222,6 +223,526 @@ function SolbookTypePanelSection({
                         {currentType ? `현재: ${currentType}` : '미지정'}
                         {isSaving && ' · 저장 중…'}
                       </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * 기출기반 교재의 지문별 passage_source 편집 섹션
+ */
+type AutoMatchStats = {
+  total: number;
+  alreadySet: number;
+  matched: number;
+  updated: number;
+  unmatched: number;
+};
+
+function ExamPassageSourceSection({ examBasedKeys }: { examBasedKeys: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [selectedTextbook, setSelectedTextbook] = useState('');
+  const [passages, setPassages] = useState<PassageListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [msg, setMsg] = useState<{ id: string; ok: boolean } | null>(null);
+  const [autoMatchLoading, setAutoMatchLoading] = useState(false);
+  const [autoMatchResult, setAutoMatchResult] = useState<{ dryRun: boolean; stats: AutoMatchStats } | null>(null);
+
+  const loadPassages = useCallback((tb: string) => {
+    if (!tb) { setPassages([]); return; }
+    setLoading(true);
+    fetch(`/api/admin/passages?textbook=${encodeURIComponent(tb)}&limit=500`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setPassages(Array.isArray(d.items) ? d.items : []))
+      .catch(() => setPassages([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (open && selectedTextbook) loadPassages(selectedTextbook);
+  }, [open, selectedTextbook, loadPassages]);
+
+  const getDraft = (p: PassageListItem) =>
+    editing[p._id] ?? p.passage_source ?? '';
+
+  const handleSave = async (p: PassageListItem) => {
+    const value = getDraft(p).trim();
+    setSaving((prev) => ({ ...prev, [p._id]: true }));
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/admin/passages/${p._id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passage_source: value }),
+      });
+      if (!res.ok) throw new Error('failed');
+      setPassages((prev) =>
+        prev.map((pp) => (pp._id === p._id ? { ...pp, passage_source: value } : pp))
+      );
+      setEditing((prev) => { const n = { ...prev }; delete n[p._id]; return n; });
+      setMsg({ id: p._id, ok: true });
+    } catch {
+      setMsg({ id: p._id, ok: false });
+    } finally {
+      setSaving((prev) => ({ ...prev, [p._id]: false }));
+    }
+  };
+
+  const handleAutoMatch = async (dryRun: boolean, overwrite = false) => {
+    if (!selectedTextbook) return;
+    setAutoMatchLoading(true);
+    setAutoMatchResult(null);
+    try {
+      const res = await fetch('/api/admin/passages/auto-match-source', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbook: selectedTextbook, dryRun, overwrite }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setAutoMatchResult({ dryRun, stats: d.stats as AutoMatchStats });
+        if (!dryRun) loadPassages(selectedTextbook);
+      } else {
+        alert(d.error || '자동 매칭 실패');
+      }
+    } catch {
+      alert('자동 매칭 요청 실패');
+    } finally {
+      setAutoMatchLoading(false);
+    }
+  };
+
+  return (
+    <section className="bg-slate-800/50 border border-slate-700 rounded-xl mb-6 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/80 transition-colors"
+      >
+        <div>
+          <h2 className="text-base font-bold text-white">
+            기출기반 교재 — 지문별 원문출처 편집
+            <span className="ml-2 text-xs font-normal text-slate-400">(passages.passage_source)</span>
+          </h2>
+          <p className="text-slate-400 text-xs mt-0.5">
+            각 지문(강·번호)별 원문출처를 수정합니다. 예: &quot;25년 9월 고1 영어모의고사 18번&quot;
+          </p>
+        </div>
+        <span className="text-slate-400 shrink-0">{open ? '▼' : '▶'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-700/80 px-4 pb-4">
+          <div className="py-3 flex flex-wrap gap-3 items-center">
+            <select
+              value={selectedTextbook}
+              onChange={(e) => {
+                setSelectedTextbook(e.target.value);
+                setEditing({});
+                setAutoMatchResult(null);
+                loadPassages(e.target.value);
+              }}
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white min-w-[280px]"
+            >
+              <option value="">교재 선택…</option>
+              {examBasedKeys.map((k) => (
+                <option key={k} value={k}>{k}</option>
+              ))}
+            </select>
+            {selectedTextbook && (
+              <span className="text-xs text-slate-500">{passages.length}개 지문</span>
+            )}
+            {selectedTextbook && (
+              <div className="flex gap-2 items-center flex-wrap">
+                <button
+                  type="button"
+                  disabled={autoMatchLoading}
+                  onClick={() => void handleAutoMatch(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors disabled:opacity-50"
+                >
+                  {autoMatchLoading ? '분석 중…' : '🔍 미리보기 (dry run)'}
+                </button>
+                <button
+                  type="button"
+                  disabled={autoMatchLoading}
+                  onClick={() => {
+                    if (confirm('원문 비교로 자동 매칭합니다. 미설정된 지문만 업데이트됩니다. 계속할까요?'))
+                      void handleAutoMatch(false);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-700 hover:bg-amber-600 text-white transition-colors disabled:opacity-50"
+                >
+                  ⚡ 자동 매칭 실행
+                </button>
+                <button
+                  type="button"
+                  disabled={autoMatchLoading}
+                  onClick={() => {
+                    if (confirm('이미 설정된 것 포함 전체를 원문 비교로 덮어씁니다. 계속할까요?'))
+                      void handleAutoMatch(false, true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-600 hover:bg-slate-500 text-slate-300 transition-colors disabled:opacity-50"
+                >
+                  전체 덮어쓰기
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 자동 매칭 결과 */}
+          {autoMatchResult && (
+            <div className={`mb-3 px-3 py-2 rounded-lg text-xs border ${
+              autoMatchResult.dryRun
+                ? 'bg-blue-900/30 border-blue-700/50 text-blue-300'
+                : 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+            }`}>
+              <span className="font-semibold">{autoMatchResult.dryRun ? '[미리보기]' : '[완료]'}</span>{' '}
+              총 {autoMatchResult.stats.total}개 지문 —{' '}
+              매칭됨 <strong className="text-white">{autoMatchResult.stats.matched}</strong>개 ·{' '}
+              이미설정 {autoMatchResult.stats.alreadySet}개 ·{' '}
+              미매칭 <strong className={autoMatchResult.stats.unmatched > 0 ? 'text-amber-300' : 'text-white'}>
+                {autoMatchResult.stats.unmatched}
+              </strong>개
+              {autoMatchResult.dryRun && autoMatchResult.stats.matched > 0 && (
+                <span className="ml-2 text-blue-200">→ "자동 매칭 실행"을 누르면 적용됩니다.</span>
+              )}
+            </div>
+          )}
+
+          {loading && <p className="py-4 text-center text-sm text-slate-500">로딩 중…</p>}
+
+          {!loading && selectedTextbook && passages.length === 0 && (
+            <p className="py-4 text-center text-sm text-slate-500">지문이 없습니다.</p>
+          )}
+
+          {!loading && passages.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-700 text-slate-400">
+                    <th className="text-left px-2 py-2 font-medium w-[120px]">소스키</th>
+                    <th className="text-left px-2 py-2 font-medium">원문출처 (passage_source)</th>
+                    <th className="px-2 py-2 w-[80px]"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {passages.map((p) => {
+                    const draft = getDraft(p);
+                    const saved = p.passage_source ?? '';
+                    const isDirty = (editing[p._id] ?? null) !== null && draft !== saved;
+                    const isSaving = saving[p._id] ?? false;
+                    return (
+                      <tr key={p._id} className="border-b border-slate-800 hover:bg-slate-800/30">
+                        <td className="px-2 py-1.5 text-slate-400 font-mono whitespace-nowrap">{p.source_key || p.number}</td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            type="text"
+                            value={draft}
+                            onChange={(e) => setEditing((prev) => ({ ...prev, [p._id]: e.target.value }))}
+                            onKeyDown={(e) => { if (e.key === 'Enter') void handleSave(p); }}
+                            placeholder="예: 25년 9월 고1 영어모의고사 18번"
+                            className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white placeholder:text-slate-600 focus:border-amber-500 outline-none text-xs"
+                          />
+                          {msg?.id === p._id && (
+                            <span className={`text-[10px] ${msg.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {msg.ok ? '저장됨' : '실패'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-1.5 text-center">
+                          <button
+                            type="button"
+                            disabled={isSaving || !isDirty}
+                            onClick={() => void handleSave(p)}
+                            className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors disabled:opacity-40 ${
+                              isDirty
+                                ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                                : 'bg-slate-700 text-slate-400'
+                            }`}
+                          >
+                            {isSaving ? '…' : '저장'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** 교재 카드 내 소스별 원문출처 인라인 편집 */
+function ExamTextbookPassageList({ textbookKey }: { textbookKey: string }) {
+  const [passages, setPassages] = useState<PassageListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [editing, setEditing] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [savedMsg, setSavedMsg] = useState<Record<string, boolean>>({});
+  const [autoMatchLoading, setAutoMatchLoading] = useState(false);
+  const [autoMatchResult, setAutoMatchResult] = useState<{ dryRun: boolean; stats: AutoMatchStats } | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    fetch(`/api/admin/passages?textbook=${encodeURIComponent(textbookKey)}&limit=500`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => { setPassages(Array.isArray(d.items) ? d.items : []); setLoaded(true); })
+      .catch(() => setPassages([]))
+      .finally(() => setLoading(false));
+  }, [textbookKey]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const getDraft = (p: PassageListItem) => editing[p._id] ?? p.passage_source ?? '';
+
+  const handleSave = async (p: PassageListItem) => {
+    const value = getDraft(p).trim();
+    setSaving((prev) => ({ ...prev, [p._id]: true }));
+    try {
+      const res = await fetch(`/api/admin/passages/${p._id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passage_source: value }),
+      });
+      if (!res.ok) throw new Error();
+      setPassages((prev) => prev.map((pp) => pp._id === p._id ? { ...pp, passage_source: value } : pp));
+      setEditing((prev) => { const n = { ...prev }; delete n[p._id]; return n; });
+      setSavedMsg((prev) => ({ ...prev, [p._id]: true }));
+      setTimeout(() => setSavedMsg((prev) => { const n = { ...prev }; delete n[p._id]; return n; }), 1500);
+    } catch { /* silent */ } finally {
+      setSaving((prev) => ({ ...prev, [p._id]: false }));
+    }
+  };
+
+  const handleAutoMatch = async (dryRun: boolean, overwrite = false) => {
+    setAutoMatchLoading(true);
+    setAutoMatchResult(null);
+    try {
+      const res = await fetch('/api/admin/passages/auto-match-source', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbook: textbookKey, dryRun, overwrite }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setAutoMatchResult({ dryRun, stats: d.stats as AutoMatchStats });
+        if (!dryRun) load();
+      }
+    } catch { /* silent */ } finally {
+      setAutoMatchLoading(false);
+    }
+  };
+
+  const setCount = passages.filter((p) => p.passage_source).length;
+  const totalCount = passages.length;
+
+  return (
+    <div className="mt-3 border-t border-amber-800/40 pt-3">
+      {/* 자동 매칭 버튼 */}
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        <button type="button" disabled={autoMatchLoading}
+          onClick={() => void handleAutoMatch(true)}
+          className="px-2 py-1 rounded text-[10px] font-semibold bg-slate-700 hover:bg-slate-600 text-slate-300 disabled:opacity-50">
+          {autoMatchLoading ? '분석 중…' : '🔍 자동매칭 미리보기'}
+        </button>
+        <button type="button" disabled={autoMatchLoading}
+          onClick={() => { if (confirm('원문 비교 자동 매칭 (미설정만). 계속?')) void handleAutoMatch(false); }}
+          className="px-2 py-1 rounded text-[10px] font-semibold bg-amber-700/70 hover:bg-amber-600 text-white disabled:opacity-50">
+          ⚡ 자동 매칭
+        </button>
+        <button type="button" disabled={autoMatchLoading}
+          onClick={() => { if (confirm('전체 덮어쓰기. 계속?')) void handleAutoMatch(false, true); }}
+          className="px-2 py-1 rounded text-[10px] font-semibold bg-slate-600 hover:bg-slate-500 text-slate-300 disabled:opacity-50">
+          전체 덮어쓰기
+        </button>
+        {loaded && (
+          <span className="ml-auto text-[10px] text-slate-500 self-center">
+            {setCount}/{totalCount} 설정됨
+          </span>
+        )}
+      </div>
+
+      {/* 자동 매칭 결과 */}
+      {autoMatchResult && (
+        <div className={`mb-2 px-2 py-1.5 rounded text-[10px] border ${autoMatchResult.dryRun ? 'bg-blue-900/30 border-blue-700/50 text-blue-300' : 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'}`}>
+          {autoMatchResult.dryRun ? '[미리보기]' : '[완료]'}{' '}
+          매칭 <strong className="text-white">{autoMatchResult.stats.matched}</strong> ·
+          이미설정 {autoMatchResult.stats.alreadySet} ·
+          미매칭 <strong className={autoMatchResult.stats.unmatched > 0 ? 'text-amber-300' : 'text-white'}>{autoMatchResult.stats.unmatched}</strong>
+        </div>
+      )}
+
+      {loading && <p className="text-[10px] text-slate-500 py-2">로딩 중…</p>}
+
+      {/* 소스 목록 */}
+      {!loading && passages.length > 0 && (
+        <div className="max-h-80 overflow-y-auto">
+          <table className="w-full text-[11px] border-collapse">
+            <thead className="sticky top-0 bg-slate-900">
+              <tr className="border-b border-slate-700 text-slate-400">
+                <th className="text-left px-1.5 py-1 font-medium w-[110px]">소스키</th>
+                <th className="text-left px-1.5 py-1 font-medium">원문출처</th>
+                <th className="px-1.5 py-1 w-[50px]"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {passages.map((p) => {
+                const draft = getDraft(p);
+                const saved = p.passage_source ?? '';
+                const isDirty = (editing[p._id] ?? null) !== null && draft !== saved;
+                const isSaving = saving[p._id] ?? false;
+                return (
+                  <tr key={p._id} className="border-b border-slate-800/60 hover:bg-slate-800/20">
+                    <td className="px-1.5 py-1 text-slate-400 font-mono whitespace-nowrap">{p.source_key || p.number}</td>
+                    <td className="px-1.5 py-1">
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={draft}
+                          onChange={(e) => setEditing((prev) => ({ ...prev, [p._id]: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === 'Enter') void handleSave(p); }}
+                          placeholder="예: 25년 9월 고1 영어모의고사 18번"
+                          className="flex-1 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-white placeholder:text-slate-600 focus:border-amber-500 outline-none text-[11px]"
+                        />
+                        {savedMsg[p._id] && <span className="text-emerald-400 text-[10px] shrink-0">✓</span>}
+                      </div>
+                    </td>
+                    <td className="px-1.5 py-1 text-center">
+                      <button
+                        type="button"
+                        disabled={isSaving || !isDirty}
+                        onClick={() => void handleSave(p)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors disabled:opacity-40 ${isDirty ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-700 text-slate-400'}`}
+                      >
+                        {isSaving ? '…' : '저장'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExamBasedPanelSection({
+  examBasedByTextbook,
+  examBasedSavingKey,
+  onToggle,
+  textbooks,
+}: {
+  examBasedByTextbook: Record<string, boolean>;
+  examBasedSavingKey: string | null;
+  onToggle: (key: string, value: boolean) => Promise<void>;
+  textbooks: string[];
+}) {
+  const [open, setOpen] = useState(true);
+  const [search, setSearch] = useState('');
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+
+  const examBasedKeys = Object.keys(examBasedByTextbook)
+    .filter((k) => examBasedByTextbook[k])
+    .sort((a, b) => a.localeCompare(b, 'ko'));
+
+  const filtered = search.trim()
+    ? examBasedKeys.filter((k) => k.toLowerCase().includes(search.toLowerCase()))
+    : examBasedKeys;
+
+  return (
+    <section className="bg-slate-800/50 border border-slate-700 rounded-xl mb-6 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/80 transition-colors"
+      >
+        <div>
+          <h2 className="text-base font-bold text-white">
+            기출기반 교재 관리
+          </h2>
+          <p className="text-slate-400 text-xs mt-0.5">
+            교재를 클릭하면 소스별 원문출처를 편집할 수 있습니다.
+          </p>
+        </div>
+        <span className="text-slate-400 shrink-0">{open ? '▼' : '▶'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-700/80 px-4 pb-4">
+          {examBasedKeys.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">
+              기출기반으로 설정된 교재가 없습니다.{' '}
+              <span className="text-slate-400">위 "교재 메타데이터 관리" 테이블의 <strong>기출기반</strong> 열에서 설정하세요.</span>
+            </p>
+          ) : (
+            <>
+              <div className="py-3 flex flex-wrap gap-3 items-center">
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="교재명 검색…"
+                  className="flex-1 min-w-[200px] max-w-sm bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                />
+                <span className="text-xs text-slate-500">{filtered.length}개 교재</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {filtered.map((key) => {
+                  const isSavingToggle = examBasedSavingKey === key;
+                  const hasPassages = textbooks.includes(key);
+                  const isExpanded = expandedKey === key;
+
+                  return (
+                    <div
+                      key={key}
+                      className={`rounded-xl border transition-colors ${isExpanded ? 'border-amber-600/70 bg-amber-950/30' : 'border-amber-700/40 bg-amber-950/15'}`}
+                    >
+                      {/* 헤더 — 클릭 시 소스 목록 펼침/접힘 */}
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left"
+                        onClick={() => setExpandedKey(isExpanded ? null : key)}
+                      >
+                        <span className="text-slate-400 text-xs shrink-0">{isExpanded ? '▼' : '▶'}</span>
+                        <span className="text-sm font-medium text-white flex-1 leading-snug">{key}</span>
+                        {!hasPassages && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-800/50 shrink-0">지문 없음</span>
+                        )}
+                        <button
+                          type="button"
+                          disabled={isSavingToggle}
+                          onClick={(e) => { e.stopPropagation(); void onToggle(key, false); }}
+                          title="기출기반 해제"
+                          className="shrink-0 text-[10px] px-2 py-1 rounded bg-amber-700/50 text-amber-200 hover:bg-red-800/60 hover:text-red-200 transition-colors disabled:opacity-50 font-bold"
+                        >
+                          {isSavingToggle ? '…' : '기출기반 ✓'}
+                        </button>
+                      </button>
+
+                      {/* 소스별 원문출처 편집 (펼쳐진 경우) */}
+                      {isExpanded && (
+                        <div className="px-3 pb-3">
+                          <ExamTextbookPassageList textbookKey={key} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -456,6 +977,10 @@ export default function AdminPassagesPage() {
   const [linkFolderScope, setLinkFolderScope] = useState('');
   const [textbookLinkFolders, setTextbookLinkFolders] = useState<TextbookLinkFolder[]>([]);
   const [textbookLinkAssignments, setTextbookLinkAssignments] = useState<Record<string, string>>({});
+  const [passageCountByTextbook, setPassageCountByTextbook] = useState<Record<string, number>>({});
+  const [examBasedByTextbook, setExamBasedByTextbook] = useState<Record<string, boolean>>({});
+  const [examBasedSavingKey, setExamBasedSavingKey] = useState<string | null>(null);
+  const [originalSourceByTextbook, setOriginalSourceByTextbook] = useState<Record<string, string>>({});
 
   const fetchAdminTextbookLinks = useCallback(() => {
     setLinksLoading(true);
@@ -522,6 +1047,77 @@ export default function AdminPassagesPage() {
       .catch(() => {});
   }, []);
 
+  const fetchPassageCounts = useCallback(() => {
+    fetch('/api/admin/passages/counts-by-textbook', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.counts && typeof d.counts === 'object') {
+          setPassageCountByTextbook(d.counts as Record<string, number>);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const fetchExamBasedByTextbook = useCallback(() => {
+    fetch('/api/admin/passages/exam-based-by-textbook', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.examBased && typeof d.examBased === 'object') {
+          setExamBasedByTextbook(d.examBased as Record<string, boolean>);
+        }
+        if (d.originalSourceByTextbook && typeof d.originalSourceByTextbook === 'object') {
+          setOriginalSourceByTextbook(d.originalSourceByTextbook as Record<string, string>);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveOriginalSourceTextbook = async (textbookKey: string, originalSourceTextbook: string) => {
+    const res = await fetch('/api/admin/passages/exam-based-by-textbook', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ textbookKey, originalSourceTextbook }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || '저장 실패');
+    setOriginalSourceByTextbook((prev) => ({
+      ...prev,
+      [textbookKey]: originalSourceTextbook,
+    }));
+  };
+
+  const saveExamBased = async (textbookKey: string, isExamBased: boolean) => {
+    setExamBasedSavingKey(textbookKey);
+    setLinkMsg(null);
+    try {
+      const res = await fetch('/api/admin/passages/exam-based-by-textbook', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textbookKey, isExamBased }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        setLinkMsg({ type: 'err', text: j.error || '기출기반 저장 실패' });
+        return;
+      }
+      setExamBasedByTextbook((prev) => ({ ...prev, [textbookKey]: isExamBased }));
+      if (!isExamBased) {
+        setOriginalSourceByTextbook((prev) => {
+          const n = { ...prev };
+          delete n[textbookKey];
+          return n;
+        });
+      }
+      setLinkMsg({ type: 'ok', text: `「${textbookKey}」 기출기반 ${isExamBased ? '설정' : '해제'}됨` });
+    } catch {
+      setLinkMsg({ type: 'err', text: '요청 실패' });
+    } finally {
+      setExamBasedSavingKey(null);
+    }
+  };
+
   const saveTextbookTypeForTextbook = async (textbookKey: string, textbookType: '교과서' | '부교재' | '') => {
     setTextbookTypeSavingKey(textbookKey);
     setLinkMsg(null);
@@ -576,7 +1172,9 @@ export default function AdminPassagesPage() {
     fetchTextbookLinkAssignments();
     fetchPublisherByTextbook();
     fetchTextbookTypeByTextbook();
-  }, [user, fetchAdminTextbookLinks, fetchTextbookLinkAssignments, fetchPublisherByTextbook, fetchTextbookTypeByTextbook]);
+    fetchPassageCounts();
+    fetchExamBasedByTextbook();
+  }, [user, fetchAdminTextbookLinks, fetchTextbookLinkAssignments, fetchPublisherByTextbook, fetchTextbookTypeByTextbook, fetchPassageCounts, fetchExamBasedByTextbook]);
 
   useEffect(() => {
     setLinkDrafts((prev) => {
@@ -1056,7 +1654,7 @@ export default function AdminPassagesPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => { fetchAdminTextbookLinks(); fetchPublisherByTextbook(); fetchTextbookTypeByTextbook(); }}
+                  onClick={() => { fetchAdminTextbookLinks(); fetchPublisherByTextbook(); fetchTextbookTypeByTextbook(); fetchPassageCounts(); fetchExamBasedByTextbook(); }}
                   disabled={linksLoading}
                   className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm disabled:opacity-50"
                 >
@@ -1085,6 +1683,7 @@ export default function AdminPassagesPage() {
                       <th className="px-3 py-2 font-medium w-[min(14rem,28vw)]">교재명 (passages)</th>
                       <th className="px-3 py-2 font-medium w-28">쏠북 출판사</th>
                       <th className="px-3 py-2 font-medium w-28">교과서/부교재</th>
+                      <th className="px-3 py-2 font-medium w-20 text-center">기출기반</th>
                       <th className="px-3 py-2 font-medium min-w-[7rem]">폴더</th>
                       <th className="px-3 py-2 font-medium min-w-[200px]">구매 URL / 추가 링크</th>
                       <th className="px-3 py-2 font-medium min-w-[140px]">설명(툴팁)</th>
@@ -1094,7 +1693,7 @@ export default function AdminPassagesPage() {
                   <tbody>
                     {linkRowKeys.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                           {textbooks.length === 0
                             ? '등록된 교재가 없습니다. 원문을 먼저 등록하면 교재명이 여기에 나타납니다.'
                             : '검색 결과가 없습니다.'}
@@ -1120,6 +1719,11 @@ export default function AdminPassagesPage() {
                                 {!hasPassages && (
                                   <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-800/50">
                                     지문 없음
+                                  </span>
+                                )}
+                                {hasPassages && passageCountByTextbook[key] != null && (
+                                  <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
+                                    총 {passageCountByTextbook[key]}개 지문
                                   </span>
                                 )}
                                 {hasSaved && (
@@ -1167,6 +1771,27 @@ export default function AdminPassagesPage() {
                               ) : (
                                 <span className="text-[10px] text-slate-600">—</span>
                               )}
+                            </td>
+                            <td className="px-3 py-2 align-top text-center">
+                              {(() => {
+                                const isEB = !!examBasedByTextbook[key];
+                                const isSaving = examBasedSavingKey === key;
+                                return (
+                                  <button
+                                    type="button"
+                                    disabled={isSaving}
+                                    onClick={() => saveExamBased(key, !isEB)}
+                                    title={isEB ? '기출기반 교재 (클릭하여 해제)' : '일반 교재 (클릭하여 기출기반 설정)'}
+                                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold transition-all disabled:opacity-50 ${
+                                      isEB
+                                        ? 'bg-violet-700 text-white shadow'
+                                        : 'bg-slate-700 text-slate-500 hover:bg-slate-600 hover:text-slate-300'
+                                    }`}
+                                  >
+                                    {isSaving ? '…' : isEB ? '기출기반 ✓' : '—'}
+                                  </button>
+                                );
+                              })()}
                             </td>
                             <td className="px-3 py-2 align-top">
                               <select
@@ -1249,6 +1874,14 @@ export default function AdminPassagesPage() {
           textbookTypeSavingKey={textbookTypeSavingKey}
           onSave={saveTextbookTypeForTextbook}
           msg={linkMsg}
+        />
+
+        {/* 기출기반 교재 관리 패널 */}
+        <ExamBasedPanelSection
+          examBasedByTextbook={examBasedByTextbook}
+          examBasedSavingKey={examBasedSavingKey}
+          onToggle={saveExamBased}
+          textbooks={textbooks}
         />
 
         {/* 교재 JSON 데이터 구조 패널 */}

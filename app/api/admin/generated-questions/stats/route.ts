@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const db = await getDb('gomijoshua');
 
     const pipeline = [
+      { $match: { type: { $ne: '워크북어법' } } },
       {
         $group: {
           _id: { textbook: '$textbook', type: '$type', status: '$status' },

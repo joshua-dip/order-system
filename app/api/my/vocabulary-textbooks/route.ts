@@ -1,3 +1,4 @@
+// @deprecated — 새 단어장 시스템은 /api/my/vocabulary/* 를 사용합니다. 이 라우트는 하위 호환성을 위해 유지됩니다.
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';

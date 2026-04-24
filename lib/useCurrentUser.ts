@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export interface CurrentUser {
+  role?: string;
   allowedTextbooks: string[];
   allowedTextbooksAnalysis: string[];
   allowedTextbooksEssay: string[];
@@ -32,6 +33,7 @@ export function useCurrentUser(): CurrentUser | null {
           const wb = data.user.allowedTextbooksWorkbook;
           const vb = data.user.allowedTextbooksVariant;
           setUser({
+            role: data.user.role ?? undefined,
             allowedTextbooks: at,
             allowedTextbooksAnalysis: Array.isArray(data.user.allowedTextbooksAnalysis) ? data.user.allowedTextbooksAnalysis : at,
             allowedTextbooksEssay: Array.isArray(data.user.allowedTextbooksEssay) ? data.user.allowedTextbooksEssay : at,

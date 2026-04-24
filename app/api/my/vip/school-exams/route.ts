@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       objectiveCount: e.objectiveCount ?? 0,
       subjectiveCount: e.subjectiveCount ?? 0,
       examScope: e.examScope ?? [],
+      examScopePassages: e.examScopePassages ?? [],
       isLocked: !!e.isLocked,
       pdfPath: e.pdfPath ?? null,
       pdfName: e.pdfName ?? null,

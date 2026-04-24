@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { readMergedConvertedData, writeMergedConvertedData } from '@/lib/converted-data-store';
-
-type PassageRow = { chapter?: unknown; number?: unknown; order?: unknown };
+import { buildMergedTextbookBranchFromPassages, type PassageRow } from '@/lib/build-converted-branch-from-passages';
 
 /**
  * MongoDB passages(원문 관리) → 교재 병합 데이터로 동기화.
@@ -36,52 +35,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const byChapter = new Map<string, Map<string, { order: number }>>();
-    for (const p of docs) {
-      const chRaw = String(p.chapter ?? '').trim();
-      const ch = chRaw || '(강 미지정)';
-      const num = String(p.number ?? '').trim();
-      if (!num) continue;
-      const ord =
-        typeof p.order === 'number' && Number.isFinite(p.order) ? p.order : 1_000_000;
-      if (!byChapter.has(ch)) byChapter.set(ch, new Map());
-      const inner = byChapter.get(ch)!;
-      const prev = inner.get(num);
-      if (!prev || ord < prev.order) inner.set(num, { order: ord });
+    const built = buildMergedTextbookBranchFromPassages(textbook, docs);
+    if (!built) {
+      return NextResponse.json(
+        { error: `번호가 있는 지문이 없어 "${textbook}" 트리를 만들 수 없습니다.` },
+        { status: 400 },
+      );
     }
-
-    const lessonKeys = [...byChapter.keys()].sort((a, b) => a.localeCompare(b, 'ko'));
-    const 부교재Inner: Record<string, Record<string, { 번호: string }[]>> = {};
-    부교재Inner[textbook] = {};
-
-    for (const lesson of lessonKeys) {
-      const nums = byChapter.get(lesson)!;
-      const entries = [...nums.entries()].sort((a, b) => {
-        const o = a[1].order - b[1].order;
-        if (o !== 0) return o;
-        return a[0].localeCompare(b[0], 'ko');
-      });
-      부교재Inner[textbook][lesson] = entries.map(([n]) => ({ 번호: n }));
-    }
-
-    const branch = {
-      Sheet1: {
-        부교재: 부교재Inner,
-      },
-    };
 
     const existing = await readMergedConvertedData();
-    existing[textbook] = branch;
+    existing[textbook] = built.branch;
     await writeMergedConvertedData(existing);
-
-    const lessonCount = lessonKeys.length;
-    const passageCount = docs.filter((p) => String(p.number ?? '').trim()).length;
 
     return NextResponse.json({
       ok: true,
       textbook,
-      lessonCount,
-      passageCount,
+      lessonCount: built.lessonCount,
+      passageCount: built.passageCount,
     });
   } catch (e) {
     console.error('passage-upload/from-passages:', e);

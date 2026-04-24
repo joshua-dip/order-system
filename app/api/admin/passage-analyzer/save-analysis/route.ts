@@ -49,12 +49,11 @@ export async function POST(request: NextRequest) {
       { upsert: true }
     );
 
-    const savedDoc = await db.collection(COL).findOne(query);
     return NextResponse.json({
       success: true,
       message: '저장되었습니다.',
       version: newVersion,
-      lastSaved: (savedDoc as { lastSaved?: string })?.lastSaved ?? now.toISOString(),
+      lastSaved: now.toISOString(),
       lastEditorName: editorName,
     });
   } catch (e) {

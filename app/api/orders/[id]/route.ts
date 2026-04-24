@@ -212,10 +212,13 @@ export async function DELETE(
     }
 
     const db = await getDb('gomijoshua');
-    const result = await db.collection(COLLECTION).deleteOne({ _id: new ObjectId(id) });
-    if (result.deletedCount === 0) {
+    const col = db.collection(COLLECTION);
+    const existing = await col.findOne({ _id: new ObjectId(id) });
+    if (!existing) {
       return NextResponse.json({ error: '주문을 찾을 수 없습니다.' }, { status: 404 });
     }
+    await tryRefundPointsAfterOrderCancelled(db, existing);
+    await col.deleteOne({ _id: new ObjectId(id) });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('주문 삭제 실패:', err);

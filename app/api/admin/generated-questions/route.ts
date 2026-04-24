@@ -33,7 +33,11 @@ function buildVariantFilter(opts: {
 }): Record<string, unknown> {
   const filter: Record<string, unknown> = {};
   if (opts.textbook) filter.textbook = opts.textbook;
-  if (opts.type) filter.type = opts.type;
+  if (opts.type) {
+    filter.type = opts.type;
+  } else {
+    filter.type = { $ne: '워크북어법' };
+  }
   if (opts.status) filter.status = opts.status;
   if (opts.difficulty) filter.difficulty = opts.difficulty;
   if (opts.passageId && ObjectId.isValid(opts.passageId)) {
@@ -51,20 +55,22 @@ function buildVariantFilter(opts: {
 
 function serializeListRows(
   items: Record<string, unknown>[],
-  passageMap: Map<string, string>
+  passageMap: Map<string, string>,
+  sourceMap?: Map<string, string>
 ): Record<string, unknown>[] {
   return items.map((d) => {
+    const pid = passageIdToValidHex(d.passage_id);
+    const passage_source = pid && sourceMap ? (sourceMap.get(pid) ?? null) : null;
     const kind = d.record_kind;
     if (kind === 'narrative') {
-      return serialize({ ...d, record_kind: 'narrative' }, null);
+      return serialize({ ...d, record_kind: 'narrative', passage_source }, null);
     }
-    const pid = passageIdToValidHex(d.passage_id);
     const orig = pid ? (passageMap.get(pid) ?? '') : '';
     const qd = d.question_data as Record<string, unknown> | undefined;
     const para = typeof qd?.Paragraph === 'string' ? (qd.Paragraph as string) : '';
     const typeStr = String(d.type ?? '').trim();
     const variation_pct = variationPercentAgainstOriginal(typeStr, orig, para, qd);
-    const row = { ...d, record_kind: 'variant' };
+    const row = { ...d, record_kind: 'variant', passage_source };
     return serialize(row, variation_pct);
   });
 }
@@ -99,12 +105,91 @@ async function loadPassageMapForRows(
   return passageMap;
 }
 
+/**
+ * passage_id 목록 → passages.passage_source 맵 (기출기반 교재 원문출처 표시용)
+ * key: passage_id hex string, value: passage_source (예: "25년 9월 고1 영어모의고사 18번")
+ */
+async function loadPassageSourceMap(
+  db: Awaited<ReturnType<typeof getDb>>,
+  items: Record<string, unknown>[]
+): Promise<Map<string, string>> {
+  const idHexSet = new Set<string>();
+  for (const d of items) {
+    const h = passageIdToValidHex(d.passage_id);
+    if (h) idHexSet.add(h);
+  }
+  const passageOids = [...idHexSet].map((h) => new ObjectId(h));
+  const sourceMap = new Map<string, string>();
+  if (passageOids.length > 0) {
+    const passagesCol = db.collection('passages');
+    const passages = await passagesCol
+      .find({ _id: { $in: passageOids } })
+      .project({ _id: 1, passage_source: 1, textbook: 1 })
+      .toArray();
+    for (const p of passages) {
+      const id = String(p._id);
+      const ps = typeof p.passage_source === 'string' ? p.passage_source.trim() : '';
+      if (ps) sourceMap.set(id, ps);
+    }
+  }
+  return sourceMap;
+}
+
+/**
+ * 기출기반 교재명 → 해당 교재의 passage ObjectId 목록
+ * generated_questions 필터를 passage_id 기반으로 전환할 때 사용
+ */
+async function loadExamTextbookPassageIds(
+  db: Awaited<ReturnType<typeof getDb>>,
+  examTextbook: string
+): Promise<ObjectId[]> {
+  if (!examTextbook) return [];
+  const passagesCol = db.collection('passages');
+  const docs = await passagesCol
+    .find({ textbook: examTextbook })
+    .project({ _id: 1, original_passage_id: 1 })
+    .toArray();
+
+  const ids = new Set<string>();
+  for (const d of docs) {
+    // original_passage_id가 있으면 원본 passage 기준으로 문제 조회
+    if (d.original_passage_id instanceof ObjectId) {
+      ids.add(d.original_passage_id.toHexString());
+    } else if (d.original_passage_id) {
+      try { ids.add(new ObjectId(String(d.original_passage_id)).toHexString()); } catch { /* skip */ }
+    }
+    // original_passage_id 미설정분: 해당 passage 자체 ID로 fallback
+    if (!d.original_passage_id) {
+      ids.add((d._id as ObjectId).toHexString());
+    }
+  }
+  return [...ids].map((hex) => new ObjectId(hex));
+}
+
+/** 기출기반 교재 목록 (textbook_links.isExamBased=true) */
+async function loadExamBasedTextbooks(
+  db: Awaited<ReturnType<typeof getDb>>
+): Promise<Set<string>> {
+  try {
+    const docs = await db
+      .collection('textbook_links')
+      .find({ isExamBased: true })
+      .project({ _id: 0, textbookKey: 1 })
+      .toArray();
+    return new Set(docs.map((d) => String(d.textbookKey ?? '')).filter(Boolean));
+  } catch {
+    return new Set();
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
   const { searchParams } = request.nextUrl;
   const textbook = searchParams.get('textbook')?.trim() || '';
+  /** 기출기반 교재명 — 설정 시 passage_id 기반으로 조회 (textbook 필터 대신) */
+  const examTextbook = searchParams.get('exam_textbook')?.trim() || '';
   const type = searchParams.get('type')?.trim() || '';
   const status = searchParams.get('status')?.trim() || '';
   const difficulty = searchParams.get('difficulty')?.trim() || '';
@@ -119,21 +204,46 @@ export async function GET(request: NextRequest) {
   const dataScope =
     dataScopeRaw === 'narrative' || dataScopeRaw === 'all' ? dataScopeRaw : 'variant';
 
-  const variantFilter = buildVariantFilter({ textbook, type, status, difficulty, passageId, q });
-  const narrFilter = buildNarrativeQuestionsFilter({
-    textbook,
-    type,
-    passageIdHex: passageId,
-    q,
-  });
-
-  const sortSpec =
-    sortMode === 'newest'
-      ? ({ created_at: -1, _id: -1 } as Record<string, 1 | -1>)
-      : ({ textbook: 1, source: 1, type: 1, created_at: -1, _id: -1 } as Record<string, 1 | -1>);
-
   try {
     const db = await getDb('gomijoshua');
+
+    /** 기출기반 교재 선택 시: passage_id 기반 필터로 전환 */
+    let examPassageIds: ObjectId[] = [];
+    if (examTextbook) {
+      examPassageIds = await loadExamTextbookPassageIds(db, examTextbook);
+    }
+
+    const effectiveTextbook = examTextbook ? '' : textbook;
+    const variantFilter = buildVariantFilter({
+      textbook: effectiveTextbook,
+      type,
+      status,
+      difficulty,
+      passageId,
+      q,
+    });
+    const narrFilter = buildNarrativeQuestionsFilter({
+      textbook: effectiveTextbook,
+      type,
+      passageIdHex: passageId,
+      q,
+    });
+
+    /** exam_textbook 있으면 passage_id $in 조건 추가 */
+    if (examPassageIds.length > 0) {
+      variantFilter.passage_id = { $in: examPassageIds };
+      (narrFilter as Record<string, unknown>).passage_id = { $in: examPassageIds };
+    } else if (examTextbook) {
+      // 교재명은 있지만 passage가 없는 경우 — 결과 없음 처리
+      variantFilter.passage_id = { $in: [] as ObjectId[] };
+      (narrFilter as Record<string, unknown>).passage_id = { $in: [] as ObjectId[] };
+    }
+
+    const sortSpec =
+      sortMode === 'newest'
+        ? ({ created_at: -1, _id: -1 } as Record<string, 1 | -1>)
+        : ({ textbook: 1, source: 1, type: 1, created_at: -1, _id: -1 } as Record<string, 1 | -1>);
+
     const col = db.collection('generated_questions');
     const narrCol = db.collection('narrative_questions');
 
@@ -147,7 +257,13 @@ export async function GET(request: NextRequest) {
           .limit(limit)
           .toArray(),
       ]);
-      const items = raw.map((d) => mapNarrativeDocToListRow(d as Record<string, unknown>));
+      const rawItems = raw.map((d) => mapNarrativeDocToListRow(d as Record<string, unknown>)) as Record<string, unknown>[];
+      const sourceMap = await loadPassageSourceMap(db, rawItems);
+      const items = rawItems.map((row) => {
+        const pid = passageIdToValidHex(row.passage_id);
+        const passage_source = pid ? (sourceMap.get(pid) ?? null) : null;
+        return { ...row, passage_source };
+      });
       return NextResponse.json({
         items,
         total,
@@ -251,8 +367,11 @@ export async function GET(request: NextRequest) {
 
       const total = typeof countAgg[0]?.n === 'number' ? countAgg[0].n : 0;
       const items = listAgg as Record<string, unknown>[];
-      const passageMap = await loadPassageMapForRows(db, items);
-      const serialized = serializeListRows(items, passageMap);
+      const [passageMap, sourceKeyMap] = await Promise.all([
+        loadPassageMapForRows(db, items),
+        loadPassageSourceMap(db, items),
+      ]);
+      const serialized = serializeListRows(items, passageMap, sourceKeyMap);
 
       return NextResponse.json({
         items: serialized,
@@ -291,8 +410,11 @@ export async function GET(request: NextRequest) {
     ]);
 
     const withKind = (items as Record<string, unknown>[]).map((d) => ({ ...d, record_kind: 'variant' }));
-    const passageMap = await loadPassageMapForRows(db, withKind);
-    const serialized = serializeListRows(withKind, passageMap);
+    const [passageMap, sourceKeyMap] = await Promise.all([
+      loadPassageMapForRows(db, withKind),
+      loadPassageSourceMap(db, withKind),
+    ]);
+    const serialized = serializeListRows(withKind, passageMap, sourceKeyMap);
 
     return NextResponse.json({
       items: serialized,
@@ -323,6 +445,13 @@ export async function POST(request: NextRequest) {
     }
     if (!source || !type) {
       return NextResponse.json({ error: 'source(출처)와 유형(type)은 필수입니다.' }, { status: 400 });
+    }
+
+    if (type === '워크북어법') {
+      return NextResponse.json(
+        { error: '워크북어법은 /api/admin/workbook/save 로 저장하세요.' },
+        { status: 422 },
+      );
     }
 
     source = normalizeMockVariantSourceLabel(textbook, source);

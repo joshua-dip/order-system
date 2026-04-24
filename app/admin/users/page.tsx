@@ -44,17 +44,17 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch('/api/auth/me', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
-        if (d?.role !== 'admin') { router.replace('/admin/login'); return; }
-        setAdminLoginId(d.loginId ?? '');
+        if (!d?.user || d.user.role !== 'admin') { router.replace('/admin/login'); return; }
+        setAdminLoginId(d.user.loginId ?? '');
       })
       .catch(() => router.replace('/admin/login'));
   }, [router]);
 
   useEffect(() => {
-    fetch('/api/admin/users')
+    fetch('/api/admin/users', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
         if (d?.users) setUsers(d.users);

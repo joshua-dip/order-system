@@ -11,6 +11,7 @@ import {
 import QuestionFriendlyPreview from '@/app/my/premium/variant-generate/QuestionFriendlyPreview';
 import EssayQuestionPreview from '@/app/my/premium/variant-generate/EssayQuestionPreview';
 import { MEMBER_ESSAY_QUESTION_TYPES } from '@/lib/member-essay-draft-claude';
+import { WorkbookGrammarPreview } from '@/app/admin/workbook/_components/WorkbookGrammarPreview';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -72,7 +73,7 @@ const ESSAY_TYPE: TypeMeta = {
   icon: 'note',
 };
 
-type PageMode = 'multiple-choice' | 'essay';
+type PageMode = 'multiple-choice' | 'essay' | 'workbook';
 
 const SAMPLE_PARAGRAPH = `Most people think that creativity is something you are born with — that you either have it or you don't. But research suggests otherwise. Studies have repeatedly shown that creativity is a skill, much like playing the piano or speaking a foreign language. The more you practice it, the better you become. What truly separates highly creative people from the rest is not raw talent, but their willingness to explore unfamiliar ideas, fail repeatedly, and try again. In short, creativity grows through deliberate effort, not through waiting for inspiration to strike.`;
 
@@ -311,6 +312,49 @@ export default function VariantTryPage() {
     }
   };
 
+  const handleWorkbookGenerate = async () => {
+    setMessage(null);
+    if (charCount < 10) {
+      showMessage({ kind: 'err', text: '영어 지문을 10자 이상 입력해 주세요.' });
+      textareaRef.current?.focus();
+      return;
+    }
+    if (!apiKey) {
+      showMessage({ kind: 'err', text: 'Anthropic API 키를 먼저 등록해 주세요.' });
+      setShowKeyInput(true);
+      apiSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setBusy(true);
+    setDraft(null);
+    try {
+      const res = await fetch('/api/variant/workbook-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-anthropic-api-key': apiKey },
+        body: JSON.stringify({ paragraph: paragraph.trim(), maxPoints: 4 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showMessage({ kind: 'err', text: typeof data?.error === 'string' ? data.error : '생성에 실패했습니다.' });
+        return;
+      }
+      const qd =
+        data.question_data && typeof data.question_data === 'object' && !Array.isArray(data.question_data)
+          ? (data.question_data as Record<string, unknown>)
+          : null;
+      if (!qd) {
+        showMessage({ kind: 'err', text: '응답 형식 오류입니다.' });
+        return;
+      }
+      setDraft({ type: '워크북어법', question_data: qd });
+      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    } catch {
+      showMessage({ kind: 'err', text: '요청 중 오류가 발생했습니다.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const stepDone = {
     key: apiKeySaved,
     paragraph: charCount >= 10,
@@ -320,8 +364,10 @@ export default function VariantTryPage() {
   const firstIncompleteIdx = stepFlags.findIndex((d) => !d);
   const currentStepIdx = firstIncompleteIdx === -1 ? -1 : firstIncompleteIdx;
   const canGenerate = stepDone.key && stepDone.paragraph && !busy &&
-    (pageMode === 'essay' || stepDone.type);
-  const selectedTypeMeta = pageMode === 'essay' ? ESSAY_TYPE : ALL_TYPES.find((t) => t.key === selectedType);
+    (pageMode === 'essay' || pageMode === 'workbook' || stepDone.type);
+  const selectedTypeMeta = pageMode === 'essay' ? ESSAY_TYPE
+    : pageMode === 'workbook' ? { key: '워크북어법', label: '워크북 어법', desc: '[ A / B ] 양자택일 어법', icon: 'search' as IconName }
+    : ALL_TYPES.find((t) => t.key === selectedType);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -462,7 +508,7 @@ export default function VariantTryPage() {
             done={pageMode === 'essay' ? true : stepDone.type}
           />
 
-          {/* 객관식 / 서술형 탭 */}
+          {/* 객관식 / 서술형 / 워크북 탭 */}
           <div className="mt-3 mb-4 flex rounded-xl overflow-hidden border border-slate-200 bg-slate-100 p-1 gap-1">
             <button
               type="button"
@@ -487,6 +533,18 @@ export default function VariantTryPage() {
               }`}
             >
               서술형 (요약문)
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => { setPageMode('workbook'); setDraft(null); }}
+              className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${
+                pageMode === 'workbook'
+                  ? 'bg-white text-amber-700 shadow-sm ring-1 ring-amber-200'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              워크북 (어법)
             </button>
           </div>
 
@@ -546,6 +604,30 @@ export default function VariantTryPage() {
                   </svg>
                 </div>
                 <p className="text-[11px] leading-snug text-emerald-100">{ESSAY_TYPE.desc}</p>
+              </button>
+            </div>
+          )}
+
+          {/* 워크북 어법 유형 카드 */}
+          {pageMode === 'workbook' && (
+            <div>
+              <p className="text-[11px] text-slate-500 mb-3 px-1 leading-relaxed">
+                지문 안에서 어법 포인트를 자동으로 찾아 <strong>[ A / B ]</strong> 양자택일 형태로 변환하는 워크북용 문항입니다.
+              </p>
+              <button
+                type="button"
+                className="w-full rounded-2xl border-2 border-amber-600 bg-amber-600 text-white p-4 text-left shadow-md scale-[1.01] cursor-default"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon name="search" className="h-4 w-4 text-white" />
+                  <span className="text-sm font-bold">워크북 어법 (양자택일)</span>
+                  <svg className="ml-auto h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-[11px] leading-snug text-amber-100">
+                  수동태·분사·관계사·시제·수일치 등 어법 포인트를 [ 정답 / 오답 ] 형식으로 지문에 삽입 · 정답·해설 자동 생성
+                </p>
               </button>
             </div>
           )}
@@ -634,18 +716,24 @@ export default function VariantTryPage() {
             </div>
             <button
               type="button"
-              onClick={() => void (pageMode === 'essay' ? handleEssayGenerate() : handleGenerate())}
+              onClick={() => void (
+                pageMode === 'essay' ? handleEssayGenerate()
+                : pageMode === 'workbook' ? handleWorkbookGenerate()
+                : handleGenerate()
+              )}
               disabled={!canGenerate}
               className={`flex-1 sm:flex-none sm:min-w-[260px] inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 text-base font-bold transition-all ${
                 canGenerate
                   ? pageMode === 'essay'
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98]'
+                    : pageMode === 'workbook'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:from-amber-600 hover:to-orange-600 active:scale-[0.98]'
                     : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
             >
               {selectedTypeMeta && <Icon name={selectedTypeMeta.icon} className="h-5 w-5" />}
-              「{selectedTypeMeta?.label}」 {pageMode === 'essay' ? '서술형 만들기' : '변형문제 만들기'}
+              「{selectedTypeMeta?.label}」 {pageMode === 'essay' ? '서술형 만들기' : pageMode === 'workbook' ? '워크북 만들기' : '변형문제 만들기'}
             </button>
           </div>
         </div>
@@ -813,20 +901,37 @@ function ResultPanel({
   pageMode: PageMode;
 }) {
   const isEssay = (MEMBER_ESSAY_QUESTION_TYPES as readonly string[]).includes(draft.type);
+  const isWorkbook = draft.type === '워크북어법';
+  const headerGradient = isWorkbook
+    ? 'from-amber-500 to-orange-500'
+    : isEssay
+    ? 'from-emerald-500 to-teal-600'
+    : 'from-emerald-500 to-teal-600';
+  const borderColor = isWorkbook ? 'border-amber-200' : isEssay ? 'border-emerald-200' : 'border-violet-200';
+  const btnColor = isWorkbook
+    ? 'bg-amber-500 hover:bg-amber-600'
+    : isEssay
+    ? 'bg-emerald-600 hover:bg-emerald-700'
+    : 'bg-violet-600 hover:bg-violet-700';
+
   return (
     <div className="space-y-4 anim-fade-slide-bottom">
       {/* 성공 헤더 */}
-      <div className={`rounded-3xl p-6 text-white shadow-lg text-center bg-gradient-to-br ${isEssay ? 'from-emerald-500 to-teal-600' : 'from-emerald-500 to-teal-600'}`}>
+      <div className={`rounded-3xl p-6 text-white shadow-lg text-center bg-gradient-to-br ${headerGradient}`}>
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
           <Icon name="check" className="h-7 w-7 text-white" />
         </div>
-        <h2 className="text-xl font-black">{isEssay ? '서술형 문제가 완성됐어요!' : '변형문제가 완성됐어요!'}</h2>
-        <p className="text-sm text-emerald-100 mt-1">「{draft.type}」 유형</p>
+        <h2 className="text-xl font-black">
+          {isWorkbook ? '워크북 어법 문제가 완성됐어요!' : isEssay ? '서술형 문제가 완성됐어요!' : '변형문제가 완성됐어요!'}
+        </h2>
+        <p className="text-sm text-white/80 mt-1">「{draft.type}」 유형</p>
       </div>
 
       {/* 결과 본문 */}
-      <div className={`rounded-3xl border-2 bg-white p-5 shadow-sm ${isEssay ? 'border-emerald-200' : 'border-violet-200'}`}>
-        {isEssay ? (
+      <div className={`rounded-3xl border-2 bg-white p-5 shadow-sm ${borderColor}`}>
+        {isWorkbook ? (
+          <WorkbookGrammarPreview data={draft.question_data} />
+        ) : isEssay ? (
           <EssayQuestionPreview
             data={draft.question_data}
             editable={false}
@@ -840,9 +945,9 @@ function ResultPanel({
           <button
             type="button"
             onClick={onTryAnother}
-            className={`flex-1 rounded-2xl py-3 text-sm font-bold text-white transition-colors ${isEssay ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-violet-600 hover:bg-violet-700'}`}
+            className={`flex-1 rounded-2xl py-3 text-sm font-bold text-white transition-colors ${btnColor}`}
           >
-            ← {isEssay ? '다시 만들어보기' : '다른 유형도 만들어보기'}
+            ← {isWorkbook ? '다시 만들어보기' : isEssay ? '다시 만들어보기' : '다른 유형도 만들어보기'}
           </button>
           <button
             type="button"
@@ -891,13 +996,26 @@ function UpgradeBanner() {
         ))}
       </ul>
 
+      {/* 7일 무료 체험 강조 배지 */}
+      <div className="flex items-center gap-2 rounded-xl bg-white/70 border border-amber-200 px-3.5 py-2.5 mb-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-black">7</span>
+        <p className="text-xs text-amber-900 leading-snug">
+          <strong className="text-emerald-700">가입 후 7일 무료 체험</strong> — 모든 기능을 제한 없이 써보세요
+        </p>
+      </div>
+
       <a
         href={KAKAO_INQUIRY_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-full text-center rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-3.5 text-sm font-bold text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition-all active:scale-[0.98]"
+        className="group relative block w-full overflow-hidden text-center rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-4 text-sm font-bold text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition-all active:scale-[0.98]"
       >
-        카카오톡으로 가입 문의 →
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          카카오톡으로 가입 문의 →
+          <span className="rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-extrabold tracking-wide">
+            7일 무료
+          </span>
+        </span>
       </a>
     </div>
   );
@@ -1167,3 +1285,5 @@ function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: str
       return null;
   }
 }
+
+/** 워크북 어법 결과 미리보기 */

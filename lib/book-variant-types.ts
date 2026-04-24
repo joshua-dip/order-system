@@ -9,6 +9,7 @@ export const BOOK_VARIANT_QUESTION_TYPES = [
   '빈칸',
   '요약',
   '어법',
+  '워크북어법',
   '순서',
   '삽입',
   '무관한문장',
@@ -16,6 +17,11 @@ export const BOOK_VARIANT_QUESTION_TYPES = [
 ] as const;
 
 export type BookVariantQuestionType = (typeof BOOK_VARIANT_QUESTION_TYPES)[number];
+
+/** 워크북 계열을 제외한 변형문제 유형 (변형문제 관리 화면용) */
+export const BOOK_VARIANT_OBJECTIVE_TYPES = BOOK_VARIANT_QUESTION_TYPES.filter(
+  (t) => !t.startsWith('워크북'),
+);
 
 /** 동일 원문·강·유형 조합당 권장 문항 수 */
 export const DEFAULT_QUESTIONS_PER_VARIANT_TYPE = 3;

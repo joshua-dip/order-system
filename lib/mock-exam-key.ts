@@ -3,11 +3,13 @@
  *
  * 두 가지 표기를 모두 지원합니다.
  *
- *  - 신표기 (passages.textbook 과 동일): "26년 3월 고1 영어모의고사" / "23년 11월 고2 영어모의고사 (12월시행)"
+ *  - 신표기 (passages.textbook 과 동일): "26년 3월 고1 영어모의고사" (괄호 메모는 지역·「N월 시행」 제거 후 정리)
  *  - 구표기 (예전 mock-exams.json + 옛 주문): "고1_2026_03월(서울시)" / "고2_2013_06월_A형(서울시)"
  *
  * 화면 분기 ("이건 모의고사 교재인가?") 와 라벨 표시 ("어떻게 보여줄까?") 모두 한 곳에서 처리하기 위함.
  */
+
+import { isMockExamMonthScheduleSegment, stripRegionFromMockExamTextbookKey } from './mock-exam-strip-region';
 
 /** 신표기 매칭. 캡처: 1=YY, 2=M(또는 MM), 3=학년, 4=괄호 안 메모(선택) */
 const NEW_KEY_RE = /^(\d{2})년\s+(\d{1,2})월\s+고([123])\s+영어모의고사(?:\s*\(([^)]+)\))?$/;
@@ -84,16 +86,29 @@ export function isMockExamTextbookKey(key: string): boolean {
   return parsed !== null;
 }
 
+/**
+ * 단어장(/vocabulary-order) 등에서 고1·고2·고3 영어모의고사 교재는 무료로 제공.
+ * (수능 키 등 `format === 'suneung'` 은 제외)
+ */
+export function isFreeVocabularyMockExamTextbook(textbookKey: string): boolean {
+  const p = parseMockExamKey((textbookKey ?? '').trim());
+  if (!p || p.format === 'suneung') return false;
+  return p.grade === '고1' || p.grade === '고2' || p.grade === '고3';
+}
+
 /** 화면 표시용 라벨. 구표기는 신표기 형태로 변환해 보여주고, 신표기/수능은 그대로 */
 export function mockExamDisplayLabel(key: string): string {
   const parsed = parseMockExamKey(key);
   if (!parsed) return key;
-  if (parsed.format === 'new' || parsed.format === 'suneung') return parsed.raw;
+  if (parsed.format === 'new') return stripRegionFromMockExamTextbookKey(parsed.raw);
+  if (parsed.format === 'suneung') return parsed.raw;
   if (!parsed.grade || parsed.year == null || parsed.month == null) return parsed.raw;
   const yy = String(parsed.year % 100).padStart(2, '0');
   const variant = parsed.variant ? ` ${parsed.variant}` : '';
   const noteParts: string[] = [];
-  if (parsed.bracketNote) noteParts.push(parsed.bracketNote);
+  if (parsed.bracketNote && !isMockExamMonthScheduleSegment(parsed.bracketNote)) {
+    noteParts.push(parsed.bracketNote);
+  }
   const note = noteParts.length > 0 ? ` (${noteParts.join(', ')})` : '';
   return `${yy}년 ${parsed.month}월 ${parsed.grade} 영어모의고사${variant}${note}`;
 }

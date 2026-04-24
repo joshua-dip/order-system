@@ -1,8 +1,9 @@
-import { getTossPaymentsSecretKey, tossWidgetSecretRejectionMessage } from '@/lib/toss-payments-env';
+import { getTossPaymentsSecretKey } from '@/lib/toss-payments-env';
 
 /**
  * 토스페이먼츠 결제 승인 (서버 전용). 시크릿 키는 클라이언트에 노출하지 마세요.
- * @see https://docs.tosspayments.com/reference#confirm-payment
+ * 결제위젯(gsk_)·API 개별(sk_) 모두 사용 가능합니다.
+ * @see https://docs.tosspayments.com/guides/v2/payment-widget/server
  */
 export async function tossConfirmPayment(params: {
   paymentKey: string;
@@ -12,10 +13,6 @@ export async function tossConfirmPayment(params: {
   const secret = getTossPaymentsSecretKey();
   if (!secret) {
     return { ok: false, message: '결제 서버 설정이 없습니다.', status: 503 };
-  }
-  const wSecret = tossWidgetSecretRejectionMessage(secret);
-  if (wSecret) {
-    return { ok: false, message: wSecret, status: 400 };
   }
   const auth = Buffer.from(`${secret}:`).toString('base64');
   const res = await fetch('https://api.tosspayments.com/v1/payments/confirm', {

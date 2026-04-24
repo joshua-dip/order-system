@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Footer from "./components/Footer";
 import SiteVisitTracker from "./components/SiteVisitTracker";
+import KakaoFab from "./components/KakaoFab";
 import { DEFAULT_APP_BAR_TITLE, getMetadataBase } from "@/lib/site-branding";
 
 const geistSans = Geist({
@@ -44,7 +44,7 @@ export default function RootLayout({
           <SiteVisitTracker />
           {children}
         </main>
-        <Footer />
+        <KakaoFab />
       </body>
     </html>
   );

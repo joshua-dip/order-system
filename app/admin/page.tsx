@@ -298,6 +298,7 @@ export default function AdminDashboardPage() {
   /** 회원 목록: 전체·등급·드롭박스 연결 여부 */
   const [memberSegmentFilter, setMemberSegmentFilter] = useState<MemberSegmentFilter>('all');
   const [memberSortOrder, setMemberSortOrder] = useState<MemberSortOrder>('default');
+  const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
   const [editingPathId, setEditingPathId] = useState<string | null>(null);
   const [editingPathValue, setEditingPathValue] = useState('');
   const [pathSavingId, setPathSavingId] = useState<string | null>(null);
@@ -414,6 +415,24 @@ export default function AdminDashboardPage() {
   const [emailResult, setEmailResult] = useState<{ ok: boolean; msg: string } | null>(null);
   type EmailAttachment = { filename: string; content: string; contentType: string; size: number };
   const [emailAttachments, setEmailAttachments] = useState<EmailAttachment[]>([]);
+  /** 이메일 초안 목록 */
+  type EmailDraft = { id: string; orderId: string | null; orderNumber: string; loginId: string | null; to: string; subject: string; message: string; status: string; createdAt: string; updatedAt: string; sentAt: string | null };
+  const [emailDrafts, setEmailDrafts] = useState<EmailDraft[]>([]);
+  const [emailDraftsLoading, setEmailDraftsLoading] = useState(false);
+  const [emailDraftSendModal, setEmailDraftSendModal] = useState<EmailDraft | null>(null);
+  const [draftSendAttachments, setDraftSendAttachments] = useState<EmailAttachment[]>([]);
+  const [draftSendTo, setDraftSendTo] = useState('');
+  const [draftSendSubject, setDraftSendSubject] = useState('');
+  const [draftSendMessage, setDraftSendMessage] = useState('');
+  const [draftSending, setDraftSending] = useState(false);
+  const [draftSendResult, setDraftSendResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  /** 드롭박스 파일 첨부 (이메일 초안 발송 모달) */
+  type DropboxFileItem = { name: string; apiPath: string; size: number; isFolder: boolean };
+  const [dbxFiles, setDbxFiles] = useState<DropboxFileItem[]>([]);
+  const [dbxFilesLoading, setDbxFilesLoading] = useState(false);
+  const [dbxFilesError, setDbxFilesError] = useState<string | null>(null);
+  const [dbxSelected, setDbxSelected] = useState<Set<string>>(() => new Set());
+  const [dbxAttaching, setDbxAttaching] = useState(false);
   /** 최근 주문 표: 현재 표시 목록에서 다중 선택 후 일괄 삭제 */
   const [orderBulkSelectedIds, setOrderBulkSelectedIds] = useState<Set<string>>(() => new Set());
   /** 쏠북 BV 금액: 박스 클릭으로 합계·비고 펼침/접기 */
@@ -486,7 +505,16 @@ export default function AdminDashboardPage() {
       .finally(() => setExamUploadsLoading(false));
   }, []);
 
+  const fetchPendingApplicationCount = useCallback(() => {
+    fetch('/api/admin/membership-applications?status=pending&limit=1', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setPendingApplicationCount(d?.pendingCount ?? 0))
+      .catch(() => {});
+  }, []);
+
+  // fetchStats는 fetchPendingApplicationCount 아래에 정의되어야 deps 참조가 올바름
   const fetchStats = useCallback(() => {
+    fetchPendingApplicationCount();
     fetch('/api/admin/stats', { credentials: 'include' })
       .then((r) => {
         if (!r.ok) return r.json().then((d) => { setDataError(d?.error || '통계를 불러올 수 없습니다.'); return null; });
@@ -512,7 +540,7 @@ export default function AdminDashboardPage() {
           });
       })
       .catch(() => setStats(null));
-  }, []);
+  }, [fetchPendingApplicationCount]);
 
   const openSiteVisitsHistoryModal = useCallback(() => {
     setSiteVisitsHistoryOpen(true);
@@ -589,6 +617,7 @@ export default function AdminDashboardPage() {
         fetchOrders();
         fetchStats();
         fetchExamUploads();
+        fetchEmailDrafts();
         fetch('/api/admin/settings/default-textbooks', { credentials: 'include' })
           .then((r) => r.json())
           .then((d) => setDefaultTextbooks(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []))
@@ -726,6 +755,21 @@ export default function AdminDashboardPage() {
     setEditIsVip(!!u.isVip);
     setEditMessage(null);
   };
+
+  const closeEditUser = useCallback(() => {
+    setEditUser(null);
+  }, []);
+
+  useEffect(() => {
+    if (!editUser) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      closeEditUser();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [editUser, closeEditUser]);
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1662,42 +1706,197 @@ export default function AdminDashboardPage() {
     setOrderDetailTab(tab);
     setFileUrlInput(o.fileUrl ?? '');
     setStatusInput(o.status || 'pending');
-    setAssignLoginId(users[0]?.loginId ?? '');
+    const linked = (o.loginId ?? '').trim();
+    setAssignLoginId(linked || users[0]?.loginId || '');
   };
 
   const openEmailModal = (o: AdminOrder) => {
     const linkedUser = o.loginId ? users.find((u) => u.loginId === o.loginId) : null;
     const orderNum = o.orderNumber ?? `주문 ${o.id.slice(-6)}`;
+    // 주문서 텍스트에서 이메일 추출 (우선순위: orderText 파싱 → 연결 회원 이메일)
+    const emailFromText = (() => {
+      const text = typeof o.orderText === 'string' ? o.orderText : '';
+      const m = text.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/);
+      return m ? m[0] : null;
+    })();
+    // 상태별 기본 메시지
+    const defaultMessage = (() => {
+      const greeting = linkedUser?.name
+        ? `안녕하세요, ${linkedUser.name} 선생님`
+        : '안녕하세요';
+      switch (o.status) {
+        case 'payment_confirmed':
+          return `${greeting}\n\n입금이 확인되었습니다. 감사합니다 :)\n제작을 시작하겠습니다. 완료되면 다시 안내 드리겠습니다.`;
+        case 'in_progress':
+          return `${greeting}\n\n현재 열심히 제작 중입니다. 조금만 기다려 주세요!`;
+        case 'completed':
+          return `${greeting}\n\n제작이 완료되었습니다! 파일 첨부드립니다:)`;
+        case 'accepted':
+          return `${greeting}\n\n주문을 확인했습니다. 입금 확인 후 제작을 시작하겠습니다.\n감사합니다!`;
+        default:
+          return `${greeting}\n\n주문 내역을 안내드립니다. 문의 사항이 있으시면 언제든지 답장 주세요!`;
+      }
+    })();
     setEmailModal(o);
-    setEmailTo(linkedUser?.email ?? '');
+    setEmailTo(emailFromText ?? linkedUser?.email ?? '');
     setEmailSubject(`[주문서] ${orderNum} 주문 내역 안내`);
-    setEmailMessage('');
+    setEmailMessage(defaultMessage);
     setEmailResult(null);
     setEmailAttachments([]);
   };
 
-  const handleSendEmail = async () => {
+  const handleSaveDraft = async () => {
     if (!emailModal) return;
     setEmailSending(true);
     setEmailResult(null);
     try {
-      const res = await fetch(`/api/admin/orders/${emailModal.id}/send-email`, {
+      const res = await fetch('/api/admin/email-drafts', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: emailTo, subject: emailSubject, message: emailMessage, attachments: emailAttachments }),
+        body: JSON.stringify({
+          orderId: emailModal.id,
+          orderNumber: emailModal.orderNumber ?? '',
+          loginId: emailModal.loginId ?? '',
+          to: emailTo,
+          subject: emailSubject,
+          message: emailMessage,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setEmailResult({ ok: false, msg: data.error || '발송 실패' });
+        setEmailResult({ ok: false, msg: data.error || '저장 실패' });
       } else {
-        setEmailResult({ ok: true, msg: '이메일이 발송되었습니다.' });
+        setEmailResult({ ok: true, msg: '초안이 저장되었습니다. 초안함에서 파일 첨부 후 발송하세요.' });
+        fetchEmailDrafts();
       }
     } catch {
       setEmailResult({ ok: false, msg: '네트워크 오류가 발생했습니다.' });
     } finally {
       setEmailSending(false);
     }
+  };
+
+  const fetchEmailDrafts = async () => {
+    setEmailDraftsLoading(true);
+    try {
+      const res = await fetch('/api/admin/email-drafts?status=draft', { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) setEmailDrafts(data.items ?? []);
+    } catch { /* ignore */ } finally {
+      setEmailDraftsLoading(false);
+    }
+  };
+
+  const openDraftSendModal = (d: EmailDraft) => {
+    setEmailDraftSendModal(d);
+    setDraftSendTo(d.to);
+    setDraftSendSubject(d.subject);
+    setDraftSendMessage(d.message);
+    setDraftSendAttachments([]);
+    setDraftSendResult(null);
+    // 드롭박스 파일 목록 초기화 후 자동 로드
+    setDbxFiles([]);
+    setDbxFilesError(null);
+    setDbxSelected(new Set());
+    if (d.orderId) {
+      setDbxFilesLoading(true);
+      fetch(`/api/admin/orders/${d.orderId}/dropbox-files`, { credentials: 'include' })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.ok) {
+            const fileOnly = (data.files as DropboxFileItem[]).filter((f) => !f.isFolder);
+            setDbxFiles(fileOnly);
+            // 주문서 txt 제외하고 전부 자동 선택
+            const autoSelect = new Set(
+              fileOnly.filter((f) => !f.name.startsWith('주문서_')).map((f) => f.apiPath),
+            );
+            setDbxSelected(autoSelect);
+          } else if (data.error && !data.error.includes('not_found') && !data.error.includes('Dropbox 환경')) {
+            setDbxFilesError(data.error);
+          }
+        })
+        .catch(() => { /* 드롭박스 없으면 조용히 무시 */ })
+        .finally(() => setDbxFilesLoading(false));
+    }
+  };
+
+  const handleDbxAttach = async () => {
+    if (!emailDraftSendModal?.orderId || dbxSelected.size === 0) return;
+    const selectedFiles = dbxFiles.filter((f) => dbxSelected.has(f.apiPath));
+    setDbxAttaching(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${emailDraftSendModal.orderId}/dropbox-files`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paths: selectedFiles.map((f) => f.apiPath),
+          names: selectedFiles.map((f) => f.name),
+        }),
+      });
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.files)) {
+        const attached = (data.files as { filename: string; content: string; contentType: string; size: number }[]).map((f) => ({
+          filename: f.filename,
+          content: f.content,
+          contentType: f.contentType,
+          size: f.size,
+        }));
+        setDraftSendAttachments((prev) => {
+          const existing = new Set(prev.map((a) => a.filename));
+          return [...prev, ...attached.filter((a) => !existing.has(a.filename))];
+        });
+        // 첨부한 파일 선택 해제
+        setDbxSelected(new Set());
+        if (data.errors?.length) {
+          alert(`일부 파일 오류:\n${(data.errors as string[]).join('\n')}`);
+        }
+      } else {
+        alert(data.error || '파일 다운로드 실패');
+      }
+    } catch {
+      alert('파일 첨부 중 오류가 발생했습니다.');
+    } finally {
+      setDbxAttaching(false);
+    }
+  };
+
+  const handleSendDraft = async () => {
+    if (!emailDraftSendModal) return;
+    setDraftSending(true);
+    setDraftSendResult(null);
+    try {
+      const res = await fetch(`/api/admin/email-drafts/${emailDraftSendModal.id}/send`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: draftSendTo,
+          subject: draftSendSubject,
+          message: draftSendMessage,
+          attachments: draftSendAttachments,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDraftSendResult({ ok: false, msg: data.error || '발송 실패' });
+      } else {
+        setDraftSendResult({ ok: true, msg: '발송되었습니다.' });
+        setEmailDrafts((prev) => prev.filter((d) => d.id !== emailDraftSendModal.id));
+        setTimeout(() => setEmailDraftSendModal(null), 1500);
+      }
+    } catch {
+      setDraftSendResult({ ok: false, msg: '네트워크 오류가 발생했습니다.' });
+    } finally {
+      setDraftSending(false);
+    }
+  };
+
+  const handleDeleteDraft = async (id: string) => {
+    if (!confirm('초안을 삭제할까요?')) return;
+    await fetch(`/api/admin/email-drafts/${id}`, { method: 'DELETE', credentials: 'include' });
+    setEmailDrafts((prev) => prev.filter((d) => d.id !== id));
   };
 
   const handleSaveFileUrl = async () => {
@@ -1778,18 +1977,27 @@ export default function AdminDashboardPage() {
 
   const handleAssignMember = async () => {
     if (!orderDetailModal || !assignLoginId.trim()) return;
+    const nextId = assignLoginId.trim();
+    const prevId = (orderDetailModal.loginId ?? '').trim();
+    if (prevId && prevId !== nextId) {
+      const pts = orderDetailModal.pointsUsed ?? 0;
+      const ptNote =
+        pts > 0
+          ? `\n\n포인트 ${pts.toLocaleString()}P가 사용된 주문입니다. 연결 회원만 바뀌며 포인트는 자동으로 옮겨지지 않습니다.`
+          : '';
+      if (!confirm(`연결 회원을 "${prevId}" → "${nextId}"(으)로 바꿉니다.${ptNote}\n\n계속할까요?`)) return;
+    }
     setAssignSavingId(orderDetailModal.id);
     try {
       const res = await fetch(`/api/orders/${orderDetailModal.id}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'assignMember', loginId: assignLoginId.trim() }),
+        body: JSON.stringify({ action: 'assignMember', loginId: nextId }),
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        const user = users.find((u) => u.loginId === assignLoginId);
-        const next = { ...orderDetailModal, loginId: assignLoginId.trim() };
+        const next = { ...orderDetailModal, loginId: nextId };
         setRecentOrders((prev) => prev.map((o) => (o.id === orderDetailModal.id ? next : o)));
         setUserOrders((prev) => prev.map((o) => (o.id === orderDetailModal.id ? next : o)));
         setOrderDetailModal(next);
@@ -2279,6 +2487,12 @@ export default function AdminDashboardPage() {
             변형문제 관리 (DB)
           </Link>
           <Link
+            href="/admin/essay-generator"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            서술형 출제기
+          </Link>
+          <Link
             href="/admin/syntax-analyzer"
             className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
@@ -2296,13 +2510,55 @@ export default function AdminDashboardPage() {
           >
             Claude Code 검수 로그
           </Link>
+          <div className="border-t border-slate-700 my-2 pt-2">
+            <p className="text-xs text-slate-500 px-1 mb-1 uppercase tracking-wide font-semibold">워크북 관리</p>
+          </div>
+          <Link
+            href="/admin/workbook"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40"
+          >
+            워크북 대시보드
+          </Link>
+          <div className="border-t border-slate-700 my-2 pt-2">
+            <p className="text-xs text-slate-500 px-1 mb-1 uppercase tracking-wide font-semibold">학생 관리</p>
+          </div>
+          <Link
+            href="/admin/students"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40"
+          >
+            학생 목록
+          </Link>
+          <Link
+            href="/admin/enrollments"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
+          >
+            등록 신청 관리
+          </Link>
+          <Link
+            href="/admin/cycles"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
+          >
+            사이클 관리
+          </Link>
+          <div className="border-t border-slate-700 my-2 pt-2" />
           <Link
             href="/admin/guest-variant-logs"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40 mt-1"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40"
           >
             비회원 변형 로그
           </Link>
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
+          <Link
+            href="/admin/membership-applications"
+            className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            <span>가입 신청 관리</span>
+            {pendingApplicationCount > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold min-w-[1.25rem] h-5 px-1.5 rounded-full flex items-center justify-center">
+                {pendingApplicationCount}
+              </span>
+            )}
+          </Link>
           <button
             type="button"
             onClick={() => setSection('members')}
@@ -2322,6 +2578,12 @@ export default function AdminDashboardPage() {
             className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
           >
             회원상세관리
+          </Link>
+          <Link
+            href="/admin/solbook-lesson-links"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
+          >
+            쏠북 강별 링크 관리
           </Link>
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
           <button
@@ -2729,6 +2991,7 @@ export default function AdminDashboardPage() {
                         chunks.push(`포인트 ${pointsUsedOnOrder.toLocaleString()}원`);
                         return chunks.join(' · ');
                       })();
+                      const isCancelledRow = (o.status || 'pending') === 'cancelled';
                       return (
                       <tr key={o.id} className="border-b border-slate-700/50 hover:bg-slate-700/40 align-top text-xs group/row">
                         <td className="py-2.5 px-2 align-middle text-center w-10">
@@ -2878,12 +3141,12 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-2.5 px-2 text-right text-slate-400 tabular-nums whitespace-nowrap align-top">
                           {(o.pointsUsed ?? 0) > 0 ? (
-                            <span className="text-sky-300/90">{(o.pointsUsed ?? 0).toLocaleString()}</span>
+                            <span className={`text-sky-300/90 ${isCancelledRow ? 'line-through opacity-50' : ''}`}>{(o.pointsUsed ?? 0).toLocaleString()}</span>
                           ) : (
                             <span className="text-slate-600">—</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-2 text-slate-300 tabular-nums text-xs align-top" title={amountTitle}>
+                        <td className={`py-2.5 px-2 text-slate-300 tabular-nums text-xs align-top ${isCancelledRow ? 'line-through opacity-50' : ''}`} title={amountTitle}>
                           {orderCompleted ? (
                             o.revenueWon != null && o.revenueWon >= 0 ? (
                               pointsUsedOnOrder > 0 ? (
@@ -3357,6 +3620,12 @@ export default function AdminDashboardPage() {
                       <p className="text-slate-500 text-[11px] mt-1.5">
                         교재 추가·제거는 <a href="/admin/passages" className="text-violet-400 underline">원문 관리</a>에서 각 지문의 출판사를 설정하면 자동 반영됩니다.
                       </p>
+                      <a
+                        href="/admin/solbook-lesson-links"
+                        className="inline-flex items-center gap-1 mt-2 text-[11px] text-violet-300 hover:text-violet-200 underline"
+                      >
+                        강별 링크 편집 →
+                      </a>
                     </div>
                     <div>
                       <label className="block text-slate-400 text-xs font-medium mb-1">쏠북 구매 안내 URL (선택)</label>
@@ -3915,7 +4184,16 @@ export default function AdminDashboardPage() {
                       <div
                         key={u.id}
                         id={`member-card-${u.id}`}
-                        className={`scroll-mt-6 rounded-2xl overflow-hidden border transition-colors ${isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}
+                        role="presentation"
+                        onClick={() => router.push(`/admin/users/${u.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            router.push(`/admin/users/${u.id}`);
+                          }
+                        }}
+                        className={`scroll-mt-6 rounded-2xl overflow-hidden border transition-colors cursor-pointer hover:border-cyan-500/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500/50 ${isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}
+                        title="클릭하면 회원 상세 페이지로 이동합니다"
                       >
                         <div className="p-4 flex items-start gap-3">
                           <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-base font-extrabold text-white shrink-0 bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>
@@ -3978,11 +4256,12 @@ export default function AdminDashboardPage() {
                               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-400" title={formatDate(u.createdAt)}>{daysAgo(u.createdAt)} 가입</span>
                             </div>
                           </div>
-                          <div className="flex gap-1.5 shrink-0">
+                          <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <button type="button" onClick={() => openEdit(u)} title="수정" className="w-8 h-8 rounded-lg border border-[#2e3248] bg-transparent text-slate-400 flex items-center justify-center text-sm hover:border-slate-500 hover:text-white">✏️</button>
                             <button type="button" onClick={() => handleDelete(u.id)} disabled={deletingId === u.id} title="삭제" className="w-8 h-8 rounded-lg border border-[#2e3248] bg-transparent text-slate-400 flex items-center justify-center text-sm hover:border-red-400/50 hover:text-red-400 disabled:opacity-50">🗑️</button>
                           </div>
                         </div>
+                        <div onClick={(e) => e.stopPropagation()}>
                         {/* Dropbox 섹션 */}
                         <div className={`mx-3 mb-3 rounded-xl overflow-hidden border ${isUnset ? 'border-amber-500/20 bg-[#22263a]' : 'border-[#2e3248] bg-[#22263a]'}`}>
                           <div className={`px-3 py-2 flex items-center gap-2 border-b ${isUnset ? 'border-amber-500/15' : 'border-[#2e3248]'}`}>
@@ -4220,6 +4499,7 @@ export default function AdminDashboardPage() {
                           </div>
                           <span className="text-slate-600 text-xs">·</span>
                           <button type="button" onClick={() => handleResetPassword(u.id)} disabled={resetPasswordLoadingId === u.id} className="text-xs text-amber-400 hover:underline bg-transparent border-0 cursor-pointer p-0 disabled:opacity-50">PW 초기화</button>
+                        </div>
                         </div>
                       </div>
                     );
@@ -4491,27 +4771,49 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            {!orderDetailModal.loginId && users.length > 0 && (
+            {users.length > 0 && (
               <div className="mb-4 p-4 rounded-lg bg-slate-700/50 border border-slate-600">
-                <label className="block text-slate-300 text-sm font-medium mb-2">회원으로 연결 (가입 전 주문)</label>
-                <p className="text-slate-500 text-xs mb-2">이 주문을 회원 계정에 연결하면, 해당 회원이 내정보에서 주문 이력을 볼 수 있습니다. 연결하지 않아도 아래에서 상태 변경·링크 저장이 가능합니다.</p>
+                <label className="block text-slate-300 text-sm font-medium mb-2">
+                  {orderDetailModal.loginId ? '주문 회원 변경' : '회원으로 연결 (가입 전 주문)'}
+                </label>
+                <p className="text-slate-500 text-xs mb-2">
+                  {orderDetailModal.loginId
+                    ? '다른 회원으로 바꾸면 새 회원의 내정보 주문 이력에 표시됩니다. 포인트 사용 내역은 DB에서 자동 이전되지 않으니 필요 시 별도로 확인하세요.'
+                    : '이 주문을 회원 계정에 연결하면, 해당 회원이 내정보에서 주문 이력을 볼 수 있습니다. 연결하지 않아도 아래에서 상태 변경·링크 저장이 가능합니다.'}
+                </p>
                 <select
                   value={assignLoginId}
                   onChange={(e) => setAssignLoginId(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm mb-2"
                 >
-                  <option value="">회원 선택</option>
+                  {!orderDetailModal.loginId && <option value="">회원 선택</option>}
+                  {orderDetailModal.loginId &&
+                    !users.some((u) => u.loginId === orderDetailModal.loginId) && (
+                      <option value={orderDetailModal.loginId}>
+                        {orderDetailModal.loginId} (회원 목록에 없음)
+                      </option>
+                    )}
                   {users.map((u) => (
-                    <option key={u.id} value={u.loginId}>{u.loginId} ({u.name})</option>
+                    <option key={u.id} value={u.loginId}>
+                      {u.loginId} ({u.name})
+                    </option>
                   ))}
                 </select>
                 <button
                   type="button"
                   onClick={handleAssignMember}
-                  disabled={!assignLoginId.trim() || assignSavingId === orderDetailModal.id}
+                  disabled={
+                    !assignLoginId.trim() ||
+                    assignSavingId === orderDetailModal.id ||
+                    assignLoginId.trim() === (orderDetailModal.loginId ?? '').trim()
+                  }
                   className="w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg disabled:opacity-50"
                 >
-                  {assignSavingId === orderDetailModal.id ? '연결 중…' : '이 주문을 회원으로 연결'}
+                  {assignSavingId === orderDetailModal.id
+                    ? '저장 중…'
+                    : orderDetailModal.loginId
+                      ? '회원 변경 저장'
+                      : '이 주문을 회원으로 연결'}
                 </button>
               </div>
             )}
@@ -4666,6 +4968,37 @@ export default function AdminDashboardPage() {
                   placeholder="customer@example.com"
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500"
                 />
+                {(() => {
+                  const text = typeof emailModal.orderText === 'string' ? emailModal.orderText : '';
+                  const fromText = text.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/)?.[0] ?? null;
+                  const linkedUser = emailModal.loginId ? users.find((u) => u.loginId === emailModal.loginId) : null;
+                  const fromMember = linkedUser?.email ?? null;
+                  if (!fromText && !fromMember) return null;
+                  return (
+                    <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
+                      {fromText && (
+                        <button
+                          type="button"
+                          onClick={() => setEmailTo(fromText)}
+                          className={`px-2 py-0.5 rounded-md border transition-colors ${emailTo === fromText ? 'bg-indigo-700/60 border-indigo-500/60 text-indigo-200' : 'border-slate-600 text-slate-400 hover:text-white hover:border-slate-400'}`}
+                          title="주문서에서 추출한 이메일"
+                        >
+                          주문서: {fromText}
+                        </button>
+                      )}
+                      {fromMember && fromMember !== fromText && (
+                        <button
+                          type="button"
+                          onClick={() => setEmailTo(fromMember)}
+                          className={`px-2 py-0.5 rounded-md border transition-colors ${emailTo === fromMember ? 'bg-indigo-700/60 border-indigo-500/60 text-indigo-200' : 'border-slate-600 text-slate-400 hover:text-white hover:border-slate-400'}`}
+                          title="연결 회원 이메일"
+                        >
+                          회원: {fromMember}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               <div>
                 <label className="block text-slate-400 text-xs mb-1">제목</label>
@@ -4686,53 +5019,8 @@ export default function AdminDashboardPage() {
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 resize-none"
                 />
               </div>
-              {/* 파일 첨부 */}
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">파일 첨부 (선택, 각 5 MB 이하)</label>
-                <input
-                  type="file"
-                  multiple
-                  className="block w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-600 file:text-slate-200 hover:file:bg-slate-500 cursor-pointer"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files ?? []);
-                    const MAX = 5 * 1024 * 1024;
-                    const oversized = files.filter((f) => f.size > MAX);
-                    if (oversized.length > 0) {
-                      alert(`5 MB 초과 파일은 첨부할 수 없습니다: ${oversized.map((f) => f.name).join(', ')}`);
-                      e.target.value = '';
-                      return;
-                    }
-                    Promise.all(
-                      files.map(
-                        (file) =>
-                          new Promise<EmailAttachment>((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              const dataUrl = reader.result as string;
-                              const base64 = dataUrl.split(',')[1];
-                              resolve({ filename: file.name, content: base64, contentType: file.type || 'application/octet-stream', size: file.size });
-                            };
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                          }),
-                      ),
-                    ).then((attachments) => setEmailAttachments(attachments));
-                  }}
-                />
-                {emailAttachments.length > 0 && (
-                  <ul className="mt-1.5 space-y-1">
-                    {emailAttachments.map((a, i) => (
-                      <li key={i} className="flex items-center justify-between text-xs text-slate-400 bg-slate-700 rounded px-2 py-1">
-                        <span className="truncate">{a.filename} <span className="text-slate-500">({(a.size / 1024).toFixed(0)} KB)</span></span>
-                        <button type="button" onClick={() => setEmailAttachments((prev) => prev.filter((_, j) => j !== i))} className="ml-2 text-slate-500 hover:text-red-400 flex-shrink-0">✕</button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
               <p className="text-slate-500 text-xs">
-                주문번호 · 일시 · 상태 · 주문 내용{emailModal.fileUrl ? ' · 파일 링크' : ''}가 자동으로 포함됩니다.
+                주문번호 · 일시 · 상태 · 주문 내용이 자동으로 포함됩니다. 파일 첨부는 초안 저장 후 <strong className="text-slate-400">초안함</strong>에서 할 수 있습니다.
               </p>
             </div>
 
@@ -4771,11 +5059,208 @@ export default function AdminDashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={handleSendEmail}
+                onClick={handleSaveDraft}
                 disabled={emailSending || !emailTo.trim()}
                 className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 disabled:opacity-50"
               >
-                {emailSending ? '발송 중…' : '✉ 발송'}
+                {emailSending ? '저장 중…' : '💾 초안 저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이메일 초안함 패널 — 발송 버튼 클릭 시 목록 불러오기 */}
+      {emailDrafts.length > 0 && !emailModal && !emailDraftSendModal && (
+        <div className="fixed bottom-6 right-6 z-50 w-80 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+            <span className="text-sm font-semibold text-white">📬 이메일 초안함 ({emailDrafts.length})</span>
+            <button type="button" onClick={() => setEmailDrafts([])} className="text-slate-500 hover:text-slate-300 text-xs">닫기</button>
+          </div>
+          <ul className="max-h-64 overflow-y-auto divide-y divide-slate-700">
+            {emailDrafts.map((d) => (
+              <li key={d.id} className="px-4 py-3">
+                <p className="text-xs text-slate-400 font-mono truncate">{d.orderNumber || '—'} → {d.to}</p>
+                <p className="text-xs text-slate-300 truncate mt-0.5">{d.subject}</p>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => openDraftSendModal(d)}
+                    className="flex-1 text-xs py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 font-medium"
+                  >
+                    ✉ 파일 첨부 후 발송
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDraft(d.id)}
+                    className="px-2.5 text-xs py-1.5 rounded-lg bg-slate-700 text-slate-400 hover:bg-red-900/60 hover:text-red-300"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="px-4 py-2 border-t border-slate-700">
+            <button type="button" onClick={fetchEmailDrafts} disabled={emailDraftsLoading} className="text-xs text-slate-500 hover:text-slate-300">
+              {emailDraftsLoading ? '불러오는 중…' : '↻ 새로고침'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 초안 발송 모달 — 파일 첨부 후 발송 */}
+      {emailDraftSendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-700">
+            <h3 className="font-bold text-white mb-1">이메일 발송</h3>
+            <p className="text-slate-400 text-sm mb-4 font-mono">{emailDraftSendModal.orderNumber} · {emailDraftSendModal.loginId ?? '비회원'}</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">받는 사람</label>
+                <input type="email" value={draftSendTo} onChange={(e) => setDraftSendTo(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">제목</label>
+                <input type="text" value={draftSendSubject} onChange={(e) => setDraftSendSubject(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">추가 메시지</label>
+                <textarea value={draftSendMessage} onChange={(e) => setDraftSendMessage(e.target.value)} rows={2}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm resize-none" />
+              </div>
+              {/* 드롭박스 파일 자동 첨부 */}
+              {emailDraftSendModal?.orderId && (
+                <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-indigo-300">📁 드롭박스 파일</span>
+                    {dbxFilesLoading && (
+                      <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 border border-slate-500 border-t-indigo-400 rounded-full animate-spin" />
+                        불러오는 중…
+                      </span>
+                    )}
+                  </div>
+                  {dbxFilesError && (
+                    <p className="text-[11px] text-red-400 mb-2">{dbxFilesError}</p>
+                  )}
+                  {!dbxFilesLoading && dbxFiles.length === 0 && !dbxFilesError && (
+                    <p className="text-[11px] text-slate-500">드롭박스 폴더에 파일이 없거나 폴더가 생성되지 않았습니다.</p>
+                  )}
+                  {dbxFiles.length > 0 && (
+                    <>
+                      <ul className="space-y-1 mb-2">
+                        {dbxFiles.map((f) => {
+                          const tooLarge = f.size > 20 * 1024 * 1024;
+                          return (
+                            <li key={f.apiPath} className="flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                id={`dbx-${f.apiPath}`}
+                                checked={dbxSelected.has(f.apiPath)}
+                                disabled={tooLarge}
+                                onChange={(e) => setDbxSelected((prev) => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(f.apiPath); else next.delete(f.apiPath);
+                                  return next;
+                                })}
+                                className="accent-indigo-500 disabled:opacity-40"
+                              />
+                              <label htmlFor={`dbx-${f.apiPath}`} className={`flex-1 truncate cursor-pointer ${tooLarge ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                                {f.name}
+                              </label>
+                              <span className={`shrink-0 ${tooLarge ? 'text-red-400 font-medium' : 'text-slate-500'}`}>
+                                {tooLarge ? `${(f.size / 1024 / 1024).toFixed(1)} MB — 너무 큼` : `${(f.size / 1024).toFixed(0)} KB`}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {dbxFiles.some((f) => f.size > 20 * 1024 * 1024) && (
+                        <p className="text-[11px] text-amber-400 mb-2">⚠️ 20 MB 초과 파일은 첨부 불가 — 완료 파일 URL을 이메일 본문에 직접 붙여넣으세요.</p>
+                      )}
+                      <button
+                        type="button"
+                        disabled={dbxAttaching || dbxSelected.size === 0}
+                        onClick={handleDbxAttach}
+                        className="w-full py-1.5 rounded-lg bg-indigo-700/80 hover:bg-indigo-600 disabled:opacity-50 text-indigo-100 text-xs font-semibold transition-colors"
+                      >
+                        {dbxAttaching
+                          ? '다운로드 중…'
+                          : `선택 파일 첨부 (${dbxSelected.size}개)`}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">파일 첨부 (각 5 MB 이하 — 직접 선택)</label>
+                <input
+                  type="file"
+                  multiple
+                  className="block w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-600 file:text-slate-200 hover:file:bg-slate-500 cursor-pointer"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    const MAX = 5 * 1024 * 1024;
+                    const oversized = files.filter((f) => f.size > MAX);
+                    if (oversized.length > 0) {
+                      alert(`5 MB 초과 파일: ${oversized.map((f) => f.name).join(', ')}`);
+                      e.target.value = '';
+                      return;
+                    }
+                    Promise.all(
+                      files.map(
+                        (file) =>
+                          new Promise<EmailAttachment>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              const dataUrl = reader.result as string;
+                              const base64 = dataUrl.split(',')[1];
+                              resolve({ filename: file.name, content: base64, contentType: file.type || 'application/octet-stream', size: file.size });
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                          }),
+                      ),
+                    ).then((atts) => setDraftSendAttachments((prev) => {
+                      const existing = new Set(prev.map((a) => a.filename));
+                      return [...prev, ...atts.filter((a) => !existing.has(a.filename))];
+                    }));
+                  }}
+                />
+                {draftSendAttachments.length > 0 && (
+                  <ul className="mt-1.5 space-y-1">
+                    {draftSendAttachments.map((a, i) => (
+                      <li key={i} className="flex items-center justify-between text-xs text-slate-400 bg-slate-700 rounded px-2 py-1">
+                        <span className="truncate">{a.filename} <span className="text-slate-500">({(a.size / 1024).toFixed(0)} KB)</span></span>
+                        <button type="button" onClick={() => setDraftSendAttachments((prev) => prev.filter((_, j) => j !== i))} className="ml-2 text-slate-500 hover:text-red-400">✕</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            {draftSendResult && (
+              <div className={`mt-3 px-3 py-2 rounded-lg text-sm ${draftSendResult.ok ? 'bg-emerald-900/50 text-emerald-300' : 'bg-red-900/50 text-red-300'}`}>
+                {draftSendResult.msg}
+                {!draftSendResult.ok && draftSendResult.msg.includes('RESEND_API_KEY') && (
+                  <p className="mt-1 text-xs text-red-400">
+                    .env.local에 <code className="bg-slate-700 px-1 rounded">RESEND_API_KEY=re_xxx</code>를 추가하세요.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="mt-5 flex gap-2 justify-end">
+              <button type="button" onClick={() => setEmailDraftSendModal(null)}
+                className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 text-sm hover:bg-slate-700">닫기</button>
+              <button type="button" onClick={handleSendDraft} disabled={draftSending || !draftSendTo.trim()}
+                className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 disabled:opacity-50">
+                {draftSending ? '발송 중…' : '✉ 발송'}
               </button>
             </div>
           </div>
@@ -4918,7 +5403,7 @@ export default function AdminDashboardPage() {
 
       {/* Edit user modal */}
       {editUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onKeyDown={(e) => { if (e.key === 'Escape') setEditUser(null); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-slate-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-700">
             <h3 className="font-bold text-white p-6 pb-0 shrink-0">계정 수정 — {editUser.loginId}</h3>
             <form onSubmit={handleSaveEdit} className="flex flex-col flex-1 min-h-0 p-6">
@@ -5017,7 +5502,7 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex gap-2 pt-4 shrink-0">
                 <button type="submit" disabled={editSaving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-50">{editSaving ? '저장 중…' : '저장'}</button>
-                <button type="button" onClick={() => setEditUser(null)} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">취소</button>
+                <button type="button" onClick={closeEditUser} className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500">취소</button>
               </div>
             </form>
           </div>

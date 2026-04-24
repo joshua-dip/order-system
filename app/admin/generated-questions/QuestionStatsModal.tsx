@@ -37,6 +37,8 @@ interface SourceData {
   types: string[];
   rows: SourceRow[];
   sourceTotals: Record<string, number>;
+  /** source_key → 원문출처(passage_source). 기출기반 교재에서만 제공 */
+  sourcePassageSource?: Record<string, string>;
 }
 
 type ViewMode = 'heatmap' | 'bar-textbook' | 'bar-type';
@@ -79,6 +81,134 @@ function buildPendingReviewClipboardText(textbook: string, p: PendingReviewCopyP
   ].join('\n');
 }
 
+/* ── 부족 유형 클립보드 메시지 빌더 ─────────────────── */
+
+type ShortageItem = { type: string; current: number; avg: number; need: number };
+
+function buildShortageClipboardText(textbook: string, source: string, items: ShortageItem[]): string {
+  if (items.length === 0) return '';
+  const totalNeed = items.reduce((s, i) => s + i.need, 0);
+  return [
+    `교재: ${textbook}`,
+    `소스(지문): ${source}`,
+    ``,
+    `아래 유형의 변형문제를 만들어주세요 (평균 미달 → 추가 필요):`,
+    ...items.map(
+      ({ type, current, avg, need }) =>
+        `- [${type}] ${need}개 추가 (현재 ${current}개 → 목표 ${MAX_PER_SOURCE_TYPE}개, 평균 ${avg.toFixed(1)})`,
+    ),
+    ``,
+    `총 ${totalNeed}개 추가 필요`,
+  ].join('\n');
+}
+
+function CopyTypeShortageButton({
+  textbook,
+  type,
+  avg,
+  items,
+}: {
+  textbook: string;
+  type: string;
+  avg: number;
+  items: Array<{ source: string; current: number; need: number }>;
+}) {
+  const [copied, setCopied] = useState(false);
+  const totalNeed = items.reduce((s, i) => s + i.need, 0);
+  const handleClick = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const lines = [
+        `교재: ${textbook}`,
+        `유형: ${type}`,
+        `목표 문항 수: ${MAX_PER_SOURCE_TYPE}개 / 소스 (유형 소스별 평균: ${avg.toFixed(1)}개)`,
+        ``,
+        `아래 소스에서 [${type}] 유형 변형문제 추가 제작이 필요합니다.`,
+        ``,
+        ...items.map(
+          ({ source, current, need }) =>
+            `소스(지문): ${source} — 현재 ${current}개 → 목표 ${MAX_PER_SOURCE_TYPE}개 (${need}개 추가 필요)`,
+        ),
+        ``,
+        `합계: ${totalNeed}개 추가 필요`,
+      ];
+      const text = lines.join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    },
+    [textbook, type, avg, items, totalNeed],
+  );
+  return (
+    <button
+      type="button"
+      title={`[${type}] 부족 소스 ${items.length}개 / 총 ${totalNeed}개 필요 — 클릭하면 신규 제작 요청 문구 복사`}
+      onClick={handleClick}
+      className={`mt-0.5 rounded px-1 py-0.5 text-[10px] font-bold transition-colors ${
+        copied
+          ? 'bg-emerald-600 text-white'
+          : 'bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500'
+      }`}
+    >
+      {copied ? '✓' : `+${totalNeed}`}
+    </button>
+  );
+}
+
+function CopyShortageButton({
+  textbook,
+  source,
+  items,
+}: {
+  textbook: string;
+  source: string;
+  items: ShortageItem[];
+}) {
+  const [copied, setCopied] = useState(false);
+  const handleClick = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const text = buildShortageClipboardText(textbook, source, items);
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    },
+    [textbook, source, items],
+  );
+  return (
+    <button
+      type="button"
+      title={`부족 유형 ${items.length}개 — 클릭하면 신규 제작 요청 문구를 클립보드에 복사`}
+      onClick={handleClick}
+      className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-bold transition-colors ${
+        copied
+          ? 'bg-emerald-600 text-white'
+          : 'bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500'
+      }`}
+    >
+      {copied ? '✓' : `+${items.reduce((s, i) => s + i.need, 0)}`}
+    </button>
+  );
+}
+
 /* ── 색상 ─────────────────────────────────────────────── */
 
 const TYPE_COLORS: Record<string, string> = {
@@ -89,8 +219,11 @@ const TYPE_COLORS: Record<string, string> = {
 };
 function typeColor(type: string) { return TYPE_COLORS[type] ?? '#94a3b8'; }
 
+const MAX_PER_SOURCE_TYPE = 7;
+
 function heatColor(value: number, max: number): string {
   if (max === 0 || value === 0) return 'bg-slate-800/60 text-slate-600';
+  if (value > max) return 'bg-teal-700/80 text-teal-100';
   const r = value / max;
   if (r >= 0.8) return 'bg-indigo-500 text-white';
   if (r >= 0.6) return 'bg-indigo-400 text-white';
@@ -511,19 +644,37 @@ function SourceHeatmap({
             {/* 유형 헤더 */}
             <tr>
               <th className="px-2 py-1.5 text-left text-slate-400 font-medium min-w-[110px] sticky left-0 bg-slate-900">소스</th>
-              {data.types.map((tp) => (
-                <th
-                  key={tp}
-                  className={`px-1 py-1.5 text-center font-semibold min-w-[52px] cursor-pointer hover:opacity-80 transition-opacity ${
-                    selectedType === tp ? 'underline' : ''
-                  }`}
-                  style={{ color: typeColor(tp) }}
-                  onClick={() => onTypeClick(tp)}
-                  title={`${tp} 유형 분석`}
-                >
-                  {tp}
-                </th>
-              ))}
+              {data.types.map((tp) => {
+                const avg = typeAvgMap.get(tp) ?? 0;
+                const typeShortageItems = data.sources.flatMap((src) => {
+                  const v = getValue(src, tp);
+                  const need = Math.max(0, MAX_PER_SOURCE_TYPE - v);
+                  return need > 0 ? [{ source: src, current: v, need }] : [];
+                });
+                return (
+                  <th
+                    key={tp}
+                    className={`px-1 py-1.5 text-center font-semibold min-w-[52px] cursor-pointer hover:opacity-80 transition-opacity ${
+                      selectedType === tp ? 'underline' : ''
+                    }`}
+                    style={{ color: typeColor(tp) }}
+                    onClick={() => onTypeClick(tp)}
+                    title={`${tp} 유형 분석`}
+                  >
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span>{tp}</span>
+                      {typeShortageItems.length > 0 && (
+                        <CopyTypeShortageButton
+                          textbook={data.textbook}
+                          type={tp}
+                          avg={avg}
+                          items={typeShortageItems}
+                        />
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
               <th className="px-2 py-1.5 text-right text-slate-400 font-medium">합계</th>
             </tr>
             {/* 유형별 완료/대기 요약 행 */}
@@ -594,13 +745,36 @@ function SourceHeatmap({
               const isNewChapter = chapter !== prevChapter;
               prevChapter = chapter;
               const rowTotal = data.types.reduce((s, tp) => s + getValue(src, tp), 0);
+              // 부족 유형 계산
+              const shortageItems: ShortageItem[] = data.types.flatMap((tp) => {
+                const v = getValue(src, tp);
+                const avg = typeAvgMap.get(tp) ?? 0;
+                const need = Math.max(0, MAX_PER_SOURCE_TYPE - v);
+                return need > 0 ? [{ type: tp, current: v, avg, need }] : [];
+              });
               return (
                 <tr
                   key={src}
                   className={`border-t ${isNewChapter && chapter ? 'border-slate-600' : 'border-slate-800'}`}
                 >
                   <td className="sticky left-0 bg-slate-900 px-2 py-1 text-slate-300 whitespace-nowrap">
-                    {src}
+                    <div className="flex items-center gap-1.5">
+                      {shortageItems.length > 0 && (
+                        <CopyShortageButton
+                          textbook={data.textbook}
+                          source={src}
+                          items={shortageItems}
+                        />
+                      )}
+                      <div className="flex flex-col leading-tight">
+                        <span>{src}</span>
+                        {data.sourcePassageSource?.[src] && (
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            · {data.sourcePassageSource[src]}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   {data.types.map((tp) => {
                     const r = rowMap.get(`${src}|${tp}`);
@@ -608,18 +782,21 @@ function SourceHeatmap({
                     const completed = r?.완료 ?? 0;
                     const pending = r?.대기 ?? 0;
                     const avg = typeAvgMap.get(tp) ?? 0;
-                    const need = Math.max(0, Math.round(avg) - v);
+                    const need = Math.max(0, MAX_PER_SOURCE_TYPE - v);
                     const clickable = onCellClick && need > 0;
                     const tooltipBase = showSplit
                       ? `완료 ${completed} / 대기 ${pending}`
                       : undefined;
-                    const tooltip = clickable
-                      ? `${tooltipBase ? tooltipBase + '\n' : ''}클릭: 평균(${avg.toFixed(1)}) 도달에 ${need}개 필요 — 클립보드 복사`
+                    const overTarget = v > MAX_PER_SOURCE_TYPE;
+                    const tooltip = overTarget
+                      ? `${tooltipBase ? tooltipBase + '\n' : ''}목표(${MAX_PER_SOURCE_TYPE}) 초과`
+                      : clickable
+                      ? `${tooltipBase ? tooltipBase + '\n' : ''}클릭: 목표 ${MAX_PER_SOURCE_TYPE}개 도달에 ${need}개 필요 — 클립보드 복사`
                       : tooltipBase;
                     return (
                       <td
                         key={tp}
-                        className={`px-0.5 py-0 text-center font-mono ${heatColor(v, heatMax)} ${
+                        className={`px-0.5 py-0 text-center font-mono ${heatColor(v, MAX_PER_SOURCE_TYPE)} ${
                           selectedType === tp ? 'ring-1 ring-inset ring-white/20' : ''
                         } ${clickable ? 'cursor-pointer hover:brightness-125 active:scale-95 transition-all' : ''}`}
                         title={tooltip}
@@ -734,10 +911,12 @@ function SourceBarChart({ data, statusFilter }: { data: SourceData; statusFilter
 
 function DrilldownPanel({
   textbook,
+  isExamBased,
   statusFilter,
   onBack,
 }: {
   textbook: string;
+  isExamBased?: boolean;
   statusFilter: StatusFilter;
   onBack: () => void;
 }) {
@@ -756,10 +935,10 @@ function DrilldownPanel({
       `소스(지문): ${info.source}`,
       `유형: ${info.type}`,
       `현재 문항 수: ${info.count}개`,
-      `유형 소스별 평균: ${avg.toFixed(1)}개 (0 제외)`,
+      `목표 문항 수: ${MAX_PER_SOURCE_TYPE}개 (유형 소스별 평균: ${avg.toFixed(1)}개)`,
       ``,
       `위 소스에서 [${info.type}] 유형 변형문제 ${info.need}개를 만들어주세요.`,
-      `(현재 ${info.count}개 → 목표 ${Math.round(avg)}개)`,
+      `(현재 ${info.count}개 → 목표 ${MAX_PER_SOURCE_TYPE}개)`,
     ].join('\n');
 
     navigator.clipboard.writeText(text).then(() => {
@@ -794,8 +973,11 @@ function DrilldownPanel({
   useEffect(() => {
     setLoading(true);
     setError(null);
+    const sourceParam = isExamBased
+      ? `exam_textbook=${encodeURIComponent(textbook)}`
+      : `textbook=${encodeURIComponent(textbook)}`;
     fetch(
-      `/api/admin/generated-questions/stats/source?textbook=${encodeURIComponent(textbook)}`,
+      `/api/admin/generated-questions/stats/source?${sourceParam}`,
       { credentials: 'include' }
     )
       .then((r) => r.json())
@@ -942,9 +1124,15 @@ function DrilldownPanel({
 export function QuestionStatsModal({
   open,
   onClose,
+  filterTextbook,
+  examBasedTextbooks,
 }: {
   open: boolean;
   onClose: () => void;
+  /** 현재 선택된 교재 (있으면 자동 드릴다운) */
+  filterTextbook?: string;
+  /** 기출기반 교재 Set */
+  examBasedTextbooks?: Set<string>;
 }) {
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -957,6 +1145,15 @@ export function QuestionStatsModal({
 
   // 드릴다운: 클릭된 교재명 (null = 전체 뷰)
   const [drillTextbook, setDrillTextbook] = useState<string | null>(null);
+
+  // 현재 필터 교재가 있으면 자동 드릴다운
+  useEffect(() => {
+    if (open && filterTextbook) {
+      setDrillTextbook(filterTextbook);
+    } else if (open && !filterTextbook) {
+      setDrillTextbook(null);
+    }
+  }, [open, filterTextbook]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1095,8 +1292,9 @@ export function QuestionStatsModal({
               <div className="px-6 py-5">
                 <DrilldownPanel
                   textbook={drillTextbook}
+                  isExamBased={examBasedTextbooks?.has(drillTextbook) ?? false}
                   statusFilter={statusFilter}
-                  onBack={() => setDrillTextbook(null)}
+                  onBack={() => { if (filterTextbook) onClose(); else setDrillTextbook(null); }}
                 />
               </div>
             ) : (

@@ -44,7 +44,9 @@ async function getAccessToken(): Promise<string> {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Dropbox 토큰 갱신 실패: ${text}`);
+    // 배포 환경 진단을 위해 상세 오류 출력
+    console.error('[Dropbox] 토큰 갱신 실패:', res.status, text.slice(0, 400));
+    throw new Error(`Dropbox 토큰 갱신 실패 (${res.status}): ${text.slice(0, 200)}`);
   }
 
   const data = await res.json();
@@ -211,6 +213,99 @@ export async function uploadOrderTxt(
     const data = await res.json().catch(() => ({}));
     throw new Error(`Dropbox 주문서 업로드 실패 (${filePathLogical}): ${JSON.stringify(data)}`);
   }
+}
+
+export type DropboxFileEntry = {
+  name: string;
+  /** Dropbox API에 전달하는 경로 (앱 폴더 기준 상대 경로) */
+  apiPath: string;
+  size: number;
+  isFolder: boolean;
+};
+
+/**
+ * 폴더 내 파일/서브폴더 목록을 반환합니다.
+ * logicalPath: /gomijoshua/... 형태의 논리 경로
+ */
+export async function listFolderFiles(logicalPath: string): Promise<DropboxFileEntry[]> {
+  const token = await getAccessToken();
+  const apiPath = toApiPath(logicalPath);
+
+  const res = await fetch(`${DROPBOX_API_URL}/files/list_folder`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ path: apiPath, recursive: false }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const tag = (data as Record<string, unknown>)?.error_summary as string | undefined;
+    // 폴더 없음 → 빈 배열 반환
+    if (tag?.startsWith('path/not_found')) return [];
+    throw new Error(`Dropbox 파일 목록 조회 실패 (${logicalPath}): ${JSON.stringify(data)}`);
+  }
+
+  const data = await res.json() as {
+    entries: Array<{ '.tag': string; name: string; path_lower: string; size?: number }>;
+  };
+
+  return data.entries.map((e) => ({
+    name: e.name,
+    apiPath: e.path_lower,
+    size: e.size ?? 0,
+    isFolder: e['.tag'] === 'folder',
+  }));
+}
+
+const EXT_CONTENT_TYPE: Record<string, string> = {
+  pdf: 'application/pdf',
+  hwp: 'application/x-hwp',
+  hwpx: 'application/haansofthwpx',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  doc: 'application/msword',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  xls: 'application/vnd.ms-excel',
+  zip: 'application/zip',
+  txt: 'text/plain',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+};
+
+function extToContentType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
+  return EXT_CONTENT_TYPE[ext] ?? 'application/octet-stream';
+}
+
+/** Dropbox 파일을 base64 인코딩해 반환합니다 (이메일 첨부용). */
+export async function downloadFileAsBase64(
+  fileApiPath: string,
+  filename: string,
+): Promise<{ content: string; contentType: string; size: number }> {
+  const token = await getAccessToken();
+
+  const res = await fetch(`${DROPBOX_CONTENT_URL}/files/download`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Dropbox-API-Arg': dropboxApiArgHeader({ path: fileApiPath }),
+    },
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`Dropbox 파일 다운로드 실패 (${fileApiPath}): ${JSON.stringify(data)}`);
+  }
+
+  const buffer = Buffer.from(await res.arrayBuffer());
+  return {
+    content: buffer.toString('base64'),
+    contentType: extToContentType(filename),
+    size: buffer.length,
+  };
 }
 
 export function isDropboxConfigured(): boolean {

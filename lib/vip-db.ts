@@ -57,6 +57,7 @@ export interface VipSchoolExam {
   objectiveCount: number;
   subjectiveCount: number;
   examScope: string[];
+  examScopePassages?: string[];
   isLocked: boolean;
   pdfPath?: string;
   pdfUrl?: string;

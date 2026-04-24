@@ -42,6 +42,8 @@ interface AdminOrder {
   orderMetaFlow: string | null;
   revenueWon: number | null;
   completedAt: string | null;
+  fileUrl: string | null;
+  dropboxFolderCreated: boolean;
 }
 
 interface PointLedgerItem {
@@ -54,7 +56,23 @@ interface PointLedgerItem {
   createdAt: string;
 }
 
-type Tab = 'info' | 'orders' | 'points' | 'dropbox';
+type Tab = 'info' | 'orders' | 'points' | 'dropbox' | 'vocabulary';
+
+interface VocabAdminRow {
+  id: string;
+  user_id: string;
+  login_id: string;
+  passage_id: string;
+  textbook: string;
+  display_label: string;
+  package_type: string;
+  points_used: number;
+  order_number: string;
+  purchased_at: string;
+  last_edited_at: string;
+  entry_count: number;
+  has_custom_edit: boolean;
+}
 
 /* ─── 뱃지 ─── */
 const STATUS_COLORS: Record<string, string> = {
@@ -151,6 +169,9 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<DetailUser | null>(null);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [pointItems, setPointItems] = useState<PointLedgerItem[]>([]);
+  const [vocabItems, setVocabItems] = useState<VocabAdminRow[]>([]);
+  const [vocabTotal, setVocabTotal] = useState(0);
+  const [vocabLoading, setVocabLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('info');
@@ -184,13 +205,35 @@ export default function UserDetailPage() {
   /* 삭제 확인 */
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  /* 주문 관리 모달 */
+  const [orderModal, setOrderModal] = useState<AdminOrder | null>(null);
+  const [orderModalTab, setOrderModalTab] = useState<'order' | 'manage' | 'email'>('order');
+  const [orderStatusInput, setOrderStatusInput] = useState('');
+  const [orderFileUrlInput, setOrderFileUrlInput] = useState('');
+  const [orderSaving, setOrderSaving] = useState(false);
+  const [orderSaveMsg, setOrderSaveMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [orderEmailTo, setOrderEmailTo] = useState('');
+  const [orderEmailSubject, setOrderEmailSubject] = useState('');
+  const [orderEmailMessage, setOrderEmailMessage] = useState('');
+  const [orderEmailSending, setOrderEmailSending] = useState(false);
+  const [orderEmailResult, setOrderEmailResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [orderCreatingFolder, setOrderCreatingFolder] = useState(false);
+  const [orderDeletingId, setOrderDeletingId] = useState<string | null>(null);
+  /* 이메일 첨부 */
+  const [orderAttachments, setOrderAttachments] = useState<{ filename: string; content: string; contentType: string; size: number }[]>([]);
+  const [dbxFiles, setDbxFiles] = useState<{ name: string; apiPath: string; size: number }[]>([]);
+  const [dbxFilesLoading, setDbxFilesLoading] = useState(false);
+  const [dbxFilesError, setDbxFilesError] = useState<string | null>(null);
+  const [dbxSelected, setDbxSelected] = useState<Set<string>>(() => new Set());
+  const [dbxAttaching, setDbxAttaching] = useState(false);
+
   /* ─── 데이터 로딩 ─── */
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch('/api/auth/me', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
-        if (d?.role !== 'admin') { router.replace('/admin/login'); }
-        else setAdminLoginId(d.loginId ?? '');
+        if (!d?.user || d.user.role !== 'admin') { router.replace('/admin/login'); return; }
+        setAdminLoginId(d.user.loginId ?? '');
       })
       .catch(() => router.replace('/admin/login'));
   }, [router]);
@@ -198,7 +241,7 @@ export default function UserDetailPage() {
   const loadUser = useCallback(async () => {
     if (!userId) return;
     try {
-      const r = await fetch(`/api/admin/users/${userId}`);
+      const r = await fetch(`/api/admin/users/${userId}`, { credentials: 'include' });
       const d = await r.json();
       if (!r.ok || !d.user) { setError(d.error ?? '회원을 찾을 수 없습니다.'); return; }
       const u: DetailUser = d.user;
@@ -222,16 +265,212 @@ export default function UserDetailPage() {
 
   const loadOrders = useCallback(async () => {
     if (!user?.loginId) return;
-    const r = await fetch(`/api/admin/orders?loginId=${encodeURIComponent(user.loginId)}&limit=50`);
+    const r = await fetch(`/api/admin/orders?loginId=${encodeURIComponent(user.loginId)}&limit=50`, { credentials: 'include' });
     const d = await r.json();
     if (d?.orders) setOrders(d.orders);
   }, [user?.loginId]);
 
+  const openOrderModal = (o: AdminOrder) => {
+    setOrderModal(o);
+    setOrderModalTab('order');
+    setOrderStatusInput(o.status);
+    setOrderFileUrlInput(o.fileUrl ?? '');
+    setOrderSaveMsg(null);
+    setOrderEmailResult(null);
+    setOrderAttachments([]);
+    setDbxFiles([]);
+    setDbxFilesError(null);
+    setDbxSelected(new Set());
+    // 드롭박스 파일 자동 로드
+    setDbxFilesLoading(true);
+    fetch(`/api/admin/orders/${o.id}/dropbox-files`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) {
+          const fileOnly = (data.files as { name: string; apiPath: string; size: number; isFolder: boolean }[]).filter((f) => !f.isFolder);
+          setDbxFiles(fileOnly);
+          const autoSelect = new Set(fileOnly.filter((f) => !f.name.startsWith('주문서_')).map((f) => f.apiPath));
+          setDbxSelected(autoSelect);
+        } else if (data.error && !data.error.includes('not_found') && !data.error.includes('Dropbox 환경')) {
+          setDbxFilesError(data.error);
+        }
+      })
+      .catch(() => { /* 드롭박스 없으면 무시 */ })
+      .finally(() => setDbxFilesLoading(false));
+    // 이메일 기본값
+    const userEmail = user?.email ?? '';
+    const emailFromText = o.orderText?.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/)?.[0] ?? null;
+    setOrderEmailTo(emailFromText ?? userEmail);
+    const orderNum = o.orderNumber ?? `주문 ${o.id.slice(-6)}`;
+    setOrderEmailSubject(`[주문서] ${orderNum} 주문 내역 안내`);
+    const greeting = user?.name ? `안녕하세요, ${user.name} 선생님` : '안녕하세요';
+    const statusMsgs: Record<string, string> = {
+      payment_confirmed: `${greeting}\n\n입금이 확인되었습니다. 감사합니다 :)\n제작을 시작하겠습니다. 완료되면 다시 안내 드리겠습니다.`,
+      in_progress: `${greeting}\n\n현재 열심히 제작 중입니다. 조금만 기다려 주세요!`,
+      completed: `${greeting}\n\n제작이 완료되었습니다! 파일 첨부드립니다:)`,
+      accepted: `${greeting}\n\n주문을 확인했습니다. 입금 확인 후 제작을 시작하겠습니다.\n감사합니다!`,
+    };
+    setOrderEmailMessage(statusMsgs[o.status] ?? `${greeting}\n\n주문 내역을 안내드립니다. 문의 사항이 있으시면 언제든지 답장 주세요!`);
+  };
+
+  const handleOrderSaveStatus = async () => {
+    if (!orderModal) return;
+    setOrderSaving(true);
+    setOrderSaveMsg(null);
+    try {
+      const r = await fetch(`/api/orders/${orderModal.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setStatus', status: orderStatusInput }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        setOrderSaveMsg({ ok: true, text: '상태가 저장되었습니다.' });
+        const updated = { ...orderModal, status: orderStatusInput, statusLabel: d.statusLabel ?? orderStatusInput };
+        setOrderModal(updated);
+        setOrders((prev) => prev.map((o) => o.id === updated.id ? updated : o));
+      } else {
+        setOrderSaveMsg({ ok: false, text: d.error ?? '저장 실패' });
+      }
+    } catch { setOrderSaveMsg({ ok: false, text: '네트워크 오류' }); }
+    finally { setOrderSaving(false); }
+  };
+
+  const handleOrderSaveFileUrl = async () => {
+    if (!orderModal) return;
+    setOrderSaving(true);
+    setOrderSaveMsg(null);
+    try {
+      const r = await fetch(`/api/orders/${orderModal.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setFileUrl', fileUrl: orderFileUrlInput }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        setOrderSaveMsg({ ok: true, text: '파일 URL이 저장되었습니다.' });
+        const updated = { ...orderModal, fileUrl: orderFileUrlInput };
+        setOrderModal(updated);
+        setOrders((prev) => prev.map((o) => o.id === updated.id ? updated : o));
+      } else {
+        setOrderSaveMsg({ ok: false, text: d.error ?? '저장 실패' });
+      }
+    } catch { setOrderSaveMsg({ ok: false, text: '네트워크 오류' }); }
+    finally { setOrderSaving(false); }
+  };
+
+  const handleOrderSendEmail = async () => {
+    if (!orderModal || !orderEmailTo.trim()) return;
+    setOrderEmailSending(true);
+    setOrderEmailResult(null);
+    try {
+      const r = await fetch(`/api/admin/orders/${orderModal.id}/send-email`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: orderEmailTo,
+          subject: orderEmailSubject,
+          message: orderEmailMessage,
+          attachments: orderAttachments.length > 0 ? orderAttachments : undefined,
+        }),
+      });
+      const d = await r.json();
+      setOrderEmailResult(r.ok && d.ok ? { ok: true, msg: '발송되었습니다.' } : { ok: false, msg: d.error ?? '발송 실패' });
+    } catch { setOrderEmailResult({ ok: false, msg: '네트워크 오류' }); }
+    finally { setOrderEmailSending(false); }
+  };
+
+  const handleDbxAttach = async () => {
+    if (!orderModal || dbxSelected.size === 0) return;
+    const selectedFiles = dbxFiles.filter((f) => dbxSelected.has(f.apiPath));
+    setDbxAttaching(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderModal.id}/dropbox-files`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paths: selectedFiles.map((f) => f.apiPath), names: selectedFiles.map((f) => f.name) }),
+      });
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.files)) {
+        const attached = (data.files as { filename: string; content: string; contentType: string; size: number }[]);
+        setOrderAttachments((prev) => {
+          const existing = new Set(prev.map((a) => a.filename));
+          return [...prev, ...attached.filter((a) => !existing.has(a.filename))];
+        });
+        setDbxSelected(new Set());
+        if (data.errors?.length) alert(`일부 파일 오류:\n${(data.errors as string[]).join('\n')}`);
+      } else {
+        alert(data.error ?? '파일 다운로드 실패');
+      }
+    } catch { alert('파일 첨부 중 오류가 발생했습니다.'); }
+    finally { setDbxAttaching(false); }
+  };
+
+  const handleOrderCreateDropboxFolder = async () => {
+    if (!orderModal) return;
+    setOrderCreatingFolder(true);
+    try {
+      const r = await fetch(`/api/admin/orders/${orderModal.id}/create-dropbox-folder`, { method: 'POST', credentials: 'include' });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        const updated = { ...orderModal, dropboxFolderCreated: true };
+        setOrderModal(updated);
+        setOrders((prev) => prev.map((o) => o.id === updated.id ? updated : o));
+        setOrderSaveMsg({ ok: true, text: `드롭박스 폴더 생성 완료: ${d.folderPath ?? ''}` });
+      } else {
+        setOrderSaveMsg({ ok: false, text: d.error ?? '폴더 생성 실패' });
+      }
+    } catch { setOrderSaveMsg({ ok: false, text: '네트워크 오류' }); }
+    finally { setOrderCreatingFolder(false); }
+  };
+
+  const handleOrderDelete = async (orderId: string) => {
+    if (!confirm('주문을 삭제하시겠습니까? 포인트 사용 내역이 있으면 자동으로 환불됩니다.')) return;
+    setOrderDeletingId(orderId);
+    try {
+      const r = await fetch(`/api/orders/${orderId}`, { method: 'DELETE', credentials: 'include' });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+        if (orderModal?.id === orderId) setOrderModal(null);
+        await loadUser();
+      } else {
+        alert(d.error ?? '삭제 실패');
+      }
+    } catch { alert('네트워크 오류'); }
+    finally { setOrderDeletingId(null); }
+  };
+
   const loadPoints = useCallback(async () => {
     if (!userId) return;
-    const r = await fetch(`/api/admin/users/${userId}/point-ledger`);
+    const r = await fetch(`/api/admin/users/${userId}/point-ledger`, { credentials: 'include' });
     const d = await r.json();
     if (d?.items) setPointItems(d.items);
+  }, [userId]);
+
+  const loadVocabularies = useCallback(async () => {
+    if (!userId) return;
+    setVocabLoading(true);
+    try {
+      const r = await fetch(`/api/admin/users/${userId}/vocabularies?limit=200&skip=0`, { credentials: 'include' });
+      const d = await r.json();
+      if (r.ok) {
+        setVocabItems(d.items ?? []);
+        setVocabTotal(typeof d.total === 'number' ? d.total : 0);
+      } else {
+        setVocabItems([]);
+        setVocabTotal(0);
+      }
+    } catch {
+      setVocabItems([]);
+      setVocabTotal(0);
+    } finally {
+      setVocabLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -246,6 +485,10 @@ export default function UserDetailPage() {
   useEffect(() => {
     if (user && tab === 'points') loadPoints();
   }, [user, tab, loadPoints]);
+
+  useEffect(() => {
+    if (user && tab === 'vocabulary') loadVocabularies();
+  }, [user, tab, loadVocabularies]);
 
   /* ─── 기본정보 저장 ─── */
   async function handleSaveInfo() {
@@ -268,6 +511,7 @@ export default function UserDetailPage() {
       };
       const r = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
@@ -290,6 +534,7 @@ export default function UserDetailPage() {
     if (!confirm('비밀번호를 초기값으로 초기화할까요?')) return;
     const r = await fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ resetPassword: true }),
     });
@@ -305,6 +550,7 @@ export default function UserDetailPage() {
     try {
       const r = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ addPoints: n }),
       });
@@ -327,6 +573,7 @@ export default function UserDetailPage() {
     setDropboxMsg(null);
     const r = await fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dropboxFolderPath: editDropboxPath }),
     });
@@ -342,7 +589,7 @@ export default function UserDetailPage() {
     setCreatingFolder(true);
     setDropboxMsg(null);
     try {
-      const r = await fetch(`/api/admin/users/${userId}/create-dropbox-folder`, { method: 'POST' });
+      const r = await fetch(`/api/admin/users/${userId}/create-dropbox-folder`, { method: 'POST', credentials: 'include' });
       const d = await r.json();
       setDropboxMsg(r.ok ? { ok: true, text: '폴더가 생성되었습니다.' } : { ok: false, text: d.error ?? '실패' });
       if (r.ok) await loadUser();
@@ -353,7 +600,7 @@ export default function UserDetailPage() {
 
   /* ─── 계정 삭제 ─── */
   async function handleDelete() {
-    const r = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+    const r = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' });
     const d = await r.json();
     if (r.ok) {
       alert('계정이 삭제되었습니다.');
@@ -466,6 +713,7 @@ export default function UserDetailPage() {
                 { key: 'orders', label: '주문 내역' },
                 { key: 'points', label: '포인트 내역' },
                 { key: 'dropbox', label: 'Dropbox' },
+                { key: 'vocabulary', label: '단어장' },
               ] as { key: Tab; label: string }[]
             ).map((t) => (
               <button
@@ -596,13 +844,18 @@ export default function UserDetailPage() {
                       <th className="text-left px-5 py-3 font-medium">상태</th>
                       <th className="text-left px-5 py-3 font-medium hidden md:table-cell">유형</th>
                       <th className="text-right px-5 py-3 font-medium hidden lg:table-cell">매출</th>
+                      <th className="text-right px-5 py-3 font-medium">관리</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orders.map((o) => (
-                      <tr key={o.id} className="border-b border-slate-700/50 last:border-0 hover:bg-slate-700/20 transition-colors">
+                      <tr
+                        key={o.id}
+                        onClick={() => openOrderModal(o)}
+                        className="border-b border-slate-700/50 last:border-0 hover:bg-slate-700/30 cursor-pointer transition-colors"
+                      >
                         <td className="px-5 py-3.5">
-                          <p className="font-mono text-xs text-slate-300">{o.orderNumber ?? '—'}</p>
+                          <p className="font-mono text-xs text-sky-300 hover:underline">{o.orderNumber ?? '—'}</p>
                         </td>
                         <td className="px-5 py-3.5 text-slate-400 text-xs">
                           {o.createdAt ? new Date(o.createdAt).toLocaleDateString('ko-KR') : '—'}
@@ -618,11 +871,308 @@ export default function UserDetailPage() {
                         <td className="px-5 py-3.5 text-right text-slate-300 hidden lg:table-cell">
                           {o.revenueWon != null ? `${o.revenueWon.toLocaleString()}원` : '—'}
                         </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-700/80 text-slate-400 font-medium">
+                            관리 →
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               )}
+            </div>
+          )}
+
+          {/* ─── 주문 관리 모달 ─── */}
+          {orderModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 overflow-y-auto">
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-2xl shadow-2xl my-4 flex flex-col max-h-[90vh]">
+                {/* 헤더 */}
+                <div className="px-5 py-4 border-b border-slate-700 flex items-start justify-between shrink-0">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-white font-mono">{orderModal.orderNumber ?? orderModal.id}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_COLORS[orderModal.status] ?? 'bg-slate-600/40 text-slate-400 border-slate-600'}`}>
+                        {orderModal.statusLabel}
+                      </span>
+                      {orderModal.fileUrl && (
+                        <a href={orderModal.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-sky-400 hover:underline">
+                          📎 파일 링크
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      {orderModal.createdAt ? new Date(orderModal.createdAt).toLocaleString('ko-KR') : ''}
+                      {orderModal.orderMetaFlow && ` · ${orderModal.orderMetaFlow}`}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setOrderModal(null)} className="text-slate-400 hover:text-white text-2xl leading-none px-1 ml-2 shrink-0">×</button>
+                </div>
+
+                {/* 탭 */}
+                <div className="flex border-b border-slate-700 shrink-0">
+                  {(['order', 'manage', 'email'] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setOrderModalTab(t)}
+                      className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${orderModalTab === t ? 'border-sky-500 text-sky-300' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                    >
+                      {t === 'order' ? '주문서' : t === 'manage' ? '관리' : '이메일'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 탭 내용 */}
+                <div className="overflow-y-auto flex-1 p-5">
+
+                  {/* ── 주문서 탭 ── */}
+                  {orderModalTab === 'order' && (
+                    <div>
+                      {orderModal.orderText ? (
+                        <pre className="bg-slate-900/60 rounded-xl p-4 text-sm text-slate-300 whitespace-pre-wrap leading-relaxed font-sans">
+                          {orderModal.orderText}
+                        </pre>
+                      ) : (
+                        <p className="text-slate-500 text-sm text-center py-10">주문서 내용이 없습니다.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── 관리 탭 ── */}
+                  {orderModalTab === 'manage' && (
+                    <div className="space-y-5">
+                      {/* 상태 변경 */}
+                      <div>
+                        <label className="block text-slate-400 text-xs mb-2 font-semibold uppercase tracking-wide">주문 상태</label>
+                        <div className="flex gap-2 items-center">
+                          <select
+                            value={orderStatusInput}
+                            onChange={(e) => setOrderStatusInput(e.target.value)}
+                            className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm"
+                          >
+                            <option value="pending">주문 접수</option>
+                            <option value="accepted">제작 수락</option>
+                            <option value="payment_confirmed">입금 확인</option>
+                            <option value="in_progress">제작 중</option>
+                            <option value="completed">완료</option>
+                            <option value="cancelled">취소됨</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={handleOrderSaveStatus}
+                            disabled={orderSaving || orderStatusInput === orderModal.status}
+                            className="px-4 py-2 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg"
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 파일 URL */}
+                      <div>
+                        <label className="block text-slate-400 text-xs mb-2 font-semibold uppercase tracking-wide">완료 파일 URL</label>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="url"
+                            value={orderFileUrlInput}
+                            onChange={(e) => setOrderFileUrlInput(e.target.value)}
+                            placeholder="https://drive.google.com/..."
+                            className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleOrderSaveFileUrl}
+                            disabled={orderSaving || orderFileUrlInput === (orderModal.fileUrl ?? '')}
+                            className="px-4 py-2 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg"
+                          >
+                            저장
+                          </button>
+                        </div>
+                        {orderModal.fileUrl && (
+                          <a href={orderModal.fileUrl} target="_blank" rel="noopener noreferrer" className="mt-1 text-xs text-sky-400 hover:underline block truncate">
+                            현재: {orderModal.fileUrl}
+                          </a>
+                        )}
+                      </div>
+
+                      {/* 저장 결과 */}
+                      {orderSaveMsg && (
+                        <p className={`text-sm rounded-lg px-3 py-2 ${orderSaveMsg.ok ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'}`}>
+                          {orderSaveMsg.text}
+                        </p>
+                      )}
+
+                      {/* 드롭박스 */}
+                      <div className="border-t border-slate-700 pt-4">
+                        <label className="block text-slate-400 text-xs mb-2 font-semibold uppercase tracking-wide">드롭박스</label>
+                        {orderModal.dropboxFolderCreated ? (
+                          <span className="text-xs text-emerald-400 font-medium">☁️ 폴더 생성됨</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleOrderCreateDropboxFolder}
+                            disabled={orderCreatingFolder}
+                            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+                          >
+                            {orderCreatingFolder ? '생성 중…' : '☁️ 드롭박스 폴더 생성'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* 삭제 */}
+                      <div className="border-t border-slate-700 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => handleOrderDelete(orderModal.id)}
+                          disabled={!!orderDeletingId}
+                          className="px-4 py-2 bg-red-900/40 hover:bg-red-800/60 border border-red-700/50 disabled:opacity-50 text-red-300 text-sm font-medium rounded-lg transition-colors"
+                        >
+                          {orderDeletingId === orderModal.id ? '삭제 중…' : '🗑 주문 삭제'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 이메일 탭 ── */}
+                  {orderModalTab === 'email' && (
+                    <div className="space-y-3">
+                      <input
+                        type="email"
+                        value={orderEmailTo}
+                        onChange={(e) => setOrderEmailTo(e.target.value)}
+                        placeholder="받는 사람 이메일"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500"
+                      />
+                      <input
+                        type="text"
+                        value={orderEmailSubject}
+                        onChange={(e) => setOrderEmailSubject(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm"
+                      />
+                      <textarea
+                        value={orderEmailMessage}
+                        onChange={(e) => setOrderEmailMessage(e.target.value)}
+                        rows={5}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm resize-none"
+                      />
+
+                      {/* 완료 파일 URL 링크 삽입 */}
+                      {orderModal.fileUrl && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400 truncate flex-1">📎 {orderModal.fileUrl}</span>
+                          <button
+                            type="button"
+                            onClick={() => setOrderEmailMessage((prev) =>
+                              prev + (prev.endsWith('\n') || prev === '' ? '' : '\n') + `\n파일 다운로드: ${orderModal!.fileUrl}`
+                            )}
+                            className="shrink-0 text-xs px-2.5 py-1 rounded-lg bg-sky-700/60 hover:bg-sky-600/80 text-sky-200 font-medium transition-colors"
+                          >
+                            본문에 링크 삽입
+                          </button>
+                        </div>
+                      )}
+
+                      {/* 드롭박스 파일 첨부 */}
+                      <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-indigo-300">📁 드롭박스 파일</span>
+                          {dbxFilesLoading && (
+                            <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                              <span className="inline-block w-3 h-3 border border-slate-500 border-t-indigo-400 rounded-full animate-spin" />
+                              불러오는 중…
+                            </span>
+                          )}
+                        </div>
+                        {dbxFilesError && <p className="text-[11px] text-red-400 mb-2">{dbxFilesError}</p>}
+                        {!dbxFilesLoading && dbxFiles.length === 0 && !dbxFilesError && (
+                          <p className="text-[11px] text-slate-500">드롭박스 폴더에 파일이 없거나 폴더가 생성되지 않았습니다.</p>
+                        )}
+                        {dbxFiles.length > 0 && (
+                          <>
+                            <ul className="space-y-1 mb-2">
+                              {dbxFiles.map((f) => {
+                                const tooLarge = f.size > 20 * 1024 * 1024;
+                                return (
+                                  <li key={f.apiPath} className="flex items-center gap-2 text-xs">
+                                    <input
+                                      type="checkbox"
+                                      id={`dbx-u-${f.apiPath}`}
+                                      checked={dbxSelected.has(f.apiPath)}
+                                      disabled={tooLarge}
+                                      onChange={(e) => setDbxSelected((prev) => {
+                                        const next = new Set(prev);
+                                        if (e.target.checked) next.add(f.apiPath); else next.delete(f.apiPath);
+                                        return next;
+                                      })}
+                                      className="accent-indigo-500 disabled:opacity-40"
+                                    />
+                                    <label htmlFor={`dbx-u-${f.apiPath}`} className={`flex-1 truncate cursor-pointer ${tooLarge ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                                      {f.name}
+                                    </label>
+                                    <span className={`shrink-0 ${tooLarge ? 'text-red-400 font-medium' : 'text-slate-500'}`}>
+                                      {tooLarge ? `${(f.size / 1024 / 1024).toFixed(1)} MB — 너무 큼` : `${(f.size / 1024).toFixed(0)} KB`}
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                            {dbxFiles.some((f) => f.size > 20 * 1024 * 1024) && (
+                              <p className="text-[11px] text-amber-400 mb-2">⚠️ 20 MB 초과 파일은 첨부 불가 — 위 「본문에 링크 삽입」을 이용하세요.</p>
+                            )}
+                            <button
+                              type="button"
+                              disabled={dbxAttaching || dbxSelected.size === 0}
+                              onClick={handleDbxAttach}
+                              className="w-full py-1.5 rounded-lg bg-indigo-700/80 hover:bg-indigo-600 disabled:opacity-50 text-indigo-100 text-xs font-semibold transition-colors"
+                            >
+                              {dbxAttaching ? '다운로드 중…' : `선택 파일 첨부 (${dbxSelected.size}개)`}
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* 첨부된 파일 목록 */}
+                      {orderAttachments.length > 0 && (
+                        <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 p-3">
+                          <p className="text-xs font-semibold text-emerald-300 mb-2">✅ 첨부 완료 ({orderAttachments.length}개)</p>
+                          <ul className="space-y-1">
+                            {orderAttachments.map((a) => (
+                              <li key={a.filename} className="flex items-center justify-between text-xs">
+                                <span className="text-slate-300 truncate flex-1">{a.filename}</span>
+                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                  <span className="text-slate-500">{(a.size / 1024).toFixed(0)} KB</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOrderAttachments((prev) => prev.filter((x) => x.filename !== a.filename))}
+                                    className="text-red-400 hover:text-red-300 text-[11px]"
+                                  >✕</button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {orderEmailResult && (
+                        <p className={`text-sm rounded-lg px-3 py-2 ${orderEmailResult.ok ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'}`}>
+                          {orderEmailResult.msg}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleOrderSendEmail}
+                        disabled={orderEmailSending || !orderEmailTo.trim()}
+                        className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                      >
+                        {orderEmailSending ? '발송 중…' : `✉ 이메일 발송${orderAttachments.length > 0 ? ` (첨부 ${orderAttachments.length}개)` : ''}`}
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              </div>
             </div>
           )}
 
@@ -695,6 +1245,83 @@ export default function UserDetailPage() {
             </div>
           )}
 
+          {/* ─── 탭 내용: 단어장 ─── */}
+          {tab === 'vocabulary' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-slate-400 text-sm">
+                  이 회원의 단어장 구매·편집 내역입니다. 전체 회원 분석은{' '}
+                  <Link href="/admin/vocabulary-library" className="text-sky-400 hover:underline">
+                    단어장 구매·편집 분석
+                  </Link>
+                  메뉴에서 확인하세요.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => loadVocabularies()}
+                  disabled={vocabLoading}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+                >
+                  새로고침
+                </button>
+              </div>
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                {vocabLoading ? (
+                  <div className="py-12 text-center text-slate-500 text-sm">불러오는 중…</div>
+                ) : vocabItems.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500 text-sm">단어장 구매 내역이 없습니다.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[720px]">
+                      <thead>
+                        <tr className="border-b border-slate-700 text-slate-400 text-xs text-left">
+                          <th className="px-4 py-3 font-medium">교재·지문</th>
+                          <th className="px-4 py-3 font-medium">주문번호</th>
+                          <th className="px-4 py-3 font-medium text-right">포인트</th>
+                          <th className="px-4 py-3 font-medium">구매</th>
+                          <th className="px-4 py-3 font-medium">최종 편집</th>
+                          <th className="px-4 py-3 font-medium text-center">편집</th>
+                          <th className="px-4 py-3 font-medium text-right">단어 수</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vocabItems.map((row) => (
+                          <tr key={row.id} className="border-b border-slate-700/50 last:border-0 hover:bg-slate-700/20">
+                            <td className="px-4 py-3 text-slate-300 max-w-[200px]">
+                              <p className="truncate text-xs text-slate-500">{row.textbook}</p>
+                              <p className="truncate">{row.display_label || '—'}</p>
+                            </td>
+                            <td className="px-4 py-3 font-mono text-xs text-slate-400">{row.order_number}</td>
+                            <td className="px-4 py-3 text-right">{row.points_used.toLocaleString()}P</td>
+                            <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">
+                              {row.purchased_at ? new Date(row.purchased_at).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
+                            </td>
+                            <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">
+                              {row.last_edited_at ? new Date(row.last_edited_at).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
+                            </td>
+                            <td className="px-4 py-3 text-center text-xs">
+                              {row.has_custom_edit ? (
+                                <span className="font-semibold text-teal-300">편집됨</span>
+                              ) : (
+                                <span className="text-slate-600">원본</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right text-slate-400">{row.entry_count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              {vocabTotal > vocabItems.length && (
+                <p className="text-slate-500 text-xs">
+                  최근 {vocabItems.length}건만 표시합니다. (전체 {vocabTotal}건)
+                </p>
+              )}
+            </div>
+          )}
+
           {/* ─── 탭 내용: Dropbox ─── */}
           {tab === 'dropbox' && (
             <div className="space-y-4">
@@ -743,6 +1370,7 @@ export default function UserDetailPage() {
                         setEditDropboxPath('');
                         const r = await fetch(`/api/admin/users/${userId}`, {
                           method: 'PATCH',
+                          credentials: 'include',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ dropboxFolderPath: '' }),
                         });

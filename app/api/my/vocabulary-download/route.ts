@@ -1,3 +1,4 @@
+// @deprecated — 새 단어장 시스템은 /api/my/vocabulary/[id]/download 를 사용합니다. 이 라우트는 하위 호환성을 위해 유지됩니다.
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import * as XLSX from 'xlsx';
@@ -15,6 +16,7 @@ import {
 } from '@/lib/passage-analyzer-types';
 import { sortVocabularyEntries } from '@/lib/passage-analyzer-vocabulary';
 import { VOCABULARY_WORD_TYPE_LABELS } from '@/lib/passage-analyzer-vocabulary';
+import { lessonLabelFromPassageRow } from '@/lib/vocabulary-lesson-label';
 
 /* ── 요청 파라미터 타입 ── */
 
@@ -81,28 +83,19 @@ async function loadVocabulary(
 ) {
   type PRow = { _id: unknown; textbook?: string; chapter?: string; number?: string; source_key?: string; order?: number };
 
-  let passageFilter: Record<string, unknown>;
-  if (selectedLessons.length > 0) {
-    passageFilter = {
-      $or: selectedLessons.map((l) => {
-        const parts = l.split(' ');
-        if (parts.length >= 2) {
-          return { textbook, chapter: parts[0], number: parts.slice(1).join(' ') };
-        }
-        return { textbook, number: l };
-      }),
-    };
-  } else {
-    passageFilter = { textbook };
-  }
-
-  const passages = (await db
+  const allForTb = (await db
     .collection('passages')
-    .find(passageFilter)
+    .find({ textbook })
     .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1, order: 1 })
     .sort({ chapter: 1, order: 1, number: 1 })
-    .limit(500)
+    .limit(2000)
     .toArray()) as PRow[];
+
+  const labelSet = new Set(selectedLessons.map((l) => l.trim()).filter(Boolean));
+  const passages =
+    selectedLessons.length > 0
+      ? allForTb.filter((p) => labelSet.has(lessonLabelFromPassageRow(p)))
+      : allForTb;
 
   if (passages.length === 0) return { passages: [] as PRow[], vocabByFile: new Map<string, VocabularyEntry[]>() };
 

@@ -17,6 +17,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.objectiveCount !== undefined) $set.objectiveCount = Number(body.objectiveCount);
   if (body.subjectiveCount !== undefined) $set.subjectiveCount = Number(body.subjectiveCount);
   if (body.examScope !== undefined) $set.examScope = body.examScope;
+  if (body.examScopePassages !== undefined) $set.examScopePassages = body.examScopePassages;
   if (body.isLocked !== undefined) $set.isLocked = !!body.isLocked;
   if (body.pdfUrl !== undefined) $set.pdfUrl = body.pdfUrl;
   if (body.pdfName !== undefined) $set.pdfName = body.pdfName;

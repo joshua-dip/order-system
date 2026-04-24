@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
@@ -107,6 +107,8 @@ interface LessonSelectionProps {
   onLessonsSelect: (lessons: string[]) => void;
   onBack: () => void;
   onTextbookSelect?: (textbook: string) => void;
+  /** /gyogwaseo 전용: 교재만 먼저 고른 뒤 쏠북 안내 → 맞춤 주문 */
+  flow?: 'gyogwaseo';
 }
 
 interface LessonItem {
@@ -144,7 +146,7 @@ interface TextbookStructure {
   };
 }
 
-const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect }: LessonSelectionProps) => {
+const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect, flow }: LessonSelectionProps) => {
   const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
   const { links: textbookLinks } = useTextbookLinks();
   const [defaultTextbooks, setDefaultTextbooks] = useState<string[]>([]);
@@ -157,9 +159,13 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [showTextbookList, setShowTextbookList] = useState(false);
   /** 교과서 화면: 학년/과목 필터 (전체 = 빈 문자열) */
   const [gyogwaseoSubjectFilter, setGyogwaseoSubjectFilter] = useState<string>('');
+  /** /gyogwaseo: 1) 교재만 선택 → 2) 쏠북 안내 후 맞춤 주문 */
+  const [gyogwaseoStep, setGyogwaseoStep] = useState<'pickTextbook' | 'checkSolbook'>('pickTextbook');
+  const [gyogwaseoChosenKey, setGyogwaseoChosenKey] = useState<string | null>(null);
   /** 관리자가 회원 전용 변형문제 부교재 목록을 저장한 경우에만 true */
   const [variantDedicatedActive, setVariantDedicatedActive] = useState(false);
   const [variantDedicatedList, setVariantDedicatedList] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   /** /api/auth/me 응답 완료 여부 — 완료 전에는 배정 교재 분기를 쓰지 않아 전체 목록이 잠깐 보이는 현상 방지 */
   const [memberPrefsLoaded, setMemberPrefsLoaded] = useState(false);
   /** /api/settings/default-textbooks 응답 완료 여부 */
@@ -175,6 +181,13 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       .then((res) => res.json())
       .then((data) => {
         const u = data?.user;
+        if (u?.role === 'admin') {
+          setIsAdmin(true);
+          setVariantDedicatedActive(false);
+          setVariantDedicatedList([]);
+          return;
+        }
+        setIsAdmin(false);
         if (u && 'allowedTextbooksVariant' in u && Array.isArray(u.allowedTextbooksVariant)) {
           setVariantDedicatedActive(true);
           setVariantDedicatedList(u.allowedTextbooksVariant.filter((x: unknown): x is string => typeof x === 'string'));
@@ -184,6 +197,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
         }
       })
       .catch(() => {
+        setIsAdmin(false);
         setVariantDedicatedActive(false);
         setVariantDedicatedList([]);
       })
@@ -197,6 +211,20 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       .catch(() => setDefaultTextbooks([]))
       .finally(() => setDefaultTextbooksLoaded(true));
   }, []);
+
+  const prevSelectedTextbookRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (flow !== 'gyogwaseo') {
+      prevSelectedTextbookRef.current = selectedTextbook;
+      return;
+    }
+    const prev = prevSelectedTextbookRef.current;
+    prevSelectedTextbookRef.current = selectedTextbook;
+    if (selectedTextbook === '교과서_목록' && prev != null && prev !== '교과서_목록') {
+      setGyogwaseoStep('pickTextbook');
+      setGyogwaseoChosenKey(null);
+    }
+  }, [flow, selectedTextbook]);
 
   useEffect(() => {
     fetch('/api/settings/variant-solbook', { cache: 'no-store' })
@@ -247,7 +275,10 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           }
           const allKeys = Object.keys(textbooksData);
           let textbookList: string[];
-          if (variantDedicatedActive) {
+          if (isAdmin) {
+            // 관리자: 전체 교재 노출
+            textbookList = [...allKeys];
+          } else if (variantDedicatedActive) {
             textbookList = filterVariantSupplementaryTextbookKeys(allKeys, {
               allowedTextbooksVariant: [...variantDedicatedList, ...defaultTextbooks],
             });
@@ -365,6 +396,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     selectedTextbook,
     textbooksData,
     defaultTextbooks,
+    isAdmin,
     variantDedicatedActive,
     variantDedicatedList,
     memberPrefsLoaded,
@@ -418,12 +450,26 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
 
   const prefsReady = memberPrefsLoaded && defaultTextbooksLoaded && solbookLoaded;
   const listMode교과서 = showTextbookList && selectedTextbook === '교과서_목록';
-  const listScreenTitle = listMode교과서 ? '교과서 자료 주문' : showTextbookList ? '부교재 선택' : '강과 번호 선택';
-  const listScreenSubtitle = listMode교과서
-    ? '쏠북 정식 교재·구매를 먼저 확인하신 뒤, 맞춤 자료는 아래에서 이어가 주세요'
-    : showTextbookList
-      ? '부교재를 선택해주세요'
-      : selectedTextbook;
+  const gyogwaseoSolbookStep = flow === 'gyogwaseo' && listMode교과서 && gyogwaseoStep === 'checkSolbook' && Boolean(gyogwaseoChosenKey);
+
+  const listScreenTitle = gyogwaseoSolbookStep
+    ? '쏠북 구성 확인'
+    : listMode교과서 && flow === 'gyogwaseo'
+      ? '교재 선택'
+      : listMode교과서
+        ? '교과서 자료 주문'
+        : showTextbookList
+          ? '부교재 선택'
+          : '강과 번호 선택';
+  const listScreenSubtitle = gyogwaseoSolbookStep
+    ? '쏠북에서 판매 중인 구성을 확인하신 뒤, 필요하면 맞춤 자료 주문으로 이어가 주세요'
+    : listMode교과서 && flow === 'gyogwaseo'
+      ? '먼저 사용하실 교재를 한 권 선택해 주세요'
+      : listMode교과서
+        ? '쏠북 정식 교재·구매를 먼저 확인하신 뒤, 맞춤 자료는 아래에서 이어가 주세요'
+        : showTextbookList
+          ? '부교재를 선택해주세요'
+          : selectedTextbook;
 
   const selectTextbookAndOpenLessons = (textbook: string) => {
     if (onTextbookSelect) {
@@ -495,6 +541,44 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     );
   };
 
+  /** /gyogwaseo 1단계: 교재만 선택 (쏠북·주문 버튼은 다음 화면) */
+  const renderGyogwaseoPickCard = (textbook: string) => {
+    const meta = parseGyogwaseoKey(textbook);
+    const style = PUBLISHER_STYLE[meta.publisher] ?? PUBLISHER_STYLE['기타'];
+    return (
+      <button
+        key={textbook}
+        type="button"
+        onClick={() => {
+          setGyogwaseoChosenKey(textbook);
+          setGyogwaseoStep('checkSolbook');
+        }}
+        className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 pl-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-400 hover:shadow-lg focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2"
+      >
+        <span className={`absolute inset-y-0 left-0 w-1.5 ${style.stripe}`} aria-hidden />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+            {meta.subject}
+          </span>
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold ${style.badge}`}>
+            {meta.publisher}
+          </span>
+        </div>
+        <h3 className="mt-2.5 text-lg font-bold leading-tight text-slate-900">
+          {meta.author || meta.subject}
+          <span className="ml-1.5 text-xs font-medium text-slate-400">대표저자</span>
+        </h3>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+          다음 단계에서 이 교재의 <span className="font-semibold text-violet-700">쏠북 판매 구성</span>을 안내합니다.
+        </p>
+        <span className="mt-4 inline-flex w-full items-center justify-center gap-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-bold text-white group-hover:bg-violet-700">
+          이 교재 선택
+          <span aria-hidden>→</span>
+        </span>
+      </button>
+    );
+  };
+
   const allLessonItems = Object.keys(lessonGroups).flatMap(key => lessonGroups[key] || []);
   const allSelected = allLessonItems.length > 0 && selectedLessons.length === allLessonItems.length;
 
@@ -512,6 +596,15 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
       return;
     }
     onLessonsSelect(selectedLessons);
+  };
+
+  const handleAppBarBack = () => {
+    if (flow === 'gyogwaseo' && listMode교과서 && gyogwaseoStep === 'checkSolbook') {
+      setGyogwaseoStep('pickTextbook');
+      setGyogwaseoChosenKey(null);
+      return;
+    }
+    onBack();
   };
 
   if (dataLoading) {
@@ -539,7 +632,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     <>
       <AppBar 
         showBackButton={true} 
-        onBackClick={onBack}
+        onBackClick={handleAppBarBack}
         title={listScreenTitle}
       />
       <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
@@ -564,7 +657,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           <div className="flex items-center justify-between">
             <div 
               className="flex flex-col items-center cursor-pointer group"
-              onClick={onBack}
+              onClick={handleAppBarBack}
               title="교재 선택으로 돌아가기"
             >
               <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-green-700 transition-colors">
@@ -611,7 +704,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                 </div>
               ) : (
                 <div className="w-full">
-              {/* 검색 입력 필드 */}
+              {/* 검색 입력 필드 — /gyogwaseo 쏠북 확인 단계에서는 숨김 */}
+              {!gyogwaseoSolbookStep && (
               <div className="max-w-md mx-auto mb-6">
                 <div className="relative">
                   <input
@@ -643,8 +737,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                   </div>
                 )}
               </div>
+              )}
 
-              {filteredTextbooks.length === 0 && searchTerm ? (
+              {!gyogwaseoSolbookStep && filteredTextbooks.length === 0 && searchTerm ? (
                 <div className="text-center py-16">
                   <div className="text-gray-400 mb-4">
                     <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -740,9 +835,85 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         return a[0].localeCompare(b[0], 'ko');
                       });
 
+                      /* /gyogwaseo 2단계: 선택한 교재 기준 쏠북 안내 → 맞춤 주문 */
+                      if (flow === 'gyogwaseo' && gyogwaseoStep === 'checkSolbook' && gyogwaseoChosenKey) {
+                        const tbKey = gyogwaseoChosenKey;
+                        const links = textbookLinks[tbKey];
+                        const cta = solbookPurchaseCta(links);
+                        const meta = parseGyogwaseoKey(tbKey);
+                        const style = PUBLISHER_STYLE[meta.publisher] ?? PUBLISHER_STYLE['기타'];
+                        return (
+                          <>
+                            <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                              <div className={`h-1.5 w-full ${style.stripe}`} />
+                              <div className="border-b border-slate-100 bg-slate-50/80 px-5 py-4">
+                                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">선택한 교재</p>
+                                <p className="mt-1 text-xs font-medium text-slate-600">
+                                  <span className="text-slate-800">{meta.subject}</span>
+                                  {' · '}
+                                  <span className="text-violet-700">{meta.publisher}</span>
+                                </p>
+                                <p className="mt-1 text-lg font-bold text-slate-900">
+                                  {meta.author || meta.subject}
+                                  <span className="ml-1 text-xs font-normal text-slate-400">대표저자</span>
+                                </p>
+                              </div>
+                              <div className="space-y-4 px-5 py-5">
+                                <p className="text-sm leading-relaxed text-slate-700">
+                                  아래에서 <strong className="text-violet-800">쏠북</strong>에 올라와 있는 정식 세트·구성을 먼저 확인해 주세요.
+                                  원하시는 구성이 없거나, 강·지문 단위로 변형 문제 등 <strong>맞춤 제작</strong>이 필요하면 그다음 버튼으로 주문서 작성을 이어가실 수 있습니다.
+                                </p>
+                                <a
+                                  href={cta.primaryHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-violet-600 to-violet-700 px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:from-violet-700 hover:to-violet-800"
+                                >
+                                  <span>📘</span>
+                                  {cta.primaryLabel}
+                                  <span aria-hidden>→</span>
+                                </a>
+                                {cta.secondary ? (
+                                  <a
+                                    href={cta.secondary.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-center text-xs font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900"
+                                  >
+                                    {cta.secondary.label}
+                                  </a>
+                                ) : null}
+                                <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-[13px] leading-relaxed text-amber-950">
+                                  <strong className="font-semibold">맞춤 주문</strong>은 강·번호를 고른 뒤 유형·문항 수를 정하는 단계로 이어집니다. 단어장·분석지·변형을 한 번에 담으려면{' '}
+                                  <Link href="/bundle" className="font-semibold text-violet-800 underline underline-offset-2 hover:text-violet-950">
+                                    통합 주문
+                                  </Link>
+                                  을 이용해 보세요.
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => selectTextbookAndOpenLessons(tbKey)}
+                                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-slate-800"
+                                >
+                                  <span aria-hidden>✂️</span>
+                                  맞춤 자료 주문 — 강·지문 선택하기
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      const cardRenderer = flow === 'gyogwaseo' && gyogwaseoStep === 'pickTextbook' ? renderGyogwaseoPickCard : renderGyogwaseoCard;
+
                       return (
                         <>
-                          {/* 두 갈래 안내: 컴팩트 히어로 카드 */}
+                          {/* /gyogwaseo 1단계: 짧은 안내 · 그 외는 기존 히어로 */}
+                          {flow === 'gyogwaseo' && gyogwaseoStep === 'pickTextbook' ? (
+                            <div className="mb-6 rounded-xl border border-violet-100 bg-violet-50/60 px-4 py-3 text-center text-sm text-violet-950">
+                              <span className="font-semibold">1단계</span> — 아래에서 사용할 교재를 한 권만 선택해 주세요.
+                            </div>
+                          ) : flow !== 'gyogwaseo' ? (
                           <div className="mb-6 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 shadow-sm">
                             <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-violet-100">
                               <a
@@ -785,6 +956,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                               </Link>
                             </div>
                           </div>
+                          ) : null}
 
                           {/* 학년/과목 필터 칩 */}
                           {subjects.length > 1 && (
@@ -831,7 +1003,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                                   <span className="text-xs font-medium text-slate-500">{keys.length}종</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  {keys.map(renderGyogwaseoCard)}
+                                  {keys.map(cardRenderer)}
                                 </div>
                               </section>
                             ))}

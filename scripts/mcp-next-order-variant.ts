@@ -31,6 +31,8 @@ import {
   sliceQuestionCountPayloadForApi,
 } from '@/lib/question-count-validation';
 import { saveGeneratedQuestionToDb } from '@/lib/variant-save-generated-question';
+import { saveGeneratedWorkbook } from '@/lib/generated-workbooks-store';
+import type { WorkbookGrammarPoint } from '@/lib/workbook-grammar-types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -178,6 +180,32 @@ async function runSave(args: {
     return textError('question_data_json JSON 파싱 실패');
   }
 
+  if (type === '워크북어법') {
+    const qd = question_data;
+    const wbSaved = await saveGeneratedWorkbook({
+      passage_id: passageIdStr,
+      textbook,
+      passage_source_label: source,
+      category: '워크북어법',
+      paragraph: String(qd.Paragraph ?? ''),
+      grammar_points: (qd.GrammarPoints ?? []) as WorkbookGrammarPoint[],
+      answer_text: String(qd.AnswerText ?? ''),
+      explanation: String(qd.Explanation ?? ''),
+      created_by: 'mcp',
+      status: docStatus === '완료' || docStatus === '검수완료' ? 'reviewed' : 'draft',
+    });
+    if (!wbSaved.ok) return textError(wbSaved.error);
+    return textResult({
+      ok: true,
+      inserted_id: wbSaved.inserted_id,
+      collection: 'generated_workbooks',
+      textbook,
+      passage_id: passageIdStr,
+      source,
+      type,
+    });
+  }
+
   const saved = await saveGeneratedQuestionToDb({
     passage_id: passageIdStr,
     textbook,
@@ -263,6 +291,7 @@ async function main() {
           passage_id: String(p._id),
           textbook: String(p.textbook ?? ''),
           source_key: String(p.source_key ?? ''),
+          passage_source: String(p.passage_source ?? ''),
           chapter: p.chapter ?? '',
           number: p.number ?? '',
           content,

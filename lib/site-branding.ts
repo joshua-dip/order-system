@@ -1,6 +1,11 @@
 /** 브라우저 탭·앱바 기본 제목 */
 export const DEFAULT_APP_BAR_TITLE = '고미조슈아 · 교재 주문';
 
+/** 앱바 배경 — DAVICHI 계열(좌 브라운 골드 → 우 퍼플), 하단 액센트 틸 */
+export const APP_BAR_GRADIENT_START = '#A67C52';
+export const APP_BAR_GRADIENT_END = '#7E4A8D';
+export const APP_BAR_ACCENT_LINE = '#169B8F';
+
 /**
  * 공개 사이트 절대 URL (프로덕션).
  * Amplify/Vercel 등에 `NEXT_PUBLIC_SITE_URL=https://실제도메인` 설정 → OG·metadataBase·이메일 등에서 동일 도메인 사용.

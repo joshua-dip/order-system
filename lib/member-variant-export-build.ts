@@ -106,6 +106,52 @@ export function isEssayQuestionType(type: string): boolean {
   return ESSAY_TYPE_PREFIXES.some((p) => type.startsWith(p));
 }
 
+/** 워크북 어법 유형 여부 판단 */
+export function isWorkbookGrammarType(type: string): boolean {
+  return type === '워크북어법';
+}
+
+/** 워크북 유형 일반 판단 (향후 워크북빈칸 등 포함) */
+export function isWorkbookType(type: string): boolean {
+  return type.startsWith('워크북');
+}
+
+/**
+ * generated_workbooks doc (snake_case) → PascalCase 변환 어댑터.
+ * 기존 generated_questions 의 question_data (PascalCase) 도 그대로 통과.
+ */
+function normalizeWorkbookDataToPascal(qd: Record<string, unknown>): Record<string, unknown> {
+  if (typeof qd.Paragraph === 'string') return qd;
+  return {
+    ...qd,
+    Paragraph: qd.paragraph ?? qd.Paragraph ?? '',
+    AnswerText: qd.answer_text ?? qd.AnswerText ?? '',
+    Explanation: qd.explanation ?? qd.Explanation ?? '',
+    GrammarPoints: qd.grammar_points ?? qd.GrammarPoints ?? [],
+  };
+}
+
+/** 워크북 어법 question_data에서 섹션 목록 추출 */
+export function flattenWorkbookGrammarData(
+  qd: Record<string, unknown>,
+  mode: ExportMode,
+): { label: string; text: string }[] {
+  const norm = normalizeWorkbookDataToPascal(qd);
+  const sections: { label: string; text: string }[] = [];
+  const paragraph = str(norm.Paragraph).trim();
+  const answerText = str(norm.AnswerText).trim();
+  const explanation = str(norm.Explanation).trim();
+
+  if (paragraph) sections.push({ label: '지문(양자택일)', text: paragraph });
+
+  if (mode === 'teacher') {
+    if (answerText) sections.push({ label: '정답', text: answerText });
+    if (explanation) sections.push({ label: '해설', text: explanation });
+  }
+
+  return sections;
+}
+
 /** 서술형 question_data에서 섹션 목록 추출 */
 export function flattenEssayQuestionData(
   qd: Record<string, unknown>,
@@ -163,30 +209,53 @@ export function flattenMemberQuestionData(qd: Record<string, unknown>): {
 export async function buildMemberVariantXlsxBuffer(docs: MemberVariantExportDoc[]): Promise<Buffer> {
   const XLSX = await import('xlsx');
   const rows: (string | number)[][] = [
-    ['번호', '유형', '난이도', '교재', '출처', '상태', '저장일시', '발문', '지문', '선택지', '정답', '해설'],
+    ['번호', '유형', '난이도', '교재', '출처', '상태', '저장일시', '발문', '지문(양자택일)', '선택지', '정답', '해설'],
   ];
   for (let i = 0; i < docs.length; i++) {
     const d = docs[i];
     const qd = d.question_data ?? {};
-    const f = flattenMemberQuestionData(qd);
+    const docType = str(d.type);
     const created =
       d.created_at instanceof Date
         ? d.created_at.toISOString().replace('T', ' ').slice(0, 19)
         : '';
-    rows.push([
-      i + 1,
-      exportPlainText(str(d.type)),
-      exportPlainText(str(d.difficulty)),
-      exportPlainText(str(d.textbook)),
-      exportPlainText(str(d.source)),
-      exportPlainText(str(d.status)),
-      sanitizeExportCellText(created),
-      exportPlainText(f.question),
-      exportPlainText(f.paragraph),
-      exportPlainText(f.optionsDisplay),
-      exportPlainText(f.answer),
-      exportPlainText(f.explanation),
-    ]);
+
+    if (isWorkbookGrammarType(docType)) {
+      const sections = flattenWorkbookGrammarData(qd, 'teacher');
+      const paragraphCell = sections.find((s) => s.label === '지문(양자택일)')?.text ?? '';
+      const answerCell = sections.find((s) => s.label === '정답')?.text ?? '';
+      const explanationCell = sections.find((s) => s.label === '해설')?.text ?? '';
+      rows.push([
+        i + 1,
+        exportPlainText(docType),
+        exportPlainText(str(d.difficulty)),
+        exportPlainText(str(d.textbook)),
+        exportPlainText(str(d.source)),
+        exportPlainText(str(d.status)),
+        sanitizeExportCellText(created),
+        '',
+        exportPlainText(paragraphCell),
+        '',
+        exportPlainText(answerCell),
+        exportPlainText(explanationCell),
+      ]);
+    } else {
+      const f = flattenMemberQuestionData(qd);
+      rows.push([
+        i + 1,
+        exportPlainText(docType),
+        exportPlainText(str(d.difficulty)),
+        exportPlainText(str(d.textbook)),
+        exportPlainText(str(d.source)),
+        exportPlainText(str(d.status)),
+        sanitizeExportCellText(created),
+        exportPlainText(f.question),
+        exportPlainText(f.paragraph),
+        exportPlainText(f.optionsDisplay),
+        exportPlainText(f.answer),
+        exportPlainText(f.explanation),
+      ]);
+    }
   }
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -205,6 +274,7 @@ export async function buildMemberVariantDocxBuffer(
     const qd = doc.question_data ?? {};
     const docType = str(doc.type);
     const isEssay = isEssayQuestionType(docType);
+    const isWorkbook = isWorkbookGrammarType(docType);
     const header = `${idx + 1}. [${exportPlainText(docType)}] (${exportPlainText(str(doc.difficulty))}) · ${exportPlainText(str(doc.textbook))}`;
 
     const children: InstanceType<typeof DocxParagraph>[] = [
@@ -214,7 +284,40 @@ export async function buildMemberVariantDocxBuffer(
       }),
     ];
 
-    if (isEssay) {
+    if (isWorkbook) {
+      for (const { label, text } of flattenWorkbookGrammarData(qd, mode)) {
+        const isAnswer = label === '정답';
+        const isNote = label === '해설';
+        children.push(
+          new DocxParagraph({
+            children: [
+              new TextRun({
+                text: `[${label}]`,
+                bold: true,
+                size: isNote ? 18 : 20,
+                color: isAnswer ? '16A34A' : isNote ? '6B7280' : '000000',
+              }),
+            ],
+            spacing: { before: 120, after: 40 },
+          }),
+        );
+        for (const line of exportPlainText(text).split(/\n/).filter(Boolean)) {
+          children.push(
+            new DocxParagraph({
+              children: [
+                new TextRun({
+                  text: line,
+                  size: isNote ? 18 : 20,
+                  italics: isNote,
+                  color: isAnswer ? '16A34A' : isNote ? '6B7280' : '000000',
+                }),
+              ],
+              spacing: { after: 30 },
+            }),
+          );
+        }
+      }
+    } else if (isEssay) {
       for (const { label, text } of flattenEssayQuestionData(qd, mode)) {
         const isAnswer = label === '모범 답안';
         const isNote = label === '해설' || label === '정답 어휘';
@@ -338,6 +441,7 @@ export async function buildMemberVariantPdfBuffer(
     const qd = d.question_data ?? {};
     const docType = str(d.type);
     const isEssay = isEssayQuestionType(docType);
+    const isWorkbook = isWorkbookGrammarType(docType);
 
     if (i > 0) pdfDoc.moveDown(0.5);
     if (pdfDoc.y > 700) pdfDoc.addPage();
@@ -350,7 +454,21 @@ export async function buildMemberVariantPdfBuffer(
         { continued: false },
       );
 
-    if (isEssay) {
+    if (isWorkbook) {
+      for (const { label, text } of flattenWorkbookGrammarData(qd, mode)) {
+        const isAnswer = label === '정답';
+        const isNote = label === '해설';
+        pdfDoc.moveDown(0.3);
+        pdfDoc
+          .fontSize(isNote ? 9 : 10)
+          .fillColor(isAnswer ? '#16A34A' : isNote ? '#6B7280' : '#000000')
+          .text(`[${label}]`, { continued: false });
+        for (const line of exportPlainText(text).split(/\n/).filter(Boolean)) {
+          pdfDoc.text(line, { lineGap: 2 });
+        }
+        pdfDoc.fillColor('#000000').fontSize(10);
+      }
+    } else if (isEssay) {
       for (const { label, text } of flattenEssayQuestionData(qd, mode)) {
         const isAnswer = label === '모범 답안';
         const isNote = label === '해설' || label === '정답 어휘';

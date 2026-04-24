@@ -46,7 +46,10 @@ export async function POST(request: NextRequest) {
   }
   if (!type || !isMemberEssayQuestionType(type)) {
     return NextResponse.json(
-      { error: '유효한 서술형 문제 유형이 필요합니다. (요약문본문어휘, 요약문조건영작배열)' },
+      {
+        error:
+          '유효한 서술형 문제 유형이 필요합니다. (요약문본문어휘, 요약문조건영작배열, 빈칸재배열형, 요약문조건영작형, 이중요지영작형)',
+      },
       { status: 400 },
     );
   }

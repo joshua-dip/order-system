@@ -157,6 +157,7 @@ export async function GET(request: NextRequest) {
           chapter: 1,
           number: 1,
           source_key: 1,
+          passage_source: 1,
           page: 1,
           page_label: 1,
           order: 1,

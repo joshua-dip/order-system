@@ -71,3 +71,6 @@ ENV/
 # logs
 *.log
 watch.log
+
+# 서술형 초안 (Claude Code 로컬 JSON)
+.essay-drafts/

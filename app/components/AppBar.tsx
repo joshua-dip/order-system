@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { DEFAULT_APP_BAR_TITLE } from '@/lib/site-branding';
+import {
+  APP_BAR_ACCENT_LINE,
+  APP_BAR_GRADIENT_END,
+  APP_BAR_GRADIENT_START,
+  DEFAULT_APP_BAR_TITLE,
+} from '@/lib/site-branding';
+import MembershipApplyModal from './MembershipApplyModal';
 
 interface AppBarProps {
   title?: string;
@@ -21,6 +27,7 @@ interface AuthUser {
 const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [applyOpen, setApplyOpen] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -49,12 +56,18 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
   //  · 역할(관리자/내정보) 작은 배지 한 번
   //  · 단, 표시 이름이 역할 텍스트와 동일하면 배지 생략 → "관리자 관리자" 중복 방지
   const displayName = (user?.name || user?.loginId || '').trim();
-  const roleLabel = user?.role === 'admin' ? '관리자' : '내정보';
+  const roleLabel = user?.role === 'admin' ? '관리자' : user?.role === 'student' ? '학생' : '내정보';
   const showRoleBadge = !!displayName && displayName !== roleLabel;
-  const myHref = user?.role === 'admin' ? '/admin' : '/my';
+  const myHref = user?.role === 'admin' ? '/admin' : user?.role === 'student' ? '/my/student' : '/my';
 
   return (
-    <header className="shadow-md sticky top-0 z-50" style={{ backgroundColor: '#13294B', borderBottom: '1px solid #888B8D' }}>
+    <header
+      className="shadow-md sticky top-0 z-50"
+      style={{
+        background: `linear-gradient(90deg, ${APP_BAR_GRADIENT_START} 0%, ${APP_BAR_GRADIENT_END} 100%)`,
+        borderBottom: `2px solid ${APP_BAR_ACCENT_LINE}`,
+      }}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* 왼쪽 공간 (뒤로가기 버튼용) */}
@@ -62,7 +75,7 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
             {showBackButton && onBackClick && (
               <button
                 onClick={onBackClick}
-                className="p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors text-white"
+                className="p-2 rounded-lg hover:bg-black/15 transition-colors text-white drop-shadow-sm"
                 title="이전 페이지"
               >
                 <svg 
@@ -90,14 +103,14 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
             <button
               type="button"
               onClick={handleHomeClick}
-              className="text-base sm:text-xl font-bold text-white hover:opacity-80 transition-all cursor-pointer leading-tight"
+              className="text-base sm:text-xl font-bold text-white hover:opacity-90 transition-all cursor-pointer leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
             >
               {title}
             </button>
           </div>
 
           {/* 우측 메뉴 */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             {user ? (
               <>
                 <Link
@@ -122,36 +135,25 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
                 </button>
               </>
             ) : (
-              <Link
-                href="/login"
-                className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
-                style={{ backgroundColor: 'transparent', color: 'white' }}
-              >
-                <span>로그인</span>
-              </Link>
+              <>
+                {/* 가입신청 버튼 — 비로그인에만 노출, 데스크톱 */}
+                <button
+                  type="button"
+                  onClick={() => setApplyOpen(true)}
+                  className="hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-bold transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#FEE500', color: '#1a1a1a' }}
+                >
+                  가입신청
+                </button>
+                <Link
+                  href="/login"
+                  className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                  style={{ backgroundColor: 'transparent', color: 'white' }}
+                >
+                  <span>로그인</span>
+                </Link>
+              </>
             )}
-            <a
-              href="https://open.kakao.com/o/sHuV7wSh"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
-              style={{ backgroundColor: 'transparent', color: 'white' }}
-            >
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
-              >
-                <path 
-                  d="M12 3C6.48 3 2 6.58 2 11c0 2.4 1.17 4.55 3 6.06V21l3.94-2.06c.97.27 2 .42 3.06.42 5.52 0 10-3.58 10-8s-4.48-8-10-8z" 
-                  fill="currentColor"
-                />
-              </svg>
-              <span>문의하기</span>
-            </a>
             <div className="md:hidden flex items-center space-x-2">
               {user ? (
                 <>
@@ -177,39 +179,28 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/login"
-                  className="flex items-center px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
-                  style={{ backgroundColor: 'transparent', color: 'white' }}
-                >
-                  로그인
-                </Link>
+                <>
+                  {/* 가입신청 버튼 — 모바일 */}
+                  <button
+                    type="button"
+                    onClick={() => setApplyOpen(true)}
+                    className="flex items-center px-3 py-2 rounded-lg text-sm font-bold transition-all hover:opacity-90"
+                    style={{ backgroundColor: '#FEE500', color: '#1a1a1a' }}
+                  >
+                    가입신청
+                  </button>
+                  <Link
+                    href="/login"
+                    className="flex items-center px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
+                    style={{ backgroundColor: 'transparent', color: 'white' }}
+                  >
+                    로그인
+                  </Link>
+                </>
               )}
-              <a
-                href="https://open.kakao.com/o/sHuV7wSh"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-1 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-sm font-medium border border-white border-opacity-30"
-                style={{ backgroundColor: 'transparent', color: 'white' }}
-                title="카톡 문의"
-              >
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
-                >
-                  <path 
-                    d="M12 3C6.48 3 2 6.58 2 11c0 2.4 1.17 4.55 3 6.06V21l3.94-2.06c.97.27 2 .42 3.06.42 5.52 0 10-3.58 10-8s-4.48-8-10-8z" 
-                    fill="currentColor"
-                  />
-                </svg>
-                <span>문의</span>
-              </a>
             </div>
           </div>
+          <MembershipApplyModal open={applyOpen} onClose={() => setApplyOpen(false)} />
         </div>
       </div>
     </header>

@@ -9,6 +9,8 @@ import {
   isDropboxConfigured,
 } from '@/lib/dropbox';
 
+export const maxDuration = 30;
+
 const ORDERS_COLLECTION = 'orders';
 
 async function requireAdmin(request: NextRequest) {

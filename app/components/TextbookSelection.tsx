@@ -239,8 +239,8 @@ function useHubSections(
       },
       {
         id: 'vocabulary',
-        title: '단어장 주문 제작',
-        description: (<>맞춤 단어장 제작 주문<br />세부 안내는 카톡 문의</>),
+        title: '단어장',
+        description: (<>구매 즉시 편집·다운로드<br />첫글자제시·뜻가리기·플래시카드 등</>),
         icon: <IconVocabulary /> as ReactNode,
         accentColor: '#0D9488',
         gridClassName: 'lg:col-span-2',
@@ -464,7 +464,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">변형문제 만들기</span>
                   <p className="text-sm font-medium text-cyan-100">
-                    본인 Claude API 키로 지문을 넣고 초안을 생성합니다
+                    객관식 · 서술형 · 워크북 어법 — 지문 하나로 자동 생성
                   </p>
                   <p className="mt-0.5 text-xs text-cyan-200/90">
                     가입하면 7일 무료 · 월구독·연회원 전용 · API 키는 내 정보 탭에서만 등록(브라우저 로컬), 생성 시에만 Anthropic으로 전달됩니다
@@ -494,7 +494,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">변형문제 만들기</span>
                   <p className="text-sm font-medium text-cyan-100">
-                    본인 Claude API 키로 지문을 넣고 초안을 생성합니다
+                    객관식 · 서술형 · 워크북 어법 — 지문 하나로 자동 생성
                   </p>
                   <p className="mt-0.5 text-xs text-amber-100">
                     로그인 없이 바로 사용 가능

@@ -4,6 +4,8 @@ import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { createUserDropboxFolder, isDropboxConfigured } from '@/lib/dropbox';
 
+export const maxDuration = 30;
+
 async function requireAdmin(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) {

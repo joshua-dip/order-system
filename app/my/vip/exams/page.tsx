@@ -17,10 +17,11 @@ interface SchoolExam {
   id: string; schoolId: string; academicYear: number; grade: number;
   examType: string; questions: Record<string, ExamQuestion>;
   objectiveCount: number; subjectiveCount: number;
-  examScope: string[]; isLocked: boolean;
+  examScope: string[]; examScopePassages?: string[]; isLocked: boolean;
   pdfPath?: string | null; pdfName?: string | null;
 }
 interface TextbookEntry { textbook: string }
+interface PassageEntry { textbook: string; sourceKey: string; hasVariant: boolean; passageSource?: string }
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
@@ -64,6 +65,9 @@ export default function VipExamsPage() {
   const [exams, setExams] = useState<SchoolExam[]>([]);
   const [textbooks, setTextbooks] = useState<TextbookEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  // 소스(지문) 선택
+  const [passagesCache, setPassagesCache] = useState<Record<string, PassageEntry[]>>({});
+  const [passagesLoading, setPassagesLoading] = useState<Record<string, boolean>>({});
 
   const [filterYear, setFilterYear] = useState<number>(() => {
     if (typeof window === 'undefined') return CURRENT_YEAR;
@@ -158,10 +162,14 @@ export default function VipExamsPage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/textbooks').then((r) => r.json()).then((data) => {
-      const keys = typeof data === 'object' && !Array.isArray(data) ? Object.keys(data) : [];
-      setTextbooks(keys.map((k) => ({ textbook: k })));
-    }).catch(() => {});
+    fetch('/api/my/vip/textbooks', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok && Array.isArray(d.textbooks)) {
+          setTextbooks(d.textbooks.map((k: string) => ({ textbook: k })));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const loadExams = useCallback(async () => {
@@ -185,7 +193,49 @@ export default function VipExamsPage() {
 
   useEffect(() => { loadExams(); }, [loadExams]);
 
+  // 시험이 열릴 때 examScope가 있으면 소스 자동 로드
+  useEffect(() => {
+    if (!expandedExam) return;
+    const exam = localExams[expandedExam];
+    if (!exam) return;
+    const selectedTbs = exam.examScope ?? [];
+    if (selectedTbs.length === 0) return;
+    const cacheKey = selectedTbs.slice().sort().join(',');
+    if (passagesCache[cacheKey]) return;
+    loadPassagesForTextbooks(expandedExam, selectedTbs);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedExam, Object.keys(localExams).join(',')]);
+
   const textbookNames = useMemo(() => textbooks.map((t) => t.textbook), [textbooks]);
+
+  const MOCK_EXAM_PATTERN = /^\d{2}년\s+\d{1,2}월\s+고[123]\s+영어모의고사|^\d{2}년\s+고[123]\s+영어모의고사/;
+  const isMockExam = (name: string) => MOCK_EXAM_PATTERN.test(name) || /영어모의고사$/.test(name);
+
+  const textbookGroups = useMemo(() => {
+    const mockExams = textbookNames.filter(isMockExam);
+    const supplementary = textbookNames.filter((n) => !isMockExam(n));
+    return [
+      { label: '부교재', textbooks: supplementary },
+      { label: '모의고사', textbooks: mockExams },
+    ].filter((g) => g.textbooks.length > 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textbookNames]);
+
+  const loadPassagesForTextbooks = useCallback(async (examId: string, selectedTextbooks: string[]) => {
+    if (selectedTextbooks.length === 0) return;
+    const cacheKey = selectedTextbooks.slice().sort().join(',');
+    if (passagesCache[cacheKey]) return; // 이미 로드됨
+    setPassagesLoading((prev) => ({ ...prev, [examId]: true }));
+    try {
+      const params = new URLSearchParams({ textbooks: selectedTextbooks.join(',') });
+      const res = await fetch(`/api/my/vip/passages-by-textbooks?${params}`, { credentials: 'include' });
+      const d = await res.json();
+      if (d.ok && Array.isArray(d.passages)) {
+        setPassagesCache((prev) => ({ ...prev, [cacheKey]: d.passages as PassageEntry[] }));
+      }
+    } catch { /* 무시 */ }
+    finally { setPassagesLoading((prev) => ({ ...prev, [examId]: false })); }
+  }, [passagesCache]);
 
   const handleAddExam = async (examType: string) => {
     if (!selectedSchool) return;
@@ -209,6 +259,7 @@ export default function VipExamsPage() {
         objectiveCount: local.objectiveCount,
         subjectiveCount: local.subjectiveCount,
         examScope: local.examScope,
+        examScopePassages: local.examScopePassages ?? [],
         isLocked: local.isLocked,
       }),
     });
@@ -968,30 +1019,208 @@ export default function VipExamsPage() {
                       </div>
 
                       {/* Exam scope */}
-                      {textbookNames.length > 0 && (
-                        <div>
-                          <label className="text-xs text-zinc-500 mb-1.5 block">시험 범위 (교재)</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {textbookNames.map((tb) => (
-                              <button
-                                key={tb}
-                                onClick={() => {
-                                  const current = local.examScope || [];
-                                  const next = current.includes(tb) ? current.filter((s) => s !== tb) : [...current, tb];
-                                  updateLocal(exam.id, { examScope: next });
-                                }}
-                                className={`px-2 py-1 text-[11px] rounded-lg border transition-colors ${
-                                  (local.examScope || []).includes(tb)
-                                    ? 'bg-zinc-700/50 border-zinc-600 text-zinc-200'
-                                    : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-500 hover:text-zinc-400'
-                                }`}
-                              >
-                                {tb.length > 20 ? tb.slice(0, 20) + '…' : tb}
-                              </button>
+                      {textbookGroups.length > 0 && (() => {
+                        const selectedTbs = local.examScope || [];
+                        const cacheKey = selectedTbs.slice().sort().join(',');
+                        const availablePassages = passagesCache[cacheKey] ?? [];
+                        const isLoadingPassages = !!passagesLoading[exam.id];
+                        const selectedPassages = local.examScopePassages ?? [];
+
+                        // 선택된 교재별 소스 그룹
+                        const passagesByTb: Record<string, PassageEntry[]> = {};
+                        for (const p of availablePassages) {
+                          if (!passagesByTb[p.textbook]) passagesByTb[p.textbook] = [];
+                          passagesByTb[p.textbook].push(p);
+                        }
+
+                        return (
+                          <div className="space-y-3">
+                            {/* 교재 선택 */}
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs text-zinc-500">시험 범위 (교재)</label>
+                              {selectedTbs.length > 0 && (
+                                <button
+                                  onClick={() => updateLocal(exam.id, { examScope: [], examScopePassages: [] })}
+                                  className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                                >
+                                  전체 해제
+                                </button>
+                              )}
+                            </div>
+                            {textbookGroups.map((group) => (
+                              <div key={group.label}>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <span className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wide">{group.label}</span>
+                                  <div className="flex-1 h-px bg-zinc-800" />
+                                  <button
+                                    onClick={() => {
+                                      const current = local.examScope || [];
+                                      const allSelected = group.textbooks.every((tb) => current.includes(tb));
+                                      const next = allSelected
+                                        ? current.filter((s) => !group.textbooks.includes(s))
+                                        : [...new Set([...current, ...group.textbooks])];
+                                      updateLocal(exam.id, { examScope: next });
+                                      if (!allSelected) {
+                                        loadPassagesForTextbooks(exam.id, next);
+                                      }
+                                    }}
+                                    className="text-[10px] text-zinc-600 hover:text-zinc-400 shrink-0 transition-colors"
+                                  >
+                                    {group.textbooks.every((tb) => selectedTbs.includes(tb)) ? '전체 해제' : '전체 선택'}
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {group.textbooks.map((tb) => {
+                                    const selected = selectedTbs.includes(tb);
+                                    return (
+                                      <button
+                                        key={tb}
+                                        onClick={() => {
+                                          const current = local.examScope || [];
+                                          const next = current.includes(tb) ? current.filter((s) => s !== tb) : [...current, tb];
+                                          updateLocal(exam.id, { examScope: next });
+                                          if (!selected) loadPassagesForTextbooks(exam.id, next);
+                                        }}
+                                        className={`px-2 py-1 text-[11px] rounded-lg border transition-colors ${
+                                          selected
+                                            ? 'bg-zinc-700/50 border-zinc-500 text-zinc-200'
+                                            : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-500 hover:text-zinc-400'
+                                        }`}
+                                      >
+                                        {tb.length > 22 ? tb.slice(0, 22) + '…' : tb}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             ))}
+
+                            {/* 소스(지문) 선택 — 교재가 하나라도 선택된 경우 */}
+                            {selectedTbs.length > 0 && (
+                              <div className="border-t border-zinc-800/60 pt-3 space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs text-zinc-500">지문 범위 (소스)</label>
+                                  {isLoadingPassages && (
+                                    <span className="flex items-center gap-1 text-[10px] text-zinc-600">
+                                      <span className="inline-block w-2.5 h-2.5 border border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
+                                      불러오는 중…
+                                    </span>
+                                  )}
+                                  {!isLoadingPassages && availablePassages.length === 0 && (
+                                    <button
+                                      onClick={() => loadPassagesForTextbooks(exam.id, selectedTbs)}
+                                      className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                                    >
+                                      불러오기
+                                    </button>
+                                  )}
+                                  {selectedPassages.length > 0 && (
+                                    <button
+                                      onClick={() => updateLocal(exam.id, { examScopePassages: [] })}
+                                      className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                                    >
+                                      소스 선택 초기화
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-zinc-600 -mt-1">
+                                  선택하지 않으면 위 교재 전체 범위. 초록색 = 변형문제 데이터 있음.
+                                </p>
+
+                                {/* 선택된 소스 요약 (소스 목록 로드 전에도 표시) */}
+                                {selectedPassages.length > 0 && availablePassages.length === 0 && !isLoadingPassages && (
+                                  <div className="rounded-lg bg-zinc-800/40 border border-zinc-700/50 px-3 py-2">
+                                    <p className="text-[10px] text-zinc-400 mb-1.5 font-semibold">선택된 소스 {selectedPassages.length}개</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {selectedPassages.map((key) => {
+                                        const parts = key.split('::');
+                                        const sourceKey = parts.slice(1).join('::');
+                                        return (
+                                          <span key={key} className="px-1.5 py-0.5 text-[10px] rounded border bg-zinc-700/50 border-zinc-500 text-zinc-300">
+                                            {sourceKey}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {selectedTbs.map((tb) => {
+                                  const tbPassages = passagesByTb[tb] ?? [];
+                                  if (tbPassages.length === 0) return null;
+                                  const tbPassageKeys = tbPassages.map((p) => `${p.textbook}::${p.sourceKey}`);
+                                  const allTbSelected = tbPassageKeys.every((k) => selectedPassages.includes(k));
+                                  // 선택된 항목이 먼저 오도록 정렬
+                                  const sortedPassages = [...tbPassages].sort((a, b) => {
+                                    const aKey = `${a.textbook}::${a.sourceKey}`;
+                                    const bKey = `${b.textbook}::${b.sourceKey}`;
+                                    const aSelected = selectedPassages.includes(aKey);
+                                    const bSelected = selectedPassages.includes(bKey);
+                                    if (aSelected && !bSelected) return -1;
+                                    if (!aSelected && bSelected) return 1;
+                                    return 0;
+                                  });
+                                  const selectedInTb = tbPassageKeys.filter((k) => selectedPassages.includes(k)).length;
+                                  return (
+                                    <div key={tb}>
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="text-[10px] text-zinc-500 truncate max-w-[200px]" title={tb}>{tb}</span>
+                                        {selectedInTb > 0 && (
+                                          <span className="text-[10px] text-zinc-400 shrink-0">{selectedInTb}개 선택</span>
+                                        )}
+                                        <div className="flex-1 h-px bg-zinc-800/60" />
+                                        <button
+                                          onClick={() => {
+                                            const current = selectedPassages;
+                                            const next = allTbSelected
+                                              ? current.filter((k) => !tbPassageKeys.includes(k))
+                                              : [...new Set([...current, ...tbPassageKeys])];
+                                            updateLocal(exam.id, { examScopePassages: next });
+                                          }}
+                                          className="text-[10px] text-zinc-600 hover:text-zinc-400 shrink-0 transition-colors"
+                                        >
+                                          {allTbSelected ? '전체 해제' : '전체 선택'}
+                                        </button>
+                                      </div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {sortedPassages.map((p) => {
+                                          const key = `${p.textbook}::${p.sourceKey}`;
+                                          const isSelected = selectedPassages.includes(key);
+                                          return (
+                                            <button
+                                              key={key}
+                                              onClick={() => {
+                                                const current = selectedPassages;
+                                                const next = isSelected ? current.filter((k) => k !== key) : [...current, key];
+                                                updateLocal(exam.id, { examScopePassages: next });
+                                              }}
+                                              className={`px-1.5 py-0.5 text-[10px] rounded border transition-colors ${
+                                                isSelected
+                                                  ? p.hasVariant
+                                                    ? 'bg-emerald-900/50 border-emerald-600/70 text-emerald-200'
+                                                    : 'bg-zinc-700/50 border-zinc-500 text-zinc-200'
+                                                  : p.hasVariant
+                                                    ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-400 hover:border-emerald-600/60'
+                                                    : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-600 hover:text-zinc-400'
+                                              }`}
+                                              title={p.passageSource ? `원문출처: ${p.passageSource}${p.hasVariant ? ' · 변형문제 있음' : ''}` : (p.hasVariant ? '변형문제 데이터 있음' : '변형문제 없음')}
+                                            >
+                                              <span>{p.sourceKey}</span>
+                                              {p.passageSource && (
+                                                <span className="block text-[9px] opacity-60 leading-tight mt-0.5">{p.passageSource}</span>
+                                              )}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Question table */}
                       {totalQ > 0 && (

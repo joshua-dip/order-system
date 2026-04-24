@@ -3,7 +3,7 @@
  *
  * 변환 규칙
  *   - "고1_2026_03월(서울시)"           → "26년 3월 고1 영어모의고사"
- *   - "고1_2023_11월(경기도)[12월시행]"  → "23년 11월 고1 영어모의고사 (12월시행)"
+ *   - "고1_2023_11월(경기도)[12월시행]"  → "23년 11월 고1 영어모의고사" (월 시행 메모도 제거)
  *   - "고2_2013_06월_A형(서울시)"        → 현재 passages 에 표준화 안 된 형태이므로 그대로 유지
  *   - "수능_2024_11월_2025수능(평가원)"  → 그대로 유지 (대수능 항목은 후속 작업으로)
  *
@@ -22,6 +22,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { getDb } from '../lib/mongodb';
 import { parseMockExamKey } from '../lib/mock-exam-key';
+import { stripRegionFromMockExamTextbookKey } from '../lib/mock-exam-strip-region';
 
 const APPLY = process.argv.includes('--apply');
 const TARGET_PATH = path.resolve(process.cwd(), 'app/data/mock-exams.json');
@@ -46,8 +47,9 @@ function convertKey(key: string): string {
   if (parsed.variant) return key;
   const yy = String(parsed.year % 100).padStart(2, '0');
   const head = `${yy}년 ${parsed.month}월 ${parsed.grade} 영어모의고사`;
-  // 지역(note)은 떼고, 대괄호 메모([12월시행])만 보존
-  if (parsed.bracketNote) return `${head} (${parsed.bracketNote})`;
+  if (parsed.bracketNote) {
+    return stripRegionFromMockExamTextbookKey(`${head} (${parsed.bracketNote})`);
+  }
   return head;
 }
 
@@ -91,8 +93,9 @@ async function main() {
     const out: string[] = [];
     for (const orig of list) {
       const conv = convertKey(orig);
-      if (conv !== orig) conversions.push({ from: orig, to: conv });
-      out.push(conv);
+      const normalized = stripRegionFromMockExamTextbookKey(conv);
+      if (normalized !== orig) conversions.push({ from: orig, to: normalized });
+      out.push(normalized);
     }
     next[k] = out;
   }

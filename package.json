@@ -17,6 +17,7 @@
     "mcp-bridge:dev": "node scripts/mcp-bridge-dev.cjs",
     "mcp:variant": "tsx scripts/mcp-next-order-variant.ts",
     "cc:variant": "tsx scripts/cc-variant-cli.ts",
+    "cc:essay": "tsx scripts/cc-essay-cli.ts",
     "claude": "tsx scripts/cc-variant-cli.ts",
     "passage-analyzer:cli": "tsx scripts/passage-analyzer-cli.ts",
     "ainca:migrate": "tsx scripts/migrate-ainca-pdf.ts",

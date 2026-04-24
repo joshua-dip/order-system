@@ -1503,11 +1503,22 @@ export default function MyPage() {
           {/* ━━ 단어장 탭 ━━ */}
           {activeTab === 'vocabulary' && annualMenuUnlocked && (
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
-                <p className="text-sm font-bold text-[#0f172a] mb-1">단어장 다운로드</p>
-                <p className="text-[12px] text-[#94a3b8] leading-relaxed">
-                  <strong className="text-[#64748b]">공식 모의고사</strong> 교재만 선택할 수 있어요. 지문·CEFR·포함 항목을 설정한 뒤 엑셀·PDF·시험지로 내려받습니다.
+              <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl border border-teal-200 p-6 text-center">
+                <div className="text-4xl mb-3">📚</div>
+                <p className="font-bold text-teal-800 mb-1 text-base">단어장이 새 메뉴로 이동했어요!</p>
+                <p className="text-sm text-teal-700 leading-relaxed mb-4">
+                  이제 단어장을 구매하고, 직접 편집·다운로드할 수 있는 전용 페이지로 이동했습니다.<br />
+                  기본형/상세형 구매 후 단어를 직접 편집하고, 첫글자 제시·뜻가리기·플래시카드 등 다양한 형식으로 다운로드하세요.
                 </p>
+                <a
+                  href="/vocabulary-order"
+                  className="inline-block px-6 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors"
+                >
+                  단어장 메뉴로 이동 →
+                </a>
+              </div>
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <p className="text-xs text-slate-400 text-center">이전 단어장 다운로드 기능은 아래에서 계속 이용할 수 있습니다.</p>
               </div>
 
               {/* 교재 선택 */}

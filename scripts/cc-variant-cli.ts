@@ -154,6 +154,7 @@ async function cmdPassage(flags: Map<string, string>) {
     passage_id: String(p._id),
     textbook: String(p.textbook ?? ''),
     source_key: String(p.source_key ?? ''),
+    passage_source: String(p.passage_source ?? ''),
     chapter: p.chapter ?? '',
     number: p.number ?? '',
     content,

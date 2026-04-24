@@ -82,16 +82,34 @@ const ALL_TYPES: TypeMeta[] = TYPE_GROUPS.flatMap((g) => g.items);
 /** 서술형 유형 메타 */
 const ESSAY_TYPE_META: TypeMeta[] = [
   {
-    key: '요약문본문어휘',
-    label: '요약문 본문 어휘 찾기',
-    desc: '본문에서 단어를 직접 찾아 요약문 빈칸 완성 (변형 가능)',
+    key: '빈칸재배열형',
+    label: '빈칸재배열형',
+    desc: '주제문의 핵심 구를 보기 단어로 재배열해 빈칸 완성',
+    icon: 'puzzle',
+  },
+  {
+    key: '요약문조건영작형',
+    label: '요약문 조건 영작형',
+    desc: '한 문장 요약 빈칸을 문법 조건 3개에 맞게 영작',
     icon: 'note',
+  },
+  {
+    key: '이중요지영작형',
+    label: '이중요지 영작형',
+    desc: '지문 기반 두 가지 관점을 영어로 통합 서술 (40–50어)',
+    icon: 'quote',
+  },
+  {
+    key: '요약문본문어휘',
+    label: '요약문 본문 어휘',
+    desc: '본문에서 단어를 직접 찾아 요약문 빈칸 완성',
+    icon: 'search',
   },
   {
     key: '요약문조건영작배열',
     label: '요약문 조건 영작 (배열)',
     desc: '주어진 단어를 올바른 순서로 배열하여 요약문 완성',
-    icon: 'note',
+    icon: 'order',
   },
 ];
 
@@ -927,7 +945,7 @@ export default function MemberVariantGeneratePage() {
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              서술형 (요약문)
+              서술형 (5유형)
             </button>
           </div>
 
@@ -958,9 +976,9 @@ export default function MemberVariantGeneratePage() {
             {pageMode === 'essay' && (
               <div className="mt-3 space-y-3">
                 <p className="px-1 text-[11px] leading-relaxed text-slate-500">
-                  지문을 요약하는 영어 문장을 완성하는 서술형 문항입니다. 유형에 따라 조건 충족 영작 또는 단어 배열 방식으로 출제됩니다.
+                  빈칸재배열·조건영작·이중요지 등 수능형 서술형 5가지 유형을 지원합니다. 하나를 선택하면 AI가 지문 기반으로 문항을 생성합니다.
                 </p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   {ESSAY_TYPE_META.map((t) => (
                     <button
                       key={t.key}

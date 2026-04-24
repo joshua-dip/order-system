@@ -14,7 +14,9 @@ import {
   exportPlainText,
   flattenMemberQuestionData,
   flattenEssayQuestionData,
+  flattenWorkbookGrammarData,
   isEssayQuestionType,
+  isWorkbookGrammarType,
 } from '@/lib/member-variant-export-build';
 
 function str(v: unknown): string {
@@ -69,6 +71,7 @@ function buildSection0Xml(docs: MemberVariantExportDoc[], mode: ExportMode, titl
     const qd = d.question_data ?? {};
     const docType = str(d.type);
     const isEssay = isEssayQuestionType(docType);
+    const isWorkbook = isWorkbookGrammarType(docType);
 
     lines.push(emptyPara());
     lines.push(
@@ -79,7 +82,17 @@ function buildSection0Xml(docs: MemberVariantExportDoc[], mode: ExportMode, titl
       ),
     );
 
-    if (isEssay) {
+    if (isWorkbook) {
+      for (const { label, text } of flattenWorkbookGrammarData(qd, mode)) {
+        const isAnswer = label === '정답';
+        const isNote = label === '해설';
+        const charPr = isAnswer ? CHAR_ANSWER : isNote ? CHAR_NOTE : CHAR_BODY;
+        lines.push(para(`[${label}]`, charPr, PARA_NORMAL));
+        for (const line of exportPlainText(text).split(/\n/).filter(Boolean)) {
+          lines.push(para(line, charPr, PARA_NORMAL));
+        }
+      }
+    } else if (isEssay) {
       for (const { label, text } of flattenEssayQuestionData(qd, mode)) {
         const isAnswer = label === '모범 답안';
         const isNote = label === '해설' || label === '정답 어휘';

@@ -34,7 +34,7 @@ function LoginForm() {
         setError(data?.error || '로그인에 실패했습니다.');
         return;
       }
-      const dest = getSafeUserLoginRedirect(searchParams.get('from'), data?.mustChangePassword === true);
+      const dest = getSafeUserLoginRedirect(searchParams.get('from'), data?.mustChangePassword === true, data?.role);
       window.location.assign(dest);
     } catch {
       setError('로그인 요청 중 오류가 발생했습니다.');
@@ -146,6 +146,12 @@ function LoginForm() {
                 className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
               >
                 ← 메인으로 돌아가기
+              </Link>
+            </p>
+            <p className="text-center mt-3 text-sm text-slate-400">
+              학생이신가요?{' '}
+              <Link href="/student-login" className="text-indigo-500 hover:underline font-medium">
+                학생 로그인 →
               </Link>
             </p>
           </div>

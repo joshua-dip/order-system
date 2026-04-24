@@ -56,6 +56,12 @@ import {
 import { VocabularyStopWordsModal } from '@/app/components/admin/VocabularyStopWordsModal';
 import { apiJsonErrorMessage, parseApiResponseJson } from '@/lib/parse-api-response-json';
 import { runPassageAnalyzerAiBatch } from '@/lib/passage-analyzer-run-ai-batch';
+import {
+  MEMBER_ESSAY_QUESTION_TYPES,
+  type MemberEssayQuestionType,
+  buildCliCommand,
+  buildCliPromptForEssayDraft,
+} from '@/lib/member-essay-draft-claude';
 
 const SYNTAX_LABEL_OPTIONS = Object.keys(SYNTAX_LABEL_COLORS);
 
@@ -63,6 +69,31 @@ const EMPTY_VOCAB_CUSTOM_STOPWORDS: string[] = [];
 
 /** CEFR 셀렉트에서 AI 단건 분석 트리거 (value는 저장하지 않음) */
 const CEFR_SELECT_AI_VALUE = '__ai_cefr__';
+
+// ─────────────────────────────────────────
+// 단어장 보기 설정 (칸 가리기 · 간격)
+// ─────────────────────────────────────────
+const VOCAB_COL_META: Array<{ id: string; label: string; width: string; always?: boolean }> = [
+  { id: 'num',          label: '#',       width: 'minmax(0,2.5rem)', always: true },
+  { id: 'word',         label: '단어',    width: 'minmax(0,6rem)',   always: true },
+  { id: 'wordType',     label: '유형',    width: 'minmax(0,4rem)'   },
+  { id: 'partOfSpeech', label: '품사',    width: 'minmax(0,5rem)'   },
+  { id: 'cefr',         label: 'CEFR',   width: 'minmax(0,3.25rem)'},
+  { id: 'meaning',      label: '뜻',      width: '1fr'               },
+  { id: 'synonym',      label: '유의어',  width: 'minmax(0,5rem)'   },
+  { id: 'antonym',      label: '반의어',  width: 'minmax(0,5rem)'   },
+  { id: 'opposite',     label: '기타',    width: 'minmax(0,5rem)'   },
+  { id: 'position',     label: '위치',    width: 'minmax(0,6rem)'   },
+  { id: 'del',          label: '',        width: 'auto',             always: true },
+];
+const VOCAB_VIEW_PRESETS: Array<{ key: string; label: string; hiddenCols: string[] }> = [
+  { key: '전체',    label: '전체',            hiddenCols: [] },
+  { key: '학습용',  label: '학습용 (뜻 숨김)', hiddenCols: ['meaning', 'synonym', 'antonym', 'opposite'] },
+  { key: '단어·품사', label: '단어·품사만',   hiddenCols: ['wordType', 'cefr', 'meaning', 'synonym', 'antonym', 'opposite', 'position'] },
+  { key: '정답용',  label: '정답용 (뜻·유의어)', hiddenCols: ['synonym', 'antonym', 'opposite'] },
+];
+const VOCAB_VIEW_LS_KEY = 'pa_vocab_view_opts_v1';
+type VocabViewOpts = { hiddenCols: string[]; rowSize: 'compact' | 'normal' | 'loose' };
 
 type TextbookSibling = {
   _id: string;
@@ -285,6 +316,7 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const [grammarSubMode, setGrammarSubMode] = useState<'manual' | 'ai'>('manual');
   const [contextSubMode, setContextSubMode] = useState<'manual' | 'ai'>('manual');
   const [vocabShowInputAt, setVocabShowInputAt] = useState<number | null>(null);
+  const [vocabExpandedOi, setVocabExpandedOi] = useState<number | null>(null);
   const [vocabAiFixIdx, setVocabAiFixIdx] = useState<number | null>(null);
   const [vocabBaseFormIdx, setVocabBaseFormIdx] = useState<number | null>(null);
   const [vocabMergeFirstIdx, setVocabMergeFirstIdx] = useState<number | null>(null);
@@ -302,6 +334,28 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   /** 문법태그 모드: 새 태그 추가 시 라벨(예: #전치사구) */
   const [newGrammarTagName, setNewGrammarTagName] = useState('');
   const [showStopWordsModal, setShowStopWordsModal] = useState(false);
+  const [essayDraftOpen, setEssayDraftOpen] = useState(false);
+  const [showVocabViewPanel, setShowVocabViewPanel] = useState(false);
+  const [vocabViewOpts, setVocabViewOpts] = useState<VocabViewOpts>(() => {
+    try {
+      const v = typeof window !== 'undefined' ? localStorage.getItem(VOCAB_VIEW_LS_KEY) : null;
+      return v ? (JSON.parse(v) as VocabViewOpts) : { hiddenCols: [], rowSize: 'normal' };
+    } catch {
+      return { hiddenCols: [], rowSize: 'normal' };
+    }
+  });
+  const updateVocabViewOpts = useCallback((next: VocabViewOpts) => {
+    setVocabViewOpts(next);
+    try { localStorage.setItem(VOCAB_VIEW_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  }, []);
+  const vocabHiddenSet = useMemo(() => new Set(vocabViewOpts.hiddenCols), [vocabViewOpts.hiddenCols]);
+  const isVCol = useCallback((id: string) => !vocabHiddenSet.has(id), [vocabHiddenSet]);
+  const vocabGridTpl = useMemo(
+    () => VOCAB_COL_META.filter((c) => c.always || !vocabHiddenSet.has(c.id)).map((c) => c.width).join(' '),
+    [vocabHiddenSet]
+  );
+  const vocabRowPad = vocabViewOpts.rowSize === 'compact' ? 'p-1' : vocabViewOpts.rowSize === 'loose' ? 'py-2.5 px-2' : 'p-2';
+  const vocabRowText = vocabViewOpts.rowSize === 'compact' ? 'text-[10px]' : vocabViewOpts.rowSize === 'loose' ? 'text-xs' : 'text-[11px]';
   const [mongoPanelOpen, setMongoPanelOpen] = useState(false);
   const [mongoPanelJson, setMongoPanelJson] = useState<string | null>(null);
   const [mongoPanelLoading, setMongoPanelLoading] = useState(false);
@@ -2735,6 +2789,15 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                 })}
               </div>
               <span className="text-[11px] text-slate-500 hidden sm:inline">토글 · 다중 선택</span>
+              {viewMode === 'essaySentence' && (state.essayHighlightedSentences?.length ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setEssayDraftOpen(true)}
+                  className="ml-auto shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-pink-700/80 hover:bg-pink-600/90 text-white transition-colors"
+                >
+                  서술형 초안 만들기
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -2777,6 +2840,18 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
               <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                 <button
                   type="button"
+                  onClick={() => setShowVocabViewPanel((v) => !v)}
+                  className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-colors ${
+                    showVocabViewPanel
+                      ? 'border-teal-500/60 bg-teal-800/40 text-teal-100'
+                      : 'border-slate-600 bg-slate-900 text-slate-400 hover:bg-slate-800'
+                  }`}
+                  title="칸 가리기·간격·프리셋 설정"
+                >
+                  ⚙ 보기 설정{vocabViewOpts.hiddenCols.length > 0 && ` (${vocabViewOpts.hiddenCols.length}개 숨김)`}
+                </button>
+                <button
+                  type="button"
                   onClick={() => void downloadCurrentVocabularyXlsx()}
                   disabled={!!vocabExportBusy || !state}
                   className="text-[11px] px-2.5 py-1.5 rounded-lg border border-emerald-700/70 bg-emerald-950/50 text-emerald-100 hover:bg-emerald-900/40 disabled:opacity-40 disabled:pointer-events-none"
@@ -2801,6 +2876,77 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                 </button>
               </div>
             </div>
+            {showVocabViewPanel && (
+              <div className="rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 space-y-3">
+                {/* 프리셋 */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-semibold text-slate-400 shrink-0">프리셋</span>
+                  {VOCAB_VIEW_PRESETS.map((p) => {
+                    const isActive =
+                      JSON.stringify([...p.hiddenCols].sort()) ===
+                      JSON.stringify([...vocabViewOpts.hiddenCols].sort());
+                    return (
+                      <button
+                        key={p.key}
+                        type="button"
+                        onClick={() => updateVocabViewOpts({ ...vocabViewOpts, hiddenCols: p.hiddenCols })}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition-colors ${
+                          isActive
+                            ? 'bg-teal-700 border-teal-500 text-white'
+                            : 'bg-slate-900 border-slate-600 text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* 칸 개별 토글 */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <span className="text-[11px] font-semibold text-slate-400 shrink-0">칸 가리기</span>
+                  {VOCAB_COL_META.filter((c) => !c.always).map((col) => {
+                    const hidden = vocabHiddenSet.has(col.id);
+                    return (
+                      <label key={col.id} className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={!hidden}
+                          onChange={() => {
+                            const next = hidden
+                              ? vocabViewOpts.hiddenCols.filter((c) => c !== col.id)
+                              : [...vocabViewOpts.hiddenCols, col.id];
+                            updateVocabViewOpts({ ...vocabViewOpts, hiddenCols: next });
+                          }}
+                          className="accent-teal-500"
+                        />
+                        <span className={`text-[11px] ${hidden ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                          {col.label}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {/* 행 간격 */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-slate-400 shrink-0">행 간격</span>
+                  {(['compact', 'normal', 'loose'] as const).map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => updateVocabViewOpts({ ...vocabViewOpts, rowSize: size })}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border transition-colors ${
+                        vocabViewOpts.rowSize === size
+                          ? 'bg-teal-700 border-teal-500 text-white'
+                          : 'bg-slate-900 border-slate-600 text-slate-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      {size === 'compact' ? '좁게' : size === 'normal' ? '보통' : '넓게'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {state.showVocabulary !== false && (
               <>
                 <p className="text-[11px] text-slate-500">
@@ -2946,17 +3092,20 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                       </div>
                     </div>
                   )}
-                  <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 px-2 py-1.5 bg-slate-800/90 text-[10px] text-slate-400 font-medium border-b border-slate-700 min-w-[62rem]">
+                  <div
+                    className="grid gap-1 px-2 py-1.5 bg-slate-800/90 text-[10px] text-slate-400 font-medium border-b border-slate-700"
+                    style={{ gridTemplateColumns: vocabGridTpl }}
+                  >
                     <span>#</span>
                     <span>단어</span>
-                    <span>유형</span>
-                    <span>품사</span>
-                    <span title="목록에서 「✨ AI로 CEFR」 선택 시 AI가 문맥 기준으로 등급 제안">CEFR</span>
-                    <span>뜻(·부가)</span>
-                    <span>영어 유의어</span>
-                    <span>영어 반의어</span>
-                    <span>기타</span>
-                    <span>위치</span>
+                    {isVCol('wordType') && <span>유형</span>}
+                    {isVCol('partOfSpeech') && <span>품사</span>}
+                    {isVCol('cefr') && <span title="목록에서 「✨ AI로 CEFR」 선택 시 AI가 문맥 기준으로 등급 제안">CEFR</span>}
+                    {isVCol('meaning') && <span>뜻(·부가)</span>}
+                    {isVCol('synonym') && <span>유의어</span>}
+                    {isVCol('antonym') && <span>반의어</span>}
+                    {isVCol('opposite') && <span>기타</span>}
+                    {isVCol('position') && <span>위치</span>}
                     <span />
                   </div>
                   {sortedVocabulary.map((item, displayIdx) => {
@@ -2968,9 +3117,19 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                         .join(', ') || '—';
                     return (
                       <div key={`vr-${oi}-${displayIdx}`} className="border-b border-slate-800">
-                        <div className="grid grid-cols-[minmax(0,2.5rem)_minmax(0,6rem)_minmax(0,4rem)_minmax(0,5rem)_minmax(0,3.25rem)_1fr_minmax(0,5rem)_minmax(0,5rem)_minmax(0,5rem)_minmax(0,6rem)_auto] gap-1 p-2 items-start text-[11px] min-w-[62rem]">
+                        <div
+                          className={`grid gap-1 items-start ${vocabRowPad} ${vocabRowText}`}
+                          style={{ gridTemplateColumns: vocabGridTpl }}
+                        >
                           <span className="text-slate-500 tabular-nums pt-1 flex items-center gap-0.5">
-                            {displayIdx + 1}
+                            <button
+                              type="button"
+                              onClick={() => setVocabExpandedOi(vocabExpandedOi === oi ? null : oi)}
+                              className={`tabular-nums leading-none hover:text-teal-300 transition-colors ${vocabExpandedOi === oi ? 'text-teal-300' : 'text-slate-400'}`}
+                              title="클릭하면 해당 문장 보기"
+                            >
+                              {displayIdx + 1}
+                            </button>
                             <button
                               type="button"
                               disabled={vocabBaseFormIdx === oi}
@@ -3003,132 +3162,148 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                                 : 'border-slate-700 text-teal-100'
                             }`}
                           />
-                          <select
-                            value={item.wordType || 'word'}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], wordType: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
-                          >
-                            {VOCABULARY_WORD_TYPE_OPTIONS.map((o) => (
-                              <option key={o} value={o}>
-                                {VOCABULARY_WORD_TYPE_LABELS[o] ?? o}
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            value={item.partOfSpeech || 'n.'}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], partOfSpeech: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
-                          >
-                            {VOCABULARY_POS_OPTIONS.map((o) => (
-                              <option key={o} value={o}>
-                                {o}
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            value={item.cefr ?? ''}
-                            disabled={!!busy || cefrAiRowIndex === oi || cefrAiInline}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === CEFR_SELECT_AI_VALUE) {
-                                void runCefrAiForRow(oi);
-                                return;
-                              }
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], cefr: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
-                            title="CEFR — 목록에서 「✨ AI로 CEFR」을 고르면 문맥·뜻 기준 자동 채움"
-                          >
-                            <option value="">미지정</option>
-                            <option value={CEFR_SELECT_AI_VALUE}>✨ AI로 CEFR</option>
-                            {VOCABULARY_CEFR_OPTIONS.filter((o) => o !== '').map((o) => (
-                              <option key={o} value={o}>
-                                {o}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex gap-0.5 items-start w-full">
-                            <input
-                              value={item.meaning || ''}
+                          {isVCol('wordType') && (
+                            <select
+                              value={item.wordType || 'word'}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 updateState((s) => {
                                   const list = [...(s.vocabularyList || [])];
-                                  if (list[oi]) list[oi] = { ...list[oi], meaning: v };
+                                  if (list[oi]) list[oi] = { ...list[oi], wordType: v };
                                   return { ...s, vocabularyList: list };
                                 });
                               }}
-                              placeholder="한글 뜻(·부가)"
-                              className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 flex-1 min-w-0"
-                            />
-                            <button
-                              type="button"
-                              disabled={vocabAiFixIdx === oi}
-                              onClick={() => void runMeaningAiForRow(oi)}
-                              className="shrink-0 px-1 py-1 rounded text-[9px] leading-tight border border-violet-700/60 text-violet-300 hover:bg-violet-900/40 disabled:opacity-40 disabled:cursor-wait"
-                              title="AI로 뜻 수정 (문맥 기반)"
+                              className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
                             >
-                              {vocabAiFixIdx === oi ? '…' : '✨'}
-                            </button>
-                          </div>
-                          <input
-                            value={item.synonym || ''}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], synonym: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            placeholder="영어 유의어"
-                            className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
-                          />
-                          <input
-                            value={item.antonym || ''}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], antonym: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            placeholder="영어 반의어"
-                            className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
-                          />
-                          <input
-                            value={item.opposite || ''}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              updateState((s) => {
-                                const list = [...(s.vocabularyList || [])];
-                                if (list[oi]) list[oi] = { ...list[oi], opposite: v };
-                                return { ...s, vocabularyList: list };
-                              });
-                            }}
-                            placeholder="기타"
-                            className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
-                          />
-                          <span className="text-slate-500 text-[10px] pt-1 font-mono leading-tight">{posLabel}</span>
+                              {VOCABULARY_WORD_TYPE_OPTIONS.map((o) => (
+                                <option key={o} value={o}>
+                                  {VOCABULARY_WORD_TYPE_LABELS[o] ?? o}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {isVCol('partOfSpeech') && (
+                            <select
+                              value={item.partOfSpeech || 'n.'}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                updateState((s) => {
+                                  const list = [...(s.vocabularyList || [])];
+                                  if (list[oi]) list[oi] = { ...list[oi], partOfSpeech: v };
+                                  return { ...s, vocabularyList: list };
+                                });
+                              }}
+                              className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
+                            >
+                              {VOCABULARY_POS_OPTIONS.map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {isVCol('cefr') && (
+                            <select
+                              value={item.cefr ?? ''}
+                              disabled={!!busy || cefrAiRowIndex === oi || cefrAiInline}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === CEFR_SELECT_AI_VALUE) {
+                                  void runCefrAiForRow(oi);
+                                  return;
+                                }
+                                updateState((s) => {
+                                  const list = [...(s.vocabularyList || [])];
+                                  if (list[oi]) list[oi] = { ...list[oi], cefr: v };
+                                  return { ...s, vocabularyList: list };
+                                });
+                              }}
+                              className="bg-slate-950 border border-slate-600 rounded text-slate-300 w-full text-[10px]"
+                              title="CEFR — 목록에서 「✨ AI로 CEFR」을 고르면 문맥·뜻 기준 자동 채움"
+                            >
+                              <option value="">미지정</option>
+                              <option value={CEFR_SELECT_AI_VALUE}>✨ AI로 CEFR</option>
+                              {VOCABULARY_CEFR_OPTIONS.filter((o) => o !== '').map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {isVCol('meaning') ? (
+                            <div className="flex gap-0.5 items-start w-full">
+                              <input
+                                value={item.meaning || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  updateState((s) => {
+                                    const list = [...(s.vocabularyList || [])];
+                                    if (list[oi]) list[oi] = { ...list[oi], meaning: v };
+                                    return { ...s, vocabularyList: list };
+                                  });
+                                }}
+                                placeholder="한글 뜻(·부가)"
+                                className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 flex-1 min-w-0"
+                              />
+                              <button
+                                type="button"
+                                disabled={vocabAiFixIdx === oi}
+                                onClick={() => void runMeaningAiForRow(oi)}
+                                className="shrink-0 px-1 py-1 rounded text-[9px] leading-tight border border-violet-700/60 text-violet-300 hover:bg-violet-900/40 disabled:opacity-40 disabled:cursor-wait"
+                                title="AI로 뜻 수정 (문맥 기반)"
+                              >
+                                {vocabAiFixIdx === oi ? '…' : '✨'}
+                              </button>
+                            </div>
+                          ) : null}
+                          {isVCol('synonym') && (
+                            <input
+                              value={item.synonym || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                updateState((s) => {
+                                  const list = [...(s.vocabularyList || [])];
+                                  if (list[oi]) list[oi] = { ...list[oi], synonym: v };
+                                  return { ...s, vocabularyList: list };
+                                });
+                              }}
+                              placeholder="영어 유의어"
+                              className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
+                            />
+                          )}
+                          {isVCol('antonym') && (
+                            <input
+                              value={item.antonym || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                updateState((s) => {
+                                  const list = [...(s.vocabularyList || [])];
+                                  if (list[oi]) list[oi] = { ...list[oi], antonym: v };
+                                  return { ...s, vocabularyList: list };
+                                });
+                              }}
+                              placeholder="영어 반의어"
+                              className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
+                            />
+                          )}
+                          {isVCol('opposite') && (
+                            <input
+                              value={item.opposite || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                updateState((s) => {
+                                  const list = [...(s.vocabularyList || [])];
+                                  if (list[oi]) list[oi] = { ...list[oi], opposite: v };
+                                  return { ...s, vocabularyList: list };
+                                });
+                              }}
+                              placeholder="기타"
+                              className="bg-slate-950 border border-slate-600 rounded px-1 py-1 text-slate-200 w-full"
+                            />
+                          )}
+                          {isVCol('position') && (
+                            <span className="text-slate-500 text-[10px] pt-1 font-mono leading-tight">{posLabel}</span>
+                          )}
                           <button
                             type="button"
                             onClick={() =>
@@ -3142,6 +3317,36 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                             삭제
                           </button>
                         </div>
+                        {vocabExpandedOi === oi && (() => {
+                          const sentenceIndices = [...new Set((item.positions || []).map((p) => p.sentence))].sort((a, b) => a - b);
+                          if (sentenceIndices.length === 0) return (
+                            <div className="px-3 py-2 bg-slate-800/50 border-t border-slate-700/50 text-[11px] text-slate-500">위치 정보 없음</div>
+                          );
+                          return (
+                            <div className="bg-slate-800/50 border-t border-slate-700/50 divide-y divide-slate-700/40">
+                              {sentenceIndices.map((si) => {
+                                const eng = state.sentences?.[si] ?? '';
+                                const kor = state.koreanSentences?.[si] ?? '';
+                                const word = item.word;
+                                const parts = word ? eng.split(new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'i')) : [eng];
+                                return (
+                                  <div key={si} className="px-3 py-2 space-y-0.5">
+                                    <p className="text-[11px] text-slate-200 leading-relaxed">
+                                      {parts.map((part, pi) =>
+                                        part.toLowerCase() === word.toLowerCase() ? (
+                                          <mark key={pi} className="bg-teal-500/30 text-teal-200 rounded px-0.5">{part}</mark>
+                                        ) : (
+                                          <span key={pi}>{part}</span>
+                                        )
+                                      )}
+                                    </p>
+                                    {kor && <p className="text-[11px] text-slate-400 leading-relaxed">{kor}</p>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                         <button
                           type="button"
                           onClick={() =>
@@ -3787,6 +3992,272 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         customStopWords={state.vocabularyCustomStopWords ?? EMPTY_VOCAB_CUSTOM_STOPWORDS}
         onSave={(words) => updateState((s) => ({ ...s, vocabularyCustomStopWords: words }))}
       />
+
+      {essayDraftOpen && state && (
+        <FocusEssayDraftModal
+          open={essayDraftOpen}
+          onClose={() => setEssayDraftOpen(false)}
+          sentences={state.sentences}
+          essayHighlightedIndices={state.essayHighlightedSentences ?? []}
+          paragraph={state.sentences.join(' ')}
+          passageId={passageId ?? ''}
+        />
+      )}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────
+// FocusEssayDraftModal
+// ────────────────────────────────────────────
+
+function FocusEssayDraftModal({
+  open,
+  onClose,
+  sentences,
+  essayHighlightedIndices,
+  paragraph,
+  passageId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  sentences: string[];
+  essayHighlightedIndices: number[];
+  paragraph: string;
+  passageId: string;
+}) {
+  const highlightedSentences = essayHighlightedIndices.map((i) => sentences[i]).filter(Boolean);
+
+  const [selected, setSelected] = useState<Set<number>>(
+    () => new Set(essayHighlightedIndices)
+  );
+  const [essayType, setEssayType] = useState<MemberEssayQuestionType>(MEMBER_ESSAY_QUESTION_TYPES[0]);
+  const [userHint, setUserHint] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+  const [resultJson, setResultJson] = useState<string | null>(null);
+  const [copyTip, setCopyTip] = useState<'result' | 'prompt' | null>(null);
+
+  if (!open) return null;
+
+  const focusSentences = essayHighlightedIndices
+    .filter((i) => selected.has(i))
+    .map((i) => sentences[i])
+    .filter(Boolean);
+
+  function toggleIndex(i: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
+  async function handleGenerate() {
+    setGenerating(true);
+    setGenError(null);
+    setResultJson(null);
+    try {
+      const res = await fetch('/api/admin/passage-analyzer/generate-essay-draft', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paragraph,
+          type: essayType,
+          focusSentences: focusSentences.length > 0 ? focusSentences : undefined,
+          userHint: userHint.trim() || undefined,
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string; question_data?: unknown };
+      if (!res.ok || !data.ok) {
+        setGenError(data.error || '생성 실패');
+      } else {
+        setResultJson(JSON.stringify(data.question_data, null, 2));
+      }
+    } catch (e) {
+      setGenError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function copyToClipboard(text: string, kind: 'result' | 'prompt') {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyTip(kind);
+      setTimeout(() => setCopyTip(null), 1800);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function handleCopyCliPrompt() {
+    const selectedIndices = essayHighlightedIndices.filter((i) => selected.has(i));
+    const cmd = passageId
+      ? buildCliCommand({
+          passageId,
+          selectedIndices,
+          type: essayType,
+          userHint: userHint.trim() || undefined,
+        })
+      : buildCliPromptForEssayDraft({
+          paragraph,
+          type: essayType,
+          focusSentences: focusSentences.length > 0 ? focusSentences : undefined,
+          userHint: userHint.trim() || undefined,
+        });
+    void copyToClipboard(cmd, 'prompt');
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-pink-800/50 bg-slate-900 shadow-2xl overflow-hidden">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700 bg-slate-800/80 shrink-0">
+          <span className="text-sm font-bold text-pink-200">서술형 초안 만들기</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-white text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+          {/* 중심 문장 선택 */}
+          <section>
+            <p className="text-[11px] font-semibold text-pink-300/90 mb-2">
+              서술형대비 문장 — 중심으로 삼을 문장 선택
+            </p>
+            <div className="space-y-1.5">
+              {essayHighlightedIndices.length === 0 ? (
+                <p className="text-xs text-slate-500">표시된 서술형대비 문장이 없습니다.</p>
+              ) : (
+                highlightedSentences.map((sent, idx) => {
+                  const si = essayHighlightedIndices[idx];
+                  const isOn = selected.has(si);
+                  return (
+                    <label
+                      key={si}
+                      className={`flex items-start gap-2.5 rounded-lg px-3 py-2 cursor-pointer border transition-colors ${
+                        isOn
+                          ? 'border-pink-600/60 bg-pink-950/40'
+                          : 'border-slate-700/50 bg-slate-800/40 opacity-60'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isOn}
+                        onChange={() => toggleIndex(si)}
+                        className="mt-0.5 accent-pink-500 shrink-0"
+                      />
+                      <span className="text-xs text-slate-200 leading-relaxed">{sent}</span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          {/* 유형 선택 */}
+          <section>
+            <p className="text-[11px] font-semibold text-slate-300/90 mb-2">유형</p>
+            <div className="flex flex-wrap gap-2">
+              {MEMBER_ESSAY_QUESTION_TYPES.map((t) => (
+                <label key={t} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="essay-type"
+                    value={t}
+                    checked={essayType === t}
+                    onChange={() => setEssayType(t)}
+                    className="accent-pink-500"
+                  />
+                  <span className="text-xs text-slate-300">{t}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          {/* 추가 힌트 */}
+          <section>
+            <p className="text-[11px] font-semibold text-slate-300/90 mb-1.5">추가 힌트 (선택)</p>
+            <textarea
+              value={userHint}
+              onChange={(e) => setUserHint(e.target.value)}
+              placeholder="출제 방향, 특정 단어 포함 등 자유롭게 입력"
+              rows={2}
+              className="w-full text-xs rounded-lg bg-slate-800 border border-slate-600 text-slate-200 px-3 py-2 resize-none placeholder:text-slate-500 focus:outline-none focus:border-pink-600/60"
+            />
+          </section>
+
+          {/* Claude Code 명령어 미리보기 */}
+          {passageId && (
+            <section>
+              <p className="text-[11px] font-semibold text-slate-400/90 mb-1.5">
+                Claude Code 명령어 미리보기
+              </p>
+              <div className="rounded-lg bg-slate-800/80 border border-slate-700 px-3 py-2 font-mono text-[11px] text-slate-300 leading-relaxed break-all">
+                {buildCliCommand({
+                  passageId,
+                  selectedIndices: essayHighlightedIndices.filter((i) => selected.has(i)),
+                  type: essayType,
+                  userHint: userHint.trim() || undefined,
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* 액션 버튼 */}
+          <section className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => void handleGenerate()}
+              disabled={generating}
+              className="flex-1 min-w-[10rem] py-2.5 rounded-xl text-sm font-bold bg-pink-700 hover:bg-pink-600 disabled:opacity-50 text-white transition-colors"
+            >
+              {generating ? '생성 중…' : 'API로 즉시 생성'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyCliPrompt}
+              className="flex-1 min-w-[10rem] py-2.5 rounded-xl text-sm font-bold bg-slate-700 hover:bg-slate-600 text-slate-100 transition-colors"
+            >
+              {copyTip === 'prompt' ? '✓ 복사됨' : 'Claude Code 명령어 복사'}
+            </button>
+          </section>
+
+          {/* 오류 */}
+          {genError && (
+            <p className="text-xs text-red-400 bg-red-950/30 rounded-lg px-3 py-2">{genError}</p>
+          )}
+
+          {/* 결과 미리보기 */}
+          {resultJson && (
+            <section>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[11px] font-semibold text-emerald-300/90">생성 결과 (question_data)</p>
+                <button
+                  type="button"
+                  onClick={() => void copyToClipboard(resultJson, 'result')}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                >
+                  {copyTip === 'result' ? '✓ 복사됨' : 'JSON 복사'}
+                </button>
+              </div>
+              <pre className="text-[10px] leading-relaxed font-mono text-slate-300 bg-slate-800/80 border border-slate-700 rounded-lg p-3 overflow-auto max-h-72 whitespace-pre-wrap break-words">
+                {resultJson}
+              </pre>
+            </section>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

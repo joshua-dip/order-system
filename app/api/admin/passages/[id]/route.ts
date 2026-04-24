@@ -58,6 +58,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (typeof body.chapter === 'string') $set.chapter = body.chapter.trim();
     if (typeof body.number === 'string') $set.number = body.number.trim();
     if (typeof body.source_key === 'string') $set.source_key = body.source_key.trim();
+    if (typeof body.passage_source === 'string') $set.passage_source = body.passage_source.trim();
     if (body.publisher !== undefined) {
       const p = typeof body.publisher === 'string' ? body.publisher.trim() : '';
       $set.publisher = VALID_PUBLISHERS.includes(p as Publisher) ? (p as Publisher) : null;
