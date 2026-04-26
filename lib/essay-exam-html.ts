@@ -306,12 +306,23 @@ export function applyExamMetaOverrides(
 // ── HTML 생성 (Jinja2 템플릿 → JS 변환) ────────────────────────────────────────
 
 export function buildExamHtml(data: ExamData, css: string): string {
+  const diffClass =
+    data.meta.difficulty === '중난도'
+      ? ' diff-mid'
+      : data.meta.difficulty === '기본난도' || data.meta.difficulty === '난이도하'
+        ? ' diff-low'
+        : '';
   const diffBadge = data.meta.difficulty
-    ? `<span class="diff-badge">${data.meta.difficulty}</span>`
+    ? `<span class="diff-badge${diffClass}">${data.meta.difficulty}</span>`
     : '';
 
   const metaSpans = data.meta.info
-    .map(item => `<span><b>${item.label}</b>${item.value}</span>`)
+    .map((item) => {
+      const label = escapeHtml(String(item.label ?? ''));
+      const raw = String(item.value ?? '').trim();
+      const inner = raw ? escapeHtml(raw) : '\u00a0';
+      return `<span class="meta-item"><b class="meta-label">${label}</b><span class="meta-value">${inner}</span></span>`;
+    })
     .join('\n    ');
 
   const questionsHtml = data.questions

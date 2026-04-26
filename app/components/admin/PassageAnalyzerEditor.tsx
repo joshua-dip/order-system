@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import type {
   EditorViewMode,
+  GrammarPointEntry,
   PassageStateStored,
   SvocComponentId,
   SvocSentenceData,
@@ -127,6 +128,7 @@ const MODES: { id: EditorViewMode; label: string }[] = [
   { id: 'svoc', label: 'SVOC' },
   { id: 'syntax', label: '구문' },
   { id: 'grammarTags', label: '문법태그' },
+  { id: 'grammarPoints', label: '문법 포인트' },
   { id: 'vocabulary', label: '단어장' },
 ];
 
@@ -333,6 +335,13 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   });
   /** 문법태그 모드: 새 태그 추가 시 라벨(예: #전치사구) */
   const [newGrammarTagName, setNewGrammarTagName] = useState('');
+  /** 문법 포인트 모드 — Claude Code 프롬프트 / JSON 붙여넣기 패널 상태 */
+  const [gpCcPromptOpen, setGpCcPromptOpen] = useState(false);
+  const [gpCcPromptText, setGpCcPromptText] = useState('');
+  const [gpCcPromptCopied, setGpCcPromptCopied] = useState(false);
+  const [gpImportOpen, setGpImportOpen] = useState(false);
+  const [gpImportText, setGpImportText] = useState('');
+  const [gpImportMsg, setGpImportMsg] = useState<string | null>(null);
   const [showStopWordsModal, setShowStopWordsModal] = useState(false);
   const [essayDraftOpen, setEssayDraftOpen] = useState(false);
   const [showVocabViewPanel, setShowVocabViewPanel] = useState(false);
@@ -1609,6 +1618,122 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
     [busy, fetchCefrForWord]
   );
 
+  const buildGrammarPointsCcPrompt = useCallback(() => {
+    const tb = passageMeta?.textbook?.trim() || '(교재명 없음)';
+    const sk = passageMeta?.source_key?.trim() || '(소스키 없음)';
+    const sentences = state?.sentences || [];
+    const sentenceLines = sentences.map((s, i) => `[${i}] ${s}`).join('\n');
+    const lines: string[] = [
+      `지문 분석기 「문법 포인트」 모드 입력용 JSON을 작성해줘.`,
+      ``,
+      `## 지문 정보`,
+      `- passageId: ${passageId ?? '(없음)'}`,
+      `- 교재     : ${tb}`,
+      `- source_key: ${sk}`,
+      ``,
+      `## 문장 (0-indexed)`,
+      `(필요 시 \`npm run cc:essay -- passage --id ${passageId ?? '<passageId>'}\` 로 한글 해석·서술형대비 ⭐ 표시까지 같이 확인 가능)`,
+      sentenceLines || '(문장 없음)',
+      ``,
+      `## 작업`,
+      `각 문장에서 「개념명 — 그 문장에서의 표현」 페어를 0~5개 정도 골라줘.`,
+      `- title  : 문법 개념명 (예: "관계대명사", "수동태", "to부정사 부사적용법", "분사구문", "비교급")`,
+      `- content: 그 문장에서 해당하는 표현 그대로 (예: "who", "was given", "to study", "Walking down")`,
+      `- 평이한 평서문이면 비워둬도 됨 (해당 문장 키 자체를 생략)`,
+      `- 한 문장에 같은 개념이 여러 번 나오면 content를 " / "로 연결해 한 항목에 묶어 OK.`,
+      ``,
+      `## 응답 형식`,
+      `코드펜스(\\\`\\\`\\\`) 없이 **순수 JSON 객체만** 출력. 키는 문장 인덱스(0부터):`,
+      `{`,
+      `  "0": [{"title": "관계대명사", "content": "who"}],`,
+      `  "1": [{"title": "수동태", "content": "was given"}, {"title": "분사구문", "content": "Walking down"}],`,
+      `  "5": [{"title": "to부정사 부사적용법", "content": "to study"}]`,
+      `}`,
+      ``,
+      `JSON을 출력하면 사용자가 분석기 좌측 「JSON 붙여넣기」에 그대로 붙여 넣어 반영합니다.`,
+    ];
+    return lines.join('\n');
+  }, [passageId, passageMeta, state?.sentences]);
+
+  const applyGrammarPointsImport = useCallback(() => {
+    setGpImportMsg(null);
+    const raw = gpImportText.trim();
+    if (!raw) {
+      setGpImportMsg('JSON을 붙여넣어 주세요.');
+      return;
+    }
+    let parsed: unknown;
+    try {
+      const cleaned = raw
+        .replace(/^```(?:json)?\s*\n?/i, '')
+        .replace(/\n?```\s*$/i, '')
+        .trim();
+      parsed = JSON.parse(cleaned);
+    } catch (e) {
+      setGpImportMsg(`JSON 파싱 실패: ${e instanceof Error ? e.message : String(e)}`);
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      setGpImportMsg('JSON은 {"0": [...], "1": [...]} 형태의 객체여야 합니다.');
+      return;
+    }
+    const incoming = parsed as Record<string, unknown>;
+    let mergedCount = 0;
+    let sentenceCount = 0;
+    let skippedOutOfRange = 0;
+    updateState((s) => {
+      const map: Record<number, GrammarPointEntry[]> = { ...(s.grammarPointsBySentence ?? {}) };
+      for (const [k, v] of Object.entries(incoming)) {
+        const idx = Number(k);
+        if (!Number.isInteger(idx) || idx < 0 || idx >= s.sentences.length) {
+          skippedOutOfRange++;
+          continue;
+        }
+        if (!Array.isArray(v)) continue;
+        const validNew = v
+          .map((x): GrammarPointEntry | null => {
+            if (!x || typeof x !== 'object') return null;
+            const obj = x as Record<string, unknown>;
+            const title = typeof obj.title === 'string' ? obj.title.trim() : '';
+            const content = typeof obj.content === 'string' ? obj.content.trim() : '';
+            if (!title && !content) return null;
+            return { title, content };
+          })
+          .filter((x): x is GrammarPointEntry => x !== null);
+        if (validNew.length === 0) continue;
+        const existing = Array.isArray(map[idx]) ? map[idx]! : [];
+        const seen = new Set(existing.map(e => `${e.title}\t${e.content}`));
+        const merged = [...existing];
+        for (const e of validNew) {
+          const key = `${e.title}\t${e.content}`;
+          if (!seen.has(key)) {
+            merged.push(e);
+            seen.add(key);
+            mergedCount++;
+          }
+        }
+        if (merged.length > existing.length) {
+          map[idx] = merged;
+          sentenceCount++;
+        }
+      }
+      return { ...s, grammarPointsBySentence: map };
+    });
+    if (mergedCount === 0) {
+      setGpImportMsg(
+        skippedOutOfRange > 0
+          ? `추가된 항목 없음 (이미 모두 존재하거나 ${skippedOutOfRange}개 키가 문장 범위 밖).`
+          : '추가된 항목 없음 (이미 모두 존재).'
+      );
+    } else {
+      setGpImportMsg(
+        `✓ ${sentenceCount}개 문장에 ${mergedCount}개 항목 추가 (중복 제외)` +
+          (skippedOutOfRange > 0 ? ` · ${skippedOutOfRange}개 키 무시(문장 범위 밖)` : '')
+      );
+      setGpImportText('');
+    }
+  }, [gpImportText, updateState]);
+
   const regenerateVocabularyFromPassage = () => {
     if (!state || !analysisFileName) return;
     const n = state.vocabularyList?.length ?? 0;
@@ -2640,6 +2765,110 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
             </p>
           </div>
         )}
+        {viewMode === 'grammarPoints' && (
+          <div className="mt-2 flex flex-col gap-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 px-0.5">Claude Code 연동</p>
+            <button
+              type="button"
+              onClick={() => {
+                setGpCcPromptText(buildGrammarPointsCcPrompt());
+                setGpCcPromptOpen((p) => !p);
+                setGpCcPromptCopied(false);
+              }}
+              disabled={!state?.sentences?.length}
+              className="w-full py-2 rounded-lg bg-fuchsia-800/80 hover:bg-fuchsia-700 disabled:opacity-40 text-xs font-semibold text-fuchsia-100 border border-fuchsia-600/50"
+              title="현재 지문 정보 + 문장 목록 + 응답 형식 안내가 들어간 Claude Code용 프롬프트를 만듭니다."
+            >
+              Claude Code 명령어 생성
+            </button>
+            {gpCcPromptOpen && (
+              <div className="rounded-lg border border-fuchsia-600/50 bg-slate-900/70 p-2 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-fuchsia-300">프롬프트 (편집 후 복사)</span>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try { await navigator.clipboard.writeText(gpCcPromptText); }
+                        catch {
+                          const el = document.createElement('textarea');
+                          el.value = gpCcPromptText;
+                          document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+                        }
+                        setGpCcPromptCopied(true);
+                        setTimeout(() => setGpCcPromptCopied(false), 1800);
+                      }}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${gpCcPromptCopied ? 'bg-emerald-600 text-white' : 'bg-fuchsia-700 hover:bg-fuchsia-600 text-fuchsia-100'}`}
+                    >
+                      {gpCcPromptCopied ? '✓ 복사됨' : '복사'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGpCcPromptOpen(false)}
+                      className="text-slate-500 hover:text-white text-base leading-none px-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  value={gpCcPromptText}
+                  onChange={(e) => setGpCcPromptText(e.target.value)}
+                  className="w-full h-44 px-2 py-1.5 rounded bg-slate-950 border border-slate-700 text-[10px] text-slate-200 font-mono resize-y focus:outline-none focus:border-fuchsia-500"
+                  spellCheck={false}
+                />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setGpImportOpen((p) => !p);
+                setGpImportMsg(null);
+              }}
+              className="w-full py-2 rounded-lg bg-slate-800 border border-fuchsia-700/50 text-xs font-semibold text-fuchsia-200 hover:bg-slate-700"
+              title="Claude Code가 출력한 JSON을 붙여넣어 분석기에 반영합니다 (중복 제외 머지)."
+            >
+              JSON 붙여넣기
+            </button>
+            {gpImportOpen && (
+              <div className="rounded-lg border border-fuchsia-700/40 bg-slate-900/70 p-2 space-y-1.5">
+                <textarea
+                  value={gpImportText}
+                  onChange={(e) => setGpImportText(e.target.value)}
+                  placeholder='{"0":[{"title":"관계대명사","content":"who"}], ...}'
+                  className="w-full h-32 px-2 py-1.5 rounded bg-slate-950 border border-slate-700 text-[10px] text-slate-200 font-mono resize-y focus:outline-none focus:border-fuchsia-500 placeholder:text-slate-600"
+                  spellCheck={false}
+                />
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={applyGrammarPointsImport}
+                    disabled={!gpImportText.trim()}
+                    className="flex-1 py-1.5 rounded bg-fuchsia-700 hover:bg-fuchsia-600 disabled:opacity-40 text-[11px] font-semibold text-white"
+                  >
+                    분석기에 머지
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setGpImportText(''); setGpImportMsg(null); }}
+                    className="px-2 py-1.5 rounded bg-slate-800 border border-slate-600 text-[10px] text-slate-300"
+                  >
+                    지우기
+                  </button>
+                </div>
+                {gpImportMsg && (
+                  <p className={`text-[10px] leading-snug ${gpImportMsg.startsWith('✓') ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    {gpImportMsg}
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="text-[10px] text-slate-500 leading-snug px-0.5">
+              「명령어 생성」 → 복사 → Claude Code에 붙여넣기 → 응답 JSON을 「JSON 붙여넣기」에 입력 → 머지.
+              기존 항목은 그대로 두고 중복은 제외됩니다 (개념명+표현 동일 시).
+            </p>
+          </div>
+        )}
         {viewMode === 'vocabulary' && (
           <div className="flex flex-col gap-1.5 mt-2">
             <button
@@ -2730,6 +2959,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                   ? '같은 문장에서 시작 단어·끝 단어 순으로 클릭해 범위를 지정합니다.'
                 : viewMode === 'grammarTags'
                   ? '왼쪽에 태그 이름을 입력한 뒤, 같은 문장에서 시작·끝 단어를 순서대로 클릭해 구간을 추가합니다. 문장 아래 목록에서 태그명·구절·설명을 수정하거나 삭제할 수 있습니다.'
+                  : viewMode === 'grammarPoints'
+                  ? '각 문장 아래의 「+ 문법 포인트 추가」 버튼으로 「개념명 — 그 문장에서의 표현」 페어를 자유 입력합니다. 서술형 출제기 답지의 grammar_points와 같은 형태로 저장됩니다.'
                   : viewMode === 'sentenceBreaks'
                   ? '단어를 클릭하면 해당 위치 뒤에 끊어읽기(/)가 토글됩니다.'
                   : viewMode === 'grammar'
@@ -3721,6 +3952,96 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
             {state.koreanSentences[si] && (
               <p className="text-slate-400 text-sm mt-2">{state.koreanSentences[si]}</p>
             )}
+            {viewMode === 'grammarPoints' && (() => {
+              const points = state.grammarPointsBySentence?.[si] ?? [];
+              return (
+                <div className="mt-2 rounded-lg border border-fuchsia-900/55 bg-fuchsia-950/20 p-2.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-fuchsia-300/80">문법 포인트</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateState((s) => {
+                          const map = { ...(s.grammarPointsBySentence ?? {}) };
+                          const cur = Array.isArray(map[si]) ? [...map[si]!] : [];
+                          cur.push({ title: '', content: '' });
+                          map[si] = cur;
+                          return { ...s, grammarPointsBySentence: map };
+                        });
+                      }}
+                      className="rounded-md border border-fuchsia-700/60 bg-fuchsia-900/40 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-100 hover:bg-fuchsia-800/60"
+                    >
+                      + 추가
+                    </button>
+                  </div>
+                  {points.length === 0 ? (
+                    <p className="text-[10px] text-fuchsia-200/40 italic">아직 없음 — 「+ 추가」를 눌러 「개념명 — 그 문장에서의 표현」 페어를 입력하세요.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {points.map((pt, pi) => (
+                        <li key={pi} className="flex flex-wrap items-start gap-1.5">
+                          <input
+                            value={pt.title}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              updateState((s) => {
+                                const map = { ...(s.grammarPointsBySentence ?? {}) };
+                                const cur = Array.isArray(map[si]) ? [...map[si]!] : [];
+                                if (!cur[pi]) return s;
+                                cur[pi] = { ...cur[pi], title: v };
+                                map[si] = cur;
+                                return { ...s, grammarPointsBySentence: map };
+                              });
+                            }}
+                            placeholder="개념명 (예: 관계대명사)"
+                            className="min-w-[7rem] flex-1 bg-slate-950/80 border border-fuchsia-800/60 rounded px-2 py-1 text-[11px] text-fuchsia-50 placeholder:text-fuchsia-200/30"
+                            aria-label="문법 포인트 개념명"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <input
+                            value={pt.content}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              updateState((s) => {
+                                const map = { ...(s.grammarPointsBySentence ?? {}) };
+                                const cur = Array.isArray(map[si]) ? [...map[si]!] : [];
+                                if (!cur[pi]) return s;
+                                cur[pi] = { ...cur[pi], content: v };
+                                map[si] = cur;
+                                return { ...s, grammarPointsBySentence: map };
+                              });
+                            }}
+                            placeholder="해당 표현 (예: who)"
+                            className="min-w-[10rem] flex-[2] bg-slate-950/80 border border-fuchsia-800/60 rounded px-2 py-1 text-[11px] text-slate-100 placeholder:text-slate-500"
+                            aria-label="문법 포인트 내용"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateState((s) => {
+                                const map = { ...(s.grammarPointsBySentence ?? {}) };
+                                const cur = Array.isArray(map[si]) ? [...map[si]!] : [];
+                                cur.splice(pi, 1);
+                                if (cur.length === 0) delete map[si];
+                                else map[si] = cur;
+                                return { ...s, grammarPointsBySentence: map };
+                              });
+                            }}
+                            className="shrink-0 rounded-md border border-red-900/60 bg-red-950/40 px-2 py-1 text-[10px] text-red-300 hover:bg-red-950/70"
+                            aria-label="문법 포인트 삭제"
+                          >
+                            삭제
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })()}
             {viewMode !== 'svoc' &&
               (state.grammarTags || []).some((t) => t.sentenceIndex === si) && (
               <ul className="mt-2 space-y-2">

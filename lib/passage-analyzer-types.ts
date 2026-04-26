@@ -36,6 +36,7 @@ export type EditorViewMode =
   | 'svoc'
   | 'syntax'
   | 'grammarTags'
+  | 'grammarPoints'
   | 'vocabulary';
 
 export interface PassageDataRow {
@@ -110,6 +111,12 @@ export interface GrammarTagStored {
   subCategory?: string;
 }
 
+/** 「문법 포인트」 모드 — 서술형 출제기 답지의 grammar_points와 같은 형태({개념명, 그 문장에서의 표현}). 단어 위치 anchored 아님. */
+export interface GrammarPointEntry {
+  title: string;
+  content: string;
+}
+
 export interface VocabularyEntry {
   word: string;
   meaning: string;
@@ -150,6 +157,8 @@ export interface PassageStateStored {
   showVocabulary?: boolean;
   svocData?: Record<number, SvocSentenceData>;
   grammarTags?: GrammarTagStored[];
+  /** 문장 인덱스 → 문법 포인트 카드 리스트 (서술형 답지 grammar_points와 동일 모양) */
+  grammarPointsBySentence?: Record<number, GrammarPointEntry[]>;
   sentenceBreaks?: Record<number, number[]>;
   syntaxPhrases?: Record<number, SyntaxPhraseStored[]>;
   structureDiagramLink?: string;

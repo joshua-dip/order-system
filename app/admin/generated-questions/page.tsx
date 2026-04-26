@@ -693,7 +693,11 @@ export default function AdminGeneratedQuestionsPage() {
     truncated?: boolean;
   } | null>(null);
   /** 순서 Options 구조 검증 */
-  const [orderOptionsOpen, setOrderOptionsOpen] = useState(false);
+  /** 순서 통합 검증 — 단일 모달 + 4 탭 (Options / CorrectAnswer / 원문 대조 / ABC 편중) */
+  const [orderUnifiedOpen, setOrderUnifiedOpen] = useState(false);
+  const [orderUnifiedTab, setOrderUnifiedTab] = useState<'options' | 'correct' | 'verify' | 'abc'>('options');
+
+  /** 순서 Options 검증 */
   const [orderOptionsLoading, setOrderOptionsLoading] = useState(false);
   const [orderOptionsError, setOrderOptionsError] = useState<string | null>(null);
   const [orderOptionsData, setOrderOptionsData] = useState<{
@@ -710,7 +714,6 @@ export default function AdminGeneratedQuestionsPage() {
   const [orderOptionsRowCopied, setOrderOptionsRowCopied] = useState<string | null>(null);
 
   /** 순서 CorrectAnswer 검증 */
-  const [orderCaOpen, setOrderCaOpen] = useState(false);
   const [orderCaLoading, setOrderCaLoading] = useState(false);
   const [orderCaFixing, setOrderCaFixing] = useState(false);
   const [orderCaError, setOrderCaError] = useState<string | null>(null);
@@ -726,6 +729,39 @@ export default function AdminGeneratedQuestionsPage() {
   const [orderCaPromptText, setOrderCaPromptText] = useState('');
   const [orderCaPromptCopied, setOrderCaPromptCopied] = useState(false);
   const [orderCaRowCopied, setOrderCaRowCopied] = useState<string | null>(null);
+
+  /** 순서 원문 대조 검증 */
+  const [orderVerifyLoading, setOrderVerifyLoading] = useState(false);
+  const [orderVerifyError, setOrderVerifyError] = useState<string | null>(null);
+  const [orderVerifyFixing, setOrderVerifyFixing] = useState(false);
+  const [orderVerifyFixMsg, setOrderVerifyFixMsg] = useState<string | null>(null);
+  const [orderVerifyDeleting, setOrderVerifyDeleting] = useState(false);
+  const [orderVerifyData, setOrderVerifyData] = useState<{
+    totalScanned: number;
+    totalVerified: number;
+    totalMismatched: number;
+    totalUnshuffled: number;
+    totalUnverifiable: number;
+    totalCorrect: number;
+    truncated: boolean;
+    items: { id: string; textbook: string; source: string; seq: number; currentAnswer: string; correctAnswer: string; positions: { A: number; B: number; C: number }; readingOrder: string; status: 'mismatch' | 'unverifiable' | 'unshuffled' }[];
+  } | null>(null);
+
+  /** 순서 ABC 편중 검증 */
+  const [orderAbcLoading, setOrderAbcLoading] = useState(false);
+  const [orderAbcError, setOrderAbcError] = useState<string | null>(null);
+  const [orderAbcData, setOrderAbcData] = useState<{
+    totalCount: number;
+    distribution: Record<string, number>;
+    otherCount: number;
+    skewed: boolean;
+    skewedAnswer: string | null;
+    skewedPct: number;
+    threshold: number;
+    itemCount: number;
+    truncated: boolean;
+    items: { id: string; textbook: string; source: string; answer: string; options: string; paragraph: string }[];
+  } | null>(null);
 
   /** 어법: 구조·보기 일치·원문 대비 표기 변형 */
   const [grammarVariantOpen, setGrammarVariantOpen] = useState(false);
@@ -2780,31 +2816,7 @@ export default function AdminGeneratedQuestionsPage() {
       .finally(() => setOptionsApiLoading(false));
   };
 
-  const openOrderOptionsModal = () => {
-    setOrderOptionsOpen(true);
-    setOrderOptionsData(null);
-    setOrderOptionsError(null);
-    setOrderOptionsLoading(true);
-    const params = new URLSearchParams();
-    if (filterTextbook) params.set('textbook', filterTextbook);
-    fetch(`/api/admin/generated-questions/validate/order-options?${params}`, { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d.ok) { setOrderOptionsError(d.error || '검증 실패'); return; }
-        setOrderOptionsData({
-          filters: d.filters ?? { textbook: null },
-          totalScanned: d.totalScanned ?? 0,
-          totalMatched: d.totalMatched ?? 0,
-          truncated: !!d.truncated,
-          correctExample: d.correctExample ?? '',
-          items: Array.isArray(d.items) ? d.items : [],
-        });
-      })
-      .catch(() => setOrderOptionsError('네트워크 오류'))
-      .finally(() => setOrderOptionsLoading(false));
-  };
-
-  const runOrderOptionsValidate = () => {
+  const fetchOrderOptionsData = () => {
     setOrderOptionsLoading(true);
     setOrderOptionsError(null);
     setOrderOptionsData(null);
@@ -2850,10 +2862,18 @@ export default function AdminGeneratedQuestionsPage() {
       .finally(() => setOrderCaLoading(false));
   };
 
-  const openOrderCaModal = () => {
-    setOrderCaOpen(true);
+  const openOrderUnifiedModal = (initialTab: 'options' | 'correct' | 'verify' | 'abc' = 'options') => {
+    setOrderUnifiedOpen(true);
+    setOrderUnifiedTab(initialTab);
+    setOrderOptionsPromptOpen(false);
     setOrderCaPromptOpen(false);
+    setOrderVerifyFixMsg(null);
+    setOrderCaFixMsg(null);
+    // 4개 검증 병렬 실행 — 각 fetcher가 자체 loading/error/data 상태를 관리
+    fetchOrderOptionsData();
     fetchOrderCaData();
+    fetchOrderVerifyData();
+    fetchOrderAbcData();
   };
 
   const handleOrderCaAutoFix = async () => {
@@ -2884,6 +2904,95 @@ export default function AdminGeneratedQuestionsPage() {
     } finally {
       setOrderCaFixing(false);
     }
+  };
+
+  const fetchOrderVerifyData = () => {
+    setOrderVerifyLoading(true);
+    setOrderVerifyError(null);
+    setOrderVerifyData(null);
+    setOrderVerifyFixMsg(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/order-answer-verify?${params}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) { setOrderVerifyError(d.error || '검증 실패'); return; }
+        setOrderVerifyData(d);
+      })
+      .catch(() => setOrderVerifyError('네트워크 오류'))
+      .finally(() => setOrderVerifyLoading(false));
+  };
+
+  const handleOrderVerifyDeleteUnshuffled = async () => {
+    if (!orderVerifyData) return;
+    const targets = orderVerifyData.items.filter((i) => i.status === 'unshuffled');
+    if (targets.length === 0) return;
+    if (!confirm(`(A)(B)(C) 셔플 누락 불량 문항 ${targets.length}건을 영구 삭제합니다. 되돌릴 수 없습니다. 계속할까요?`)) return;
+    setOrderVerifyDeleting(true);
+    setOrderVerifyFixMsg(null);
+    try {
+      const res = await fetch('/api/admin/generated-questions/validate/order-answer-verify', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: targets.map((i) => i.id) }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setOrderVerifyFixMsg(`✓ ${d.deletedCount}건 삭제 완료`);
+        fetchOrderVerifyData();
+      } else {
+        setOrderVerifyFixMsg(`오류: ${d.error || '삭제 실패'}`);
+      }
+    } catch {
+      setOrderVerifyFixMsg('네트워크 오류');
+    } finally {
+      setOrderVerifyDeleting(false);
+    }
+  };
+
+  const handleOrderVerifyAutoFix = async () => {
+    if (!orderVerifyData) return;
+    const fixable = orderVerifyData.items.filter((i) => i.status === 'mismatch' && i.correctAnswer !== '?');
+    if (fixable.length === 0) return;
+    if (!confirm(`원문 대조 결과에 따라 ${fixable.length}건의 정답을 수정합니다. 계속할까요?`)) return;
+    setOrderVerifyFixing(true);
+    setOrderVerifyFixMsg(null);
+    try {
+      const res = await fetch('/api/admin/generated-questions/validate/order-answer-verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fixes: fixable.map((i) => ({ id: i.id, answer: i.correctAnswer })) }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setOrderVerifyFixMsg(`✓ ${d.modifiedCount}건 수정 완료`);
+        fetchOrderVerifyData();
+      } else {
+        setOrderVerifyFixMsg(`오류: ${d.error || '수정 실패'}`);
+      }
+    } catch {
+      setOrderVerifyFixMsg('네트워크 오류');
+    } finally {
+      setOrderVerifyFixing(false);
+    }
+  };
+
+  const fetchOrderAbcData = () => {
+    setOrderAbcLoading(true);
+    setOrderAbcError(null);
+    setOrderAbcData(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/order-abc-distribution?${params}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) { setOrderAbcError(d.error || '검증 실패'); return; }
+        setOrderAbcData(d);
+      })
+      .catch(() => setOrderAbcError('네트워크 오류'))
+      .finally(() => setOrderAbcLoading(false));
   };
 
   const openGrammarVariantModal = () => {
@@ -3802,21 +3911,12 @@ export default function AdminGeneratedQuestionsPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={orderOptionsLoading}
-                  onClick={openOrderOptionsModal}
-                  className="shrink-0 bg-violet-900/80 hover:bg-violet-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-violet-100 border border-violet-500/40"
-                  title="순서 유형: ①(A)-(C)-(B) ②(B)-(A)-(C) ③(B)-(C)-(A) ④(C)-(A)-(B) ⑤(C)-(B)-(A) 형식이 아닌 문항 검증"
+                  disabled={orderOptionsLoading || orderCaLoading || orderVerifyLoading || orderAbcLoading}
+                  onClick={() => openOrderUnifiedModal('options')}
+                  className="shrink-0 bg-gradient-to-r from-violet-900/80 via-sky-900/80 to-rose-900/80 hover:from-violet-800 hover:via-sky-800 hover:to-rose-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white border border-violet-500/40"
+                  title="순서 유형 4개 검증을 한 번에 — Options · CorrectAnswer · 원문 대조 · ABC 편중"
                 >
-                  순서 Options 검증
-                </button>
-                <button
-                  type="button"
-                  disabled={orderCaLoading}
-                  onClick={openOrderCaModal}
-                  className="shrink-0 bg-violet-900/80 hover:bg-violet-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-violet-100 border border-violet-500/40"
-                  title="순서 유형: CorrectAnswer가 ①~⑤ 동그라미 번호가 아닌 문항 검증"
-                >
-                  순서 CorrectAnswer 검증
+                  순서 통합 검증
                 </button>
               </div>
             </div>
@@ -5455,378 +5555,763 @@ export default function AdminGeneratedQuestionsPage() {
         </div>
       )}
 
-      {orderOptionsOpen && (
+      {/* 순서 통합 검증 모달 — Options · CorrectAnswer · 원문 대조 · ABC 편중 4탭 */}
+      {orderUnifiedOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
-          <div className="bg-slate-800 border border-violet-700/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+          <div className="bg-slate-800 border border-violet-700/40 rounded-2xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl">
+            {/* 헤더 */}
             <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
               <div>
-                <h2 className="text-lg font-bold text-violet-200">순서 Options 검증</h2>
+                <h2 className="text-lg font-bold bg-gradient-to-r from-violet-200 via-sky-200 to-rose-200 bg-clip-text text-transparent">
+                  순서 통합 검증
+                </h2>
                 <p className="text-xs text-slate-400 mt-1">
-                  <code className="text-violet-300">type=순서</code> 문항의 Options가 아래 정확한 5개 순열인지 확인합니다. 상단 교재 필터 적용.
+                  ① Options → ② CorrectAnswer → ③ 원문 대조 → ④ ABC 편중 — 의존 순서대로 처리하면 효율적입니다.
+                  {filterTextbook && (<> · 교재: <strong className="text-violet-200">{filterTextbook}</strong></>)}
                 </p>
-                {orderOptionsData?.correctExample && (
-                  <pre className="mt-1.5 text-[11px] text-emerald-300/90 leading-snug whitespace-pre-wrap">
-                    {orderOptionsData.correctExample}
-                  </pre>
-                )}
               </div>
-              <button type="button" onClick={() => setOrderOptionsOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none px-2">×</button>
+              <button type="button" onClick={() => setOrderUnifiedOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none px-2">×</button>
             </div>
-            <div className="overflow-y-auto flex-1 p-5">
-              {orderOptionsLoading && !orderOptionsData && (
-                <div className="flex items-center justify-center gap-2 py-12 text-violet-300">
-                  <span className="inline-block w-6 h-6 border-2 border-violet-500/50 border-t-violet-300 rounded-full animate-spin" />
-                  검증 중…
-                </div>
-              )}
-              {orderOptionsError && (
-                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">{orderOptionsError}</div>
-              )}
-              {orderOptionsData && !orderOptionsLoading && (
-                <>
-                  <div className="mb-4 flex flex-wrap items-center gap-3">
-                    <p className="text-sm text-slate-300">
-                      <strong className="text-violet-200">형식 불일치</strong>:{' '}
-                      <strong className="text-white">{orderOptionsData.totalMatched.toLocaleString()}</strong>건
-                      {' '}/ 전체 순서 유형 {orderOptionsData.totalScanned.toLocaleString()}건 스캔
-                      {orderOptionsData.filters.textbook && (
-                        <> · 교재: <strong className="text-violet-200">{orderOptionsData.filters.textbook}</strong></>
-                      )}
-                      {orderOptionsData.truncated && (
-                        <span className="ml-2 text-amber-400 text-xs">(최대 {orderOptionsData.items.length}건만 표시)</span>
-                      )}
-                    </p>
-                    <button type="button" onClick={runOrderOptionsValidate} className="text-xs px-3 py-1.5 rounded-lg bg-violet-800/80 hover:bg-violet-700 text-violet-200">
-                      다시 검증
-                    </button>
+
+            {/* 요약 카드 (4개 검증 상태 한눈에) */}
+            <div className="px-5 pt-4 pb-3 border-b border-slate-700/50 shrink-0 bg-slate-900/40">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {/* Options 카드 */}
+                <button
+                  type="button"
+                  onClick={() => setOrderUnifiedTab('options')}
+                  className={`text-left rounded-lg border px-3 py-2.5 transition-colors ${orderUnifiedTab === 'options' ? 'border-violet-500 bg-violet-950/40' : 'border-slate-600 bg-slate-800/40 hover:border-violet-700'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-violet-300">① Options</span>
+                    {orderOptionsLoading ? (
+                      <span className="text-[10px] text-slate-400">…</span>
+                    ) : orderOptionsError ? (
+                      <span className="text-[10px] text-red-300">오류</span>
+                    ) : orderOptionsData ? (
+                      orderOptionsData.totalMatched === 0 ? (
+                        <span className="text-[10px] text-emerald-300">✓ 정상</span>
+                      ) : (
+                        <span className="text-[10px] text-amber-300">⚠ 위반</span>
+                      )
+                    ) : null}
                   </div>
-                  {orderOptionsData.totalMatched === 0 ? (
-                    <p className="text-emerald-400/90 text-sm py-4">모두 정상 — 모든 순서 유형 문항의 Options가 올바른 형식입니다.</p>
-                  ) : (
+                  <div className="text-xl font-bold text-white">
+                    {orderOptionsData ? orderOptionsData.totalMatched.toLocaleString() : '–'}
+                    <span className="text-xs font-medium text-slate-400 ml-1">건 위반</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">
+                    {orderOptionsData ? `전체 ${orderOptionsData.totalScanned.toLocaleString()}건 스캔` : '대기'}
+                  </div>
+                </button>
+
+                {/* CorrectAnswer 카드 */}
+                <button
+                  type="button"
+                  onClick={() => setOrderUnifiedTab('correct')}
+                  className={`text-left rounded-lg border px-3 py-2.5 transition-colors ${orderUnifiedTab === 'correct' ? 'border-violet-500 bg-violet-950/40' : 'border-slate-600 bg-slate-800/40 hover:border-violet-700'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-violet-300">② CorrectAnswer</span>
+                    {orderCaLoading ? (
+                      <span className="text-[10px] text-slate-400">…</span>
+                    ) : orderCaError ? (
+                      <span className="text-[10px] text-red-300">오류</span>
+                    ) : orderCaData ? (
+                      orderCaData.totalMatched === 0 ? (
+                        <span className="text-[10px] text-emerald-300">✓ 정상</span>
+                      ) : (
+                        <span className="text-[10px] text-amber-300">⚠ 위반</span>
+                      )
+                    ) : null}
+                  </div>
+                  <div className="text-xl font-bold text-white">
+                    {orderCaData ? orderCaData.totalMatched.toLocaleString() : '–'}
+                    <span className="text-xs font-medium text-slate-400 ml-1">건 위반</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">
+                    {orderCaData ? `자동수정 가능 ${orderCaData.autoFixable.toLocaleString()}건` : '대기'}
+                  </div>
+                </button>
+
+                {/* 원문 대조 카드 */}
+                <button
+                  type="button"
+                  onClick={() => setOrderUnifiedTab('verify')}
+                  className={`text-left rounded-lg border px-3 py-2.5 transition-colors ${orderUnifiedTab === 'verify' ? 'border-sky-500 bg-sky-950/40' : 'border-slate-600 bg-slate-800/40 hover:border-sky-700'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-sky-300">③ 원문 대조</span>
+                    {orderVerifyLoading ? (
+                      <span className="text-[10px] text-slate-400">…</span>
+                    ) : orderVerifyError ? (
+                      <span className="text-[10px] text-red-300">오류</span>
+                    ) : orderVerifyData ? (
+                      (orderVerifyData.totalMismatched + orderVerifyData.totalUnshuffled === 0) ? (
+                        <span className="text-[10px] text-emerald-300">✓ 정상</span>
+                      ) : (
+                        <span className="text-[10px] text-amber-300">⚠ 점검</span>
+                      )
+                    ) : null}
+                  </div>
+                  <div className="text-[11px] text-slate-300 leading-tight">
+                    {orderVerifyData ? (
+                      <>
+                        <span className="text-red-300 font-bold">{orderVerifyData.totalMismatched}</span> 불일치 ·{' '}
+                        <span className="text-violet-300 font-bold">{orderVerifyData.totalUnshuffled}</span> 미셔플
+                        <br />
+                        <span className="text-amber-300 font-bold">{orderVerifyData.totalUnverifiable}</span> 검증불가 ·{' '}
+                        <span className="text-emerald-300 font-bold">{orderVerifyData.totalCorrect}</span> 정답 일치
+                      </>
+                    ) : '대기'}
+                  </div>
+                </button>
+
+                {/* ABC 편중 카드 */}
+                <button
+                  type="button"
+                  onClick={() => setOrderUnifiedTab('abc')}
+                  className={`text-left rounded-lg border px-3 py-2.5 transition-colors ${orderUnifiedTab === 'abc' ? 'border-rose-500 bg-rose-950/40' : 'border-slate-600 bg-slate-800/40 hover:border-rose-700'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-rose-300">④ ABC 편중</span>
+                    {orderAbcLoading ? (
+                      <span className="text-[10px] text-slate-400">…</span>
+                    ) : orderAbcError ? (
+                      <span className="text-[10px] text-red-300">오류</span>
+                    ) : orderAbcData ? (
+                      orderAbcData.skewed ? (
+                        <span className="text-[10px] text-red-300">⚠ 편중</span>
+                      ) : (
+                        <span className="text-[10px] text-emerald-300">✓ 균등</span>
+                      )
+                    ) : null}
+                  </div>
+                  <div className="text-[11px] text-slate-300 leading-tight">
+                    {orderAbcData ? (
+                      orderAbcData.skewed && orderAbcData.skewedAnswer ? (
+                        <>
+                          <span className="text-red-300 font-bold">{orderAbcData.skewedAnswer}</span> 이{' '}
+                          <span className="text-red-300 font-bold">{orderAbcData.skewedPct}%</span> 편중
+                        </>
+                      ) : (
+                        (['①','②','③','④','⑤'] as const).map((c, i) => {
+                          const cnt = orderAbcData.distribution[c] ?? 0;
+                          const pct = orderAbcData.totalCount > 0 ? Math.round((cnt / orderAbcData.totalCount) * 100) : 0;
+                          return <span key={c} className={i === 0 ? '' : 'ml-1.5'}>{c}{pct}%</span>;
+                        })
+                      )
+                    ) : '대기'}
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* 탭 본문 */}
+            <div className="overflow-y-auto flex-1 p-5">
+              {/* === 탭 1: Options === */}
+              {orderUnifiedTab === 'options' && (
+                <>
+                  {orderOptionsData?.correctExample && (
+                    <pre className="mb-4 text-[11px] text-emerald-300/90 leading-snug whitespace-pre-wrap rounded-lg bg-slate-900/40 p-3 border border-slate-700/50">
+                      {orderOptionsData.correctExample}
+                    </pre>
+                  )}
+                  {orderOptionsLoading && !orderOptionsData && (
+                    <div className="flex items-center justify-center gap-2 py-12 text-violet-300">
+                      <span className="inline-block w-6 h-6 border-2 border-violet-500/50 border-t-violet-300 rounded-full animate-spin" />
+                      검증 중…
+                    </div>
+                  )}
+                  {orderOptionsError && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">{orderOptionsError}</div>
+                  )}
+                  {orderOptionsData && !orderOptionsLoading && (
                     <>
-                      {/* 일괄 수정 프롬프트 패널 */}
-                      <div className="mb-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const correctOpts = ['① (A)-(C)-(B)', '② (B)-(A)-(C)', '③ (B)-(C)-(A)', '④ (C)-(A)-(B)', '⑤ (C)-(B)-(A)'].join('\n');
-                            const tb = orderOptionsData.filters.textbook;
-                            const lines = [
-                              `아래 순서(글의 순서) 유형 문항들의 Options를 올바른 형식으로 수정해주세요.`,
-                              ``,
-                              `올바른 Options (5개):`,
-                              correctOpts,
-                              ``,
-                              `수정 대상 목록 (총 ${orderOptionsData.totalMatched}개${tb ? ` / 교재: ${tb}` : ''}):`,
-                              ...orderOptionsData.items.map(
-                                (it) => `- ID: ${it.id} / 교재: ${it.textbook} / 출처: ${it.source} / 현재 선택지 수: ${it.optionCount}`,
-                              ),
-                            ].join('\n');
-                            setOrderOptionsPromptText(lines);
-                            setOrderOptionsPromptOpen(true);
-                            setOrderOptionsPromptCopied(false);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-violet-700/80 hover:bg-violet-600 text-violet-100 text-xs font-semibold border border-violet-500/40"
-                        >
-                          수정 프롬프트 생성
+                      <div className="mb-4 flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-slate-300">
+                          <strong className="text-violet-200">형식 불일치</strong>:{' '}
+                          <strong className="text-white">{orderOptionsData.totalMatched.toLocaleString()}</strong>건
+                          {' '}/ 전체 순서 유형 {orderOptionsData.totalScanned.toLocaleString()}건 스캔
+                          {orderOptionsData.filters.textbook && (
+                            <> · 교재: <strong className="text-violet-200">{orderOptionsData.filters.textbook}</strong></>
+                          )}
+                          {orderOptionsData.truncated && (
+                            <span className="ml-2 text-amber-400 text-xs">(최대 {orderOptionsData.items.length}건만 표시)</span>
+                          )}
+                        </p>
+                        <button type="button" onClick={fetchOrderOptionsData} className="text-xs px-3 py-1.5 rounded-lg bg-violet-800/80 hover:bg-violet-700 text-violet-200">
+                          다시 검증
                         </button>
                       </div>
-
-                      {/* 편집 가능 textarea 패널 */}
-                      {orderOptionsPromptOpen && (
-                        <div className="mb-4 rounded-xl border border-violet-600/50 bg-slate-900/70 p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold text-violet-300">수정 프롬프트 (편집 후 복사)</span>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  try { await navigator.clipboard.writeText(orderOptionsPromptText); }
-                                  catch { const el = document.createElement('textarea'); el.value = orderOptionsPromptText; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
-                                  setOrderOptionsPromptCopied(true);
-                                  setTimeout(() => setOrderOptionsPromptCopied(false), 1800);
-                                }}
-                                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${orderOptionsPromptCopied ? 'bg-emerald-600 text-white' : 'bg-violet-700 hover:bg-violet-600 text-violet-100'}`}
-                              >
-                                {orderOptionsPromptCopied ? '✓ 복사됨' : '클립보드 복사'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setOrderOptionsPromptOpen(false)}
-                                className="text-slate-500 hover:text-white text-lg leading-none px-1"
-                              >
-                                ×
-                              </button>
-                            </div>
+                      {orderOptionsData.totalMatched === 0 ? (
+                        <p className="text-emerald-400/90 text-sm py-4">모두 정상 — 모든 순서 유형 문항의 Options가 올바른 형식입니다.</p>
+                      ) : (
+                        <>
+                          <div className="mb-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const correctOpts = ['① (A)-(C)-(B)', '② (B)-(A)-(C)', '③ (B)-(C)-(A)', '④ (C)-(A)-(B)', '⑤ (C)-(B)-(A)'].join('\n');
+                                const tb = orderOptionsData.filters.textbook;
+                                const lines = [
+                                  `아래 순서(글의 순서) 유형 문항들의 Options를 올바른 형식으로 수정해주세요.`,
+                                  ``,
+                                  `올바른 Options (5개):`,
+                                  correctOpts,
+                                  ``,
+                                  `수정 대상 목록 (총 ${orderOptionsData.totalMatched}개${tb ? ` / 교재: ${tb}` : ''}):`,
+                                  ...orderOptionsData.items.map(
+                                    (it) => `- ID: ${it.id} / 교재: ${it.textbook} / 출처: ${it.source} / 현재 선택지 수: ${it.optionCount}`,
+                                  ),
+                                ].join('\n');
+                                setOrderOptionsPromptText(lines);
+                                setOrderOptionsPromptOpen(true);
+                                setOrderOptionsPromptCopied(false);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-violet-700/80 hover:bg-violet-600 text-violet-100 text-xs font-semibold border border-violet-500/40"
+                            >
+                              수정 프롬프트 생성
+                            </button>
                           </div>
-                          <textarea
-                            value={orderOptionsPromptText}
-                            onChange={(e) => setOrderOptionsPromptText(e.target.value)}
-                            className="w-full h-48 px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-xs text-slate-200 font-mono resize-y focus:outline-none focus:border-violet-500"
-                            spellCheck={false}
-                          />
-                        </div>
-                      )}
 
-                      <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[45vh] overflow-y-auto">
-                        <table className="w-full text-xs">
-                          <thead className="sticky top-0 bg-slate-900 z-[1]">
-                            <tr className="text-left text-slate-400 border-b border-slate-600">
-                              <th className="py-2 px-2">작업</th>
-                              <th className="py-2 px-2">교재</th>
-                              <th className="py-2 px-2">출처</th>
-                              <th className="py-2 px-2 text-center">선택지 수</th>
-                              <th className="py-2 px-2">현재 Options</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {orderOptionsData.items.map((it) => (
-                              <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
-                                <td className="py-1.5 px-2 whitespace-nowrap">
-                                  <div className="flex items-center gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() => { setOrderOptionsOpen(false); openEdit(it.id); }}
-                                      className="text-violet-400 hover:text-violet-300 underline"
+                          {orderOptionsPromptOpen && (
+                            <div className="mb-4 rounded-xl border border-violet-600/50 bg-slate-900/70 p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-semibold text-violet-300">수정 프롬프트 (편집 후 복사)</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try { await navigator.clipboard.writeText(orderOptionsPromptText); }
+                                      catch { const el = document.createElement('textarea'); el.value = orderOptionsPromptText; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
+                                      setOrderOptionsPromptCopied(true);
+                                      setTimeout(() => setOrderOptionsPromptCopied(false), 1800);
+                                    }}
+                                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${orderOptionsPromptCopied ? 'bg-emerald-600 text-white' : 'bg-violet-700 hover:bg-violet-600 text-violet-100'}`}
+                                  >
+                                    {orderOptionsPromptCopied ? '✓ 복사됨' : '클립보드 복사'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOrderOptionsPromptOpen(false)}
+                                    className="text-slate-500 hover:text-white text-lg leading-none px-1"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              </div>
+                              <textarea
+                                value={orderOptionsPromptText}
+                                onChange={(e) => setOrderOptionsPromptText(e.target.value)}
+                                className="w-full h-48 px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-xs text-slate-200 font-mono resize-y focus:outline-none focus:border-violet-500"
+                                spellCheck={false}
+                              />
+                            </div>
+                          )}
+
+                          <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[45vh] overflow-y-auto">
+                            <table className="w-full text-xs">
+                              <thead className="sticky top-0 bg-slate-900 z-[1]">
+                                <tr className="text-left text-slate-400 border-b border-slate-600">
+                                  <th className="py-2 px-2">작업</th>
+                                  <th className="py-2 px-2">교재</th>
+                                  <th className="py-2 px-2">출처</th>
+                                  <th className="py-2 px-2 text-center">선택지 수</th>
+                                  <th className="py-2 px-2">현재 Options</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {orderOptionsData.items.map((it) => (
+                                  <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                                    <td className="py-1.5 px-2 whitespace-nowrap">
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => { setOrderUnifiedOpen(false); openEdit(it.id); }}
+                                          className="text-violet-400 hover:text-violet-300 underline"
+                                        >
+                                          수정
+                                        </button>
+                                        <button
+                                          type="button"
+                                          title="이 문항 단독 수정 프롬프트 복사"
+                                          onClick={async () => {
+                                            const correctOpts = ['① (A)-(C)-(B)', '② (B)-(A)-(C)', '③ (B)-(C)-(A)', '④ (C)-(A)-(B)', '⑤ (C)-(B)-(A)'].join('\n');
+                                            const text = [
+                                              `교재: ${it.textbook}`,
+                                              `출처(소스): ${it.source}`,
+                                              `유형: 순서`,
+                                              `문항 ID: ${it.id}`,
+                                              ``,
+                                              `question_data.Options를 아래 형식으로 교체해주세요:`,
+                                              correctOpts,
+                                              ``,
+                                              `현재 Options (참고):`,
+                                              it.optionsFull,
+                                            ].join('\n');
+                                            try { await navigator.clipboard.writeText(text); }
+                                            catch { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
+                                            setOrderOptionsRowCopied(it.id);
+                                            setTimeout(() => setOrderOptionsRowCopied((p) => p === it.id ? null : p), 1500);
+                                          }}
+                                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-colors ${orderOptionsRowCopied === it.id ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                                        >
+                                          {orderOptionsRowCopied === it.id ? '✓' : '프롬프트'}
+                                        </button>
+                                      </div>
+                                    </td>
+                                    <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                                    <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                                    <td className={`py-1.5 px-2 text-center font-bold ${it.optionCount === 5 ? 'text-amber-300' : 'text-red-400'}`}>{it.optionCount}</td>
+                                    <td
+                                      className="py-1.5 px-2 text-slate-400 max-w-[360px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                      title="클릭하면 전체 내용 보기"
+                                      onClick={() => setFullTextView({ title: `Options · ${it.source} 순서`, text: it.optionsFull })}
                                     >
-                                      수정
-                                    </button>
-                                    <button
-                                      type="button"
-                                      title="이 문항 단독 수정 프롬프트 복사"
-                                      onClick={async () => {
-                                        const correctOpts = ['① (A)-(C)-(B)', '② (B)-(A)-(C)', '③ (B)-(C)-(A)', '④ (C)-(A)-(B)', '⑤ (C)-(B)-(A)'].join('\n');
-                                        const text = [
-                                          `교재: ${it.textbook}`,
-                                          `출처(소스): ${it.source}`,
-                                          `유형: 순서`,
-                                          `문항 ID: ${it.id}`,
-                                          ``,
-                                          `question_data.Options를 아래 형식으로 교체해주세요:`,
-                                          correctOpts,
-                                          ``,
-                                          `현재 Options (참고):`,
-                                          it.optionsFull,
-                                        ].join('\n');
-                                        try { await navigator.clipboard.writeText(text); }
-                                        catch { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
-                                        setOrderOptionsRowCopied(it.id);
-                                        setTimeout(() => setOrderOptionsRowCopied((p) => p === it.id ? null : p), 1500);
-                                      }}
-                                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-colors ${orderOptionsRowCopied === it.id ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
-                                    >
-                                      {orderOptionsRowCopied === it.id ? '✓' : '프롬프트'}
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
-                                <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
-                                <td className={`py-1.5 px-2 text-center font-bold ${it.optionCount === 5 ? 'text-amber-300' : 'text-red-400'}`}>{it.optionCount}</td>
-                                <td
-                                  className="py-1.5 px-2 text-slate-400 max-w-[360px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
-                                  title="클릭하면 전체 내용 보기"
-                                  onClick={() => setFullTextView({ title: `Options · ${it.source} 순서`, text: it.optionsFull })}
-                                >
-                                  {it.optionsPreview}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                                      {it.optionsPreview}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </>
               )}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* 순서 CorrectAnswer 검증 모달 */}
-      {orderCaOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
-          <div className="bg-slate-800 border border-violet-700/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
-              <div>
-                <h2 className="text-lg font-bold text-violet-200">순서 CorrectAnswer 검증</h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  <code className="text-violet-300">type=순서</code> 문항의 CorrectAnswer가 ①~⑤ 동그라미 번호인지 확인합니다. 상단 교재 필터 적용.
-                </p>
-              </div>
-              <button type="button" onClick={() => setOrderCaOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none px-2">×</button>
-            </div>
-            <div className="overflow-y-auto flex-1 p-5">
-              {orderCaLoading && !orderCaData && (
-                <div className="flex items-center justify-center gap-2 py-12 text-violet-300">
-                  <span className="inline-block w-6 h-6 border-2 border-violet-500/50 border-t-violet-300 rounded-full animate-spin" />
-                  검증 중…
-                </div>
-              )}
-              {orderCaError && (
-                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">{orderCaError}</div>
-              )}
-              {orderCaFixMsg && (
-                <div className={`mb-4 p-3 rounded-lg border text-sm ${orderCaFixMsg.startsWith('✓') ? 'bg-emerald-950/50 border-emerald-700/50 text-emerald-300' : 'bg-red-950/50 border-red-800/50 text-red-300'}`}>
-                  {orderCaFixMsg}
-                </div>
-              )}
-              {orderCaData && !orderCaLoading && (
+              {/* === 탭 2: CorrectAnswer === */}
+              {orderUnifiedTab === 'correct' && (
                 <>
-                  <div className="mb-4 flex flex-wrap items-center gap-3">
-                    <p className="text-sm text-slate-300">
-                      <strong className="text-violet-200">형식 불일치</strong>:{' '}
-                      <strong className="text-white">{orderCaData.totalMatched.toLocaleString()}</strong>건
-                      {' '}/ 전체 순서 유형 {orderCaData.totalScanned.toLocaleString()}건 스캔
-                      {orderCaData.truncated && (
-                        <span className="ml-2 text-amber-400 text-xs">(최대 {orderCaData.items.length}건만 표시)</span>
-                      )}
-                    </p>
-                    <button type="button" onClick={fetchOrderCaData} className="text-xs px-3 py-1.5 rounded-lg bg-violet-800/80 hover:bg-violet-700 text-violet-200">
-                      다시 검증
-                    </button>
-                  </div>
-                  {orderCaData.totalMatched === 0 ? (
-                    <p className="text-emerald-400/90 text-sm py-4">모두 정상 — 모든 순서 유형 문항의 CorrectAnswer가 올바른 동그라미 번호입니다.</p>
-                  ) : (
+                  {orderCaLoading && !orderCaData && (
+                    <div className="flex items-center justify-center gap-2 py-12 text-violet-300">
+                      <span className="inline-block w-6 h-6 border-2 border-violet-500/50 border-t-violet-300 rounded-full animate-spin" />
+                      검증 중…
+                    </div>
+                  )}
+                  {orderCaError && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">{orderCaError}</div>
+                  )}
+                  {orderCaFixMsg && (
+                    <div className={`mb-4 p-3 rounded-lg border text-sm ${orderCaFixMsg.startsWith('✓') ? 'bg-emerald-950/50 border-emerald-700/50 text-emerald-300' : 'bg-red-950/50 border-red-800/50 text-red-300'}`}>
+                      {orderCaFixMsg}
+                    </div>
+                  )}
+                  {orderCaData && !orderCaLoading && (
                     <>
-                      {/* 자동수정 버튼 */}
-                      <div className="mb-3 flex flex-wrap items-center gap-2">
-                        {orderCaData.autoFixable > 0 && (
-                          <button
-                            type="button"
-                            disabled={orderCaFixing}
-                            onClick={handleOrderCaAutoFix}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-50 text-emerald-100 text-xs font-semibold border border-emerald-500/40"
-                          >
-                            {orderCaFixing ? '수정 중…' : `일괄 자동수정 (${orderCaData.autoFixable}건)`}
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const lines = [
-                              `아래 순서(글의 순서) 유형 문항들의 CorrectAnswer를 올바른 동그라미 번호(①②③④⑤)로 수정해주세요.`,
-                              ``,
-                              `매핑 기준 (Options 기준):`,
-                              `  ① = (A)-(C)-(B)`,
-                              `  ② = (B)-(A)-(C)`,
-                              `  ③ = (B)-(C)-(A)`,
-                              `  ④ = (C)-(A)-(B)`,
-                              `  ⑤ = (C)-(B)-(A)`,
-                              ``,
-                              `수정 대상 목록 (총 ${orderCaData!.totalMatched}건):`,
-                              ...orderCaData!.items.map(
-                                (it) => `- ID: ${it.id} / 교재: ${it.textbook} / 출처: ${it.source} / 현재: "${it.currentAnswer}" → 수정: "${it.suggestedAnswer ?? '(자동수정 불가)'}"`,
-                              ),
-                            ].join('\n');
-                            setOrderCaPromptText(lines);
-                            setOrderCaPromptOpen(true);
-                            setOrderCaPromptCopied(false);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-violet-700/80 hover:bg-violet-600 text-violet-100 text-xs font-semibold border border-violet-500/40"
-                        >
-                          수정 프롬프트 생성
+                      <div className="mb-4 flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-slate-300">
+                          <strong className="text-violet-200">형식 불일치</strong>:{' '}
+                          <strong className="text-white">{orderCaData.totalMatched.toLocaleString()}</strong>건
+                          {' '}/ 전체 순서 유형 {orderCaData.totalScanned.toLocaleString()}건 스캔
+                          {orderCaData.truncated && (
+                            <span className="ml-2 text-amber-400 text-xs">(최대 {orderCaData.items.length}건만 표시)</span>
+                          )}
+                        </p>
+                        <button type="button" onClick={fetchOrderCaData} className="text-xs px-3 py-1.5 rounded-lg bg-violet-800/80 hover:bg-violet-700 text-violet-200">
+                          다시 검증
                         </button>
                       </div>
-
-                      {/* 편집 가능 textarea 패널 */}
-                      {orderCaPromptOpen && (
-                        <div className="mb-4 rounded-xl border border-violet-600/50 bg-slate-900/70 p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold text-violet-300">수정 프롬프트 (편집 후 복사)</span>
-                            <div className="flex gap-2">
+                      {orderCaData.totalMatched === 0 ? (
+                        <p className="text-emerald-400/90 text-sm py-4">모두 정상 — 모든 순서 유형 문항의 CorrectAnswer가 올바른 동그라미 번호입니다.</p>
+                      ) : (
+                        <>
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
+                            {orderCaData.autoFixable > 0 && (
                               <button
                                 type="button"
-                                onClick={async () => {
-                                  try { await navigator.clipboard.writeText(orderCaPromptText); }
-                                  catch { const el = document.createElement('textarea'); el.value = orderCaPromptText; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
-                                  setOrderCaPromptCopied(true);
-                                  setTimeout(() => setOrderCaPromptCopied(false), 1800);
-                                }}
-                                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${orderCaPromptCopied ? 'bg-emerald-600 text-white' : 'bg-violet-700 hover:bg-violet-600 text-violet-100'}`}
+                                disabled={orderCaFixing}
+                                onClick={handleOrderCaAutoFix}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-50 text-emerald-100 text-xs font-semibold border border-emerald-500/40"
                               >
-                                {orderCaPromptCopied ? '✓ 복사됨' : '클립보드 복사'}
+                                {orderCaFixing ? '수정 중…' : `일괄 자동수정 (${orderCaData.autoFixable}건)`}
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setOrderCaPromptOpen(false)}
-                                className="text-slate-500 hover:text-white text-lg leading-none px-1"
-                              >
-                                ×
-                              </button>
-                            </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const lines = [
+                                  `아래 순서(글의 순서) 유형 문항들의 CorrectAnswer를 올바른 동그라미 번호(①②③④⑤)로 수정해주세요.`,
+                                  ``,
+                                  `매핑 기준 (Options 기준):`,
+                                  `  ① = (A)-(C)-(B)`,
+                                  `  ② = (B)-(A)-(C)`,
+                                  `  ③ = (B)-(C)-(A)`,
+                                  `  ④ = (C)-(A)-(B)`,
+                                  `  ⑤ = (C)-(B)-(A)`,
+                                  ``,
+                                  `수정 대상 목록 (총 ${orderCaData!.totalMatched}건):`,
+                                  ...orderCaData!.items.map(
+                                    (it) => `- ID: ${it.id} / 교재: ${it.textbook} / 출처: ${it.source} / 현재: "${it.currentAnswer}" → 수정: "${it.suggestedAnswer ?? '(자동수정 불가)'}"`,
+                                  ),
+                                ].join('\n');
+                                setOrderCaPromptText(lines);
+                                setOrderCaPromptOpen(true);
+                                setOrderCaPromptCopied(false);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-violet-700/80 hover:bg-violet-600 text-violet-100 text-xs font-semibold border border-violet-500/40"
+                            >
+                              수정 프롬프트 생성
+                            </button>
                           </div>
-                          <textarea
-                            value={orderCaPromptText}
-                            onChange={(e) => setOrderCaPromptText(e.target.value)}
-                            className="w-full h-48 px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-xs text-slate-200 font-mono resize-y focus:outline-none focus:border-violet-500"
-                            spellCheck={false}
-                          />
-                        </div>
-                      )}
 
-                      <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[45vh] overflow-y-auto">
-                        <table className="w-full text-xs">
-                          <thead className="sticky top-0 bg-slate-900 z-[1]">
-                            <tr className="text-left text-slate-400 border-b border-slate-600">
-                              <th className="py-2 px-2">작업</th>
-                              <th className="py-2 px-2">교재</th>
-                              <th className="py-2 px-2">출처</th>
-                              <th className="py-2 px-2">현재 CorrectAnswer</th>
-                              <th className="py-2 px-2">변환값</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {orderCaData.items.map((it) => (
-                              <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
-                                <td className="py-1.5 px-2 whitespace-nowrap">
-                                  <div className="flex items-center gap-1.5">
+                          {orderCaPromptOpen && (
+                            <div className="mb-4 rounded-xl border border-violet-600/50 bg-slate-900/70 p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-semibold text-violet-300">수정 프롬프트 (편집 후 복사)</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try { await navigator.clipboard.writeText(orderCaPromptText); }
+                                      catch { const el = document.createElement('textarea'); el.value = orderCaPromptText; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
+                                      setOrderCaPromptCopied(true);
+                                      setTimeout(() => setOrderCaPromptCopied(false), 1800);
+                                    }}
+                                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${orderCaPromptCopied ? 'bg-emerald-600 text-white' : 'bg-violet-700 hover:bg-violet-600 text-violet-100'}`}
+                                  >
+                                    {orderCaPromptCopied ? '✓ 복사됨' : '클립보드 복사'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOrderCaPromptOpen(false)}
+                                    className="text-slate-500 hover:text-white text-lg leading-none px-1"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              </div>
+                              <textarea
+                                value={orderCaPromptText}
+                                onChange={(e) => setOrderCaPromptText(e.target.value)}
+                                className="w-full h-48 px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-xs text-slate-200 font-mono resize-y focus:outline-none focus:border-violet-500"
+                                spellCheck={false}
+                              />
+                            </div>
+                          )}
+
+                          <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[45vh] overflow-y-auto">
+                            <table className="w-full text-xs">
+                              <thead className="sticky top-0 bg-slate-900 z-[1]">
+                                <tr className="text-left text-slate-400 border-b border-slate-600">
+                                  <th className="py-2 px-2">작업</th>
+                                  <th className="py-2 px-2">교재</th>
+                                  <th className="py-2 px-2">출처</th>
+                                  <th className="py-2 px-2">현재 CorrectAnswer</th>
+                                  <th className="py-2 px-2">변환값</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {orderCaData.items.map((it) => (
+                                  <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                                    <td className="py-1.5 px-2 whitespace-nowrap">
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => { setOrderUnifiedOpen(false); openEdit(it.id); }}
+                                          className="text-violet-400 hover:text-violet-300 underline"
+                                        >
+                                          수정
+                                        </button>
+                                        <button
+                                          type="button"
+                                          title="이 문항 단독 수정 프롬프트 복사"
+                                          onClick={async () => {
+                                            const text = [
+                                              `교재: ${it.textbook}`,
+                                              `출처(소스): ${it.source}`,
+                                              `유형: 순서`,
+                                              `문항 ID: ${it.id}`,
+                                              ``,
+                                              `question_data.CorrectAnswer를 올바른 동그라미 번호로 수정해주세요:`,
+                                              `현재: "${it.currentAnswer}"`,
+                                              `수정 후: "${it.suggestedAnswer ?? '(자동수정 불가 — 수동 확인 필요)'}"`,
+                                              ``,
+                                              `매핑: ①=(A)-(C)-(B) ②=(B)-(A)-(C) ③=(B)-(C)-(A) ④=(C)-(A)-(B) ⑤=(C)-(B)-(A)`,
+                                            ].join('\n');
+                                            try { await navigator.clipboard.writeText(text); }
+                                            catch { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
+                                            setOrderCaRowCopied(it.id);
+                                            setTimeout(() => setOrderCaRowCopied((p) => p === it.id ? null : p), 1500);
+                                          }}
+                                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-colors ${orderCaRowCopied === it.id ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                                        >
+                                          {orderCaRowCopied === it.id ? '✓' : '프롬프트'}
+                                        </button>
+                                      </div>
+                                    </td>
+                                    <td className="py-1.5 px-2 text-slate-300 max-w-[160px] truncate" title={it.textbook}>{it.textbook}</td>
+                                    <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                                    <td className="py-1.5 px-2 text-red-300 font-mono">{it.currentAnswer}</td>
+                                    <td className={`py-1.5 px-2 font-mono font-bold ${it.canAutoFix ? 'text-emerald-300' : 'text-amber-400'}`}>
+                                      {it.suggestedAnswer ?? '수동 확인 필요'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* === 탭 3: 원문 대조 === */}
+              {orderUnifiedTab === 'verify' && (
+                <>
+                  {orderVerifyLoading && !orderVerifyData && (
+                    <div className="flex items-center justify-center gap-2 py-12 text-sky-300">
+                      <span className="inline-block w-6 h-6 border-2 border-sky-500/50 border-t-sky-300 rounded-full animate-spin" />
+                      원문 대조 중… (지문 수에 따라 시간이 걸릴 수 있습니다)
+                    </div>
+                  )}
+                  {orderVerifyError && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">{orderVerifyError}</div>
+                  )}
+                  {orderVerifyFixMsg && (
+                    <div className={`mb-4 p-3 rounded-lg border text-sm ${orderVerifyFixMsg.startsWith('✓') ? 'bg-emerald-950/50 border-emerald-700/50 text-emerald-300' : 'bg-red-950/50 border-red-800/50 text-red-300'}`}>
+                      {orderVerifyFixMsg}
+                    </div>
+                  )}
+                  {orderVerifyData && !orderVerifyLoading && (
+                    <>
+                      <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {[
+                          { label: '스캔', value: orderVerifyData.totalScanned, color: 'text-slate-200' },
+                          { label: '검증 성공', value: orderVerifyData.totalVerified, color: 'text-sky-200' },
+                          { label: '정답 일치', value: orderVerifyData.totalCorrect, color: 'text-emerald-300' },
+                          { label: '불일치', value: orderVerifyData.totalMismatched, color: orderVerifyData.totalMismatched > 0 ? 'text-red-300' : 'text-emerald-300' },
+                          { label: '미셔플', value: orderVerifyData.totalUnshuffled, color: orderVerifyData.totalUnshuffled > 0 ? 'text-violet-300' : 'text-slate-400' },
+                          { label: '검증 불가', value: orderVerifyData.totalUnverifiable, color: orderVerifyData.totalUnverifiable > 0 ? 'text-amber-300' : 'text-slate-400' },
+                        ].map((s) => (
+                          <div key={s.label} className="rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-center">
+                            <div className={`text-xl font-bold ${s.color}`}>{s.value.toLocaleString()}</div>
+                            <div className="text-[10px] text-slate-400 font-medium">{s.label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 mb-4">
+                        <button type="button" onClick={fetchOrderVerifyData} className="text-xs px-3 py-1.5 rounded-lg bg-sky-800/80 hover:bg-sky-700 text-sky-200">
+                          다시 검증
+                        </button>
+                        {orderVerifyData.totalMismatched > 0 && (
+                          <button
+                            type="button"
+                            disabled={orderVerifyFixing}
+                            onClick={handleOrderVerifyAutoFix}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-50 text-emerald-100 text-xs font-semibold border border-emerald-500/40"
+                          >
+                            {orderVerifyFixing ? '수정 중…' : `원문 기준 일괄 수정 (${orderVerifyData.totalMismatched}건)`}
+                          </button>
+                        )}
+                        {orderVerifyData.totalUnshuffled > 0 && (
+                          <button
+                            type="button"
+                            disabled={orderVerifyDeleting}
+                            onClick={handleOrderVerifyDeleteUnshuffled}
+                            title="(A)(B)(C) 셔플이 안 된 불량 문항은 5지선다 정답이 존재하지 않아 자동 수정 불가 — 삭제 후 재생성 필요"
+                            className="px-3 py-1.5 rounded-lg bg-violet-700/80 hover:bg-violet-600 disabled:opacity-50 text-violet-100 text-xs font-semibold border border-violet-500/40"
+                          >
+                            {orderVerifyDeleting ? '삭제 중…' : `미셔플 일괄 삭제 (${orderVerifyData.totalUnshuffled}건)`}
+                          </button>
+                        )}
+                      </div>
+
+                      {orderVerifyData.totalMismatched === 0 && orderVerifyData.totalUnverifiable === 0 && orderVerifyData.totalUnshuffled === 0 ? (
+                        <p className="text-emerald-400/90 text-sm py-4">모두 정상 — 모든 순서 유형 문항의 정답이 원문 순서와 일치합니다.</p>
+                      ) : (
+                        <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                          <table className="w-full text-xs">
+                            <thead className="sticky top-0 bg-slate-900 z-[1]">
+                              <tr className="text-left text-slate-400 border-b border-slate-600">
+                                <th className="py-2 px-2">작업</th>
+                                <th className="py-2 px-2">교재</th>
+                                <th className="py-2 px-2">출처</th>
+                                <th className="py-2 px-2">#</th>
+                                <th className="py-2 px-2">현재 답</th>
+                                <th className="py-2 px-2">원문 답</th>
+                                <th className="py-2 px-2">원문 순서</th>
+                                <th className="py-2 px-2">위치(A/B/C)</th>
+                                <th className="py-2 px-2">상태</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {orderVerifyData.items.map((it, idx) => (
+                                <tr key={it.id + '-' + idx} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                                  <td className="py-1.5 px-2 whitespace-nowrap">
                                     <button
                                       type="button"
-                                      onClick={() => { setOrderCaOpen(false); openEdit(it.id); }}
-                                      className="text-violet-400 hover:text-violet-300 underline"
+                                      onClick={() => { setOrderUnifiedOpen(false); openEdit(it.id); }}
+                                      className="text-sky-400 hover:text-sky-300 underline"
                                     >
                                       수정
                                     </button>
-                                    <button
-                                      type="button"
-                                      title="이 문항 단독 수정 프롬프트 복사"
-                                      onClick={async () => {
-                                        const text = [
-                                          `교재: ${it.textbook}`,
-                                          `출처(소스): ${it.source}`,
-                                          `유형: 순서`,
-                                          `문항 ID: ${it.id}`,
-                                          ``,
-                                          `question_data.CorrectAnswer를 올바른 동그라미 번호로 수정해주세요:`,
-                                          `현재: "${it.currentAnswer}"`,
-                                          `수정 후: "${it.suggestedAnswer ?? '(자동수정 불가 — 수동 확인 필요)'}"`,
-                                          ``,
-                                          `매핑: ①=(A)-(C)-(B) ②=(B)-(A)-(C) ③=(B)-(C)-(A) ④=(C)-(A)-(B) ⑤=(C)-(B)-(A)`,
-                                        ].join('\n');
-                                        try { await navigator.clipboard.writeText(text); }
-                                        catch { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
-                                        setOrderCaRowCopied(it.id);
-                                        setTimeout(() => setOrderCaRowCopied((p) => p === it.id ? null : p), 1500);
-                                      }}
-                                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-colors ${orderCaRowCopied === it.id ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                                  </td>
+                                  <td className="py-1.5 px-2 text-slate-300 max-w-[130px] truncate" title={it.textbook}>{it.textbook}</td>
+                                  <td className="py-1.5 px-2 text-slate-300 font-mono whitespace-nowrap">{it.source}</td>
+                                  <td className="py-1.5 px-2 text-slate-400">{it.seq}</td>
+                                  <td className={`py-1.5 px-2 font-mono font-bold ${it.status === 'mismatch' ? 'text-red-300' : 'text-slate-400'}`}>{it.currentAnswer}</td>
+                                  <td className={`py-1.5 px-2 font-mono font-bold ${it.correctAnswer === '?' ? (it.status === 'unshuffled' ? 'text-violet-400' : 'text-amber-400') : 'text-emerald-300'}`}>{it.correctAnswer}</td>
+                                  <td className={`py-1.5 px-2 font-mono ${it.status === 'unshuffled' ? 'text-violet-300' : 'text-slate-300'}`}>{it.readingOrder}</td>
+                                  <td className="py-1.5 px-2 text-slate-500 font-mono text-[10px]">{it.positions.A}/{it.positions.B}/{it.positions.C}</td>
+                                  <td className="py-1.5 px-2">
+                                    <span
+                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                        it.status === 'mismatch'
+                                          ? 'bg-red-900/60 text-red-200'
+                                          : it.status === 'unshuffled'
+                                            ? 'bg-violet-900/60 text-violet-200'
+                                            : 'bg-amber-900/60 text-amber-200'
+                                      }`}
+                                      title={
+                                        it.status === 'unshuffled'
+                                          ? '출제 시 (A)(B)(C) 청크를 원문 순서 그대로 라벨만 붙이고 셔플하지 않은 불량 문항. 5지선다 보기에 정답이 없으므로 자동 수정 불가 — 재생성 필요.'
+                                          : it.status === 'unverifiable'
+                                            ? '원문에서 (A)(B)(C) 청크 위치를 찾지 못해 정답을 판정할 수 없음.'
+                                            : '저장된 정답이 원문 순서와 다름.'
+                                      }
                                     >
-                                      {orderCaRowCopied === it.id ? '✓' : '프롬프트'}
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="py-1.5 px-2 text-slate-300 max-w-[160px] truncate" title={it.textbook}>{it.textbook}</td>
-                                <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
-                                <td className="py-1.5 px-2 text-red-300 font-mono">{it.currentAnswer}</td>
-                                <td className={`py-1.5 px-2 font-mono font-bold ${it.canAutoFix ? 'text-emerald-300' : 'text-amber-400'}`}>
-                                  {it.suggestedAnswer ?? '수동 확인 필요'}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                      {it.status === 'mismatch' ? '불일치' : it.status === 'unshuffled' ? '미셔플' : '검증불가'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* === 탭 4: ABC 편중 === */}
+              {orderUnifiedTab === 'abc' && (
+                <>
+                  {orderAbcLoading && !orderAbcData && (
+                    <div className="flex items-center justify-center gap-2 py-12 text-rose-300">
+                      <span className="inline-block w-6 h-6 border-2 border-rose-500/50 border-t-rose-300 rounded-full animate-spin" />
+                      검증 중…
+                    </div>
+                  )}
+                  {orderAbcError && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">{orderAbcError}</div>
+                  )}
+                  {orderAbcData && !orderAbcLoading && (
+                    <>
+                      <div className="mb-5 rounded-xl border border-slate-600 bg-slate-900/60 p-4">
+                        <p className="text-sm text-slate-300 mb-3">
+                          전체 순서 문항 <strong className="text-white">{orderAbcData.totalCount.toLocaleString()}</strong>건
+                          {orderAbcData.otherCount > 0 && (
+                            <span className="ml-2 text-amber-400 text-xs">(기타/잘못된 형식 {orderAbcData.otherCount}건 별도)</span>
+                          )}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {(['①', '②', '③', '④', '⑤'] as const).map((c) => {
+                            const count = orderAbcData.distribution[c] ?? 0;
+                            const pct = orderAbcData.totalCount > 0
+                              ? Math.round((count / orderAbcData.totalCount) * 1000) / 10
+                              : 0;
+                            const isSkewed = orderAbcData.skewed && orderAbcData.skewedAnswer === c;
+                            return (
+                              <div
+                                key={c}
+                                className={`flex flex-col items-center px-4 py-2.5 rounded-lg border ${isSkewed ? 'border-red-500 bg-red-950/60' : 'border-slate-600 bg-slate-800/60'}`}
+                              >
+                                <span className={`text-2xl font-bold ${isSkewed ? 'text-red-300' : 'text-slate-200'}`}>{c}</span>
+                                <span className={`text-sm font-semibold ${isSkewed ? 'text-red-200' : 'text-white'}`}>{count.toLocaleString()}</span>
+                                <span className={`text-xs ${isSkewed ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{pct}%</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-3 flex h-5 rounded-full overflow-hidden bg-slate-700/50">
+                          {(['①', '②', '③', '④', '⑤'] as const).map((c) => {
+                            const count = orderAbcData.distribution[c] ?? 0;
+                            const pct = orderAbcData.totalCount > 0 ? (count / orderAbcData.totalCount) * 100 : 0;
+                            if (pct === 0) return null;
+                            const colors: Record<string, string> = {
+                              '①': 'bg-blue-500', '②': 'bg-emerald-500', '③': 'bg-amber-500', '④': 'bg-violet-500', '⑤': 'bg-rose-500',
+                            };
+                            return (
+                              <div
+                                key={c}
+                                className={`${colors[c]} flex items-center justify-center text-[10px] font-bold text-white`}
+                                style={{ width: `${pct}%`, minWidth: pct > 2 ? '1.5rem' : undefined }}
+                                title={`${c}: ${count}건 (${Math.round(pct * 10) / 10}%)`}
+                              >
+                                {pct > 5 ? c : ''}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+
+                      {!orderAbcData.skewed ? (
+                        <p className="text-emerald-400/90 text-sm py-4">
+                          정상 — 어떤 번호도 {orderAbcData.threshold}% 이상 편중되지 않았습니다.
+                        </p>
+                      ) : (
+                        <>
+                          <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-700/50 text-red-200 text-sm">
+                            <strong className="text-red-100">편중 경고:</strong>{' '}
+                            정답 <strong className="text-red-100">{orderAbcData.skewedAnswer}</strong>이{' '}
+                            전체의 <strong className="text-red-100">{orderAbcData.skewedPct}%</strong>
+                            ({orderAbcData.distribution[orderAbcData.skewedAnswer!]?.toLocaleString() ?? 0}건)를 차지합니다.
+                            문항의 (A)(B)(C) 단락이 제대로 셔플되지 않았을 가능성이 있습니다.
+                          </div>
+                          <div className="flex items-center gap-3 mb-3">
+                            <button type="button" onClick={fetchOrderAbcData} className="text-xs px-3 py-1.5 rounded-lg bg-rose-800/80 hover:bg-rose-700 text-rose-200">
+                              다시 검증
+                            </button>
+                            <span className="text-xs text-slate-400">
+                              편중 번호 문항 {orderAbcData.itemCount.toLocaleString()}건 표시
+                              {orderAbcData.truncated && ' (일부 생략)'}
+                            </span>
+                          </div>
+
+                          <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[45vh] overflow-y-auto">
+                            <table className="w-full text-xs">
+                              <thead className="sticky top-0 bg-slate-900 z-[1]">
+                                <tr className="text-left text-slate-400 border-b border-slate-600">
+                                  <th className="py-2 px-2">작업</th>
+                                  <th className="py-2 px-2">교재</th>
+                                  <th className="py-2 px-2">출처</th>
+                                  <th className="py-2 px-2">정답</th>
+                                  <th className="py-2 px-2">Options</th>
+                                  <th className="py-2 px-2">지문 미리보기</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {orderAbcData.items.map((it, idx) => (
+                                  <tr key={it.id + '-' + idx} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                                    <td className="py-1.5 px-2 whitespace-nowrap">
+                                      <button
+                                        type="button"
+                                        onClick={() => { setOrderUnifiedOpen(false); openEdit(it.id); }}
+                                        className="text-rose-400 hover:text-rose-300 underline"
+                                      >
+                                        수정
+                                      </button>
+                                    </td>
+                                    <td className="py-1.5 px-2 text-slate-300 max-w-[140px] truncate" title={it.textbook}>{it.textbook}</td>
+                                    <td className="py-1.5 px-2 text-slate-300 font-mono whitespace-nowrap">{it.source}</td>
+                                    <td className="py-1.5 px-2 text-red-300 font-mono font-bold">{it.answer}</td>
+                                    <td className="py-1.5 px-2 text-slate-400 max-w-[180px] truncate font-mono" title={it.options}>{it.options?.replace(/\n/g, ' | ')}</td>
+                                    <td className="py-1.5 px-2 text-slate-500 max-w-[220px] truncate" title={it.paragraph}>{it.paragraph}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </>

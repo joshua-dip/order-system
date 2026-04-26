@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     sourceKey?: string;
     difficulty?: string;
     folder?: string;
+    isPlaceholder?: boolean;
     data?: object;
     html?: string;
   };
@@ -37,8 +38,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 });
   }
 
-  if (!body.data || !body.html) {
-    return NextResponse.json({ error: 'data와 html이 필요합니다.' }, { status: 400 });
+  if (!body.data) {
+    return NextResponse.json({ error: 'data가 필요합니다.' }, { status: 400 });
+  }
+  const isPlaceholder = body.isPlaceholder === true;
+  const html = typeof body.html === 'string' ? body.html : '';
+  if (!isPlaceholder && html.trim() === '') {
+    return NextResponse.json({ error: 'html이 필요합니다.' }, { status: 400 });
   }
 
   try {
@@ -48,8 +54,9 @@ export async function POST(request: NextRequest) {
       sourceKey: body.sourceKey ?? '',
       difficulty: body.difficulty ?? '',
       folder: body.folder ?? '기본',
+      ...(isPlaceholder ? { isPlaceholder: true as const } : {}),
       data: body.data,
-      html: body.html,
+      html,
     });
     return NextResponse.json({ id });
   } catch (e) {

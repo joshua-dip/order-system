@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
-import { getEssayExam, updateEssayExam, deleteEssayExam, moveExamOrder } from '@/lib/essay-exams-store';
+import { getDb } from '@/lib/mongodb';
+import {
+  getEssayExam,
+  updateEssayExam,
+  deleteEssayExam,
+  moveExamOrder,
+  type EssayExamDoc,
+} from '@/lib/essay-exams-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +43,25 @@ export async function PATCH(
     return NextResponse.json({ ok });
   }
 
-  const ok = await updateEssayExam(id, body);
+  const patch: Record<string, unknown> = {};
+  if (body.html !== undefined) patch.html = body.html;
+  if (body.data !== undefined) patch.data = body.data;
+  if (body.folder !== undefined) {
+    const nextFolder = (body.folder as string).trim() || '기본';
+    patch.folder = nextFolder;
+    const doc = await getEssayExam(id);
+    if (doc) {
+      const prev = (String(doc.folder ?? '').trim() || '기본');
+      if (prev !== nextFolder) {
+        const db = await getDb('gomijoshua');
+        const last = await db
+          .collection('essay_exams')
+          .findOne({ folder: nextFolder }, { sort: { order: -1 } });
+        patch.order = last ? Number((last as { order?: number }).order ?? 0) + 1 : 0;
+      }
+    }
+  }
+  const ok = await updateEssayExam(id, patch as Partial<Omit<EssayExamDoc, '_id' | 'createdAt'>>);
   if (!ok) return NextResponse.json({ error: '없음' }, { status: 404 });
 
   return NextResponse.json({ ok: true });

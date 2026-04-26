@@ -9,7 +9,7 @@
  *   npx tsx scripts/cc-essay-cli.ts passages --textbook "교재명" [--limit 40]
  *   npx tsx scripts/cc-essay-cli.ts passage --id <passageId>
  *   npx tsx scripts/cc-essay-cli.ts shortage --textbook "교재명" [--required 1]
- *                                            [--difficulty 고난도|중난도|all]
+ *                                            [--difficulty 고난도|중난도|기본난도|all]
  *                                            [--folder "..."|all]
  *   npx tsx scripts/cc-essay-cli.ts save --json path/to/exam.json [--dry-run] [--force]
  *   cat exam.json | npx tsx scripts/cc-essay-cli.ts save --json -
@@ -22,7 +22,7 @@
  *     "passageId": "65fa…",          // 선택. 있으면 textbook/sourceKey 자동 보강.
  *     "textbook":  "26년 3월 고1 영어모의고사",
  *     "sourceKey": "26년 3월 고1 영어모의고사 21번",
- *     "difficulty": "고난도",
+ *     "difficulty": "중난도",
  *     "folder":    "기본",
  *     "examTitle": "직전보강 서술형 파이널",   // data.meta.title 덮어쓰기
  *     "schoolName": "○○고등학교",            // data.meta.info 앞에 삽입
@@ -454,7 +454,7 @@ async function cmdSave(flags: Map<string, string>) {
   if (!textbook) die('save: textbook 이 필요합니다 (passageId 없으면 명시 필수).');
   if (!sourceKey) die('save: sourceKey 가 필요합니다 (passageId 없으면 명시 필수).');
 
-  const difficulty = (input.difficulty ?? '').trim() || (input.data.meta?.difficulty ?? '고난도');
+  const difficulty = (input.difficulty ?? '').trim() || (input.data.meta?.difficulty ?? '중난도');
   const folder = (input.folder ?? '').trim() || '기본';
 
   /* 3) HTML 생성 (단일 진입점) */
@@ -550,7 +550,7 @@ async function main() {
   textbooks [--limit N]
   passages --textbook "이름" [--limit N]
   passage  --id <ObjectId>
-  shortage --textbook "이름" [--required N] [--difficulty 고난도|중난도|all] [--folder "..."|all]
+  shortage --textbook "이름" [--required N] [--difficulty 고난도|중난도|기본난도|all] [--folder "..."|all]
   save     --json <파일|->  [--dry-run] [--force]
 
 단축:

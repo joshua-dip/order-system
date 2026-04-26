@@ -13,6 +13,8 @@ export interface EssayExamDoc {
   difficulty: string;
   folder: string;   // 폴더 이름 (기본: '기본')
   order: number;    // 폴더 내 정렬 순서 (작을수록 앞)
+  /** 폴더 생성을 위한 더미 문서 — 목록에 표시하지 않음 */
+  isPlaceholder?: boolean;
   data: object;
   html: string;
   createdAt: Date;
@@ -38,7 +40,10 @@ export async function listEssayExams(): Promise<EssayExamListItem[]> {
   const db = await getDb('gomijoshua');
   const docs = await db
     .collection(COL)
-    .find({})
+    .find({
+      isPlaceholder: { $ne: true },   // 폴더 더미 문서 제외
+      $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],  // 구버전 더미 문서도 제외
+    })
     .project({ title: 1, textbook: 1, sourceKey: 1, difficulty: 1, folder: 1, order: 1, createdAt: 1, updatedAt: 1 })
     .sort({ folder: 1, order: 1, createdAt: 1 })
     .limit(500)
