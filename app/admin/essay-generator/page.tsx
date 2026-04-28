@@ -751,7 +751,7 @@ function SavedListPanel({
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           {item.difficulty && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${item.difficulty === '고난도' ? 'bg-red-700/50 text-red-300' : item.difficulty === '중난도' ? 'bg-amber-700/50 text-amber-300' : 'bg-emerald-700/50 text-emerald-300'}`}>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${item.difficulty === '최고난도' ? 'bg-purple-700/50 text-purple-300' : item.difficulty === '고난도' ? 'bg-red-700/50 text-red-300' : item.difficulty === '중난도' ? 'bg-amber-700/50 text-amber-300' : 'bg-emerald-700/50 text-emerald-300'}`}>
                               {item.difficulty}
                             </span>
                           )}
@@ -829,7 +829,7 @@ export default function EssayGeneratorPage() {
   const [selectedPassageInfo, setSelectedPassageInfo] = useState<{ textbook: string; sourceKey: string; passageId?: string } | null>(null);
   const [essaySentenceIndices, setEssaySentenceIndices] = useState<number[]>([]);
   const [sentenceListExpanded, setSentenceListExpanded] = useState(false);
-  const [difficulty, setDifficulty] = useState<'고난도' | '중난도' | '기본난도'>('중난도');
+  const [difficulty, setDifficulty] = useState<'최고난도' | '고난도' | '중난도' | '기본난도'>('중난도');
   const [questionNumber, setQuestionNumber] = useState('서·논술형 1');
   const [examSubtitle, setExamSubtitle] = useState('');
   const [totalPoints, setTotalPoints] = useState<number | ''>('');
@@ -1632,17 +1632,18 @@ export default function EssayGeneratorPage() {
             {/* 난이도 */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">난이도</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {([
                   { key: '기본난도' as const, label: '기본난도', activeCls: 'bg-emerald-700 text-white border-emerald-700' },
                   { key: '중난도' as const, label: '중난도', activeCls: 'bg-amber-600 text-white border-amber-600' },
                   { key: '고난도' as const, label: '고난도', activeCls: 'bg-red-700 text-white border-red-700' },
+                  { key: '최고난도' as const, label: '최고난도', activeCls: 'bg-purple-700 text-white border-purple-700' },
                 ]).map(({ key, label, activeCls }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setDifficulty(key)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors border ${
+                    className={`flex-1 min-w-[5rem] py-2 rounded-lg text-xs font-semibold transition-colors border ${
                       difficulty === key
                         ? activeCls
                         : 'border-slate-600 text-slate-400 hover:bg-slate-700/60 hover:text-white'
