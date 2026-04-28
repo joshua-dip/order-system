@@ -325,6 +325,10 @@ export function buildExamHtml(data: ExamData, css: string): string {
     })
     .join('\n    ');
 
+  const isMaxDifficulty = data.meta.difficulty === '최고난도';
+  const bogiLabel = isMaxDifficulty ? '한국어 해석' : '보기';
+  const bogiClass = isMaxDifficulty ? 'bogi bogi-korean' : 'bogi';
+
   const questionsHtml = data.questions
     .map(q => {
       const condList = q.conditions.map(c => `<li>${c}</li>`).join('\n      ');
@@ -337,8 +341,8 @@ export function buildExamHtml(data: ExamData, css: string): string {
     <ul>
       ${condList}
     </ul>
-    <div class="label">▸ 보기</div>
-    <div class="bogi">${q.bogi}</div>
+    <div class="label">▸ ${bogiLabel}</div>
+    <div class="${bogiClass}">${q.bogi}</div>
   </div>
   <div class="ans-area">
     <div class="lbl">Answer:</div>

@@ -44,8 +44,14 @@ function normalizeForCompare(text: string): string {
     .trim();
 }
 
-function validateQuestion(q: Question, errors: string[], warnings: string[]) {
+function validateQuestion(
+  q: Question,
+  errors: string[],
+  warnings: string[],
+  difficulty?: string,
+) {
   const qid = `Q${q.id}`;
+  const isMaxDifficulty = difficulty === '최고난도';
 
   if (!q.answer || typeof q.answer !== 'object') {
     errors.push(`${qid}: answer 객체가 없습니다.`);
@@ -84,38 +90,53 @@ function validateQuestion(q: Question, errors: string[], warnings: string[]) {
     }
   }
 
-  // 2) bogi 청크 합 ↔ answer.text
-  const bogiChunks = splitBogi(q.bogi);
-  if (bogiChunks.length === 0) {
-    errors.push(`${qid}: bogi 청크가 0개입니다.`);
+  if (isMaxDifficulty) {
+    // 최고난도: bogi = 한국어 해석문 한 줄. 슬래시 청크 합 검사·청크 개수 검사 스킵.
+    // 한국어 문자가 하나라도 들어있는지만 가볍게 확인.
+    if (!/[가-힯]/.test(q.bogi)) {
+      errors.push(`${qid}: 최고난도는 bogi 에 한국어 해석문을 넣어야 합니다. bogi="${q.bogi}"`);
+    }
   } else {
-    const bogiJoinedNorm = normalizeForCompare(bogiChunks.join(' '));
-    const answerNorm = normalizeForCompare(answerText);
-    if (bogiJoinedNorm !== answerNorm) {
-      // 부분 일치 (쉼표 위치 차이 등) 허용 여부: 정확 일치만 통과.
-      // 그러나 청크 순서가 섞여 있어도 학생이 정렬해야 하는 경우가 있을 수 있으니,
-      // 기본은 errors. 청크 셋이 같으면 warning 으로 격하.
-      const bogiSorted = [...bogiChunks].map(s => normalizeForCompare(s)).sort().join('|');
-      const answerWords = normalizeForCompare(answerText).split(' ');
-      // answer 를 bogi 청크와 동일한 단어 수로 균등 분할은 불가능 → 단순히 모든 청크 단어가
-      // answer 에 등장하는지 확인.
-      const allChunksInAnswer = bogiChunks.every(ch => {
-        const chNorm = normalizeForCompare(ch);
-        return normalizeForCompare(answerText).includes(chNorm);
-      });
-      if (allChunksInAnswer) {
-        warnings.push(
-          `${qid}: bogi 청크가 answer.text 에 모두 포함되지만 순서/구두점이 다릅니다. (bogi 정렬: ${bogiSorted}, answer 단어수: ${answerWords.length})`,
-        );
-      } else {
-        errors.push(
-          `${qid}: bogi 청크 합이 answer.text 와 불일치합니다. bogi="${bogiChunks.join(' / ')}" / answer="${answerText}"`,
-        );
+    // 2) bogi 청크 합 ↔ answer.text
+    const bogiChunks = splitBogi(q.bogi);
+    if (bogiChunks.length === 0) {
+      errors.push(`${qid}: bogi 청크가 0개입니다.`);
+    } else {
+      const bogiJoinedNorm = normalizeForCompare(bogiChunks.join(' '));
+      const answerNorm = normalizeForCompare(answerText);
+      if (bogiJoinedNorm !== answerNorm) {
+        // 부분 일치 (쉼표 위치 차이 등) 허용 여부: 정확 일치만 통과.
+        // 그러나 청크 순서가 섞여 있어도 학생이 정렬해야 하는 경우가 있을 수 있으니,
+        // 기본은 errors. 청크 셋이 같으면 warning 으로 격하.
+        const bogiSorted = [...bogiChunks].map(s => normalizeForCompare(s)).sort().join('|');
+        const answerWords = normalizeForCompare(answerText).split(' ');
+        // answer 를 bogi 청크와 동일한 단어 수로 균등 분할은 불가능 → 단순히 모든 청크 단어가
+        // answer 에 등장하는지 확인.
+        const allChunksInAnswer = bogiChunks.every(ch => {
+          const chNorm = normalizeForCompare(ch);
+          return normalizeForCompare(answerText).includes(chNorm);
+        });
+        if (allChunksInAnswer) {
+          warnings.push(
+            `${qid}: bogi 청크가 answer.text 에 모두 포함되지만 순서/구두점이 다릅니다. (bogi 정렬: ${bogiSorted}, answer 단어수: ${answerWords.length})`,
+          );
+        } else {
+          errors.push(
+            `${qid}: bogi 청크 합이 answer.text 와 불일치합니다. bogi="${bogiChunks.join(' / ')}" / answer="${answerText}"`,
+          );
+        }
       }
+    }
+
+    // 5) bogi 청크 개수 권장 (7~10)
+    if (bogiChunks.length < 5 || bogiChunks.length > 12) {
+      warnings.push(
+        `${qid}: bogi 청크 개수(${bogiChunks.length}) 가 권장 범위(7~10) 를 벗어났습니다.`,
+      );
     }
   }
 
-  // 3) "N개의 단어" 조건 ↔ word_count.total
+  // 3) "N개의 단어" 조건 ↔ word_count.total (모든 난이도 공통)
   if (Array.isArray(q.conditions) && wc?.total != null) {
     const wordCountCond = q.conditions.find(c => /\d+\s*개의?\s*단어/.test(c));
     if (wordCountCond) {
@@ -139,21 +160,20 @@ function validateQuestion(q: Question, errors: string[], warnings: string[]) {
       );
     }
   }
-
-  // 5) bogi 청크 개수 권장 (7~10)
-  if (bogiChunks.length < 5 || bogiChunks.length > 12) {
-    warnings.push(
-      `${qid}: bogi 청크 개수(${bogiChunks.length}) 가 권장 범위(7~10) 를 벗어났습니다.`,
-    );
-  }
 }
 
 /**
  * ExamData 전체 정합성 검증.
  * - errors : 저장 거부 사유 (정량적 불일치)
  * - warnings : 권장 위반 (저장은 가능)
+ *
+ * `opts.difficulty` 를 넘기면 난이도 고유 규칙을 적용한다 (예: 최고난도는
+ * bogi 가 한국어 해석문이라 슬래시 청크 검사 스킵). 비우면 일반 보기 규칙.
  */
-export function validateExamData(data: unknown): ValidationResult {
+export function validateExamData(
+  data: unknown,
+  opts?: { difficulty?: string },
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -162,6 +182,8 @@ export function validateExamData(data: unknown): ValidationResult {
   }
 
   const d = data as Partial<ExamData>;
+  // 호출자가 명시한 difficulty 가 우선, 없으면 ExamData.meta.difficulty 사용.
+  const difficulty = opts?.difficulty ?? d.meta?.difficulty;
 
   if (!d.meta || typeof d.meta !== 'object') {
     errors.push('meta 객체가 없습니다.');
@@ -192,7 +214,7 @@ export function validateExamData(data: unknown): ValidationResult {
     errors.push('questions 배열이 비어 있습니다.');
   } else {
     for (const q of d.questions) {
-      validateQuestion(q, errors, warnings);
+      validateQuestion(q, errors, warnings, difficulty);
     }
   }
 
