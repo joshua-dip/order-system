@@ -67,6 +67,30 @@ cat draft.json | npm run cc:essay -- save --json -               # stdin (코드
 
 **금지** — `variant_generate_draft` 와 같은 이유로, 서술형도 `/api/admin/essay-generator/generate` (Anthropic API) 는 Pro 만으로 운영할 땐 호출하지 말 것. CLI 의 `save` 만 사용.
 
+## 블록 빈칸 워크북 (Pro 전용 — `cc:block-workbook`)
+
+`/admin/block-workbook` 와 동일한 데이터를 만드는 CLI. 한 지문에서 단어/구/문장 블록을 골라 **A~F 6 유형(단어 빈칸·구 빈칸·문장 영작·어순 배열·핵심 표현 정리·어법 변형)** 워크북을 동시 생성. **API 키 호출 없음**.
+
+```
+npm run cc:block-workbook -- textbooks                                  # 교재 목록
+npm run cc:block-workbook -- passages --textbook "26년 3월 고1 영어모의고사"
+npm run cc:block-workbook -- passage  --id <passageId>                  # 지문 토큰 표 (sentenceIdx·tokens·korean)
+npm run cc:block-workbook -- shortage --textbook "..." [--required 1] [--types ABCDEF|all] [--folder "..."|all]
+npm run cc:block-workbook -- save --json draft.json [--dry-run] [--force]
+cat draft.json | npm run cc:block-workbook -- save --json -             # stdin (코드펜스 ```json 자동 제거)
+단축: npm run cc:block-workbook -- "26년 3월 고1 영어모의고사"          # shortage 와 동일
+```
+
+**작성 흐름 (Pro 채팅):**
+1. `passage --id …` → 출력의 `sentences` 배열을 채팅에 그대로 붙임
+2. `scripts/cc-block-workbook-prompt.md` 의 규칙에 따라 selection JSON 작성
+3. `save --json … --dry-run` 로 검증 (블록 인덱스·겹침·types 정합)
+4. 통과 시 `save --json …` 으로 실제 insert
+
+**save JSON 필수 키** — `textbook` / `sourceKey` / `title` / `selection.sentences` / `selection.blocks` / `types`. `passageId` 가 있으면 `textbook`/`sourceKey` 자동 보강.
+
+**금지** — `/api/admin/block-workbook/generate` 라우트는 **만들지 않음** (Pro-only 정책). CLI `save` 만 사용. 자동 lemma 추론·자동 한국어 번역 라이브러리 추가 X — 채팅에서 직접 입력하거나 `passages.content.sentences_ko` fallback.
+
 ## 대기 vs 신규 작성 (한 번에 보기)
 
 1. **`pendingReviewTotal`** — 이미 DB에 있으나 **status=대기**. 할 일: 문제 풀기 → **`variant_review_pending_record`** → 정답 맞으면 **완료**(첫 시도) 또는 **`attemptNumber`≥2**면 **검수불일치**.
