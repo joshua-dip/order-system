@@ -107,6 +107,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <Link href="/admin/essay-generator" className={linkCls('/admin/essay-generator')}>
           서술형 출제기
         </Link>
+        <Link href="/admin/block-workbook" className={linkCls('/admin/block-workbook')}>
+          블록 빈칸 워크북
+        </Link>
         <Link href="/admin/syntax-analyzer" className={linkCls('/admin/syntax-analyzer')}>
           구문 분석기
         </Link>
