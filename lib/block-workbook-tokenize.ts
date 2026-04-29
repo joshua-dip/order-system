@@ -27,3 +27,26 @@ export function tokenizePassage(text: string): SentenceTokenized[] {
   const sentences = splitSentences(text);
   return sentences.map((s, idx) => ({ idx, text: s, tokens: tokenizeSentence(s) }));
 }
+
+/**
+ * passages.content 객체에서 토큰화. sentences_en 이 있으면 그 배열을 그대로 사용해
+ * sentences_ko 와 인덱스 정합을 보장. 없으면 original 을 split 하여 fallback.
+ */
+export function tokenizePassageFromContent(
+  content: { original?: string; sentences_en?: unknown; sentences_ko?: unknown } | null | undefined,
+): SentenceTokenized[] {
+  const c = content ?? {};
+  const enArr = Array.isArray(c.sentences_en)
+    ? (c.sentences_en as unknown[]).map(v => String(v ?? '').trim()).filter(Boolean)
+    : [];
+  const koArr = Array.isArray(c.sentences_ko)
+    ? (c.sentences_ko as unknown[]).map(v => String(v ?? '').trim())
+    : [];
+  const sentences = enArr.length > 0 ? enArr : splitSentences(String(c.original ?? ''));
+  return sentences.map((s, idx) => ({
+    idx,
+    text: s,
+    tokens: tokenizeSentence(s),
+    korean: koArr[idx] || undefined,
+  }));
+}

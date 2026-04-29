@@ -77,7 +77,14 @@ function renderMaskedBody(
       if (block) {
         const phrase = joinTokens(s.tokens.slice(block.startTokenIdx, block.endTokenIdx + 1));
         bogiItems.push(phrase);
-        out.push(`<span class="bw-blank">${escapeHtml(blankFor(phrase))}</span>`);
+        const tokenCount = block.endTokenIdx - block.startTokenIdx + 1;
+        const phraseKorean = block.kind === 'phrase' ? (block.koreanMeaning ?? '').trim() : '';
+        const hint = block.kind === 'phrase'
+          ? phraseKorean
+            ? ` <span class="bw-blank-hint">(${tokenCount}단어 · ${escapeHtml(phraseKorean)})</span>`
+            : ` <span class="bw-blank-hint">(${tokenCount}단어)</span>`
+          : '';
+        out.push(`<span class="bw-blank">${escapeHtml(blankFor(phrase))}</span>${hint}`);
         i = block.endTokenIdx + 1;
         continue;
       }
@@ -124,7 +131,7 @@ function renderSentenceEssayBody(
   const sentenceHtmls = sentences.map(s => {
     const block = sentenceBlocks.find(b => b.sentenceIdx === s.idx);
     if (!block) return escapeHtml(s.text);
-    const korean = (block.koreanMeaning ?? '').trim();
+    const korean = ((block.koreanMeaning ?? '').trim() || (s.korean ?? '').trim());
     const english = s.text;
     const wordCount = english.replace(/[,.;:!?"]/g, ' ').split(/\s+/).filter(Boolean).length;
     items.push({ idx: s.idx, english, korean, wordCount });
@@ -140,6 +147,107 @@ function renderSentenceEssayBody(
   };
 }
 
+// ── 통합형: 한 지문에 단어·구·문장 빈칸 동시 마스킹 ──────────────────────────────
+
+interface UnifiedRender {
+  /** 마스킹된 본문 HTML — 한 지문 안에 word/phrase 는 번호 빈칸으로, sentence 는 한국어로 */
+  body: string;
+  /** 빈칸 정답 목록 (출현 순 — ①②③… 와 1:1) */
+  blankAnswers: { label: string; kind: 'word' | 'phrase'; original: string }[];
+  /** 문장 영작 항목 (질문지·답지 양쪽에서 번호 1, 2, 3 으로 사용) */
+  essayItems: { num: number; english: string; korean: string; wordCount: number }[];
+}
+
+const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+function blankLabel(n: number): string {
+  return n <= 20 ? CIRCLED[n - 1] : `(${n})`;
+}
+
+/**
+ * 활성화된 kind 만 마스킹한 본문을 만든다.
+ * - 같은 문장에 sentence 블록이 있으면 그 문장 전체를 한국어로 치환하고 내부 단어·구 마스킹은 생략 (sentence 가 우위).
+ * - word ⊂ phrase 가 있으면 phrase 가 우위 (더 큰 범위).
+ * - 동일 kind 끼리 토큰 범위가 겹치면 시작 인덱스가 빠른 쪽이 우위 (단순 결정적 규칙).
+ */
+function renderUnifiedMaskedBody(
+  sentences: SentenceTokenized[],
+  blocks: SelectionBlock[],
+  activeKinds: ReadonlySet<'word' | 'phrase' | 'sentence'>,
+  showKorean: boolean,
+): UnifiedRender {
+  const blankAnswers: UnifiedRender['blankAnswers'] = [];
+  const essayItems: UnifiedRender['essayItems'] = [];
+  let blankCounter = 0;
+  let essayCounter = 0;
+
+  /** kind 우선순위: sentence > phrase > word (큰 범위가 이긴다) */
+  const kindRank: Record<'word' | 'phrase' | 'sentence', number> = {
+    word: 0,
+    phrase: 1,
+    sentence: 2,
+  };
+
+  const sentenceHtmls = sentences.map(s => {
+    const here = blocks.filter(b => b.sentenceIdx === s.idx && activeKinds.has(b.kind));
+    if (here.length === 0) return escapeHtml(s.text);
+
+    const sentBlock = here.find(b => b.kind === 'sentence');
+    if (sentBlock) {
+      const korean = ((sentBlock.koreanMeaning ?? '').trim() || (s.korean ?? '').trim());
+      const english = s.text;
+      const wordCount = english.replace(/[,.;:!?"]/g, ' ').split(/\s+/).filter(Boolean).length;
+      essayCounter += 1;
+      essayItems.push({ num: essayCounter, english, korean, wordCount });
+      if (!showKorean) {
+        return `<span class="bw-blank bw-blank-sentence">[${essayCounter}] ${'_'.repeat(40)}</span>`;
+      }
+      return korean
+        ? `<span class="bw-korean">[${essayCounter}] ${escapeHtml(korean)}</span>`
+        : `<span class="bw-korean bw-korean-empty">[${essayCounter}] (한국어 해석 미입력)</span>`;
+    }
+
+    const sorted = [...here].sort((a, b) => {
+      if (a.startTokenIdx !== b.startTokenIdx) return a.startTokenIdx - b.startTokenIdx;
+      return kindRank[b.kind] - kindRank[a.kind];
+    });
+
+    const out: string[] = [];
+    let i = 0;
+    while (i < s.tokens.length) {
+      const candidates = sorted.filter(b => b.startTokenIdx === i);
+      const block = candidates[0];
+      if (block) {
+        const phrase = joinTokens(s.tokens.slice(block.startTokenIdx, block.endTokenIdx + 1));
+        const kind = block.kind === 'phrase' ? 'phrase' : 'word';
+        blankCounter += 1;
+        const label = blankLabel(blankCounter);
+        blankAnswers.push({ label, kind, original: phrase });
+        const cls = kind === 'phrase' ? 'bw-blank bw-blank-phrase' : 'bw-blank bw-blank-word';
+        const tokenCount = block.endTokenIdx - block.startTokenIdx + 1;
+        const phraseKorean = kind === 'phrase' && showKorean ? (block.koreanMeaning ?? '').trim() : '';
+        const hint = kind === 'phrase'
+          ? phraseKorean
+            ? ` <span class="bw-blank-hint">(${tokenCount}단어 · ${escapeHtml(phraseKorean)})</span>`
+            : ` <span class="bw-blank-hint">(${tokenCount}단어)</span>`
+          : '';
+        out.push(`<span class="bw-blank-num">${escapeHtml(label)}</span><span class="${cls}">${escapeHtml(blankFor(phrase))}</span>${hint}`);
+        i = block.endTokenIdx + 1;
+        continue;
+      }
+      const inMid = sorted.some(b => i > b.startTokenIdx && i <= b.endTokenIdx);
+      if (!inMid) out.push(escapeHtml(s.tokens[i]));
+      i++;
+    }
+    return out.join(' ').replace(/\s+([,.;:!?])/g, '$1');
+  });
+
+  return {
+    body: sentenceHtmls.join(' '),
+    blankAnswers,
+    essayItems,
+  };
+}
+
 // ── 공통 CSS ───────────────────────────────────────────────────────────────────
 
 const SHARED_CSS = `
@@ -150,6 +258,25 @@ const SHARED_CSS = `
   .bw-warning { margin: 6pt 0; padding: 6pt 10pt; background: #fef3c7; border-left: 3px solid #d97706; font-size: 10pt; color: #92400e; }
   .bw-passage { font-size: 11pt; line-height: 1.85; padding: 10pt 12pt; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }
   .bw-blank { display: inline-block; min-width: 60px; border-bottom: 1.5px solid #1f2937; padding: 0 4px; color: transparent; user-select: none; }
+  .bw-blank-phrase { border-bottom-style: double; border-bottom-width: 3px; }
+  .bw-blank-num { display: inline-block; font-weight: 700; color: #1e3a8a; margin-right: 2px; }
+  .bw-blank-hint { display: inline-block; font-size: 9pt; color: #6b7280; margin-left: 3px; }
+  .bw-answer-write-block { margin-top: 8pt; padding: 6pt 10pt; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }
+  .bw-answer-write { display: flex; align-items: flex-start; gap: 8pt; margin: 4pt 0; }
+  .bw-answer-write-num { flex-shrink: 0; font-weight: 700; color: #1e3a8a; min-width: 20pt; padding-top: 2pt; }
+  .bw-answer-write-lines { flex: 1; }
+  .bw-answer-write-lines .bw-write-row { margin-top: 4pt; }
+  .bw-answer-write-lines .bw-write-row:first-child { margin-top: 0; }
+  .bw-answer-key { margin-top: 18pt; padding-top: 10pt; border-top: 2px solid #1f2937; }
+  .bw-answer-key h2 { color: #b91c1c; }
+  .bw-answer-source { display: inline-block; margin: 0 0 10pt; padding: 4pt 10pt; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; font-size: 11pt; font-weight: 700; color: #b91c1c; }
+  .bw-answer-list { margin: 6pt 0; padding: 8pt 12pt; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; font-size: 11pt; line-height: 1.9; }
+  .bw-answer-list .ans { display: inline-block; margin-right: 14pt; }
+  .bw-answer-list .ans .lab { font-weight: 700; color: #b91c1c; margin-right: 3px; }
+  .bw-answer-essay { margin-top: 10pt; }
+  .bw-answer-essay .row { margin: 4pt 0; padding: 6pt 10pt; background: #fef2f2; border-left: 3px solid #b91c1c; border-radius: 3px; font-size: 11pt; }
+  .bw-answer-essay .row .num { font-weight: 700; color: #b91c1c; margin-right: 6px; }
+  @media print { .bw-answer-key { page-break-before: always; border-top: none; padding-top: 0; } }
   .bw-lemma { display: inline-block; padding: 0 4px; color: #1e3a8a; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 3px; font-style: italic; }
   .bw-lemma-empty { color: #b45309; background: #fffbeb; border-color: #d97706; }
   .bw-korean { color: #1f2937; background: #fef3c7; border: 1px dashed #d97706; padding: 1px 6px; border-radius: 4px; font-style: normal; }
@@ -172,6 +299,10 @@ const SHARED_CSS = `
   .bw-table th, .bw-table td { border: 1px solid #d1d5db; padding: 6pt 8pt; text-align: left; vertical-align: top; }
   .bw-table th { background: #f3f4f6; font-weight: 700; }
   .bw-table .kind { color: #6b7280; font-size: 9pt; font-weight: 400; }
+  .bw-section { padding-top: 4pt; }
+  .bw-section + .bw-section { margin-top: 18pt; padding-top: 14pt; border-top: 1px dashed #d1d5db; }
+  @media print { .bw-section + .bw-section { page-break-before: always; border-top: none; margin-top: 0; padding-top: 0; } }
+  .bw-section-meta { font-size: 9pt; color: #4b5563; margin: 0 0 6pt; padding-bottom: 3pt; border-bottom: 1px dashed #d1d5db; font-weight: 600; }
 `;
 
 const WORD_META = `<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="ProgId" content="Word.Document"><meta name="Generator" content="Microsoft Word"><meta name="Originator" content="Microsoft Word"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->`;
@@ -232,7 +363,12 @@ function header({ title, textbook, sourceKey }: BuildOptions): string {
 <div class="bw-meta">${escapeHtml(textbook)} · ${escapeHtml(sourceKey)}</div>`;
 }
 
-export function buildWordBlankHtml(opts: BuildOptions): string {
+/** 각 섹션(=각 인쇄 페이지) 상단에 교재·소스 표기 — PDF 두 번째 페이지부터도 정보가 남도록. */
+function sectionMeta({ textbook, sourceKey }: BuildOptions): string {
+  return `<div class="bw-section-meta">${escapeHtml(textbook)} · ${escapeHtml(sourceKey)}</div>`;
+}
+
+function fragmentA(opts: BuildOptions): string {
   const { body, bogiItems } = renderMaskedBody(
     opts.selection.sentences,
     opts.selection.blocks,
@@ -244,14 +380,19 @@ export function buildWordBlankHtml(opts: BuildOptions): string {
   <div class="bw-bogi-list">${bogiItems.map(w => `<span class="item">${escapeHtml(w)}</span>`).join('')}</div>
 </div>`
     : '<div class="bw-meta">선택된 단어 블록이 없습니다.</div>';
-
-  return htmlShell(`${opts.title} — 단어 빈칸`, `${header(opts)}
+  return `<section class="bw-section bw-section-A">
 <h2>A. 단어 빈칸</h2>
 <div class="bw-passage">${body}</div>
-${bogiHtml}`);
+${bogiHtml}
+</section>`;
 }
 
-export function buildPhraseBlankHtml(opts: BuildOptions): string {
+export function buildWordBlankHtml(opts: BuildOptions): string {
+  return htmlShell(`${opts.title} — 단어 빈칸`, `${header(opts)}
+${fragmentA(opts)}`);
+}
+
+function fragmentB(opts: BuildOptions): string {
   const { body, bogiItems } = renderMaskedBody(
     opts.selection.sentences,
     opts.selection.blocks,
@@ -263,16 +404,20 @@ export function buildPhraseBlankHtml(opts: BuildOptions): string {
   <div class="bw-bogi-list">${bogiItems.map(w => `<span class="item">${escapeHtml(w)}</span>`).join('')}</div>
 </div>`
     : '<div class="bw-meta">선택된 구 블록이 없습니다.</div>';
-
-  return htmlShell(`${opts.title} — 구 빈칸`, `${header(opts)}
+  return `<section class="bw-section bw-section-B">
 <h2>B. 구·표현 빈칸</h2>
 <div class="bw-passage">${body}</div>
-${bogiHtml}`);
+${bogiHtml}
+</section>`;
 }
 
-export function buildSentenceEssayHtml(opts: BuildOptions): string {
-  const { body, items } = renderSentenceEssayBody(opts.selection.sentences, opts.selection.blocks);
+export function buildPhraseBlankHtml(opts: BuildOptions): string {
+  return htmlShell(`${opts.title} — 구 빈칸`, `${header(opts)}
+${fragmentB(opts)}`);
+}
 
+function fragmentC(opts: BuildOptions): string {
+  const { body, items } = renderSentenceEssayBody(opts.selection.sentences, opts.selection.blocks);
   const questionHtml = items.length
     ? items
         .map(
@@ -286,22 +431,25 @@ export function buildSentenceEssayHtml(opts: BuildOptions): string {
         )
         .join('\n')
     : '<div class="bw-meta">선택된 문장 블록이 없습니다.</div>';
-
-  return htmlShell(`${opts.title} — 문장 영작`, `${header(opts)}
+  return `<section class="bw-section bw-section-C">
 <h2>C. 문장 영작</h2>
 <div class="bw-passage">${body}</div>
-${questionHtml}`);
+${questionHtml}
+</section>`;
+}
+
+export function buildSentenceEssayHtml(opts: BuildOptions): string {
+  return htmlShell(`${opts.title} — 문장 영작`, `${header(opts)}
+${fragmentC(opts)}`);
 }
 
 // ── D. 어순 배열 ──────────────────────────────────────────────────────────────
 
-export function buildSentenceOrderHtml(opts: BuildOptions): string {
+function fragmentD(opts: BuildOptions): string {
   const sentenceBlocks = opts.selection.blocks.filter(b => b.kind === 'sentence');
-
   const passageHtml = opts.selection.sentences
     .map(s => escapeHtml(s.text))
     .join(' ');
-
   const labels = ['(A)', '(B)', '(C)', '(D)', '(E)', '(F)', '(G)', '(H)'];
 
   const questionsHtml = sentenceBlocks.length
@@ -310,7 +458,6 @@ export function buildSentenceOrderHtml(opts: BuildOptions): string {
           const sent = opts.selection.sentences.find(s => s.idx === b.sentenceIdx);
           if (!sent) return '';
           const chunks = chunkSentence(sent.tokens);
-          // 시드는 문장 인덱스 + 토큰 수 + 첫 토큰 hash — 결정적
           const seed = b.sentenceIdx * 1000 + sent.tokens.length * 31 + (sent.tokens[0]?.charCodeAt(0) ?? 0);
           const shuffled = shuffleDeterministic(
             chunks.map((c, idx) => ({ idx, chunk: joinTokens(c) })),
@@ -331,10 +478,17 @@ export function buildSentenceOrderHtml(opts: BuildOptions): string {
         .join('\n')
     : '<div class="bw-meta">선택된 문장 블록이 없습니다.</div>';
 
-  return htmlShell(`${opts.title} — 어순 배열`, `${header(opts)}
+  return `<section class="bw-section bw-section-D">
+${sectionMeta(opts)}
 <h2>D. 어순 배열</h2>
 <div class="bw-passage">${passageHtml}</div>
-${questionsHtml}`);
+${questionsHtml}
+</section>`;
+}
+
+export function buildSentenceOrderHtml(opts: BuildOptions): string {
+  return htmlShell(`${opts.title} — 어순 배열`, `${header(opts)}
+${fragmentD(opts)}`);
 }
 
 // ── E. 핵심 표현 정리 ─────────────────────────────────────────────────────────
@@ -345,15 +499,16 @@ const KIND_LABEL_KO: Record<'word' | 'phrase' | 'sentence', string> = {
   sentence: '문장',
 };
 
-export function buildKeyExpressionHtml(opts: BuildOptions): string {
+function fragmentE(opts: BuildOptions): string {
   const sorted = sortBlocks(opts.selection.blocks);
-
   const rows = sorted
     .map(b => {
       const sent = opts.selection.sentences.find(s => s.idx === b.sentenceIdx);
       if (!sent) return '';
       const english = joinTokens(sent.tokens.slice(b.startTokenIdx, b.endTokenIdx + 1));
-      const korean = (b.koreanMeaning ?? '').trim();
+      // sentence 블록은 DB 의 sentence.korean 으로 fallback 가능
+      const fallback = b.kind === 'sentence' ? (sent.korean ?? '').trim() : '';
+      const korean = (b.koreanMeaning ?? '').trim() || fallback;
       const koreanCell = korean
         ? escapeHtml(korean)
         : '<span class="bw-meta" style="margin:0">(미입력)</span>';
@@ -376,15 +531,22 @@ export function buildKeyExpressionHtml(opts: BuildOptions): string {
 
   const passageHtml = opts.selection.sentences.map(s => escapeHtml(s.text)).join(' ');
 
-  return htmlShell(`${opts.title} — 핵심 표현 정리`, `${header(opts)}
+  return `<section class="bw-section bw-section-E">
+${sectionMeta(opts)}
 <h2>E. 핵심 표현 정리</h2>
 <div class="bw-passage">${passageHtml}</div>
-${tableHtml}`);
+${tableHtml}
+</section>`;
+}
+
+export function buildKeyExpressionHtml(opts: BuildOptions): string {
+  return htmlShell(`${opts.title} — 핵심 표현 정리`, `${header(opts)}
+${fragmentE(opts)}`);
 }
 
 // ── F. 어법 변형 ──────────────────────────────────────────────────────────────
 
-export function buildGrammarTransformHtml(opts: BuildOptions): string {
+function fragmentF(opts: BuildOptions): string {
   const wordBlocks = opts.selection.blocks.filter(b => b.kind === 'word');
   let missingCount = 0;
 
@@ -422,12 +584,198 @@ export function buildGrammarTransformHtml(opts: BuildOptions): string {
         .join('\n')
     : '<div class="bw-meta">선택된 단어 블록이 없습니다.</div>';
 
-  return htmlShell(`${opts.title} — 어법 변형`, `${header(opts)}
+  return `<section class="bw-section bw-section-F">
+${sectionMeta(opts)}
 <h2>F. 어법 변형</h2>
 ${warning}
 <div class="bw-meta">▸ 괄호 안의 단어를 문맥에 맞게 어형 변환하여 빈칸을 완성하세요.</div>
 <div class="bw-passage">${body}</div>
-${writeRowsHtml}`);
+${writeRowsHtml}
+</section>`;
+}
+
+export function buildGrammarTransformHtml(opts: BuildOptions): string {
+  return htmlShell(`${opts.title} — 어법 변형`, `${header(opts)}
+${fragmentF(opts)}`);
+}
+
+interface UnifiedQuestion {
+  html: string;
+  heading: string;
+  blankAnswers: UnifiedRender['blankAnswers'];
+  essayItems: UnifiedRender['essayItems'];
+  hasContent: boolean;
+}
+
+/** 통합 문제지 페이지 한 장 — showKorean 에 따라 해석 포함/제외. */
+function buildUnifiedQuestion(
+  opts: BuildOptions,
+  types: WorkbookKind[],
+  showKorean: boolean,
+): UnifiedQuestion {
+  const activeKinds = new Set<'word' | 'phrase' | 'sentence'>();
+  if (types.includes('A')) activeKinds.add('word');
+  if (types.includes('B')) activeKinds.add('phrase');
+  if (types.includes('C')) activeKinds.add('sentence');
+  if (activeKinds.size === 0) {
+    return { html: '', heading: '', blankAnswers: [], essayItems: [], hasContent: false };
+  }
+
+  const { body, blankAnswers, essayItems } = renderUnifiedMaskedBody(
+    opts.selection.sentences,
+    opts.selection.blocks,
+    activeKinds,
+    showKorean,
+  );
+
+  const labels: string[] = [];
+  if (activeKinds.has('word')) labels.push('A. 단어');
+  if (activeKinds.has('phrase')) labels.push('B. 구');
+  if (activeKinds.has('sentence')) labels.push('C. 문장');
+  const heading = `통합 빈칸 (${labels.join(' · ')})`;
+
+  const essayPrompts = activeKinds.has('sentence') && essayItems.length
+    ? `<div class="bw-essay-block">
+<div class="bw-bogi-label" style="color:#92400e;margin-top:14pt;">▸ 문장 영작 — 본문의 [번호] 자리에 들어갈 영어 문장을 작성하세요.</div>
+${essayItems
+  .map(it => {
+    const koreanLine = showKorean
+      ? `<div class="bw-condition">▸ 한국어 해석: <span class="ko">${escapeHtml(it.korean || '(미입력)')}</span></div>`
+      : '';
+    return `<div class="bw-essay-q">
+  <div><span class="num">${it.num}.</span> ${showKorean ? '다음 한국어 해석에 부합하도록 영어 문장을 작성하세요.' : '본문의 [' + it.num + '] 자리에 들어갈 영어 문장을 작성하세요.'}</div>
+  ${koreanLine}
+  <div class="bw-condition">▸ 작성 단어 수: <b>${it.wordCount}개</b></div>
+  <div class="bw-write-row"></div>
+  <div class="bw-write-row"></div>
+</div>`;
+  })
+  .join('\n')}
+</div>`
+    : '';
+
+  const headerNote = showKorean
+    ? '▸ 본문의 빈칸 ①②③… 에 들어갈 단어·구 를 적고, [번호] 자리에는 영어 문장을 영작하세요.'
+    : '▸ 본문의 빈칸 ①②③… 에 들어갈 단어·구 를 적으세요. (한국어 해석 없이)';
+
+  const writeRowsHtml = blankAnswers.length
+    ? `<div class="bw-answer-write-block">
+<div class="bw-bogi-label" style="color:#1e3a8a;margin-top:14pt;">▸ 단어·구 정답 작성란</div>
+${blankAnswers
+  .map(a => `<div class="bw-answer-write">
+  <div class="bw-answer-write-num">${escapeHtml(a.label)}</div>
+  <div class="bw-answer-write-lines">
+    <div class="bw-write-row"></div>
+    <div class="bw-write-row"></div>
+  </div>
+</div>`)
+  .join('\n')}
+</div>`
+    : '';
+
+  const html = `<section class="bw-section bw-section-unified">
+${sectionMeta(opts)}
+<h2>${escapeHtml(heading)}${showKorean ? ' — 해석 포함' : ' — 해석 제외'}</h2>
+<div class="bw-meta">${headerNote}</div>
+<div class="bw-passage">${body}</div>
+${writeRowsHtml}
+${essayPrompts}
+</section>`;
+
+  return { html, heading, blankAnswers, essayItems, hasContent: true };
+}
+
+/** 통합 답지 페이지 한 장 — 양쪽 버전 정답이 동일하므로 한 번만 출력. */
+function buildUnifiedAnswer(q: UnifiedQuestion, opts: BuildOptions): string {
+  if (!q.hasContent) return '';
+  if (!q.blankAnswers.length && !q.essayItems.length) return '';
+
+  const blanksHtml = q.blankAnswers.length
+    ? `<div class="bw-bogi-label" style="color:#b91c1c;">▸ 단어·구 정답 (출현 순)</div>
+<div class="bw-answer-list">${q.blankAnswers
+  .map(a => `<span class="ans"><span class="lab">${escapeHtml(a.label)}</span>${escapeHtml(a.original)}</span>`)
+  .join('')}</div>`
+    : '';
+
+  const essayAnswersHtml = q.essayItems.length
+    ? `<div class="bw-answer-essay">
+<div class="bw-bogi-label" style="color:#b91c1c;">▸ 문장 영작 정답 (원문)</div>
+${q.essayItems
+  .map(it => `<div class="row"><span class="num">${it.num}.</span>${escapeHtml(it.english)}</div>`)
+  .join('\n')}
+</div>`
+    : '';
+
+  return `<section class="bw-answer-key">
+${sectionMeta(opts)}
+<h2>▣ 정답 — ${escapeHtml(q.heading)}</h2>
+<div class="bw-answer-source">${escapeHtml(opts.textbook)} · ${escapeHtml(opts.sourceKey)} · ${escapeHtml(opts.title)}</div>
+${blanksHtml}
+${essayAnswersHtml}
+</section>`;
+}
+
+/**
+ * 통합 페이지 빌더 — 3장 + 보조 섹션.
+ * - 1쪽: A/B/C 통합 빈칸 (해석 포함)
+ * - 2쪽: A/B/C 통합 빈칸 (해석 제외) — page-break-before
+ * - 3쪽: 정답 (양쪽 공통) — page-break-before
+ * - 이후 D/E/F 가 활성이면 추가 섹션 (각각 page-break)
+ */
+export function buildCombinedHtml(
+  opts: BuildOptions,
+  types: WorkbookKind[],
+): string {
+  const sections: string[] = [];
+  const unifiedActive = types.includes('A') || types.includes('B') || types.includes('C');
+  if (unifiedActive) {
+    const qWith = buildUnifiedQuestion(opts, types, true);
+    const qNo = buildUnifiedQuestion(opts, types, false);
+    if (qWith.html) sections.push(qWith.html);
+    if (qNo.html) sections.push(qNo.html);
+    const ans = buildUnifiedAnswer(qWith, opts);
+    if (ans) sections.push(ans);
+  }
+  if (types.includes('D')) sections.push(fragmentD(opts));
+  if (types.includes('E')) sections.push(fragmentE(opts));
+  if (types.includes('F')) sections.push(fragmentF(opts));
+
+  const body = sections.length > 0
+    ? sections.join('\n')
+    : '<div class="bw-meta">선택된 유형이 없습니다.</div>';
+  return htmlShell(`${opts.title} — 통합`, `${header(opts)}\n${body}`);
+}
+
+export interface FolderWorkbookEntry {
+  opts: BuildOptions;
+  types: WorkbookKind[];
+}
+
+/**
+ * 폴더 단위 묶음 PDF 빌더 — 워크북별 문제지(해석 포함 → 해석 제외)를 먼저 모두 출력한 뒤,
+ * 모든 워크북의 정답 페이지를 맨 뒤에 한 번에 모아서 출력. 인쇄 시 각 섹션 = 1쪽.
+ */
+export function buildFolderHtml(folderName: string, entries: FolderWorkbookEntry[]): string {
+  const questions: string[] = [];
+  const answers: string[] = [];
+
+  for (const e of entries) {
+    const types = e.types;
+    const unifiedActive = types.includes('A') || types.includes('B') || types.includes('C');
+    if (!unifiedActive) continue;
+    const qWith = buildUnifiedQuestion(e.opts, types, true);
+    const qNo = buildUnifiedQuestion(e.opts, types, false);
+    if (qWith.html) questions.push(qWith.html);
+    if (qNo.html) questions.push(qNo.html);
+    const a = buildUnifiedAnswer(qWith, e.opts);
+    if (a) answers.push(a);
+  }
+
+  const body = questions.length === 0 && answers.length === 0
+    ? '<div class="bw-meta">출력할 워크북이 없습니다.</div>'
+    : `${questions.join('\n')}\n${answers.join('\n')}`;
+
+  return htmlShell(`폴더 ${folderName} — 통합 PDF`, body);
 }
 
 /** 모든 활성 유형의 HTML 을 한 번에 빌드. 비활성 유형은 undefined 로 둔다. */

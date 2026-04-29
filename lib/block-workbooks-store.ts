@@ -108,3 +108,31 @@ export async function deleteBlockWorkbook(id: string): Promise<boolean> {
   const r = await db.collection(COL).deleteOne({ _id: oid });
   return r.deletedCount > 0;
 }
+
+/** 워크북의 메타 (현재는 folder/title) 만 부분 업데이트. */
+export async function updateBlockWorkbookMeta(
+  id: string,
+  patch: { folder?: string; title?: string },
+): Promise<boolean> {
+  const db = await getDb('gomijoshua');
+  let oid: ObjectId;
+  try { oid = new ObjectId(id); } catch { return false; }
+  const set: Record<string, unknown> = { updatedAt: new Date() };
+  if (typeof patch.folder === 'string') set.folder = patch.folder.trim() || '기본';
+  if (typeof patch.title === 'string') set.title = patch.title.trim() || '블록 빈칸 워크북';
+  const r = await db.collection(COL).updateOne({ _id: oid }, { $set: set });
+  return r.matchedCount > 0;
+}
+
+/** 폴더 일괄 이름 변경 — 같은 폴더에 있던 모든 항목을 새 폴더명으로 옮김. */
+export async function renameBlockWorkbookFolder(from: string, to: string): Promise<number> {
+  const db = await getDb('gomijoshua');
+  const f = (from || '').trim();
+  const t = (to || '').trim() || '기본';
+  if (!f) return 0;
+  const r = await db.collection(COL).updateMany(
+    { folder: f },
+    { $set: { folder: t, updatedAt: new Date() } },
+  );
+  return r.modifiedCount;
+}
