@@ -12,7 +12,7 @@
  *   6. 「📂 목록」 패널에서 기존 워크북 로드/삭제
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '../_components/AdminSidebar';
 import PassagePickerModal, { PassageItem } from '../_components/PassagePickerModal';
@@ -24,8 +24,12 @@ import {
 } from '@/lib/block-workbook-types';
 import { tokenizePassage } from '@/lib/block-workbook-tokenize';
 import {
+  buildAllHtml,
+  buildGrammarTransformHtml,
+  buildKeyExpressionHtml,
   buildPhraseBlankHtml,
   buildSentenceEssayHtml,
+  buildSentenceOrderHtml,
   buildWordBlankHtml,
 } from '@/lib/block-workbook-html';
 
@@ -44,7 +48,12 @@ const TYPE_LABEL: Record<WorkbookKind, string> = {
   A: 'A. 단어 빈칸',
   B: 'B. 구 빈칸',
   C: 'C. 문장 영작',
+  D: 'D. 어순 배열',
+  E: 'E. 핵심 표현 정리',
+  F: 'F. 어법 변형',
 };
+
+const TYPE_KINDS: WorkbookKind[] = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 export default function BlockWorkbookPage() {
   const router = useRouter();
@@ -54,8 +63,11 @@ export default function BlockWorkbookPage() {
   const [title, setTitle] = useState('블록 빈칸 워크북');
   const [folder, setFolder] = useState('기본');
   const [blocks, setBlocks] = useState<SelectionBlock[]>([]);
-  const [activeTypes, setActiveTypes] = useState<Record<WorkbookKind, boolean>>({ A: true, B: true, C: true });
+  const [activeTypes, setActiveTypes] = useState<Record<WorkbookKind, boolean>>({
+    A: true, B: true, C: true, D: false, E: false, F: false,
+  });
   const [previewType, setPreviewType] = useState<WorkbookKind>('A');
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
 
@@ -91,22 +103,65 @@ export default function BlockWorkbookPage() {
   const previewHtml = useMemo(() => {
     if (!passage) return '';
     const opts = { title, textbook: passage.textbook, sourceKey, selection };
-    if (previewType === 'A') return buildWordBlankHtml(opts);
-    if (previewType === 'B') return buildPhraseBlankHtml(opts);
-    return buildSentenceEssayHtml(opts);
+    switch (previewType) {
+      case 'A': return buildWordBlankHtml(opts);
+      case 'B': return buildPhraseBlankHtml(opts);
+      case 'C': return buildSentenceEssayHtml(opts);
+      case 'D': return buildSentenceOrderHtml(opts);
+      case 'E': return buildKeyExpressionHtml(opts);
+      case 'F': return buildGrammarTransformHtml(opts);
+      default: return '';
+    }
   }, [passage, title, sourceKey, selection, previewType]);
 
-  /** 한 문장 영작 블록의 한국어 해석 입력 */
-  const sentenceBlocks = blocks.filter(b => b.kind === 'sentence');
-
-  const updateKorean = (sentenceIdx: number, korean: string) => {
+  /** 블록의 한국어 의미 / base form 업데이트. (sentenceIdx, startTokenIdx) 로 블록 식별. */
+  const updateBlockField = (
+    sentenceIdx: number,
+    startTokenIdx: number,
+    field: 'koreanMeaning' | 'baseForm',
+    value: string,
+  ) => {
     setBlocks(prev =>
       prev.map(b =>
-        b.kind === 'sentence' && b.sentenceIdx === sentenceIdx
-          ? { ...b, koreanMeaning: korean }
+        b.sentenceIdx === sentenceIdx && b.startTokenIdx === startTokenIdx
+          ? { ...b, [field]: value }
           : b,
       ),
     );
+  };
+
+  /** 정렬된 블록 (sentenceIdx, startTokenIdx 오름차순) — 추가정보 패널·E 표 표시용 */
+  const sortedBlocks = useMemo(
+    () => [...blocks].sort((a, b) => {
+      if (a.sentenceIdx !== b.sentenceIdx) return a.sentenceIdx - b.sentenceIdx;
+      return a.startTokenIdx - b.startTokenIdx;
+    }),
+    [blocks],
+  );
+
+  /** 활성화된 유형 중 어떤 입력란이 패널에 보여야 하는지 */
+  const showKoreanInput = activeTypes.C || activeTypes.E;
+  const showBaseFormInput = activeTypes.F;
+
+  // 내보내기
+  const downloadAsDoc = () => {
+    if (!previewHtml) return;
+    const blob = new Blob([previewHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title || 'block-workbook'}-${previewType}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const printPreview = () => {
+    const w = previewIframeRef.current?.contentWindow;
+    if (!w) return;
+    w.focus();
+    w.print();
   };
 
   const handlePickPassage = (p: PassageItem) => {
@@ -151,10 +206,7 @@ export default function BlockWorkbookPage() {
     setSaveMsg('');
     try {
       const opts = { title, textbook: passage.textbook, sourceKey, selection };
-      const html: Partial<Record<WorkbookKind, string>> = {};
-      if (types.includes('A')) html.A = buildWordBlankHtml(opts);
-      if (types.includes('B')) html.B = buildPhraseBlankHtml(opts);
-      if (types.includes('C')) html.C = buildSentenceEssayHtml(opts);
+      const html = buildAllHtml(opts, types);
 
       const r = await fetch('/api/admin/block-workbook/save', {
         method: 'POST',
@@ -202,7 +254,7 @@ export default function BlockWorkbookPage() {
       setBlocks(item.selection.blocks);
       setTitle(item.title);
       setFolder(item.folder ?? '기본');
-      const t: Record<WorkbookKind, boolean> = { A: false, B: false, C: false };
+      const t: Record<WorkbookKind, boolean> = { A: false, B: false, C: false, D: false, E: false, F: false };
       for (const k of item.types as WorkbookKind[]) t[k] = true;
       setActiveTypes(t);
       setShowList(false);
@@ -287,8 +339,8 @@ export default function BlockWorkbookPage() {
               </div>
               <div>
                 <label className="block text-xs text-slate-400 mb-1">생성할 유형</label>
-                <div className="flex gap-2">
-                  {(Object.keys(TYPE_LABEL) as WorkbookKind[]).map(k => (
+                <div className="flex flex-wrap gap-1.5">
+                  {TYPE_KINDS.map(k => (
                     <label key={k} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-slate-600 cursor-pointer">
                       <input
                         type="checkbox"
@@ -320,20 +372,69 @@ export default function BlockWorkbookPage() {
               </div>
             </div>
 
-            {sentenceBlocks.length > 0 && (
-              <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-2">
-                <h2 className="text-sm font-bold">문장 영작 — 한국어 해석 입력</h2>
-                {sentenceBlocks.map(b => {
+            {sortedBlocks.length > 0 && (showKoreanInput || showBaseFormInput) && (
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3">
+                <h2 className="text-sm font-bold">블록 추가 정보</h2>
+                <p className="text-[11px] text-slate-500">
+                  활성화된 유형에 따라 입력란이 표시됩니다.
+                  {activeTypes.C && ' · 「문장 영작」: 한국어 해석'}
+                  {activeTypes.E && ' · 「핵심 표현 정리」: 모든 블록 한국어 의미'}
+                  {activeTypes.F && ' · 「어법 변형」: 단어 블록 base form'}
+                </p>
+                {sortedBlocks.map(b => {
                   const sent = sentences.find(s => s.idx === b.sentenceIdx);
+                  if (!sent) return null;
+                  const phrase = sent.tokens.slice(b.startTokenIdx, b.endTokenIdx + 1).join(' ');
+                  const kindBadge = b.kind === 'word' ? '단어' : b.kind === 'phrase' ? '구' : '문장';
+                  const kindCls =
+                    b.kind === 'word'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : b.kind === 'phrase'
+                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+
+                  // 해당 블록에 보여줄 한국어 입력란이 필요한 조건
+                  const needKorean =
+                    (activeTypes.C && b.kind === 'sentence') || activeTypes.E;
+                  const needBaseForm = activeTypes.F && b.kind === 'word';
+
+                  if (!needKorean && !needBaseForm) return null;
+
                   return (
-                    <div key={b.sentenceIdx} className="space-y-1">
-                      <div className="text-[11px] text-slate-500 truncate">{sent?.text}</div>
-                      <input
-                        value={b.koreanMeaning ?? ''}
-                        onChange={e => updateKorean(b.sentenceIdx, e.target.value)}
-                        placeholder="한국어 해석문 (학생에게 보여줄 의미)"
-                        className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm"
-                      />
+                    <div
+                      key={`${b.sentenceIdx}:${b.startTokenIdx}`}
+                      className="space-y-1.5 p-2 rounded border border-slate-700 bg-slate-900/40"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${kindCls}`}>
+                          {kindBadge}
+                        </span>
+                        <span className="text-xs text-slate-300 truncate flex-1">{phrase}</span>
+                      </div>
+                      {needKorean && (
+                        <input
+                          value={b.koreanMeaning ?? ''}
+                          onChange={e =>
+                            updateBlockField(b.sentenceIdx, b.startTokenIdx, 'koreanMeaning', e.target.value)
+                          }
+                          placeholder={
+                            b.kind === 'sentence'
+                              ? '한국어 해석문 (학생에게 보여줄 의미)'
+                              : '한국어 의미 (예: 드러내다)'
+                          }
+                          className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm"
+                        />
+                      )}
+                      {needBaseForm && (
+                        <input
+                          value={b.baseForm ?? ''}
+                          onChange={e =>
+                            updateBlockField(b.sentenceIdx, b.startTokenIdx, 'baseForm', e.target.value)
+                          }
+                          placeholder="base form (예: reveal — 학생이 어형 변환)"
+                          className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm"
+                        />
+                      )}
                     </div>
                   );
                 })}
@@ -355,18 +456,21 @@ export default function BlockWorkbookPage() {
 
           {/* 우: 미리보기 */}
           <section className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3 lg:sticky lg:top-4 lg:self-start">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <h2 className="text-sm font-bold">미리보기</h2>
-              <div className="flex gap-1">
-                {(Object.keys(TYPE_LABEL) as WorkbookKind[]).map(k => (
+              <div className="flex gap-1 flex-wrap">
+                {TYPE_KINDS.map(k => (
                   <button
                     key={k}
                     type="button"
                     onClick={() => setPreviewType(k)}
+                    title={TYPE_LABEL[k]}
                     className={`text-xs px-2 py-1 rounded border ${
                       previewType === k
                         ? 'bg-slate-600 text-white border-slate-500'
-                        : 'border-slate-700 text-slate-400 hover:bg-slate-700/50'
+                        : activeTypes[k]
+                          ? 'border-slate-700 text-slate-300 hover:bg-slate-700/50'
+                          : 'border-slate-700 text-slate-600 hover:bg-slate-700/30'
                     }`}
                   >
                     {k}
@@ -374,8 +478,27 @@ export default function BlockWorkbookPage() {
                 ))}
               </div>
             </div>
+            {passage && (
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={printPreview}
+                  className="text-xs px-2 py-1 rounded border border-slate-600 hover:bg-slate-700"
+                >
+                  🖨 인쇄/PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadAsDoc}
+                  className="text-xs px-2 py-1 rounded border border-slate-600 hover:bg-slate-700"
+                >
+                  📝 Word(.doc)
+                </button>
+              </div>
+            )}
             {passage ? (
               <iframe
+                ref={previewIframeRef}
                 title="preview"
                 srcDoc={previewHtml}
                 className="w-full h-[70vh] bg-white rounded border border-slate-600"
