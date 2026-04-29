@@ -19,6 +19,11 @@ export interface SentenceTokenized {
   text: string;
   /** 단어 단위 토큰. 구두점은 토큰 끝에 붙어 있을 수 있음. */
   tokens: string[];
+  /**
+   * 문장 단위 한국어 해석. passages.content.sentences_ko 가 있으면 자동으로 채워진다.
+   * sentence 블록의 koreanMeaning 이 비어 있을 때 fallback 으로 사용.
+   */
+  korean?: string;
 }
 
 export type BlockKind = 'word' | 'phrase' | 'sentence';

@@ -163,6 +163,8 @@ export async function GET(request: NextRequest) {
           order: 1,
           publisher: 1,
           'content.original': 1,
+          'content.sentences_en': 1,
+          'content.sentences_ko': 1,
           created_at: 1,
           updated_at: 1,
         })
