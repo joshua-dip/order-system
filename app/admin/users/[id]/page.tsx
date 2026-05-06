@@ -4,8 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import AdminSidebar from '../../_components/AdminSidebar';
+import { isEbsTextbook } from '@/lib/textbookSort';
 
 /* ─── 타입 ─── */
+type TextbooksMode = 'analysis' | 'essay' | 'workbook' | 'variant';
+
 interface DetailUser {
   id: string;
   loginId: string;
@@ -18,6 +21,8 @@ interface DetailUser {
   canAccessEssay: boolean;
   myFormatApproved: boolean;
   allowedTextbooks: string[];
+  allowedTextbooksAnalysis?: string[];
+  allowedTextbooksEssay?: string[];
   allowedTextbooksWorkbook?: string[];
   allowedTextbooksVariant?: string[];
   allowedEssayTypeIds: string[];
@@ -204,6 +209,13 @@ export default function UserDetailPage() {
 
   /* 삭제 확인 */
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  /* 교재 관리 모달 */
+  const [textbooksMode, setTextbooksMode] = useState<TextbooksMode | null>(null);
+  const [textbookList, setTextbookList] = useState<string[]>([]);
+  const [textbooksSelected, setTextbooksSelected] = useState<string[]>([]);
+  const [textbooksLoading, setTextbooksLoading] = useState(false);
+  const [textbooksSaving, setTextbooksSaving] = useState(false);
 
   /* 주문 관리 모달 */
   const [orderModal, setOrderModal] = useState<AdminOrder | null>(null);
@@ -611,6 +623,148 @@ export default function UserDetailPage() {
     }
   }
 
+  /* ─── 교재 관리 ─── */
+  async function openTextbooksModal(mode: TextbooksMode) {
+    if (!user) return;
+    setTextbooksMode(mode);
+    const legacy = Array.isArray(user.allowedTextbooks) ? user.allowedTextbooks : [];
+    if (mode === 'analysis' || mode === 'essay') {
+      const list =
+        mode === 'analysis'
+          ? Array.isArray(user.allowedTextbooksAnalysis)
+            ? user.allowedTextbooksAnalysis
+            : legacy
+          : Array.isArray(user.allowedTextbooksEssay)
+            ? user.allowedTextbooksEssay
+            : legacy;
+      setTextbooksSelected([...list]);
+    } else {
+      setTextbooksSelected([]);
+    }
+    setTextbooksLoading(true);
+    try {
+      const r = await fetch('/api/textbooks');
+      const data = await r.json();
+      if (data && typeof data === 'object' && !data.error) {
+        let keys = Object.keys(data);
+        if (mode === 'workbook' || mode === 'variant') {
+          keys = keys.filter((k) => !/^고[123]_/.test(k));
+          const solbookSet = new Set<string>();
+          try {
+            const sr = await fetch('/api/settings/variant-solbook', { cache: 'no-store' });
+            const sj = (await sr.json()) as { textbookKeys?: unknown };
+            if (Array.isArray(sj.textbookKeys)) {
+              for (const k of sj.textbookKeys) {
+                if (typeof k === 'string' && k.trim()) solbookSet.add(k.trim());
+              }
+            }
+          } catch { /* solbook 실패해도 EBS만 제외 */ }
+          keys = keys
+            .filter((k) => !isEbsTextbook(k) && !solbookSet.has(k))
+            .sort((a, b) => a.localeCompare(b, 'ko'));
+          if (mode === 'workbook') {
+            setTextbookList(keys);
+            if (Array.isArray(user.allowedTextbooksWorkbook)) {
+              setTextbooksSelected(user.allowedTextbooksWorkbook.filter((t) => keys.includes(t)));
+            } else if (legacy.length > 0) {
+              setTextbooksSelected(keys.filter((k) => legacy.includes(k)));
+            } else {
+              setTextbooksSelected([...keys]);
+            }
+          } else if (Array.isArray(user.allowedTextbooksVariant)) {
+            const saved = user.allowedTextbooksVariant.filter((t): t is string => typeof t === 'string');
+            const orphans = saved.filter(
+              (t) => !keys.includes(t) && !/^고[123]_/.test(t) && !isEbsTextbook(t) && !solbookSet.has(t)
+            );
+            const list = [...keys, ...orphans].sort((a, b) => a.localeCompare(b, 'ko'));
+            setTextbookList(list);
+            setTextbooksSelected(saved.filter((t) => list.includes(t)));
+          } else if (legacy.length > 0) {
+            setTextbookList(keys);
+            setTextbooksSelected(keys.filter((k) => legacy.includes(k)));
+          } else {
+            setTextbookList(keys);
+            setTextbooksSelected([...keys]);
+          }
+        } else {
+          setTextbookList(keys);
+        }
+      } else {
+        setTextbookList([]);
+      }
+    } catch {
+      setTextbookList([]);
+    } finally {
+      setTextbooksLoading(false);
+    }
+  }
+
+  function closeTextbooksModal() {
+    setTextbooksMode(null);
+    setTextbookList([]);
+    setTextbooksSelected([]);
+  }
+
+  async function saveAllowedTextbooks() {
+    if (!textbooksMode) return;
+    setTextbooksSaving(true);
+    try {
+      const body =
+        textbooksMode === 'analysis'
+          ? { allowedTextbooksAnalysis: textbooksSelected }
+          : textbooksMode === 'essay'
+            ? { allowedTextbooksEssay: textbooksSelected }
+            : textbooksMode === 'workbook'
+              ? { allowedTextbooksWorkbook: textbooksSelected }
+              : { allowedTextbooksVariant: textbooksSelected };
+      const r = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        await loadUser();
+        closeTextbooksModal();
+      } else {
+        alert(d?.error || '저장에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setTextbooksSaving(false);
+    }
+  }
+
+  async function clearAllowedTextbooks(mode: 'workbook' | 'variant') {
+    const msg =
+      mode === 'workbook'
+        ? '워크북 부교재 전용 목록을 해제할까요? 이후에는 일반「교재 허용」목록(allowedTextbooks)과 동일한 규칙이 적용됩니다.'
+        : '변형문제 부교재 전용 목록을 해제할까요? 이후에는 사이트 기본 노출(관리자 기본 교재 설정)만 적용됩니다.';
+    if (!confirm(msg)) return;
+    setTextbooksSaving(true);
+    try {
+      const body = mode === 'workbook' ? { allowedTextbooksWorkbook: null } : { allowedTextbooksVariant: null };
+      const r = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        await loadUser();
+      } else {
+        alert(d?.error || '해제에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setTextbooksSaving(false);
+    }
+  }
+
   /* ─── 멤버십 뱃지 계산 ─── */
   function getMembershipBadges(u: DetailUser) {
     const now = new Date();
@@ -783,28 +937,130 @@ export default function UserDetailPage() {
                 </div>
               </div>
 
-              {/* 허용 교재 요약 */}
+              {/* 허용 교재 관리 */}
               <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <SectionTitle>허용 교재 현황</SectionTitle>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">워크북/분석지 교재</span>
-                    <span className="text-white font-medium">{user.allowedTextbooks.length}종</span>
+                <SectionTitle>허용 교재 관리</SectionTitle>
+
+                {/* 워크북 부교재 */}
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/40 p-3.5 mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm">📘</span>
+                    <span className="text-xs font-semibold text-slate-300 flex-1">워크북 부교재 노출</span>
+                    {user.allowedTextbooksWorkbook !== undefined ? (
+                      <span className="text-[10px] font-semibold text-cyan-400/90">전용 목록 사용 중</span>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-slate-500">일반 허용과 동일</span>
+                    )}
                   </div>
-                  {user.allowedTextbooksWorkbook !== undefined && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">워크북 전용</span>
-                      <span className="text-white font-medium">{user.allowedTextbooksWorkbook?.length ?? 0}종</span>
-                    </div>
-                  )}
-                  {user.allowedTextbooksVariant !== undefined && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">변형문제 교재</span>
-                      <span className="text-white font-medium">{user.allowedTextbooksVariant?.length ?? 0}종</span>
-                    </div>
-                  )}
+                  <p className="text-[11px] text-slate-500 leading-relaxed mb-2">
+                    공통 부교재(<code className="text-slate-400">WORKBOOK_SUPPLEMENTARY_COMMON_KEYS</code>) 외에 이 회원만
+                    볼 추가 교재를 고릅니다. EBS·쏠북은 전 회원 공개라 선택 목록에 없습니다.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => openTextbooksModal('workbook')}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-600 text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                    >
+                      부교재 선택
+                      {user.allowedTextbooksWorkbook !== undefined
+                        ? ` (${user.allowedTextbooksWorkbook.length}개)`
+                        : user.allowedTextbooks.length > 0
+                          ? ' (일반과 동일·미저장)'
+                          : ''}
+                    </button>
+                    {user.allowedTextbooksWorkbook !== undefined && (
+                      <button
+                        type="button"
+                        onClick={() => clearAllowedTextbooks('workbook')}
+                        disabled={textbooksSaving}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-amber-500/30 text-amber-400/90 rounded-lg text-[11px] font-semibold hover:bg-amber-500/10 disabled:opacity-50"
+                      >
+                        전용 해제
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-slate-600 text-xs mt-3">교재 목록 수정은 회원 관리 카드의 「교재 선택하기」에서 진행하세요.</p>
+
+                {/* 변형문제 부교재 */}
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/40 p-3.5 mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm">📗</span>
+                    <span className="text-xs font-semibold text-slate-300 flex-1">변형문제 부교재 노출</span>
+                    {user.allowedTextbooksVariant !== undefined ? (
+                      <span className="text-[10px] font-semibold text-emerald-400/90">전용 목록 사용 중</span>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-slate-500">기본 노출과 동일</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed mb-2">
+                    공통 부교재(<code className="text-slate-400">VARIANT_SUPPLEMENTARY_COMMON_KEYS</code>) 외에 이 회원만
+                    부교재 변형문제 주문(/textbook) 화면에서 볼 추가 교재를 고릅니다.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => openTextbooksModal('variant')}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-600 text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                    >
+                      부교재 선택
+                      {user.allowedTextbooksVariant !== undefined
+                        ? ` (${user.allowedTextbooksVariant.length}개)`
+                        : user.allowedTextbooks.length > 0
+                          ? ' (미저장·저장 시 전용 적용)'
+                          : ''}
+                    </button>
+                    {user.allowedTextbooksVariant !== undefined && (
+                      <button
+                        type="button"
+                        onClick={() => clearAllowedTextbooks('variant')}
+                        disabled={textbooksSaving}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-emerald-500/30 text-emerald-400/90 rounded-lg text-[11px] font-semibold hover:bg-emerald-500/10 disabled:opacity-50"
+                      >
+                        전용 해제
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 분석지·서술형 (메뉴 권한 켜진 경우만) */}
+                {(user.canAccessAnalysis || user.canAccessEssay) && (
+                  <div className="rounded-xl border border-slate-700/70 bg-slate-900/40 p-3.5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm">📋</span>
+                      <span className="text-xs font-semibold text-slate-300">메뉴별 교재 허용</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed mb-2">
+                      선택한 교재만 해당 메뉴(분석지·서술형)의 강과/교재 선택에 노출됩니다.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {user.canAccessAnalysis && (
+                        <button
+                          type="button"
+                          onClick={() => openTextbooksModal('analysis')}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-600 text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                        >
+                          📗 분석지 교재
+                          {((user.allowedTextbooksAnalysis?.length ?? user.allowedTextbooks.length) ?? 0) > 0
+                            ? ` (${user.allowedTextbooksAnalysis?.length ?? user.allowedTextbooks.length}개)`
+                            : ''}
+                        </button>
+                      )}
+                      {user.canAccessEssay && (
+                        <button
+                          type="button"
+                          onClick={() => openTextbooksModal('essay')}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-600 text-slate-300 rounded-lg text-[11px] font-semibold hover:bg-slate-700/50"
+                        >
+                          📘 서술형 교재
+                          {((user.allowedTextbooksEssay?.length ?? user.allowedTextbooks.length) ?? 0) > 0
+                            ? ` (${user.allowedTextbooksEssay?.length ?? user.allowedTextbooks.length}개)`
+                            : ''}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 저장 버튼 */}
@@ -1386,6 +1642,106 @@ export default function UserDetailPage() {
                       {dropboxMsg.text}
                     </p>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─── 교재 선택 모달 ─── */}
+          {textbooksMode && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+              <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col border border-slate-700">
+                <div className="p-4 border-b border-slate-700">
+                  <h3 className="font-bold text-white">
+                    {textbooksMode === 'analysis'
+                      ? '분석지 허용 교재'
+                      : textbooksMode === 'essay'
+                        ? '서술형 허용 교재'
+                        : textbooksMode === 'workbook'
+                          ? '워크북 부교재 (회원 전용 추가)'
+                          : '변형문제 부교재 (회원 전용 추가)'}
+                  </h3>
+                  <p className="text-slate-400 text-xs mt-1">
+                    {textbooksMode === 'workbook' ? (
+                      <>
+                        모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
+                        회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
+                        <strong className="text-slate-300">공통 교재(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
+                        워크북 부교재로 보입니다.
+                      </>
+                    ) : textbooksMode === 'variant' ? (
+                      <>
+                        모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
+                        회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
+                        <strong className="text-slate-300">공통 교재(VARIANT_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
+                        부교재 변형문제 주문(/textbook) 화면의「회원 전용 추가」범위로 쓰입니다.
+                      </>
+                    ) : (
+                      <>
+                        선택한 교재만 해당 회원에게 노출됩니다.{' '}
+                        {textbooksMode === 'analysis' ? '분석지' : '서술형'} 주문 시 강과/교재 선택에 사용됩니다.
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="p-4 overflow-y-auto flex-1">
+                  {textbooksLoading ? (
+                    <div className="py-8 text-center text-slate-500">교재 목록 불러오는 중…</div>
+                  ) : textbookList.length === 0 ? (
+                    <p className="text-slate-500 text-sm">교재 데이터가 없습니다.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <label className="flex items-center gap-2 text-slate-400 text-xs mb-2">
+                        <input
+                          type="checkbox"
+                          checked={textbookList.length > 0 && textbooksSelected.length === textbookList.length}
+                          onChange={(e) => {
+                            if (e.target.checked) setTextbooksSelected([...textbookList]);
+                            else setTextbooksSelected([]);
+                          }}
+                          className="rounded border-slate-500 bg-slate-700 text-cyan-500"
+                        />
+                        전체 선택 / 해제
+                      </label>
+                      {textbookList.map((tb) => (
+                        <label
+                          key={tb}
+                          className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-slate-700/50 cursor-pointer text-sm text-slate-200"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={textbooksSelected.includes(tb)}
+                            onChange={(e) => {
+                              if (e.target.checked) setTextbooksSelected((prev) => [...prev, tb]);
+                              else setTextbooksSelected((prev) => prev.filter((t) => t !== tb));
+                            }}
+                            className="rounded border-slate-500 bg-slate-700 text-cyan-500"
+                          />
+                          <span className="truncate">{tb}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 border-t border-slate-700 flex justify-between">
+                  <span className="text-slate-400 text-sm">{textbooksSelected.length}개 선택</span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={closeTextbooksModal}
+                      className="px-4 py-2 bg-slate-600 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-500"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveAllowedTextbooks}
+                      disabled={textbooksSaving}
+                      className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-500 disabled:opacity-50"
+                    >
+                      {textbooksSaving ? '저장 중…' : '저장'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
