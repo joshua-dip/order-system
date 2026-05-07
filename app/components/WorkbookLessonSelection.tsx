@@ -19,39 +19,64 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
 
   useEffect(() => {
     if (!convertedData) return;
-    const loadLessonsForTextbook = async () => {
+    /** Sheet1.{branch}, {branch}, '지문 데이터'.{branch} 순으로 검색해 강 데이터를 찾는다.
+     *  교과서 키도 같은 흐름(부교재 → 교과서 fallback)으로 처리. */
+    const pickFromBranch = (
+      textbookData: Record<string, unknown>,
+      branch: '부교재' | '교과서',
+    ): Record<string, unknown> | null => {
+      const candidates: Array<unknown> = [];
+      const sheet1 = textbookData.Sheet1;
+      if (sheet1 && typeof sheet1 === 'object') {
+        candidates.push((sheet1 as Record<string, unknown>)[branch]);
+      }
+      const dataSection = (textbookData as Record<string, unknown>)['지문 데이터'];
+      if (dataSection && typeof dataSection === 'object') {
+        candidates.push((dataSection as Record<string, unknown>)[branch]);
+      }
+      candidates.push(textbookData[branch]);
+      for (const cand of candidates) {
+        if (!cand || typeof cand !== 'object') continue;
+        const branchRec = cand as Record<string, unknown>;
+        let info = branchRec[selectedTextbook];
+        if (!info && Object.keys(branchRec).length > 0) {
+          info = branchRec[Object.keys(branchRec)[0]];
+        }
+        if (info && typeof info === 'object') {
+          return info as Record<string, unknown>;
+        }
+      }
+      return null;
+    };
+
+    const loadLessonsForTextbook = () => {
       try {
         const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
-        
-        if (textbookData && typeof textbookData === 'object') {
-          // Sheet1 > 부교재 > 교재명 구조에서 강 번호 추출
-          const sheet1 = (textbookData as Record<string, unknown>).Sheet1;
-          if (sheet1 && typeof sheet1 === 'object') {
-            const 부교재 = (sheet1 as Record<string, unknown>).부교재 as Record<string, unknown> | undefined;
-            if (부교재 && typeof 부교재 === 'object') {
-              let textbookInfo = 부교재[selectedTextbook];
-              if (!textbookInfo && Object.keys(부교재).length > 0) {
-                textbookInfo = 부교재[Object.keys(부교재)[0]];
-              }
-              if (textbookInfo && typeof textbookInfo === 'object') {
-                const textbookInfoRecord = textbookInfo as Record<string, unknown>;
-                const lessonNames = Object.keys(textbookInfoRecord);
-                setAvailableLessons(lessonNames);
-                const textCounts: Record<string, number> = {};
-                lessonNames.forEach(lessonName => {
-                  const lessonData = textbookInfoRecord[lessonName];
-                  if (Array.isArray(lessonData)) {
-                    textCounts[lessonName] = lessonData.length;
-                  }
-                });
-                setLessonTextCounts(textCounts);
-              }
-            }
-          }
+        if (!textbookData || typeof textbookData !== 'object') {
+          setAvailableLessons([]);
+          setLessonTextCounts({});
+          return;
         }
+        const data = textbookData as Record<string, unknown>;
+        // 부교재 우선, 없으면 교과서 fallback (교과서 워크북 신규 카테고리)
+        const textbookInfo = pickFromBranch(data, '부교재') ?? pickFromBranch(data, '교과서');
+        if (!textbookInfo) {
+          setAvailableLessons([]);
+          setLessonTextCounts({});
+          return;
+        }
+        const lessonNames = Object.keys(textbookInfo);
+        setAvailableLessons(lessonNames);
+        const textCounts: Record<string, number> = {};
+        lessonNames.forEach((lessonName) => {
+          const lessonData = textbookInfo[lessonName];
+          if (Array.isArray(lessonData)) {
+            textCounts[lessonName] = lessonData.length;
+          }
+        });
+        setLessonTextCounts(textCounts);
       } catch (error) {
         console.error('강 데이터 로드 실패:', error);
-        // 에러 시 빈 배열로 설정
         setAvailableLessons([]);
         setLessonTextCounts({});
       }

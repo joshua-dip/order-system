@@ -32,7 +32,13 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   
   const [isTextbookExpanded, setIsTextbookExpanded] = useState<boolean>(true);
+  const [isGyogwaseoExpanded, setIsGyogwaseoExpanded] = useState<boolean>(true);
   const [isMockExamExpanded, setIsMockExamExpanded] = useState<boolean>(true);
+
+  /** /api/settings/variant-solbook 의 교과서Keys — LessonSelection 과 동일한 분류 기준
+   *  (변형문제 화면의 「교과서」 카드와 같은 풀을 워크북에도 노출). */
+  const [gyogwaseoKeys, setGyogwaseoKeys] = useState<string[]>([]);
+  const [gyogwaseoLoaded, setGyogwaseoLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/settings/default-textbooks')
@@ -43,7 +49,20 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
   }, []);
 
   useEffect(() => {
-    if (!convertedData || !defaultTextbooksLoaded) return;
+    fetch('/api/settings/variant-solbook', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        const keys = Array.isArray(data?.교과서Keys)
+          ? (data.교과서Keys as unknown[]).filter((k): k is string => typeof k === 'string' && k.trim().length > 0)
+          : [];
+        setGyogwaseoKeys(keys);
+      })
+      .catch(() => setGyogwaseoKeys([]))
+      .finally(() => setGyogwaseoLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!convertedData || !defaultTextbooksLoaded || !gyogwaseoLoaded) return;
     const allKeys = Object.keys(convertedData as Record<string, unknown>);
     const textbookNames = filterWorkbookSupplementaryTextbookKeys(allKeys, {
       allowedTextbooks: currentUser?.allowedTextbooks,
@@ -51,9 +70,12 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
       defaultTextbooksForGuests: defaultTextbooks,
       isGuest: !currentUser,
     });
-    setWorkbookTextbooks(textbookNames);
-    setFilteredTextbooks(textbookNames);
-  }, [convertedData, defaultTextbooksLoaded, defaultTextbooks, currentUser]);
+    /** 교과서 set 은 부교재 목록에서 제외 (교과서 전용 섹션에서 따로 노출) */
+    const gyoSet = new Set(gyogwaseoKeys);
+    const supplementaryOnly = textbookNames.filter((k) => !gyoSet.has(k));
+    setWorkbookTextbooks(supplementaryOnly);
+    setFilteredTextbooks(supplementaryOnly);
+  }, [convertedData, defaultTextbooksLoaded, defaultTextbooks, gyogwaseoLoaded, gyogwaseoKeys, currentUser]);
 
   // 검색 필터링 로직
   useEffect(() => {
@@ -371,6 +393,84 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                 </div>
               )}
                 </>
+              )}
+            </div>
+          )}
+
+          {/* 교과서 섹션 — 변형문제 화면과 동일한 「교과서」 풀 (settings.variant-solbook 의 교과서Keys) */}
+          {!dataLoading && !dataError && convertedData && gyogwaseoKeys.length > 0 && (
+            <div className="mt-16">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <h2 className="text-2xl font-bold" style={{ color: '#00A9E0' }}>
+                    교과서
+                  </h2>
+                  <button
+                    onClick={() => setIsGyogwaseoExpanded(!isGyogwaseoExpanded)}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                    title={isGyogwaseoExpanded ? '접기' : '펼치기'}
+                  >
+                    {isGyogwaseoExpanded ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <p className="text-gray-600">워크북 제작에 사용할 교과서를 선택해주세요</p>
+              </div>
+
+              {isGyogwaseoExpanded && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...gyogwaseoKeys]
+                    .sort((a, b) => a.localeCompare(b, 'ko'))
+                    .map((textbook) => (
+                      <div
+                        key={textbook}
+                        onClick={() => onTextbookSelect(textbook)}
+                        className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3 border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-1">
+                              {textbook}
+                            </h3>
+                            <p className="text-xs text-gray-500">클릭하여 선택</p>
+                            {textbookLinks[textbook]?.extraUrl?.trim() ? (
+                              <a
+                                href={textbookLinks[textbook].extraUrl!.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="mt-1 inline-block max-w-full truncate text-[11px] font-medium text-violet-700 hover:text-violet-900 underline underline-offset-2"
+                                title={textbookLinks[textbook].extraLabel || '추가 링크'}
+                              >
+                                {textbookLinks[textbook].extraLabel?.trim() || '추가 링크'}
+                              </a>
+                            ) : null}
+                          </div>
+                          {textbookLinks[textbook]?.kyoboUrl?.trim() ? (
+                            <div className="ml-auto shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(textbookLinks[textbook].kyoboUrl, '_blank');
+                                }}
+                                className="group relative px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded text-xs text-blue-700 hover:text-blue-800 transition-all duration-200 font-medium"
+                                title={`${textbookLinks[textbook].description ?? ''} - YES24에서 확인`}
+                              >
+                                📖 교재 확인
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
           )}
