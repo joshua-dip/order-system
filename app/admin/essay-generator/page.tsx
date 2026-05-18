@@ -480,45 +480,67 @@ function SavedListPanel({
     try {
       const selectedItems = items.filter(it => selectedIds.has(it._id));
 
+      /* 세 모드 모두 한 PDF 로 합본 출력. 다이얼로그 1번 + 한 폴더 지정으로 끝.
+         서버 측 folder-print 가 각 항목 사이에 이미 page-break 를 끼워주므로
+         IDs 정렬 순서만 모드별로 다르게 주면 같은 그룹끼리 연속 페이지로 묶임. */
+      const diffOrder: Record<string, number> = { 기본난도: 0, 중난도: 1, 고난도: 2, 최고난도: 3 };
+
+      let orderedItems: SavedExamItem[];
+      let title: string;
+
       if (mode === 'single') {
+        orderedItems = selectedItems;
         const firstSk = selectedItems[0]?.sourceKey?.trim() ?? '';
-        const title = sanitizeFilename(
+        title = sanitizeFilename(
           firstSk
             ? (selectedItems.length === 1 ? firstSk : `${firstSk} 외 ${selectedItems.length - 1}건 (총 ${selectedItems.length}건)`)
             : `선택 ${selectedItems.length}건`,
         );
-        await openPrintForIds(selectedItems.map(i => i._id), title);
       } else if (mode === 'per-source') {
-        /* sourceKey 별로 그룹 → 각각 PDF (난이도 순서 정렬) */
-        const diffOrder: Record<string, number> = { 기본난도: 0, 중난도: 1, 고난도: 2, 최고난도: 3 };
+        /* sourceKey 그룹 → 그룹 내 난도 순. 같은 번호 페이지가 연속으로 묶임. */
         const bySk = new Map<string, SavedExamItem[]>();
         for (const it of selectedItems) {
           const sk = (it.sourceKey ?? '').trim() || '__nosk__';
           if (!bySk.has(sk)) bySk.set(sk, []);
           bySk.get(sk)!.push(it);
         }
-        for (const [sk, group] of bySk) {
+        orderedItems = [];
+        for (const group of bySk.values()) {
           const sorted = [...group].sort((a, b) => (diffOrder[a.difficulty] ?? 99) - (diffOrder[b.difficulty] ?? 99));
-          const diffsLabel = sorted.map(x => shortDifficulty(x.difficulty)).filter(Boolean).join('·');
-          const title = sanitizeFilename(`${sk}${diffsLabel ? ' (' + diffsLabel + ')' : ''}`);
-          await openPrintForIds(sorted.map(i => i._id), title);
+          orderedItems.push(...sorted);
         }
+        const skKeys = [...bySk.keys()].filter(k => k !== '__nosk__');
+        const firstSk = skKeys[0] ?? '';
+        title = sanitizeFilename(
+          skKeys.length <= 1
+            ? `${firstSk || '선택'} (${selectedItems.length}건)`
+            : `${firstSk} 외 ${skKeys.length - 1}개 번호 (총 ${selectedItems.length}건)`,
+        );
       } else {
-        /* per-difficulty: 난도별로 그룹 → 각각 PDF */
+        /* per-difficulty: 난도 그룹 순. 같은 난도가 연속으로 묶임. */
         const byDiff = new Map<string, SavedExamItem[]>();
         for (const it of selectedItems) {
           const d = it.difficulty || '기타';
           if (!byDiff.has(d)) byDiff.set(d, []);
           byDiff.get(d)!.push(it);
         }
-        const diffOrder = ['기본난도', '중난도', '고난도', '최고난도'];
-        for (const d of [...diffOrder, ...[...byDiff.keys()].filter(x => !diffOrder.includes(x))]) {
+        const diffOrderList = ['기본난도', '중난도', '고난도', '최고난도'];
+        orderedItems = [];
+        const orderedDiffKeys: string[] = [];
+        for (const d of [...diffOrderList, ...[...byDiff.keys()].filter(x => !diffOrderList.includes(x))]) {
           const group = byDiff.get(d);
           if (!group || group.length === 0) continue;
-          const title = sanitizeFilename(`${d} (${group.length}건)`);
-          await openPrintForIds(group.map(i => i._id), title);
+          orderedItems.push(...group);
+          orderedDiffKeys.push(d);
         }
+        title = sanitizeFilename(
+          orderedDiffKeys.length === 1
+            ? `${orderedDiffKeys[0]} (${selectedItems.length}건)`
+            : `난도별 ${orderedDiffKeys.map(shortDifficulty).filter(Boolean).join('·')} (총 ${selectedItems.length}건)`,
+        );
       }
+
+      await openPrintForIds(orderedItems.map(i => i._id), title);
     } catch (err) {
       console.error('[selected-print]', err);
       alert('출력 중 오류: ' + (err instanceof Error ? err.message : String(err)));
@@ -1080,15 +1102,15 @@ function SavedListPanel({
               >×</button>
             </div>
             <div className="px-5 py-4 flex flex-col gap-2">
-              <div className="text-xs text-slate-400 mb-2">선택 <b className="text-slate-200">{selectedIds.size}</b>건 — 어떻게 저장할까요?</div>
+              <div className="text-xs text-slate-400 mb-2">선택 <b className="text-slate-200">{selectedIds.size}</b>건 — 어떻게 정렬해 저장할까요? (모두 한 PDF, 그룹 사이 페이지 분리)</div>
               <button
                 type="button"
                 disabled={printingSelected}
                 onClick={() => void runBulkPrint('single')}
                 className="text-left px-4 py-3 rounded-lg border border-blue-500/60 bg-blue-900/30 hover:bg-blue-800/40 text-blue-100 disabled:opacity-50"
               >
-                <div className="font-bold text-sm">📄 한번에 다 저장</div>
-                <div className="text-[11px] text-blue-200/70 mt-0.5">선택된 모든 항목을 하나의 PDF로 저장</div>
+                <div className="font-bold text-sm">📄 원래 순서대로</div>
+                <div className="text-[11px] text-blue-200/70 mt-0.5">목록 등장 순 그대로 한 PDF에 합본</div>
               </button>
               <button
                 type="button"
@@ -1096,8 +1118,8 @@ function SavedListPanel({
                 onClick={() => void runBulkPrint('per-source')}
                 className="text-left px-4 py-3 rounded-lg border border-emerald-500/60 bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-100 disabled:opacity-50"
               >
-                <div className="font-bold text-sm">📚 번호별로 저장</div>
-                <div className="text-[11px] text-emerald-200/70 mt-0.5">sourceKey 별로 PDF 분리 (예: 18번 PDF, 19번 PDF…)</div>
+                <div className="font-bold text-sm">📚 번호별로 묶어서</div>
+                <div className="text-[11px] text-emerald-200/70 mt-0.5">같은 번호(예: 18번)의 난도 변형들이 연속 페이지로 — 한 PDF, 그룹 사이 자동 페이지 분리</div>
               </button>
               <button
                 type="button"
@@ -1105,8 +1127,8 @@ function SavedListPanel({
                 onClick={() => void runBulkPrint('per-difficulty')}
                 className="text-left px-4 py-3 rounded-lg border border-fuchsia-500/60 bg-fuchsia-900/30 hover:bg-fuchsia-800/40 text-fuchsia-100 disabled:opacity-50"
               >
-                <div className="font-bold text-sm">🎯 난도별로 저장</div>
-                <div className="text-[11px] text-fuchsia-200/70 mt-0.5">난이도별 PDF 분리 (기본 PDF, 중 PDF, 고 PDF, 최고 PDF)</div>
+                <div className="font-bold text-sm">🎯 난도별로 묶어서</div>
+                <div className="text-[11px] text-fuchsia-200/70 mt-0.5">기본 → 중 → 고 → 최고 순으로 묶여 한 PDF, 그룹 사이 자동 페이지 분리</div>
               </button>
               {printingSelected && (
                 <div className="text-xs text-emerald-300 text-center py-2">생성 중… 팝업이 차단됐다면 허용해 주세요.</div>
