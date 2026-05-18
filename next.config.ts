@@ -13,12 +13,15 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
   // kordoc는 webpack 번들 대상 (cfb/canvas 동적 require 문제 회피 위해 serverExternal 제외).
   // hwpx 생성은 kordoc 대신 jszip 직접 구현으로 교체.
-  serverExternalPackages: ["pdfkit", "xlsx", "docx"],
+  serverExternalPackages: ["pdfkit", "xlsx", "docx", "puppeteer-core", "@sparticuz/chromium"],
   /** Amplify SSR Lambda 번들에 fs로 읽는 파일들 명시 포함 */
   outputFileTracingIncludes: {
     "/api/my/member-variant/export": [
       "./lib/fonts/**/*",
       "./node_modules/pdfkit/js/data/**/*",
+    ],
+    "/api/admin/essay-generator/bulk-pdf-zip": [
+      "./node_modules/@sparticuz/chromium/**/*",
     ],
   },
 };

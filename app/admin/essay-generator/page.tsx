@@ -480,44 +480,38 @@ function SavedListPanel({
     try {
       const selectedItems = items.filter(it => selectedIds.has(it._id));
 
-      /* 세 모드 모두 한 PDF 로 합본 출력. 다이얼로그 1번 + 한 폴더 지정으로 끝.
-         서버 측 folder-print 가 각 항목 사이에 이미 page-break 를 끼워주므로
-         IDs 정렬 순서만 모드별로 다르게 주면 같은 그룹끼리 연속 페이지로 묶임. */
       const diffOrder: Record<string, number> = { 기본난도: 0, 중난도: 1, 고난도: 2, 최고난도: 3 };
 
-      let orderedItems: SavedExamItem[];
-      let title: string;
-
       if (mode === 'single') {
-        orderedItems = selectedItems;
+        /* 단일 모드 — 기존 print 다이얼로그 유지 (다이얼로그 1번이라 사용자 부담 없음) */
         const firstSk = selectedItems[0]?.sourceKey?.trim() ?? '';
-        title = sanitizeFilename(
+        const title = sanitizeFilename(
           firstSk
             ? (selectedItems.length === 1 ? firstSk : `${firstSk} 외 ${selectedItems.length - 1}건 (총 ${selectedItems.length}건)`)
             : `선택 ${selectedItems.length}건`,
         );
-      } else if (mode === 'per-source') {
-        /* sourceKey 그룹 → 그룹 내 난도 순. 같은 번호 페이지가 연속으로 묶임. */
+        await openPrintForIds(selectedItems.map(i => i._id), title);
+        return;
+      }
+
+      /* per-source / per-difficulty — 서버에서 그룹별 PDF 생성 후 ZIP 으로 묶어 한 번에 다운로드.
+         다이얼로그 1번 + ZIP 풀면 한 폴더에 PDF N개 (파일명: 그룹명.pdf). */
+      let groups: Array<{ name: string; ids: string[] }>;
+
+      if (mode === 'per-source') {
         const bySk = new Map<string, SavedExamItem[]>();
         for (const it of selectedItems) {
-          const sk = (it.sourceKey ?? '').trim() || '__nosk__';
+          const sk = (it.sourceKey ?? '').trim() || '미분류';
           if (!bySk.has(sk)) bySk.set(sk, []);
           bySk.get(sk)!.push(it);
         }
-        orderedItems = [];
-        for (const group of bySk.values()) {
-          const sorted = [...group].sort((a, b) => (diffOrder[a.difficulty] ?? 99) - (diffOrder[b.difficulty] ?? 99));
-          orderedItems.push(...sorted);
-        }
-        const skKeys = [...bySk.keys()].filter(k => k !== '__nosk__');
-        const firstSk = skKeys[0] ?? '';
-        title = sanitizeFilename(
-          skKeys.length <= 1
-            ? `${firstSk || '선택'} (${selectedItems.length}건)`
-            : `${firstSk} 외 ${skKeys.length - 1}개 번호 (총 ${selectedItems.length}건)`,
-        );
+        groups = [...bySk.entries()].map(([sk, items]) => ({
+          name: sk,
+          ids: [...items]
+            .sort((a, b) => (diffOrder[a.difficulty] ?? 99) - (diffOrder[b.difficulty] ?? 99))
+            .map(i => i._id),
+        }));
       } else {
-        /* per-difficulty: 난도 그룹 순. 같은 난도가 연속으로 묶임. */
         const byDiff = new Map<string, SavedExamItem[]>();
         for (const it of selectedItems) {
           const d = it.difficulty || '기타';
@@ -525,22 +519,36 @@ function SavedListPanel({
           byDiff.get(d)!.push(it);
         }
         const diffOrderList = ['기본난도', '중난도', '고난도', '최고난도'];
-        orderedItems = [];
-        const orderedDiffKeys: string[] = [];
-        for (const d of [...diffOrderList, ...[...byDiff.keys()].filter(x => !diffOrderList.includes(x))]) {
-          const group = byDiff.get(d);
-          if (!group || group.length === 0) continue;
-          orderedItems.push(...group);
-          orderedDiffKeys.push(d);
-        }
-        title = sanitizeFilename(
-          orderedDiffKeys.length === 1
-            ? `${orderedDiffKeys[0]} (${selectedItems.length}건)`
-            : `난도별 ${orderedDiffKeys.map(shortDifficulty).filter(Boolean).join('·')} (총 ${selectedItems.length}건)`,
-        );
+        const orderedKeys = [
+          ...diffOrderList.filter(d => byDiff.has(d)),
+          ...[...byDiff.keys()].filter(d => !diffOrderList.includes(d)),
+        ];
+        groups = orderedKeys.map(d => ({
+          name: d,
+          ids: byDiff.get(d)!.map(i => i._id),
+        }));
       }
 
-      await openPrintForIds(orderedItems.map(i => i._id), title);
+      const res = await fetch('/api/admin/essay-generator/bulk-pdf-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ groups }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(typeof d.error === 'string' ? d.error : `ZIP 생성 실패 (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      /* 서버가 Content-Disposition 으로 한글 파일명 제안 — 브라우저가 그걸 우선 사용 */
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
     } catch (err) {
       console.error('[selected-print]', err);
       alert('출력 중 오류: ' + (err instanceof Error ? err.message : String(err)));
@@ -1102,15 +1110,15 @@ function SavedListPanel({
               >×</button>
             </div>
             <div className="px-5 py-4 flex flex-col gap-2">
-              <div className="text-xs text-slate-400 mb-2">선택 <b className="text-slate-200">{selectedIds.size}</b>건 — 어떻게 정렬해 저장할까요? (모두 한 PDF, 그룹 사이 페이지 분리)</div>
+              <div className="text-xs text-slate-400 mb-2">선택 <b className="text-slate-200">{selectedIds.size}</b>건 — 어떻게 저장할까요?</div>
               <button
                 type="button"
                 disabled={printingSelected}
                 onClick={() => void runBulkPrint('single')}
                 className="text-left px-4 py-3 rounded-lg border border-blue-500/60 bg-blue-900/30 hover:bg-blue-800/40 text-blue-100 disabled:opacity-50"
               >
-                <div className="font-bold text-sm">📄 원래 순서대로</div>
-                <div className="text-[11px] text-blue-200/70 mt-0.5">목록 등장 순 그대로 한 PDF에 합본</div>
+                <div className="font-bold text-sm">📄 한번에 다 저장</div>
+                <div className="text-[11px] text-blue-200/70 mt-0.5">하나의 PDF로 합본 — 브라우저 print 다이얼로그 1번</div>
               </button>
               <button
                 type="button"
@@ -1118,8 +1126,8 @@ function SavedListPanel({
                 onClick={() => void runBulkPrint('per-source')}
                 className="text-left px-4 py-3 rounded-lg border border-emerald-500/60 bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-100 disabled:opacity-50"
               >
-                <div className="font-bold text-sm">📚 번호별로 묶어서</div>
-                <div className="text-[11px] text-emerald-200/70 mt-0.5">같은 번호(예: 18번)의 난도 변형들이 연속 페이지로 — 한 PDF, 그룹 사이 자동 페이지 분리</div>
+                <div className="font-bold text-sm">📚 번호별로 분리 (ZIP)</div>
+                <div className="text-[11px] text-emerald-200/70 mt-0.5">「18번.pdf · 19번.pdf …」 N개 PDF 를 ZIP 하나로 다운로드 (다이얼로그 1번, ZIP 풀면 한 폴더에 모두)</div>
               </button>
               <button
                 type="button"
@@ -1127,11 +1135,11 @@ function SavedListPanel({
                 onClick={() => void runBulkPrint('per-difficulty')}
                 className="text-left px-4 py-3 rounded-lg border border-fuchsia-500/60 bg-fuchsia-900/30 hover:bg-fuchsia-800/40 text-fuchsia-100 disabled:opacity-50"
               >
-                <div className="font-bold text-sm">🎯 난도별로 묶어서</div>
-                <div className="text-[11px] text-fuchsia-200/70 mt-0.5">기본 → 중 → 고 → 최고 순으로 묶여 한 PDF, 그룹 사이 자동 페이지 분리</div>
+                <div className="font-bold text-sm">🎯 난도별로 분리 (ZIP)</div>
+                <div className="text-[11px] text-fuchsia-200/70 mt-0.5">「기본난도.pdf · 중난도.pdf …」 N개 PDF 를 ZIP 하나로 다운로드</div>
               </button>
               {printingSelected && (
-                <div className="text-xs text-emerald-300 text-center py-2">생성 중… 팝업이 차단됐다면 허용해 주세요.</div>
+                <div className="text-xs text-emerald-300 text-center py-2">생성 중… (PDF 변환에 다소 시간이 걸립니다)</div>
               )}
             </div>
           </div>
