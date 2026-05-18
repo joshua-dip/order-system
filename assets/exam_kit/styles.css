@@ -1,0 +1,438 @@
+/* ===================================================================
+   영어 서·논술형 평가 디자인 시스템
+   Korean English Writing-Type Assessment PDF Stylesheet
+   ===================================================================
+   설계 원칙:
+   - A4 용지, 2페이지 구성 (시험지 1p + 정답지 1p)
+   - 한글: Noto Sans/Serif CJK KR, 영문: Times New Roman
+   - 컬러: 흑백 위주 + 강조색 (고난도 빨강, 배경 연회색)
+   - 여백 최소화하여 정보 밀도 극대화
+   =================================================================== */
+
+@page {
+  size: A4;
+  margin: 13mm 14mm 12mm 14mm;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 8.5pt;
+    color: #666;
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* 인쇄 시 배경색·배경이미지·색깔 밑줄 보존 */
+.diff-badge,
+.diff-badge.diff-mid,
+.diff-badge.diff-low,
+.q-head,
+.q-head .tag,
+.answer-header,
+.ans-q-tag,
+.ans-answer,
+.ans-table th,
+.word-count,
+.svoc-legend,
+.svoc-legend-chip,
+.svoc-S, .svoc-V, .svoc-O, .svoc-C, .svoc-M,
+.svoc-inner-S, .svoc-inner-V, .svoc-inner-O, .svoc-inner-C, .svoc-inner-M {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+body {
+  font-family: 'Noto Serif CJK KR', 'Times New Roman', serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  color: #111;
+  margin: 0;
+}
+
+/* ========== 상단 헤더 ========== */
+.header {
+  border-bottom: 2pt solid #111;
+  padding-bottom: 4pt;
+  margin-bottom: 6pt;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.title {
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: -0.5pt;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  white-space: nowrap;
+}
+.subtitle {
+  font-size: 9.5pt;
+  color: #555;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+}
+.meta {
+  margin-top: 3pt;
+  font-size: 9pt;
+  color: #444;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  display: flex;
+  flex-wrap: nowrap;  /* 학교·학년·성명·배점 4 슬롯을 한 줄에 강제 */
+  align-items: flex-end;
+  column-gap: 14pt;
+  row-gap: 8pt;
+}
+/* 라벨과 작성란 분리 — 인쇄 시 손글씨 여백 */
+.meta-item {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6pt;
+  flex: 0 1 auto;
+  white-space: nowrap;
+}
+.meta-label {
+  color: #111;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.meta-value {
+  display: inline-block;
+  min-width: 70pt;
+  min-height: 12pt;
+  padding: 0 6pt 2pt;
+  border-bottom: 0.7pt solid #333;
+  box-sizing: content-box;
+}
+/* 학교 */
+.meta-item--school .meta-value {
+  min-width: 80pt;
+}
+/* 학년: 숫자만 들어가므로 작성란을 좁힘 */
+.meta-item--grade .meta-value {
+  min-width: 24pt;
+}
+/* 성명: 좀 더 넓게 */
+.meta-item--name .meta-value {
+  min-width: 100pt;
+}
+/* 구버전 HTML: .meta-item 없이 span>b 만 있는 경우 */
+.meta > span:not(.meta-item) b { color: #111; margin-right: 6pt; }
+
+/* 난이도 배지 */
+.diff-badge {
+  display: inline-block;
+  background: #b91c1c;
+  color: #fff;
+  padding: 1pt 6pt;
+  font-size: 8.5pt;
+  font-weight: 700;
+  border-radius: 2pt;
+  margin-left: 4pt;
+  letter-spacing: 0.3pt;
+}
+.diff-badge.diff-mid { background: #d97706; }
+.diff-badge.diff-low { background: #15803d; }
+
+/* ========== 문항 헤더 (검은색 바) ========== */
+.q-head {
+  background: #111;
+  color: #fff;
+  padding: 3.5pt 9pt;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-size: 10.5pt;
+  font-weight: 600;
+  margin: 6pt 0 5pt 0;
+  letter-spacing: -0.3pt;
+}
+.q-head .tag {
+  background: #fff;
+  color: #111;
+  padding: 1pt 5pt;
+  border-radius: 2pt;
+  font-size: 8.5pt;
+  margin-right: 7pt;
+  font-weight: 700;
+}
+
+/* ========== 지문 영역 ========== */
+.passage {
+  font-family: 'Times New Roman', 'Noto Serif CJK KR', serif;
+  font-size: 9.8pt;
+  line-height: 1.45;
+  text-align: justify;
+  padding: 1pt 2pt;
+}
+/* 한국어 번역 부분 — 밑줄 + 굵게 */
+.passage .kr {
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2pt;
+}
+/* (A), (B) 같은 마커 */
+.passage .marker {
+  font-weight: 700;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+}
+
+/* ========== 하위 문항 (5-1, 5-2 등) ========== */
+.sub-q {
+  margin-top: 5pt;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+}
+.sub-q-title {
+  font-size: 10.5pt;
+  font-weight: 600;
+  margin-bottom: 3pt;
+}
+.sub-q-title .points {
+  float: right;
+  color: #888;
+  font-weight: 500;
+}
+
+/* ========== 조건 박스 ========== */
+.condition-box {
+  border: 0.8pt solid #222;
+  padding: 4pt 8pt;
+  font-size: 9.3pt;
+  line-height: 1.4;
+}
+.condition-box .label {
+  font-weight: 700;
+  margin-bottom: 1pt;
+  margin-top: 1.5pt;
+}
+.condition-box .label:first-child { margin-top: 0; }
+.condition-box ul {
+  list-style: none;
+  padding-left: 8pt;
+  margin: 0.5pt 0 1pt 0;
+}
+.condition-box ul li {
+  position: relative;
+  padding-left: 9pt;
+  margin-bottom: 0;
+}
+.condition-box ul li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+/* 보기 (청크 나열) */
+.bogi {
+  font-family: 'Times New Roman', serif;
+  font-size: 9.8pt;
+  line-height: 1.4;
+  padding: 1pt 0 0 8pt;
+}
+
+/* ========== 답안 작성 영역 ========== */
+.ans-area {
+  margin-top: 4pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+/* 조건 박스와 답안 영역이 페이지에 걸쳐 분리되지 않도록 */
+.condition-box {
+  page-break-after: avoid;
+  break-after: avoid;
+}
+.sub-q {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.ans-area .lbl {
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-weight: 600;
+  font-size: 10pt;
+  display: inline-block;
+  margin-bottom: 3pt;
+}
+.ans-area .write-row {
+  border-bottom: 0.6pt solid #333;
+  height: 13pt;
+  margin-top: 2pt;
+}
+
+/* ========== 페이지 분리 ========== */
+.page-break { page-break-before: always; }
+
+/* ========== 정답지 페이지 헤더 ========== */
+.answer-header {
+  background: #222;
+  color: #fff;
+  padding: 5pt 10pt;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  margin-bottom: 6pt;
+  /* 헤더가 페이지 말미에 혼자 남지 않게 — 뒤따르는 본문과 함께 다음 페이지로 */
+  page-break-after: avoid;
+  break-after: avoid;
+}
+.answer-header .h-title {
+  font-size: 13pt;
+  font-weight: 700;
+  letter-spacing: -0.3pt;
+}
+.answer-header .h-sub {
+  font-size: 8.7pt;
+  opacity: 0.85;
+  margin-top: 1pt;
+}
+
+/* ========== 정답 블록 (컴팩트 — 두 문제가 A4 한 페이지에 들어가도록) ========== */
+/* 두 문항의 해설을 좌·우 2 컬럼으로 흘려 한 페이지에 압축 */
+.ans-blocks {
+  column-count: 2;
+  column-gap: 10pt;
+  column-fill: balance;
+}
+.ans-block {
+  margin-bottom: 4pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+.ans-q-tag {
+  display: inline-block;
+  background: #111;
+  color: #fff;
+  padding: 1.5pt 6pt;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-size: 9pt;
+  font-weight: 600;
+  margin-bottom: 2pt;
+}
+/* 모범답안 박스 (좌측 검은 테두리 + 회색 배경) */
+.ans-answer {
+  border-left: 2.5pt solid #111;
+  padding: 2pt 7pt;
+  background: #f5f5f5;
+  font-family: 'Times New Roman', serif;
+  font-size: 9.5pt;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 2.5pt;
+}
+
+/* 각 섹션 (문법 포인트, 출제 의도 등) */
+.ans-section {
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-size: 8.4pt;
+  line-height: 1.38;
+  margin-bottom: 2pt;
+}
+.ans-section .sec-title {
+  font-weight: 700;
+  color: #111;
+  margin-right: 4pt;
+  display: block;
+  margin-bottom: 0.5pt;
+  padding-bottom: 0.5pt;
+}
+
+/* 해설 테이블 */
+.ans-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1pt;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-size: 7.9pt;
+}
+.ans-table th, .ans-table td {
+  border: 0.4pt solid #666;
+  padding: 1.5pt 4pt;
+  vertical-align: top;
+  text-align: left;
+  line-height: 1.32;
+}
+.ans-table th {
+  background: #eee;
+  font-weight: 600;
+  width: 25%;
+}
+/* 코드 인용 (원문 발췌 강조용) */
+.ans-table td code, .ans-section code {
+  font-family: 'Times New Roman', serif;
+  background: #fff;
+  padding: 0 1pt;
+  font-weight: 600;
+}
+
+/* 단어 수 검증 박스 */
+.word-count {
+  font-family: 'Times New Roman', serif;
+  font-size: 7.5pt;
+  color: #555;
+  line-height: 1.35;
+  background: #fafafa;
+  padding: 1.5pt 6pt;
+  border: 0.3pt solid #ccc;
+  margin-top: 0.5pt;
+}
+.word-count b { color: #111; font-family: 'Noto Sans CJK KR', sans-serif; }
+
+/* 답지 헤더도 살짝 컴팩트 */
+.answer-header {
+  padding: 4pt 9pt !important;
+  margin-bottom: 4pt !important;
+}
+.answer-header .h-title { font-size: 12pt !important; }
+.answer-header .h-sub { font-size: 8.3pt !important; }
+
+/* ========== 문장 구조(SVOC) 인라인 색칠 ========== */
+
+/* 범례 — 정답지 헤더 바로 아래에 한 줄로 표시 */
+.svoc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt;
+  align-items: center;
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-size: 7.8pt;
+  margin: 0 0 3pt 0;
+  padding: 2pt 5pt;
+  border: 0.4pt solid #ddd;
+  border-radius: 2pt;
+  background: #fafafa;
+}
+.svoc-legend-label { font-weight: 700; color: #333; margin-right: 2pt; }
+.svoc-legend-chip {
+  padding: 1pt 6pt;
+  border-radius: 2pt;
+  font-weight: 600;
+  color: #111;
+}
+.svoc-legend-note {
+  color: #666;
+  font-size: 7.8pt;
+  margin-left: auto;
+  font-style: italic;
+}
+
+/* 외곽 — 파스텔 하이라이트 */
+.svoc-S { background: #d6e8ff; border-radius: 2pt; padding: 0 1.5pt; }
+.svoc-V { background: #ffe2c2; border-radius: 2pt; padding: 0 1.5pt; }
+.svoc-O { background: #d8f0c8; border-radius: 2pt; padding: 0 1.5pt; }
+.svoc-C { background: #e8dbf5; border-radius: 2pt; padding: 0 1.5pt; }
+.svoc-M { background: #ececec; border-radius: 2pt; padding: 0 1.5pt; }
+
+/* 내부(절·구 안의 SVOC) — 색깔 점선 밑줄 */
+.svoc-inner-S { border-bottom: 1.4pt dotted #2563eb; }
+.svoc-inner-V { border-bottom: 1.4pt dotted #c2410c; }
+.svoc-inner-O { border-bottom: 1.4pt dotted #15803d; }
+.svoc-inner-C { border-bottom: 1.4pt dotted #6d28d9; }
+.svoc-inner-M { border-bottom: 1.4pt dotted #4b5563; }
+
+/* 매칭 실패 안내 (정답 박스 아래에 작게) */
+.svoc-unmatched {
+  font-family: 'Noto Sans CJK KR', sans-serif;
+  font-size: 7.6pt;
+  color: #888;
+  margin: 1pt 0 3pt 0;
+  padding: 1pt 4pt;
+  border-left: 1pt dashed #ccc;
+}
+.svoc-unmatched b { color: #555; }

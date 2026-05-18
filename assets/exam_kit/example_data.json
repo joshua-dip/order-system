@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "title": "영어 서·논술형 평가",
+    "difficulty": "고난도",
+    "subtitle": "2026학년도 모의고사 3회 · Lyceum English Academy",
+    "answer_subtitle": "Answer Key & Explanation · 2026학년도 모의고사 3회 · 고난도",
+    "info": [
+      { "label": "학교", "value": "" },
+      { "label": "학년", "value": "" },
+      { "label": "성명", "value": "" },
+      { "label": "배점", "value": "7점 (4점 + 3점)" }
+    ]
+  },
+  "question_set": {
+    "tag": "서·논술형 5",
+    "instruction": "다음 글을 읽고 질문에 답하시오."
+  },
+  "passage": "Many things happen in our brains that we are unaware of. The autonomic nervous system is controlled by a small group of cells deep in the brain that targets most body functions, including heart rate, blood pressure, and digestion. Other unconscious events are more directly associated with mental activity. Negative comments in the operating room about a patient under general anesthesia can influence subsequent patient feelings, even though the patient expresses no awareness of the comments. <span class=\"marker\">(A) [</span> <span class=\"kr\">10밀리초 동안만 지속되는 사진들의 빠른 스크린 디스플레이를 보는 연구 대상자들은 이미지 인식을 보고하지 않는다.</span> <span class=\"marker\">]</span> But in later tests, these same subjects score well above chance when asked to pick target pictures from a larger collection, showing that the pictures impacted memory without the subject's awareness. Essentially the same process is repeated in our daily lives. <span class=\"marker\">(B) [</span> <span class=\"kr\">우리의 지식, 기술, 경험, 그리고 편견의 많은 부분이 우리 뇌로 들어오는 인과적 입력에 대한 인식 없이 습득된다.</span> <span class=\"marker\">]</span>",
+  "questions": [
+    {
+      "id": "5-1",
+      "points": 4,
+      "prompt": "밑줄 친 (A)를 아래 조건에 맞게 영어로 쓰시오.",
+      "conditions": [
+        "본문에 제시한 우리말 해석과 의미가 일치할 것",
+        "올바른 어법을 사용하여 완전한 문장을 작성할 것",
+        "<b>주어를 수식하는 현재분사구</b>(~하고 있는)를 사용할 것",
+        "문장 내 다른 명사를 수식하는 <b>두 번째 현재분사구</b>를 포함할 것",
+        "<b>주어와 동사의 수 일치</b>에 유의하여 동사 형태를 결정할 것",
+        "16개의 단어로 답안을 작성할 것",
+        "아래 보기의 단어(구)들을 모두 사용하여 올바른 순서로 '배열'할 것"
+      ],
+      "bogi": "only 10 milliseconds / viewing / no image awareness / Research subjects / lasting / rapid screen displays / report / of pictures",
+      "answer_lines": 2,
+      "answer": {
+        "text": "Research subjects viewing rapid screen displays of pictures lasting only 10 milliseconds report no image awareness.",
+        "structure_analysis": [
+          {
+            "label": "주어 (S)",
+            "content": "<code>Research subjects</code> <b>+</b> 현재분사구 <code>viewing rapid screen displays of pictures lasting only 10 milliseconds</code> (총 12단어)"
+          },
+          {
+            "label": "동사 (V)",
+            "content": "<code>report</code> — 주어가 복수 <code>subjects</code>이므로 <b>-s 붙이지 않음</b>"
+          },
+          {
+            "label": "목적어 (O)",
+            "content": "<code>no image awareness</code>"
+          }
+        ],
+        "grammar_points": [
+          {
+            "title": "① 현재분사 수식 (1차)",
+            "content": "<code>subjects</code> ← <code>viewing ...</code> — 원래 관계절 <code>(who are) viewing ...</code>에서 <code>who are</code>가 생략된 축약 형태"
+          },
+          {
+            "title": "② 현재분사 수식 (2차)",
+            "content": "<code>pictures</code> ← <code>lasting only 10 milliseconds</code> — 원래 <code>(that are) lasting ...</code>. <b>10ms 동안 지속되는</b>은 능동 관계이므로 과거분사(lasted)가 아닌 <b>현재분사(lasting)</b>"
+          },
+          {
+            "title": "③ 주어-동사 수 일치",
+            "content": "복수 주어 <code>Research subjects</code> → 복수 동사 <code>report</code> (×reports). 주어와 동사 사이에 12단어의 수식어구가 끼어 있어 실수 유발"
+          },
+          {
+            "title": "④ 중첩 수식 순서",
+            "content": "<code>rapid screen displays</code> <b>of</b> <code>pictures lasting ...</code> — <b>displays</b>가 \"화면 표시\", 그 표시가 보여주는 대상이 <b>pictures</b>, 그 사진들이 <b>lasting ~</b>"
+          }
+        ],
+        "word_count": {
+          "total": 16,
+          "words": ["Research", "subjects", "viewing", "rapid", "screen", "displays", "of", "pictures", "lasting", "only", "10", "milliseconds", "report", "no", "image", "awareness"],
+          "note": null
+        },
+        "intent_title": "출제 의도 · 감점 포인트",
+        "intent_content": "피험자들이 무의식 상태에서 이미지를 처리한다는 실험 묘사 문장. 주어 뒤에 붙는 현재분사구 안에 또 다른 현재분사구가 중첩된 <b>이중 축약 관계절</b> 구조를 설계할 수 있는지 평가한다. 자주 나오는 오류: (1) 동사를 <code>reports</code>로 써서 수 일치 오류 — 주어는 복수 <code>subjects</code>, (2) <code>lasting</code>을 <code>lasted</code>(과거분사)로 써서 의미 오류 — \"지속된\" vs \"지속되는\"은 능동이므로 현재분사, (3) 두 개의 현재분사 위치 혼동 — <code>viewing</code>은 <code>subjects</code> 뒤, <code>lasting</code>은 <code>pictures</code> 뒤에 각각 정확히 배치해야 함."
+      }
+    },
+    {
+      "id": "5-2",
+      "points": 3,
+      "prompt": "밑줄 친 (B)를 아래 조건에 맞게 영어로 쓰시오.",
+      "conditions": [
+        "본문에 제시한 우리말 해석과 의미가 일치할 것",
+        "올바른 어법을 사용하여 완전한 문장을 작성할 것",
+        "<b>「Much of + 명사구」</b> 형태의 주어를 사용할 것",
+        "<b>수동태(be + p.p.)</b>를 사용할 것",
+        "<b>「with + 명사구」</b>의 부대상황 구문을 사용할 것",
+        "19개의 단어로 답안을 작성할 것 <span style=\"color:#888;\">(쉼표는 단어 수에 포함하지 않음)</span>",
+        "아래 보기의 단어(구)들을 모두 사용하여 올바른 순서로 '배열'할 것 (필요한 곳에 쉼표 추가)"
+      ],
+      "bogi": "of causal input / Much of / are acquired / skills / with no awareness / our knowledge / to our brains / experiences / and prejudices",
+      "answer_lines": 2,
+      "answer": {
+        "text": "Much of our knowledge, skills, experiences, and prejudices are acquired with no awareness of causal input to our brains.",
+        "grammar_points": [
+          {
+            "title": "① Much of + 명사구",
+            "content": "<code>Much of our knowledge, skills, experiences, and prejudices</code> — \"~의 많은 부분/대부분\". 부분-전체를 나타내는 주어 구조"
+          },
+          {
+            "title": "② 주어-동사 수 일치",
+            "content": "동사는 <b>are</b> (복수). <code>Much of</code>는 뒤따르는 명사의 수를 따르며, 이 문장에서 나열 명사(<code>skills, experiences, prejudices</code>)가 복수이므로 <b>복수 취급</b>. 마지막 나열 명사 기준으로 판단하는 것이 일반적"
+          },
+          {
+            "title": "③ 수동태 (be + p.p.)",
+            "content": "<code>are acquired</code> — \"습득된다\". 지식·기술·경험 등이 주어가 되므로 행위를 당하는 수동 관계"
+          },
+          {
+            "title": "④ with + 명사구 (부대상황)",
+            "content": "<code>with no awareness of ...</code> — \"~에 대한 인식 없이\". <b>「no + 명사」</b> 형태로 부정의 부대상황 표현"
+          },
+          {
+            "title": "⑤ 나열 + and 위치",
+            "content": "A, B, C<b>, and</b> D 형태의 Oxford comma 포함 병렬. <code>and</code>는 마지막 항목(<code>prejudices</code>) 앞에만 위치"
+          }
+        ],
+        "word_count": {
+          "total": 19,
+          "words": ["Much", "of", "our", "knowledge", "skills", "experiences", "and", "prejudices", "are", "acquired", "with", "no", "awareness", "of", "causal", "input", "to", "our", "brains"],
+          "note": "쉼표는 단어 수에 포함 안 함"
+        },
+        "intent_title": "출제 의도 · 감점 포인트",
+        "intent_content": "지문의 결론 문장. 부분-전체를 나타내는 <b>Much of</b> 주어에서 뒤따르는 복합 명사구와의 <b>수 일치</b>를 판별하고, 이를 <b>수동태</b> 및 <b>with 부대상황</b>과 결합할 수 있는지 평가한다. 자주 나오는 오류: (1) <code>is acquired</code>로 단수 처리 — 복합 명사구의 마지막 복수 명사와 일치시켜 <code>are</code>가 맞음, (2) <code>with awareness of</code> 또는 <code>without no awareness</code> 등 부정 중복/누락, (3) Oxford comma 위치 — <code>and</code>는 반드시 마지막 항목 앞, (4) <code>acquired with</code>를 <code>acquired by</code>로 쓰면 의미 변화 (행위자가 아니라 부대상황)."
+      }
+    }
+  ]
+}

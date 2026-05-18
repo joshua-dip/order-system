@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+{# ============ PAGE 1: 시험지 ============ #}
+<div class="header">
+  <div class="header-row">
+    <div class="title">{{ meta.title }}{% if meta.difficulty %} <span class="diff-badge">{{ meta.difficulty }}</span>{% endif %}</div>
+    <div class="subtitle">{{ meta.subtitle }}</div>
+  </div>
+  <div class="meta">
+    {% for item in meta.info %}
+    <span><b>{{ item.label }}</b>{{ item.value }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="q-head">
+  <span class="tag">{{ question_set.tag }}</span>{{ question_set.instruction }}
+</div>
+
+{# 지문: HTML 태그(<span class='kr'> 등) 포함되므로 safe 필터로 원본 삽입 #}
+<div class="passage">
+{{ passage | safe }}
+</div>
+
+{# 각 하위 문항 반복 (보통 2개: X-1, X-2) #}
+{% for q in questions %}
+<div class="sub-q">
+  <div class="sub-q-title">{{ q.id }}) {{ q.prompt }} <span class="points">[{{ q.points }}점]</span></div>
+  <div class="condition-box">
+    <div class="label">▸ 조건</div>
+    <ul>
+      {% for cond in q.conditions %}
+      <li>{{ cond | safe }}</li>
+      {% endfor %}
+    </ul>
+    <div class="label">▸ 보기</div>
+    <div class="bogi">{{ q.bogi }}</div>
+  </div>
+  <div class="ans-area">
+    <div class="lbl">Answer:</div>
+    {% for _ in range(q.answer_lines | default(2)) %}
+    <div class="write-row"></div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+{# ============ PAGE 2: 정답지 ============ #}
+<div class="page-break"></div>
+
+<div class="answer-header">
+  <div class="h-title">정답 및 해설</div>
+  <div class="h-sub">{{ meta.answer_subtitle }}</div>
+</div>
+
+{% for q in questions %}
+<div class="ans-block">
+  <div class="ans-q-tag">{{ q.id }}) [{{ q.points }}점]</div>
+  <div class="ans-answer">{{ q.answer.text }}</div>
+
+  {# 선택: 문장 구조 분석 (S/V/O) - 고난도 문제에 권장 #}
+  {% if q.answer.structure_analysis %}
+  <div class="ans-section">
+    <span class="sec-title">▸ 문장 구조 분석</span>
+    <table class="ans-table">
+      {% for row in q.answer.structure_analysis %}
+      <tr>
+        <th>{{ row.label }}</th>
+        <td>{{ row.content | safe }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {# 필수: 문법 포인트 테이블 #}
+  <div class="ans-section">
+    <span class="sec-title">▸ 문법 포인트</span>
+    <table class="ans-table">
+      {% for point in q.answer.grammar_points %}
+      <tr>
+        <th>{{ point.title | safe }}</th>
+        <td>{{ point.content | safe }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {# 필수: 단어 수 검증 - words 리스트를 loop.index로 자동 번호 매김 #}
+  <div class="ans-section">
+    <span class="sec-title">▸ 단어 수 검증 (총 {{ q.answer.word_count.total }}개)</span>
+    <div class="word-count">
+      {% for word in q.answer.word_count.words -%}
+      {{ word }}({{ loop.index }}){% if not loop.last %} / {% endif %}
+      {%- endfor %} <b>✓</b>
+      {% if q.answer.word_count.note %}&nbsp;&nbsp;※ {{ q.answer.word_count.note | safe }}{% endif %}
+    </div>
+  </div>
+
+  {# 필수: 출제 의도 + 감점 포인트 (문장 또는 테이블 형태) #}
+  <div class="ans-section">
+    <span class="sec-title">▸ {{ q.answer.intent_title | default('출제 의도 · 감점 포인트') }}</span>
+    {{ q.answer.intent_content | safe }}
+  </div>
+</div>
+{% endfor %}
+
+</body>
+</html>
