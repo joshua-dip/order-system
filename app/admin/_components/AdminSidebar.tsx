@@ -72,7 +72,15 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
           ‹
         </button>
       </div>
-      <nav className="p-3 flex-1 text-sm overflow-y-auto min-h-0">
+      <nav
+        className="p-3 flex-1 text-sm overflow-y-auto min-h-0
+          [scrollbar-gutter:stable]
+          [&::-webkit-scrollbar]:w-1.5
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:bg-slate-600/70 [&::-webkit-scrollbar-thumb]:rounded-full
+          [&::-webkit-scrollbar-thumb:hover]:bg-slate-500"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(71 85 105 / 0.7) transparent' }}
+      >
         <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
         <Link href="/admin" className={linkCls('/admin')}>
           대시보드
