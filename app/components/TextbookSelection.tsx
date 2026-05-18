@@ -130,12 +130,24 @@ function IconByok() {
   );
 }
 
+function IconFinalMock() {
+  return (
+    <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+      <rect x="9" y="3" width="6" height="4" rx="1" />
+      <path d="M9 12h6" />
+      <path d="M9 16h4" />
+    </svg>
+  );
+}
+
 /* ── Hub items ─────────────────────────────────────────────── */
 
 function useHubSections(
   analysisUnlocked: boolean,
   isMember: boolean,
-  isPremiumMember: boolean
+  isPremiumMember: boolean,
+  onFinalGate: () => void
 ): { primary: HubEntry[]; more: HubEntry[] } {
   return useMemo(() => {
     const mock: HubEntry = {
@@ -184,7 +196,44 @@ function useHubSections(
       href: '/gyogwaseo',
       interactive: true,
     };
+    const finalMock: HubEntry = {
+      id: 'final-mock',
+      title: '파이널 예비 모의고사',
+      description: isPremiumMember ? (
+        <>
+          시험 범위 설정 · 예비 시험지 제작
+          <br />
+          부교재 + 모의고사 한 번에 조합
+        </>
+      ) : (
+        <>
+          시험 범위 설정 · 예비 시험지 제작
+          <br />
+          <span className="font-semibold text-purple-700">연회원 · 월구독 전용</span>
+        </>
+      ),
+      icon: <IconFinalMock /> as ReactNode,
+      accentColor: '#7C3AED',
+      gridClassName: 'lg:col-span-2',
+      href: '/unified',
+      interactive: isPremiumMember,
+      bottomSlot: isPremiumMember ? undefined : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onFinalGate();
+          }}
+          className="inline-flex items-center gap-2 rounded-full border-2 border-purple-500 bg-purple-50 px-4 py-2 text-xs font-bold text-purple-700 transition-colors hover:border-purple-600 hover:bg-purple-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40 focus-visible:ring-offset-2"
+        >
+          이용 안내 보기
+        </button>
+      ),
+    };
+
     const more: HubEntry[] = [
+      finalMock,
       {
         id: 'workbook',
         title: '워크북 주문',
@@ -269,7 +318,7 @@ function useHubSections(
       },
     ];
     return { primary: [mock, textbook, gyogwaseo], more };
-  }, [analysisUnlocked, isMember, isPremiumMember]);
+  }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
 
 /* ── Component ─────────────────────────────────────────────── */
@@ -300,7 +349,13 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const isMember = user !== null;
   const analysisUnlocked = isMember && user.canAccessAnalysis;
   const isPremiumMember = user?.isPremiumMember === true;
-  const { primary: hubPrimary, more: hubMore } = useHubSections(analysisUnlocked, isMember, isPremiumMember);
+  const openFinalGate = () => setFinalGateOpen(true);
+  const { primary: hubPrimary, more: hubMore } = useHubSections(
+    analysisUnlocked,
+    isMember,
+    isPremiumMember,
+    openFinalGate,
+  );
 
   const renderHubGrid = (items: HubEntry[]) => (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-6" role="list">
@@ -337,109 +392,51 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
       <AppBar />
       <div className="min-h-screen motion-safe:scroll-smooth" style={{ backgroundColor: '#F8FAFC' }}>
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
-            {/* 파이널 예비 모의고사 + 변형문제 만들기 — 나란히 강조 배너 */}
+            {/* 공유자료 + 변형문제 만들기 — 나란히 강조 배너 */}
           <div className="mb-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
-            {premiumLoad ? (
-              <div
-                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md opacity-80 animate-pulse cursor-wait sm:px-7"
-                style={{
-                  background: 'linear-gradient(120deg, #1a1a6e 0%, #4b0082 55%, #7c3aed 100%)',
-                }}
-              >
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">파이널 예비 모의고사</span>
-                  <p className="text-sm font-medium text-purple-200">불러오는 중…</p>
+            <Link
+              href="/shared-resources"
+              className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+              style={{
+                background: 'linear-gradient(120deg, #064e3b 0%, #047857 55%, #0d9488 100%)',
+              }}
+            >
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-emerald-300 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-emerald-950 shadow">
+                    FREE
+                  </span>
+                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">공유자료</span>
                 </div>
+                <p className="text-sm font-medium text-emerald-100">
+                  모의고사·교재 학습자료를 <strong className="text-white">무료로 다운로드</strong> (HWP · PDF)
+                </p>
+                <p className="mt-0.5 text-xs text-emerald-200/90">
+                  회원가입 불필요 · 회차별·카테고리별·번호별 · 묶음 ZIP 한 번에 받기
+                </p>
               </div>
-            ) : user?.isPremiumMember ? (
-              <Link
-                href="/unified"
-                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
-                style={{
-                  background: 'linear-gradient(120deg, #1a1a6e 0%, #4b0082 55%, #7c3aed 100%)',
-                }}
-              >
-                <div className="flex min-w-0 flex-col gap-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-gray-900 shadow">
-                      NEW
-                    </span>
-                    <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">파이널 예비 모의고사</span>
-                  </div>
-                  <p className="text-sm font-medium text-purple-200">
-                    시험 범위를 설정하고 예비 시험지를 제작하기에 가장 적합한 기능입니다
-                  </p>
-                  <p className="mt-0.5 text-xs text-purple-300">
-                    부교재 + 모의고사를 한 번에 조합 · 유형별 문항수 개별 조정 · 시험범위 저장/불러오기
-                  </p>
-                </div>
-                <div className="ml-4 flex shrink-0 flex-col items-center gap-2 sm:ml-6">
-                  <svg
-                    className="h-10 w-10 text-purple-300 transition-transform duration-200 group-hover:scale-110 sm:h-12 sm:w-12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-                    <rect x="9" y="3" width="6" height="4" rx="1" />
-                    <path d="M9 12h6" />
-                    <path d="M9 16h4" />
+              <div className="ml-4 flex shrink-0 flex-col items-center gap-2 sm:ml-6">
+                <svg
+                  className="h-10 w-10 text-emerald-200 transition-transform duration-200 group-hover:scale-110 sm:h-12 sm:w-12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  <path d="M12 11v6" />
+                  <path d="M9 14l3 3 3-3" />
+                </svg>
+                <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
+                  자료 받으러 가기
+                  <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
                   </svg>
-                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
-                    시작하기
-                    <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setFinalGateOpen(true)}
-                className="group flex min-h-[7.5rem] w-full items-center justify-between overflow-hidden rounded-2xl px-5 py-5 text-left shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
-                style={{
-                  background: 'linear-gradient(120deg, #1a1a6e 0%, #4b0082 55%, #7c3aed 100%)',
-                }}
-              >
-                <div className="flex min-w-0 flex-col gap-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-gray-900 shadow">
-                      NEW
-                    </span>
-                    <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">파이널 예비 모의고사</span>
-                  </div>
-                  <p className="text-sm font-medium text-purple-200">
-                    시험 범위를 설정하고 예비 시험지를 제작하기에 가장 적합한 기능입니다
-                  </p>
-                  <p className="mt-0.5 text-xs text-amber-200">
-                    연회원 또는 월구독 회원 전용 · 클릭하면 이용 안내와 요금을 확인할 수 있습니다
-                  </p>
-                </div>
-                <div className="ml-4 flex shrink-0 flex-col items-center gap-2 sm:ml-6">
-                  <svg
-                    className="h-10 w-10 text-purple-300 transition-transform duration-200 group-hover:scale-110 sm:h-12 sm:w-12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-                    <rect x="9" y="3" width="6" height="4" rx="1" />
-                    <path d="M9 12h6" />
-                    <path d="M9 16h4" />
-                  </svg>
-                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
-                    이용 안내
-                  </span>
-                </div>
-              </button>
-            )}
+                </span>
+              </div>
+            </Link>
 
             {premiumLoad ? (
               <div
@@ -652,10 +649,34 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
 
           <section className="mt-8" aria-labelledby="hub-primary-heading">
             <div className="mb-4">
-              <h2 id="hub-primary-heading" className="text-lg font-bold text-slate-900 tracking-tight">
-                모의고사 · 부교재 · 교과서 자료 주문
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">가장 많이 이용하시는 주문입니다. 아래에서 바로 시작할 수 있어요.</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <h2 id="hub-primary-heading" className="text-lg font-bold text-slate-900 tracking-tight">
+                  자료 주문서 작성
+                </h2>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800"
+                  title="제작 후 전달까지 걸리는 시간"
+                >
+                  ⏱ 최대 1일 소요
+                </span>
+              </div>
+              <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+                바로 받아보는 자료가 아니라 <strong className="text-slate-800">주문 제작</strong>으로 진행됩니다.
+                편집 방식이 워낙 다양해 정성껏 만드는 데 <strong className="text-slate-800">최대 1일</strong>까지 걸릴 수 있어요.
+                {' '}
+                <a
+                  href="https://blog.naver.com/englishcloud_"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-0.5 font-semibold text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-800 hover:decoration-blue-500"
+                >
+                  편집 양식 안내 보기
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M7 17L17 7" />
+                    <path d="M9 7h8v8" />
+                  </svg>
+                </a>
+              </p>
             </div>
             {renderHubGrid(hubPrimary)}
           </section>

@@ -10,6 +10,7 @@ interface ExamQuestion {
   questionBody?: string;   // 문제본문 (지문)
   choices?: string;        // 선택지 (\n 구분)
   summary?: string;        // 요약문 (요약 유형)
+  glossary?: string;       // 별단어 (*word: 뜻, \n 구분)
   groupId?: string;        // 공통지문 묶음 ID
   score: number; isSubjective: boolean;
 }
@@ -40,6 +41,51 @@ const EXCEL_TYPE_MAP: Record<string, string> = {
 };
 const SUBJECTIVE_TYPE_SET = new Set(['서술형', '영작', '요약서술']);
 
+// 문제제목 키워드 → 자동 분류 후보. 키워드는 부분일치 (includes) 기준이라 더 구체적인 패턴을 먼저 둠.
+const TITLE_KEYWORD_RULES: { keyword: string; type: string }[] = [
+  { keyword: '일치하지 않는', type: '내용불일치' },
+  { keyword: '내용 불일치', type: '내용불일치' },
+  { keyword: '내용불일치', type: '내용불일치' },
+  { keyword: '내용 일치', type: '내용일치' },
+  { keyword: '내용일치', type: '내용일치' },
+  { keyword: '문장이 들어가기에', type: '삽입' },
+  { keyword: '들어갈 문장', type: '삽입' },
+  { keyword: '글의 순서', type: '순서' },
+  { keyword: '이어질 글의 순서', type: '순서' },
+  { keyword: '의미', type: '함의' },
+  { keyword: '요지', type: '요지' },
+  { keyword: '주제', type: '주제' },
+  { keyword: '제목', type: '제목' },
+  { keyword: '목적', type: '글의목적' },
+  { keyword: '심경', type: '심경' },
+  { keyword: '분위기', type: '심경' },
+  { keyword: '빈칸', type: '빈칸' },
+  { keyword: '순서', type: '순서' },
+  { keyword: '연결사', type: '연결사' },
+  { keyword: '어법', type: '어법' },
+  { keyword: '어휘', type: '어휘' },
+  { keyword: '쓰임', type: '어휘' },
+  { keyword: '지칭', type: '지칭추론' },
+  { keyword: '요약', type: '요약' },
+];
+function detectQuestionType(title: string): string | null {
+  if (!title) return null;
+  for (const rule of TITLE_KEYWORD_RULES) {
+    if (title.includes(rule.keyword)) return rule.type;
+  }
+  return null;
+}
+
+// 한 줄에 여러 별단어가 섞여 있는 경우 항목별로 분리. 보관 형식은 「word: 뜻」 (앞의 * 제거).
+// 예: "*sequester: 격리하다 phytoplankton: 식물성 플랑크톤" → ["sequester: 격리하다", "phytoplankton: 식물성 플랑크톤"]
+// 단어 토큰은 알파벳/한글만 (숫자는 제외해 의미 안의 "1:2 비율" 같은 콜론으로 분할되는 일을 방지).
+function splitGlossaryEntries(line: string): string[] {
+  const parts = line.trim().split(/\s+(?=\*?[A-Za-z가-힣][A-Za-z가-힣\-]*\s*:)/);
+  return parts
+    .map((p) => p.trim().replace(/^\*+\s*/, ''))
+    .filter(Boolean);
+}
+
 type ExcelQuestion = { num: number; questionType: string; score: number; isSubjective: boolean };
 
 async function parseExamExcel(file: File): Promise<ExcelQuestion[]> {
@@ -57,7 +103,7 @@ async function parseExamExcel(file: File): Promise<ExcelQuestion[]> {
   }).filter((q) => q.num > 0);
 }
 
-type GroupQuestion = { qNum: string; title: string; choices: string; score: number; summary: string; showSummary: boolean; };
+type GroupQuestion = { qNum: string; title: string; choices: string; score: number; summary: string; showSummary: boolean; glossary: string; questionType: string; };
 
 export default function VipExamsPage() {
   const [schools, setSchools] = useState<School[]>([]);
@@ -107,7 +153,7 @@ export default function VipExamsPage() {
     body: string;      // 공통 문제본문
     bodySelection: string;
     matching: boolean;
-    matchResult: { textbook: string; sourceKey: string; similarity: number } | null;
+    matchResult: { textbook: string; sourceKey: string; similarity: number; passageSource?: string; inScope?: boolean } | null;
     noMatch: boolean;
   } | null>(null);
   const pdfInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -429,7 +475,7 @@ export default function VipExamsPage() {
     const groupQuestions: GroupQuestion[] = groupNums.map((n) => {
       const gq = exam?.questions[n];
       const isYoyak = (gq?.questionType || '').includes('요약');
-      return { qNum: n, title: gq?.questionTitle || '', choices: gq?.choices || '', score: gq?.score ?? 0, summary: gq?.summary || '', showSummary: isYoyak || !!(gq?.summary) };
+      return { qNum: n, title: gq?.questionTitle || '', choices: gq?.choices || '', score: gq?.score ?? 0, summary: gq?.summary || '', showSummary: isYoyak || !!(gq?.summary), glossary: gq?.glossary || '', questionType: gq?.questionType || '' };
     });
     // 공통 문제본문: 기준 문항 것 사용 (그룹은 동기화됨)
     setTextModal({ examId, qNum, groupQuestions, body: q?.questionBody || '', bodySelection: '', matching: false, matchResult: null, noMatch: false });
@@ -439,10 +485,13 @@ export default function VipExamsPage() {
     if (!textModal || textModal.body.trim().length < 15) return;
     setTextModal((prev) => prev && ({ ...prev, matching: true, matchResult: null, noMatch: false }));
     try {
+      const examForScope = localExams[textModal.examId] || exams.find((e) => e.id === textModal.examId);
+      const textbooks = examForScope?.examScope ?? [];
+      const passageIds = examForScope?.examScopePassages ?? [];
       const res = await fetch('/api/my/vip/passages/match', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: textModal.body }),
+        body: JSON.stringify({ text: textModal.body, textbooks, passageIds }),
       });
       const d = await res.json();
       if (d.match) {
@@ -468,14 +517,16 @@ export default function VipExamsPage() {
     const existingGroupId = needsGroup
       ? groupQuestions.map(gq => newQs[gq.qNum]?.groupId).find(Boolean) || `grp-${Date.now()}`
       : undefined;
-    groupQuestions.forEach(({ qNum, title, choices, score, summary }) => {
+    groupQuestions.forEach(({ qNum, title, choices, score, summary, glossary, questionType }) => {
       const existing = newQs[qNum] || { score: 0, isSubjective: false };
       const patch: Partial<ExamQuestion> = {
         questionTitle: title,
         questionBody: body,
         choices,
         summary,
+        glossary,
         score,
+        questionType: questionType || '기타',
         questionText: title || body.slice(0, 60) || '',
         ...(needsGroup ? { groupId: existingGroupId } : {}),
       };
@@ -570,10 +621,14 @@ export default function VipExamsPage() {
       const circleNums = '①②③④⑤';
 
       const bodyHtml = (q.questionBody || '').replace(/\n/g, '<br>').replace(/<u>(.*?)<\/u>/g, '<u>$1</u>');
+      const glossaryHtml = (q.glossary || '').trim()
+        ? `<div class="glossary">${(q.glossary || '').trim().replace(/\n/g, '<br>')}</div>`
+        : '';
 
       return `
         ${isGroupStart && q.questionBody ? `
           <div class="passage">${bodyHtml}</div>
+          ${glossaryHtml}
         ` : ''}
         <div class="question">
           <div class="q-header">
@@ -581,7 +636,7 @@ export default function VipExamsPage() {
             <span class="q-title">${q.questionTitle || ''}</span>
             <span class="q-score">[${q.score || 0}점]</span>
           </div>
-          ${!q.questionBody || groupId ? '' : `<div class="q-body">${bodyHtml}</div>`}
+          ${!q.questionBody || groupId ? '' : `<div class="q-body">${bodyHtml}</div>${glossaryHtml}`}
           ${choiceLines.length ? `
             <ol class="choices">
               ${choiceLines.map((c, i) => `<li><span class="circle">${circleNums[i] || (i+1)}</span>${c.replace(/^[①②③④⑤]\s*/, '')}</li>`).join('')}
@@ -618,6 +673,7 @@ export default function VipExamsPage() {
   .choices li { display: flex; gap: 6px; margin-bottom: 2px; font-size: 9.5pt; }
   .circle { min-width: 16px; }
   .summary { margin: 4px 0 0 20px; font-size: 9pt; color: #444; border: 1px dashed #aaa; padding: 4px 8px; }
+  .glossary { margin: 2px 0 8px 0; padding: 4px 12px; font-size: 8.5pt; color: #555; font-style: italic; border-top: 1px dotted #aaa; }
   .answer-box { margin-top: 6px; margin-left: 20px; border: 1px solid #aaa; height: 36px; }
   u { text-decoration: underline; }
   @media print { body { padding: 10mm 12mm; } }
@@ -1482,6 +1538,25 @@ export default function VipExamsPage() {
           });
         };
 
+        // 별단어 드래그 이동 (대상 문항 인덱스). 여러 줄 + 한 줄 다중 항목 지원, 중복 제거.
+        const moveGlossaryToGQ = (gqIdx: number) => {
+          const sel = textModal.bodySelection;
+          setTextModal((prev) => {
+            if (!prev) return prev;
+            const i = prev.body.indexOf(sel);
+            const newBody = i >= 0
+              ? (prev.body.slice(0, i) + prev.body.slice(i + sel.length)).replace(/\n{3,}/g, '\n\n').trim()
+              : prev.body;
+            const gqs = [...prev.groupQuestions];
+            const existingLines = (gqs[gqIdx].glossary || '').split('\n').map((s) => s.trim()).filter(Boolean);
+            const seen = new Set(existingLines);
+            const additions = sel.split('\n').flatMap((s) => splitGlossaryEntries(s)).filter((s) => s && !seen.has(s));
+            const merged = [...existingLines, ...additions].join('\n');
+            gqs[gqIdx] = { ...gqs[gqIdx], glossary: merged };
+            return { ...prev, groupQuestions: gqs, body: newBody, bodySelection: '' };
+          });
+        };
+
         // 문제제목 드래그 이동 (대상 문항 인덱스)
         const moveTitleToGQ = (gqIdx: number) => {
           const sel = textModal.bodySelection;
@@ -1499,7 +1574,7 @@ export default function VipExamsPage() {
 
         // 문항별 패널 (문제제목 + 배점 + 선택지)
         const QuestionPanel = ({ gq, idx }: { gq: GroupQuestion; idx: number }) => (
-          <div className={`flex flex-col shrink-0 border-r border-zinc-800 p-3 gap-2 overflow-y-auto ${isGroup ? 'w-64' : 'w-56'}`}>
+          <div className={`flex flex-col shrink-0 border-r border-zinc-800 p-3 gap-2 overflow-y-auto scrollbar-thin ${isGroup ? 'w-80' : 'w-[26rem]'}`}>
             {/* 문제제목 */}
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">
@@ -1512,6 +1587,61 @@ export default function VipExamsPage() {
                   여기로
                 </button>
               )}
+              {(() => {
+                if (gq.title.includes('<u>')) return null;
+                const m = gq.title.match(/(밑줄\s*친\s+)(.+?)(\s*가)/);
+                if (!m) return null;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = gq.title.replace(/(밑줄\s*친\s+)(.+?)(\s*가)/, '$1<u>$2</u>$3');
+                      updateGQ(idx, { title: next });
+                    }}
+                    title={`'${m[2].trim()}' 부분에 <u> 밑줄 태그 자동 적용`}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-200 hover:bg-sky-400/40 hover:text-white border border-sky-600/40 text-[10px] font-semibold transition-colors animate-pulse"
+                  >
+                    <span className="underline">U</span>
+                    밑줄
+                  </button>
+                );
+              })()}
+              <div className="ml-auto flex items-center gap-1.5">
+                {(() => {
+                  const suggested = detectQuestionType(gq.title);
+                  if (!suggested || gq.questionType === suggested) return null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => updateGQ(idx, { questionType: suggested })}
+                      title={`제목에서 '${TITLE_KEYWORD_RULES.find((r) => r.type === suggested)?.keyword}' 감지 → ${suggested} 유형으로 설정`}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-yellow-500/30 text-yellow-100 hover:bg-yellow-400/60 hover:text-white text-[10px] font-semibold animate-pulse shadow-[0_0_10px_rgba(250,204,21,0.45)] transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                      </svg>
+                      {suggested}
+                    </button>
+                  );
+                })()}
+                {(() => {
+                  const exam = localExams[textModal.examId] || exams.find((e) => e.id === textModal.examId);
+                  const isSub = exam ? parseInt(gq.qNum) > (exam.objectiveCount || 0) : false;
+                  const opts = isSub ? SUBJECTIVE_TYPES : OBJECTIVE_TYPES;
+                  const inList = !!gq.questionType && opts.includes(gq.questionType);
+                  return (
+                    <select
+                      value={inList ? gq.questionType : ''}
+                      onChange={(e) => updateGQ(idx, { questionType: e.target.value })}
+                      title="유형 (미지정 시 기타로 저장)"
+                      className="px-1.5 py-0.5 rounded-md bg-zinc-900/80 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 focus:outline-none focus:border-zinc-500 text-[10px] cursor-pointer transition-colors [&>option]:bg-zinc-900 [&>option]:text-zinc-100"
+                    >
+                      <option value="">유형…</option>
+                      {opts.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  );
+                })()}
+              </div>
             </div>
             <textarea
               value={gq.title}
@@ -1523,7 +1653,7 @@ export default function VipExamsPage() {
               }}
               placeholder="다음 글의 요지로 가장 적절한 것은?"
               rows={isGroup ? 3 : undefined}
-              className={`w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed ${isGroup ? '' : 'flex-1'}`}
+              className={`w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed scrollbar-thin ${isGroup ? '' : 'flex-1'}`}
             />
             {/* 배점 */}
             <div className="shrink-0 flex items-center gap-2">
@@ -1560,6 +1690,49 @@ export default function VipExamsPage() {
                 );
               })()}
             </div>
+            {/* 별단어 — 본문에 *가 있거나 이미 저장된 데이터가 있을 때만 노출 */}
+            {(!!gq.glossary.trim() || textModal.body.includes('*')) && (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">별단어</span>
+                  {textModal.bodySelection && /^\s*\*\S/.test(textModal.bodySelection) && (
+                    <button onClick={() => moveGlossaryToGQ(idx)}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/25 text-amber-300 hover:bg-amber-500/40 transition-colors text-[10px] animate-pulse">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                      여기로
+                    </button>
+                  )}
+                </div>
+                {(() => {
+                  const lines = (gq.glossary || '').split('\n');
+                  const entries = [...lines];
+                  while (entries.length < 2) entries.push('');
+                  if (entries[entries.length - 1] !== '') entries.push('');
+                  const handleEdit = (i: number, val: string) => {
+                    const next = [...entries];
+                    next[i] = val;
+                    while (next.length > 0 && next[next.length - 1] === '') next.pop();
+                    updateGQ(idx, { glossary: next.join('\n') });
+                  };
+                  return (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {entries.map((line, i) => (
+                        <div key={i} className="flex items-center gap-1">
+                          <span className="text-[10px] text-amber-500/70 shrink-0 w-3 text-right">{i + 1}</span>
+                          <input
+                            type="text"
+                            value={line}
+                            onChange={(e) => handleEdit(i, e.target.value)}
+                            placeholder={i === 0 ? 'evaporate: 증발시키다' : ''}
+                            className="flex-1 min-w-0 px-2 py-1 rounded-lg bg-amber-950/30 border border-amber-800/50 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-700 text-[11px]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </>
+            )}
             {/* 선택지 */}
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">선택지</span>
@@ -1583,7 +1756,7 @@ export default function VipExamsPage() {
                       lines[n-1] = e.target.value;
                       updateGQ(idx, { choices: lines.join('\n') });
                     }}
-                    className="flex-1 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed"
+                    className="flex-1 px-2 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed scrollbar-thin"
                   />
                 </div>
               );
@@ -1597,7 +1770,7 @@ export default function VipExamsPage() {
                 </div>
                 <textarea value={gq.summary} rows={3} placeholder="요약문..."
                   onChange={(e) => updateGQ(idx, { summary: e.target.value })}
-                  className="w-full px-2 py-1.5 rounded-xl bg-amber-950/30 border border-amber-800/50 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-700 text-xs resize-none"
+                  className="w-full px-2 py-1.5 rounded-xl bg-amber-950/30 border border-amber-800/50 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-700 text-xs resize-none scrollbar-thin"
                 />
               </div>
             ) : (
@@ -1629,9 +1802,23 @@ export default function VipExamsPage() {
                   )}
                   <span className="text-sm font-medium text-zinc-100">문항 세부 정보</span>
                   {textModal.matchResult && (
-                    <span className="flex items-center gap-1 text-[11px] text-cyan-400">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      출처 찾음 ({textModal.matchResult.similarity}%) · {textModal.matchResult.textbook} {textModal.matchResult.sourceKey}
+                    <span className="flex flex-col text-[11px] text-cyan-400 leading-tight">
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        출처 찾음 ({textModal.matchResult.similarity}%) · {textModal.matchResult.textbook} {textModal.matchResult.sourceKey}
+                        <span
+                          title={textModal.matchResult.inScope ? '입력된 시험범위 내에서 찾음' : '시험범위에서 못 찾아 전체 데이터에서 찾음'}
+                          className={`ml-1 px-1.5 py-[1px] rounded text-[9px] font-medium ${textModal.matchResult.inScope ? 'bg-emerald-500/20 text-emerald-300' : 'bg-zinc-700/60 text-zinc-300'}`}
+                        >
+                          {textModal.matchResult.inScope ? '범위' : '전체'}
+                        </span>
+                      </span>
+                      {textModal.matchResult.passageSource && (
+                        <span className="flex items-center gap-1 mt-0.5 text-[10px] text-cyan-400/70">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                          원문출처 · {textModal.matchResult.passageSource}
+                        </span>
+                      )}
                     </span>
                   )}
                   {textModal.noMatch && <span className="text-[11px] text-zinc-600">일치 지문 없음</span>}
@@ -1681,8 +1868,104 @@ export default function VipExamsPage() {
                       }
                     }}
                     placeholder="지문을 붙여넣으세요..."
-                    className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0"
+                    className="flex-1 w-full px-2.5 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 text-xs resize-none leading-relaxed min-h-0 scrollbar-thin"
                   />
+                  {/* 별단어 감지 (*word: 뜻) — 한 줄 다중 항목 자동 분리 */}
+                  {(() => {
+                    const STAR_RE = /^\s*\*[^\s*][^\n]*$/gm;
+                    const matches = textModal.body.match(STAR_RE);
+                    if (!matches || matches.length === 0) return null;
+                    const entries = matches.flatMap((s) => splitGlossaryEntries(s));
+                    if (entries.length === 0) return null;
+                    return (
+                      <div className="shrink-0 rounded-lg bg-amber-950/40 border border-amber-700/50 px-3 py-2 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
+                        <span className="text-[11px] text-amber-300 flex-1">별단어 {entries.length}건 감지 — {entries[0].slice(0, 24)}{entries[0].length > 24 ? '…' : ''}</span>
+                        <button onClick={() => {
+                          const detectedLines = matches.flatMap((s) => splitGlossaryEntries(s)).filter(Boolean);
+                          setTextModal((prev) => {
+                            if (!prev) return prev;
+                            const newBody = prev.body.replace(/^\s*\*[^\s*][^\n]*$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+                            const gqs = prev.groupQuestions.map((gq) => {
+                              const existing = (gq.glossary || '').split('\n').map((s) => s.trim()).filter(Boolean);
+                              const seen = new Set(existing);
+                              const additions = detectedLines.filter((s) => !seen.has(s));
+                              return { ...gq, glossary: [...existing, ...additions].join('\n') };
+                            });
+                            return { ...prev, body: newBody, groupQuestions: gqs, bodySelection: '' };
+                          });
+                        }} className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[11px] transition-colors shrink-0">별단어로 이동</button>
+                      </div>
+                    );
+                  })()}
+                  {/* 밑줄 후보 감지 — 제목의 「밑줄 친 X 가」/「<u>X</u>」 또는 본문 안의 「밑줄 친 X 가」에서 X 를 추출해 본문의 적용 가능 위치를 찾음. 따옴표(곡선/직선) 차이는 정규화 후 비교. */}
+                  {(() => {
+                    // 곡선/직선 따옴표·아포스트로피 통일 (UTF-16 단일 code unit 기준이라 길이는 보존).
+                    const normalize = (s: string) =>
+                      s.replace(/[‘’‚‛′]/g, "'")
+                       .replace(/[“”„‟″]/g, '"');
+                    // 본문 내 phrase 의 「적용 가능」 첫 위치 (이미 <u>로 감싸졌거나 「밑줄 친 」 직후의 자기참조 위치는 건너뜀).
+                    const findApplicableIndex = (body: string, phrase: string): number => {
+                      const nbody = normalize(body);
+                      const nphrase = normalize(phrase);
+                      if (!nphrase) return -1;
+                      let pos = 0;
+                      while (pos <= nbody.length) {
+                        const found = nbody.indexOf(nphrase, pos);
+                        if (found < 0) return -1;
+                        const before = nbody.slice(Math.max(0, found - 3), found);
+                        const after = nbody.slice(found + nphrase.length, found + nphrase.length + 4);
+                        if (before === '<u>' && after === '</u>') { pos = found + nphrase.length; continue; }
+                        const stemPrefix = nbody.slice(Math.max(0, found - 8), found);
+                        if (/밑줄\s*친\s*$/.test(stemPrefix)) { pos = found + nphrase.length; continue; }
+                        return found;
+                      }
+                      return -1;
+                    };
+                    const candidates: string[] = [];
+                    const seen = new Set<string>();
+                    const tryAdd = (raw: string | undefined) => {
+                      if (!raw) return;
+                      const cleaned = raw.trim().replace(/<\/?u>/g, '').trim();
+                      if (!cleaned) return;
+                      const key = normalize(cleaned);
+                      if (seen.has(key)) return;
+                      if (findApplicableIndex(textModal.body, cleaned) < 0) return;
+                      seen.add(key);
+                      candidates.push(cleaned);
+                    };
+                    for (const gq of textModal.groupQuestions) {
+                      tryAdd(gq.title.match(/밑줄\s*친\s+(.+?)\s*가/)?.[1]);
+                      const uRe = /<u>([\s\S]+?)<\/u>/g;
+                      let um: RegExpExecArray | null;
+                      while ((um = uRe.exec(gq.title)) !== null) tryAdd(um[1]);
+                    }
+                    const bodyRe = /밑줄\s*친\s+(.+?)\s*가/g;
+                    let bm: RegExpExecArray | null;
+                    while ((bm = bodyRe.exec(textModal.body)) !== null) tryAdd(bm[1]);
+                    if (candidates.length === 0) return null;
+                    const preview = candidates[0].length > 28 ? candidates[0].slice(0, 28) + '…' : candidates[0];
+                    return (
+                      <div className="shrink-0 rounded-lg bg-sky-950/40 border border-sky-700/50 px-3 py-2 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 19h18M5 5v9a4 4 0 008 0V5" /></svg>
+                        <span className="text-[11px] text-sky-300 flex-1">밑줄 후보 {candidates.length}건 — {preview}</span>
+                        <button onClick={() => {
+                          setTextModal((prev) => {
+                            if (!prev) return prev;
+                            let next = prev.body;
+                            for (const phrase of candidates) {
+                              const idx2 = findApplicableIndex(next, phrase);
+                              if (idx2 < 0) continue;
+                              // 본문 원본 글자(곡선 따옴표 등)를 보존한 채 그 구간만 <u>로 감쌈.
+                              const original = next.slice(idx2, idx2 + phrase.length);
+                              next = next.slice(0, idx2) + `<u>${original}</u>` + next.slice(idx2 + phrase.length);
+                            }
+                            return { ...prev, body: next };
+                          });
+                        }} className="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[11px] transition-colors shrink-0">&lt;u&gt; 적용</button>
+                      </div>
+                    );
+                  })()}
                   {/* 빈칸 감지 */}
                   {textModal.body.match(/ {2,}/g) && (() => {
                     const blanks = textModal.body.match(/ {2,}/g)!;
@@ -1692,6 +1975,85 @@ export default function VipExamsPage() {
                         <span className="text-[11px] text-orange-300 flex-1">연속 공백 {blanks.length}곳 → &lt;u&gt;_____&lt;/u&gt; 변환</span>
                         <button onClick={() => setTextModal((prev) => prev && ({ ...prev, body: prev.body.replace(/ {2,}/g, '<u>_____</u>') }))}
                           className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] transition-colors shrink-0">변환</button>
+                      </div>
+                    );
+                  })()}
+                  {/* 어법 ①…⑤ 자동 밑줄 OR 선택지 ①…⑤ 자동 이동 — 어법 유형이면 동그라미 뒤 첫 단어를 <u>로 감쌈 */}
+                  {(() => {
+                    const targetIdx = textModal.groupQuestions.findIndex((g) => g.qNum === textModal.qNum);
+                    const target = textModal.groupQuestions[targetIdx >= 0 ? targetIdx : 0];
+                    if (!target) return null;
+                    const isGrammar = target.questionType === '어법' || target.title.includes('어법');
+                    const markers = ['①','②','③','④','⑤'];
+
+                    // 어법 모드: 동그라미 뒤 첫 단어 (이미 <u>면 제외) 카운트
+                    if (isGrammar) {
+                      const pending: { circle: string }[] = [];
+                      for (const c of markers) {
+                        const re = new RegExp(`${c}\\s*([A-Za-z][A-Za-z'\\-]*)`);
+                        const m = textModal.body.match(re);
+                        if (!m) continue;
+                        // 이미 <u>로 감싸졌는지 확인 (circle + 공백 + <u>)
+                        const wrapped = new RegExp(`${c}\\s*<u>`);
+                        if (wrapped.test(textModal.body)) continue;
+                        pending.push({ circle: c });
+                      }
+                      if (pending.length < 1) return null;
+                      return (
+                        <div className="shrink-0 rounded-lg bg-sky-950/40 border border-sky-700/50 px-3 py-2 flex items-center gap-2">
+                          <svg className="w-3.5 h-3.5 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 19h18M5 5v9a4 4 0 008 0V5" /></svg>
+                          <span className="text-[11px] text-sky-300 flex-1">어법 밑줄 {pending.length}곳 자동 적용 — 동그라미 뒤 단어를 &lt;u&gt;로 감쌈 (다단어는 직접 확장)</span>
+                          <button onClick={() => {
+                            setTextModal((prev) => {
+                              if (!prev) return prev;
+                              let next = prev.body;
+                              for (const c of markers) {
+                                const wrapped = new RegExp(`${c}\\s*<u>`);
+                                if (wrapped.test(next)) continue;
+                                const re = new RegExp(`(${c}\\s*)([A-Za-z][A-Za-z'\\-]*)`);
+                                next = next.replace(re, '$1<u>$2</u>');
+                              }
+                              return { ...prev, body: next };
+                            });
+                          }} className="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[11px] transition-colors shrink-0">&lt;u&gt; 5곳 적용</button>
+                        </div>
+                      );
+                    }
+
+                    // MC 모드: 선택지 자동 이동
+                    const startIdx = textModal.body.indexOf('①');
+                    if (startIdx < 0) return null;
+                    const tail = textModal.body.slice(startIdx);
+                    const parts = tail.split(/(?=[①②③④⑤])/)
+                      .map((s) => s.replace(/^[①②③④⑤\s]+/, '').trim())
+                      .filter(Boolean)
+                      .slice(0, 5);
+                    if (parts.length < 4) return null;
+                    if ((target.choices || '').trim()) return null;
+                    const preview = parts[0].slice(0, 22) + (parts[0].length > 22 ? '…' : '');
+                    return (
+                      <div className="shrink-0 rounded-lg bg-indigo-950/40 border border-indigo-700/50 px-3 py-2 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor"><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6" /></svg>
+                        <span className="text-[11px] text-indigo-300 flex-1">선택지 {parts.length}개 감지 — ① {preview}</span>
+                        <button onClick={() => {
+                          setTextModal((prev) => {
+                            if (!prev) return prev;
+                            const sIdx = prev.body.indexOf('①');
+                            if (sIdx < 0) return prev;
+                            const t = prev.body.slice(sIdx);
+                            const ps = t.split(/(?=[①②③④⑤])/)
+                              .map((s) => s.replace(/^[①②③④⑤\s]+/, '').trim())
+                              .filter(Boolean)
+                              .slice(0, 5);
+                            while (ps.length < 5) ps.push('');
+                            const newBody = prev.body.slice(0, sIdx).replace(/\s+$/, '');
+                            const tIdx = prev.groupQuestions.findIndex((g) => g.qNum === prev.qNum);
+                            const useIdx = tIdx >= 0 ? tIdx : 0;
+                            const gqs = [...prev.groupQuestions];
+                            gqs[useIdx] = { ...gqs[useIdx], choices: ps.join('\n') };
+                            return { ...prev, groupQuestions: gqs, body: newBody, bodySelection: '' };
+                          });
+                        }} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] transition-colors shrink-0">{textModal.qNum}번 선택지로 이동</button>
                       </div>
                     );
                   })()}
@@ -1717,7 +2079,7 @@ export default function VipExamsPage() {
                             if (!prev) return prev;
                             const toAdd = missing.map((n) => {
                               const q = currentExam?.questions[String(n)];
-                              return { qNum: String(n), title: q?.questionTitle || '', choices: q?.choices || '', score: q?.score ?? 0, summary: q?.summary || '', showSummary: !!(q?.summary) };
+                              return { qNum: String(n), title: q?.questionTitle || '', choices: q?.choices || '', score: q?.score ?? 0, summary: q?.summary || '', showSummary: !!(q?.summary), glossary: q?.glossary || '', questionType: q?.questionType || '' };
                             });
                             const allGQs = [...prev.groupQuestions, ...toAdd].sort((a, b) => parseInt(a.qNum) - parseInt(b.qNum));
                             return { ...prev, groupQuestions: allGQs };
@@ -1747,7 +2109,7 @@ export default function VipExamsPage() {
                       const q = currentExam?.questions[nextNum];
                       setTextModal((prev) => prev && ({
                         ...prev,
-                        groupQuestions: [...prev.groupQuestions, { qNum: nextNum, title: q?.questionTitle || '', choices: q?.choices || '', score: q?.score ?? 0, summary: q?.summary || '', showSummary: !!(q?.summary) }],
+                        groupQuestions: [...prev.groupQuestions, { qNum: nextNum, title: q?.questionTitle || '', choices: q?.choices || '', score: q?.score ?? 0, summary: q?.summary || '', showSummary: !!(q?.summary), glossary: q?.glossary || '', questionType: q?.questionType || '' }],
                       }));
                     }}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-dashed border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-500 transition-colors text-[11px]"

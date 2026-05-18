@@ -1,0 +1,10 @@
+# 공유자료 파일 보관 디렉터리
+
+여기에 PDF/ZIP 등 자료를 카테고리 슬러그별 하위 폴더로 두세요.
+
+예:
+- public/shared-resources/class-guide/2026-class-guide.pdf
+- public/shared-resources/exam-archive/26-3-go1.zip
+
+`lib/shared-resources.ts` 의 `SHARED_RESOURCES` 에 `href: '/shared-resources/...'` 로 등록하면
+공유자료 페이지 (`/shared-resources`) 에 다운로드 카드로 노출됩니다.

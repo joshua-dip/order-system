@@ -21,7 +21,7 @@ export interface ValidationResult {
 /** 영어 텍스트를 단어 단위로 잘라내기. 쉼표·종결구두점 제거 후 공백 분리. */
 function tokenizeWords(text: string): string[] {
   return text
-    .replace(/[,.;:!?"]/g, ' ')
+    .replace(/[,.;:!?"─—–]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .split(' ')
@@ -39,7 +39,7 @@ function splitBogi(bogi: string): string[] {
 /** 비교용 정규화: 쉼표·종결구두점 제거, 다중 공백 정리, 소문자 비교는 X (대소문자 보존). */
 function normalizeForCompare(text: string): string {
   return text
-    .replace(/[,.;:!?"]/g, ' ')
+    .replace(/[,.;:!?"─—–]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -52,6 +52,8 @@ function validateQuestion(
 ) {
   const qid = `Q${q.id}`;
   const isMaxDifficulty = difficulty === '최고난도';
+  const isHardDifficulty = difficulty === '고난도';
+  const isMidDifficulty = difficulty === '중난도';
 
   if (!q.answer || typeof q.answer !== 'object') {
     errors.push(`${qid}: answer 객체가 없습니다.`);
@@ -96,8 +98,55 @@ function validateQuestion(
     if (!/[가-힯]/.test(q.bogi)) {
       errors.push(`${qid}: 최고난도는 bogi 에 한국어 해석문을 넣어야 합니다. bogi="${q.bogi}"`);
     }
+  } else if (isHardDifficulty) {
+    // 고난도: bogi = 키워드(lemma) 알파벳순 풀. 청크 합 검사 스킵 (lemma 와 굴절형 차이 때문).
+    const bogiChunks = splitBogi(q.bogi);
+    if (bogiChunks.length === 0) {
+      errors.push(`${qid}: bogi 키워드가 0개입니다.`);
+    } else if (bogiChunks.length < 5 || bogiChunks.length > 10) {
+      warnings.push(
+        `${qid}: 고난도 키워드 개수(${bogiChunks.length}) 가 권장 범위(5~10) 를 벗어났습니다.`,
+      );
+    }
+    /* 알파벳순 정렬 권장 */
+    const sortedAsc = [...bogiChunks].map(s => s.toLowerCase()).sort();
+    const givenLc = bogiChunks.map(s => s.toLowerCase());
+    if (givenLc.join('|') !== sortedAsc.join('|')) {
+      warnings.push(
+        `${qid}: 고난도 키워드는 알파벳순(어순 노출 방지)이 권장됩니다. 현재="${bogiChunks.join(' / ')}"`,
+      );
+    }
+  } else if (isMidDifficulty) {
+    // 중난도: bogi 청크 7~10개. 그 중 1~2개는 의도적 변형 (정답과 다른 어형).
+    // → 청크 합 = answer 검사 스킵. 대신 변형 청크 개수만 1~2 인지 확인.
+    const bogiChunks = splitBogi(q.bogi);
+    if (bogiChunks.length === 0) {
+      errors.push(`${qid}: bogi 청크가 0 개입니다.`);
+    } else {
+      /* 변형 식별: 청크의 토큰 중 단 하나라도 answer 의 토큰 집합에 없으면 변형 청크.
+         (substring 매칭은 'happen' ⊂ 'happens' 처럼 굴절 변형을 놓쳐 단어-경계 비교 사용) */
+      const answerTokenSet = new Set(tokenizeWords(answerText).map(t => t.toLowerCase()));
+      const variantChunks = bogiChunks.filter(ch => {
+        const chTokens = tokenizeWords(ch).map(t => t.toLowerCase());
+        return chTokens.some(t => !answerTokenSet.has(t));
+      });
+      if (variantChunks.length === 0) {
+        warnings.push(
+          `${qid}: 중난도이지만 변형 청크가 0 개입니다. 1~2 개의 의도적 어형 변형이 필요합니다.`,
+        );
+      } else if (variantChunks.length > 2) {
+        warnings.push(
+          `${qid}: 중난도 변형 청크가 ${variantChunks.length} 개 — 권장 범위(1~2)를 초과했습니다. (${variantChunks.map(c => `"${c}"`).join(', ')})`,
+        );
+      }
+      if (bogiChunks.length < 5 || bogiChunks.length > 12) {
+        warnings.push(
+          `${qid}: 중난도 bogi 청크 개수(${bogiChunks.length}) 가 권장 범위(7~10) 를 벗어났습니다.`,
+        );
+      }
+    }
   } else {
-    // 2) bogi 청크 합 ↔ answer.text
+    // 기본난도: bogi 청크 합 = answer.text 정확 일치.
     const bogiChunks = splitBogi(q.bogi);
     if (bogiChunks.length === 0) {
       errors.push(`${qid}: bogi 청크가 0개입니다.`);

@@ -46,7 +46,7 @@ export async function listEssayExams(): Promise<EssayExamListItem[]> {
     })
     .project({ title: 1, textbook: 1, sourceKey: 1, difficulty: 1, folder: 1, order: 1, createdAt: 1, updatedAt: 1 })
     .sort({ folder: 1, order: 1, createdAt: 1 })
-    .limit(500)
+    .limit(2000)
     .toArray();
 
   return docs.map(d => ({

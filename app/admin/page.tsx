@@ -9,6 +9,7 @@ import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-set
 import { isAnnualMemberActive } from '@/lib/annual-member';
 import { isMonthlyMemberActive, isSignupPremiumTrialActive } from '@/lib/premium-member';
 import { isEbsTextbook } from '@/lib/textbookSort';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 interface EssayTypeItem {
   id: string;
@@ -463,6 +464,44 @@ export default function AdminDashboardPage() {
   >([]);
   const [monthlyRevenueNote, setMonthlyRevenueNote] = useState<string | null>(null);
   const [monthlyRevenueError, setMonthlyRevenueError] = useState<string | null>(null);
+  /** 월별 매출 상세 엑셀 다운로드 진행 상태 + 메시지 */
+  const [revenueExportBusy, setRevenueExportBusy] = useState(false);
+  const [revenueExportMsg, setRevenueExportMsg] = useState<string | null>(null);
+
+  const handleDownloadRevenueDetail = useCallback(async () => {
+    if (revenueExportBusy) return;
+    setRevenueExportBusy(true);
+    setRevenueExportMsg(null);
+    try {
+      const r = await fetch('/api/admin/stats/revenue-by-month/detailed?months=48', {
+        credentials: 'include',
+      });
+      if (!r.ok) {
+        let msg = '다운로드 실패';
+        try {
+          const j = await r.json();
+          if (j?.error) msg = String(j.error);
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ymd = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `revenue-detail-${ymd}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setRevenueExportMsg('다운로드 완료');
+      window.setTimeout(() => setRevenueExportMsg(null), 2500);
+    } catch (e) {
+      setRevenueExportMsg((e as Error).message ?? '오류');
+    } finally {
+      setRevenueExportBusy(false);
+    }
+  }, [revenueExportBusy]);
 
   const [siteVisitsHistoryOpen, setSiteVisitsHistoryOpen] = useState(false);
   const [siteVisitsHistoryLoading, setSiteVisitsHistoryLoading] = useState(false);
@@ -1208,7 +1247,8 @@ export default function AdminDashboardPage() {
         if (data && typeof data === 'object' && !data.error) {
           let keys = Object.keys(data);
           if (mode === 'workbook' || mode === 'variant') {
-            keys = keys.filter((k) => !/^고[123]_/.test(k));
+            /** 모의고사 키 (옛/신 표기·수능 모두) 는 전 회원 공개라 회원별 체크 목록에서 제외 */
+            keys = keys.filter((k) => !isMockExamTextbookKey(k));
             /** EBS·쏠북 교재는 전 회원 공개이므로 회원별 체크 목록에서 제외 */
             const solbookSet = new Set<string>();
             try {
@@ -1241,7 +1281,7 @@ export default function AdminDashboardPage() {
               const orphans = saved.filter(
                 (t) =>
                   !keys.includes(t) &&
-                  !/^고[123]_/.test(t) &&
+                  !isMockExamTextbookKey(t) &&
                   !isEbsTextbook(t) &&
                   !solbookSet.has(t)
               );
@@ -4331,7 +4371,7 @@ export default function AdminDashboardPage() {
                               <code className="text-slate-400">lib/workbook-textbooks.ts</code>의{' '}
                               <code className="text-slate-400">WORKBOOK_SUPPLEMENTARY_COMMON_KEYS</code>에 넣습니다.
                               여기서는 그 외 <strong className="text-slate-400">이 회원만</strong> 볼 추가 교재를 고릅니다.
-                              EBS·쏠북 교재는 전 회원 공개라 선택 목록에 없습니다.
+                              모의고사·EBS·쏠북 교재는 전 회원 공개라 선택 목록에 없습니다.
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                               <button
@@ -4376,7 +4416,7 @@ export default function AdminDashboardPage() {
                               <code className="text-slate-400">lib/variant-textbooks.ts</code>의{' '}
                               <code className="text-slate-400">VARIANT_SUPPLEMENTARY_COMMON_KEYS</code>에 넣습니다.
                               여기서는 <strong className="text-slate-400">이 회원만</strong> 부교재 변형문제 주문(/textbook) 화면에서 볼 추가 교재를 고릅니다.
-                              EBS·쏠북 교재는 전 회원 공개라 선택 목록에 없습니다.
+                              모의고사·EBS·쏠북 교재는 전 회원 공개라 선택 목록에 없습니다.
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                               <button
@@ -4527,15 +4567,31 @@ export default function AdminDashboardPage() {
               <h3 id="monthly-revenue-title" className="font-bold text-white text-lg">
                 월별 매출 (완료 주문)
               </h3>
-              <button
-                type="button"
-                onClick={() => setMonthlyRevenueOpen(false)}
-                className="text-slate-400 hover:text-white text-xl leading-none px-1"
-                aria-label="닫기"
-              >
-                ×
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadRevenueDetail}
+                  disabled={revenueExportBusy}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors font-semibold"
+                  title="월별 요약·주문·항목 3시트 엑셀 (어떤 자료가 팔렸는지 분석용)"
+                >
+                  {revenueExportBusy ? '내보내는 중…' : '📊 상세 매출 엑셀'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMonthlyRevenueOpen(false)}
+                  className="text-slate-400 hover:text-white text-xl leading-none px-1"
+                  aria-label="닫기"
+                >
+                  ×
+                </button>
+              </div>
             </div>
+            {revenueExportMsg && (
+              <div className="px-5 py-1.5 text-[11px] text-emerald-300 border-b border-slate-700 shrink-0">
+                {revenueExportMsg}
+              </div>
+            )}
             <div className="p-5 overflow-y-auto flex-1 min-h-0">
               {monthlyRevenueLoading && (
                 <p className="text-slate-400 text-sm py-8 text-center">불러오는 중…</p>
@@ -5785,15 +5841,15 @@ export default function AdminDashboardPage() {
               <p className="text-slate-400 text-xs mt-1">
                 {editingTextbooksMode === 'workbook' ? (
                   <>
-                    모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
-                    회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
+                    모의고사(옛 고1_/고2_/고3_ 및 신표기 「YY년 M월 고N 영어모의고사」)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다.
+                    모의고사·EBS·쏠북은 전 회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
                     <strong className="text-slate-300">공통 교재(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
                     워크북 부교재로 보입니다.
                   </>
                 ) : editingTextbooksMode === 'variant' ? (
                   <>
-                    모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
-                    회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
+                    모의고사(옛 고1_/고2_/고3_ 및 신표기 「YY년 M월 고N 영어모의고사」)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다.
+                    모의고사·EBS·쏠북은 전 회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
                     <strong className="text-slate-300">공통 교재(VARIANT_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
                     부교재 변형문제 주문(/textbook) 화면의「회원 전용 추가」범위로 쓰입니다. 변환 JSON에만 있는 키 중
                     위에 해당하지 않는 교재만 체크할 수 있습니다.

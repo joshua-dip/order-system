@@ -74,3 +74,15 @@ watch.log
 
 # 서술형 초안 (Claude Code 로컬 JSON)
 .essay-drafts/
+.essay-audit-logs/
+.variant-drafts/
+.essay-audit-reports/
+
+# Audit 작업 중 자동 생성되는 일회성 패치 스크립트
+scripts/patch-essay-*.ts
+
+# 공유자료 — 자료 파일은 배포 환경에서 직접 업로드 (git 추적 X)
+# 단, meta.json 과 .gitkeep 은 코드와 함께 관리해도 OK
+/public/shared-resources/**
+!/public/shared-resources/.gitkeep
+!/public/shared-resources/*/meta.json

@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { sendMembershipApplicationNotification } from './admin-membership-notification';
 
 export const MEMBERSHIP_APPLICATIONS_COLLECTION = 'membership_applications';
 
@@ -79,14 +80,66 @@ export async function createApplication(data: {
   const result = await db
     .collection<MembershipApplicationDoc>(MEMBERSHIP_APPLICATIONS_COLLECTION)
     .insertOne(doc as MembershipApplicationDoc & { _id: ObjectId });
-  return toRow({ ...doc, _id: result.insertedId } as MembershipApplicationDoc & { _id: ObjectId });
+  const row = toRow({ ...doc, _id: result.insertedId } as MembershipApplicationDoc & { _id: ObjectId });
+  // 관리자 알림 메일 — fire-and-forget. 발송 실패해도 신청 자체는 성공 처리.
+  void sendMembershipApplicationNotification(row).catch(err => {
+    console.error('[createApplication] notification dispatch failed:', err);
+  });
+  return row;
+}
+
+export interface MembershipApplicationStats {
+  pending: number;
+  contacted: number;
+  completed: number;
+  rejected: number;
+  total: number;
+  /** 한국 시간 기준 오늘(자정 이후) 신청 건수 */
+  newToday: number;
+  /** 한국 시간 기준 최근 7일 신청 건수 */
+  newThisWeek: number;
+}
+
+function startOfKoreaTodayUtc(): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const y = parts.find(p => p.type === 'year')?.value;
+  const mo = parts.find(p => p.type === 'month')?.value;
+  const d = parts.find(p => p.type === 'day')?.value;
+  if (!y || !mo || !d) return new Date(new Date().setHours(0, 0, 0, 0));
+  return new Date(`${y}-${mo}-${d}T00:00:00+09:00`);
+}
+
+export async function getApplicationStats(): Promise<MembershipApplicationStats> {
+  const db = await getDb('gomijoshua');
+  const col = db.collection(MEMBERSHIP_APPLICATIONS_COLLECTION);
+  const todayStart = startOfKoreaTodayUtc();
+  const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const [pending, contacted, completed, rejected, total, newToday, newThisWeek] = await Promise.all([
+    col.countDocuments({ status: 'pending' }),
+    col.countDocuments({ status: 'contacted' }),
+    col.countDocuments({ status: 'completed' }),
+    col.countDocuments({ status: 'rejected' }),
+    col.countDocuments({}),
+    col.countDocuments({ appliedAt: { $gte: todayStart } }),
+    col.countDocuments({ appliedAt: { $gte: weekStart } }),
+  ]);
+  return { pending, contacted, completed, rejected, total, newToday, newThisWeek };
 }
 
 export async function listApplications(opts: {
   status?: MembershipApplicationStatus;
   search?: string;
   limit?: number;
-}): Promise<{ applications: MembershipApplicationRow[]; pendingCount: number }> {
+}): Promise<{
+  applications: MembershipApplicationRow[];
+  pendingCount: number;
+  stats: MembershipApplicationStats;
+}> {
   const db = await getDb('gomijoshua');
   const col = db.collection<MembershipApplicationDoc>(MEMBERSHIP_APPLICATIONS_COLLECTION);
 
@@ -98,12 +151,15 @@ export async function listApplications(opts: {
   }
 
   const limit = Math.min(opts.limit ?? 50, 200);
-  const docs = await col.find(filter).sort({ appliedAt: -1 }).limit(limit).toArray();
-  const pendingCount = await col.countDocuments({ status: 'pending' });
+  const [docs, stats] = await Promise.all([
+    col.find(filter).sort({ appliedAt: -1 }).limit(limit).toArray(),
+    getApplicationStats(),
+  ]);
 
   return {
     applications: docs.map((d) => toRow(d as MembershipApplicationDoc & { _id: ObjectId })),
-    pendingCount,
+    pendingCount: stats.pending,
+    stats,
   };
 }
 

@@ -9,9 +9,13 @@
  */
 
 import {
+  BlockUse,
   BlockWorkbookSelection,
+  ELIGIBLE_USES_BY_KIND,
   SelectionBlock,
   WorkbookKind,
+  blockUseIncludes,
+  sentenceUsesIncludes,
 } from './block-workbook-types';
 import { detectBlockOverlaps } from './block-workbook-overlap';
 
@@ -32,7 +36,8 @@ export interface BlockWorkbookSaveLikeInput {
 }
 
 const VALID_KINDS = new Set<SelectionBlock['kind']>(['word', 'phrase', 'sentence']);
-const VALID_TYPES = new Set<WorkbookKind>(['A', 'B', 'C', 'D', 'E', 'F']);
+// E·F 는 옛 데이터 호환을 위해 허용. UI·렌더러는 사용 안 함 (E 제거 / F 어법공략 워크북 분리).
+const VALID_TYPES = new Set<WorkbookKind>(['A', 'B', 'C', 'D', 'I', 'E', 'F']);
 
 export function validateBlockWorkbookInput(
   input: BlockWorkbookSaveLikeInput,
@@ -116,6 +121,23 @@ export function validateBlockWorkbookInput(
     if (b.kind === 'phrase' && len > 6) {
       warnings.push(`${tag}: phrase 길이 ${len} — 권장 2~5 단어를 벗어났습니다.`);
     }
+
+    // uses 필드 검증 — kind 별 적격 use 만 허용
+    if (b.uses !== undefined) {
+      if (!Array.isArray(b.uses)) {
+        errors.push(`${tag}: uses 는 배열이어야 합니다.`);
+      } else {
+        const eligible = ELIGIBLE_USES_BY_KIND[b.kind];
+        const all: BlockUse[] = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const unknown = b.uses.filter(u => !all.includes(u as BlockUse));
+        if (unknown.length) errors.push(`${tag}: uses 에 알 수 없는 값 ${unknown.join(', ')} (허용: A, B, C, D, E, F)`);
+        const inelig = b.uses.filter(u => all.includes(u as BlockUse) && !eligible.includes(u as BlockUse));
+        if (inelig.length) {
+          warnings.push(`${tag}: kind=${b.kind} 에 부적격한 use ${inelig.join(', ')} — 무시됩니다 (적격: ${eligible.join(', ')}).`);
+        }
+        if (b.uses.length === 0) warnings.push(`${tag}: uses 가 빈 배열입니다 — 이 블록은 어디에도 노출되지 않습니다.`);
+      }
+    }
   }
 
   // ── 블록 겹침 (overlap util 재사용) ─────────────────────────────────────
@@ -136,38 +158,29 @@ export function validateBlockWorkbookInput(
   if (types.includes('B') && !has('phrase')) {
     warnings.push('types 에 B 가 있지만 phrase 블록이 없습니다.');
   }
-  if (types.includes('C') && !has('sentence')) {
-    warnings.push('types 에 C 가 있지만 sentence 블록이 없습니다.');
+  const hasSentenceFor = (use: 'C' | 'D') =>
+    sel.blocks.some(b => b.kind === 'sentence' && blockUseIncludes(b, use));
+  if (types.includes('C') && !hasSentenceFor('C')) {
+    warnings.push('types 에 C 가 있지만 C 용도 sentence 블록이 없습니다.');
   }
-  if (types.includes('D') && !has('sentence')) {
-    warnings.push('types 에 D 가 있지만 sentence 블록이 없습니다.');
+  if (types.includes('D') && !hasSentenceFor('D')) {
+    warnings.push('types 에 D 가 있지만 D 용도 sentence 블록이 없습니다.');
   }
-  if (types.includes('F')) {
-    const wordBlocks = sel.blocks.filter(b => b.kind === 'word');
-    if (wordBlocks.length === 0) {
-      warnings.push('types 에 F 가 있지만 word 블록이 없습니다.');
+  if (types.includes('I')) {
+    const iBlocks = sel.blocks.filter(
+      b => (b.kind === 'word' || b.kind === 'phrase') && blockUseIncludes(b, 'I'),
+    );
+    if (iBlocks.length === 0) {
+      warnings.push('types 에 I 가 있지만 I 용도 word/phrase 블록이 없습니다.');
     } else {
-      const missing = wordBlocks.filter(b => !((b.baseForm ?? '').trim()));
-      if (missing.length) {
-        warnings.push(`F 어법 변형: word 블록 ${missing.length}개에 baseForm 이 비어 있습니다 — 본문에 (?) 로 표시됩니다.`);
+      const lowDistractors = iBlocks.filter(b => (b.distractors ?? []).filter(s => s.trim()).length < 4);
+      if (lowDistractors.length) {
+        warnings.push(`I 접속사 빈칸: ${lowDistractors.length}개 블록의 distractor 가 4개 미만 — 부족분은 기본 풀에서 자동 채움.`);
       }
     }
   }
-  if (types.includes('E')) {
-    // E 는 모든 블록을 표로 묶음. korean fallback 이 있어도 직접 입력 권장.
-    const noKo = sel.blocks.filter(b => {
-      const ko = (b.koreanMeaning ?? '').trim();
-      if (ko) return false;
-      // sentence 는 sentences_ko fallback 가능
-      if (b.kind === 'sentence') {
-        const sent = sel.sentences.find(s => s.idx === b.sentenceIdx);
-        if (sent && (sent.korean ?? '').trim()) return false;
-      }
-      return true;
-    });
-    if (noKo.length) {
-      warnings.push(`E 핵심 표현 정리: 블록 ${noKo.length}개의 한국어 의미가 비어 있습니다 — 표에 "(미입력)"으로 노출됩니다.`);
-    }
+  if (types.includes('E') || types.includes('F')) {
+    warnings.push('E (핵심 표현 정리) 와 F (어법 변형) 는 더 이상 블록 빈칸 워크북에서 출력되지 않습니다 — 어법은 「어법공략 워크북」 탭으로 분리됨.');
   }
 
   return { valid: errors.length === 0, errors, warnings };

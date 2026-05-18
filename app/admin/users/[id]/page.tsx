@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import AdminSidebar from '../../_components/AdminSidebar';
 import { isEbsTextbook } from '@/lib/textbookSort';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 /* ─── 타입 ─── */
 type TextbooksMode = 'analysis' | 'essay' | 'workbook' | 'variant';
@@ -648,7 +649,7 @@ export default function UserDetailPage() {
       if (data && typeof data === 'object' && !data.error) {
         let keys = Object.keys(data);
         if (mode === 'workbook' || mode === 'variant') {
-          keys = keys.filter((k) => !/^고[123]_/.test(k));
+          keys = keys.filter((k) => !isMockExamTextbookKey(k));
           const solbookSet = new Set<string>();
           try {
             const sr = await fetch('/api/settings/variant-solbook', { cache: 'no-store' });
@@ -674,7 +675,7 @@ export default function UserDetailPage() {
           } else if (Array.isArray(user.allowedTextbooksVariant)) {
             const saved = user.allowedTextbooksVariant.filter((t): t is string => typeof t === 'string');
             const orphans = saved.filter(
-              (t) => !keys.includes(t) && !/^고[123]_/.test(t) && !isEbsTextbook(t) && !solbookSet.has(t)
+              (t) => !keys.includes(t) && !isMockExamTextbookKey(t) && !isEbsTextbook(t) && !solbookSet.has(t)
             );
             const list = [...keys, ...orphans].sort((a, b) => a.localeCompare(b, 'ko'));
             setTextbookList(list);
@@ -954,7 +955,7 @@ export default function UserDetailPage() {
                   </div>
                   <p className="text-[11px] text-slate-500 leading-relaxed mb-2">
                     공통 부교재(<code className="text-slate-400">WORKBOOK_SUPPLEMENTARY_COMMON_KEYS</code>) 외에 이 회원만
-                    볼 추가 교재를 고릅니다. EBS·쏠북은 전 회원 공개라 선택 목록에 없습니다.
+                    볼 추가 교재를 고릅니다. 모의고사·EBS·쏠북은 전 회원 공개라 선택 목록에 없습니다.
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     <button
@@ -1664,15 +1665,15 @@ export default function UserDetailPage() {
                   <p className="text-slate-400 text-xs mt-1">
                     {textbooksMode === 'workbook' ? (
                       <>
-                        모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
-                        회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
+                        모의고사(옛 고1_/고2_/고3_ 및 신표기 「YY년 M월 고N 영어모의고사」)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다.
+                        모의고사·EBS·쏠북은 전 회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
                         <strong className="text-slate-300">공통 교재(WORKBOOK_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
                         워크북 부교재로 보입니다.
                       </>
                     ) : textbooksMode === 'variant' ? (
                       <>
-                        모의고사(고1_/고2_/고3_)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다. EBS·쏠북은 전
-                        회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
+                        모의고사(옛 고1_/고2_/고3_ 및 신표기 「YY년 M월 고N 영어모의고사」)·EBS·쏠북(변형 쏠북 설정에 등록된 교재)은 제외된 목록입니다.
+                        모의고사·EBS·쏠북은 전 회원에게 공개됩니다. 저장 시 이 회원에게는{' '}
                         <strong className="text-slate-300">공통 교재(VARIANT_SUPPLEMENTARY_COMMON_KEYS) ∪ 선택 교재</strong>만
                         부교재 변형문제 주문(/textbook) 화면의「회원 전용 추가」범위로 쓰입니다.
                       </>

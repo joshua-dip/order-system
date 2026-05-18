@@ -52,29 +52,23 @@ export async function GET(request: NextRequest) {
     const css = readExamCss();
     const parts = exams.map((e) => splitHtml(String(e.html)));
 
-    const sheetSections = parts.map((p, i) => {
-      const exam = exams[i];
-      const title = exam.title || exam.textbook || `문제 ${i + 1}`;
-      const label = `<div style="font-family:'Noto Sans CJK KR',sans-serif;font-size:8pt;color:#888;margin-bottom:4pt;padding-bottom:2pt;border-bottom:0.3pt solid #ccc;">
-        [${i + 1}/${exams.length}] ${title}
-      </div>`;
-      return label + p.sheet;
-    });
+    /* 각 문항의 자체 헤더(시험지/정답지 양쪽)가 이미 경계 역할을 하므로
+       [i/n] title 부 라벨은 생략. */
+    const sheetSections = parts.map(p => p.sheet);
 
     const answerSections = parts
       .map((p, i) => {
         if (!p.answer) return null;
-        const exam = exams[i];
-        const title = exam.title || exam.textbook || `문제 ${i + 1}`;
-        const header = `<div style="font-family:'Noto Sans CJK KR',sans-serif;font-size:8pt;color:#888;margin-bottom:4pt;margin-top:${i === 0 ? '0' : '12pt'};padding-bottom:2pt;border-bottom:0.3pt solid #ccc;">
-          [${i + 1}/${exams.length}] ${title}
-        </div>`;
-        return header + p.answer;
+        /* 두 번째 항목부터는 새 페이지로 분리 — answer-header (정답 및 해설 검정 바) 가
+           이전 페이지 말미에 orphan 으로 남는 문제 방지 */
+        const sep = i === 0 ? '' : '<div class="page-break"></div>';
+        return sep + p.answer;
       })
       .filter(Boolean);
 
     const sheetsHtml = sheetSections.join('\n<div class="page-break"></div>\n');
-    const answersHtml = answerSections.join('\n<div style="margin-top:16pt;border-top:0.5pt solid #ddd;padding-top:8pt;"></div>\n');
+    /* 답지 사이는 항목 map 안에서 이미 처리한 sep 만 사용 (조용한 join) */
+    const answersHtml = answerSections.join('\n');
 
     const combinedHtml = `<!DOCTYPE html>
 <html lang="ko">

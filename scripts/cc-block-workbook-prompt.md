@@ -39,25 +39,41 @@
 - 단어 단순 나열은 피하고, 구조를 가진 표현 (e.g. "rather than X", "as a result of", "be aware of")
 - A 와 위치가 겹치지 않게
 
-### C. 문장 영작 (`kind: "sentence"`, 한 문장 통째)
+### C. 문장 영작 (`kind: "sentence"` + `uses: ["C"]`)
 - 문법 구조가 풍부한 문장 **1~2개** (관계절·분사·수동·to부정사 등)
 - `koreanMeaning` 은 **`sentences[idx].korean` 이 있으면 비워둠** (자동 fallback). 없으면 직접 작성.
+- `uses: ["C"]` 로 명시 (D 와 분리). C+D 양쪽 모두 활용하려면 `uses: ["C","D"]`. 생략하면 백워드 호환으로 둘 다.
 
-### D. 어순 배열 — 별도 입력 X
-- C 의 sentence 블록을 그대로 사용 (시스템이 자동으로 청크 셔플). 별도 블록 추가 불필요.
+### D. 어순 배열 (`kind: "sentence"` + `uses: ["D"]`)
+- C 와 별도로 **D 전용 sentence 블록** 을 둘 수 있다. 같은 문장을 C+D 모두에 쓰려면 한 블록에 `uses: ["C","D"]`.
+- D 전용 블록은 `koreanMeaning` 불필요. 시스템이 자동 5~8 청크 셔플.
 
-### E. 핵심 표현 정리 — 별도 입력 X
-- A·B·C 블록이 곧 표 항목. 단, **A·B 블록의 `koreanMeaning`** 을 정확하게 채워두면 학습 카드 품질이 좋아짐.
+### I. 접속사·접속부사 빈칸 (`kind: "word"|"phrase"` + `uses: ["I"]` + `distractors`)
+- 변형문제 「빈칸 추론(접속어)」. 본문의 연결어(However, Therefore, On the other hand 등) 자리를 5지선다 빈칸으로.
+- 단어형: `kind: "word"` (1 token). 구형: `kind: "phrase"` (2~5 tokens).
+- 같은 word 블록을 A 빈칸과 I 둘 다 쓰려면 `uses: ["A","I"]`. I 전용이면 `uses: ["I"]`.
+- **`distractors`** 에 오답 보기 4개 입력 (정답과 중복 금지). 부족하면 시스템이 기본 풀(However·Therefore·Moreover·Nevertheless·In addition·For example·Otherwise·On the other hand 등) 에서 자동 채움.
+- 정답 위치는 결정적 셔플(시드=블록 좌표) — 같은 워크북에는 항상 같은 정답 위치.
 
-### F. 어법 변형 (`kind: "word"` + `baseForm` 채우기)
-- 어형 변환 학습 가치가 큰 **동사·관계사·분사·be동사** 단어 블록 **2~4개**. A 의 일부와 겹쳐도 OK (같은 word 블록 재사용).
-- **`baseForm` 은 lemma (원형) 정확히 입력** — 동사 원형, 명사 단수형, 형용사 원급. 학생이 문맥에 맞게 변환할 단서가 된다.
+## uses 필드 — 블록별 유형 노출 제어 (선택)
+
+각 블록의 `uses?: ('A'|'B'|'C'|'D'|'I')[]` 로 그 블록이 노출될 유형을 좁힐 수 있다. **생략하면 kind 별 적격 use 에 자동 노출** (백워드 호환). 단 'I' 는 명시적 opt-in 만 — 옛 워크북이 갑자기 I 페이지에 노출되지 않도록.
+
+| kind | 적격 use | 기본(undefined) |
+|------|---------|-----------------|
+| word | A, I | A 만 (I 는 명시 opt-in) |
+| phrase | B, I | B 만 (I 는 명시 opt-in) |
+| sentence | C, D | C·D 모두 |
+
+예: 같은 문장을 C+D 양쪽에 쓰려면 `"uses": ["C","D"]`. word 블록을 I 빈칸으로 쓰려면 `"uses": ["I"]` (또는 A 와 같이 `"uses": ["A","I"]`).
+
+> **deprecated**: 옛 'E' (핵심 표현 정리) 는 변형 X 라 제거됨. 'F' (어법 변형) 는 별도 「어법공략 워크북」 탭으로 분리. 옛 데이터의 `uses: ["E"]`/`["F"]` 는 자동 무시.
 
 ## 절대 금지
 - **블록 겹침**: 같은 문장 안에서 두 블록의 토큰 범위가 겹치면 안 됨. 특히 「sentence 블록」이 있는 문장에는 그 안에 word/phrase 블록 추가 X.
 - **인덱스 어긋남**: `sentenceIdx` 와 `startTokenIdx`/`endTokenIdx` 는 입력의 `sentences[i].tokens[j]` 와 정확히 일치.
 - **존재하지 않는 토큰**: `endTokenIdx >= tokens.length` 금지.
-- **types 값 외 문자**: types 는 `"A"|"B"|"C"|"D"|"E"|"F"` 만.
+- **types 값 외 문자**: types 는 `"A"|"B"|"C"|"D"|"I"` 만 (옛 'E','F' 는 deprecated).
 
 ## 출력 JSON 스키마
 
@@ -71,12 +87,14 @@
   "selection": {
     "sentences": <input.sentences 그대로>,
     "blocks": [
-      { "sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "kind": "word", "baseForm": "reveal", "koreanMeaning": "드러내다" },
+      { "sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "kind": "word" },
       { "sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 9, "kind": "phrase", "koreanMeaning": "이루어내다" },
-      { "sentenceIdx": 2, "startTokenIdx": 0, "endTokenIdx": 14, "kind": "sentence" }
+      { "sentenceIdx": 2, "startTokenIdx": 0, "endTokenIdx": 14, "kind": "sentence", "uses": ["C"] },
+      { "sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 18, "kind": "sentence", "uses": ["D"] },
+      { "sentenceIdx": 3, "startTokenIdx": 0, "endTokenIdx": 0, "kind": "word", "uses": ["I"], "distractors": ["Therefore", "Moreover", "In addition", "For example"] }
     ]
   },
-  "types": ["A","B","C","D","E","F"]
+  "types": ["A","B","C","D","I"]
 }
 ```
 

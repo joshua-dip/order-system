@@ -17,8 +17,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BlockKind,
+  ELIGIBLE_USES_BY_KIND,
   SelectionBlock,
   SentenceTokenized,
+  SentenceUse,
+  effectiveUses,
+  sentenceUsesIncludes,
 } from '@/lib/block-workbook-types';
 
 interface BlockSelectorProps {
@@ -87,15 +91,40 @@ function applyDragRange(
   return [...base, { sentenceIdx: s, startTokenIdx: lo, endTokenIdx: hi, kind }];
 }
 
-/** 한 문장 통째 토글. 같은 sentence 블록이 있으면 제거. */
-function toggleWholeSentence(blocks: SelectionBlock[], s: number, totalTokens: number): SelectionBlock[] {
-  const existing = blocks.find(
-    b => b.sentenceIdx === s && b.kind === 'sentence' && b.startTokenIdx === 0 && b.endTokenIdx === totalTokens - 1,
-  );
-  if (existing) return blocks.filter(b => b !== existing);
-  // 그 문장의 다른 블록은 모두 제거하고 sentence 블록 1개만 추가
-  const without = blocks.filter(b => b.sentenceIdx !== s);
-  return [...without, { sentenceIdx: s, startTokenIdx: 0, endTokenIdx: totalTokens - 1, kind: 'sentence' }];
+/**
+ * 한 문장의 sentence 블록에서 C/D use 를 토글. (E 는 추가정보 패널에서 따로 토글)
+ * - 블록 없음 + use 추가 → 새 sentence 블록을 그 use 만 켜서 추가
+ * - 블록 있음 + use 제거 → uses 에서 빼고, 모두 빠지면 블록 자체 삭제
+ * - 블록 있음 + use 추가 → uses 에 추가 (E 는 보존)
+ * 같은 문장의 다른 단어/구 블록은 사용자가 의도적으로 잡은 것이므로 건드리지 않는다.
+ */
+function toggleSentenceUse(
+  blocks: SelectionBlock[],
+  s: number,
+  totalTokens: number,
+  use: SentenceUse,
+): SelectionBlock[] {
+  const existing = blocks.find(b => b.sentenceIdx === s && b.kind === 'sentence');
+  if (!existing) {
+    return [
+      ...blocks,
+      {
+        sentenceIdx: s,
+        startTokenIdx: 0,
+        endTokenIdx: totalTokens - 1,
+        kind: 'sentence',
+        uses: [use],
+      },
+    ];
+  }
+  const cur = effectiveUses(existing);
+  const has = cur.includes(use);
+  const next = has ? cur.filter(u => u !== use) : [...cur, use];
+  if (next.length === 0) return blocks.filter(b => b !== existing);
+  // ELIGIBLE 순서로 정렬해 일관성 유지
+  const eligible = ELIGIBLE_USES_BY_KIND.sentence;
+  const sorted = eligible.filter(u => next.includes(u));
+  return blocks.map(b => (b === existing ? { ...b, uses: sorted } : b));
 }
 
 export default function BlockSelector({ sentences, blocks, onChangeBlocks }: BlockSelectorProps) {
@@ -162,20 +191,36 @@ export default function BlockSelector({ sentences, blocks, onChangeBlocks }: Blo
         const sentenceBlock = blocks.find(
           b => b.sentenceIdx === sent.idx && b.kind === 'sentence',
         );
+        const usesC = sentenceBlock ? sentenceUsesIncludes(sentenceBlock, 'C') : false;
+        const usesD = sentenceBlock ? sentenceUsesIncludes(sentenceBlock, 'D') : false;
         return (
           <div key={sent.idx} className="flex items-start gap-2 group">
-            <button
-              type="button"
-              onClick={() => onChangeBlocks(toggleWholeSentence(blocks, sent.idx, sent.tokens.length))}
-              className={`shrink-0 mt-0.5 w-6 h-6 rounded text-[11px] font-bold border transition-colors ${
-                sentenceBlock
-                  ? 'bg-amber-500 text-slate-900 border-amber-400'
-                  : 'border-slate-600 text-slate-500 hover:bg-slate-700 hover:text-slate-200'
-              }`}
-              title="문장 통째로 영작 블록"
-            >
-              {sentenceBlock ? '문' : '＋'}
-            </button>
+            <div className="shrink-0 mt-0.5 flex gap-0.5">
+              <button
+                type="button"
+                onClick={() => onChangeBlocks(toggleSentenceUse(blocks, sent.idx, sent.tokens.length, 'C'))}
+                className={`w-6 h-6 rounded text-[11px] font-bold border transition-colors ${
+                  usesC
+                    ? 'bg-amber-500 text-slate-900 border-amber-400'
+                    : 'border-slate-600 text-slate-500 hover:bg-slate-700 hover:text-slate-200'
+                }`}
+                title="C. 문장 영작 — 본문에서 한국어로 치환"
+              >
+                C
+              </button>
+              <button
+                type="button"
+                onClick={() => onChangeBlocks(toggleSentenceUse(blocks, sent.idx, sent.tokens.length, 'D'))}
+                className={`w-6 h-6 rounded text-[11px] font-bold border transition-colors ${
+                  usesD
+                    ? 'bg-purple-500 text-white border-purple-400'
+                    : 'border-slate-600 text-slate-500 hover:bg-slate-700 hover:text-slate-200'
+                }`}
+                title="D. 어순 배열 — 5~8개 청크로 셔플"
+              >
+                D
+              </button>
+            </div>
             <div className="flex flex-wrap gap-1 leading-relaxed flex-1">
               {sent.tokens.map((tok, t) => {
                 const inSentence = !!sentenceBlock;
@@ -184,8 +229,12 @@ export default function BlockSelector({ sentences, blocks, onChangeBlocks }: Blo
                 const inActiveDrag = isInActiveDrag(sent.idx, t);
 
                 let cls = 'px-1.5 py-0.5 rounded text-sm cursor-pointer transition-colors border ';
-                if (inSentence) cls += 'bg-amber-500/30 text-amber-100 border-amber-500/40';
-                else if (inWord) cls += 'bg-emerald-500/30 text-emerald-100 border-emerald-500/40';
+                if (inSentence) {
+                  // C 활성(또는 C+D) 이면 amber, D 전용이면 보라색으로 시각 구분
+                  cls += usesC
+                    ? 'bg-amber-500/30 text-amber-100 border-amber-500/40'
+                    : 'bg-purple-500/30 text-purple-100 border-purple-500/40';
+                } else if (inWord) cls += 'bg-emerald-500/30 text-emerald-100 border-emerald-500/40';
                 else if (inPhrase) cls += 'bg-sky-500/30 text-sky-100 border-sky-500/40';
                 else if (inActiveDrag) cls += 'bg-purple-500/30 text-purple-100 border-purple-500/40';
                 else cls += 'border-transparent text-slate-200 hover:bg-slate-700/50';

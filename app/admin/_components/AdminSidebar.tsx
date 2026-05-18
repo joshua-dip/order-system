@@ -107,9 +107,35 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <Link href="/admin/essay-generator" className={linkCls('/admin/essay-generator')}>
           서술형 출제기
         </Link>
-        <Link href="/admin/block-workbook" className={linkCls('/admin/block-workbook')}>
-          블록 빈칸 워크북
+        <Link href="/admin/workbook-maker" className={linkCls('/admin/workbook-maker')}>
+          워크북 제작기
         </Link>
+        <div className="ml-3 mt-0.5 mb-1 flex flex-col gap-0.5">
+          <Link
+            href="/admin/workbook-maker/block-blank"
+            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
+          >
+            ├ 블록 빈칸
+          </Link>
+          <Link
+            href="/admin/workbook-maker/sentence-order"
+            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
+          >
+            ├ 순서배열
+          </Link>
+          <Link
+            href="/admin/workbook-maker/grammar"
+            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
+          >
+            ├ 어법공략
+          </Link>
+          <Link
+            href="/admin/workbook-maker/essay-step"
+            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
+          >
+            └ 서술형집중
+          </Link>
+        </div>
         <Link href="/admin/syntax-analyzer" className={linkCls('/admin/syntax-analyzer')}>
           구문 분석기
         </Link>

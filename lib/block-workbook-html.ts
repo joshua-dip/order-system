@@ -9,9 +9,12 @@
 
 import {
   BlockWorkbookSelection,
+  DEFAULT_CONNECTOR_POOL,
   SelectionBlock,
   SentenceTokenized,
   WorkbookKind,
+  blockUseIncludes,
+  sentenceUsesIncludes,
 } from './block-workbook-types';
 
 // ── 공통 유틸 ─────────────────────────────────────────────────────────────────
@@ -54,13 +57,22 @@ interface MaskedRender {
   bogiItems: string[];
 }
 
-/** 단어/구 블록만 받아 본문 마스킹 + 보기 목록 추출. */
+/**
+ * 단어/구 블록만 받아 본문 마스킹 + 보기 목록 추출.
+ * kindFilter=['word'] 면 A 용 — uses 에 'A' 가 포함된 word 블록만.
+ * kindFilter=['phrase'] 면 B 용 — uses 에 'B' 가 포함된 phrase 블록만.
+ */
 function renderMaskedBody(
   sentences: SentenceTokenized[],
   blocks: SelectionBlock[],
   kindFilter: ('word' | 'phrase')[],
 ): MaskedRender {
-  const filtered = blocks.filter(b => (kindFilter as string[]).includes(b.kind));
+  const useFor = (k: 'word' | 'phrase'): 'A' | 'B' => (k === 'word' ? 'A' : 'B');
+  const filtered = blocks.filter(b => {
+    if (b.kind !== 'word' && b.kind !== 'phrase') return false;
+    if (!(kindFilter as string[]).includes(b.kind)) return false;
+    return blockUseIncludes(b, useFor(b.kind));
+  });
   const sorted = sortBlocks(filtered);
   const bogiItems: string[] = [];
 
@@ -125,7 +137,8 @@ function renderSentenceEssayBody(
   sentences: SentenceTokenized[],
   blocks: SelectionBlock[],
 ): SentenceEssayRender {
-  const sentenceBlocks = blocks.filter(b => b.kind === 'sentence');
+  // C 영작용으로 표기된 sentence 블록만 (uses 미설정 = 백워드 호환으로 포함)
+  const sentenceBlocks = blocks.filter(b => sentenceUsesIncludes(b, 'C'));
   const items: SentenceEssayRender['items'] = [];
 
   const sentenceHtmls = sentences.map(s => {
@@ -152,8 +165,16 @@ function renderSentenceEssayBody(
 interface UnifiedRender {
   /** 마스킹된 본문 HTML — 한 지문 안에 word/phrase 는 번호 빈칸으로, sentence 는 한국어로 */
   body: string;
-  /** 빈칸 정답 목록 (출현 순 — ①②③… 와 1:1) */
-  blankAnswers: { label: string; kind: 'word' | 'phrase'; original: string }[];
+  /**
+   * 빈칸 정답 목록 (출현 순 — ①②③… 와 1:1).
+   * baseForm 이 있으면 F 결합 모드에서 본문에 (base form) 힌트가 같이 노출된 빈칸.
+   */
+  blankAnswers: {
+    label: string;
+    kind: 'word' | 'phrase';
+    original: string;
+    baseForm?: string;
+  }[];
   /** 문장 영작 항목 (질문지·답지 양쪽에서 번호 1, 2, 3 으로 사용) */
   essayItems: { num: number; english: string; korean: string; wordCount: number }[];
 }
@@ -168,12 +189,15 @@ function blankLabel(n: number): string {
  * - 같은 문장에 sentence 블록이 있으면 그 문장 전체를 한국어로 치환하고 내부 단어·구 마스킹은 생략 (sentence 가 우위).
  * - word ⊂ phrase 가 있으면 phrase 가 우위 (더 큰 범위).
  * - 동일 kind 끼리 토큰 범위가 겹치면 시작 인덱스가 빠른 쪽이 우위 (단순 결정적 규칙).
+ * - includeGrammar=true 면 word 빈칸 옆에 (baseForm) 괄호를 같이 노출해 F(어법 변형) 를 결합.
+ *   A 가 활성일 때만 의미가 있다. F 단독은 fragmentF 가 별도 섹션으로 처리.
  */
 function renderUnifiedMaskedBody(
   sentences: SentenceTokenized[],
   blocks: SelectionBlock[],
   activeKinds: ReadonlySet<'word' | 'phrase' | 'sentence'>,
   showKorean: boolean,
+  includeGrammar: boolean = false,
 ): UnifiedRender {
   const blankAnswers: UnifiedRender['blankAnswers'] = [];
   const essayItems: UnifiedRender['essayItems'] = [];
@@ -188,7 +212,14 @@ function renderUnifiedMaskedBody(
   };
 
   const sentenceHtmls = sentences.map(s => {
-    const here = blocks.filter(b => b.sentenceIdx === s.idx && activeKinds.has(b.kind));
+    // 각 kind 별로 해당 use(A/B/C) 가 켜진 블록만 통합 본문에 노출.
+    const here = blocks.filter(b => {
+      if (b.sentenceIdx !== s.idx) return false;
+      if (!activeKinds.has(b.kind)) return false;
+      if (b.kind === 'word') return blockUseIncludes(b, 'A');
+      if (b.kind === 'phrase') return blockUseIncludes(b, 'B');
+      return blockUseIncludes(b, 'C'); // sentence
+    });
     if (here.length === 0) return escapeHtml(s.text);
 
     const sentBlock = here.find(b => b.kind === 'sentence');
@@ -221,16 +252,29 @@ function renderUnifiedMaskedBody(
         const kind = block.kind === 'phrase' ? 'phrase' : 'word';
         blankCounter += 1;
         const label = blankLabel(blankCounter);
-        blankAnswers.push({ label, kind, original: phrase });
+        // F 결합 — word 블록이고 F 활성이며 그 블록 자체가 F use 를 켰을 때만.
+        const grammarOn = kind === 'word' && includeGrammar && blockUseIncludes(block, 'F');
+        const baseForm = grammarOn ? (block.baseForm ?? '').trim() : '';
+        blankAnswers.push({
+          label,
+          kind,
+          original: phrase,
+          ...(baseForm ? { baseForm } : {}),
+        });
         const cls = kind === 'phrase' ? 'bw-blank bw-blank-phrase' : 'bw-blank bw-blank-word';
         const tokenCount = block.endTokenIdx - block.startTokenIdx + 1;
         const phraseKorean = kind === 'phrase' && showKorean ? (block.koreanMeaning ?? '').trim() : '';
-        const hint = kind === 'phrase'
+        const phraseHint = kind === 'phrase'
           ? phraseKorean
             ? ` <span class="bw-blank-hint">(${tokenCount}단어 · ${escapeHtml(phraseKorean)})</span>`
             : ` <span class="bw-blank-hint">(${tokenCount}단어)</span>`
           : '';
-        out.push(`<span class="bw-blank-num">${escapeHtml(label)}</span><span class="${cls}">${escapeHtml(blankFor(phrase))}</span>${hint}`);
+        const grammarHint = grammarOn
+          ? baseForm
+            ? ` <span class="bw-lemma">(${escapeHtml(baseForm)})</span>`
+            : ` <span class="bw-lemma bw-lemma-empty">(?)</span>`
+          : '';
+        out.push(`<span class="bw-blank-num">${escapeHtml(label)}</span><span class="${cls}">${escapeHtml(blankFor(phrase))}</span>${phraseHint}${grammarHint}`);
         i = block.endTokenIdx + 1;
         continue;
       }
@@ -251,58 +295,407 @@ function renderUnifiedMaskedBody(
 // ── 공통 CSS ───────────────────────────────────────────────────────────────────
 
 const SHARED_CSS = `
-  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "맑은 고딕", "Malgun Gothic", sans-serif; color: #1f2937; line-height: 1.7; padding: 24px 32px; max-width: 820px; margin: 0 auto; }
-  h1 { font-size: 18pt; margin: 0 0 6pt; }
-  h2 { font-size: 12pt; margin: 14pt 0 6pt; padding-bottom: 3pt; border-bottom: 1.5px solid #1f2937; }
-  .bw-meta { font-size: 10pt; color: #4b5563; margin-bottom: 12pt; }
-  .bw-warning { margin: 6pt 0; padding: 6pt 10pt; background: #fef3c7; border-left: 3px solid #d97706; font-size: 10pt; color: #92400e; }
-  .bw-passage { font-size: 11pt; line-height: 1.85; padding: 10pt 12pt; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }
-  .bw-blank { display: inline-block; min-width: 60px; border-bottom: 1.5px solid #1f2937; padding: 0 4px; color: transparent; user-select: none; }
-  .bw-blank-phrase { border-bottom-style: double; border-bottom-width: 3px; }
-  .bw-blank-num { display: inline-block; font-weight: 700; color: #1e3a8a; margin-right: 2px; }
-  .bw-blank-hint { display: inline-block; font-size: 9pt; color: #6b7280; margin-left: 3px; }
-  .bw-answer-write-block { margin-top: 8pt; padding: 6pt 10pt; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }
-  .bw-answer-write { display: flex; align-items: flex-start; gap: 8pt; margin: 4pt 0; }
-  .bw-answer-write-num { flex-shrink: 0; font-weight: 700; color: #1e3a8a; min-width: 20pt; padding-top: 2pt; }
-  .bw-answer-write-lines { flex: 1; }
-  .bw-answer-write-lines .bw-write-row { margin-top: 4pt; }
-  .bw-answer-write-lines .bw-write-row:first-child { margin-top: 0; }
-  .bw-answer-key { margin-top: 18pt; padding-top: 10pt; border-top: 2px solid #1f2937; }
-  .bw-answer-key h2 { color: #b91c1c; }
-  .bw-answer-source { display: inline-block; margin: 0 0 10pt; padding: 4pt 10pt; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; font-size: 11pt; font-weight: 700; color: #b91c1c; }
-  .bw-answer-list { margin: 6pt 0; padding: 8pt 12pt; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; font-size: 11pt; line-height: 1.9; }
-  .bw-answer-list .ans { display: inline-block; margin-right: 14pt; }
-  .bw-answer-list .ans .lab { font-weight: 700; color: #b91c1c; margin-right: 3px; }
-  .bw-answer-essay { margin-top: 10pt; }
-  .bw-answer-essay .row { margin: 4pt 0; padding: 6pt 10pt; background: #fef2f2; border-left: 3px solid #b91c1c; border-radius: 3px; font-size: 11pt; }
-  .bw-answer-essay .row .num { font-weight: 700; color: #b91c1c; margin-right: 6px; }
-  @media print { .bw-answer-key { page-break-before: always; border-top: none; padding-top: 0; } }
-  .bw-lemma { display: inline-block; padding: 0 4px; color: #1e3a8a; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 3px; font-style: italic; }
-  .bw-lemma-empty { color: #b45309; background: #fffbeb; border-color: #d97706; }
-  .bw-korean { color: #1f2937; background: #fef3c7; border: 1px dashed #d97706; padding: 1px 6px; border-radius: 4px; font-style: normal; }
+  /* === A4 인쇄 시 색상 보존 === */
+  .bw-section-head, .bw-section-head .bw-tag,
+  .bw-answer-header, .bw-answer-source, .bw-answer-list, .bw-answer-essay .row,
+  .bw-bogi, .bw-passage, .bw-table th, .bw-warning, .bw-korean, .bw-lemma,
+  .bw-essay-q .ko, .bw-order-list,
+  .bw-connector-options, .bw-connector-q {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Noto Serif CJK KR', 'Noto Serif KR', 'Times New Roman', serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #111;
+    margin: 0 auto;
+    padding: 16pt 22pt 14pt;
+    max-width: 800px;
+    background: #fff;
+  }
+
+  /* === 시험지 상단 헤더 === */
+  .bw-header {
+    border-bottom: 2pt solid #111;
+    padding-bottom: 6pt;
+    margin-bottom: 10pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-header .bw-h-title {
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5pt;
+  }
+  .bw-header .bw-h-meta {
+    font-size: 9.5pt;
+    color: #555;
+    margin-top: 3pt;
+  }
+
+  /* === 섹션 헤더 (검은 바 + 흰 태그) === */
+  .bw-section { margin-top: 10pt; }
+  .bw-section-head {
+    background: #111;
+    color: #fff;
+    padding: 4pt 10pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 11pt;
+    font-weight: 600;
+    margin: 0 0 6pt 0;
+    letter-spacing: -0.3pt;
+  }
+  .bw-section-head .bw-tag {
+    background: #fff;
+    color: #111;
+    padding: 1pt 5pt;
+    border-radius: 2pt;
+    font-size: 8.5pt;
+    margin-right: 7pt;
+    font-weight: 700;
+  }
+  .bw-section-meta {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 8.5pt;
+    color: #666;
+    margin: 0 0 4pt 0;
+    font-weight: 600;
+  }
+  .bw-instruction {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9.5pt;
+    color: #444;
+    margin: 0 0 5pt 0;
+  }
+  .bw-meta {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9pt;
+    color: #555;
+  }
+  /* 인쇄/PDF 호환 — 옛 호출에서 h1/h2 가 남아 있어도 스타일 유지 */
+  h1 { font-family: 'Noto Sans CJK KR', sans-serif; font-size: 16pt; margin: 0 0 4pt; }
+  h2 { font-family: 'Noto Sans CJK KR', sans-serif; font-size: 11pt; margin: 10pt 0 5pt; padding: 4pt 10pt; background: #111; color: #fff; }
+
+  /* === 본문 (지문) === */
+  .bw-passage {
+    font-family: 'Times New Roman', 'Noto Serif CJK KR', serif;
+    font-size: 10.5pt;
+    line-height: 1.7;
+    text-align: justify;
+    padding: 8pt 12pt;
+    border: 0.7pt solid #999;
+    background: #fafafa;
+  }
+
+  /* === 빈칸 === */
+  .bw-blank {
+    display: inline-block;
+    min-width: 56px;
+    border-bottom: 1pt solid #111;
+    padding: 0 4px;
+    color: transparent;
+    user-select: none;
+  }
+  .bw-blank-phrase { border-bottom-style: double; border-bottom-width: 2pt; }
+  .bw-blank-num {
+    display: inline-block;
+    font-weight: 700;
+    color: #111;
+    margin-right: 2px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-blank-hint {
+    display: inline-block;
+    font-size: 8.5pt;
+    color: #777;
+    margin-left: 3px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+
+  /* === 한국어 치환 (C/통합) === */
+  .bw-korean {
+    color: #111;
+    background: #fff3d4;
+    border: 0.4pt dashed #d97706;
+    padding: 1pt 5pt;
+    border-radius: 2pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 600;
+  }
   .bw-korean-empty { color: #b45309; background: #fffbeb; }
-  .bw-bogi { margin-top: 12pt; padding: 8pt 12pt; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; }
-  .bw-bogi-label { font-weight: 700; color: #1e3a8a; margin-bottom: 4pt; font-size: 10pt; }
-  .bw-bogi-list { font-size: 11pt; }
-  .bw-bogi-list .item { display: inline-block; padding: 2px 8px; margin: 2px 4px 2px 0; background: white; border: 1px solid #93c5fd; border-radius: 4px; }
-  .bw-essay-q { margin-top: 14pt; padding: 10pt 12pt; border: 1px solid #e5e7eb; border-radius: 6px; }
-  .bw-essay-q .num { font-weight: 700; color: #1f2937; margin-right: 6px; }
-  .bw-essay-q .ko { background: #fef3c7; padding: 2px 6px; border-radius: 4px; }
-  .bw-write-row { border-bottom: 1px solid #6b7280; height: 16pt; margin-top: 6pt; }
-  .bw-condition { margin-top: 6pt; font-size: 10pt; color: #4b5563; }
-  .bw-order-q { margin-top: 14pt; padding: 10pt 12pt; border: 1px solid #e5e7eb; border-radius: 6px; }
-  .bw-order-q .num { font-weight: 700; margin-right: 6px; }
-  .bw-order-list { margin-top: 6pt; padding: 6pt 10pt; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 11pt; }
-  .bw-order-list .lab { font-weight: 700; color: #1e3a8a; margin-right: 4px; }
-  .bw-order-list .chunk { display: inline-block; padding: 1px 6px; margin: 2px 8px 2px 0; }
-  .bw-table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10.5pt; }
-  .bw-table th, .bw-table td { border: 1px solid #d1d5db; padding: 6pt 8pt; text-align: left; vertical-align: top; }
-  .bw-table th { background: #f3f4f6; font-weight: 700; }
-  .bw-table .kind { color: #6b7280; font-size: 9pt; font-weight: 400; }
-  .bw-section { padding-top: 4pt; }
-  .bw-section + .bw-section { margin-top: 18pt; padding-top: 14pt; border-top: 1px dashed #d1d5db; }
-  @media print { .bw-section + .bw-section { page-break-before: always; border-top: none; margin-top: 0; padding-top: 0; } }
-  .bw-section-meta { font-size: 9pt; color: #4b5563; margin: 0 0 6pt; padding-bottom: 3pt; border-bottom: 1px dashed #d1d5db; font-weight: 600; }
+
+  /* === base form 괄호 (F 결합) === */
+  .bw-lemma {
+    display: inline-block;
+    padding: 0 4px;
+    color: #1e3a8a;
+    background: #eef4ff;
+    border: 0.4pt dashed #6f8fc4;
+    border-radius: 2pt;
+    font-style: italic;
+  }
+  .bw-lemma-empty { color: #b45309; background: #fffbeb; border-color: #d97706; }
+
+  /* === 보기 박스 === */
+  .bw-bogi {
+    margin-top: 8pt;
+    padding: 6pt 10pt;
+    border: 0.6pt solid #999;
+    background: #f5f5f5;
+  }
+  .bw-bogi-label {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 3pt;
+    font-size: 9.5pt;
+  }
+  .bw-bogi-list { font-family: 'Times New Roman', serif; font-size: 10.5pt; }
+  .bw-bogi-list .item {
+    display: inline-block;
+    padding: 1pt 6pt;
+    margin: 1pt 4pt 1pt 0;
+    background: #fff;
+    border: 0.5pt solid #888;
+    border-radius: 2pt;
+  }
+
+  /* === 단어·구 정답 작성란 === */
+  .bw-answer-write-block {
+    margin-top: 6pt;
+    padding: 5pt 8pt;
+    border: 0.5pt solid #999;
+    background: #fafafa;
+  }
+  .bw-answer-write { display: flex; align-items: flex-start; gap: 6pt; margin: 3pt 0; }
+  .bw-answer-write-num {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: #111;
+    min-width: 18pt;
+    padding-top: 1pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-answer-write-lines { flex: 1; }
+  .bw-write-row {
+    border-bottom: 0.5pt solid #555;
+    height: 13pt;
+    margin-top: 4pt;
+  }
+  .bw-write-row:first-child { margin-top: 0; }
+
+  /* === C 영작 문항 === */
+  .bw-essay-q {
+    margin-top: 8pt;
+    padding: 6pt 10pt;
+    border: 0.6pt solid #888;
+    background: #fff;
+  }
+  .bw-essay-q .num {
+    font-weight: 700;
+    margin-right: 6px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-essay-q .ko {
+    background: #fff3d4;
+    padding: 1pt 5pt;
+    border-radius: 2pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-condition {
+    margin-top: 4pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9.3pt;
+    color: #444;
+  }
+
+  /* === D 어순배열 문항 === */
+  .bw-order-q {
+    margin-top: 8pt;
+    padding: 6pt 10pt;
+    border: 0.6pt solid #888;
+  }
+  .bw-order-q .num {
+    font-weight: 700;
+    margin-right: 6px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-order-list {
+    margin-top: 4pt;
+    padding: 5pt 8pt;
+    background: #f5f5f5;
+    border: 0.4pt solid #ccc;
+    font-family: 'Times New Roman', serif;
+    font-size: 10pt;
+  }
+  .bw-order-list .lab {
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-right: 4px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-order-list .chunk { display: inline-block; padding: 1px 6px; margin: 2px 6px 2px 0; }
+
+  /* === E 표 === */
+  .bw-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9.5pt;
+  }
+  .bw-table th, .bw-table td {
+    border: 0.5pt solid #888;
+    padding: 4pt 7pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  .bw-table th { background: #eee; font-weight: 700; color: #111; }
+  .bw-table .kind {
+    color: #777;
+    font-size: 8pt;
+    font-weight: 400;
+    margin-bottom: 1pt;
+  }
+
+  /* === 정답지 === */
+  .bw-answer-key { margin-top: 14pt; }
+  .bw-answer-header {
+    background: #b91c1c;
+    color: #fff;
+    padding: 4pt 10pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    margin: 0 0 5pt 0;
+    font-size: 12pt;
+    font-weight: 700;
+  }
+  .bw-answer-source {
+    display: inline-block;
+    margin: 2pt 0 6pt;
+    padding: 2pt 7pt;
+    background: #fef2f2;
+    border: 0.5pt solid #fca5a5;
+    border-radius: 2pt;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #b91c1c;
+  }
+  .bw-answer-list {
+    margin: 4pt 0;
+    padding: 5pt 8pt;
+    background: #fef2f2;
+    border-left: 2.5pt solid #b91c1c;
+    font-family: 'Times New Roman', serif;
+    font-size: 10pt;
+    line-height: 1.7;
+  }
+  .bw-answer-list .ans { display: inline-block; margin-right: 12pt; }
+  .bw-answer-list .ans .lab {
+    font-weight: 700;
+    color: #b91c1c;
+    margin-right: 3px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-answer-essay { margin-top: 6pt; }
+  .bw-answer-essay .row {
+    margin: 3pt 0;
+    padding: 4pt 8pt;
+    background: #fef2f2;
+    border-left: 2.5pt solid #b91c1c;
+    font-family: 'Times New Roman', serif;
+    font-size: 10pt;
+  }
+  .bw-answer-essay .row .num {
+    font-weight: 700;
+    color: #b91c1c;
+    margin-right: 6px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+
+  /* === 문항 카드 공통 헤더 === */
+  .bw-essay-q-head {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 10pt;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 4pt;
+  }
+  .bw-essay-q-head .num { margin-right: 6px; }
+
+  /* === I 접속사 빈칸 === */
+  .bw-blank-connector {
+    display: inline-block;
+    min-width: 90px;
+    border-bottom: 1.4pt solid #111;
+    padding: 0 6px;
+    color: transparent;
+    font-weight: 700;
+  }
+  .bw-connector-q {
+    margin-top: 8pt;
+    padding: 6pt 10pt;
+    border: 0.6pt solid #888;
+    background: #fff;
+  }
+  .bw-connector-q .num {
+    font-weight: 700;
+    margin-right: 6px;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+  }
+  .bw-connector-options {
+    margin-top: 4pt;
+    padding: 5pt 10pt;
+    background: #f5f5f5;
+    border: 0.4pt solid #ccc;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 10pt;
+    line-height: 1.7;
+  }
+  .bw-connector-options .opt {
+    display: inline-block;
+    padding: 1pt 8pt;
+    margin: 1pt 10pt 1pt 0;
+  }
+  .bw-connector-options .opt b {
+    color: #1e3a8a;
+    font-weight: 700;
+    margin-right: 3px;
+  }
+
+  /* === 경고 === */
+  .bw-warning {
+    margin: 6pt 0;
+    padding: 4pt 8pt;
+    background: #fef3c7;
+    border-left: 2.5pt solid #d97706;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9pt;
+    color: #92400e;
+  }
+
+  /* === 섹션 구분 (preview) === */
+  .bw-section + .bw-section {
+    margin-top: 14pt;
+    padding-top: 10pt;
+    border-top: 1pt dashed #ccc;
+  }
+
+  @page { size: A4; margin: 13mm 14mm 12mm 14mm; }
+
+  @media print {
+    body { padding: 0; max-width: none; }
+    .bw-section + .bw-section {
+      page-break-before: always;
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+    .bw-section + .bw-answer-key { page-break-before: always; padding-top: 0; }
+    .bw-answer-key + .bw-answer-key { page-break-before: avoid; }
+  }
 `;
 
 const WORD_META = `<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="ProgId" content="Word.Document"><meta name="Generator" content="Microsoft Word"><meta name="Originator" content="Microsoft Word"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->`;
@@ -359,13 +752,20 @@ interface BuildOptions {
 }
 
 function header({ title, textbook, sourceKey }: BuildOptions): string {
-  return `<h1>${escapeHtml(title)}</h1>
-<div class="bw-meta">${escapeHtml(textbook)} · ${escapeHtml(sourceKey)}</div>`;
+  // sourceKey 가 textbook 으로 시작하면 prefix 를 떼어 중복 표기 방지
+  const tb = (textbook || '').trim();
+  let sk = (sourceKey || '').trim();
+  if (tb && sk.startsWith(tb)) sk = sk.slice(tb.length).trim();
+  const metaParts = [tb, sk].filter(Boolean);
+  return `<header class="bw-header">
+  <div class="bw-h-title">${escapeHtml(title)}</div>
+  <div class="bw-h-meta">${escapeHtml(metaParts.join(' · '))}</div>
+</header>`;
 }
 
-/** 각 섹션(=각 인쇄 페이지) 상단에 교재·소스 표기 — PDF 두 번째 페이지부터도 정보가 남도록. */
-function sectionMeta({ textbook, sourceKey }: BuildOptions): string {
-  return `<div class="bw-section-meta">${escapeHtml(textbook)} · ${escapeHtml(sourceKey)}</div>`;
+/** 섹션 헤더 — 검은 바 + 흰 태그(A~F) + 제목. */
+function sectionHead(tag: string, label: string): string {
+  return `<div class="bw-section-head"><span class="bw-tag">${escapeHtml(tag)}</span>${escapeHtml(label)}</div>`;
 }
 
 function fragmentA(opts: BuildOptions): string {
@@ -381,7 +781,7 @@ function fragmentA(opts: BuildOptions): string {
 </div>`
     : '<div class="bw-meta">선택된 단어 블록이 없습니다.</div>';
   return `<section class="bw-section bw-section-A">
-<h2>A. 단어 빈칸</h2>
+${sectionHead('A', '단어 빈칸')}
 <div class="bw-passage">${body}</div>
 ${bogiHtml}
 </section>`;
@@ -405,7 +805,7 @@ function fragmentB(opts: BuildOptions): string {
 </div>`
     : '<div class="bw-meta">선택된 구 블록이 없습니다.</div>';
   return `<section class="bw-section bw-section-B">
-<h2>B. 구·표현 빈칸</h2>
+${sectionHead('B', '구·표현 빈칸')}
 <div class="bw-passage">${body}</div>
 ${bogiHtml}
 </section>`;
@@ -432,7 +832,7 @@ function fragmentC(opts: BuildOptions): string {
         .join('\n')
     : '<div class="bw-meta">선택된 문장 블록이 없습니다.</div>';
   return `<section class="bw-section bw-section-C">
-<h2>C. 문장 영작</h2>
+${sectionHead('C', '문장 영작')}
 <div class="bw-passage">${body}</div>
 ${questionHtml}
 </section>`;
@@ -446,7 +846,8 @@ ${fragmentC(opts)}`);
 // ── D. 어순 배열 ──────────────────────────────────────────────────────────────
 
 function fragmentD(opts: BuildOptions): string {
-  const sentenceBlocks = opts.selection.blocks.filter(b => b.kind === 'sentence');
+  // D 어순 배열용으로 표기된 sentence 블록만 (uses 미설정 = 백워드 호환으로 포함)
+  const sentenceBlocks = opts.selection.blocks.filter(b => sentenceUsesIncludes(b, 'D'));
   const passageHtml = opts.selection.sentences
     .map(s => escapeHtml(s.text))
     .join(' ');
@@ -479,8 +880,7 @@ function fragmentD(opts: BuildOptions): string {
     : '<div class="bw-meta">선택된 문장 블록이 없습니다.</div>';
 
   return `<section class="bw-section bw-section-D">
-${sectionMeta(opts)}
-<h2>D. 어순 배열</h2>
+${sectionHead('D', '어순 배열')}
 <div class="bw-passage">${passageHtml}</div>
 ${questionsHtml}
 </section>`;
@@ -500,7 +900,8 @@ const KIND_LABEL_KO: Record<'word' | 'phrase' | 'sentence', string> = {
 };
 
 function fragmentE(opts: BuildOptions): string {
-  const sorted = sortBlocks(opts.selection.blocks);
+  // E 표 정리용으로 표기된 블록만 (uses 미설정 = 백워드 호환으로 모든 적격 use 포함)
+  const sorted = sortBlocks(opts.selection.blocks.filter(b => blockUseIncludes(b, 'E')));
   const rows = sorted
     .map(b => {
       const sent = opts.selection.sentences.find(s => s.idx === b.sentenceIdx);
@@ -532,8 +933,7 @@ function fragmentE(opts: BuildOptions): string {
   const passageHtml = opts.selection.sentences.map(s => escapeHtml(s.text)).join(' ');
 
   return `<section class="bw-section bw-section-E">
-${sectionMeta(opts)}
-<h2>E. 핵심 표현 정리</h2>
+${sectionHead('E', '핵심 표현 정리')}
 <div class="bw-passage">${passageHtml}</div>
 ${tableHtml}
 </section>`;
@@ -547,7 +947,8 @@ ${fragmentE(opts)}`);
 // ── F. 어법 변형 ──────────────────────────────────────────────────────────────
 
 function fragmentF(opts: BuildOptions): string {
-  const wordBlocks = opts.selection.blocks.filter(b => b.kind === 'word');
+  // F 어법 변형용으로 표기된 word 블록만 (uses 미설정 = 백워드 호환)
+  const wordBlocks = opts.selection.blocks.filter(b => b.kind === 'word' && blockUseIncludes(b, 'F'));
   let missingCount = 0;
 
   const sentenceHtmls = opts.selection.sentences.map(s => {
@@ -585,8 +986,7 @@ function fragmentF(opts: BuildOptions): string {
     : '<div class="bw-meta">선택된 단어 블록이 없습니다.</div>';
 
   return `<section class="bw-section bw-section-F">
-${sectionMeta(opts)}
-<h2>F. 어법 변형</h2>
+${sectionHead('F', '어법 변형')}
 ${warning}
 <div class="bw-meta">▸ 괄호 안의 단어를 문맥에 맞게 어형 변환하여 빈칸을 완성하세요.</div>
 <div class="bw-passage">${body}</div>
@@ -598,6 +998,143 @@ export function buildGrammarTransformHtml(opts: BuildOptions): string {
   return htmlShell(`${opts.title} — 어법 변형`, `${header(opts)}
 ${fragmentF(opts)}`);
 }
+
+// ── I. 접속사·접속부사 빈칸 ────────────────────────────────────────────────────
+//
+// 변형문제 「빈칸 추론(접속어)」. word/phrase 블록(use='I') 자리를 [Q1] ____ 로 마스킹.
+// 각 블록당 한 카드: 정답 + distractor 4개 = 5지선다. 정답 위치는 결정적 셔플.
+// distractor 가 비어 있거나 4개 미만이면 DEFAULT_CONNECTOR_POOL 에서 자동 채움.
+
+interface IItem {
+  num: number;            // Q1, Q2, ...
+  blockLabel: string;     // 본문 마스킹에 표시되는 라벨 (예: "Q1")
+  original: string;       // 정답 원문 (블록 토큰 합)
+  options: string[];      // 5개 옵션 (셔플 적용된 순서)
+  answerOptionIdx: number; // 1-base — options 안에서 정답 위치
+  sentenceIdx: number;
+  startTokenIdx: number;
+}
+
+/** distractor 4개 채움 — 사용자 입력 + 부족분은 DEFAULT_CONNECTOR_POOL 에서 결정적 셔플로. */
+function fillConnectorOptions(
+  block: SelectionBlock,
+  answer: string,
+  seed: number,
+): string[] {
+  const norm = (s: string) => s.trim().toLowerCase();
+  const taken = new Set<string>([norm(answer)]);
+  const userPool: string[] = [];
+  for (const raw of block.distractors ?? []) {
+    const s = (raw ?? '').trim();
+    if (!s) continue;
+    const k = norm(s);
+    if (taken.has(k)) continue;
+    taken.add(k);
+    userPool.push(s);
+    if (userPool.length >= 4) break;
+  }
+  const need = 4 - userPool.length;
+  if (need <= 0) return userPool;
+
+  const candidates = DEFAULT_CONNECTOR_POOL.filter(c => !taken.has(norm(c)));
+  const picked = shuffleDeterministic(candidates, seed).slice(0, need);
+  return [...userPool, ...picked];
+}
+
+function fragmentI(opts: BuildOptions): { html: string; items: IItem[] } {
+  const iBlocks = sortBlocks(
+    opts.selection.blocks.filter(
+      b => (b.kind === 'word' || b.kind === 'phrase') && blockUseIncludes(b, 'I'),
+    ),
+  );
+
+  if (iBlocks.length === 0) {
+    return {
+      html: `<section class="bw-section bw-section-I">
+${sectionHead('I', '접속사·접속부사 빈칸')}
+<div class="bw-meta">I 용도(use=I) 로 표기된 word/phrase 블록이 없습니다.</div>
+</section>`,
+      items: [],
+    };
+  }
+
+  const items: IItem[] = [];
+  iBlocks.forEach((b, idx) => {
+    const sent = opts.selection.sentences.find(s => s.idx === b.sentenceIdx);
+    if (!sent) return;
+    const phrase = joinTokens(sent.tokens.slice(b.startTokenIdx, b.endTokenIdx + 1));
+    const num = idx + 1;
+    const blockLabel = `Q${num}`;
+    const seed = b.sentenceIdx * 1000 + b.startTokenIdx * 31 + (phrase.charCodeAt(0) || 0);
+    const distractors = fillConnectorOptions(b, phrase, seed);
+    const all = [phrase, ...distractors];
+    const shuffled = shuffleDeterministic(all, seed + 7);
+    const answerOptionIdx = shuffled.findIndex(s => s === phrase) + 1; // 1-base
+    items.push({ num, blockLabel, original: phrase, options: shuffled, answerOptionIdx, sentenceIdx: b.sentenceIdx, startTokenIdx: b.startTokenIdx });
+  });
+
+  // 본문 마스킹 — I-블록 자리만 [Q1] ____ 로 치환
+  const sentenceHtmls = opts.selection.sentences.map(s => {
+    const blocksHere = iBlocks
+      .filter(b => b.sentenceIdx === s.idx)
+      .sort((a, b) => a.startTokenIdx - b.startTokenIdx);
+    if (blocksHere.length === 0) return escapeHtml(s.text);
+    const out: string[] = [];
+    let i = 0;
+    while (i < s.tokens.length) {
+      const block = blocksHere.find(bb => bb.startTokenIdx === i);
+      if (block) {
+        const phrase = joinTokens(s.tokens.slice(block.startTokenIdx, block.endTokenIdx + 1));
+        const item = items.find(it => it.sentenceIdx === block.sentenceIdx && it.startTokenIdx === block.startTokenIdx);
+        const lbl = item?.blockLabel ?? '?';
+        out.push(`<span class="bw-blank-num">${escapeHtml(lbl)}</span><span class="bw-blank bw-blank-connector">${escapeHtml(blankFor(phrase))}</span>`);
+        i = block.endTokenIdx + 1;
+        continue;
+      }
+      const inMid = blocksHere.some(bb => i > bb.startTokenIdx && i <= bb.endTokenIdx);
+      if (!inMid) out.push(escapeHtml(s.tokens[i]));
+      i++;
+    }
+    return out.join(' ').replace(/\s+([,.;:!?])/g, '$1');
+  });
+  const body = sentenceHtmls.join(' ');
+
+  const cardsHtml = items
+    .map(it => `<div class="bw-connector-q">
+  <div class="bw-essay-q-head"><span class="num">${escapeHtml(it.blockLabel)}.</span> 위 본문의 <b>[${escapeHtml(it.blockLabel)}]</b> 자리에 들어갈 말로 가장 적절한 것은?</div>
+  <div class="bw-connector-options">${it.options.map((o, i) => `<span class="opt"><b>${escapeHtml(blankLabel(i + 1))}</b> ${escapeHtml(o)}</span>`).join('')}</div>
+</div>`)
+    .join('\n');
+
+  const html = `<section class="bw-section bw-section-I">
+${sectionHead('I', '접속사·접속부사 빈칸')}
+<div class="bw-instruction">▸ 본문의 [Q1], [Q2]… 자리에 들어갈 말로 가장 적절한 것을 5지선다에서 고르세요.</div>
+<div class="bw-passage">${body}</div>
+${cardsHtml}
+</section>`;
+
+  return { html, items };
+}
+
+function buildConnectorAnswer(items: IItem[], opts: BuildOptions): string {
+  if (items.length === 0) return '';
+  const list = items
+    .map(it => `<span class="ans"><span class="lab">${escapeHtml(it.blockLabel)}.</span>${escapeHtml(blankLabel(it.answerOptionIdx))} ${escapeHtml(it.original)}</span>`)
+    .join('');
+  return `<section class="bw-answer-key">
+<div class="bw-answer-header">▣ 정답 — I. 접속사·접속부사 빈칸</div>
+<div class="bw-answer-list">${list}</div>
+</section>`;
+  // opts 미사용이지만 시그니처 일관성 유지용
+  void opts;
+}
+
+export function buildConnectorBlankHtml(opts: BuildOptions): string {
+  const { html } = fragmentI(opts);
+  return htmlShell(`${opts.title} — 접속사·접속부사 빈칸`, `${header(opts)}
+${html}`);
+}
+
 
 interface UnifiedQuestion {
   html: string;
@@ -621,18 +1158,25 @@ function buildUnifiedQuestion(
     return { html: '', heading: '', blankAnswers: [], essayItems: [], hasContent: false };
   }
 
+  // F (어법 변형) 가 활성이고 A 도 활성이면, 단어 빈칸에 (baseForm) 괄호를 같이 노출해 결합.
+  const includeGrammar = types.includes('F') && activeKinds.has('word');
+
   const { body, blankAnswers, essayItems } = renderUnifiedMaskedBody(
     opts.selection.sentences,
     opts.selection.blocks,
     activeKinds,
     showKorean,
+    includeGrammar,
   );
 
   const labels: string[] = [];
-  if (activeKinds.has('word')) labels.push('A. 단어');
+  if (activeKinds.has('word')) labels.push(includeGrammar ? 'A. 단어 + F. 어법' : 'A. 단어');
   if (activeKinds.has('phrase')) labels.push('B. 구');
   if (activeKinds.has('sentence')) labels.push('C. 문장');
-  const heading = `통합 빈칸 (${labels.join(' · ')})`;
+  if (types.includes('D')) labels.push('D. 어순');
+  if (types.includes('E')) labels.push('E. 표현');
+  if (types.includes('F') && !includeGrammar) labels.push('F. 어법');
+  const heading = `통합 (${labels.join(' · ')})`;
 
   const essayPrompts = activeKinds.has('sentence') && essayItems.length
     ? `<div class="bw-essay-block">
@@ -654,9 +1198,17 @@ ${essayItems
 </div>`
     : '';
 
-  const headerNote = showKorean
-    ? '▸ 본문의 빈칸 ①②③… 에 들어갈 단어·구 를 적고, [번호] 자리에는 영어 문장을 영작하세요.'
-    : '▸ 본문의 빈칸 ①②③… 에 들어갈 단어·구 를 적으세요. (한국어 해석 없이)';
+  const headerParts: string[] = [];
+  headerParts.push(
+    includeGrammar
+      ? '▸ 본문의 빈칸 ①②③… 에 들어갈 단어·구 를 적고, 단어 빈칸은 옆 괄호 안 어형을 문맥에 맞게 변환하세요.'
+      : '▸ 본문의 빈칸 ①②③… 에 들어갈 단어·구 를 적으세요.',
+  );
+  if (activeKinds.has('sentence')) {
+    headerParts.push(showKorean ? '[번호] 자리에는 영어 문장을 영작하세요.' : '[번호] 자리에도 영어 문장을 영작하세요.');
+  }
+  if (!showKorean) headerParts.push('(한국어 해석 없이)');
+  const headerNote = headerParts.join(' ');
 
   const writeRowsHtml = blankAnswers.length
     ? `<div class="bw-answer-write-block">
@@ -674,9 +1226,8 @@ ${blankAnswers
     : '';
 
   const html = `<section class="bw-section bw-section-unified">
-${sectionMeta(opts)}
-<h2>${escapeHtml(heading)}${showKorean ? ' — 해석 포함' : ' — 해석 제외'}</h2>
-<div class="bw-meta">${headerNote}</div>
+${sectionHead('통합', `${heading.replace(/^통합\s*/, '')}${showKorean ? ' — 해석 포함' : ' — 해석 제외'}`)}
+<div class="bw-instruction">${headerNote}</div>
 <div class="bw-passage">${body}</div>
 ${writeRowsHtml}
 ${essayPrompts}
@@ -693,7 +1244,12 @@ function buildUnifiedAnswer(q: UnifiedQuestion, opts: BuildOptions): string {
   const blanksHtml = q.blankAnswers.length
     ? `<div class="bw-bogi-label" style="color:#b91c1c;">▸ 단어·구 정답 (출현 순)</div>
 <div class="bw-answer-list">${q.blankAnswers
-  .map(a => `<span class="ans"><span class="lab">${escapeHtml(a.label)}</span>${escapeHtml(a.original)}</span>`)
+  .map(a => {
+    const lemma = a.baseForm
+      ? ` <span class="bw-meta" style="margin:0;color:#6b7280">(← ${escapeHtml(a.baseForm)})</span>`
+      : '';
+    return `<span class="ans"><span class="lab">${escapeHtml(a.label)}</span>${escapeHtml(a.original)}${lemma}</span>`;
+  })
   .join('')}</div>`
     : '';
 
@@ -707,20 +1263,24 @@ ${q.essayItems
     : '';
 
   return `<section class="bw-answer-key">
-${sectionMeta(opts)}
-<h2>▣ 정답 — ${escapeHtml(q.heading)}</h2>
-<div class="bw-answer-source">${escapeHtml(opts.textbook)} · ${escapeHtml(opts.sourceKey)} · ${escapeHtml(opts.title)}</div>
+<div class="bw-answer-header">▣ 정답 — ${escapeHtml(q.heading)}</div>
 ${blanksHtml}
 ${essayAnswersHtml}
 </section>`;
 }
 
 /**
- * 통합 페이지 빌더 — 3장 + 보조 섹션.
- * - 1쪽: A/B/C 통합 빈칸 (해석 포함)
- * - 2쪽: A/B/C 통합 빈칸 (해석 제외) — page-break-before
- * - 3쪽: 정답 (양쪽 공통) — page-break-before
- * - 이후 D/E/F 가 활성이면 추가 섹션 (각각 page-break)
+ * 통합 페이지 빌더 — A/B/C/D/I 변형문제 워크북.
+ *
+ * 흐름:
+ *   1쪽: A/B/C 통합 본문 (해석 포함)
+ *   2쪽: A/B/C 통합 본문 (해석 제외)
+ *   3쪽: I 접속사 빈칸 (활성 시)
+ *   4쪽: D 어순배열 (활성 시)
+ *   5쪽: 통합 정답 (A·B·C 단어·구·문장)
+ *   6쪽: I 정답 (활성 시)
+ *
+ * 옛 'E','F' 는 무시 (E 제거 / F 는 별도 「어법공략 워크북」 탭).
  */
 export function buildCombinedHtml(
   opts: BuildOptions,
@@ -728,17 +1288,23 @@ export function buildCombinedHtml(
 ): string {
   const sections: string[] = [];
   const unifiedActive = types.includes('A') || types.includes('B') || types.includes('C');
+  let unifiedAnswer = '';
+  let iAnswerHtml = '';
   if (unifiedActive) {
     const qWith = buildUnifiedQuestion(opts, types, true);
     const qNo = buildUnifiedQuestion(opts, types, false);
     if (qWith.html) sections.push(qWith.html);
     if (qNo.html) sections.push(qNo.html);
-    const ans = buildUnifiedAnswer(qWith, opts);
-    if (ans) sections.push(ans);
+    unifiedAnswer = buildUnifiedAnswer(qWith, opts);
+  }
+  if (types.includes('I')) {
+    const iSect = fragmentI(opts);
+    sections.push(iSect.html);
+    iAnswerHtml = buildConnectorAnswer(iSect.items, opts);
   }
   if (types.includes('D')) sections.push(fragmentD(opts));
-  if (types.includes('E')) sections.push(fragmentE(opts));
-  if (types.includes('F')) sections.push(fragmentF(opts));
+  if (unifiedAnswer) sections.push(unifiedAnswer);
+  if (iAnswerHtml) sections.push(iAnswerHtml);
 
   const body = sections.length > 0
     ? sections.join('\n')
@@ -746,36 +1312,74 @@ export function buildCombinedHtml(
   return htmlShell(`${opts.title} — 통합`, `${header(opts)}\n${body}`);
 }
 
+/** 통합 PDF 가 출력할 페이지 수(섹션 수) — 활성 유형으로 추정. UI 라벨 동기화용. */
+export function estimateCombinedPageCount(types: WorkbookKind[]): number {
+  let n = 0;
+  const unified = types.includes('A') || types.includes('B') || types.includes('C');
+  if (unified) n += 2; // 해석 포함 + 해석 제외
+  if (types.includes('I')) n += 1;
+  if (types.includes('D')) n += 1;
+  if (unified) n += 1; // 통합 정답
+  if (types.includes('I')) n += 1; // I 정답
+  return n;
+}
+
 export interface FolderWorkbookEntry {
   opts: BuildOptions;
   types: WorkbookKind[];
 }
 
+export type FolderPdfMode = 'both' | 'with-ko' | 'no-ko';
+
 /**
- * 폴더 단위 묶음 PDF 빌더 — 워크북별 문제지(해석 포함 → 해석 제외)를 먼저 모두 출력한 뒤,
- * 모든 워크북의 정답 페이지를 맨 뒤에 한 번에 모아서 출력. 인쇄 시 각 섹션 = 1쪽.
+ * 폴더 단위 묶음 PDF 빌더.
+ * - mode='both' (기본): 워크북별 [해석 포함 → 해석 제외] 문제지 → 마지막에 모든 답지
+ * - mode='with-ko': 한국어 해석 포함 문제지만 모음 → 답지
+ * - mode='no-ko': 한국어 해석 제외 문제지만 모음 → 답지
  */
-export function buildFolderHtml(folderName: string, entries: FolderWorkbookEntry[]): string {
+export function buildFolderHtml(
+  folderName: string,
+  entries: FolderWorkbookEntry[],
+  mode: FolderPdfMode = 'both',
+): string {
   const questions: string[] = [];
   const answers: string[] = [];
 
   for (const e of entries) {
     const types = e.types;
     const unifiedActive = types.includes('A') || types.includes('B') || types.includes('C');
-    if (!unifiedActive) continue;
-    const qWith = buildUnifiedQuestion(e.opts, types, true);
-    const qNo = buildUnifiedQuestion(e.opts, types, false);
-    if (qWith.html) questions.push(qWith.html);
-    if (qNo.html) questions.push(qNo.html);
-    const a = buildUnifiedAnswer(qWith, e.opts);
-    if (a) answers.push(a);
+    const iActive = types.includes('I');
+    if (!unifiedActive && !iActive) continue;
+    if (unifiedActive) {
+      const qWith = buildUnifiedQuestion(e.opts, types, true);
+      const qNo = buildUnifiedQuestion(e.opts, types, false);
+      if (mode === 'both') {
+        if (qWith.html) questions.push(qWith.html);
+        if (qNo.html) questions.push(qNo.html);
+      } else if (mode === 'with-ko') {
+        if (qWith.html) questions.push(qWith.html);
+      } else {
+        if (qNo.html) questions.push(qNo.html);
+      }
+      const a = buildUnifiedAnswer(qWith, e.opts);
+      if (a) answers.push(a);
+    }
+    if (iActive) {
+      const iSect = fragmentI(e.opts);
+      if (iSect.items.length) {
+        questions.push(iSect.html);
+        const ia = buildConnectorAnswer(iSect.items, e.opts);
+        if (ia) answers.push(ia);
+      }
+    }
   }
 
   const body = questions.length === 0 && answers.length === 0
     ? '<div class="bw-meta">출력할 워크북이 없습니다.</div>'
     : `${questions.join('\n')}\n${answers.join('\n')}`;
 
-  return htmlShell(`폴더 ${folderName} — 통합 PDF`, body);
+  const titleSuffix = mode === 'with-ko' ? ' (해석 포함)' : mode === 'no-ko' ? ' (해석 제외)' : '';
+  return htmlShell(`폴더 ${folderName} — 통합 PDF${titleSuffix}`, body);
 }
 
 /** 모든 활성 유형의 HTML 을 한 번에 빌드. 비활성 유형은 undefined 로 둔다. */
@@ -788,7 +1392,6 @@ export function buildAllHtml(
   if (types.includes('B')) out.B = buildPhraseBlankHtml(opts);
   if (types.includes('C')) out.C = buildSentenceEssayHtml(opts);
   if (types.includes('D')) out.D = buildSentenceOrderHtml(opts);
-  if (types.includes('E')) out.E = buildKeyExpressionHtml(opts);
-  if (types.includes('F')) out.F = buildGrammarTransformHtml(opts);
+  if (types.includes('I')) out.I = buildConnectorBlankHtml(opts);
   return out;
 }

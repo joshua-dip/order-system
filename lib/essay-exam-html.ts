@@ -140,10 +140,41 @@ function stripInlineHtml(s: string): string {
 }
 
 /**
- * `<code>...</code>` 안의 구문들을 phrase 로 추출.
+ * `<code>...</code>` 안의 구문들을 phrase 로 추출 — answer.text 와 매칭되도록 정규화.
+ *
+ * 모델이 자주 만드는 형태:
+ *   <code>am writing (현재진행)</code>        → "am writing"
+ *   <code>, a team that ... (동격)</code>    → "a team that ..."
+ *   <code>"Use my spare!" (인용)</code>      → "Use my spare!"
+ *
+ * 정규화 규칙:
+ *   - 끝에 붙은 ` (한국어 부연...)` 제거 (한국어 또는 메타 라벨 포함 괄호)
+ *   - 앞쪽의 단독 punctuation/공백 제거 (",", ";", ":" 만 있는 경우)
+ *
  * 설명 영역(` — ` 뒤) 의 `<code>` 인용은 의미 설명용이므로 phrase 후보에서 제외.
  * 어떤 `<code>` 도 없으면 phraseArea 전체를 fallback 으로 사용한다.
  */
+function normalizePhrase(raw: string): string {
+  let p = raw.trim();
+  /* 끝에 붙은 괄호 부연 제거 — 한국어/메타 라벨 (한 줄 안, 중첩 없음). 반복 적용. */
+  while (true) {
+    const next = p.replace(/\s*\([^)]*\)\s*$/u, '').trim();
+    if (next === p) break;
+    p = next;
+  }
+  /* 미닫힌 ` (` 처리 — content 에 ` — ` 가 괄호 안에 있어 phraseArea 가 잘못 잘린 경우 `urge (원형` 같은 상태가 됨. 영어 부분만 남긴다. */
+  const openParenMatch = p.match(/^([\s\S]*?)\s+\([^)]*$/u);
+  if (openParenMatch) p = openParenMatch[1].trim();
+  /* 끝에 붙은 한국어 부연 (괄호 없는 경우): "am writing 현재진행" 같은 케이스. */
+  const koTail = p.match(/^([\s\S]*?[A-Za-z][A-Za-z0-9'\-.,!?":;\s)]*)(?:\s+[가-힣].*)$/u);
+  if (koTail) p = koTail[1].trim();
+  /* 앞쪽 단독 punctuation/접속 부호 제거 */
+  p = p.replace(/^[,;:\s]+/, '').trim();
+  /* 끝쪽 부착 콤마 제거 (마침표/물음표는 문장 종결로 보존) */
+  p = p.replace(/[,;:]+\s*$/, '').trim();
+  return p;
+}
+
 function extractPhrasesFromContent(content: string): string[] {
   const dashIdx = content.indexOf(' — ');
   const phraseArea = dashIdx > 0 ? content.slice(0, dashIdx) : content;
@@ -152,11 +183,11 @@ function extractPhrasesFromContent(content: string): string[] {
   const re = /<code>([\s\S]*?)<\/code>/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(phraseArea)) !== null) {
-    const phrase = stripInlineHtml(m[1]).trim();
+    const phrase = normalizePhrase(stripInlineHtml(m[1]));
     if (phrase) phrases.push(phrase);
   }
   if (phrases.length === 0) {
-    const cleaned = stripInlineHtml(phraseArea).trim();
+    const cleaned = normalizePhrase(stripInlineHtml(phraseArea));
     if (cleaned) phrases.push(cleaned);
   }
   return phrases;
@@ -284,18 +315,36 @@ export function applyExamMetaOverrides(
 ): ExamData {
   const { examTitle, schoolName, grade, examSubtitle } = overrides;
 
-  const extraInfo: MetaInfo[] = [];
-  if (schoolName && schoolName.trim()) extraInfo.push({ label: '학교', value: schoolName.trim() });
-  if (grade && grade.trim()) extraInfo.push({ label: '학년', value: grade.trim() });
+  /* 학교 / 학년 / 성명 / 배점 표준 4 슬롯을 항상 보장. 사용자 미지정 슬롯은 빈 입력란.
+     성명에 '______________' 같은 underscore placeholder 가 들어 있으면 빈 값으로 정규화 —
+     CSS border-bottom 으로 작성란을 그리므로 텍스트 밑줄과 중복되지 않게. */
+  const userInfo = data.meta.info ?? [];
+  const findInfo = (label: string): MetaInfo | undefined =>
+    userInfo.find(i => String(i.label ?? '').trim() === label);
+
+  const standardLabels = new Set(['학교', '학년', '성명', '배점', '과목']);
+  const otherInfo = userInfo.filter(i => !standardLabels.has(String(i.label ?? '').trim()));
+
+  const pickStandard = (label: string, override?: string): string => {
+    const fromOverride = override && override.trim();
+    if (fromOverride) return fromOverride;
+    const raw = String(findInfo(label)?.value ?? '').trim();
+    /* underscore placeholder 는 빈 값으로 */
+    if (/^[_\s]+$/.test(raw)) return '';
+    return raw;
+  };
+
+  const standardInfo: MetaInfo[] = [
+    { label: '학교', value: pickStandard('학교', schoolName) },
+    { label: '학년', value: pickStandard('학년', grade) },
+    { label: '성명', value: pickStandard('성명') },
+    { label: '배점', value: pickStandard('배점') },
+  ];
 
   const nextMeta = { ...data.meta };
   if (examTitle && examTitle.trim()) nextMeta.title = examTitle.trim();
   if (examSubtitle && examSubtitle.trim()) nextMeta.subtitle = examSubtitle.trim();
-  if (extraInfo.length > 0) {
-    nextMeta.info = [...extraInfo, ...(data.meta.info ?? [])];
-  } else {
-    nextMeta.info = [...(data.meta.info ?? [])];
-  }
+  nextMeta.info = [...standardInfo, ...otherInfo];
 
   return {
     ...data,
@@ -316,12 +365,30 @@ export function buildExamHtml(data: ExamData, css: string): string {
     ? `<span class="diff-badge${diffClass}">${data.meta.difficulty}</span>`
     : '';
 
-  const metaSpans = data.meta.info
+  /* 라벨별 modifier — 학년은 작성란 좁게, 배점은 헤더 우측으로 분리 */
+  const labelModifier = (label: string): string => {
+    switch (label.trim()) {
+      case '학년': return ' meta-item--grade';
+      case '성명': return ' meta-item--name';
+      case '학교': return ' meta-item--school';
+      default: return '';
+    }
+  };
+
+  /* 과목 슬롯 폐기, 나머지(학교·학년·성명·배점)는 한 줄에 나열 */
+  const infoItems = (data.meta.info ?? []).filter(item => {
+    const lbl = String(item.label ?? '').trim();
+    return lbl !== '과목';
+  });
+
+  const metaSpans = infoItems
     .map((item) => {
-      const label = escapeHtml(String(item.label ?? ''));
+      const rawLabel = String(item.label ?? '');
+      const label = escapeHtml(rawLabel);
       const raw = String(item.value ?? '').trim();
       const inner = raw ? escapeHtml(raw) : '\u00a0';
-      return `<span class="meta-item"><b class="meta-label">${label}</b><span class="meta-value">${inner}</span></span>`;
+      const mod = labelModifier(rawLabel);
+      return `<span class="meta-item${mod}"><b class="meta-label">${label}</b><span class="meta-value">${inner}</span></span>`;
     })
     .join('\n    ');
 
@@ -447,7 +514,9 @@ ${questionsHtml}
 
 ${svocLegendHtml}
 
+<div class="ans-blocks">
 ${ansBlocksHtml}
+</div>
 
 </body>
 </html>`;

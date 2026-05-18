@@ -50,6 +50,12 @@ async function main() {
   report.generated_questions_from = await count('generated_questions', { textbook: FROM });
   report.narrative_questions_from = await count('narrative_questions', { textbook: FROM });
   report.member_gq_from = await count('member_generated_questions', { textbook: FROM });
+  /* 신규 컬렉션 — 서술형 출제기·서술형집중·블록 빈칸 워크북 */
+  report.essay_exams_from = await count('essay_exams', { textbook: FROM });
+  report.essay_step_workbooks_from = await count('essay_step_workbooks', { textbook: FROM });
+  report.block_workbooks_from = await count('block_workbooks', { textbook: FROM });
+  /* 주문 메타 — orderMeta.textbook 또는 orderMeta.examName 등 가능. 가장 흔한 textbook 만 카운트 */
+  report.orders_from = await count('orders', { 'orderMeta.textbook': FROM });
 
   if (DRY) {
     console.log(JSON.stringify({ dryRun: true, FROM, TO, ...report }, null, 2));
@@ -67,6 +73,20 @@ async function main() {
 
   const rMem = await db.collection('member_generated_questions').updateMany({ textbook: FROM }, { $set: { textbook: TO, updated_at: new Date() } });
   report.member_generated_questions_modified = rMem.modifiedCount;
+
+  /* 신규 컬렉션 일괄 — 모두 textbook 필드를 같은 키로 사용. updatedAt(camel) / updated_at(snake) 혼재라
+     각 컬렉션별로 적절한 timestamp 필드 갱신. */
+  const rEssay = await db.collection('essay_exams').updateMany({ textbook: FROM }, { $set: { textbook: TO, updatedAt: new Date() } });
+  report.essay_exams_modified = rEssay.modifiedCount;
+
+  const rEssayStep = await db.collection('essay_step_workbooks').updateMany({ textbook: FROM }, { $set: { textbook: TO, updatedAt: new Date() } });
+  report.essay_step_workbooks_modified = rEssayStep.modifiedCount;
+
+  const rBlock = await db.collection('block_workbooks').updateMany({ textbook: FROM }, { $set: { textbook: TO, updatedAt: new Date() } });
+  report.block_workbooks_modified = rBlock.modifiedCount;
+
+  const rOrders = await db.collection('orders').updateMany({ 'orderMeta.textbook': FROM }, { $set: { 'orderMeta.textbook': TO, updatedAt: new Date() } });
+  report.orders_modified = rOrders.modifiedCount;
 
   const linkCol = db.collection(TEXTBOOK_LINKS_COLLECTION);
   const oldLink = await linkCol.findOne({ textbookKey: FROM });

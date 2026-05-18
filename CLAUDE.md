@@ -65,7 +65,48 @@ cat draft.json | npm run cc:essay -- save --json -               # stdin (코드
 
 **save JSON 스키마 핵심 키** — `passageId` / `textbook` / `sourceKey` / `difficulty` / `folder` / `examTitle` / `schoolName` / `grade` / `examSubtitle` / `data` (= ExamData). `passageId` 가 있으면 `textbook`/`sourceKey` 자동 보강.
 
+**저장 폴더 자동 생성** — `save` / `save-all` 은 입력 JSON 의 `folder` 가 `essay_exams` 에 한 번도 등장한 적 없으면 placeholder 문서를 1 개 사전 insert 한다 (`/admin/essay-generator` 「📁 새 폴더」 와 동일). 단독 호출도 가능: `npm run cc:essay -- ensure-folder --folder "이름"`.
+
+**한 줄 호출용 워크플로우 프롬프트** (`claude agents` 의 task description 같은 single-line 입력에서도 안전) — `claude agents`/`claude` 채팅에서 매번 멀티라인 프롬프트를 paste 하면 truncate 위험이 있으니 다음을 첨부:
+- 자동 채움 (4 난도 생성·저장 1 cycle): `@scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 "<textbook>" 1 cycle 돌려줘.`
+- audit-content 검증·개선: `@scripts/cc-essay-audit-prompt.md 워크플로우대로 교재 "<textbook>" 검증해줘.`
+
+**완전 자동화 헬퍼 스크립트** (Pro 전용 · 권한 프롬프트 없이 진짜 hands-off):
+```bash
+# 한 교재 자동 채움 — 현재 터미널에서 claude 띄우고 ScheduleWakeup 10분 루프
+./scripts/run-essay-loop.sh "25년 3월 고1 영어모의고사"
+
+# 여러 교재 병렬 — macOS Terminal.app 새 창 N 개 동시 시작
+./scripts/run-essay-loop-multi.sh \
+  "25년 3월 고1 영어모의고사" \
+  "26년 3월 고3 영어모의고사" \
+  "24년 6월 고1 영어모의고사"
+```
+내부에서 `claude --dangerously-skip-permissions "@scripts/cc-essay-loop-prompt.md …"` 로 실행. **에이전트가 룰을 안 어기는 한 안전**하지만, 잘못 만든 명령도 즉시 실행되므로 새 워크플로우 검증할 때는 일반 `claude` 로 먼저 1 cycle 확인.
+
 **금지** — `variant_generate_draft` 와 같은 이유로, 서술형도 `/api/admin/essay-generator/generate` (Anthropic API) 는 Pro 만으로 운영할 땐 호출하지 말 것. CLI 의 `save` 만 사용.
+
+## 서술형집중 워크북 (Pro 전용 — `cc:essay-step`)
+
+한 지문 종합 8섹션 워크북(표지+본문+어휘+어법+영작+빈칸+해석/구문+주제·요약·제목+종합+정답키). 프리미엄 판매용. **API 키 호출 없음** — Pro 채팅에서 8섹션 JSON 작성 → CLI 가 검증·HTML 생성·저장.
+
+```
+npm run cc:essay-step -- textbooks
+npm run cc:essay-step -- passages --textbook "..."
+npm run cc:essay-step -- passage  --id <passageId>                # EN+KO 문장 표
+npm run cc:essay-step -- shortage --textbook "..." [--required 1] [--folder "..."|all]
+npm run cc:essay-step -- save --json draft.json [--dry-run] [--force]   # essay_step_workbooks 에 insert
+cat draft.json | npm run cc:essay-step -- save --json -
+단축: npm run cc:essay-step -- "26년 3월 고1 영어모의고사"
+```
+
+**작성 흐름**
+1. `passage --id …` 로 EN+KO 문장 표 가져오기
+2. 채팅에서 `scripts/cc-essay-step-prompt.md` 규칙대로 8섹션 JSON 작성 (vocab·definitions·grammar_fix/box/passage·word_arrange·ko_to_en·cond_write·inflection·blank_*·translation·syntax·summary·title·comprehensive)
+3. `save --json … --dry-run` 으로 검증
+4. 통과 시 `save --json …` 으로 저장. `/admin/workbook-maker/essay-step` 에서 활용.
+
+**금지** — `/api/admin/workbook-maker/essay-step/generate` (Anthropic API) 는 Pro-only 운영시 호출 X. CLI `save` 만 사용.
 
 ## 블록 빈칸 워크북 (Pro 전용 — `cc:block-workbook`)
 
