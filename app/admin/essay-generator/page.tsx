@@ -672,8 +672,16 @@ function SavedListPanel({
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-white text-xl leading-none">×</button>
         </div>
         <div className="flex flex-1 overflow-hidden">
-          {/* 좌: 폴더 사이드바 */}
-          <aside className="w-[200px] border-r border-slate-700/70 bg-slate-900/40 overflow-y-auto p-2">
+          {/* 좌: 폴더 사이드바 — 한글 교재명이 길어 2줄까지 wrap, 슬림 스크롤바 */}
+          <aside
+            className="w-[240px] shrink-0 border-r border-slate-700/70 bg-slate-900/40 overflow-y-auto p-2
+              [scrollbar-gutter:stable]
+              [&::-webkit-scrollbar]:w-1.5
+              [&::-webkit-scrollbar-track]:bg-transparent
+              [&::-webkit-scrollbar-thumb]:bg-slate-600/70 [&::-webkit-scrollbar-thumb]:rounded-full
+              [&::-webkit-scrollbar-thumb:hover]:bg-slate-500"
+            style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(71 85 105 / 0.7) transparent' }}
+          >
             <button
               type="button"
               onClick={() => setFolderFilter('')}
@@ -701,16 +709,16 @@ function SavedListPanel({
               const count = folderCounts.get(f) ?? 0;
               const printing = printingFolder === f;
               return (
-                <div key={f} className="flex items-stretch gap-0.5 mb-0.5">
+                <div key={f} className="flex items-start gap-0.5 mb-0.5">
                   <button
                     type="button"
                     onClick={() => setFolderFilter(f)}
-                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded truncate ${
+                    className={`flex-1 min-w-0 text-left text-xs px-2 py-1.5 rounded leading-snug break-keep ${
                       folderFilter === f ? 'bg-emerald-700 text-white' : 'text-slate-300 hover:bg-slate-700/60'
                     }`}
-                    title={f}
+                    title={`${f} (${count})`}
                   >
-                    📂 {f} ({count})
+                    <span className="line-clamp-2">📂 {f} <span className="text-slate-400">({count})</span></span>
                   </button>
                   {count > 0 && (
                     <button
