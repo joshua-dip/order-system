@@ -138,14 +138,22 @@ function SavedListPanel({
   /** 전체선택 출력 모드 선택 모달 */
   const [bulkPrintModalOpen, setBulkPrintModalOpen] = useState(false);
 
-  const fetchList = useCallback(async () => {
+  /** 서버측 폴더별 도큐먼트 카운트 (사이드바용). 폴더 필터와 무관하게 항상 정확. */
+  const [serverFolderCounts, setServerFolderCounts] = useState<Record<string, number>>({});
+
+  const fetchList = useCallback(async (overrideFolder?: string) => {
     setLoading(true);
-    const res = await fetch('/api/admin/essay-generator/exams', { credentials: 'include' });
+    const f = overrideFolder !== undefined ? overrideFolder : folderFilter;
+    const qs = f ? `?folder=${encodeURIComponent(f)}` : '';
+    const res = await fetch(`/api/admin/essay-generator/exams${qs}`, { credentials: 'include' });
     const d = await res.json();
     setItems(d.items ?? []);
     setFolders(d.folders ?? ['기본']);
+    if (d.folderCounts && typeof d.folderCounts === 'object') {
+      setServerFolderCounts(d.folderCounts as Record<string, number>);
+    }
     setLoading(false);
-  }, []);
+  }, [folderFilter]);
 
   useEffect(() => { fetchList(); }, [fetchList]);
 
@@ -655,10 +663,15 @@ function SavedListPanel({
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
 
+  /** 사이드바 카운트는 서버 aggregation 우선 (limit 영향 없음). 서버 값 없으면 client items 로 폴백. */
   const folderCounts = new Map<string, number>();
-  for (const it of items) {
-    const key = (it.folder || '').trim() || '기본';
-    folderCounts.set(key, (folderCounts.get(key) ?? 0) + 1);
+  if (Object.keys(serverFolderCounts).length > 0) {
+    for (const [k, v] of Object.entries(serverFolderCounts)) folderCounts.set(k, v);
+  } else {
+    for (const it of items) {
+      const key = (it.folder || '').trim() || '기본';
+      folderCounts.set(key, (folderCounts.get(key) ?? 0) + 1);
+    }
   }
   for (const f of folders) if (!folderCounts.has(f)) folderCounts.set(f, 0);
   const folderList = Array.from(folderCounts.keys()).sort((a, b) => {
@@ -666,9 +679,9 @@ function SavedListPanel({
     if (b === '기본') return 1;
     return a.localeCompare(b, 'ko');
   });
-  const filteredItems = folderFilter
-    ? items.filter(it => ((it.folder || '').trim() || '기본') === folderFilter)
-    : items;
+  /* 서버측에서 이미 folder 로 필터링했으므로 클라이언트 추가 필터링 불필요.
+     단, 전체 모드(folderFilter === '')에선 items 가 전체이고 사용자가 즉시 폴더 클릭하면 fetchList 가 재요청. */
+  const filteredItems = items;
   const visibleIds = filteredItems.map(it => it._id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
   const selectedInView = visibleIds.filter(id => selectedIds.has(id)).length;

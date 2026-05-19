@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
-import { listEssayExams, listFolders, saveEssayExam } from '@/lib/essay-exams-store';
+import { listEssayExams, listFolderCounts, listFolders, saveEssayExam } from '@/lib/essay-exams-store';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * GET /api/admin/essay-generator/exams
+ *   - 기본: 전체 items (limit 5000) + 폴더 목록 + 폴더별 카운트
+ *   - ?folder=<이름>: 그 폴더의 items 만 (limit 없음) + 폴더 목록 + 카운트
+ *     큰 컬렉션에서 사이드바 카운트는 정확히 표시되면서 본문은 선택 폴더만 가볍게.
+ */
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
+  const folder = request.nextUrl.searchParams.get('folder')?.trim();
+
   try {
-    const [items, folders] = await Promise.all([listEssayExams(), listFolders()]);
-    return NextResponse.json({ items, folders });
+    const [items, folders, folderCounts] = await Promise.all([
+      listEssayExams(folder ? { folder } : undefined),
+      listFolders(),
+      listFolderCounts(),
+    ]);
+    return NextResponse.json({ items, folders, folderCounts });
   } catch (e) {
     console.error('[essay-exams GET]', e);
     return NextResponse.json({ error: '목록 조회 실패' }, { status: 500 });

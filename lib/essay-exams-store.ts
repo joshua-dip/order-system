@@ -36,18 +36,27 @@ export interface EssayExamListItem {
   updatedAt: string;
 }
 
-export async function listEssayExams(): Promise<EssayExamListItem[]> {
+/**
+ * 저장된 문제 목록.
+ *
+ * - folder 인자 없음: 전체 (안전상 limit 5000 적용 — 그 이상은 폴더로 필터 후 봐야).
+ * - folder 인자 있음: 그 폴더만 — limit 없이 모두 반환. (폴더당 보통 100건 단위)
+ */
+export async function listEssayExams(options?: { folder?: string }): Promise<EssayExamListItem[]> {
   const db = await getDb('gomijoshua');
-  const docs = await db
+  const baseFilter: Record<string, unknown> = {
+    isPlaceholder: { $ne: true },
+    $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],
+  };
+  const filter = options?.folder ? { ...baseFilter, folder: options.folder } : baseFilter;
+
+  let cursor = db
     .collection(COL)
-    .find({
-      isPlaceholder: { $ne: true },   // 폴더 더미 문서 제외
-      $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],  // 구버전 더미 문서도 제외
-    })
+    .find(filter)
     .project({ title: 1, textbook: 1, sourceKey: 1, difficulty: 1, folder: 1, order: 1, createdAt: 1, updatedAt: 1 })
-    .sort({ folder: 1, order: 1, createdAt: 1 })
-    .limit(2000)
-    .toArray();
+    .sort({ folder: 1, order: 1, createdAt: 1 });
+  if (!options?.folder) cursor = cursor.limit(5000);
+  const docs = await cursor.toArray();
 
   return docs.map(d => ({
     _id: String(d._id),
@@ -68,6 +77,26 @@ export async function listFolders(): Promise<string[]> {
   const result = (folders as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
   if (!result.includes('기본')) result.unshift('기본');
   return result;
+}
+
+/** 폴더별 도큐먼트 수 — 사이드바 카운트용. limit 영향 없이 정확. */
+export async function listFolderCounts(): Promise<Record<string, number>> {
+  const db = await getDb('gomijoshua');
+  const pipeline: object[] = [
+    {
+      $match: {
+        isPlaceholder: { $ne: true },
+        $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],
+      },
+    },
+    { $group: { _id: { $ifNull: ['$folder', '기본'] }, count: { $sum: 1 } } },
+  ];
+  const rows = await db.collection(COL).aggregate(pipeline).toArray();
+  const out: Record<string, number> = {};
+  for (const r of rows) {
+    out[String(r._id)] = Number(r.count ?? 0);
+  }
+  return out;
 }
 
 export async function getEssayExam(id: string): Promise<EssayExamDocWithStringId | null> {
