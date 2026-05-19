@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import AdminSidebar from '../_components/AdminSidebar';
 import type { SharedResourceLink } from '@/lib/shared-resources-shared';
 
 interface DraftState {
@@ -12,6 +14,8 @@ interface DraftState {
 const EMPTY_DRAFT: DraftState = { title: '', subtitle: '', blogUrl: '' };
 
 export default function AdminSharedResourcesPage() {
+  const router = useRouter();
+  const [adminLoginId, setAdminLoginId] = useState('');
   const [items, setItems] = useState<SharedResourceLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,6 +24,16 @@ export default function AdminSharedResourcesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<DraftState>(EMPTY_DRAFT);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d?.user || d.user.role !== 'admin') { router.replace('/admin/login'); return; }
+        setAdminLoginId(d.user.loginId ?? '');
+      })
+      .catch(() => router.replace('/admin/login'));
+  }, [router]);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -154,7 +168,9 @@ export default function AdminSharedResourcesPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="min-h-screen bg-slate-900 flex text-white">
+      <AdminSidebar loginId={adminLoginId} />
+      <main className="flex-1 overflow-auto p-6 max-w-4xl">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-white">공유자료</h1>
         <p className="mt-1 text-sm text-slate-400">
@@ -331,6 +347,7 @@ export default function AdminSharedResourcesPage() {
           </ul>
         )}
       </section>
+      </main>
     </div>
   );
 }

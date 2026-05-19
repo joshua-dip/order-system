@@ -2625,6 +2625,14 @@ export default function AdminDashboardPage() {
           >
             쏠북 강별 링크 관리
           </Link>
+          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">PUBLIC</p>
+          <Link
+            href="/admin/shared-resources"
+            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            공유자료
+          </Link>
+
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
           <button
             type="button"
