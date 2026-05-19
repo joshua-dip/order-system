@@ -833,18 +833,32 @@ function SavedListPanel({
                       type="button"
                       onClick={() => setBulkPrintModalOpen(true)}
                       disabled={printingSelected}
-                      className="text-xs px-2.5 py-1 rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+                      className="text-xs px-2.5 py-1 rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 inline-flex items-center gap-1.5"
                     >
-                      {printingSelected ? '생성 중…' : `선택 ${selectedInView}건 출력 ▾`}
+                      {printingSelected ? (
+                        <>
+                          <Spinner className="w-3 h-3" />
+                          <span>생성 중<LoadingDots /></span>
+                        </>
+                      ) : (
+                        `선택 ${selectedInView}건 출력 ▾`
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={handleSelectedMoveFolder}
                       disabled={movingSelected}
-                      className="text-xs px-2.5 py-1 rounded bg-emerald-700 text-white hover:bg-emerald-600 disabled:opacity-50"
+                      className="text-xs px-2.5 py-1 rounded bg-emerald-700 text-white hover:bg-emerald-600 disabled:opacity-50 inline-flex items-center gap-1.5"
                       title="선택한 항목을 특정 폴더로 일괄 이동"
                     >
-                      {movingSelected ? '이동 중…' : `선택 ${selectedInView}건 폴더 이동`}
+                      {movingSelected ? (
+                        <>
+                          <Spinner className="w-3 h-3" />
+                          <span>이동 중<LoadingDots /></span>
+                        </>
+                      ) : (
+                        `선택 ${selectedInView}건 폴더 이동`
+                      )}
                     </button>
                   </>
                 )}
@@ -1152,13 +1166,50 @@ function SavedListPanel({
                 <div className="text-[11px] text-fuchsia-200/70 mt-0.5">「기본난도.pdf · 중난도.pdf …」 N개 PDF 를 ZIP 하나로 다운로드</div>
               </button>
               {printingSelected && (
-                <div className="text-xs text-emerald-300 text-center py-2">생성 중… (PDF 변환에 다소 시간이 걸립니다)</div>
+                <div className="mt-2 px-3 py-3 rounded-lg bg-emerald-950/40 border border-emerald-700/50">
+                  <div className="flex items-center justify-center gap-2 text-emerald-200">
+                    <Spinner className="w-4 h-4" />
+                    <span className="text-sm font-semibold">
+                      PDF 생성 중<LoadingDots />
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1 rounded-full bg-emerald-900/60 overflow-hidden">
+                    <div className="h-full w-1/3 bg-emerald-400/80 animate-[shimmer_1.4s_ease-in-out_infinite]"
+                         style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(110,231,183,0.9), transparent)' }} />
+                  </div>
+                  <p className="mt-2 text-[11px] text-emerald-300/70 text-center">
+                    선택 항목 수에 따라 30초~2분 정도 소요됩니다. 창을 닫지 마세요.
+                  </p>
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * 로딩 표시 컴포넌트들
+ * ────────────────────────────────────────────────────────────────────────── */
+
+function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LoadingDots() {
+  return (
+    <span className="inline-flex gap-0.5 ml-0.5 align-middle">
+      <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+      <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+      <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+    </span>
   );
 }
 
