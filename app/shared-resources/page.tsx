@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { listExamSummaries, formatFileSize } from '@/lib/shared-resources';
+import { listSharedResources } from '@/lib/shared-resources';
 import SharedResourcesHeader from './_components/SharedResourcesHeader';
 import { DocumentStackIcon, LockOpenIcon } from './_components/Icons';
 
@@ -8,13 +7,11 @@ export const metadata = {
   description: '학원에서 공유하는 학습 자료를 무료로 다운로드할 수 있습니다.',
 };
 
-export const dynamic = 'force-static';
-export const revalidate = 60;
+/* DB 에서 매 요청 시 최신 목록을 보여준다. 항목이 바뀐 직후 새로고침으로 즉시 반영. */
+export const dynamic = 'force-dynamic';
 
-export default function SharedResourcesIndexPage() {
-  const exams = listExamSummaries();
-  const totalFiles = exams.reduce((s, e) => s + e.stats.totalFiles, 0);
-  const totalBytes = exams.reduce((s, e) => s + e.stats.totalBytes, 0);
+export default async function SharedResourcesIndexPage() {
+  const items = await listSharedResources();
 
   return (
     <>
@@ -30,32 +27,20 @@ export default function SharedResourcesIndexPage() {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">공유자료</h1>
             <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
-              영어 모의고사·교재 학습용 자료입니다. <strong>HWP</strong> 와 <strong>PDF</strong> 두 가지 형식으로 제공되며,
-              한 번에 묶음 ZIP 다운로드도 가능합니다.
+              영어 모의고사·교재 학습용 자료입니다. 카드를 클릭하면 자료가 정리된 블로그 글이 새 탭으로 열립니다.
             </p>
-            {exams.length > 0 && (
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                <span>회차 <strong className="text-slate-700">{exams.length}</strong></span>
-                <span className="text-slate-300">·</span>
-                <span>파일 <strong className="text-slate-700">{totalFiles.toLocaleString()}</strong></span>
-                {formatFileSize(totalBytes) && (
-                  <>
-                    <span className="text-slate-300">·</span>
-                    <span>총 <strong className="text-slate-700">{formatFileSize(totalBytes)}</strong></span>
-                  </>
-                )}
-              </div>
-            )}
           </header>
 
-          {exams.length === 0 ? (
+          {items.length === 0 ? (
             <EmptyState />
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">
-              {exams.map((exam) => (
-                <li key={exam.slug}>
-                  <Link
-                    href={`/shared-resources/${encodeURIComponent(exam.slug)}`}
+              {items.map((it) => (
+                <li key={it._id}>
+                  <a
+                    href={it.blogUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="block rounded-2xl border border-slate-200 bg-white p-5 hover:border-emerald-400 hover:shadow-md transition-all"
                   >
                     <div className="flex items-start gap-3">
@@ -64,28 +49,20 @@ export default function SharedResourcesIndexPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-slate-900 leading-tight break-keep">
-                          {exam.label}
+                          {it.title}
                         </h3>
-                        {exam.subtitle && (
-                          <p className="mt-0.5 text-xs text-slate-500">{exam.subtitle}</p>
+                        {it.subtitle && (
+                          <p className="mt-0.5 text-xs text-slate-500">{it.subtitle}</p>
                         )}
-                        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                          <span>카테고리 {exam.stats.categoryCount}</span>
-                          <span className="text-slate-300">·</span>
-                          <span>파일 {exam.stats.totalFiles.toLocaleString()}</span>
-                          {formatFileSize(exam.stats.totalBytes) && (
-                            <>
-                              <span className="text-slate-300">·</span>
-                              <span>{formatFileSize(exam.stats.totalBytes)}</span>
-                            </>
-                          )}
-                        </div>
+                        <p className="mt-3 text-[11px] text-emerald-700">
+                          블로그로 이동하여 다운로드 →
+                        </p>
                       </div>
-                      <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
                     </div>
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -100,7 +77,7 @@ function EmptyState() {
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
       <div className="inline-flex w-14 h-14 items-center justify-center rounded-full bg-slate-100 mb-3">
-        <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h6l5 5v11a2 2 0 01-2 2z" />
         </svg>
       </div>
