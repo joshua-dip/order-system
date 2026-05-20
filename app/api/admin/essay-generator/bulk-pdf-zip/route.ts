@@ -29,10 +29,12 @@ export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { groups?: Array<{ name?: string; ids?: string[] }> };
+  let body: { groups?: Array<{ name?: string; ids?: string[] }>; zipName?: string };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 });
   }
+
+  const clientZipName = typeof body.zipName === 'string' ? body.zipName.trim() : '';
 
   const groups = (body.groups ?? []).filter(
     (g): g is { name: string; ids: string[] } =>
@@ -117,7 +119,11 @@ export async function POST(request: NextRequest) {
       compressionOptions: { level: 6 },
     })) as Uint8Array;
 
-    const zipName = sanitizeFilename(`서술형_${groups.length}그룹_${new Date().toISOString().slice(0, 10)}`) + '.zip';
+    /* 파일명: 클라이언트가 보낸 zipName (교재명 기반) 을 우선. 없거나 sanitize 후 비면 fallback. */
+    const sanitizedClient = clientZipName
+      ? sanitizeFilename(clientZipName.replace(/\.zip$/i, ''))
+      : '';
+    const zipName = (sanitizedClient && sanitizedClient !== 'untitled' ? sanitizedClient : `서술형_${groups.length}그룹_${new Date().toISOString().slice(0, 10)}`) + '.zip';
     const encoded = encodeURIComponent(zipName);
     const fallback = `essay-bulk-${Date.now()}.zip`;
 

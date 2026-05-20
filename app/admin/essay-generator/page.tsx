@@ -537,11 +537,28 @@ function SavedListPanel({
         }));
       }
 
+      /* ZIP 파일명 — 선택 항목의 교재명 기반. 같은 교재만 있으면 그 이름 그대로,
+         여러 교재 섞이면 "교재A 외 N개". 난도별 모드는 뒤에 _난도별 접미사. */
+      const textbookSet = new Set<string>();
+      for (const it of selectedItems) {
+        const tb = (it.textbook ?? '').trim();
+        if (tb) textbookSet.add(tb);
+      }
+      const textbookList = [...textbookSet];
+      const firstTextbook = textbookList[0] ?? '서술형';
+      const textbookLabel =
+        textbookList.length <= 1
+          ? firstTextbook
+          : `${firstTextbook} 외 ${textbookList.length - 1}개`;
+      const zipName = sanitizeFilename(
+        mode === 'per-difficulty' ? `${textbookLabel}_난도별` : textbookLabel,
+      ) + '.zip';
+
       const res = await fetch('/api/admin/essay-generator/bulk-pdf-zip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ groups }),
+        body: JSON.stringify({ groups, zipName }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
