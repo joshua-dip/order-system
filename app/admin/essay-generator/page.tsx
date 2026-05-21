@@ -491,13 +491,32 @@ function SavedListPanel({
       const diffOrder: Record<string, number> = { 기본난도: 0, 중난도: 1, 고난도: 2, 최고난도: 3 };
 
       if (mode === 'single') {
-        /* 단일 모드 — 기존 print 다이얼로그 유지 (다이얼로그 1번이라 사용자 부담 없음) */
-        const firstSk = selectedItems[0]?.sourceKey?.trim() ?? '';
-        const title = sanitizeFilename(
-          firstSk
-            ? (selectedItems.length === 1 ? firstSk : `${firstSk} 외 ${selectedItems.length - 1}건 (총 ${selectedItems.length}건)`)
-            : `선택 ${selectedItems.length}건`,
-        );
+        /* 단일 모드 — 한 PDF 합본. 파일명: 「교재명 폴더명 전체」 패턴.
+           단일 항목이면 sourceKey 그대로, 여러 교재면 "외 N개" 폴백. */
+        const textbookSet = new Set<string>();
+        const folderSet = new Set<string>();
+        for (const it of selectedItems) {
+          const tb = (it.textbook ?? '').trim();
+          if (tb) textbookSet.add(tb);
+          const fd = (it.folder ?? '').trim();
+          if (fd) folderSet.add(fd);
+        }
+        const textbooks = [...textbookSet];
+        const folders = [...folderSet];
+
+        let rawTitle: string;
+        if (selectedItems.length === 1) {
+          rawTitle = selectedItems[0]?.sourceKey?.trim() || selectedItems[0]?.textbook?.trim() || '선택 1건';
+        } else if (textbooks.length === 0) {
+          rawTitle = `선택 ${selectedItems.length}건`;
+        } else if (textbooks.length === 1 && folders.length === 1) {
+          rawTitle = `${textbooks[0]} ${folders[0]} 전체`;
+        } else if (textbooks.length === 1) {
+          rawTitle = `${textbooks[0]} 전체`;
+        } else {
+          rawTitle = `${textbooks[0]} 외 ${textbooks.length - 1}개`;
+        }
+        const title = sanitizeFilename(rawTitle);
         await openPrintForIds(selectedItems.map(i => i._id), title);
         return;
       }
