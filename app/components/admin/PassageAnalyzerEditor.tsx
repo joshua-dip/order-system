@@ -13,6 +13,7 @@ import type {
   VocabularyEntry,
 } from '@/lib/passage-analyzer-types';
 import { SVOC_COMPONENTS, passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
+import CcSyntaxCliPanel from '@/app/admin/syntax-analyzer/_components/CcSyntaxCliPanel';
 import { findWordIndices, getSyntaxColorForLabel, SYNTAX_LABEL_COLORS } from '@/lib/syntax-analyzer-word-match';
 import {
   deriveSentencesFromPassageContent,
@@ -2737,6 +2738,10 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           >
             AI 단어장
           </button>
+          <div className="pt-3 mt-2 border-t border-slate-700/60">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 px-1 mb-2">Pro 자동화</p>
+            <CcSyntaxCliPanel variant="modal-button" passageId={passageId ?? undefined} />
+          </div>
         </div>
         {viewMode === 'syntax' && (
           <select
