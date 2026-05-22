@@ -30,7 +30,7 @@ export default function CcSyntaxCliPanel({ variant = 'inline', passageId, defaul
             onClick={() => setOpen(false)}
           >
             <div
-              className="bg-slate-900 border border-violet-700/50 rounded-xl shadow-2xl w-full max-w-2xl my-auto"
+              className="bg-slate-900 border border-violet-700/50 rounded-xl shadow-2xl w-full max-w-3xl my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <header className="flex items-center justify-between px-5 py-3 border-b border-slate-700">
@@ -83,6 +83,9 @@ export default function CcSyntaxCliPanel({ variant = 'inline', passageId, defaul
 function CcSyntaxCliContent({ passageId }: { passageId?: string }) {
   const pid = passageId?.trim() || '<passageId>';
   const draftPath = passageId ? `.syntax-drafts/${passageId}.json` : '.syntax-drafts/<pid>.json';
+  const oneShot = passageId
+    ? `@scripts/cc-syntax-prompt.md 워크플로우대로 passageId ${pid} 한 건의 모든 분석 항목(종합분석·주제문장·서술형대비·어법·문맥·끊어읽기·SVOC·구문·문법태그·문법포인트·단어장) 작성 → dry-run 통과 시 save 까지 자동 진행해줘. 실패 시 errors 보고하고 멈춰.`
+    : `@scripts/cc-syntax-prompt.md 워크플로우대로 passageId <여기에 ID 붙여넣기> 한 건의 모든 분석 항목 작성 → dry-run 통과 시 save 까지 자동 진행해줘.`;
 
   return (
     <div className="space-y-3 text-xs text-violet-100/90">
@@ -90,16 +93,29 @@ function CcSyntaxCliContent({ passageId }: { passageId?: string }) {
         <strong className="text-violet-200">ANTHROPIC API 키 호출 없음</strong> — Pro 채팅에서 분석 JSON 을 작성하고 CLI 가 검증·저장만. 종합분석·주제문장·서술형대비·어법·문맥·끊어읽기·SVOC·구문·문법태그·문법포인트·단어장 등 모든 카테고리를 한 번에 채워 저장.
       </p>
 
-      {passageId && (
-        <div className="rounded-lg bg-emerald-950/30 border border-emerald-700/40 p-3 space-y-2">
-          <div className="text-[11px] text-emerald-300 font-semibold uppercase tracking-wide">
-            ⚡ 현재 지문에 바로 적용 (passageId: <span className="font-mono">{passageId}</span>)
-          </div>
-          <CmdBlock cmd={`npm run cc:syntax -- passage --id ${pid}`} desc="이 지문 원문·문장표 받기" />
-          <CmdBlock cmd={`npm run cc:syntax -- save --json ${draftPath} --dry-run`} desc="검증" />
-          <CmdBlock cmd={`npm run cc:syntax -- save --json ${draftPath}`} desc="실제 저장" />
-          <CmdBlock cmd={`npm run cc:syntax -- export ${pid}`} desc="기존 분석 백업" />
+      {/* ⚡ 한 줄 명령 — Claude Code 채팅에 paste 한 번으로 4 단계 자동 진행 */}
+      <div className="rounded-lg bg-amber-950/30 border-2 border-amber-500/60 p-3 space-y-2 shadow-[0_0_15px_-5px_rgba(245,158,11,0.5)]">
+        <div className="text-[11px] text-amber-300 font-bold uppercase tracking-wide flex items-center gap-1.5">
+          ⚡ 한 번에 끝내기 — Claude Code 채팅에 paste 한 번이면 끝
         </div>
+        <p className="text-[10px] text-amber-200/70 leading-relaxed">
+          이 문장 그대로 Claude Code 에 paste 하면 클로드가 자동으로 (1) 지문 받기 → (2) JSON 작성 → (3) dry-run 검증 → (4) save 까지 진행합니다. 실패 시 멈추고 보고.
+        </p>
+        <BigCopyBlock text={oneShot} buttonLabel="🚀 명령 복사" />
+      </div>
+
+      {passageId && (
+        <details className="rounded-lg bg-slate-950/60 border border-violet-700/30 p-3">
+          <summary className="text-[11px] text-violet-300 font-semibold uppercase tracking-wide cursor-pointer">
+            세분 명령 (단계별 직접 실행 — 디버깅용)
+          </summary>
+          <div className="mt-2 space-y-2">
+            <CmdBlock cmd={`npm run cc:syntax -- passage --id ${pid}`} desc="① 지문 원문·문장표" />
+            <CmdBlock cmd={`npm run cc:syntax -- save --json ${draftPath} --dry-run`} desc="② 검증" />
+            <CmdBlock cmd={`npm run cc:syntax -- save --json ${draftPath}`} desc="③ 실제 저장" />
+            <CmdBlock cmd={`npm run cc:syntax -- export ${pid}`} desc="(백업) 기존 분석 덤프" />
+          </div>
+        </details>
       )}
 
       <div className="rounded-lg bg-slate-950/60 border border-violet-700/30 p-3 space-y-2">
@@ -133,6 +149,43 @@ function CcSyntaxCliContent({ passageId }: { passageId?: string }) {
           <li>검증 실패 시 <code>--force</code> 같은 우회 (옵션 없음)</li>
         </ul>
       </div>
+    </div>
+  );
+}
+
+/** 한 줄 명령 큰 박스 + 도드라진 복사 버튼. 멀티라인 텍스트 가독성 위해 별도 컴포넌트. */
+function BigCopyBlock({ text, buttonLabel }: { text: string; buttonLabel: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <pre className="text-[11px] text-amber-100 bg-slate-950/80 px-3 py-2.5 rounded font-mono whitespace-pre-wrap break-words leading-relaxed border border-amber-700/30">{text}</pre>
+      <button
+        type="button"
+        onClick={() => void handleCopy()}
+        className={`self-end px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+          copied
+            ? 'bg-emerald-600 text-white'
+            : 'bg-amber-500 hover:bg-amber-400 text-slate-900'
+        }`}
+      >
+        {copied ? '✓ 복사됨' : buttonLabel}
+      </button>
     </div>
   );
 }

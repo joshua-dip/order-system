@@ -214,7 +214,24 @@ npm run cc:syntax -- save --json .syntax-drafts/<passageId>.json
 
 ---
 
-## 5. 금지 사항
+## 5. 한 번에 끝내기 (Claude Code 자동 진행)
+
+사용자가 다음 패턴으로 한 줄 명령을 주면 위 1~4 단계를 **중단 없이 자동 진행**:
+
+```
+@scripts/cc-syntax-prompt.md 워크플로우대로 passageId <X> 한 건의 모든 분석 항목 작성 → dry-run 통과 시 save 까지 자동 진행해줘.
+```
+
+이 경우 클로드는:
+1. `npm run cc:syntax -- passage --id <X>` 호출 → 지문·문장표 받기
+2. `.syntax-drafts/<X>.json` 에 12 카테고리 모두 채워 JSON 작성
+3. `npm run cc:syntax -- save --json .syntax-drafts/<X>.json --dry-run` 으로 검증
+4. **검증 통과** → `npm run cc:syntax -- save --json .syntax-drafts/<X>.json` 로 저장
+5. 짧은 결과 보고 (progress.percent · version)
+
+**검증 실패** 시 errors 를 사용자에게 보고하고 멈춤. `--force` 자동 사용 X.
+
+## 6. 금지 사항
 
 - `passage-analyzer-cli.ts run-ai` (ANTHROPIC API 키) 호출 **금지**.
 - `/api/admin/passage-analyzer/comprehensive-analysis` 등 AI 라우트 직접 호출 **금지**.
