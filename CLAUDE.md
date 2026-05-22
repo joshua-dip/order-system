@@ -132,6 +132,28 @@ cat draft.json | npm run cc:block-workbook -- save --json -             # stdin 
 
 **금지** — `/api/admin/block-workbook/generate` 라우트는 **만들지 않음** (Pro-only 정책). CLI `save` 만 사용. 자동 lemma 추론·자동 한국어 번역 라이브러리 추가 X — 채팅에서 직접 입력하거나 `passages.content.sentences_ko` fallback.
 
+## 지문분석기 (Pro 전용 — `cc:syntax`)
+
+한 지문의 **모든 분석 카테고리**(종합분석·주제문장·서술형대비·어법·문맥·끊어읽기·SVOC·구문·문법태그·문법포인트·단어장) 를 채워 `passage_analyses.passageStates.main` 에 저장. **API 키 호출 없음** — Pro 채팅에서 PassageStateStored JSON 작성 → CLI 검증·저장만.
+
+```
+npm run cc:syntax -- textbooks
+npm run cc:syntax -- passages --textbook "..."
+npm run cc:syntax -- passage  --id <passageId>           # 지문 + 현재 진척률
+npm run cc:syntax -- shortage --textbook "..." [--required 100]
+npm run cc:syntax -- next-empty --textbook "..." [--required 100]
+npm run cc:syntax -- save --json draft.json [--dry-run]  # passageId 는 JSON 안 필드 또는 --passage-id
+npm run cc:syntax -- save-all draft1.json draft2.json [--dry-run]
+npm run cc:syntax -- export <passageId>                  # 기존 main JSON 덤프
+단축: npm run cc:syntax -- "<교재명>"  →  shortage
+```
+
+**작성 흐름** — `scripts/cc-syntax-prompt.md` 의 항목별 규칙 참조. 자동 채움 루프는 `@scripts/cc-syntax-loop-prompt.md 워크플로우대로 교재 "<textbook>" 1 cycle 돌려줘`.
+
+**save JSON 스키마** — `{ passageId, main: PassageStateStored }` 또는 `{ passageId, sentences, koreanSentences, ... }` (top-level 본문). 인덱스는 모두 `sentences` 배열 idx 기준 (svocData/syntaxPhrases/grammarTags 의 sentenceIndex / startIndex 등).
+
+**금지** — `passage-analyzer-cli.ts run-ai` (ANTHROPIC API) Pro-only 운영 시 호출 X. CLI `save` 만 사용.
+
 ## 대기 vs 신규 작성 (한 번에 보기)
 
 1. **`pendingReviewTotal`** — 이미 DB에 있으나 **status=대기**. 할 일: 문제 풀기 → **`variant_review_pending_record`** → 정답 맞으면 **완료**(첫 시도) 또는 **`attemptNumber`≥2**면 **검수불일치**.
