@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PassageAnalyzerEditor } from '@/app/components/admin/PassageAnalyzerEditor';
+import CcSyntaxCliPanel from '../_components/CcSyntaxCliPanel';
 
 function AnalyzeInner() {
   const sp = useSearchParams();
@@ -22,7 +23,14 @@ function AnalyzeInner() {
     );
   }
 
-  return <PassageAnalyzerEditor passageId={passageId} />;
+  return (
+    <>
+      <div className="max-w-7xl mx-auto px-4 pt-3">
+        <CcSyntaxCliPanel />
+      </div>
+      <PassageAnalyzerEditor passageId={passageId} />
+    </>
+  );
 }
 
 export default function AnalyzePage() {
