@@ -334,7 +334,7 @@ export default function AdminSyntaxAnalyzerPage() {
             <strong className="text-slate-300">분석 작업대</strong>에서 구문·SVOC·저장 등을 진행합니다.
           </p>
         </header>
-        <CcSyntaxCliPanel />
+        <CcSyntaxCliPanel textbook={filterTextbook || undefined} />
         <div className="space-y-6">
           <section className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
             <h2 className="text-sm font-bold text-slate-200 mb-1">지문 선택 (passages)</h2>
