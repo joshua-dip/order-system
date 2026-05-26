@@ -64,6 +64,7 @@ import {
   buildCliCommand,
   buildCliPromptForEssayDraft,
 } from '@/lib/member-essay-draft-claude';
+import { PassageAnalysisPdfDocument } from '@/app/components/admin/PassageAnalysisPdfDocument';
 
 const SYNTAX_LABEL_OPTIONS = Object.keys(SYNTAX_LABEL_COLORS);
 
@@ -378,6 +379,9 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
     source_key?: string;
   } | null>(null);
   const [vocabExportBusy, setVocabExportBusy] = useState<'passage' | 'textbook' | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfMounted, setPdfMounted] = useState(false);
+  const pdfRef = useRef<HTMLDivElement | null>(null);
   const [cefrAiRowIndex, setCefrAiRowIndex] = useState<number | null>(null);
   const [cefrAiInline, setCefrAiInline] = useState(false);
   const cefrAiLockRef = useRef(false);
@@ -945,6 +949,117 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       setBusy(null);
     }
   };
+
+  const handleExportPdf = useCallback(async () => {
+    if (!state || pdfBusy) return;
+    setPdfBusy(true);
+    setMsg(null);
+    flushSync(() => setPdfMounted(true));
+    try {
+      // 두 프레임 대기 — hidden 컨테이너 paint 완료까지
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => r()))
+      );
+      const root = pdfRef.current;
+      if (!root) throw new Error('PDF 컨테이너 없음');
+
+      const sections = Array.from(root.querySelectorAll<HTMLElement>('[data-pdf-section]'));
+      if (sections.length === 0) throw new Error('렌더할 섹션이 없습니다.');
+
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 12;
+      const usableH = pageH - margin * 2;
+      const contentW = pageW - margin * 2;
+      const gap = 4; // mm 섹션 간 여백
+      let y = margin;
+
+      for (let s = 0; s < sections.length; s++) {
+        const el = sections[s];
+        const canvas = await html2canvas(el, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          windowWidth: el.scrollWidth,
+          windowHeight: el.scrollHeight,
+        });
+        const imgH = (canvas.height * contentW) / canvas.width;
+
+        if (imgH <= usableH) {
+          // 한 페이지에 들어가는 섹션 — fit 체크
+          if (y > margin && y + imgH > pageH - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, y, contentW, imgH);
+          y += imgH + gap;
+        } else {
+          // 한 페이지보다 큰 섹션(매우 드묾) — 캔버스 slice로 안전 분할
+          if (y > margin) {
+            pdf.addPage();
+            y = margin;
+          }
+          const pxPerMm = canvas.width / contentW;
+          const slicePxPerPage = Math.floor(usableH * pxPerMm);
+          let consumed = 0;
+          let first = true;
+          while (consumed < canvas.height) {
+            if (!first) {
+              pdf.addPage();
+              y = margin;
+            }
+            const sliceH_px = Math.min(canvas.height - consumed, slicePxPerPage);
+            const slice = document.createElement('canvas');
+            slice.width = canvas.width;
+            slice.height = sliceH_px;
+            const ctx = slice.getContext('2d');
+            if (ctx) {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, slice.width, slice.height);
+              ctx.drawImage(canvas, 0, -consumed);
+            }
+            const sliceImgH = sliceH_px / pxPerMm;
+            pdf.addImage(slice.toDataURL('image/png'), 'PNG', margin, y, contentW, sliceImgH);
+            y += sliceImgH + gap;
+            consumed += sliceH_px;
+            first = false;
+          }
+        }
+      }
+
+      // 푸터: 페이지 번호 + ASCII 식별자 (한글은 jsPDF 기본 폰트에 글리프가 없어 깨짐)
+      const footerId = passageId ? `passageId: ${passageId}` : '';
+      const total = pdf.getNumberOfPages();
+      for (let i = 1; i <= total; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(148, 163, 184); // slate-400
+        if (footerId) pdf.text(footerId, margin, pageH - 5);
+        pdf.text(`${i} / ${total}`, pageW - margin, pageH - 5, { align: 'right' });
+      }
+
+      const rawName =
+        passageMeta?.source_key?.trim() ||
+        [passageMeta?.textbook, passageMeta?.chapter, passageMeta?.number]
+          .filter((x) => x && String(x).trim())
+          .join('_') ||
+        passageId ||
+        'passage';
+      const safe = rawName.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+      pdf.save(`${safe}_데이터점검보고서.pdf`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'PDF 생성 실패');
+    } finally {
+      setPdfMounted(false);
+      setPdfBusy(false);
+    }
+  }, [state, pdfBusy, passageMeta, passageId]);
 
   const runGrammarTagsAi = async () => {
     if (!state?.sentences.length) return;
@@ -2254,14 +2369,25 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
               </button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={runComprehensive}
-            disabled={!!busy || !state.sentences.length}
-            className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-40 shrink-0"
-          >
-            {busy === '종합' ? '분석 중…' : 'AI 종합분석 실행'}
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={runComprehensive}
+              disabled={!!busy || !state.sentences.length}
+              className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-40 shrink-0"
+            >
+              {busy === '종합' ? '분석 중…' : 'AI 종합분석 실행'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleExportPdf()}
+              disabled={pdfBusy || !state.sentences.length}
+              title="현재 지문의 12개 분석 항목(원문·해석·종합분석·주제문장·서술형·어법·문맥·끊어읽기·SVOC·구문·문법태그·문법포인트·단어장)이 정확히 채워졌는지 점검용 PDF — raw 인덱스·카운트·빈 필드 식별"
+              className="px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-sm font-semibold disabled:opacity-40 shrink-0"
+            >
+              {pdfBusy ? 'PDF 생성 중…' : '데이터 점검 보고서 PDF'}
+            </button>
+          </div>
         </div>
 
         <details className="rounded-lg border border-slate-700/80 bg-slate-900/40">
@@ -4329,6 +4455,26 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           passageId={passageId ?? ''}
         />
       )}
+
+      {pdfMounted && state ? (
+        <div
+          aria-hidden
+          style={{
+            position: 'fixed',
+            left: '-10000px',
+            top: 0,
+            zIndex: -1,
+            pointerEvents: 'none',
+          }}
+        >
+          <PassageAnalysisPdfDocument
+            ref={pdfRef}
+            state={state}
+            passageMeta={passageMeta}
+            passageId={passageId ?? null}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

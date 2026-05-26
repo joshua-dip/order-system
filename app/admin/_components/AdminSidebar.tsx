@@ -174,11 +174,6 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
           단어장 구매·편집 분석
         </Link>
 
-        <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">PUBLIC</p>
-        <Link href="/admin/shared-resources" className={linkCls('/admin/shared-resources')}>
-          공유자료
-        </Link>
-
         <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
         <Link href="/admin?section=settings" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
           교재 노출 설정

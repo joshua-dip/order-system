@@ -240,7 +240,7 @@ type MemberSegmentFilter =
   | 'dropbox_yes'
   | 'dropbox_no';
 
-type MemberSortOrder = 'default' | 'orders_desc' | 'revenue_desc';
+type MemberSortOrder = 'default' | 'orders_desc' | 'revenue_desc' | 'created_desc';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -2625,14 +2625,6 @@ export default function AdminDashboardPage() {
           >
             쏠북 강별 링크 관리
           </Link>
-          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">PUBLIC</p>
-          <Link
-            href="/admin/shared-resources"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
-          >
-            공유자료
-          </Link>
-
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
           <button
             type="button"
@@ -4002,6 +3994,7 @@ export default function AdminDashboardPage() {
                     className="py-2 px-3 bg-[#1a1d27] border border-[#2e3248] rounded-lg text-slate-200 text-sm outline-none focus:border-cyan-500 min-w-[9rem]"
                   >
                     <option value="default">아이디순</option>
+                    <option value="created_desc">가입일 최신순</option>
                     <option value="orders_desc">완료 주문 건수순</option>
                     <option value="revenue_desc">완료 주문 금액순</option>
                   </select>
@@ -4133,6 +4126,7 @@ export default function AdminDashboardPage() {
                   {(
                     [
                       { id: 'default' as const, label: '아이디순' },
+                      { id: 'created_desc' as const, label: '가입 최신순' },
                       { id: 'orders_desc' as const, label: '완료 건수순' },
                       { id: 'revenue_desc' as const, label: '완료 금액순' },
                     ] as const
@@ -4150,7 +4144,15 @@ export default function AdminDashboardPage() {
                         }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${id === 'default' ? 'bg-slate-400' : id === 'orders_desc' ? 'bg-cyan-400' : 'bg-emerald-400'}`}
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            id === 'default'
+                              ? 'bg-slate-400'
+                              : id === 'created_desc'
+                                ? 'bg-violet-400'
+                                : id === 'orders_desc'
+                                  ? 'bg-cyan-400'
+                                  : 'bg-emerald-400'
+                          }`}
                         />
                         {label}
                       </button>
@@ -4211,6 +4213,10 @@ export default function AdminDashboardPage() {
                 }
                 if (memberSortOrder === 'revenue_desc') {
                   const d = completedOrderRevenueFor(lb) - completedOrderRevenueFor(la);
+                  return d !== 0 ? d : la.localeCompare(lb, 'ko');
+                }
+                if (memberSortOrder === 'created_desc') {
+                  const d = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                   return d !== 0 ? d : la.localeCompare(lb, 'ko');
                 }
                 return la.localeCompare(lb, 'ko');

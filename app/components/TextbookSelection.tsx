@@ -392,52 +392,8 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
       <AppBar />
       <div className="min-h-screen motion-safe:scroll-smooth" style={{ backgroundColor: '#F8FAFC' }}>
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
-            {/* 공유자료 + 변형문제 만들기 — 나란히 강조 배너 */}
-          <div className="mb-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
-            <Link
-              href="/shared-resources"
-              className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
-              style={{
-                background: 'linear-gradient(120deg, #064e3b 0%, #047857 55%, #0d9488 100%)',
-              }}
-            >
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-emerald-300 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-emerald-950 shadow">
-                    FREE
-                  </span>
-                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">공유자료</span>
-                </div>
-                <p className="text-sm font-medium text-emerald-100">
-                  모의고사·교재 학습자료를 <strong className="text-white">무료로 다운로드</strong> (HWP · PDF)
-                </p>
-                <p className="mt-0.5 text-xs text-emerald-200/90">
-                  회원가입 불필요 · 회차별·카테고리별·번호별 · 묶음 ZIP 한 번에 받기
-                </p>
-              </div>
-              <div className="ml-4 flex shrink-0 flex-col items-center gap-2 sm:ml-6">
-                <svg
-                  className="h-10 w-10 text-emerald-200 transition-transform duration-200 group-hover:scale-110 sm:h-12 sm:w-12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                  <path d="M12 11v6" />
-                  <path d="M9 14l3 3 3-3" />
-                </svg>
-                <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm group-hover:bg-white/30">
-                  자료 받으러 가기
-                  <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
-
+            {/* 변형문제 만들기 강조 배너 */}
+          <div className="mb-2">
             {premiumLoad ? (
               <div
                 className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md opacity-80 animate-pulse cursor-wait sm:px-7"

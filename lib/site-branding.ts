@@ -1,5 +1,5 @@
 /** 브라우저 탭·앱바 기본 제목 */
-export const DEFAULT_APP_BAR_TITLE = '고미조슈아 · 교재 주문';
+export const DEFAULT_APP_BAR_TITLE = '고미조슈아 · 자료 주문';
 
 /** 앱바 배경 — DAVICHI 계열(좌 브라운 골드 → 우 퍼플), 하단 액센트 틸 */
 export const APP_BAR_GRADIENT_START = '#A67C52';
