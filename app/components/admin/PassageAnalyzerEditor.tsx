@@ -12,7 +12,12 @@ import type {
   SvocSentenceData,
   VocabularyEntry,
 } from '@/lib/passage-analyzer-types';
-import { SVOC_COMPONENTS, passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
+import {
+  SVOC_COMPONENTS,
+  SVOC_FIELDS,
+  SVOC_WORD_BG,
+  passageAnalysisFileNameForPassageId,
+} from '@/lib/passage-analyzer-types';
 import CcSyntaxCliPanel from '@/app/admin/syntax-analyzer/_components/CcSyntaxCliPanel';
 import { findWordIndices, getSyntaxColorForLabel, SYNTAX_LABEL_COLORS } from '@/lib/syntax-analyzer-word-match';
 import {
@@ -248,35 +253,8 @@ function wordKey(si: number, wi: number) {
   return `${si}:${wi}`;
 }
 
-const SVOC_FIELDS: Record<
-  SvocComponentId,
-  { text: keyof SvocSentenceData; start: keyof SvocSentenceData; end: keyof SvocSentenceData }
-> = {
-  subject: { text: 'subject', start: 'subjectStart', end: 'subjectEnd' },
-  verb: { text: 'verb', start: 'verbStart', end: 'verbEnd' },
-  indirectObject: { text: 'indirectObject', start: 'indirectObjectStart', end: 'indirectObjectEnd' },
-  directObject: { text: 'directObject', start: 'directObjectStart', end: 'directObjectEnd' },
-  subjectComplement: {
-    text: 'subjectComplement',
-    start: 'subjectComplementStart',
-    end: 'subjectComplementEnd',
-  },
-  objectComplement: {
-    text: 'objectComplement',
-    start: 'objectComplementStart',
-    end: 'objectComplementEnd',
-  },
-};
-
-/** SVOC 단어 칠하기 (SVOC_COMPONENTS.color 와 동일 계열) */
-const SVOC_WORD_BG: Record<(typeof SVOC_COMPONENTS)[number]['color'], string> = {
-  yellow: 'rgba(234,179,8,0.42)',
-  blue: 'rgba(59,130,246,0.42)',
-  emerald: 'rgba(16,185,129,0.38)',
-  green: 'rgba(34,197,94,0.38)',
-  purple: 'rgba(168,85,247,0.38)',
-  pink: 'rgba(236,72,153,0.38)',
-};
+// SVOC_FIELDS / SVOC_WORD_BG 는 lib/passage-analyzer-types.ts 로 옮겨 export.
+// (Q&A 분석 페이지에서도 동일 import → 두 화면 SVOC 톤 100% 일치.)
 
 function defaultSvocSentence(): SvocSentenceData {
   return {

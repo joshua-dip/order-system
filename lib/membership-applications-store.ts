@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { sendMembershipApplicationNotification } from './admin-membership-notification';
+import { notifySlackMembershipApplication } from './slack';
+import { getPublicSiteUrl } from './site-branding';
 
 export const MEMBERSHIP_APPLICATIONS_COLLECTION = 'membership_applications';
 
@@ -81,9 +83,19 @@ export async function createApplication(data: {
     .collection<MembershipApplicationDoc>(MEMBERSHIP_APPLICATIONS_COLLECTION)
     .insertOne(doc as MembershipApplicationDoc & { _id: ObjectId });
   const row = toRow({ ...doc, _id: result.insertedId } as MembershipApplicationDoc & { _id: ObjectId });
-  // 관리자 알림 메일 — fire-and-forget. 발송 실패해도 신청 자체는 성공 처리.
+  // 관리자 알림 — fire-and-forget. 발송 실패해도 신청 자체는 성공 처리.
   void sendMembershipApplicationNotification(row).catch(err => {
-    console.error('[createApplication] notification dispatch failed:', err);
+    console.error('[createApplication] email notification failed:', err);
+  });
+  const origin = getPublicSiteUrl();
+  void notifySlackMembershipApplication({
+    applicantTypeLabel: APPLICANT_TYPE_LABELS[row.applicantType] ?? row.applicantType,
+    name: row.name,
+    phone: row.phone,
+    appliedAt: row.appliedAt instanceof Date ? row.appliedAt : new Date(row.appliedAt),
+    adminUrl: origin ? `${origin}/admin/membership-applications` : undefined,
+  }).catch(err => {
+    console.error('[createApplication] slack notification failed:', err);
   });
   return row;
 }

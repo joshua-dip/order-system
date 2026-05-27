@@ -14,7 +14,7 @@ export default function KakaoFab() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="카카오톡 문의하기"
-      className="fixed bottom-6 right-5 z-50 flex items-center gap-2 rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 group"
+      className="fixed bottom-6 right-5 z-50 flex items-center gap-2 rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 group print:hidden"
       style={{ backgroundColor: '#FEE500' }}
     >
       {/* 말풍선 라벨 — hover 시 슬라이드인 */}

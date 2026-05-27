@@ -154,3 +154,27 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: #64748b;
 }
+
+
+/* ============================================================
+ * 인쇄·PDF 저장 전용 글로벌 스타일.
+ *
+ * - 개별 chrome 숨김은 각 페이지에서 Tailwind `print:hidden` 으로 명시.
+ * - 글로벌엔 ① 색칠 보존(SVOC 등), ② 배경 흰색, ③ article 단위 페이지 분할만 둠.
+ *   다른 페이지 print 동작이 깨지지 않도록 specificity 최소화.
+ * ============================================================ */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    background: white !important;
+  }
+  article {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+  }
+}

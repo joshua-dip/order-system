@@ -30,3 +30,71 @@ export async function notifySlackOrder(orderText: string, orderId: string): Prom
   const message = `📋 *새 주문서* (gomijoshua)\nID: \`${orderId}\`\n\n${preview}${orderText.length > 1500 ? '\n…' : ''}`;
   return notifySlack(message);
 }
+
+export async function notifySlackMembershipApplication(input: {
+  applicantTypeLabel: string;
+  name: string;
+  phone: string;
+  appliedAt: Date;
+  adminUrl?: string;
+}): Promise<boolean> {
+  const appliedAt = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(input.appliedAt);
+  const adminLink = input.adminUrl?.trim();
+  const lines = [
+    '🆕 *새 가입 신청* (gomijoshua)',
+    `유형: ${input.applicantTypeLabel}`,
+    `이름: ${input.name}`,
+    `전화: ${input.phone}`,
+    `신청: ${appliedAt} (KST)`,
+  ];
+  if (adminLink) lines.push(`<${adminLink}|관리자에서 보기>`);
+  return notifySlack(lines.join('\n'));
+}
+
+/**
+ * Q&A 분석 페이지에 새 질문이 작성됐을 때 Slack 알림.
+ *
+ * - `question` 은 120자로 truncate (긴 질문이 채널을 잡아먹지 않도록).
+ * - `deepUrl` 은 `${origin}/qna/[passageId]#thread-<id>` 형태 — 한 클릭에 답변 위치.
+ * - `sentenceIndex` 가 -1 이면 「지문 전체」, 그 외엔 「N번 문장」 (1-based).
+ * - `SLACK_WEBHOOK_URL` 미설정 시 silent skip.
+ */
+export async function notifySlackQnaQuestion(input: {
+  threadId: string;
+  textbook: string;
+  sourceKey?: string;
+  /** 0-based 인덱스. -1 = 지문 전체. 화면 표기는 1-based 로 변환. */
+  sentenceIndex: number;
+  nickname: string;
+  question: string;
+  deepUrl?: string;
+}): Promise<boolean> {
+  const QUESTION_LIMIT = 120;
+  const truncated =
+    input.question.length > QUESTION_LIMIT
+      ? input.question.slice(0, QUESTION_LIMIT) + '…'
+      : input.question;
+  // 슬랙 코드 백틱 충돌 회피
+  const safeQuestion = truncated.replace(/`/g, "'");
+
+  const where =
+    input.sentenceIndex < 0 ? '지문 전체' : `${input.sentenceIndex + 1}번 문장`;
+  const sourceLabel = input.sourceKey ? ` · ${input.sourceKey}` : '';
+  const lines = [
+    '❓ *새 Q&A 질문* (gomijoshua)',
+    `${input.textbook}${sourceLabel} · ${where}`,
+    `작성: ${input.nickname}`,
+    `> ${safeQuestion}`,
+  ];
+  const link = input.deepUrl?.trim();
+  if (link) lines.push(`<${link}|답변하러 가기>`);
+  return notifySlack(lines.join('\n'));
+}

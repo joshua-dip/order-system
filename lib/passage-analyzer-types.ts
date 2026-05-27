@@ -191,6 +191,48 @@ export const SVOC_COMPONENTS = [
 
 export type SvocComponentId = (typeof SVOC_COMPONENTS)[number]['id'];
 
+/**
+ * SVOC 단어 배경색 — SVOC_COMPONENTS.color 와 동일 계열의 RGBA 파스텔.
+ * PassageAnalyzerEditor 와 /qna 페이지에서 동일하게 import → 톤 100% 일치.
+ */
+export const SVOC_WORD_BG: Record<(typeof SVOC_COMPONENTS)[number]['color'], string> = {
+  yellow: 'rgba(234,179,8,0.42)',
+  blue: 'rgba(59,130,246,0.42)',
+  emerald: 'rgba(16,185,129,0.38)',
+  green: 'rgba(34,197,94,0.38)',
+  purple: 'rgba(168,85,247,0.38)',
+  pink: 'rgba(236,72,153,0.38)',
+};
+
+/** SVOC 컴포넌트 id → svocData 안의 텍스트/시작/끝 필드 이름 매핑 */
+export const SVOC_FIELDS: Record<
+  SvocComponentId,
+  { text: keyof SvocSentenceData; start: keyof SvocSentenceData; end: keyof SvocSentenceData }
+> = {
+  subject: { text: 'subject', start: 'subjectStart', end: 'subjectEnd' },
+  verb: { text: 'verb', start: 'verbStart', end: 'verbEnd' },
+  indirectObject: {
+    text: 'indirectObject',
+    start: 'indirectObjectStart',
+    end: 'indirectObjectEnd',
+  },
+  directObject: {
+    text: 'directObject',
+    start: 'directObjectStart',
+    end: 'directObjectEnd',
+  },
+  subjectComplement: {
+    text: 'subjectComplement',
+    start: 'subjectComplementStart',
+    end: 'subjectComplementEnd',
+  },
+  objectComplement: {
+    text: 'objectComplement',
+    start: 'objectComplementStart',
+    end: 'objectComplementEnd',
+  },
+};
+
 export function passageAnalysisFileNameForPassageId(passageId: string): string {
   return `passage:${passageId}`;
 }

@@ -173,6 +173,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <Link href="/admin/vocabulary-library" className={linkCls('/admin/vocabulary-library')}>
           단어장 구매·편집 분석
         </Link>
+        <Link href="/admin/qna" className={linkCls('/admin/qna')}>
+          Q&amp;A 분석지 모더레이션
+        </Link>
 
         <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
         <Link href="/admin?section=settings" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
