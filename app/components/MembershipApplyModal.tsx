@@ -11,6 +11,18 @@ const TYPE_OPTIONS: { value: ApplicantType; label: string }[] = [
   { value: 'teacher', label: '선생님' },
 ];
 
+/**
+ * 개인정보 수집·이용 동의 안내 본문. 버전이 바뀌면 PRIVACY_CONSENT_VERSION 도 같이 올린다.
+ * 서버는 이 버전 문자열을 그대로 받아 DB 에 기록 → 동의 시점의 정책 본문을 추적할 수 있다.
+ */
+const PRIVACY_CONSENT_VERSION = 'v1.0-2026-05-27';
+const PRIVACY_CONSENT_ITEMS: { label: string; value: string }[] = [
+  { label: '수집 항목', value: '이름, 전화번호, 신청 유형(학생/학부모/선생님)' },
+  { label: '수집·이용 목적', value: '가입 상담 연락 및 본인 식별' },
+  { label: '보유·이용 기간', value: '가입 처리 완료 시 회원 정보로 이관 · 그 외 신청일로부터 90일 후 파기' },
+  { label: '거부 권리', value: '동의를 거부할 수 있으며, 거부 시 가입 신청이 제한됩니다.' },
+];
+
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 11);
   if (digits.length <= 3) return digits;
@@ -28,6 +40,8 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
   const [applicantType, setApplicantType] = useState<ApplicantType | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [showConsentDetails, setShowConsentDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,6 +50,8 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
     setApplicantType(null);
     setName('');
     setPhone('');
+    setPrivacyConsent(false);
+    setShowConsentDetails(false);
     setSubmitting(false);
     setError('');
   }, []);
@@ -75,13 +91,23 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
       setError('신청 유형(학생·학부모·선생님)을 선택해 주세요.');
       return;
     }
+    if (!privacyConsent) {
+      setError('개인정보 수집·이용에 동의해 주세요.');
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await fetch('/api/membership-applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ applicantType, name: name.trim(), phone }),
+        body: JSON.stringify({
+          applicantType,
+          name: name.trim(),
+          phone,
+          privacyConsent: true,
+          privacyConsentVersion: PRIVACY_CONSENT_VERSION,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -192,6 +218,41 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
               </div>
             </fieldset>
 
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={privacyConsent}
+                  onChange={(e) => {
+                    setPrivacyConsent(e.target.checked);
+                    if (e.target.checked) setError('');
+                  }}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                />
+                <span className="text-sm leading-relaxed text-slate-700">
+                  <span className="font-semibold text-rose-600">[필수]</span>{' '}
+                  개인정보 수집·이용에 동의합니다.
+                  <button
+                    type="button"
+                    onClick={() => setShowConsentDetails((v) => !v)}
+                    className="ml-1 text-xs font-medium text-amber-700 underline underline-offset-2 hover:text-amber-800"
+                  >
+                    {showConsentDetails ? '상세 닫기' : '상세 보기'}
+                  </button>
+                </span>
+              </label>
+              {showConsentDetails && (
+                <dl className="mt-3 space-y-1.5 border-t border-slate-200 pt-3 text-[11.5px] leading-relaxed text-slate-600">
+                  {PRIVACY_CONSENT_ITEMS.map((item) => (
+                    <div key={item.label} className="flex gap-2">
+                      <dt className="shrink-0 font-semibold text-slate-700">· {item.label}:</dt>
+                      <dd>{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </div>
+
             {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-2.5">{error}</p>}
 
             <p className="text-xs text-slate-500 leading-relaxed">
@@ -200,8 +261,8 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
 
             <button
               type="submit"
-              disabled={submitting}
-              className="w-full py-3.5 rounded-xl font-bold text-slate-900 transition-all disabled:opacity-60"
+              disabled={submitting || !privacyConsent}
+              className="w-full py-3.5 rounded-xl font-bold text-slate-900 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#FEE500' }}
             >
               {submitting ? '제출 중…' : '신청하기'}

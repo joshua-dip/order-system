@@ -28,6 +28,14 @@ export const SMS_BODY_TEMPLATES: Record<MembershipApplicantType, (name: string, 
   teacher: (name, phone) => `[선생님 가입 신청] ${name} / ${phone}`,
 };
 
+/** 개인정보 수집·이용 동의 기록 (감사·분쟁 대응). version 은 정책 본문 버전 식별자. */
+export interface PrivacyConsentRecord {
+  agreed: boolean;
+  agreedAt: Date;
+  /** 동의받은 정책 본문 버전 (예: 'v1.0-2026-05-27'). 클라이언트가 보낸 문자열을 그대로 저장. */
+  version: string;
+}
+
 export type MembershipApplicationDoc = {
   _id?: ObjectId;
   applicantType: MembershipApplicantType;
@@ -41,6 +49,8 @@ export type MembershipApplicationDoc = {
   rejectedAt?: Date;
   ip?: string;
   userAgent?: string;
+  /** 가입 신청 시 받은 개인정보 수집·이용 동의 기록 (구버전 데이터는 undefined) */
+  privacyConsent?: PrivacyConsentRecord;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -65,6 +75,7 @@ export async function createApplication(data: {
   phone: string;
   ip?: string;
   userAgent?: string;
+  privacyConsent?: PrivacyConsentRecord;
 }): Promise<MembershipApplicationRow> {
   const db = await getDb('gomijoshua');
   const now = new Date();
@@ -75,6 +86,7 @@ export async function createApplication(data: {
     status: 'pending',
     ip: data.ip,
     userAgent: data.userAgent,
+    privacyConsent: data.privacyConsent,
     appliedAt: now,
     createdAt: now,
     updatedAt: now,

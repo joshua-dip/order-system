@@ -18,7 +18,13 @@ function getIp(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { applicantType?: unknown; name?: unknown; phone?: unknown };
+  let body: {
+    applicantType?: unknown;
+    name?: unknown;
+    phone?: unknown;
+    privacyConsent?: unknown;
+    privacyConsentVersion?: unknown;
+  };
   try {
     body = await request.json();
   } catch {
@@ -26,6 +32,18 @@ export async function POST(request: NextRequest) {
   }
 
   const { applicantType, name, phone } = body;
+
+  // 개인정보 수집·이용 동의 필수 검증 (한국 개인정보보호법 준수)
+  if (body.privacyConsent !== true) {
+    return NextResponse.json(
+      { error: '개인정보 수집·이용에 동의해 주세요.' },
+      { status: 400 },
+    );
+  }
+  const privacyConsentVersion =
+    typeof body.privacyConsentVersion === 'string' && body.privacyConsentVersion.trim()
+      ? body.privacyConsentVersion.trim().slice(0, 64)
+      : 'unknown';
 
   // 유형 검증
   if (!VALID_TYPES.includes(applicantType as MembershipApplicantType)) {
@@ -78,6 +96,11 @@ export async function POST(request: NextRequest) {
     phone: normalizedPhone,
     ip,
     userAgent,
+    privacyConsent: {
+      agreed: true,
+      agreedAt: new Date(),
+      version: privacyConsentVersion,
+    },
   });
 
   return NextResponse.json({
