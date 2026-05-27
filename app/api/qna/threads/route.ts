@@ -90,9 +90,16 @@ export async function POST(request: NextRequest) {
   const isAdmin = !!payload && payload.role === 'admin';
 
   // nickname
+  // 개인정보 보호 정책: 학원 로그인 ID (payload.loginId) 는 닉네임으로 절대 사용하지 않는다.
+  // - 클라이언트가 별도 닉네임을 보내지 않으면 admin = '관리자', 그 외 = '익명' 으로 fallback.
+  // - 클라이언트가 보낸 nickname 이 본인 loginId 와 정확히 일치하면 의도치 않은 노출이므로 '익명' 으로 대체.
   let nickname = String(body.nickname ?? '').trim();
-  if (isAdmin && !nickname) {
-    nickname = payload?.loginId ?? 'admin';
+  const myLoginId = payload?.loginId?.trim() || '';
+  if (nickname && myLoginId && nickname.toLowerCase() === myLoginId.toLowerCase()) {
+    nickname = isAdmin ? '관리자' : '익명';
+  }
+  if (!nickname) {
+    nickname = isAdmin ? '관리자' : '익명';
   }
   if (nickname.length < NICKNAME_MIN || nickname.length > NICKNAME_MAX) {
     return NextResponse.json(

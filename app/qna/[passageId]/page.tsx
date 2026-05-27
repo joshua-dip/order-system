@@ -24,6 +24,7 @@ import {
 import { tokenizeSentence } from '../_lib/tokenize';
 import { copyShareUrl, copyText } from '../_lib/share-url';
 import { getOwnerToken, getOwnerTokenSet, removeOwnerToken, setOwnerToken } from '../_lib/owner-tokens';
+import { getOrCreateAnonNickname } from '../_lib/anon-nickname';
 
 type Me = { loginId: string; role: string; name?: string } | null;
 
@@ -563,10 +564,8 @@ export default function QnaPassagePage() {
     requestAnimationFrame(() => {
       const el = document.getElementById(`q-form-${si}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const nicknameInput = document.getElementById(`q-nick-${si}`) as HTMLInputElement | null;
       const textInput = document.getElementById(`q-text-${si}`) as HTMLTextAreaElement | null;
-      // 닉네임이 비어있으면 닉네임에, 아니면 질문에 포커스
-      (nicknameInput && !nicknameInput.value ? nicknameInput : textInput)?.focus();
+      textInput?.focus();
     });
   }, []);
 
@@ -1463,26 +1462,29 @@ function QuestionForm({
   onSubmit: (payload: { nickname: string; question: string }) => Promise<void> | void;
 }) {
   const isAdmin = me?.role === 'admin';
-  const defaultNickname = isAdmin ? me?.name || me?.loginId || 'admin' : '';
-  const [nickname, setNickname] = useState(defaultNickname);
+  // 작성자명은 항상 자동 부여 — 개인정보 보호를 위해 입력란을 제공하지 않는다.
+  // admin 은 "관리자" 고정, 그 외(게스트·일반 회원) 는 브라우저 단위로 영속되는
+  // 익명 닉네임("익명xxxx"). me.loginId 는 절대 사용하지 않는다.
+  const [nickname, setNickname] = useState<string>(isAdmin ? '관리자' : '');
   const [question, setQuestion] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // 로그인 정보 늦게 도착하는 경우 nickname 보정
+  // 마운트·me 변경 시 자동 닉네임 동기화 (SSR 단계에선 빈값 → 클라이언트에서 채움)
   useEffect(() => {
-    if (isAdmin && !nickname) setNickname(defaultNickname);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, defaultNickname]);
+    if (isAdmin) {
+      setNickname('관리자');
+    } else {
+      setNickname(getOrCreateAnonNickname());
+    }
+  }, [isAdmin]);
 
   const handle = async () => {
-    if (!question.trim() || !nickname.trim()) return;
+    const finalNick = (nickname || (isAdmin ? '관리자' : getOrCreateAnonNickname())).trim();
+    if (!question.trim() || !finalNick) return;
     setSubmitting(true);
     try {
-      await onSubmit({ nickname: nickname.trim(), question: question.trim() });
+      await onSubmit({ nickname: finalNick, question: question.trim() });
       setQuestion('');
-      if (!isAdmin) {
-        // nickname 은 유지 (다음 질문도 편하게)
-      }
     } finally {
       setSubmitting(false);
     }
@@ -1505,27 +1507,21 @@ function QuestionForm({
           </button>
         </div>
       )}
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          id={`q-nick-${sentenceIndex}`}
-          type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          placeholder="닉네임 (2~20자)"
-          maxLength={20}
-          disabled={isAdmin && !!defaultNickname}
-          className="w-full rounded border border-slate-200 px-2 py-1.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400 sm:w-40 disabled:bg-slate-100 disabled:text-slate-500"
-        />
-        <textarea
-          id={`q-text-${sentenceIndex}`}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="질문을 입력하세요… (1~500자)"
-          rows={2}
-          maxLength={500}
-          className="min-h-[2.25rem] flex-1 rounded border border-slate-200 px-2 py-1.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-        />
+      <div className="mb-2 flex items-center justify-between gap-2 text-[11px] text-slate-500">
+        <span>
+          작성자: <span className="font-semibold text-slate-700">{nickname || '익명…'}</span>
+          <span className="ml-1 text-slate-400">(자동 부여 · 개인정보 보호)</span>
+        </span>
       </div>
+      <textarea
+        id={`q-text-${sentenceIndex}`}
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder="질문을 입력하세요… (1~500자)"
+        rows={2}
+        maxLength={500}
+        className="min-h-[2.25rem] w-full rounded border border-slate-200 px-2 py-1.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+      />
       <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
         <span>{question.length}/500</span>
         <button

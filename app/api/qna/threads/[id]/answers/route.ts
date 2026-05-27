@@ -40,10 +40,15 @@ export async function POST(
     );
   }
 
-  const authorName =
-    typeof body.authorName === 'string' && body.authorName.trim()
-      ? body.authorName.trim()
-      : payload.loginId || 'admin';
+  // 개인정보 보호 정책: payload.loginId 는 답변 작성자명으로 절대 사용하지 않는다.
+  // 클라이언트가 별도 authorName 을 보내지 않으면 '관리자' 로 고정.
+  // 클라이언트가 보낸 이름이 본인 loginId 와 같다면 의도치 않은 노출이므로 '관리자' 로 대체.
+  const rawAuthorName =
+    typeof body.authorName === 'string' ? body.authorName.trim() : '';
+  const myLoginId = payload.loginId?.trim() || '';
+  const looksLikeLoginId =
+    !!rawAuthorName && !!myLoginId && rawAuthorName.toLowerCase() === myLoginId.toLowerCase();
+  const authorName = !rawAuthorName || looksLikeLoginId ? '관리자' : rawAuthorName;
 
   const thread = await getThread(id);
   if (!thread) {
