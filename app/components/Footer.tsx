@@ -14,10 +14,13 @@ const Footer = () => {
   const companyName = process.env.NEXT_PUBLIC_FOOTER_COMPANY_NAME ?? '';
   const repName = process.env.NEXT_PUBLIC_FOOTER_REP_NAME ?? '';
   const bizNumber = process.env.NEXT_PUBLIC_FOOTER_BIZ_NUMBER ?? '';
+  const mailOrderRegNumber = process.env.NEXT_PUBLIC_FOOTER_MAIL_ORDER_REG_NUMBER ?? '';
   const address = process.env.NEXT_PUBLIC_FOOTER_ADDRESS ?? '';
   const phone = process.env.NEXT_PUBLIC_FOOTER_PHONE ?? '';
-  const hasBusinessInfo = companyName || repName || bizNumber || address || phone;
+  const hasBusinessInfo = companyName || repName || bizNumber || mailOrderRegNumber || address || phone;
   const siteUrl = getPublicSiteUrl();
+  // © 줄 표시명. companyName 미설정 시 'Payperic' 폴백.
+  const copyrightHolder = companyName || 'Payperic';
 
   return (
     <footer className="py-4 mt-auto bg-slate-50 text-slate-600 border-t border-slate-200">
@@ -27,11 +30,15 @@ const Footer = () => {
             {hasBusinessInfo ? (
               <>
                 {companyName && <div className="font-semibold text-sm mb-2">{companyName}</div>}
-                {(repName || bizNumber) && (
-                  <div className="flex flex-col md:flex-row md:justify-center md:space-x-4 space-y-1 md:space-y-0">
+                {(repName || bizNumber || mailOrderRegNumber) && (
+                  <div className="flex flex-col md:flex-row md:justify-center md:flex-wrap md:gap-x-4 md:gap-y-1 space-y-1 md:space-y-0">
                     {repName && <span>대표자: {repName}</span>}
-                    {repName && bizNumber && <span className="hidden md:inline">|</span>}
+                    {repName && bizNumber && <span className="hidden md:inline">·</span>}
                     {bizNumber && <span>사업자등록번호: {bizNumber}</span>}
+                    {(repName || bizNumber) && mailOrderRegNumber && (
+                      <span className="hidden md:inline">·</span>
+                    )}
+                    {mailOrderRegNumber && <span>통신판매업신고: {mailOrderRegNumber}</span>}
                   </div>
                 )}
                 {address && <div><span>주소: {address}</span></div>}
@@ -69,7 +76,7 @@ const Footer = () => {
                   </a>
                 </p>
               )}
-              <p className="text-slate-400">© {new Date().getFullYear()} Payperic. All rights reserved.</p>
+              <p className="text-slate-400">© {new Date().getFullYear()} {copyrightHolder}. All rights reserved.</p>
             </div>
           </div>
         </div>
