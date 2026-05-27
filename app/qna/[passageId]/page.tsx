@@ -358,6 +358,22 @@ export default function QnaPassagePage() {
         import('jspdf'),
       ]);
 
+      // 분할 불가 단위(문장 카드 + 헤더) 의 원본 CSS 좌표 수집 — 캡처 직전에 측정해야
+      // clone 도큐먼트가 아닌 실제 DOM 의 layout 과 동일한 단위를 잡을 수 있다.
+      const containerRect = printableRef.current.getBoundingClientRect();
+      const blockEls = Array.from(
+        printableRef.current.querySelectorAll<HTMLElement>(
+          'article[id^="sentence-"], [data-pdf-block]',
+        ),
+      );
+      const cssBlocks = blockEls.map((el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          topCss: r.top - containerRect.top,
+          bottomCss: r.bottom - containerRect.top,
+        };
+      });
+
       const canvas = await html2canvas(printableRef.current, {
         scale: 2,
         useCORS: true,
@@ -373,6 +389,17 @@ export default function QnaPassagePage() {
         },
       });
 
+      // CSS px → canvas px 환산 (scale: 2 이므로 약 2배). containerRect.height 가
+      // 0 일 일은 거의 없지만 fallback 으로 1 사용.
+      const cssToCanvasScale = canvas.height / Math.max(containerRect.height, 1);
+      // 분할 불가 블록을 canvas px 좌표로 변환 + top 오름차순 정렬.
+      const blocks = cssBlocks
+        .map((b) => ({
+          top: Math.floor(b.topCss * cssToCanvasScale),
+          bottom: Math.ceil(b.bottomCss * cssToCanvasScale),
+        }))
+        .sort((a, b) => a.top - b.top);
+
       // A4 portrait = 210 × 297mm. 좌우 10mm 여백.
       const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
       const margin = 10;
@@ -384,11 +411,38 @@ export default function QnaPassagePage() {
       const pxPerMm = canvas.width / usableWidthMm;
       const sliceHeightPx = Math.floor(usableHeightMm * pxPerMm);
 
+      /**
+       * 페이지 경계가 분할 불가 블록의 「중간」에 떨어지면 그 블록 시작점까지
+       * sliceEnd 를 끌어올려 다음 페이지로 넘긴다. 단, 한 블록이 페이지 높이보다
+       * 크면 어쩔 수 없이 단순 슬라이스 (그대로 잘림 허용).
+       */
+      const findSafeSliceEnd = (yStart: number, hardEnd: number): number => {
+        let safeEnd = hardEnd;
+        for (const b of blocks) {
+          if (b.bottom <= yStart) continue; // 이미 지난 블록
+          if (b.top >= hardEnd) break;       // 다음 페이지로 갈 블록
+          // 블록이 hardEnd 를 가로지름
+          if (b.top > yStart && b.top < hardEnd && b.bottom > hardEnd) {
+            // 이 블록 시작점에서 끊고 다음 페이지로 넘김
+            safeEnd = Math.min(safeEnd, b.top);
+          }
+        }
+        // 블록 자체가 페이지 전체보다 크거나, yStart 가 블록 한가운데인 경우
+        // safeEnd 가 yStart 이하로 떨어질 수 있으므로 최소 진행분 보장.
+        if (safeEnd - yStart < sliceHeightPx * 0.4) {
+          return hardEnd;
+        }
+        return safeEnd;
+      };
+
       let yOffsetPx = 0;
       let pageIndex = 0;
       while (yOffsetPx < canvas.height) {
         if (pageIndex > 0) pdf.addPage();
-        const sliceHeight = Math.min(sliceHeightPx, canvas.height - yOffsetPx);
+        const hardEnd = Math.min(yOffsetPx + sliceHeightPx, canvas.height);
+        const sliceEnd =
+          hardEnd >= canvas.height ? hardEnd : findSafeSliceEnd(yOffsetPx, hardEnd);
+        const sliceHeight = sliceEnd - yOffsetPx;
         const slice = document.createElement('canvas');
         slice.width = canvas.width;
         slice.height = sliceHeight;
@@ -405,7 +459,7 @@ export default function QnaPassagePage() {
         const dataUrl = slice.toDataURL('image/jpeg', 0.95);
         const sliceHeightMm = sliceHeight / pxPerMm;
         pdf.addImage(dataUrl, 'JPEG', margin, margin, usableWidthMm, sliceHeightMm);
-        yOffsetPx += sliceHeight;
+        yOffsetPx = sliceEnd;
         pageIndex += 1;
       }
 
@@ -687,7 +741,10 @@ export default function QnaPassagePage() {
           ) : (
             <>
               {/* 상단 툴바 */}
-              <header className="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+              <header
+                data-pdf-block
+                className="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+              >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-slate-500">
