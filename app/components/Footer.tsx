@@ -5,7 +5,9 @@ import { getPublicSiteUrl, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 
 const Footer = () => {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin/syntax-analyzer') || pathname?.startsWith('/my/vip')) {
+  // 메인 페이지(`/`) 에서만 푸터를 노출한다. 다른 경로(주문 흐름·관리자·내 정보 등)
+  // 에서는 푸터를 띄우지 않는다.
+  if (pathname !== '/') {
     return null;
   }
 
