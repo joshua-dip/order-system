@@ -1,0 +1,239 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd3e",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 40번",
+  "title": "26년 3월 고3 영어모의고사 40번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "40번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Carstensen's (1995) socioemotional selectivity theory looks at individuals' goals as a lifelong process that strengthens and matures with ageing.",
+      "tokens": ["Carstensen's","(1995)","socioemotional","selectivity","theory","looks","at","individuals'","goals","as","a","lifelong","process","that","strengthens","and","matures","with","ageing."],
+      "korean": "Carstensen(1995)의 사회 정서적 선택성 이론은 개인의 목표를 노화가 진행됨에 따라 강화되고 성숙해지는 평생의 과정으로 본다."
+    },
+    {
+      "idx": 1,
+      "text": "In relation to his motivational conceptual framework, Higgins (2014) proposes that motivation may even attain its highest levels in the later stages of life, subject to the balance and organisation of one's goals in relation to life priorities.",
+      "tokens": ["In","relation","to","his","motivational","conceptual","framework,","Higgins","(2014)","proposes","that","motivation","may","even","attain","its","highest","levels","in","the","later","stages","of","life,","subject","to","the","balance","and","organisation","of","one's","goals","in","relation","to","life","priorities."],
+      "korean": "Higgins(2014)는 자신의 동기 부여의 개념적 틀과 관련하여, 동기 부여는 삶의 우선순위와 관련한 개인 목표의 균형과 조직화 여부에 따라, 심지어 인생의 후반부에 가장 높은 수준에 도달할 수도 있다는 점을 제안한다."
+    },
+    {
+      "idx": 2,
+      "text": "Building on this foundation, more recent research looks deeply into additional factors influencing well-being in later adulthood, particularly emphasising the role of self-worthiness, and the overall positive impact of developing a well-rounded self-view in life course transitions.",
+      "tokens": ["Building","on","this","foundation,","more","recent","research","looks","deeply","into","additional","factors","influencing","well-being","in","later","adulthood,","particularly","emphasising","the","role","of","self-worthiness,","and","the","overall","positive","impact","of","developing","a","well-rounded","self-view","in","life","course","transitions."],
+      "korean": "이러한 토대를 기반으로, 더 최근의 연구는 성인기 후반부의 안녕에 영향을 미치는 추가적인 요인들을 철저하게 조사하며, 특히 자아 존중감의 역할과 생애 과정 전환기에 균형이 잡힌 자기관을 발달시키는 것의 전반적인 긍정적 영향을 강조한다."
+    },
+    {
+      "idx": 3,
+      "text": "Together, these studies suggest that both goal alignment and a positive self-perception are crucial for enhancing motivation and overall well-being in later life.",
+      "tokens": ["Together,","these","studies","suggest","that","both","goal","alignment","and","a","positive","self-perception","are","crucial","for","enhancing","motivation","and","overall","well-being","in","later","life."],
+      "korean": "종합해서, 이러한 연구들은 목표의 정렬과 긍정적인 자아 인식 모두 인생 후반에 동기 부여와 전반적인 안녕을 증진하는 데 결정적이라는 점을 시사한다."
+    },
+    {
+      "idx": 4,
+      "text": "In fact, third-age learners exhibit a higher degree of selectivity when it comes to determining which goals to pursue and how to allocate their resources towards those specific priorities.",
+      "tokens": ["In","fact,","third-age","learners","exhibit","a","higher","degree","of","selectivity","when","it","comes","to","determining","which","goals","to","pursue","and","how","to","allocate","their","resources","towards","those","specific","priorities."],
+      "korean": "실제로 제3 연령기 학습자들은 어떤 목표를 추구할지, 그리고 그러한 특정 우선순위들에 자신의 자원을 어떻게 할당할 것인지를 결정하는 데 있어 더 높은 정도의 선택성을 보인다."
+    },
+    {
+      "idx": 5,
+      "text": "Older adults demonstrate a stronger sense of life purpose and self-fulfilment.",
+      "tokens": ["Older","adults","demonstrate","a","stronger","sense","of","life","purpose","and","self-fulfilment."],
+      "korean": "노인들은 더 강한 삶의 목적 의식과 자기 충족감을 보인다."
+    },
+    {
+      "idx": 6,
+      "text": "They do it their way, and their way is an accumulation of winning and personalized combinations in effectively relating motives all together at different degrees according to their life contexts.",
+      "tokens": ["They","do","it","their","way,","and","their","way","is","an","accumulation","of","winning","and","personalized","combinations","in","effectively","relating","motives","all","together","at","different","degrees","according","to","their","life","contexts."],
+      "korean": "그들은 '그들의' 방식대로 그것을 해내며, '그들의' 방식은 그들의 삶의 맥락에 따라 서로 다른 정도로 모든 동기를 효과적으로 결부시키는 데 있어 성공적이고 맞춤화된 조합들의 축적이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T5-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "looks",
+          "wrongCandidates": ["look"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 단수명사 'theory'(Carstensen's (1995) socioemotional selectivity theory)이므로 단수동사 'looks'가 맞다. 'individuals' goals'와 같은 수식어구·목적어구에 이끌려 복수동사 'look'을 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "look",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T14-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "attain",
+          "wrongCandidates": ["attains"],
+          "grammarType": "시제",
+          "explanation": "조동사 'may' 뒤에는 동사원형이 와야 하므로 'attain'이 맞다. 주어가 단수처럼 보여도 조동사 뒤에서는 수일치를 따로 하지 않으므로 'attains'는 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "attain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T12-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "influencing",
+          "wrongCandidates": ["influenced"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'additional factors'가 안녕(well-being)에 능동적으로 영향을 미치는 주체이므로 현재분사 'influencing'이 맞다. 과거분사 'influenced'는 요인이 영향을 받는 수동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "influence",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T12-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'both A and B'(both goal alignment and a positive self-perception) 구조로 복수이므로 복수형 be동사 'are'가 맞다. 단수 'is'는 단수 주어에 쓰이는 형태로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T15-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "'which goals to pursue'는 의문형용사 'which'가 명사 'goals'를 수식하는 의문사+명사+to부정사 구조이다. 'what'은 단독으로 명사절을 이끌 때 '~하는 것'의 의미가 되지만, 뒤따르는 명사 'goals'를 수식할 수 없으므로 'which'가 맞다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T2-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "demonstrate",
+          "wrongCandidates": ["demonstrates"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Older adults'가 복수명사이므로 복수동사 'demonstrate'가 맞다. 단수형 'demonstrates'는 3인칭 단수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "demonstrate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T14-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "personalized",
+          "wrongCandidates": ["personalizing"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'combinations'는 누군가에 의해 맞춤화되는 대상(수동)이므로 과거분사 'personalized'가 맞다. 현재분사 'personalizing'은 조합이 능동적으로 맞춤화한다는 의미가 되어 문맥에 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "personalize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "looks", "baseForm": "look"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "attain", "baseForm": "attain"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "influencing", "baseForm": "influence"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "demonstrate", "baseForm": "demonstrate"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "personalized", "baseForm": "personalize"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "looks", "wrongForm": "look", "explanation": "주어의 핵은 단수명사 'theory'이므로 단수동사 'looks'가 맞다. 복수형 'look'은 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "attain", "wrongForm": "attains", "explanation": "조동사 'may' 뒤에는 동사원형이 와야 하므로 'attain'이 맞다. 'attains'는 쓸 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "influencing", "wrongForm": "influenced", "explanation": "수식받는 명사 'additional factors'가 능동적으로 영향을 미치므로 현재분사 'influencing'이 맞다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "are", "wrongForm": "is", "explanation": "주어가 'both A and B' 구조로 복수이므로 복수형 'are'가 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "which", "wrongForm": "what", "explanation": "'which goals to pursue'에서 뒤의 명사 'goals'를 수식하므로 의문형용사 'which'가 맞다. 'what'은 명사를 수식하는 형태로 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "demonstrate", "wrongForm": "demonstrates", "explanation": "주어 'Older adults'가 복수이므로 복수동사 'demonstrate'가 맞다."},
+        {"sentenceIdx": 6, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "personalized", "wrongForm": "personalizing", "explanation": "수식받는 명사 'combinations'가 맞춤화되는 대상(수동)이므로 과거분사 'personalized'가 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "look", "correction": "looks", "explanation": "단수 주어 'theory'에 맞춰 단수동사 'looks'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "attains", "correction": "attain", "explanation": "조동사 'may' 뒤이므로 동사원형 'attain'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "influenced", "correction": "influencing", "explanation": "능동·진행의 의미로 명사 'factors'를 수식하므로 현재분사 'influencing'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'both A and B'에 맞춰 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "뒤의 명사 'goals'를 수식해야 하므로 의문형용사 'which'로 고쳐야 한다. 'what'은 명사 수식 불가."},
+        {"sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "demonstrates", "correction": "demonstrate", "explanation": "복수 주어 'Older adults'에 맞춰 'demonstrate'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "personalizing", "correction": "personalized", "explanation": "명사 'combinations'가 수동의 대상이므로 과거분사 'personalized'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Carstensen's (1995) socioemotional selectivity theory look at individuals' goals as a lifelong process that strengthens and matures with ageing.",
+          "isCorrect": false,
+          "correction": "Carstensen's (1995) socioemotional selectivity theory looks at individuals' goals as a lifelong process that strengthens and matures with ageing.",
+          "explanation": "주어의 핵은 단수명사 'theory'이므로 단수동사 'looks'가 맞다."
+        },
+        {
+          "text": "In relation to his motivational conceptual framework, Higgins (2014) proposes that motivation may even attains its highest levels in the later stages of life, subject to the balance and organisation of one's goals in relation to life priorities.",
+          "isCorrect": false,
+          "correction": "In relation to his motivational conceptual framework, Higgins (2014) proposes that motivation may even attain its highest levels in the later stages of life, subject to the balance and organisation of one's goals in relation to life priorities.",
+          "explanation": "조동사 'may' 뒤에는 동사원형 'attain'이 와야 한다."
+        },
+        {
+          "text": "Building on this foundation, more recent research looks deeply into additional factors influenced well-being in later adulthood, particularly emphasising the role of self-worthiness, and the overall positive impact of developing a well-rounded self-view in life course transitions.",
+          "isCorrect": false,
+          "correction": "Building on this foundation, more recent research looks deeply into additional factors influencing well-being in later adulthood, particularly emphasising the role of self-worthiness, and the overall positive impact of developing a well-rounded self-view in life course transitions.",
+          "explanation": "명사 'factors'가 능동적으로 영향을 미치므로 현재분사 'influencing'이 맞다."
+        },
+        {
+          "text": "Together, these studies suggest that both goal alignment and a positive self-perception is crucial for enhancing motivation and overall well-being in later life.",
+          "isCorrect": false,
+          "correction": "Together, these studies suggest that both goal alignment and a positive self-perception are crucial for enhancing motivation and overall well-being in later life.",
+          "explanation": "주어가 'both A and B' 구조로 복수이므로 'are'가 맞다."
+        },
+        {
+          "text": "In fact, third-age learners exhibit a higher degree of selectivity when it comes to determining what goals to pursue and how to allocate their resources towards those specific priorities.",
+          "isCorrect": false,
+          "correction": "In fact, third-age learners exhibit a higher degree of selectivity when it comes to determining which goals to pursue and how to allocate their resources towards those specific priorities.",
+          "explanation": "뒤의 명사 'goals'를 수식하므로 의문형용사 'which'가 맞다. 'what'은 명사 수식 불가."
+        },
+        {
+          "text": "Older adults demonstrates a stronger sense of life purpose and self-fulfilment.",
+          "isCorrect": false,
+          "correction": "Older adults demonstrate a stronger sense of life purpose and self-fulfilment.",
+          "explanation": "복수 주어 'Older adults'에 맞춰 복수동사 'demonstrate'가 맞다."
+        },
+        {
+          "text": "They do it their way, and their way is an accumulation of winning and personalizing combinations in effectively relating motives all together at different degrees according to their life contexts.",
+          "isCorrect": false,
+          "correction": "They do it their way, and their way is an accumulation of winning and personalized combinations in effectively relating motives all together at different degrees according to their life contexts.",
+          "explanation": "명사 'combinations'가 맞춤화되는 대상(수동)이므로 과거분사 'personalized'가 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,318 @@
+{
+  "passageId": "69d4eca372a886137cd83ef4",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 02번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 02번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 02번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In real life, every experience or chain of experiences is enacted for every observer in an uninterrupted spatial and temporal sequence.",
+      "tokens": ["In","real","life,","every","experience","or","chain","of","experiences","is","enacted","for","every","observer","in","an","uninterrupted","spatial","and","temporal","sequence."],
+      "korean": "실제 생활에서, 모든 경험 혹은 일련의 경험은 모든 관찰자에게 끊임없는 공간과 시간의 연속으로 상연된다."
+    },
+    {
+      "idx": 1,
+      "text": "I may, for example, see two people talking together in a room, but I cannot suddenly see what these two people will be doing ten minutes later.",
+      "tokens": ["I","may,","for","example,","see","two","people","talking","together","in","a","room,","but","I","cannot","suddenly","see","what","these","two","people","will","be","doing","ten","minutes","later."],
+      "korean": "예를 들어, 나는 두 사람이 방 안에서 함께 이야기하는 것을 볼 수 있지만, 이 두 사람이 10분 후에 하고 있을 것을 내가 갑자기 볼 수 없다."
+    },
+    {
+      "idx": 2,
+      "text": "These ten minutes must first pass in their entirety.",
+      "tokens": ["These","ten","minutes","must","first","pass","in","their","entirety."],
+      "korean": "이 10분은 온전히 먼저 흘러가야 한다."
+    },
+    {
+      "idx": 3,
+      "text": "There are no jerks in time or space in real life, so time and space are continuous.",
+      "tokens": ["There","are","no","jerks","in","time","or","space","in","real","life,","so","time","and","space","are","continuous."],
+      "korean": "실제 생활에서 시간이나 공간에서의 급격한 움직임이 없으므로, 시간과 공간은 끊이지 않는다."
+    },
+    {
+      "idx": 4,
+      "text": "Not so in film. The period of time that is being photographed may be interrupted at any point.",
+      "tokens": ["Not","so","in","film.","The","period","of","time","that","is","being","photographed","may","be","interrupted","at","any","point."],
+      "korean": "그러나 영화에서는 그렇지 않다. (영화에서는) 촬영되고 있는 시간의 기간은 어떤 시점에서 방해받을 수도 있다."
+    },
+    {
+      "idx": 5,
+      "text": "One scene may be immediately followed by another that takes place at a totally different time.",
+      "tokens": ["One","scene","may","be","immediately","followed","by","another","that","takes","place","at","a","totally","different","time."],
+      "korean": "한 장면에 전혀 다른 시간에 일어나는 다른 장면이 바로 이어질 수도 있다."
+    },
+    {
+      "idx": 6,
+      "text": "And the continuity of space may be broken in the same manner.",
+      "tokens": ["And","the","continuity","of","space","may","be","broken","in","the","same","manner."],
+      "korean": "그리고 공간의 연속성도 같은 방법으로 깨질 수도 있다."
+    },
+    {
+      "idx": 7,
+      "text": "A moment ago I may have been standing 100 yards away from a house.",
+      "tokens": ["A","moment","ago","I","may","have","been","standing","100","yards","away","from","a","house."],
+      "korean": "잠시 전에 나는 어느 집에서 100야드 떨어져 서 있었을지도 모른다."
+    },
+    {
+      "idx": 8,
+      "text": "Suddenly I am close in front of it. I have only to join the two strips together.",
+      "tokens": ["Suddenly","I","am","close","in","front","of","it.","I","have","only","to","join","the","two","strips","together."],
+      "korean": "갑자기 나는 그(집) 앞에 가까이 있다. 나는 두 개의 (필름) 조각을 함께 연결하기만 하면 된다."
+    },
+    {
+      "idx": 9,
+      "text": "To be sure, in practice this freedom is usually restricted in that the subject of the film is an account of some action, and a certain logical unity of time and space must be observed into which the various scenes are fitted.",
+      "tokens": ["To","be","sure,","in","practice","this","freedom","is","usually","restricted","in","that","the","subject","of","the","film","is","an","account","of","some","action,","and","a","certain","logical","unity","of","time","and","space","must","be","observed","into","which","the","various","scenes","are","fitted."],
+      "korean": "확실히, 영화의 주제가 어떤 행동의 설명이라는 점에서 실제로 이런 자유는 보통 한정적이며, 다양한 장면들이 결합되는 시간과 공간의 특정한 논리적인 통합은 준수되어야 한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T11-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "for",
+          "wrongCandidates": ["to"],
+          "grammarType": "전치사",
+          "explanation": "'enact for + 대상'은 '~을 위해 상연되다(보여지다)'의 의미로 전치사 'for'가 맞다. 'to'는 방향·도달의 의미라 'enact'와 결합해 '관찰자에게로 상연된다'는 부자연스러운 의미가 되어 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "talking",
+          "wrongCandidates": ["talked"],
+          "grammarType": "분사",
+          "explanation": "지각동사 'see' + 목적어 + 목적격보어 구조에서, 목적어 'two people'이 능동적으로 이야기하고 있는 진행 의미이므로 현재분사 'talking'이 맞다. 과거분사 'talked'는 수동의 의미가 되어 '두 사람이 (누군가에 의해) 이야기되는 것을 본다'는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "talk",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "pass",
+          "wrongCandidates": ["passes"],
+          "grammarType": "시제",
+          "explanation": "조동사 'must' 뒤에는 항상 동사원형이 와야 하므로 'pass'가 맞다. 주어 'These ten minutes'가 복수처럼 보여 'passes'를 쓰면 안 되며, 'must' 뒤에서는 수일치 자체가 적용되지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T11-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "so",
+          "wrongCandidates": ["but"],
+          "grammarType": "접속사",
+          "explanation": "앞 절 '시간·공간에 급격한 움직임이 없다'와 뒤 절 '시간과 공간은 연속적이다'가 원인-결과 관계이므로 결과의 접속사 'so'가 맞다. 'but'은 역접의 의미여서 두 절의 인과 관계를 깨뜨려 문맥과 충돌한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "photographed",
+          "wrongCandidates": ["photographing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'The period of time'은 촬영되는 대상이므로 'is being + 과거분사' 진행수동의 형태로 'photographed'가 맞다. 'photographing'은 능동의 의미가 되어 '시간의 기간이 무언가를 촬영하고 있는 중'이라는 비논리적인 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "photograph",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T8-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'another (scene)'가 있고 뒤 절에 주어가 비어 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 자체에 포함하는 관계대명사로, 선행사가 따로 존재할 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T7-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "broken",
+          "wrongCandidates": ["breaking"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the continuity of space'는 깨어지는 대상이므로 'may be + 과거분사' 수동태 구조에서 과거분사 'broken'이 맞다. 현재분사 'breaking'은 능동의 의미가 되어 '연속성이 무언가를 깨뜨리고 있다'는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "break",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T7-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "standing",
+          "wrongCandidates": ["stood"],
+          "grammarType": "시제",
+          "explanation": "'may have been ___' 뒤에는 현재완료진행을 만드는 현재분사 -ing 형태가 와야 하므로 'standing'이 맞다. 과거분사 'stood'를 쓰면 'have been stood'가 되어 'stand'의 수동태가 되는데, 'stand'는 자동사라 수동태를 만들 수 없어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "stand",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T11-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 11,
+          "endTokenIdx": 12,
+          "correctForm": "to join",
+          "wrongCandidates": ["joining"],
+          "grammarType": "부정사",
+          "explanation": "'have only to + 동사원형'은 '~하기만 하면 된다'는 의미의 관용 표현이므로 to부정사 'to join'이 맞다. 동명사 'joining'은 이 구조에 맞지 않아 의미가 통하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T17-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'the subject'는 단수이므로 단수 동사 'is'가 맞다. 사이에 끼어든 수식어구 'of the film'에 이끌려 'film'을 주어로 착각해 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "talking", "baseForm": "talk"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "photographed", "baseForm": "photograph"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "broken", "baseForm": "break"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "standing", "baseForm": "stand"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "is", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "for", "wrongForm": "to", "explanation": "'enact for + 대상'은 '~을 위해 상연되다'의 의미로 전치사 'for'가 맞다. 'to'는 방향·도달의 의미라 'enact'와 결합해 부자연스러운 의미가 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "talking", "wrongForm": "talked", "explanation": "지각동사 'see' + 목적어 + 목적격보어 구조에서 목적어 'two people'이 능동적으로 이야기하는 진행 의미이므로 현재분사 'talking'이 맞다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "pass", "wrongForm": "passes", "explanation": "조동사 'must' 뒤에는 항상 동사원형이 와야 하므로 'pass'가 맞다. 'must' 뒤에서는 수일치 자체가 적용되지 않는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "so", "wrongForm": "but", "explanation": "앞 절과 뒤 절이 원인-결과 관계이므로 결과의 접속사 'so'가 맞다. 'but'은 역접의 의미여서 문맥과 충돌한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "photographed", "wrongForm": "photographing", "explanation": "주어 'The period of time'은 촬영되는 대상이므로 'is being + 과거분사' 진행수동의 형태로 'photographed'가 맞다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'another (scene)'가 있고 뒤 절에 주어가 비어 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사를 포함하므로 불가."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "broken", "wrongForm": "breaking", "explanation": "주어가 깨어지는 대상이므로 'may be + 과거분사' 수동태 구조에서 과거분사 'broken'이 맞다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "standing", "wrongForm": "stood", "explanation": "'may have been ___' 뒤에는 현재완료진행을 만드는 -ing 형태가 와야 하므로 'standing'이 맞다. 'stand'는 자동사라 수동태 'have been stood'는 불가."},
+        {"sentenceIdx": 8, "startTokenIdx": 11, "endTokenIdx": 12, "correctForm": "to join", "wrongForm": "joining", "explanation": "'have only to + 동사원형'은 '~하기만 하면 된다'는 관용 표현이므로 to부정사 'to join'이 맞다."},
+        {"sentenceIdx": 9, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵 'the subject'는 단수이므로 'is'가 맞다. 수식어구 'of the film'에 이끌려 'are'를 쓰면 안 된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "to", "correction": "for", "explanation": "'enact for + 대상'의 의미가 맞으므로 'for'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "talked", "correction": "talking", "explanation": "지각동사 see + O + -ing 구조에서 능동·진행 의미이므로 'talking'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "passes", "correction": "pass", "explanation": "조동사 'must' 뒤이므로 동사원형 'pass'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "but", "correction": "so", "explanation": "두 절이 원인-결과 관계이므로 결과의 접속사 'so'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "photographing", "correction": "photographed", "explanation": "주어가 촬영되는 대상이므로 'is being + p.p.' 수동 진행의 'photographed'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'another'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "breaking", "correction": "broken", "explanation": "주어가 깨어지는 대상이므로 수동의 과거분사 'broken'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "stood", "correction": "standing", "explanation": "'may have been + -ing' 완료진행이므로 'standing'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 11, "endTokenIdx": 12, "isError": true, "wrongForm": "joining", "correction": "to join", "explanation": "'have only to + 동사원형' 관용표현이므로 'to join'으로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'the subject'에 맞춰 'is'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "In real life, every experience or chain of experiences is enacted to every observer in an uninterrupted spatial and temporal sequence.",
+          "isCorrect": false,
+          "correction": "In real life, every experience or chain of experiences is enacted for every observer in an uninterrupted spatial and temporal sequence.",
+          "explanation": "'enact for + 대상'은 '~을 위해 상연되다'의 의미이므로 전치사 'for'가 맞다."
+        },
+        {
+          "text": "I may, for example, see two people talked together in a room, but I cannot suddenly see what these two people will be doing ten minutes later.",
+          "isCorrect": false,
+          "correction": "I may, for example, see two people talking together in a room, but I cannot suddenly see what these two people will be doing ten minutes later.",
+          "explanation": "지각동사 see + O + 현재분사 구조이므로 능동·진행의 'talking'이 맞다."
+        },
+        {
+          "text": "These ten minutes must first passes in their entirety.",
+          "isCorrect": false,
+          "correction": "These ten minutes must first pass in their entirety.",
+          "explanation": "조동사 'must' 뒤에는 동사원형 'pass'가 와야 한다."
+        },
+        {
+          "text": "There are no jerks in time or space in real life, but time and space are continuous.",
+          "isCorrect": false,
+          "correction": "There are no jerks in time or space in real life, so time and space are continuous.",
+          "explanation": "원인-결과 관계이므로 결과의 접속사 'so'가 맞다."
+        },
+        {
+          "text": "Not so in film. The period of time that is being photographing may be interrupted at any point.",
+          "isCorrect": false,
+          "correction": "Not so in film. The period of time that is being photographed may be interrupted at any point.",
+          "explanation": "주어가 촬영되는 대상이므로 'is being + 과거분사'의 'photographed'가 맞다."
+        },
+        {
+          "text": "One scene may be immediately followed by another what takes place at a totally different time.",
+          "isCorrect": false,
+          "correction": "One scene may be immediately followed by another that takes place at a totally different time.",
+          "explanation": "선행사 'another'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "And the continuity of space may be breaking in the same manner.",
+          "isCorrect": false,
+          "correction": "And the continuity of space may be broken in the same manner.",
+          "explanation": "주어가 깨어지는 대상이므로 수동의 과거분사 'broken'이 맞다."
+        },
+        {
+          "text": "A moment ago I may have been stood 100 yards away from a house.",
+          "isCorrect": false,
+          "correction": "A moment ago I may have been standing 100 yards away from a house.",
+          "explanation": "'may have been + -ing' 완료진행이므로 'standing'이 맞다. 'stand'는 자동사라 수동태 불가."
+        },
+        {
+          "text": "Suddenly I am close in front of it. I have only joining the two strips together.",
+          "isCorrect": false,
+          "correction": "Suddenly I am close in front of it. I have only to join the two strips together.",
+          "explanation": "'have only to + 동사원형' 관용표현이므로 'to join'이 맞다."
+        },
+        {
+          "text": "To be sure, in practice this freedom is usually restricted in that the subject of the film are an account of some action, and a certain logical unity of time and space must be observed into which the various scenes are fitted.",
+          "isCorrect": false,
+          "correction": "To be sure, in practice this freedom is usually restricted in that the subject of the film is an account of some action, and a certain logical unity of time and space must be observed into which the various scenes are fitted.",
+          "explanation": "주어의 핵 'the subject'는 단수이므로 단수 동사 'is'가 맞다."
+        }
+      ]
+    }
+  }
+}

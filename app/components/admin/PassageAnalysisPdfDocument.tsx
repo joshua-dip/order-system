@@ -86,9 +86,20 @@ export const PassageAnalysisPdfDocument = forwardRef<HTMLDivElement, Props>(
           .sort(([a], [b]) => comprehensiveOrder(a) - comprehensiveOrder(b))
       : [];
 
-    const sortedSvoc = Object.entries(svoc)
-      .map(([k, v]) => [Number(k), v] as [number, SvocSentenceData])
-      .sort((a, b) => a[0] - b[0]);
+    // 다절 데이터(SvocSentenceData[]) 의 절별 row 평면화 — 같은 sentence 의 N개 절은 N개 row.
+    // tuple: [sentenceIdx, clauseIdx, isFirstClauseOfSentence, clause]
+    const sortedSvoc: Array<[number, number, boolean, SvocSentenceData]> = [];
+    Object.entries(svoc)
+      .map(([k, v]) => [Number(k), v] as [number, SvocSentenceData | SvocSentenceData[]])
+      .filter(([k, v]) => Number.isFinite(k) && v != null)
+      .sort((a, b) => a[0] - b[0])
+      .forEach(([sentIdx, v]) => {
+        const clauses = Array.isArray(v) ? v : [v];
+        clauses.forEach((c, ci) => {
+          if (!c) return;
+          sortedSvoc.push([sentIdx, ci, ci === 0, c]);
+        });
+      });
     const sortedPhrases = Object.entries(phrases)
       .map(([k, v]) => [Number(k), v] as [number, SyntaxPhraseStored[]])
       .sort((a, b) => a[0] - b[0]);
@@ -674,8 +685,11 @@ export const PassageAnalysisPdfDocument = forwardRef<HTMLDivElement, Props>(
                   </tr>
                 </thead>
                 <tbody>
-                  {chunk.map(([i, d], j) => (
-                    <tr key={i} style={j % 2 === 1 ? { background: PALETTE.zebra } : undefined}>
+                  {chunk.map(([sentIdx, clauseIdx, isFirst, d], j) => (
+                    <tr
+                      key={`${sentIdx}-${clauseIdx}`}
+                      style={j % 2 === 1 ? { background: PALETTE.zebra } : undefined}
+                    >
                       <td
                         style={{
                           ...cellBody,
@@ -684,7 +698,12 @@ export const PassageAnalysisPdfDocument = forwardRef<HTMLDivElement, Props>(
                           fontWeight: 700,
                         }}
                       >
-                        {i}
+                        {isFirst ? sentIdx : ''}
+                        {!isFirst && (
+                          <span style={{ fontSize: '8px', color: PALETTE.muted }}>
+                            ↳절{clauseIdx + 1}
+                          </span>
+                        )}
                       </td>
                       <td style={cellBody}>
                         <SvocCell

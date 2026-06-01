@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import Link from 'next/link';
 import AppBar from './AppBar';
+import HomeNoticeModal from './HomeNoticeModal';
 import { OrderHubCard, type OrderHubCardProps } from './OrderHubCard';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 
@@ -390,6 +391,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   return (
     <>
       <AppBar />
+      <HomeNoticeModal showApplyCta={!isMember} />
       <div className="min-h-screen motion-safe:scroll-smooth" style={{ backgroundColor: '#F8FAFC' }}>
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
             {/* Q&A 분석지 · 변형문제 만들기 2단 강조 배너 */}

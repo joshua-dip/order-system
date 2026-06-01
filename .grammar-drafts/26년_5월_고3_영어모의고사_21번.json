@@ -1,0 +1,412 @@
+{
+  "passageId": "69fe3e8d36e33281b7111f7b",
+  "textbook": "26년 5월 고3 영어모의고사",
+  "sourceKey": "26년 5월 고3 영어모의고사 21번",
+  "title": "26년 5월 고3 영어모의고사 21번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "고3",
+    "questionNumber": "어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "A scientist named Speiser suspects that scallop vision works in a very different way than ours.",
+      "tokens": ["A", "scientist", "named", "Speiser", "suspects", "that", "scallop", "vision", "works", "in", "a", "very", "different", "way", "than", "ours."],
+      "korean": "Speiser라는 이름의 한 과학자는 가리비의 시각이 우리의 것과는 매우 다른 방식으로 작동한다고 추측한다."
+    },
+    {
+      "idx": 1,
+      "text": "Our brains combine the overlapping information from our two eyes into a single scene.",
+      "tokens": ["Our", "brains", "combine", "the", "overlapping", "information", "from", "our", "two", "eyes", "into", "a", "single", "scene."],
+      "korean": "우리의 뇌는 우리의 두 눈으로부터 온 겹치는 정보를 하나의 장면으로 결합한다."
+    },
+    {
+      "idx": 2,
+      "text": "A scallop could do the same across a hundred eyes, but that seems unlikely given how primitive its brain is.",
+      "tokens": ["A", "scallop", "could", "do", "the", "same", "across", "a", "hundred", "eyes,", "but", "that", "seems", "unlikely", "given", "how", "primitive", "its", "brain", "is."],
+      "korean": "가리비도 백 개의 눈에 걸쳐 똑같이 '할 수' 있을지도 모르지만, 그것의 뇌가 얼마나 원시적인지를 고려하면 그것은 가능성이 희박해 보인다."
+    },
+    {
+      "idx": 3,
+      "text": "Instead, each eye might simply tell the brain whether it has detected something moving or not.",
+      "tokens": ["Instead,", "each", "eye", "might", "simply", "tell", "the", "brain", "whether", "it", "has", "detected", "something", "moving", "or", "not."],
+      "korean": "대신에, 각각의 눈은 단순히 뇌에게 그것이 움직이는 무언가를 감지했는지 아닌지만을 알려 줄지도 모른다."
+    },
+    {
+      "idx": 4,
+      "text": "Think of the scallop's brain as a security guard watching a bank of a hundred monitors, each connected to a motion-sensing camera.",
+      "tokens": ["Think", "of", "the", "scallop's", "brain", "as", "a", "security", "guard", "watching", "a", "bank", "of", "a", "hundred", "monitors,", "each", "connected", "to", "a", "motion-sensing", "camera."],
+      "korean": "가리비의 뇌를 동작 감지 카메라에 각각 연결된 한 줄로 늘어선 백 개의 모니터를 지켜보고 있는 보안 요원이라고 생각해 보라."
+    },
+    {
+      "idx": 5,
+      "text": "The cameras may be state-of-the-art, but the images they capture are not sent to the guard.",
+      "tokens": ["The", "cameras", "may", "be", "state-of-the-art,", "but", "the", "images", "they", "capture", "are", "not", "sent", "to", "the", "guard."],
+      "korean": "그 카메라들은 최신식일지 모르지만, 그들이 포착하는 이미지들은 '그 요원에게 전송되지 않는다.'"
+    },
+    {
+      "idx": 6,
+      "text": "All the guard sees on the monitors is a warning light for every camera that has spotted something.",
+      "tokens": ["All", "the", "guard", "sees", "on", "the", "monitors", "is", "a", "warning", "light", "for", "every", "camera", "that", "has", "spotted", "something."],
+      "korean": "요원이 모니터에서 보는 전부라고는 무언가를 발견한 모든 카메라로 인한 경고등뿐이다."
+    },
+    {
+      "idx": 7,
+      "text": "If Speiser is right about this strange setup, it means that even though each individual scallop eye has good spatial resolution, the animal itself might not have spatial vision.",
+      "tokens": ["If", "Speiser", "is", "right", "about", "this", "strange", "setup,", "it", "means", "that", "even", "though", "each", "individual", "scallop", "eye", "has", "good", "spatial", "resolution,", "the", "animal", "itself", "might", "not", "have", "spatial", "vision."],
+      "korean": "만약 Speiser가 이 이상한 설정에 대해 옳다면, 그것은 비록 가리비의 각각의 개별적인 눈이 좋은 공간 해상도를 가지고 있을지라도, 그 동물 자체는 공간에 대한 '시각'을 가지고 있지 않을 수도 있음을 의미한다."
+    },
+    {
+      "idx": 8,
+      "text": "It knows when eyes in a certain region of its body have detected something, but it has no visual image of that object.",
+      "tokens": ["It", "knows", "when", "eyes", "in", "a", "certain", "region", "of", "its", "body", "have", "detected", "something,", "but", "it", "has", "no", "visual", "image", "of", "that", "object."],
+      "korean": "그것은 자신의 몸의 특정 부위에 있는 눈들이 무언가를 탐지했을 때 그것을 알지만 그 물체에 대한 시각적 이미지를 가지지는 않는다."
+    },
+    {
+      "idx": 9,
+      "text": "It doesn't experience a movie in its head the same way we do.",
+      "tokens": ["It", "doesn't", "experience", "a", "movie", "in", "its", "head", "the", "same", "way", "we", "do."],
+      "korean": "그것은 우리가 하는 것과 같은 방식으로 그것의 머릿속에서 영화를 경험하지 않는다."
+    },
+    {
+      "idx": 10,
+      "text": "It sees without scenes.",
+      "tokens": ["It", "sees", "without", "scenes."],
+      "korean": "그것은 장면들 없이 본다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "F": { "blocks": [] },
+    "P": {
+      "points": [
+        {
+          "id": "S0-T2-001",
+          "sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "named", "wrongCandidates": ["naming"],
+          "grammarType": "분사",
+          "explanation": "A scientist 가 'Speiser 라고 이름 지어진' 수동 관계이므로 과거분사 named 가 맞음. 현재분사 naming 은 능동(이름을 짓는)이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "이름의",
+          "uses": ["F", "G", "H", "J"], "baseForm": "name",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T4-002",
+          "sentenceIdx": 0, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "suspects", "wrongCandidates": ["suspect"],
+          "grammarType": "수일치",
+          "explanation": "주어 A scientist 는 단수이므로 단수동사 suspects 가 맞음. 복수 suspect 는 수일치 위반(named Speiser 삽입 분사구 뒤 수일치 함정).",
+          "koCorrect": "추측한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "suspect",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T5-003",
+          "sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "that", "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "suspects 의 목적어로 완전한 절(scallop vision works ~) 이 이어지므로 명사절 접속사 that 가 맞음. 관계대명사 what 은 뒤 절이 불완전해야 하므로 부적절.",
+          "koCorrect": "고",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-004",
+          "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "combine", "wrongCandidates": ["combines"],
+          "grammarType": "수일치",
+          "explanation": "주어 Our brains 는 복수이므로 복수동사 combine 이 맞음. 단수 combines 는 수일치 위반.",
+          "koCorrect": "결합한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "combine",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-005",
+          "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "overlapping", "wrongCandidates": ["overlapped"],
+          "grammarType": "분사",
+          "explanation": "information 이 '겹치는' 능동 의미이므로 현재분사 overlapping 이 맞음. 과거분사 overlapped 는 '겹쳐진' 수동 의미라 어색(분사 능동/수동 함정).",
+          "koCorrect": "겹치는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "overlap",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T10-006",
+          "sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "into", "wrongCandidates": ["to"],
+          "grammarType": "전치사",
+          "explanation": "combine A into B (A 를 결합하여 B 로 만들다) 의 의미이므로 into 가 맞음. to 는 방향만 의미해 결합 결과의 의미가 부적절.",
+          "koCorrect": "으로",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T3-007",
+          "sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "do", "wrongCandidates": ["doing"],
+          "grammarType": "시제",
+          "explanation": "조동사 could 뒤에는 동사원형이 오므로 do 가 맞음. 동명사/현재분사 doing 은 조동사 뒤에 단독으로 올 수 없음.",
+          "koCorrect": "할 수",
+          "uses": ["F", "G", "H", "J"], "baseForm": "do",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T14-008",
+          "sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14,
+          "correctForm": "given", "wrongCandidates": ["giving"],
+          "grammarType": "분사",
+          "explanation": "'~을 고려하면' 의 의미로 굳어진 과거분사 given 이 맞음. 현재분사 giving 은 '주는' 능동 의미라 문맥에 부적절.",
+          "koCorrect": "고려하면",
+          "uses": ["F", "G", "H", "J"], "baseForm": "give",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T15-009",
+          "sentenceIdx": 2, "startTokenIdx": 15, "endTokenIdx": 15,
+          "correctForm": "how", "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "뒤에 형용사 primitive 를 수식하는 의문부사 자리이므로 how 가 맞음. what 은 형용사를 직접 수식할 수 없음.",
+          "koCorrect": "얼마나",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T8-010",
+          "sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "whether", "wrongCandidates": ["that"],
+          "grammarType": "접속사",
+          "explanation": "'~인지 아닌지' 의 의미이고 뒤에 or not 이 호응하므로 whether 가 맞음. that 은 단정 의미라 or not 호응에 부적절.",
+          "koCorrect": "지",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T10-011",
+          "sentenceIdx": 3, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "has", "wrongCandidates": ["have"],
+          "grammarType": "수일치",
+          "explanation": "종속절 주어 it 은 단수(each eye 를 받음)이므로 단수형 has 가 맞음. 복수 have 는 수일치 위반(each + 단수 함정).",
+          "koCorrect": "감지했",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T13-012",
+          "sentenceIdx": 3, "startTokenIdx": 13, "endTokenIdx": 13,
+          "correctForm": "moving", "wrongCandidates": ["moved"],
+          "grammarType": "분사",
+          "explanation": "something 이 '움직이는' 능동 의미이므로 현재분사 moving 이 맞음. 과거분사 moved 는 '옮겨진' 수동 의미라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "움직이는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "move",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-013",
+          "sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "as", "wrongCandidates": ["for"],
+          "grammarType": "전치사",
+          "explanation": "Think of A as B (A 를 B 라고 생각하다) 의 의미이므로 as 가 맞음. for 는 자격/대상 의미가 달라 부적절.",
+          "koCorrect": "이라고",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T9-014",
+          "sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "watching", "wrongCandidates": ["watched"],
+          "grammarType": "분사",
+          "explanation": "guard 가 '지켜보는' 능동 분사구이므로 현재분사 watching 이 맞음. 과거분사 watched 는 수동(지켜봐지는) 이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "지켜보고 있는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "watch",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T17-015",
+          "sentenceIdx": 4, "startTokenIdx": 17, "endTokenIdx": 17,
+          "correctForm": "connected", "wrongCandidates": ["connecting"],
+          "grammarType": "분사",
+          "explanation": "각 monitor 가 카메라에 '연결된' 수동 관계이므로 과거분사 connected 가 맞음. 현재분사 connecting 은 능동(연결하는)이라 부적절(분사 능동/수동 고빈도 함정).",
+          "koCorrect": "연결된",
+          "uses": ["F", "G", "H", "J"], "baseForm": "connect",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-016",
+          "sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "be", "wrongCandidates": ["being"],
+          "grammarType": "시제",
+          "explanation": "조동사 may 뒤에는 동사원형이 오므로 be 가 맞음. being 은 조동사 뒤에 단독으로 올 수 없음.",
+          "koCorrect": "일지",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T9-017",
+          "sentenceIdx": 5, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "capture", "wrongCandidates": ["captures"],
+          "grammarType": "수일치",
+          "explanation": "관계사절 주어 they (= images 복수) 이므로 복수동사 capture 가 맞음. 단수 captures 는 수일치 위반.",
+          "koCorrect": "포착하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "capture",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T12-018",
+          "sentenceIdx": 5, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "sent", "wrongCandidates": ["sending"],
+          "grammarType": "수동태",
+          "explanation": "images 가 '전송되는' 수동 관계 (are not sent) 이므로 과거분사 sent 가 맞음. 현재분사 sending 은 능동이라 부적절.",
+          "koCorrect": "전송되지",
+          "uses": ["F", "G", "H", "J"], "baseForm": "send",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T7-019",
+          "sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7,
+          "correctForm": "is", "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 All the guard sees on the monitors 가 명사절(=관계절 포함 단수 명사구) 단수 취급이므로 단수동사 is 가 맞음. 복수 are 는 수일치 위반.",
+          "koCorrect": "뿐이다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T14-020",
+          "sentenceIdx": 6, "startTokenIdx": 14, "endTokenIdx": 14,
+          "correctForm": "that", "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 every camera 가 있고 뒤 절이 주어 자리 불완전이므로 주격 관계대명사 that 가 맞음. what 은 선행사를 포함해 부적절.",
+          "koCorrect": "발견한",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T16-021",
+          "sentenceIdx": 6, "startTokenIdx": 16, "endTokenIdx": 16,
+          "correctForm": "spotted", "wrongCandidates": ["spot"],
+          "grammarType": "시제",
+          "explanation": "has + 과거분사 형태의 현재완료이므로 spotted 가 맞음. 원형 spot 은 has 뒤에 올 수 없음.",
+          "koCorrect": "발견한",
+          "uses": ["F", "G", "H", "J"], "baseForm": "spot",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T12-022",
+          "sentenceIdx": 7, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "though", "wrongCandidates": ["that"],
+          "grammarType": "접속사",
+          "explanation": "even + though 결합으로 '비록 ~일지라도' 양보 절을 이끌므로 though 가 맞음. that 은 양보 의미가 없어 부적절.",
+          "koCorrect": "비록",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T17-023",
+          "sentenceIdx": 7, "startTokenIdx": 17, "endTokenIdx": 17,
+          "correctForm": "has", "wrongCandidates": ["have"],
+          "grammarType": "수일치",
+          "explanation": "주어 each individual scallop eye 는 each 가 붙어 단수 취급이므로 단수동사 has 가 맞음. 복수 have 는 수일치 위반(each + 단수 고빈도 함정).",
+          "koCorrect": "가지고 있을지라도",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T26-024",
+          "sentenceIdx": 7, "startTokenIdx": 26, "endTokenIdx": 26,
+          "correctForm": "have", "wrongCandidates": ["has"],
+          "grammarType": "시제",
+          "explanation": "조동사 might 뒤에는 동사원형이 오므로 have 가 맞음. 3인칭 단수 has 는 조동사 뒤에 올 수 없음.",
+          "koCorrect": "가지고",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T2-025",
+          "sentenceIdx": 8, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "when", "wrongCandidates": ["that"],
+          "grammarType": "접속사",
+          "explanation": "'~할 때' 의 시간 부사절을 이끄는 접속사 when 이 맞음. that 은 시간 의미가 없어 부적절.",
+          "koCorrect": "때",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T11-026",
+          "sentenceIdx": 8, "startTokenIdx": 11, "endTokenIdx": 11,
+          "correctForm": "have", "wrongCandidates": ["has"],
+          "grammarType": "수일치",
+          "explanation": "삽입 전치사구(in a certain region of its body)를 걷어내면 주어 eyes 는 복수이므로 복수형 have 가 맞음. 단수 has 는 수일치 위반(삽입어구 뒤 수일치 고빈도 함정).",
+          "koCorrect": "탐지했을",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T12-027",
+          "sentenceIdx": 8, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "detected", "wrongCandidates": ["detect"],
+          "grammarType": "시제",
+          "explanation": "have + 과거분사 형태의 현재완료이므로 detected 가 맞음. 원형 detect 는 have 뒤에 올 수 없음.",
+          "koCorrect": "탐지했",
+          "uses": ["F", "G", "H", "J"], "baseForm": "detect",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T2-028",
+          "sentenceIdx": 9, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "experience", "wrongCandidates": ["experiences"],
+          "grammarType": "시제",
+          "explanation": "doesn't 의 do 뒤에는 동사원형이 오므로 experience 가 맞음. 3인칭 단수 experiences 는 doesn't 뒤에 올 수 없음.",
+          "koCorrect": "경험하지",
+          "uses": ["F", "G", "H", "J"], "baseForm": "experience",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T5-029",
+          "sentenceIdx": 9, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "in", "wrongCandidates": ["on"],
+          "grammarType": "전치사",
+          "explanation": "'머릿속에서' 의 의미이므로 in its head 가 맞음. on (표면 위) 은 의미상 부적절.",
+          "koCorrect": "에서",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T12-030",
+          "sentenceIdx": 9, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "do.", "wrongCandidates": ["does."],
+          "grammarType": "수일치",
+          "explanation": "대동사가 받는 주어 we 는 복수이므로 복수형 do 가 맞음. 3인칭 단수 does 는 we 와 수가 안 맞음.",
+          "koCorrect": "하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "do",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T1-031",
+          "sentenceIdx": 10, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "sees", "wrongCandidates": ["see"],
+          "grammarType": "수일치",
+          "explanation": "주어 It 은 3인칭 단수이므로 단수동사 sees 가 맞음. 복수 see 는 수일치 위반.",
+          "koCorrect": "본다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "see",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T2-032",
+          "sentenceIdx": 10, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "without", "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'장면 없이' 의 의미이므로 without 이 맞음. with 는 '함께' 라 문맥과 정반대.",
+          "koCorrect": "없이",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        }
+      ]
+    },
+    "G": { "points": [] },
+    "H": { "spans": [] },
+    "J": { "items": [] }
+  }
+}

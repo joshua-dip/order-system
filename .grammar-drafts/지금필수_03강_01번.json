@@ -1,0 +1,235 @@
+{
+  "passageId": "69d4eca372a886137cd83ed5",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "03강 01번",
+  "title": "지금필수 고난도유형(2026) 03강 01번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "03강 01번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Today a movement is underway to extend the years of work by postponing retirement.",
+      "tokens": ["Today","a","movement","is","underway","to","extend","the","years","of","work","by","postponing","retirement."],
+      "korean": "오늘날 은퇴를 연기함으로써 근무 연한을 연장하는 움직임이 진행 중이다."
+    },
+    {
+      "idx": 1,
+      "text": "The threshold for receiving Social Security benefits in the United States is creeping upward.",
+      "tokens": ["The","threshold","for","receiving","Social","Security","benefits","in","the","United","States","is","creeping","upward."],
+      "korean": "미국에서는 사회보장 혜택을 받을 수 있는 문턱이 서서히 높아지고 있다."
+    },
+    {
+      "idx": 2,
+      "text": "Propaganda in favor of old people working is mounting.",
+      "tokens": ["Propaganda","in","favor","of","old","people","working","is","mounting."],
+      "korean": "노인들이 일하는 것을 지지하는 선전이 증가하고 있다."
+    },
+    {
+      "idx": 3,
+      "text": "The Wall Street Journal published a glowing front-page story about the case of Bonnie Lovellette Rooks, a janitor on the floor of a steel factory, who was a month shy of her seventy-ninth birthday.",
+      "tokens": ["The","Wall","Street","Journal","published","a","glowing","front-page","story","about","the","case","of","Bonnie","Lovellette","Rooks,","a","janitor","on","the","floor","of","a","steel","factory,","who","was","a","month","shy","of","her","seventy-ninth","birthday."],
+      "korean": "<Wall Street Journal>은 79세 생일에서 한 달 부족한 제철소 작업장 청소원인 Bonnie Lovellette Rooks의 사례에 관한 강렬한 1면 기사를 실었다."
+    },
+    {
+      "idx": 4,
+      "text": "She could not afford to retire because of her medical costs and the responsibility of caring for a disabled daughter.",
+      "tokens": ["She","could","not","afford","to","retire","because","of","her","medical","costs","and","the","responsibility","of","caring","for","a","disabled","daughter."],
+      "korean": "그녀는 자신의 의료비와 장애를 가진 딸을 돌보는 책임 때문에 은퇴할 여유가 없었다."
+    },
+    {
+      "idx": 5,
+      "text": "The tone of the story was not an expression of sympathy for Ms. Rooks; instead, it emitted appreciation for the potential of a stretching of working years.",
+      "tokens": ["The","tone","of","the","story","was","not","an","expression","of","sympathy","for","Ms.","Rooks;","instead,","it","emitted","appreciation","for","the","potential","of","a","stretching","of","working","years."],
+      "korean": "그 기사의 어조는 Rooks 씨에 대한 동정심의 표현이 아니었다. 그 대신, 그것은 근무 연한을 늘릴 가능성에 대해 공감을 표했다."
+    },
+    {
+      "idx": 6,
+      "text": "Business has good reason to applaud the prolonged career of Ms. Rooks, although she has less cause to appreciate the economic conditions that left her with so much responsibility for an unaffordable medical system.",
+      "tokens": ["Business","has","good","reason","to","applaud","the","prolonged","career","of","Ms.","Rooks,","although","she","has","less","cause","to","appreciate","the","economic","conditions","that","left","her","with","so","much","responsibility","for","an","unaffordable","medical","system."],
+      "korean": "업계가 Rooks 씨의 근무 연장에 대해 박수를 칠 이유는 충분하다. 비록 감당할 수 없는 의료 체계에 대해 너무 많은 책임을 자신에게 지게 했던 경제적 상황을 그녀가 고마워할 이유는 별로 없지만 말이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T12-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "postponing",
+          "wrongCandidates": ["postpone"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'postponing'이 맞다. 동사원형 'postpone'은 전치사의 목적어가 될 수 없다. 'by + -ing'는 '~함으로써'라는 수단·방법을 나타내는 정형 구조다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "postpone",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T11-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 단수 명사 'The threshold'이므로 단수 동사 'is'가 맞다. 사이에 끼어 있는 'for receiving Social Security benefits in the United States' 같은 수식어구의 복수 명사(benefits, States)에 이끌려 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "working",
+          "wrongCandidates": ["worked"],
+          "grammarType": "분사",
+          "explanation": "'old people'을 능동적으로 수식해 '일하는 노인들'의 의미를 나타내므로 현재분사 'working'이 맞다. 과거분사 'worked'는 '일해진' 식의 수동·완료가 되어 사람 명사 'old people'을 자연스럽게 수식할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "work",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T25-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 25,
+          "endTokenIdx": 25,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사가 사람을 가리키는 'Bonnie Lovellette Rooks'(동격으로 'a janitor')이고, 관계절 안에서 주어 역할을 하므로 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받는 관계대명사라 사람에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T4-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 4,
+          "endTokenIdx": 5,
+          "correctForm": "to retire",
+          "wrongCandidates": ["retiring"],
+          "grammarType": "부정사",
+          "explanation": "동사 'afford'는 목적어로 to부정사를 취하는 동사이므로 'to retire'가 맞다. 동명사 'retiring'은 'afford'의 목적어가 될 수 없다. 'cannot afford to V'는 '~할 (경제적) 여유가 없다'라는 정형 표현이다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T16-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "emitted",
+          "wrongCandidates": ["emits"],
+          "grammarType": "시제",
+          "explanation": "앞 절의 동사 'was'와 시제를 맞춰야 하며, 기사의 어조를 서술하는 과거 시점의 진술이므로 과거 시제 'emitted'가 맞다. 현재 시제 'emits'는 앞 절과 시제 불일치를 일으켜 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "emit",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T12-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "although",
+          "wrongCandidates": ["despite"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 '주어(she) + 동사(has)'를 갖춘 절이 이어지므로 절을 이끄는 접속사 'although'가 맞다. 'despite'는 전치사라서 뒤에 절을 직접 받지 못하고 명사(구)나 동명사가 와야 하므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "postponing", "baseForm": "postpone"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "working", "baseForm": "work"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "emitted", "baseForm": "emit"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "postponing", "wrongForm": "postpone", "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'postponing'이 맞다. 동사원형 'postpone'은 전치사의 목적어가 될 수 없다. 'by + -ing'는 '~함으로써'라는 수단·방법을 나타내는 정형 구조다."},
+        {"sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵은 단수 명사 'The threshold'이므로 단수 동사 'is'가 맞다. 사이에 끼어 있는 'for receiving Social Security benefits in the United States' 같은 수식어구의 복수 명사(benefits, States)에 이끌려 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "working", "wrongForm": "worked", "explanation": "'old people'을 능동적으로 수식해 '일하는 노인들'의 의미를 나타내므로 현재분사 'working'이 맞다. 과거분사 'worked'는 '일해진' 식의 수동·완료가 되어 사람 명사 'old people'을 자연스럽게 수식할 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "who", "wrongForm": "which", "explanation": "선행사가 사람을 가리키는 'Bonnie Lovellette Rooks'(동격으로 'a janitor')이고, 관계절 안에서 주어 역할을 하므로 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받는 관계대명사라 사람에는 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 4, "endTokenIdx": 5, "correctForm": "to retire", "wrongForm": "retiring", "explanation": "동사 'afford'는 목적어로 to부정사를 취하는 동사이므로 'to retire'가 맞다. 동명사 'retiring'은 'afford'의 목적어가 될 수 없다. 'cannot afford to V'는 '~할 (경제적) 여유가 없다'라는 정형 표현이다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "emitted", "wrongForm": "emits", "explanation": "앞 절의 동사 'was'와 시제를 맞춰야 하며, 기사의 어조를 서술하는 과거 시점의 진술이므로 과거 시제 'emitted'가 맞다. 현재 시제 'emits'는 앞 절과 시제 불일치를 일으켜 어색하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "although", "wrongForm": "despite", "explanation": "뒤에 '주어(she) + 동사(has)'를 갖춘 절이 이어지므로 절을 이끄는 접속사 'although'가 맞다. 'despite'는 전치사라서 뒤에 절을 직접 받지 못하고 명사(구)나 동명사가 와야 하므로 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "postpone", "correction": "postponing", "explanation": "전치사 'by' 뒤이므로 동명사 'postponing'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어의 핵은 단수 'The threshold'이므로 단수 동사 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "worked", "correction": "working", "explanation": "'old people'을 능동으로 수식하는 현재분사 'working'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 25, "endTokenIdx": 25, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "선행사가 사람이므로 주격 관계대명사 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 4, "endTokenIdx": 5, "isError": true, "wrongForm": "retiring", "correction": "to retire", "explanation": "'afford'는 to부정사를 목적어로 취하므로 'to retire'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "emits", "correction": "emitted", "explanation": "앞의 'was'와 시제를 맞춰 과거 시제 'emitted'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "despite", "correction": "although", "explanation": "뒤에 절이 이어지므로 접속사 'although'로 고쳐야 한다. 'despite'는 전치사라 절을 받지 못한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Today a movement is underway to extend the years of work by postpone retirement.",
+          "isCorrect": false,
+          "correction": "Today a movement is underway to extend the years of work by postponing retirement.",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'postponing'이 맞다."
+        },
+        {
+          "text": "The threshold for receiving Social Security benefits in the United States are creeping upward.",
+          "isCorrect": false,
+          "correction": "The threshold for receiving Social Security benefits in the United States is creeping upward.",
+          "explanation": "주어의 핵 'The threshold'가 단수이므로 단수 동사 'is'가 맞다."
+        },
+        {
+          "text": "Propaganda in favor of old people worked is mounting.",
+          "isCorrect": false,
+          "correction": "Propaganda in favor of old people working is mounting.",
+          "explanation": "'old people'을 능동으로 수식하는 현재분사 'working'이 맞다."
+        },
+        {
+          "text": "The Wall Street Journal published a glowing front-page story about the case of Bonnie Lovellette Rooks, a janitor on the floor of a steel factory, which was a month shy of her seventy-ninth birthday.",
+          "isCorrect": false,
+          "correction": "The Wall Street Journal published a glowing front-page story about the case of Bonnie Lovellette Rooks, a janitor on the floor of a steel factory, who was a month shy of her seventy-ninth birthday.",
+          "explanation": "선행사가 사람이므로 주격 관계대명사 'who'가 맞다."
+        },
+        {
+          "text": "She could not afford retiring because of her medical costs and the responsibility of caring for a disabled daughter.",
+          "isCorrect": false,
+          "correction": "She could not afford to retire because of her medical costs and the responsibility of caring for a disabled daughter.",
+          "explanation": "'afford'는 to부정사를 목적어로 취하는 동사이므로 'to retire'가 맞다."
+        },
+        {
+          "text": "The tone of the story was not an expression of sympathy for Ms. Rooks; instead, it emits appreciation for the potential of a stretching of working years.",
+          "isCorrect": false,
+          "correction": "The tone of the story was not an expression of sympathy for Ms. Rooks; instead, it emitted appreciation for the potential of a stretching of working years.",
+          "explanation": "앞의 'was'와 시제를 맞춰 과거 시제 'emitted'가 맞다."
+        },
+        {
+          "text": "Business has good reason to applaud the prolonged career of Ms. Rooks, despite she has less cause to appreciate the economic conditions that left her with so much responsibility for an unaffordable medical system.",
+          "isCorrect": false,
+          "correction": "Business has good reason to applaud the prolonged career of Ms. Rooks, although she has less cause to appreciate the economic conditions that left her with so much responsibility for an unaffordable medical system.",
+          "explanation": "뒤에 절이 이어지므로 접속사 'although'가 맞다. 'despite'는 전치사라 절을 받지 못한다."
+        }
+      ]
+    }
+  }
+}

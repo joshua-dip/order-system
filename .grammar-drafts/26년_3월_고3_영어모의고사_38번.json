@@ -1,0 +1,264 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd3c",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 38번",
+  "title": "26년 3월 고3 영어모의고사 38번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "38번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Scholars have demonstrated that the gestures hearing people produce while they are speaking are systematically made at the same time with speech such that language and gesture must be considered \"co-expressive\".",
+      "tokens": ["Scholars","have","demonstrated","that","the","gestures","hearing","people","produce","while","they","are","speaking","are","systematically","made","at","the","same","time","with","speech","such","that","language","and","gesture","must","be","considered","\"co-expressive\"."],
+      "korean": "학자들은 들을 수 있는 사람(청인)이 말하는 동안 보여 주는 제스처가, 언어와 제스처를 반드시 '공동 표현적'이라고 간주해야 할 만큼, 말과 동시에 체계적으로 만들어진다는 것을 입증해 왔다."
+    },
+    {
+      "idx": 1,
+      "text": "This tightly integrated pairing of language and gesture enables speakers to conceptualize and formulate their thoughts in terms of both the \"categorical\" requirements of language, and the \"imagistic\" possibilities of gesture.",
+      "tokens": ["This","tightly","integrated","pairing","of","language","and","gesture","enables","speakers","to","conceptualize","and","formulate","their","thoughts","in","terms","of","both","the","\"categorical\"","requirements","of","language,","and","the","\"imagistic\"","possibilities","of","gesture."],
+      "korean": "이러한 언어와 제스처의 단단히 결합된 한 쌍은 화자가 언어의 '범주적' 요구와 제스처의 '심상적' 가능성 두 관점 모두에서 자기 생각을 개념화하고 명확하게 말할 수 있게 한다."
+    },
+    {
+      "idx": 2,
+      "text": "For example, in describing an event, one must decide if the event has been completed or is ongoing if the language being spoken at that moment has a verbal affix for each meaning and one or the other must be chosen.",
+      "tokens": ["For","example,","in","describing","an","event,","one","must","decide","if","the","event","has","been","completed","or","is","ongoing","if","the","language","being","spoken","at","that","moment","has","a","verbal","affix","for","each","meaning","and","one","or","the","other","must","be","chosen."],
+      "korean": "예를 들어, 어떤 사건을 묘사할 때, 만약 그 순간에 말해지고 있는 언어가 각 의미에 대한 동사에 붙는 접사를 가지고 있고 둘 중 하나를 반드시 선택해야 한다면, 한 사람(화자)은 그 사건이 완료되었는지 또는 진행 중인지를 반드시 결정해야 한다."
+    },
+    {
+      "idx": 3,
+      "text": "This kind of choice is characteristic of language as a semiotic system.",
+      "tokens": ["This","kind","of","choice","is","characteristic","of","language","as","a","semiotic","system."],
+      "korean": "이러한 종류의 선택은 기호 체계로서 언어의 특징이다."
+    },
+    {
+      "idx": 4,
+      "text": "According to McNeil and Duncan, gesture is different from language in that it does not present the speaker with such choices.",
+      "tokens": ["According","to","McNeil","and","Duncan,","gesture","is","different","from","language","in","that","it","does","not","present","the","speaker","with","such","choices."],
+      "korean": "McNeil과 Duncan에 따르면, 제스처는 화자에게 그러한 선택을 제시하지 않는다는 점에서 언어와 다르다."
+    },
+    {
+      "idx": 5,
+      "text": "Instead, it offers a kind of glue, which helps unite linguistic elements in a larger semiotic expression, which, as a whole, shares important characteristics with the represented objects.",
+      "tokens": ["Instead,","it","offers","a","kind","of","glue,","which","helps","unite","linguistic","elements","in","a","larger","semiotic","expression,","which,","as","a","whole,","shares","important","characteristics","with","the","represented","objects."],
+      "korean": "대신에, 그것은 일종의 접착제를 제공하는데, 그것은 언어적 요소들을 더 큰 기호 표현 안에서 결합하도록 돕고, 그것은, 전체로서, 표현된 대상과 중요한 특징을 공유한다."
+    },
+    {
+      "idx": 6,
+      "text": "In this view, speech and gesture are not redundant nor is one a \"translation\" of the other.",
+      "tokens": ["In","this","view,","speech","and","gesture","are","not","redundant","nor","is","one","a","\"translation\"","of","the","other."],
+      "korean": "이러한 관점에서, 말과 제스처는 중복되는 것이 아니며 어느 하나가 다른 하나의 '번역'도 아니다."
+    },
+    {
+      "idx": 7,
+      "text": "Rather, the minimal processing unit for the expression of thought is a combination of the two: it is \"imagistic-categorial\" in nature.",
+      "tokens": ["Rather,","the","minimal","processing","unit","for","the","expression","of","thought","is","a","combination","of","the","two:","it","is","\"imagistic-categorial\"","in","nature."],
+      "korean": "오히려, 사고 표현을 위한 최소 처리 단위는 이 둘의 결합이며, 그것은 본질적으로 '심상적범주적'이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'the gestures'가 복수이므로 본동사는 복수형 'are'가 맞다. 중간의 'hearing people produce while they are speaking'은 'the gestures'를 수식하는 관계절(목적격 관계대명사 생략)일 뿐이므로 단수 'is'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T10-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "to",
+          "wrongCandidates": ["for"],
+          "grammarType": "부정사",
+          "explanation": "'enable + 목적어 + to부정사' 구문이므로 'speakers' 뒤에 to부정사 'to conceptualize'가 와야 한다. 전치사 'for'는 enable 구문에 쓰이지 않으며, 뒤따르는 'conceptualize'와 결합하지 못한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "to",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T21-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "being",
+          "wrongCandidates": ["been"],
+          "grammarType": "수동태",
+          "explanation": "'the language' 뒤에서 명사를 수식하는 분사구문으로, '말해지고 있는 중인' 진행 수동의 의미이므로 'being spoken'(현재분사 수동)이 맞다. 'been spoken'은 완료 수동의 일부로, 앞에 'have/has'가 없으므로 분사 수식어로 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T4-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'This kind'가 단수이므로 단수동사 'is'가 맞다. 'of choice'는 전치사구 수식어이므로 복수동사 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "that",
+          "wrongCandidates": ["which"],
+          "grammarType": "접속사",
+          "explanation": "'in that S+V'는 '~라는 점에서'를 의미하는 접속사 표현으로 'that'을 써야 한다. 'in which'는 관계대명사로 선행 명사가 필요한데 여기서는 선행사가 없고 절을 이끄는 자리이므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T8-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "helps",
+          "wrongCandidates": ["helping"],
+          "grammarType": "관계사",
+          "explanation": "관계대명사 'which'의 선행사 'a kind of glue'(단수)에 호응하는 관계절의 본동사가 필요하므로 'helps'가 맞다. 'helping'은 분사가 되어 관계절의 정동사 자리를 채울 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T10-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "is",
+          "wrongCandidates": ["does"],
+          "grammarType": "시제",
+          "explanation": "부정어 'nor'가 문두로 나오면서 도치가 일어난 구조로, 뒤따르는 보어 'a translation of the other'를 잇기 위해 be동사 'is'가 필요하다. 일반동사용 조동사 'does'는 보어를 취하지 못해 문장이 성립하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "for",
+          "wrongCandidates": ["to"],
+          "grammarType": "전치사",
+          "explanation": "'the minimal processing unit' 뒤에서 '~을 위한 단위'라는 용도/목적을 나타내는 전치사 'for'가 와야 한다. 'to'는 뒤에 명사구 'the expression of thought'와 결합해 '~로의 단위'라는 어색한 방향 의미가 되어 문맥과 충돌한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "to", "baseForm": "to"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "being", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "is", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "are", "wrongForm": "is", "explanation": "주어의 핵 'the gestures'가 복수이므로 본동사는 복수형 'are'가 맞다. 중간의 'hearing people produce while they are speaking'은 'the gestures'를 수식하는 관계절(목적격 관계대명사 생략)일 뿐이므로 단수 'is'를 쓰면 안 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "to", "wrongForm": "for", "explanation": "'enable + 목적어 + to부정사' 구문이므로 'speakers' 뒤에 to부정사 'to conceptualize'가 와야 한다. 전치사 'for'는 enable 구문에 쓰이지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "being", "wrongForm": "been", "explanation": "'the language'를 수식하는 분사구문으로 '말해지고 있는 중인' 진행 수동의 의미이므로 'being spoken'이 맞다. 'been spoken'은 완료 수동의 일부로 분사 수식어로 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵 'This kind'가 단수이므로 단수동사 'is'가 맞다. 'of choice'는 전치사구 수식어이므로 복수동사 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "that", "wrongForm": "which", "explanation": "'in that S+V'는 '~라는 점에서'를 의미하는 접속사 표현으로 'that'을 써야 한다. 'in which'는 선행사가 필요한 관계대명사이므로 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "helps", "wrongForm": "helping", "explanation": "관계대명사 'which'의 선행사 'a kind of glue'(단수)에 호응하는 관계절의 본동사가 필요하므로 'helps'가 맞다. 'helping'은 분사가 되어 정동사 자리를 채울 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "is", "wrongForm": "does", "explanation": "부정어 'nor' 도치 구조에서 보어 'a translation of the other'를 잇기 위해 be동사 'is'가 필요하다. 'does'는 보어를 취하지 못한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "for", "wrongForm": "to", "explanation": "'~을 위한 단위'라는 용도/목적을 나타내는 전치사 'for'가 와야 한다. 'to'는 어색한 방향 의미가 되어 문맥과 충돌한다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'the gestures'에 맞춰 본동사를 복수형 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "for", "correction": "to", "explanation": "'enable + 목적어 + to부정사' 구문이므로 'to conceptualize'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "been", "correction": "being", "explanation": "명사 수식 진행 수동 분사구이므로 'being spoken'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어의 핵 'This kind'가 단수이므로 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "which", "correction": "that", "explanation": "'in that S+V'(~라는 점에서) 접속사 표현이므로 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "helping", "correction": "helps", "explanation": "관계절의 정동사가 필요하므로 'helps'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "does", "correction": "is", "explanation": "보어 'a translation of the other'를 잇기 위해 be동사 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "to", "correction": "for", "explanation": "용도/목적을 나타내는 전치사 'for'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Scholars have demonstrated that the gestures hearing people produce while they are speaking is systematically made at the same time with speech such that language and gesture must be considered \"co-expressive\".",
+          "isCorrect": false,
+          "correction": "Scholars have demonstrated that the gestures hearing people produce while they are speaking are systematically made at the same time with speech such that language and gesture must be considered \"co-expressive\".",
+          "explanation": "주어의 핵 'the gestures'가 복수이므로 본동사는 복수형 'are'가 맞다."
+        },
+        {
+          "text": "This tightly integrated pairing of language and gesture enables speakers for conceptualize and formulate their thoughts in terms of both the \"categorical\" requirements of language, and the \"imagistic\" possibilities of gesture.",
+          "isCorrect": false,
+          "correction": "This tightly integrated pairing of language and gesture enables speakers to conceptualize and formulate their thoughts in terms of both the \"categorical\" requirements of language, and the \"imagistic\" possibilities of gesture.",
+          "explanation": "'enable + 목적어 + to부정사' 구문이므로 'to conceptualize'가 맞다."
+        },
+        {
+          "text": "For example, in describing an event, one must decide if the event has been completed or is ongoing if the language been spoken at that moment has a verbal affix for each meaning and one or the other must be chosen.",
+          "isCorrect": false,
+          "correction": "For example, in describing an event, one must decide if the event has been completed or is ongoing if the language being spoken at that moment has a verbal affix for each meaning and one or the other must be chosen.",
+          "explanation": "명사를 수식하는 진행 수동 분사구는 'being spoken'이 맞다."
+        },
+        {
+          "text": "This kind of choice are characteristic of language as a semiotic system.",
+          "isCorrect": false,
+          "correction": "This kind of choice is characteristic of language as a semiotic system.",
+          "explanation": "주어의 핵 'This kind'가 단수이므로 단수동사 'is'가 맞다."
+        },
+        {
+          "text": "According to McNeil and Duncan, gesture is different from language in which it does not present the speaker with such choices.",
+          "isCorrect": false,
+          "correction": "According to McNeil and Duncan, gesture is different from language in that it does not present the speaker with such choices.",
+          "explanation": "'in that S+V'(~라는 점에서) 접속사 표현이므로 'that'이 맞다."
+        },
+        {
+          "text": "Instead, it offers a kind of glue, which helping unite linguistic elements in a larger semiotic expression, which, as a whole, shares important characteristics with the represented objects.",
+          "isCorrect": false,
+          "correction": "Instead, it offers a kind of glue, which helps unite linguistic elements in a larger semiotic expression, which, as a whole, shares important characteristics with the represented objects.",
+          "explanation": "관계절의 정동사가 필요하므로 'helps'가 맞다."
+        },
+        {
+          "text": "In this view, speech and gesture are not redundant nor does one a \"translation\" of the other.",
+          "isCorrect": false,
+          "correction": "In this view, speech and gesture are not redundant nor is one a \"translation\" of the other.",
+          "explanation": "보어 'a translation of the other'를 잇기 위해 be동사 'is'가 맞다."
+        },
+        {
+          "text": "Rather, the minimal processing unit to the expression of thought is a combination of the two: it is \"imagistic-categorial\" in nature.",
+          "isCorrect": false,
+          "correction": "Rather, the minimal processing unit for the expression of thought is a combination of the two: it is \"imagistic-categorial\" in nature.",
+          "explanation": "용도/목적을 나타내는 전치사 'for'가 맞다."
+        }
+      ]
+    }
+  }
+}

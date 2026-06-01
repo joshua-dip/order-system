@@ -38,6 +38,8 @@ export interface PassagePickerModalProps {
   countLabel?: (n: number) => string;
   /** true 면 카운트가 0인 지문은 목록에서 숨김. */
   hideZeroCount?: boolean;
+  /** false 면 카운트를 아예 조회·표시하지 않음 (강·번호만 보이면 되는 경우). 기본 true. */
+  showCounts?: boolean;
 }
 
 const DEFAULT_LAST_TB_KEY = 'admin_passage_picker_last_textbook';
@@ -51,6 +53,7 @@ export default function PassagePickerModal({
   countsApi = DEFAULT_COUNTS_API,
   countLabel = DEFAULT_COUNT_LABEL,
   hideZeroCount = false,
+  showCounts = true,
 }: PassagePickerModalProps) {
   const [textbooks, setTextbooks] = useState<string[]>([]);
   /** SSR·첫 클라이언트 페인트와 동일해야 hydration 오류가 나지 않음 — localStorage는 mount 후 복원 */
@@ -92,12 +95,14 @@ export default function PassagePickerModal({
     setLoading(true);
     Promise.all([
       fetch(`/api/admin/passages?textbook=${encodeURIComponent(selectedTb)}&limit=500`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`${countsApi}?textbook=${encodeURIComponent(selectedTb)}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({ counts: {} })),
+      showCounts
+        ? fetch(`${countsApi}?textbook=${encodeURIComponent(selectedTb)}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({ counts: {} }))
+        : Promise.resolve({ counts: {} }),
     ]).then(([pd, cd]) => {
       setPassages(pd.items ?? []);
       setExamCounts(cd.counts ?? {});
     }).finally(() => setLoading(false));
-  }, [selectedTb, lastTextbookKey, countsApi]);
+  }, [selectedTb, lastTextbookKey, countsApi, showCounts]);
 
   /** passages 가 새로 도착하면, 마지막 선택 지문이 있을 때 해당 행을 스크롤 컨테이너 가운데로.
    *  scrollIntoView 는 모달 layout 직후 가끔 어긋나기에 컨테이너 scrollTop 을 직접 계산. */
@@ -220,7 +225,7 @@ export default function PassagePickerModal({
                   {p.source_key && (
                     <span className="text-xs text-blue-400">{p.source_key}</span>
                   )}
-                  {cnt > 0 && (
+                  {showCounts && cnt > 0 && (
                     <span className="text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded-full">
                       {countLabel(cnt)}
                     </span>

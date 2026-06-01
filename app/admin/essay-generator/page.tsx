@@ -2144,8 +2144,6 @@ export default function EssayGeneratorPage() {
   const [adminLoginId, setAdminLoginId] = useState('');
 
   const EXAM_TITLE_KEY = 'essay_generator_exam_title';
-  const SCHOOL_NAME_KEY = 'essay_generator_school_name';
-  const GRADE_KEY = 'essay_generator_grade';
   const SAVE_FOLDER_KEY = 'essay_generator_save_folder';
   const SYSTEM_PROMPT_KEY = 'essay_generator_system_prompt';
   /** localStorage는 mount 후 복원 — 초기값은 서버·클라이언트 동일해야 hydration 일치 */
@@ -2231,10 +2229,7 @@ export default function EssayGeneratorPage() {
     try {
       const t = localStorage.getItem(EXAM_TITLE_KEY);
       if (t !== null) setExamTitle(t);
-      const s = localStorage.getItem(SCHOOL_NAME_KEY);
-      if (s !== null) setSchoolName(s);
-      const g = localStorage.getItem(GRADE_KEY);
-      if (g !== null) setGrade(g);
+      // 학교명·학년은 자동 채움 없이 항상 빈칸으로 시작
       const f = localStorage.getItem(SAVE_FOLDER_KEY);
       if (f !== null && f.trim()) setSaveFolder(f.trim());
     } catch {
@@ -3251,24 +3246,18 @@ export default function EssayGeneratorPage() {
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">고등학교 이름</label>
                 <input
                   value={schoolName}
-                  onChange={e => {
-                    setSchoolName(e.target.value);
-                    localStorage.setItem(SCHOOL_NAME_KEY, e.target.value);
-                  }}
+                  onChange={e => setSchoolName(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500"
-                  placeholder="○○고등학교"
+                  placeholder="(선택)"
                 />
               </div>
               <div className="w-full sm:w-32 shrink-0">
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">학년</label>
                 <input
                   value={grade}
-                  onChange={e => {
-                    setGrade(e.target.value);
-                    localStorage.setItem(GRADE_KEY, e.target.value);
-                  }}
+                  onChange={e => setGrade(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500"
-                  placeholder="2학년"
+                  placeholder="(선택)"
                 />
               </div>
             </div>

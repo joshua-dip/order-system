@@ -1,0 +1,208 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd2f",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 25번",
+  "title": "26년 3월 고3 영어모의고사 25번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "25번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The graph above shows the reasons for using social networks by generation, based on a survey of U.S. citizens, conducted in July 2019.",
+      "tokens": ["The","graph","above","shows","the","reasons","for","using","social","networks","by","generation,","based","on","a","survey","of","U.S.","citizens,","conducted","in","July","2019."],
+      "korean": "위의 그래프는 2019년 7월에 실시된 미국 시민들을 대상으로 한 설문 조사에 근거하여, 세대별 소셜 네트워크를 사용하는 이유를 보여 준다."
+    },
+    {
+      "idx": 1,
+      "text": "For using social networks to share pictures and updates, the percentage of Gen X was 50%, which was the highest among the three generations.",
+      "tokens": ["For","using","social","networks","to","share","pictures","and","updates,","the","percentage","of","Gen","X","was","50%,","which","was","the","highest","among","the","three","generations."],
+      "korean": "사진과 업데이트를 공유하기 위해 소셜 네트워크를 사용하는 것에 있어서, X 세대(Gen X)의 퍼센트는 50퍼센트였고, 이는 세 세대 중 가장 높았다."
+    },
+    {
+      "idx": 2,
+      "text": "When it comes to using social networks to get inspired, the percentage of Gen Z was more than twice the percentage of Gen X, with Gen X showing the lowest figure among the three generations.",
+      "tokens": ["When","it","comes","to","using","social","networks","to","get","inspired,","the","percentage","of","Gen","Z","was","more","than","twice","the","percentage","of","Gen","X,","with","Gen","X","showing","the","lowest","figure","among","the","three","generations."],
+      "korean": "영감을 얻기 위해 소셜 네트워크를 사용하는 것에 관해서는, Z 세대(Gen Z)의 퍼센트는 X 세대 퍼센트의 두 배를 넘었고, X 세대는 세 세대 중 가장 낮은 수치를 보였다."
+    },
+    {
+      "idx": 3,
+      "text": "Regarding the category of using social networks to get news conveniently, the percentage of all three generations was over 20%.",
+      "tokens": ["Regarding","the","category","of","using","social","networks","to","get","news","conveniently,","the","percentage","of","all","three","generations","was","over","20%."],
+      "korean": "소식을 편리하게 받기 위해 소셜 네트워크를 사용하는 범주에서, 모든 세대의 퍼센트는 20퍼센트를 초과했다."
+    },
+    {
+      "idx": 4,
+      "text": "For using social networks to follow celebrities, the percentage of Millennials was higher than that of Gen X, reporting exactly twice the percentage of Gen X.",
+      "tokens": ["For","using","social","networks","to","follow","celebrities,","the","percentage","of","Millennials","was","higher","than","that","of","Gen","X,","reporting","exactly","twice","the","percentage","of","Gen","X."],
+      "korean": "유명인을 팔로우하기 위해 소셜 네트워크를 사용하는 것에 있어서는, 밀레니얼 세대(Millennials)의 퍼센트는 X 세대의 것보다 더 높았고, X 세대 퍼센트의 정확히 두 배를 기록했다."
+    },
+    {
+      "idx": 5,
+      "text": "The percentage of Millennials using social networks to expand their professional network was 18%, which was the highest among the three generations.",
+      "tokens": ["The","percentage","of","Millennials","using","social","networks","to","expand","their","professional","network","was","18%,","which","was","the","highest","among","the","three","generations."],
+      "korean": "자신의 직업상 관계망을 넓히기 위해 소셜 네트워크를 사용하는 밀레니얼 세대의 퍼센트는 18퍼센트였는데, 이는 세 세대 중 가장 높았다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T19-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 19,
+          "endTokenIdx": 19,
+          "correctForm": "conducted",
+          "wrongCandidates": ["conducting"],
+          "grammarType": "분사",
+          "explanation": "수식하는 명사 'a survey'는 사람에 의해 '실시되는' 대상이므로 수동의 의미를 갖는 과거분사 'conducted'가 맞다. 현재분사 'conducting'은 능동(설문이 무언가를 실시한다)의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "conduct",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "using",
+          "wrongCandidates": ["use"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'For' 뒤에는 동명사가 와야 하므로 'using'이 맞다. 동사원형 'use'는 전치사의 목적어 자리에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T9-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "inspired,",
+          "wrongCandidates": ["inspiring,"],
+          "grammarType": "수동태",
+          "explanation": "'get + 과거분사'는 수동의 의미(영감을 받다)이므로 'inspired'가 맞다. 현재분사 'inspiring'은 '영감을 주는'의 능동 의미가 되어 문맥(사용자가 영감을 얻는 것)에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "inspire",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T17-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "was",
+          "wrongCandidates": ["were"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'the percentage'가 단수이므로 단수 동사 'was'가 맞다. 'of all three generations' 같은 수식어구의 복수 명사에 이끌려 복수형 'were'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T18-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "reporting",
+          "wrongCandidates": ["reported"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'the percentage of Millennials'가 두 배의 수치를 능동적으로 기록한다는 의미이므로 현재분사 'reporting'이 맞다. 과거분사 'reported'는 수동(퍼센트가 보고되는)의 의미가 되어 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "report",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T14-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 '18%'(앞 절 전체 또는 수치)를 받는 계속적 용법의 관계대명사 자리이므로 'which'가 맞다. 'what'은 선행사를 포함하므로 선행사가 있을 때 쓸 수 없고, 콤마 뒤 계속적 용법으로도 사용할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "conducted", "baseForm": "conduct"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "inspired,", "baseForm": "inspire"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "was", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "reporting", "baseForm": "report"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "conducted", "wrongForm": "conducting", "explanation": "수식하는 명사 'a survey'는 사람에 의해 '실시되는' 대상이므로 수동의 의미를 갖는 과거분사 'conducted'가 맞다. 현재분사 'conducting'은 능동(설문이 무언가를 실시한다)의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "using", "wrongForm": "use", "explanation": "전치사 'For' 뒤에는 동명사가 와야 하므로 'using'이 맞다. 동사원형 'use'는 전치사의 목적어 자리에 올 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "inspired,", "wrongForm": "inspiring,", "explanation": "'get + 과거분사'는 수동의 의미(영감을 받다)이므로 'inspired'가 맞다. 현재분사 'inspiring'은 '영감을 주는'의 능동 의미가 되어 문맥(사용자가 영감을 얻는 것)에 어긋난다."},
+        {"sentenceIdx": 3, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "was", "wrongForm": "were", "explanation": "주어의 핵 'the percentage'가 단수이므로 단수 동사 'was'가 맞다. 'of all three generations' 같은 수식어구의 복수 명사에 이끌려 복수형 'were'를 쓰면 안 된다."},
+        {"sentenceIdx": 4, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "reporting", "wrongForm": "reported", "explanation": "분사구문의 의미상 주어 'the percentage of Millennials'가 두 배의 수치를 능동적으로 기록한다는 의미이므로 현재분사 'reporting'이 맞다. 과거분사 'reported'는 수동(퍼센트가 보고되는)의 의미가 되어 어색하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "which", "wrongForm": "what", "explanation": "선행사 '18%'(앞 절 전체 또는 수치)를 받는 계속적 용법의 관계대명사 자리이므로 'which'가 맞다. 'what'은 선행사를 포함하므로 선행사가 있을 때 쓸 수 없고, 콤마 뒤 계속적 용법으로도 사용할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 19, "endTokenIdx": 19, "isError": true, "wrongForm": "conducting", "correction": "conducted", "explanation": "수식하는 'a survey'가 '실시되는' 대상이므로 수동의 과거분사 'conducted'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "use", "correction": "using", "explanation": "전치사 'For' 뒤이므로 동명사 'using'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "inspiring,", "correction": "inspired,", "explanation": "'get + 과거분사'로 수동의 의미(영감을 받다)를 나타내야 하므로 'inspired'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "were", "correction": "was", "explanation": "주어의 핵 'the percentage'가 단수이므로 단수 동사 'was'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "reported", "correction": "reporting", "explanation": "능동(능동적으로 기록함)의 의미이므로 현재분사 'reporting'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사를 받는 계속적 용법의 관계대명사이므로 'which'로 고쳐야 한다. 'what'은 선행사 포함이라 불가."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The graph above shows the reasons for using social networks by generation, based on a survey of U.S. citizens, conducting in July 2019.",
+          "isCorrect": false,
+          "correction": "The graph above shows the reasons for using social networks by generation, based on a survey of U.S. citizens, conducted in July 2019.",
+          "explanation": "'a survey'가 실시되는 대상(수동)이므로 과거분사 'conducted'가 맞다."
+        },
+        {
+          "text": "For use social networks to share pictures and updates, the percentage of Gen X was 50%, which was the highest among the three generations.",
+          "isCorrect": false,
+          "correction": "For using social networks to share pictures and updates, the percentage of Gen X was 50%, which was the highest among the three generations.",
+          "explanation": "전치사 'For' 뒤에는 동명사 'using'이 와야 한다."
+        },
+        {
+          "text": "When it comes to using social networks to get inspiring, the percentage of Gen Z was more than twice the percentage of Gen X, with Gen X showing the lowest figure among the three generations.",
+          "isCorrect": false,
+          "correction": "When it comes to using social networks to get inspired, the percentage of Gen Z was more than twice the percentage of Gen X, with Gen X showing the lowest figure among the three generations.",
+          "explanation": "'get + 과거분사'로 영감을 받는다는 수동의 의미이므로 'inspired'가 맞다."
+        },
+        {
+          "text": "Regarding the category of using social networks to get news conveniently, the percentage of all three generations were over 20%.",
+          "isCorrect": false,
+          "correction": "Regarding the category of using social networks to get news conveniently, the percentage of all three generations was over 20%.",
+          "explanation": "주어의 핵 'the percentage'가 단수이므로 'was'가 맞다."
+        },
+        {
+          "text": "For using social networks to follow celebrities, the percentage of Millennials was higher than that of Gen X, reported exactly twice the percentage of Gen X.",
+          "isCorrect": false,
+          "correction": "For using social networks to follow celebrities, the percentage of Millennials was higher than that of Gen X, reporting exactly twice the percentage of Gen X.",
+          "explanation": "분사구문의 의미상 주어가 능동적으로 기록하므로 현재분사 'reporting'이 맞다."
+        },
+        {
+          "text": "The percentage of Millennials using social networks to expand their professional network was 18%, what was the highest among the three generations.",
+          "isCorrect": false,
+          "correction": "The percentage of Millennials using social networks to expand their professional network was 18%, which was the highest among the three generations.",
+          "explanation": "선행사를 받는 계속적 용법의 관계대명사이므로 'which'가 맞다. 'what'은 선행사 포함이라 불가."
+        }
+      ]
+    }
+  }
+}

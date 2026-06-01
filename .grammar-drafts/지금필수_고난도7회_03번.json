@@ -1,0 +1,208 @@
+{
+  "passageId": "69d4eca372a886137cd83f1d",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 03번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 03번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 03번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The rebirth of Western thought a millennium after the fall of Rome was sparked by the rediscovery of Greek and Roman knowledge, much of which had been safeguarded and extended by scholars in the Arab world.",
+      "tokens": ["The","rebirth","of","Western","thought","a","millennium","after","the","fall","of","Rome","was","sparked","by","the","rediscovery","of","Greek","and","Roman","knowledge,","much","of","which","had","been","safeguarded","and","extended","by","scholars","in","the","Arab","world."],
+      "korean": "로마의 몰락 이후 1천 년이 지난 뒤 서구 사상의 재탄생은 그리스 로마 지식의 재발견에 의해 촉발되었는데, 그중 많은 것이 아랍 세계의 학자들에 의해 보호되고 확장되었다."
+    },
+    {
+      "idx": 1,
+      "text": "At the same time, European explorers, driven by the desire to circumvent the Arab monopoly on trade with the East, sailed west to the Americas and east to India and China.",
+      "tokens": ["At","the","same","time,","European","explorers,","driven","by","the","desire","to","circumvent","the","Arab","monopoly","on","trade","with","the","East,","sailed","west","to","the","Americas","and","east","to","India","and","China."],
+      "korean": "동시에, 동양과의 무역에 대한 아랍의 독점을 피해 가려는 욕구가 넘치는 유럽 탐험가들은 서쪽으로는 아메리카 대륙을 향해, 그리고 동쪽으로는 인도와 중국을 향해 항해했다."
+    },
+    {
+      "idx": 2,
+      "text": "Global sea routes were established, and European nations competed with one another to carve up the globe.",
+      "tokens": ["Global","sea","routes","were","established,","and","European","nations","competed","with","one","another","to","carve","up","the","globe."],
+      "korean": "세계 해상 항로가 확립되었고, 유럽 국가들은 세계를 분할하기 위해 서로 경쟁했다."
+    },
+    {
+      "idx": 3,
+      "text": "During this Age of Exploration a new range of beverages came to the fore, made possible by distillation, an alchemical process known in the ancient world but much improved by Arab scholars.",
+      "tokens": ["During","this","Age","of","Exploration","a","new","range","of","beverages","came","to","the","fore,","made","possible","by","distillation,","an","alchemical","process","known","in","the","ancient","world","but","much","improved","by","Arab","scholars."],
+      "korean": "이 탐험의 시대 동안 고대에 알려졌으나 아랍 학자들에 의해 훨씬 더 발전된 연금술 과정인 증류에 의해 만들어진 새로운 종류의 음료들이 주목을 받게 됐다."
+    },
+    {
+      "idx": 4,
+      "text": "Distilled drinks provided alcohol in a compact, durable form ideal for sea transport.",
+      "tokens": ["Distilled","drinks","provided","alcohol","in","a","compact,","durable","form","ideal","for","sea","transport."],
+      "korean": "증류된 음료는 해상운송에 이상적인, 작고 내구성이 있는 형태로 알코올을 제공했다."
+    },
+    {
+      "idx": 5,
+      "text": "Such drinks as brandy, rum, and whiskey were used as currency to buy slaves and became particularly popular in the North American colonies, where they became so politically contentious that they played a key role in the establishment of the United States.",
+      "tokens": ["Such","drinks","as","brandy,","rum,","and","whiskey","were","used","as","currency","to","buy","slaves","and","became","particularly","popular","in","the","North","American","colonies,","where","they","became","so","politically","contentious","that","they","played","a","key","role","in","the","establishment","of","the","United","States."],
+      "korean": "브랜디, 럼, 그리고 위스키같은 음료는 노예를 사기 위한 화폐로 사용되었고, 북아메리카 식민지에서 특히 인기를 끌게 되었는데, 그곳에서 그것들은 정치적으로 너무 논쟁을 불러일으키게 되어서 미국을 설립하는 데 중요한 역할을 했다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T24-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 24,
+          "endTokenIdx": 24,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'Greek and Roman knowledge'를 받는 관계대명사이므로 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 앞에 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T6-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "driven",
+          "wrongCandidates": ["driving"],
+          "grammarType": "분사",
+          "explanation": "주어 'European explorers'가 욕구에 의해 '이끌리는' 수동의 의미이므로 과거분사 'driven'이 맞다. 현재분사 'driving'은 능동의 의미가 되어 문맥과 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "drive",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T3-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "were",
+          "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Global sea routes'가 복수이므로 복수형 be 동사 'were'가 맞다. 단수형 'was'는 단수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T14-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "made",
+          "wrongCandidates": ["making"],
+          "grammarType": "수동태",
+          "explanation": "분사구의 의미상 주어 'a new range of beverages'가 증류에 의해 '만들어지는' 수동의 대상이므로 과거분사 'made'가 맞다. 현재분사 'making'은 음료가 무언가를 능동적으로 만든다는 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T2-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "provided",
+          "wrongCandidates": ["providing"],
+          "grammarType": "시제",
+          "explanation": "이 문장은 'Distilled drinks'를 주어로 하는 완전한 절이므로 본동사로 과거시제 'provided'가 필요하다. 현재분사 'providing'을 쓰면 문장의 본동사가 사라져 비문이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "provide",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T29-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 29,
+          "endTokenIdx": 29,
+          "correctForm": "that",
+          "wrongCandidates": ["which"],
+          "grammarType": "접속사",
+          "explanation": "'so + 형용사 + that + 절' 구문으로 결과를 나타내는 접속사 'that'이 와야 한다. 관계대명사 'which'는 선행사를 수식하는 형용사절을 이끄므로 'so ~ that' 결과절 구조에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "driven", "baseForm": "drive"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "were", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "made", "baseForm": "make"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "provided", "baseForm": "provide"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 24, "endTokenIdx": 24, "correctForm": "which", "wrongForm": "what", "explanation": "선행사 'Greek and Roman knowledge'를 받는 관계대명사이므로 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 앞에 선행사가 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "driven", "wrongForm": "driving", "explanation": "주어 'European explorers'가 욕구에 의해 '이끌리는' 수동의 의미이므로 과거분사 'driven'이 맞다. 현재분사 'driving'은 능동의 의미가 되어 문맥과 맞지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "were", "wrongForm": "was", "explanation": "주어 'Global sea routes'가 복수이므로 복수형 be 동사 'were'가 맞다. 단수형 'was'는 단수 주어에 사용된다."},
+        {"sentenceIdx": 3, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "made", "wrongForm": "making", "explanation": "분사구의 의미상 주어 'a new range of beverages'가 증류에 의해 '만들어지는' 수동의 대상이므로 과거분사 'made'가 맞다. 현재분사 'making'은 음료가 무언가를 능동적으로 만든다는 의미가 되어 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "provided", "wrongForm": "providing", "explanation": "이 문장은 'Distilled drinks'를 주어로 하는 완전한 절이므로 본동사로 과거시제 'provided'가 필요하다. 현재분사 'providing'을 쓰면 문장의 본동사가 사라져 비문이 된다."},
+        {"sentenceIdx": 5, "startTokenIdx": 29, "endTokenIdx": 29, "correctForm": "that", "wrongForm": "which", "explanation": "'so + 형용사 + that + 절' 구문으로 결과를 나타내는 접속사 'that'이 와야 한다. 관계대명사 'which'는 선행사를 수식하는 형용사절을 이끄므로 'so ~ that' 결과절 구조에 쓸 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 24, "endTokenIdx": 24, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사 'Greek and Roman knowledge'가 있으므로 'which'로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "driving", "correction": "driven", "explanation": "주어가 욕구에 의해 이끌리는 수동의 의미이므로 과거분사 'driven'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "was", "correction": "were", "explanation": "복수 주어 'Global sea routes'에 맞춰 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "making", "correction": "made", "explanation": "음료가 만들어지는 수동의 대상이므로 과거분사 'made'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "providing", "correction": "provided", "explanation": "문장의 본동사 자리이므로 과거시제 'provided'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 29, "endTokenIdx": 29, "isError": true, "wrongForm": "which", "correction": "that", "explanation": "'so ~ that' 결과절 구문이므로 접속사 'that'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The rebirth of Western thought a millennium after the fall of Rome was sparked by the rediscovery of Greek and Roman knowledge, much of what had been safeguarded and extended by scholars in the Arab world.",
+          "isCorrect": false,
+          "correction": "The rebirth of Western thought a millennium after the fall of Rome was sparked by the rediscovery of Greek and Roman knowledge, much of which had been safeguarded and extended by scholars in the Arab world.",
+          "explanation": "선행사 'Greek and Roman knowledge'가 있으므로 'which'가 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "At the same time, European explorers, driving by the desire to circumvent the Arab monopoly on trade with the East, sailed west to the Americas and east to India and China.",
+          "isCorrect": false,
+          "correction": "At the same time, European explorers, driven by the desire to circumvent the Arab monopoly on trade with the East, sailed west to the Americas and east to India and China.",
+          "explanation": "주어 'European explorers'가 욕구에 이끌리는 수동의 의미이므로 과거분사 'driven'이 맞다."
+        },
+        {
+          "text": "Global sea routes was established, and European nations competed with one another to carve up the globe.",
+          "isCorrect": false,
+          "correction": "Global sea routes were established, and European nations competed with one another to carve up the globe.",
+          "explanation": "복수 주어 'Global sea routes'에는 복수형 be 동사 'were'가 맞다."
+        },
+        {
+          "text": "During this Age of Exploration a new range of beverages came to the fore, making possible by distillation, an alchemical process known in the ancient world but much improved by Arab scholars.",
+          "isCorrect": false,
+          "correction": "During this Age of Exploration a new range of beverages came to the fore, made possible by distillation, an alchemical process known in the ancient world but much improved by Arab scholars.",
+          "explanation": "음료가 증류에 의해 만들어지는 수동의 대상이므로 과거분사 'made'가 맞다."
+        },
+        {
+          "text": "Distilled drinks providing alcohol in a compact, durable form ideal for sea transport.",
+          "isCorrect": false,
+          "correction": "Distilled drinks provided alcohol in a compact, durable form ideal for sea transport.",
+          "explanation": "문장의 본동사 자리이므로 과거시제 'provided'가 와야 한다."
+        },
+        {
+          "text": "Such drinks as brandy, rum, and whiskey were used as currency to buy slaves and became particularly popular in the North American colonies, where they became so politically contentious which they played a key role in the establishment of the United States.",
+          "isCorrect": false,
+          "correction": "Such drinks as brandy, rum, and whiskey were used as currency to buy slaves and became particularly popular in the North American colonies, where they became so politically contentious that they played a key role in the establishment of the United States.",
+          "explanation": "'so + 형용사 + that + 절' 결과 구문이므로 접속사 'that'이 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -50,6 +50,11 @@ export function buildBulkVariantExplanation(typeRaw: string, qd: Record<string, 
     return clip(body, 450);
   }
 
+  if (type === '어법-고난도' || cat === '어법-고난도') {
+    const body = `${head} 이 정답입니다. ${head}에 해당하는 밑줄들이 모두 어법상 어색하게 변형되어 있어, 각 자리의 올바른 표기와 대비해 골라야 합니다. 나머지 번호는 원문과 동일한 올바른 표기입니다.`;
+    return clip(body, 450);
+  }
+
   if (type === '순서' || cat === '순서') {
     const body = `${head} 가 정답입니다. (A)(B)(C) 블록을 정답 보기 순서대로 배열하면, 맨 앞 도입 문장 뒤로 사례·이유·대조나 결론이 끊기지 않고 이어집니다.\n논리 흐름 요약: 담화 단계가 앞뒤 지시어·접속과 맞물리도록 블록 순서를 맞춘 것이 정답입니다.`;
     return clip(body, 450);

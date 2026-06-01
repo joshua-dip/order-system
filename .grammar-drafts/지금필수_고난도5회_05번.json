@@ -1,0 +1,321 @@
+{
+  "passageId": "69d4eca372a886137cd83f0f",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 05번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 05번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 05번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Let’s take a look at an average household in two cultures that seem the same.",
+      "tokens": ["Let’s","take","a","look","at","an","average","household","in","two","cultures","that","seem","the","same."],
+      "korean": "같은 것처럼 보이는 두 문화의 평범한 가정을 살펴보자."
+    },
+    {
+      "idx": 1,
+      "text": "Both spend a great deal of money on plants and take great pride in their landscaping.",
+      "tokens": ["Both","spend","a","great","deal","of","money","on","plants","and","take","great","pride","in","their","landscaping."],
+      "korean": "두 가정 모두 식물에 많은 돈을 쓰며 그들의 조경에도 큰 자부심을 갖고 있다."
+    },
+    {
+      "idx": 2,
+      "text": "Both keep animals. Both have habitats for fish. But in the first culture, everything is for food.",
+      "tokens": ["Both","keep","animals.","Both","have","habitats","for","fish.","But","in","the","first","culture,","everything","is","for","food."],
+      "korean": "둘 다 동물을 키운다. 둘 다 물고기의 서식지가 있다. 하지만 첫 번째 문화에서는, 모든 것이 식량을 위한 것이다."
+    },
+    {
+      "idx": 3,
+      "text": "The plants and animals are edible and the artificial ponds are stocked with fish for eating.",
+      "tokens": ["The","plants","and","animals","are","edible","and","the","artificial","ponds","are","stocked","with","fish","for","eating."],
+      "korean": "식물과 동물은 먹을 수 있으며 인공 연못은 먹을 수 있는 물고기로 채워져 있다."
+    },
+    {
+      "idx": 4,
+      "text": "In the second culture, everything is for show.",
+      "tokens": ["In","the","second","culture,","everything","is","for","show."],
+      "korean": "두 번째 문화에서는, 모든 것이 관상용이다."
+    },
+    {
+      "idx": 5,
+      "text": "The plants are ornamental, the animals are pets, and the fish in the aquariums are expensive, exotic, and inedible.",
+      "tokens": ["The","plants","are","ornamental,","the","animals","are","pets,","and","the","fish","in","the","aquariums","are","expensive,","exotic,","and","inedible."],
+      "korean": "식물은 장식용이고, 동물은 애완동물이고, 수족관의 물고기는 비싸고, 이국적이며, 그리고 먹을 수 없다."
+    },
+    {
+      "idx": 6,
+      "text": "The first culture is ancient Rome; the second is the United States.",
+      "tokens": ["The","first","culture","is","ancient","Rome;","the","second","is","the","United","States."],
+      "korean": "첫 번째 문화는 고대 로마이고, 두 번째 문화는 미국이다."
+    },
+    {
+      "idx": 7,
+      "text": "The Romans had words for meadow and grass, because those were places where sheep could graze.",
+      "tokens": ["The","Romans","had","words","for","meadow","and","grass,","because","those","were","places","where","sheep","could","graze."],
+      "korean": "로마인들은 목초지와 풀밭에 해당하는 단어들을 가지고 있었는데, 왜냐하면 그곳은 양들이 풀을 뜯을 수 있는 장소였기 때문이었다."
+    },
+    {
+      "idx": 8,
+      "text": "But a lawn, which is a holdover from European estates 300 to 400 years ago, would have made no sense to them.",
+      "tokens": ["But","a","lawn,","which","is","a","holdover","from","European","estates","300","to","400","years","ago,","would","have","made","no","sense","to","them."],
+      "korean": "하지만 300년에서 400년 전에 유럽의 토지에서 나온 유물인 잔디는 그들에게 아무 의미도 없었을 것이다."
+    },
+    {
+      "idx": 9,
+      "text": "This indicates that there exist differences of views on food supply and nature between cultures.",
+      "tokens": ["This","indicates","that","there","exist","differences","of","views","on","food","supply","and","nature","between","cultures."],
+      "korean": "이것은 문화 간에 식량 공급과 자연에 대한 관점의 차이가 있다는 것을 나타낸다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T12-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "seem",
+          "wrongCandidates": ["seems"],
+          "grammarType": "수일치",
+          "explanation": "주격 관계대명사 'that'의 선행사가 복수명사 'two cultures'이므로 관계절의 동사는 복수형 'seem'이 와야 한다. 단수형 'seems'는 단수 선행사일 때만 가능하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "seem",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T1-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "spend",
+          "wrongCandidates": ["spends"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Both'는 '두 가정 모두'를 가리키는 복수 대명사이므로 복수형 동사 'spend'가 와야 한다. 단수형 'spends'는 단수 주어와 호응한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "spend",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T14-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'everything'은 '-thing'으로 끝나는 부정대명사로 항상 단수 취급하므로 단수형 'is'가 맞다. 복수형 'are'는 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T11-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "stocked",
+          "wrongCandidates": ["stocking"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the artificial ponds'가 물고기로 '채워지는' 대상이므로 'be + p.p.' 수동태가 와야 하고, be동사 'are' 뒤에는 과거분사 'stocked'가 맞다. 'stocking'은 현재분사로 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "stock",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T0-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "In",
+          "wrongCandidates": ["At"],
+          "grammarType": "전치사",
+          "explanation": "넓은 범위의 추상적·문화적 영역을 가리킬 때는 전치사 'in'을 쓴다. 'at'은 지점·시각 등 특정 지점을 가리킬 때 사용하므로 'culture' 같은 추상 영역에는 어울리지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T14-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 복수명사 'the fish'(여기서는 복수 의미의 물고기들)이고 'in the aquariums'는 수식어구일 뿐이다. 따라서 복수형 'are'가 맞다. 수식어구의 단수명사 'aquariums'에 끌려 단수 'is'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T3-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'The first culture'가 단수명사이므로 단수형 동사 'is'가 와야 한다. 복수형 'are'는 복수 주어에 쓰인다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T12-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "where",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'places'가 장소를 나타내고, 뒤에 이어지는 'sheep could graze'가 주어·동사 완전한 절이므로 관계부사 'where'가 와야 한다. 관계대명사 'which'는 뒤 절에 빠진 성분이 있을 때만 쓴다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T17-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "made",
+          "wrongCandidates": ["make"],
+          "grammarType": "시제",
+          "explanation": "조동사 'would have' 뒤에는 과거분사가 와서 'would have + p.p.' 형태로 과거 사실의 반대를 나타내는 가정법 과거완료가 된다. 따라서 'made'가 맞다. 동사원형 'make'는 이 구조에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T4-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "exist",
+          "wrongCandidates": ["exists"],
+          "grammarType": "수일치",
+          "explanation": "'there + 동사 + 주어' 구조에서 동사는 뒤따르는 주어에 수일치한다. 여기 주어는 복수명사 'differences'이므로 복수형 'exist'가 맞다. 단수형 'exists'는 단수 주어와 호응한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "exist",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "seem", "baseForm": "seem"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "spend", "baseForm": "spend"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "stocked", "baseForm": "stock"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "made", "baseForm": "make"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "exist", "baseForm": "exist"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "seem", "wrongForm": "seems", "explanation": "주격 관계대명사 'that'의 선행사가 복수명사 'two cultures'이므로 관계절의 동사는 복수형 'seem'이 와야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "spend", "wrongForm": "spends", "explanation": "주어 'Both'는 복수 대명사이므로 복수형 동사 'spend'가 와야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'everything'은 항상 단수 취급하므로 단수형 'is'가 맞다."},
+        {"sentenceIdx": 3, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "stocked", "wrongForm": "stocking", "explanation": "주어 'the artificial ponds'가 채워지는 대상이므로 'be + p.p.' 수동태 'stocked'가 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "In", "wrongForm": "At", "explanation": "추상적·문화적 영역을 가리킬 때는 전치사 'in'을 쓴다. 'at'은 특정 지점에 쓴다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "are", "wrongForm": "is", "explanation": "주어의 핵은 복수 'the fish'이고 'in the aquariums'는 수식어구이므로 복수형 'are'가 맞다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'The first culture'가 단수이므로 단수형 'is'가 맞다."},
+        {"sentenceIdx": 7, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "where", "wrongForm": "which", "explanation": "선행사 'places' + 뒤에 완전한 절이므로 관계부사 'where'가 와야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "made", "wrongForm": "make", "explanation": "'would have + p.p.' 가정법 과거완료이므로 과거분사 'made'가 맞다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "exist", "wrongForm": "exists", "explanation": "'there + 동사 + 주어'에서 주어가 복수 'differences'이므로 복수형 'exist'가 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "seems", "correction": "seem", "explanation": "선행사 'two cultures'가 복수이므로 관계절 동사를 'seem'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "spends", "correction": "spend", "explanation": "복수 주어 'Both'에 맞춰 'spend'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어 'everything'은 단수 취급하므로 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "stocking", "correction": "stocked", "explanation": "수동의 의미이므로 과거분사 'stocked'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "At", "correction": "In", "explanation": "추상적 문화 영역이므로 전치사 'In'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "주어의 핵 'the fish'가 복수이므로 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'The first culture'에 맞춰 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "which", "correction": "where", "explanation": "선행사 'places' + 뒤에 완전한 절이므로 관계부사 'where'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "make", "correction": "made", "explanation": "'would have' 뒤에는 과거분사가 와야 하므로 'made'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "exists", "correction": "exist", "explanation": "주어 'differences'가 복수이므로 'exist'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Let’s take a look at an average household in two cultures that seems the same.",
+          "isCorrect": false,
+          "correction": "Let’s take a look at an average household in two cultures that seem the same.",
+          "explanation": "관계대명사 'that'의 선행사가 복수 'two cultures'이므로 관계절 동사 'seem'이 맞다."
+        },
+        {
+          "text": "Both spends a great deal of money on plants and take great pride in their landscaping.",
+          "isCorrect": false,
+          "correction": "Both spend a great deal of money on plants and take great pride in their landscaping.",
+          "explanation": "주어 'Both'는 복수이므로 'spend'가 맞다."
+        },
+        {
+          "text": "Both keep animals. Both have habitats for fish. But in the first culture, everything are for food.",
+          "isCorrect": false,
+          "correction": "Both keep animals. Both have habitats for fish. But in the first culture, everything is for food.",
+          "explanation": "'everything'은 단수 취급하므로 'is'가 맞다."
+        },
+        {
+          "text": "The plants and animals are edible and the artificial ponds are stocking with fish for eating.",
+          "isCorrect": false,
+          "correction": "The plants and animals are edible and the artificial ponds are stocked with fish for eating.",
+          "explanation": "주어가 채워지는 대상(수동)이므로 'stocked'가 맞다."
+        },
+        {
+          "text": "At the second culture, everything is for show.",
+          "isCorrect": false,
+          "correction": "In the second culture, everything is for show.",
+          "explanation": "추상적·문화적 영역에는 전치사 'In'이 와야 한다."
+        },
+        {
+          "text": "The plants are ornamental, the animals are pets, and the fish in the aquariums is expensive, exotic, and inedible.",
+          "isCorrect": false,
+          "correction": "The plants are ornamental, the animals are pets, and the fish in the aquariums are expensive, exotic, and inedible.",
+          "explanation": "주어의 핵 'the fish'가 복수이므로 'are'가 맞다."
+        },
+        {
+          "text": "The first culture are ancient Rome; the second is the United States.",
+          "isCorrect": false,
+          "correction": "The first culture is ancient Rome; the second is the United States.",
+          "explanation": "단수 주어 'The first culture'에 맞춰 'is'가 맞다."
+        },
+        {
+          "text": "The Romans had words for meadow and grass, because those were places which sheep could graze.",
+          "isCorrect": false,
+          "correction": "The Romans had words for meadow and grass, because those were places where sheep could graze.",
+          "explanation": "선행사 'places' + 뒤에 완전한 절이므로 관계부사 'where'가 맞다."
+        },
+        {
+          "text": "But a lawn, which is a holdover from European estates 300 to 400 years ago, would have make no sense to them.",
+          "isCorrect": false,
+          "correction": "But a lawn, which is a holdover from European estates 300 to 400 years ago, would have made no sense to them.",
+          "explanation": "'would have' 뒤에는 과거분사가 와야 하므로 'made'가 맞다."
+        },
+        {
+          "text": "This indicates that there exists differences of views on food supply and nature between cultures.",
+          "isCorrect": false,
+          "correction": "This indicates that there exist differences of views on food supply and nature between cultures.",
+          "explanation": "'there + 동사 + 주어'에서 주어 'differences'가 복수이므로 'exist'가 맞다."
+        }
+      ]
+    }
+  }
+}

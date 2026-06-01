@@ -1,0 +1,345 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd34",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 30번",
+  "title": "26년 3월 고3 영어모의고사 30번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "30번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Every time you conceptualize, categorize, and put a name on something that is not a proper name, you abstract away from its particularities.",
+      "tokens": ["Every","time","you","conceptualize,","categorize,","and","put","a","name","on","something","that","is","not","a","proper","name,","you","abstract","away","from","its","particularities."],
+      "korean": "고유 명사가 아닌 무언가를 개념화하고, 범주화하고, 명명할 때마다, 여러분은 그 대상의 상세한 사항 간의 차이를 무시한다."
+    },
+    {
+      "idx": 1,
+      "text": "Picture daisies and clover flowers in a lawn.",
+      "tokens": ["Picture","daisies","and","clover","flowers","in","a","lawn."],
+      "korean": "잔디에 있는 데이지와 클로버 꽃을 떠올려 보라."
+    },
+    {
+      "idx": 2,
+      "text": "Those four ordinary nouns leave out their differences.",
+      "tokens": ["Those","four","ordinary","nouns","leave","out","their","differences."],
+      "korean": "그 네 개의 보통 명사는 그것들의 차이를 생략한다."
+    },
+    {
+      "idx": 3,
+      "text": "\"Flower\" co-categorizes the white and yellow types with the beige ones, and all the many other sorts to be found elsewhere.",
+      "tokens": ["\"Flower\"","co-categorizes","the","white","and","yellow","types","with","the","beige","ones,","and","all","the","many","other","sorts","to","be","found","elsewhere."],
+      "korean": "'꽃'이라는 말은 흰색과 노란색 종류를 베이지색 종류, 그리고 다른 곳에서 발견되는 모든 수많은 다른 종류와 함께 하나의 범주로 묶어 버린다."
+    },
+    {
+      "idx": 4,
+      "text": "\"Lawn\" neglects the varieties of grass and all the nongrassy plants that are there.",
+      "tokens": ["\"Lawn\"","neglects","the","varieties","of","grass","and","all","the","nongrassy","plants","that","are","there."],
+      "korean": "'잔디'라는 말은 그곳에 있는 다양한 종류의 풀과 모든 풀이 아닌 식물을 무시한다."
+    },
+    {
+      "idx": 5,
+      "text": "Zoom in, and you will find individuality and uniqueness everywhere.",
+      "tokens": ["Zoom","in,","and","you","will","find","individuality","and","uniqueness","everywhere."],
+      "korean": "확대해 보면, 여러분은 개별성과 고유성을 어디에서나 발견할 수 있을 것이다."
+    },
+    {
+      "idx": 6,
+      "text": "No two daisies, no two clovers, are exactly alike, and yet they present to a quick glance a carpet patterned uniformly enough.",
+      "tokens": ["No","two","daisies,","no","two","clovers,","are","exactly","alike,","and","yet","they","present","to","a","quick","glance","a","carpet","patterned","uniformly","enough."],
+      "korean": "어떤 데이지 두 송이도, 어떤 클로버 두 개도 정확히 같지 않지만, 재빨리 힐끗 한 번 보기에 그것들은 충분히 균일한 무늬의 카펫으로 보인다."
+    },
+    {
+      "idx": 7,
+      "text": "For most practical purposes, the differences can be ignored ─ making a daisy chain, sunbathing, and the like.",
+      "tokens": ["For","most","practical","purposes,","the","differences","can","be","ignored","─","making","a","daisy","chain,","sunbathing,","and","the","like."],
+      "korean": "데이지 꽃 사슬 만들기나 일광욕하기 등과 같은 대부분의 실용적인 목적을 위해서라면 그 차이들을 무시할 수 있다."
+    },
+    {
+      "idx": 8,
+      "text": "Not so, however, for the groundskeeper of a sports stadium, where the constituent grasses and their stages of growth really do matter.",
+      "tokens": ["Not","so,","however,","for","the","groundskeeper","of","a","sports","stadium,","where","the","constituent","grasses","and","their","stages","of","growth","really","do","matter."],
+      "korean": "그러나 스포츠 경기장의 관리인에게는 그렇지 않은데, 그곳에서는 (잔디를) 구성하는 풀들과 그것들의 성장 단계가 실제로 정말 중요하다."
+    },
+    {
+      "idx": 9,
+      "text": "And to an infinite mind, with infinite memory, each blade of grass, with its own distinct life history, need not be co-categorized with all its fellows.",
+      "tokens": ["And","to","an","infinite","mind,","with","infinite","memory,","each","blade","of","grass,","with","its","own","distinct","life","history,","need","not","be","co-categorized","with","all","its","fellows."],
+      "korean": "그리고 무한한 기억력을 지닌, 무한한 정신에게, 각각의 풀잎은, 각기 고유한 생애 이력을 지닌 채, 그것의 모든 비슷한 것과 함께 하나의 범주로 묶일 필요가 없다."
+    },
+    {
+      "idx": 10,
+      "text": "Each could have its own name, as you yourself do.",
+      "tokens": ["Each","could","have","its","own","name,","as","you","yourself","do."],
+      "korean": "여러분 자신이 그러하듯, 각각은 자기만의 이름을 가질 수 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T12-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "관계대명사 'that'의 선행사가 단수 대명사 'something'이므로 관계절의 동사도 단수형 'is'가 맞다. 복수형 'are'는 단수 선행사와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T0-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Picture",
+          "wrongCandidates": ["Picturing"],
+          "grammarType": "동사원형",
+          "explanation": "주어가 없이 청자에게 지시하는 명령문이므로 동사원형 'Picture'가 와야 한다. 동명사 'Picturing'은 명령문의 술어가 될 수 없어 완전한 문장을 이루지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "their",
+          "wrongCandidates": ["its"],
+          "grammarType": "대명사",
+          "explanation": "소유격 대명사가 가리키는 대상은 복수 명사 'Those four ordinary nouns'이므로 복수 소유격 'their'가 맞다. 단수 소유격 'its'는 복수 선행사와 일치하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T1-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "co-categorizes",
+          "wrongCandidates": ["co-categorize"],
+          "grammarType": "수일치",
+          "explanation": "주어 '\"Flower\"'는 단어를 가리키는 단수 주어이므로 단수형 동사 'co-categorizes'가 맞다. 동사원형 'co-categorize'는 단수 주어에 대해 수일치를 맞추지 못한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "co-categorize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'all the nongrassy plants'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 별도로 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T2-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "and",
+          "wrongCandidates": ["or"],
+          "grammarType": "접속사",
+          "explanation": "'명령문 + and + 주어 + will ~' 구조는 '~하면 ~할 것이다'라는 조건의 의미로 등위접속사 'and'가 와야 한다. 'or'를 쓰면 '~하지 않으면 ~할 것이다'의 반대 의미가 되어 문맥과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T19-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 19,
+          "endTokenIdx": 19,
+          "correctForm": "patterned",
+          "wrongCandidates": ["patterning"],
+          "grammarType": "분사",
+          "explanation": "명사 'a carpet'을 뒤에서 수식하는 분사로, 카펫은 무늬가 '새겨진' 대상(수동)이므로 과거분사 'patterned'가 맞다. 현재분사 'patterning'은 능동의 의미가 되어 카펫이 직접 무늬를 새긴다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "pattern",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T8-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "ignored",
+          "wrongCandidates": ["ignoring"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the differences'가 무시되는 대상이므로 'can be + 과거분사' 형태의 수동태 'be ignored'가 와야 한다. 현재분사 'ignoring'을 쓰면 능동의 의미가 되어 'can be + -ing' 같은 비문법적 구조가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "ignore",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T10-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "where",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계부사",
+          "explanation": "선행사 'a sports stadium'이 장소이고 뒤에 완전한 절('the constituent grasses ... do matter')이 이어지므로 관계부사 'where'가 맞다. 관계대명사 'which'는 뒤에 불완전한 절이 와야 하므로 이 자리에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T21-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "co-categorized",
+          "wrongCandidates": ["co-categorizing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'each blade of grass'는 범주로 묶이는 대상(수동)이므로 'need not be + 과거분사' 형태의 수동태 'be co-categorized'가 맞다. 현재분사 'co-categorizing'은 능동의 의미가 되어 풀잎이 스스로 범주화한다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "co-categorize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T8-001",
+          "sentenceIdx": 10,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "yourself",
+          "wrongCandidates": ["you"],
+          "grammarType": "재귀대명사",
+          "explanation": "'you yourself do'는 주어 'you'를 강조하기 위해 동격으로 쓰인 강조 용법의 재귀대명사이므로 'yourself'가 맞다. 인칭대명사 'you'를 한 번 더 쓰면 강조 효과가 없고 동격 표현이 성립하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "co-categorizes", "baseForm": "co-categorize"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "patterned", "baseForm": "pattern"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "ignored", "baseForm": "ignore"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "co-categorized", "baseForm": "co-categorize"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "is", "wrongForm": "are", "explanation": "관계대명사 'that'의 선행사가 단수 대명사 'something'이므로 단수형 'is'가 맞다. 복수형 'are'는 단수 선행사와 일치하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Picture", "wrongForm": "Picturing", "explanation": "명령문이므로 문두에 동사원형 'Picture'가 와야 한다. 동명사 'Picturing'은 명령문의 술어가 될 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "their", "wrongForm": "its", "explanation": "지시 대상이 복수 명사 'Those four ordinary nouns'이므로 복수 소유격 'their'가 맞다. 단수 'its'는 수가 맞지 않는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "co-categorizes", "wrongForm": "co-categorize", "explanation": "주어 '\"Flower\"'가 단수이므로 단수 동사 'co-categorizes'가 와야 한다. 동사원형 'co-categorize'는 수일치 위반이다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'all the nongrassy plants'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사를 포함하므로 별도 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "and", "wrongForm": "or", "explanation": "'명령문 + and + 주어 + will ~'은 '~하면 ~할 것이다'의 조건 의미이므로 'and'가 맞다. 'or'를 쓰면 정반대 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "patterned", "wrongForm": "patterning", "explanation": "명사 'a carpet'을 뒤에서 수식하며 카펫은 무늬가 '새겨진' 대상(수동)이므로 과거분사 'patterned'가 맞다. 현재분사 'patterning'은 능동이 되어 어색하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "ignored", "wrongForm": "ignoring", "explanation": "주어 'the differences'가 무시되는 대상(수동)이므로 'can be + 과거분사' 형태의 'ignored'가 맞다. 현재분사 'ignoring'은 'be + -ing'으로 잘못 결합한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "where", "wrongForm": "which", "explanation": "선행사 'a sports stadium'이 장소이고 뒤에 완전한 절이 이어지므로 관계부사 'where'가 맞다. 관계대명사 'which' 뒤에는 불완전한 절이 와야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "co-categorized", "wrongForm": "co-categorizing", "explanation": "주어 'each blade of grass'는 범주로 묶이는 대상(수동)이므로 'be co-categorized'가 맞다. 현재분사 'co-categorizing'은 능동이 되어 부적절하다."},
+        {"sentenceIdx": 10, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "yourself", "wrongForm": "you", "explanation": "주어 'you'를 동격으로 강조하는 강조 용법의 재귀대명사이므로 'yourself'가 맞다. 'you'를 반복하면 강조 표현이 성립하지 않는다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "관계절의 선행사가 단수 대명사 'something'이므로 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Picturing", "correction": "Picture", "explanation": "명령문이므로 문두에 동사원형 'Picture'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "its", "correction": "their", "explanation": "복수 명사 'Those four ordinary nouns'에 맞춰 복수 소유격 'their'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "co-categorize", "correction": "co-categorizes", "explanation": "단수 주어 '\"Flower\"'에 맞춰 단수 동사 'co-categorizes'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'plants'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "or", "correction": "and", "explanation": "'명령문 + and + 주어 + will ~' 조건 구문이므로 'and'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 19, "endTokenIdx": 19, "isError": true, "wrongForm": "patterning", "correction": "patterned", "explanation": "'a carpet'이 무늬가 새겨지는 대상(수동)이므로 과거분사 'patterned'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "ignoring", "correction": "ignored", "explanation": "주어가 무시되는 대상(수동)이므로 'can be ignored'의 과거분사 'ignored'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "which", "correction": "where", "explanation": "선행사가 장소이고 뒤에 완전한 절이 오므로 관계부사 'where'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "co-categorizing", "correction": "co-categorized", "explanation": "주어가 범주화의 대상(수동)이므로 'be co-categorized'의 과거분사 'co-categorized'로 고쳐야 한다."},
+        {"sentenceIdx": 10, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "you", "correction": "yourself", "explanation": "주어 'you'를 강조하는 동격 강조 용법이므로 재귀대명사 'yourself'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Every time you conceptualize, categorize, and put a name on something that are not a proper name, you abstract away from its particularities.",
+          "isCorrect": false,
+          "correction": "Every time you conceptualize, categorize, and put a name on something that is not a proper name, you abstract away from its particularities.",
+          "explanation": "관계절의 선행사가 단수 대명사 'something'이므로 단수형 'is'가 맞다."
+        },
+        {
+          "text": "Picturing daisies and clover flowers in a lawn.",
+          "isCorrect": false,
+          "correction": "Picture daisies and clover flowers in a lawn.",
+          "explanation": "명령문이므로 문두에 동사원형 'Picture'가 와야 한다."
+        },
+        {
+          "text": "Those four ordinary nouns leave out its differences.",
+          "isCorrect": false,
+          "correction": "Those four ordinary nouns leave out their differences.",
+          "explanation": "복수 명사 'Those four ordinary nouns'를 가리키므로 복수 소유격 'their'가 맞다."
+        },
+        {
+          "text": "\"Flower\" co-categorize the white and yellow types with the beige ones, and all the many other sorts to be found elsewhere.",
+          "isCorrect": false,
+          "correction": "\"Flower\" co-categorizes the white and yellow types with the beige ones, and all the many other sorts to be found elsewhere.",
+          "explanation": "단수 주어 '\"Flower\"'에 맞춰 단수 동사 'co-categorizes'가 맞다."
+        },
+        {
+          "text": "\"Lawn\" neglects the varieties of grass and all the nongrassy plants what are there.",
+          "isCorrect": false,
+          "correction": "\"Lawn\" neglects the varieties of grass and all the nongrassy plants that are there.",
+          "explanation": "선행사 'plants'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "Zoom in, or you will find individuality and uniqueness everywhere.",
+          "isCorrect": false,
+          "correction": "Zoom in, and you will find individuality and uniqueness everywhere.",
+          "explanation": "'명령문 + and + 주어 + will ~'은 조건 의미이므로 'and'가 맞다."
+        },
+        {
+          "text": "No two daisies, no two clovers, are exactly alike, and yet they present to a quick glance a carpet patterning uniformly enough.",
+          "isCorrect": false,
+          "correction": "No two daisies, no two clovers, are exactly alike, and yet they present to a quick glance a carpet patterned uniformly enough.",
+          "explanation": "'a carpet'이 무늬가 새겨지는 대상(수동)이므로 과거분사 'patterned'가 맞다."
+        },
+        {
+          "text": "For most practical purposes, the differences can be ignoring ─ making a daisy chain, sunbathing, and the like.",
+          "isCorrect": false,
+          "correction": "For most practical purposes, the differences can be ignored ─ making a daisy chain, sunbathing, and the like.",
+          "explanation": "주어가 무시되는 대상(수동)이므로 'be ignored'의 과거분사 'ignored'가 맞다."
+        },
+        {
+          "text": "Not so, however, for the groundskeeper of a sports stadium, which the constituent grasses and their stages of growth really do matter.",
+          "isCorrect": false,
+          "correction": "Not so, however, for the groundskeeper of a sports stadium, where the constituent grasses and their stages of growth really do matter.",
+          "explanation": "선행사가 장소이고 뒤에 완전한 절이 오므로 관계부사 'where'가 맞다."
+        },
+        {
+          "text": "And to an infinite mind, with infinite memory, each blade of grass, with its own distinct life history, need not be co-categorizing with all its fellows.",
+          "isCorrect": false,
+          "correction": "And to an infinite mind, with infinite memory, each blade of grass, with its own distinct life history, need not be co-categorized with all its fellows.",
+          "explanation": "주어가 범주화의 대상(수동)이므로 'be co-categorized'가 맞다."
+        },
+        {
+          "text": "Each could have its own name, as you you do.",
+          "isCorrect": false,
+          "correction": "Each could have its own name, as you yourself do.",
+          "explanation": "'you'를 강조하는 동격 강조 용법이므로 재귀대명사 'yourself'가 맞다."
+        }
+      ]
+    }
+  }
+}

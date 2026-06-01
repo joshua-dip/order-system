@@ -132,15 +132,28 @@ async function aggregateCountsByPassageAndType(
         $addFields: {
           pidStr: { $toString: '$passage_id' },
           effectiveType: {
-            $cond: {
-              if: {
-                $and: [
-                  { $eq: ['$type', '삽입'] },
-                  { $eq: ['$difficulty', '상'] },
-                ],
-              },
-              then: '삽입-고난도',
-              else: '$type',
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $and: [
+                      { $eq: ['$type', '삽입'] },
+                      { $eq: ['$difficulty', '상'] },
+                    ],
+                  },
+                  then: '삽입-고난도',
+                },
+                {
+                  case: {
+                    $and: [
+                      { $eq: ['$type', '어법'] },
+                      { $eq: ['$difficulty', '상'] },
+                    ],
+                  },
+                  then: '어법-고난도',
+                },
+              ],
+              default: '$type',
             },
           },
         },
@@ -276,15 +289,28 @@ async function aggregateStatusBreakdownByPassageAndType(
         $addFields: {
           pidStr: { $toString: '$passage_id' },
           effectiveType: {
-            $cond: {
-              if: {
-                $and: [
-                  { $eq: ['$type', '삽입'] },
-                  { $eq: ['$difficulty', '상'] },
-                ],
-              },
-              then: '삽입-고난도',
-              else: '$type',
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $and: [
+                      { $eq: ['$type', '삽입'] },
+                      { $eq: ['$difficulty', '상'] },
+                    ],
+                  },
+                  then: '삽입-고난도',
+                },
+                {
+                  case: {
+                    $and: [
+                      { $eq: ['$type', '어법'] },
+                      { $eq: ['$difficulty', '상'] },
+                    ],
+                  },
+                  then: '어법-고난도',
+                },
+              ],
+              default: '$type',
             },
           },
         },

@@ -15,11 +15,15 @@ const TYPE_OPTIONS: { value: ApplicantType; label: string }[] = [
  * 개인정보 수집·이용 동의 안내 본문. 버전이 바뀌면 PRIVACY_CONSENT_VERSION 도 같이 올린다.
  * 서버는 이 버전 문자열을 그대로 받아 DB 에 기록 → 동의 시점의 정책 본문을 추적할 수 있다.
  */
-const PRIVACY_CONSENT_VERSION = 'v1.0-2026-05-27';
+const PRIVACY_CONSENT_VERSION = 'v1.1-2026-05-27';
 const PRIVACY_CONSENT_ITEMS: { label: string; value: string }[] = [
   { label: '수집 항목', value: '이름, 전화번호, 신청 유형(학생/학부모/선생님)' },
   { label: '수집·이용 목적', value: '가입 상담 연락 및 본인 식별' },
-  { label: '보유·이용 기간', value: '가입 처리 완료 시 회원 정보로 이관 · 그 외 신청일로부터 90일 후 파기' },
+  {
+    label: '보유·이용 기간',
+    value:
+      '가입 처리 완료 또는 거절 시 즉시 이름·전화번호 마스킹, IP·접속 정보 삭제. 신청일로부터 90일 후 모든 정보 자동 파기.',
+  },
   { label: '거부 권리', value: '동의를 거부할 수 있으며, 거부 시 가입 신청이 제한됩니다.' },
 ];
 

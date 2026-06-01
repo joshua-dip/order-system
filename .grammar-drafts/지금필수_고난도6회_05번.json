@@ -1,0 +1,210 @@
+{
+  "passageId": "69d4eca372a886137cd83f17",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 05번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 05번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 05번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "According to Brown and Levinson’s politeness theory, if an indirect speech act of requesting is freshly minted rather than pulled off the shelf, its effect on the hearer is different.",
+      "tokens": ["According","to","Brown","and","Levinson’s","politeness","theory,","if","an","indirect","speech","act","of","requesting","is","freshly","minted","rather","than","pulled","off","the","shelf,","its","effect","on","the","hearer","is","different."],
+      "korean": "Brown과 Levinson의 공손함 이론에 따르면, 만약 요청하는 말을 에둘러 하는 것이 (이미 만들어져 있는) 규격품 상태로 나온다기보다는 갓 만들어진다면, 그 말이 청자에게 미치는 영향은 각양각색이다."
+    },
+    {
+      "idx": 1,
+      "text": "The request is now “off the record.”",
+      "tokens": ["The","request","is","now","“off","the","record.”"],
+      "korean": "그 요청은 이제 ‘공개하지 않는 것을 전제로 하는’ 것이다."
+    },
+    {
+      "idx": 2,
+      "text": "When a speaker thinks up a novel indirect request, like This soup is pretty bland or They never seem to have enough salt shakers at this restaurant, the hearer can ignore the comment without publicly and undoubtedly refusing the request.",
+      "tokens": ["When","a","speaker","thinks","up","a","novel","indirect","request,","like","This","soup","is","pretty","bland","or","They","never","seem","to","have","enough","salt","shakers","at","this","restaurant,","the","hearer","can","ignore","the","comment","without","publicly","and","undoubtedly","refusing","the","request."],
+      "korean": "화자가 ‘이 수프가 꽤 싱겁군요.’ 혹은 ‘이 식당에는 소금 뿌리개가 충분하지 않은 것 같군요.’와 같은 새로운 간접적인 요청을 생각해 낼 때, 청자는 공개적이고 확실하게 그 요청을 거절하지 않은 채 그 언급을 무시할 수 있다."
+    },
+    {
+      "idx": 3,
+      "text": "For this reason, Brown and Levinson argue that off-record indirect speech acts coined for the occasion ― hints, understatements, idle generalizations, and rhetorical questions ― are the politest forms of all.",
+      "tokens": ["For","this","reason,","Brown","and","Levinson","argue","that","off-record","indirect","speech","acts","coined","for","the","occasion","―","hints,","understatements,","idle","generalizations,","and","rhetorical","questions","―","are","the","politest","forms","of","all."],
+      "korean": "이러한 이유로, Brown과 Levinson은 상황에 맞게 만들어진, 비공식적이고 에둘러 하는 발화 행위인, 힌트, 절제된 표현, 근거 없는 일반화와 수사의문문이 가장 공손한 형태라고 주장한다."
+    },
+    {
+      "idx": 4,
+      "text": "A speaker can say It’s too dark to read as a way to ask a hearer to turn on the lights, or The lawn has got to be mowed instead of “Mow the lawn,” or It looks like someone may have had too much to drink instead of “You’re drunk.”",
+      "tokens": ["A","speaker","can","say","It’s","too","dark","to","read","as","a","way","to","ask","a","hearer","to","turn","on","the","lights,","or","The","lawn","has","got","to","be","mowed","instead","of","“Mow","the","lawn,”","or","It","looks","like","someone","may","have","had","too","much","to","drink","instead","of","“You’re","drunk.”"],
+      "korean": "화자가 청자에게 불을 켜 달라고 요청하는 방법으로서 “책을 읽기에는 너무 어둡네요.”라고 말하거나 혹은 “잔디를 깎아요.” 대신에 “잔디가 깎여야만 하는군요.”라고 말하거나 혹은 “당신은 술에 취했어요.” 대신에 “어떤 사람이 술을 더 마실 수 없을 만큼 너무 많이 마신 것처럼 보이네요.”라고 말할 수 있다."
+    },
+    {
+      "idx": 5,
+      "text": "Since polite indirect speech can use any hint that cannot be pinned down as a request by its literal content, but that can lead an intelligent hearer to infer its intended meaning, there is no limit to the number of forms it can take.",
+      "tokens": ["Since","polite","indirect","speech","can","use","any","hint","that","cannot","be","pinned","down","as","a","request","by","its","literal","content,","but","that","can","lead","an","intelligent","hearer","to","infer","its","intended","meaning,","there","is","no","limit","to","the","number","of","forms","it","can","take."],
+      "korean": "정중하고 에둘러 하는 말은 그것의 문자 그대로의 내용으로 보자면 요청으로 정확히 이해될 수 없지만, 똑똑한 청자가 그것의 의도된 의미를 추론할 수 있도록 이끌 수 있는 어떠한 힌트든지 사용할 수 있기 때문에, 그것(정중하고 에둘러 하는 말)이 취할 수 있는 형태의 수에는 제한이 없다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T16-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "minted",
+          "wrongCandidates": ["minting"],
+          "grammarType": "분사",
+          "explanation": "'is freshly minted'는 be + 과거분사 형태의 수동태로, 주어 'an indirect speech act of requesting'이 '만들어지는' 대상이므로 과거분사 'minted'가 맞다. 현재분사 'minting'은 주어가 능동적으로 만드는 의미가 되어 문맥과 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "mint",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'The request'가 단수이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 복수 주어와 호응하는 형태로 단수 주어에는 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T37-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 37,
+          "endTokenIdx": 37,
+          "correctForm": "refusing",
+          "wrongCandidates": ["refuse"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'without' 뒤에는 동명사가 와야 하므로 'refusing'이 맞다. 동사원형 'refuse'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "refuse",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T12-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "coined",
+          "wrongCandidates": ["coining"],
+          "grammarType": "분사",
+          "explanation": "'speech acts coined for the occasion'은 'which are coined ...'에서 관계대명사+be동사가 생략된 형태로, 명사 'speech acts'가 '만들어지는' 대상(수동)이므로 과거분사 'coined'가 맞다. 현재분사 'coining'은 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "coin",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T28-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 28,
+          "endTokenIdx": 28,
+          "correctForm": "mowed",
+          "wrongCandidates": ["mowing"],
+          "grammarType": "수동태",
+          "explanation": "'has got to be mowed'는 의무를 나타내는 'have got to' 뒤에 수동태 'be + 과거분사' 구조가 와야 하므로 'mowed'가 맞다. 주어 'The lawn'은 '깎여지는' 대상이므로 능동의 'mowing'은 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "mow",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T8-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'any hint'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 이미 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "minted", "baseForm": "mint"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 37, "endTokenIdx": 37, "correctForm": "refusing", "baseForm": "refuse"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "coined", "baseForm": "coin"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 28, "endTokenIdx": 28, "correctForm": "mowed", "baseForm": "mow"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "minted", "wrongForm": "minting", "explanation": "'is freshly minted'는 수동태 be + 과거분사이므로 'minted'가 맞다. 주어가 만들어지는 대상이라 능동 'minting'은 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'The request'가 단수이므로 단수형 'is'가 맞다."},
+        {"sentenceIdx": 2, "startTokenIdx": 37, "endTokenIdx": 37, "correctForm": "refusing", "wrongForm": "refuse", "explanation": "전치사 'without' 뒤에는 동명사가 와야 하므로 'refusing'이 맞다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "coined", "wrongForm": "coining", "explanation": "'speech acts'가 '만들어지는' 대상(수동)이므로 과거분사 'coined'가 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 28, "endTokenIdx": 28, "correctForm": "mowed", "wrongForm": "mowing", "explanation": "'has got to be ___' 수동태 구조 + 'The lawn'이 깎여지는 대상이므로 과거분사 'mowed'가 맞다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'any hint'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사를 포함하므로 불가."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "minting", "correction": "minted", "explanation": "be + 과거분사 수동태 구조이므로 'minted'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'The request'에 맞춰 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 37, "endTokenIdx": 37, "isError": true, "wrongForm": "refuse", "correction": "refusing", "explanation": "전치사 'without' 뒤이므로 동명사 'refusing'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "coining", "correction": "coined", "explanation": "'speech acts'를 수동으로 수식하므로 과거분사 'coined'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 28, "endTokenIdx": 28, "isError": true, "wrongForm": "mowing", "correction": "mowed", "explanation": "수동태 'be + p.p.' 구조이므로 'mowed'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'any hint'가 있으므로 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "According to Brown and Levinson’s politeness theory, if an indirect speech act of requesting is freshly minting rather than pulled off the shelf, its effect on the hearer is different.",
+          "isCorrect": false,
+          "correction": "According to Brown and Levinson’s politeness theory, if an indirect speech act of requesting is freshly minted rather than pulled off the shelf, its effect on the hearer is different.",
+          "explanation": "수동태 be + 과거분사 구조이므로 'minted'가 맞다."
+        },
+        {
+          "text": "The request are now “off the record.”",
+          "isCorrect": false,
+          "correction": "The request is now “off the record.”",
+          "explanation": "단수 주어 'The request'에 맞춰 단수형 'is'가 맞다."
+        },
+        {
+          "text": "When a speaker thinks up a novel indirect request, like This soup is pretty bland or They never seem to have enough salt shakers at this restaurant, the hearer can ignore the comment without publicly and undoubtedly refuse the request.",
+          "isCorrect": false,
+          "correction": "When a speaker thinks up a novel indirect request, like This soup is pretty bland or They never seem to have enough salt shakers at this restaurant, the hearer can ignore the comment without publicly and undoubtedly refusing the request.",
+          "explanation": "전치사 'without' 뒤에는 동명사 'refusing'이 와야 한다."
+        },
+        {
+          "text": "For this reason, Brown and Levinson argue that off-record indirect speech acts coining for the occasion ― hints, understatements, idle generalizations, and rhetorical questions ― are the politest forms of all.",
+          "isCorrect": false,
+          "correction": "For this reason, Brown and Levinson argue that off-record indirect speech acts coined for the occasion ― hints, understatements, idle generalizations, and rhetorical questions ― are the politest forms of all.",
+          "explanation": "'speech acts'가 수동의 대상이므로 과거분사 'coined'가 맞다."
+        },
+        {
+          "text": "A speaker can say It’s too dark to read as a way to ask a hearer to turn on the lights, or The lawn has got to be mowing instead of “Mow the lawn,” or It looks like someone may have had too much to drink instead of “You’re drunk.”",
+          "isCorrect": false,
+          "correction": "A speaker can say It’s too dark to read as a way to ask a hearer to turn on the lights, or The lawn has got to be mowed instead of “Mow the lawn,” or It looks like someone may have had too much to drink instead of “You’re drunk.”",
+          "explanation": "'be + 과거분사' 수동태 구조이므로 'mowed'가 맞다."
+        },
+        {
+          "text": "Since polite indirect speech can use any hint what cannot be pinned down as a request by its literal content, but that can lead an intelligent hearer to infer its intended meaning, there is no limit to the number of forms it can take.",
+          "isCorrect": false,
+          "correction": "Since polite indirect speech can use any hint that cannot be pinned down as a request by its literal content, but that can lead an intelligent hearer to infer its intended meaning, there is no limit to the number of forms it can take.",
+          "explanation": "선행사 'any hint'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        }
+      ]
+    }
+  }
+}

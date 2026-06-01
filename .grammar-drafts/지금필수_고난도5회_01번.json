@@ -1,0 +1,179 @@
+{
+  "passageId": "69d4eca372a886137cd83f0b",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 01번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 01번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 01번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Cahill suggests that there is evidence for anatomical, chemical and functional differences between the brains of men and women in the areas which affect memory, emotion, vision, hearing and navigation.",
+      "tokens": ["Cahill","suggests","that","there","is","evidence","for","anatomical,","chemical","and","functional","differences","between","the","brains","of","men","and","women","in","the","areas","which","affect","memory,","emotion,","vision,","hearing","and","navigation."],
+      "korean": "Cahill은 기억, 감정, 시각, 청각, 그리고 방향 감각에 영향을 미치는 부분에 있어서 남성과 여성의 두뇌의 해부학적, 화학적, 그리고 기능적 차이에 대한 증거가 있다고 말한다."
+    },
+    {
+      "idx": 1,
+      "text": "While it is accepted that there are differences between male and female brains, there is no general agreement on what these differences mean.",
+      "tokens": ["While","it","is","accepted","that","there","are","differences","between","male","and","female","brains,","there","is","no","general","agreement","on","what","these","differences","mean."],
+      "korean": "남성과 여성의 두뇌의 차이가 있다는 것은 인정되지만, 이러한 차이가 무엇을 의미하는지에 대한 일반적인 동의는 없다."
+    },
+    {
+      "idx": 2,
+      "text": "Blakemore and Frith point to research which suggests that women often outperform men on verbal tasks, while men frequently seem to be better at spatial tasks than women.",
+      "tokens": ["Blakemore","and","Frith","point","to","research","which","suggests","that","women","often","outperform","men","on","verbal","tasks,","while","men","frequently","seem","to","be","better","at","spatial","tasks","than","women."],
+      "korean": "Blakemore와 Frith는 여성은 흔히 말로 하는 과제에서 남성보다 더 뛰어난 반면에, 남성은 종종 여성보다 공간적인 과제를 더 잘하는 것처럼 보인다고 시사하는 연구를 제시한다."
+    },
+    {
+      "idx": 3,
+      "text": "Such spatial understanding is often linked to performance in mathematics and used as evidence where boys do outperform girls in this subject.",
+      "tokens": ["Such","spatial","understanding","is","often","linked","to","performance","in","mathematics","and","used","as","evidence","where","boys","do","outperform","girls","in","this","subject."],
+      "korean": "그러한 공간적 이해는 흔히 수학에서의 성과와 관련이 있으며, 남자 아이들이 이 과목(수학)에서 여자 아이들보다 더 뛰어나다는 증거로 쓰인다."
+    },
+    {
+      "idx": 4,
+      "text": "However, such broad generalizations may obscure differences at different ages and ignore the roles of social and cultural experiences.",
+      "tokens": ["However,","such","broad","generalizations","may","obscure","differences","at","different","ages","and","ignore","the","roles","of","social","and","cultural","experiences."],
+      "korean": "그러나, 그러한 광범위한 일반화는 다른 연령대의 차이를 모호하게 할 수 있으며, 사회적, 문화적 경험의 역할을 무시할 수 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T23-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 23,
+          "endTokenIdx": 23,
+          "correctForm": "affect",
+          "wrongCandidates": ["affects"],
+          "grammarType": "수일치",
+          "explanation": "관계대명사 which의 선행사가 복수 명사 'the areas'이므로 관계절 동사도 복수형 'affect'가 맞다. 단수형 'affects'는 가까운 단수 명사에 이끌린 오답이며, 실제 주어는 복수이므로 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "affect",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T0-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "While",
+          "wrongCandidates": ["During"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 'it is accepted that ...'라는 절(주어+동사)이 이어지므로 절을 이끄는 접속사 'While'(~인 반면에/~이지만)이 맞다. 'During'은 전치사라서 절 앞에 올 수 없고, 명사구만 목적어로 취한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "앞에 선행사 'research'가 있고 뒤에 'suggests that ...'이라는 불완전한 절이 이어지므로 주격 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사라서 별도의 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T5-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "linked",
+          "wrongCandidates": ["linking"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Such spatial understanding'은 다른 것에 의해 연결되는 대상이므로 'is linked'의 수동태가 맞아 과거분사 'linked'가 와야 한다. 현재분사 'linking'을 쓰면 능동의 의미가 되어 주어가 직접 연결한다는 부적절한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "link",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "obscure",
+          "wrongCandidates": ["obscures"],
+          "grammarType": "부정사",
+          "explanation": "조동사 'may' 뒤에는 반드시 동사원형이 와야 하므로 'obscure'가 맞다. 3인칭 단수 현재형 'obscures'는 조동사 뒤에 올 수 없고, 같은 절의 뒤쪽 'and ignore'와 병렬을 이룬다는 점에서도 동사원형이 정답이다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "obscure",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "affect", "baseForm": "affect"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "linked", "baseForm": "link"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "obscure", "baseForm": "obscure"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "affect", "wrongForm": "affects", "explanation": "관계대명사 which의 선행사가 복수 명사 'the areas'이므로 관계절 동사도 복수형 'affect'가 맞다. 단수형 'affects'는 가까운 단수 명사에 이끌린 오답이며, 실제 주어는 복수이므로 일치하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "While", "wrongForm": "During", "explanation": "뒤에 'it is accepted that ...'라는 절(주어+동사)이 이어지므로 절을 이끄는 접속사 'While'(~인 반면에/~이지만)이 맞다. 'During'은 전치사라서 절 앞에 올 수 없고, 명사구만 목적어로 취한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "which", "wrongForm": "what", "explanation": "앞에 선행사 'research'가 있고 뒤에 'suggests that ...'이라는 불완전한 절이 이어지므로 주격 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사라서 별도의 선행사가 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "linked", "wrongForm": "linking", "explanation": "주어 'Such spatial understanding'은 다른 것에 의해 연결되는 대상이므로 'is linked'의 수동태가 맞아 과거분사 'linked'가 와야 한다. 현재분사 'linking'을 쓰면 능동의 의미가 되어 주어가 직접 연결한다는 부적절한 뜻이 된다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "obscure", "wrongForm": "obscures", "explanation": "조동사 'may' 뒤에는 반드시 동사원형이 와야 하므로 'obscure'가 맞다. 3인칭 단수 현재형 'obscures'는 조동사 뒤에 올 수 없고, 같은 절의 뒤쪽 'and ignore'와 병렬을 이룬다는 점에서도 동사원형이 정답이다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 23, "endTokenIdx": 23, "isError": true, "wrongForm": "affects", "correction": "affect", "explanation": "선행사 'the areas'가 복수이므로 복수형 'affect'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "During", "correction": "While", "explanation": "뒤에 절(주어+동사)이 이어지므로 접속사 'While'로 고쳐야 한다. 'During'은 전치사라 절 앞에 올 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사 'research'가 있으므로 주격 관계대명사 'which'로 고쳐야 한다. 'what'은 선행사를 포함해 별도 선행사가 있을 때 불가."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "linking", "correction": "linked", "explanation": "주어가 연결되는 대상(수동)이므로 과거분사 'linked'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "obscures", "correction": "obscure", "explanation": "조동사 'may' 뒤이므로 동사원형 'obscure'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Cahill suggests that there is evidence for anatomical, chemical and functional differences between the brains of men and women in the areas which affects memory, emotion, vision, hearing and navigation.",
+          "isCorrect": false,
+          "correction": "Cahill suggests that there is evidence for anatomical, chemical and functional differences between the brains of men and women in the areas which affect memory, emotion, vision, hearing and navigation.",
+          "explanation": "관계대명사 which의 선행사가 복수 'the areas'이므로 복수형 'affect'가 맞다."
+        },
+        {
+          "text": "During it is accepted that there are differences between male and female brains, there is no general agreement on what these differences mean.",
+          "isCorrect": false,
+          "correction": "While it is accepted that there are differences between male and female brains, there is no general agreement on what these differences mean.",
+          "explanation": "뒤에 절이 이어지므로 접속사 'While'이 맞다. 'During'은 전치사라 절을 이끌 수 없다."
+        },
+        {
+          "text": "Blakemore and Frith point to research what suggests that women often outperform men on verbal tasks, while men frequently seem to be better at spatial tasks than women.",
+          "isCorrect": false,
+          "correction": "Blakemore and Frith point to research which suggests that women often outperform men on verbal tasks, while men frequently seem to be better at spatial tasks than women.",
+          "explanation": "선행사 'research'가 있으므로 주격 관계대명사 'which'가 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "Such spatial understanding is often linking to performance in mathematics and used as evidence where boys do outperform girls in this subject.",
+          "isCorrect": false,
+          "correction": "Such spatial understanding is often linked to performance in mathematics and used as evidence where boys do outperform girls in this subject.",
+          "explanation": "주어가 연결되는 대상(수동)이므로 과거분사 'linked'가 맞다."
+        },
+        {
+          "text": "However, such broad generalizations may obscures differences at different ages and ignore the roles of social and cultural experiences.",
+          "isCorrect": false,
+          "correction": "However, such broad generalizations may obscure differences at different ages and ignore the roles of social and cultural experiences.",
+          "explanation": "조동사 'may' 뒤에는 동사원형 'obscure'가 와야 한다."
+        }
+      ]
+    }
+  }
+}

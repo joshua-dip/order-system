@@ -1,0 +1,14 @@
+import path from 'node:path'; import { fileURLToPath } from 'node:url'; import { config } from 'dotenv';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
+process.env.DOTENV_CONFIG_QUIET='true'; config({path:path.join(ROOT,'.env')}); config({path:path.join(ROOT,'.env.local')});
+const { listGrammarWorkbooks, getGrammarWorkbook } = await import('./lib/grammar-workbooks-store');
+const { buildPointsAnalysisHtml } = await import('./lib/grammar-workbook-html');
+const list = await listGrammarWorkbooks({ textbook:'26년 3월 고3 영어모의고사', limit:200 });
+const doc = await getGrammarWorkbook((list.find(w=>w.sourceKey.includes('21'))??list[0])._id);
+const html = buildPointsAnalysisHtml({ title:doc!.title, textbook:doc!.textbook, sourceKey:doc!.sourceKey, sentences:doc!.sentences, points:(doc!.modeData?.P?.points??[]) as any });
+const pup=(await import('puppeteer-core')).default;
+const b=await pup.launch({args:['--no-sandbox','--disable-setuid-sandbox'],defaultViewport:{width:820,height:1160,deviceScaleFactor:2},executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
+const p=await b.newPage(); await p.setContent(html,{waitUntil:'load',timeout:60000}); await p.evaluate(async()=>{try{await (document as any).fonts?.ready;}catch{}});
+const pdf=await p.pdf({format:'A4',printBackground:true}); await b.close();
+const s=Buffer.from(pdf).toString('latin1');
+console.log('A4 인쇄 페이지 수:', (s.match(/\/Type\s*\/Page[^s]/g)||[]).length);

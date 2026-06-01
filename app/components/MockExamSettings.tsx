@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import AppBar from './AppBar';
+import {
+  variantUnitPrice,
+  variantVolumeDiscountRate,
+  VARIANT_PRICE,
+} from '@/lib/variant-pricing';
 export type OrderGenerateExtras = { orderMeta?: Record<string, unknown>; pointsUsed?: number };
 
 export type OrderGenerateHandler = (
@@ -31,7 +36,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [mockExamsData, setMockExamsData] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [questionSamples, setQuestionSamples] = useState<Record<string, {blogUrl: string, description: string, sampleTitle: string}>>({});
-  /** 순서·삽입 각각: true=해설포함 80원, false=미포함(문제·답만) 50원 */
+  /** 순서·삽입 각각: true=해설포함 50원, false=미포함(문제·답만) 30원 */
   const [orderInsertExplanation, setOrderInsertExplanation] = useState<{ 순서: boolean; 삽입: boolean }>({
     순서: true,
     삽입: true,
@@ -132,7 +137,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   }, []);
 
   const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장'];
-  const advancedTypes = ['삽입-고난도'];
+  const advancedTypes = ['삽입-고난도', '어법-고난도'];
   const questionTypes = [...standardTypes, ...advancedTypes];
   const ORDER_INSERT_TYPES = new Set(['순서', '삽입']);
 
@@ -141,24 +146,16 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     let basePrice = 0;
     for (const type of selectedTypes) {
       const n = totalNumberCount * questionsPerType;
-      const unit =
-        type === '삽입-고난도'
-          ? 100
-          : type === '순서'
-            ? orderInsertExplanation.순서
-              ? 80
-              : 50
-            : type === '삽입'
-              ? orderInsertExplanation.삽입
-                ? 80
-                : 50
-              : 80;
-      basePrice += n * unit;
+      const withExplanation =
+        type === '순서'
+          ? orderInsertExplanation.순서
+          : type === '삽입'
+            ? orderInsertExplanation.삽입
+            : true;
+      basePrice += n * variantUnitPrice(type, { withExplanation });
     }
     const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
-    let discountRate = 0;
-    if (totalQuestions >= 200) discountRate = 0.2;
-    else if (totalQuestions >= 100) discountRate = 0.1;
+    const discountRate = variantVolumeDiscountRate(totalQuestions);
     const discountAmount = basePrice * discountRate;
     const totalPrice = Math.round(basePrice - discountAmount);
     return { basePrice, totalQuestions, discountRate, discountAmount, totalPrice, isDiscounted: totalQuestions >= 100, totalNumberCount };
@@ -291,16 +288,19 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     const orderInsertLines: string[] = [];
     if (selectedTypes.includes('순서')) {
       orderInsertLines.push(
-        `순서: ${orderInsertExplanation.순서 ? '해설 포함 (80원/문항)' : '해설 미포함·문제·답만 (50원/문항)'}`
+        `순서: ${orderInsertExplanation.순서 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
       );
     }
     if (selectedTypes.includes('삽입')) {
       orderInsertLines.push(
-        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함 (80원/문항)' : '해설 미포함·문제·답만 (50원/문항)'}`
+        `삽입: ${orderInsertExplanation.삽입 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
       );
     }
     if (selectedTypes.includes('삽입-고난도')) {
-      orderInsertLines.push('삽입-고난도: 100원/문항');
+      orderInsertLines.push(`삽입-고난도: ${VARIANT_PRICE.advanced}원/문항`);
+    }
+    if (selectedTypes.includes('어법-고난도')) {
+      orderInsertLines.push(`어법-고난도: ${VARIANT_PRICE.advanced}원/문항`);
     }
     const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
 
@@ -590,8 +590,8 @@ ${examDetails}
                     <span className="text-blue-600 font-semibold">💰 할인 안내</span>
                   </div>
                   <div className="text-sm text-blue-700">
-                    • 기본: 문항당 80원 (순서·삽입은 해설 추가하면 80원, 문제·답만이면 50원)<br/>
-                    • 삽입-고난도: 문항당 100원<br/>
+                    • 기본: 문항당 {VARIANT_PRICE.base}원 (순서·삽입은 해설 추가하면 {VARIANT_PRICE.orderInsertWithExplanation}원, 문제·답만이면 {VARIANT_PRICE.orderInsertNoExplanation}원)<br/>
+                    • 삽입-고난도·어법-고난도: 문항당 {VARIANT_PRICE.advanced}원<br/>
                     • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                     • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                   </div>
@@ -688,7 +688,7 @@ ${examDetails}
                         </div>
                         {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
                           <p className="text-[10px] text-gray-500 mt-1.5 pl-8">
-                            미포함 50원 · 해설 80원/문항
+                            미포함 {VARIANT_PRICE.orderInsertNoExplanation}원 · 해설 {VARIANT_PRICE.orderInsertWithExplanation}원/문항
                           </p>
                         )}
                       </div>
@@ -734,7 +734,7 @@ ${examDetails}
                               </button>
                             )}
                           </div>
-                          <p className="text-[10px] text-gray-500 mt-1.5 pl-8">100원/문항 · 새 문장을 생성하여 삽입 위치를 찾는 고난도 문항</p>
+                          <p className="text-[10px] text-gray-500 mt-1.5 pl-8">{VARIANT_PRICE.advanced}원/문항 · 새 문장을 생성하여 삽입 위치를 찾는 고난도 문항</p>
                         </div>
                       ))}
                     </div>

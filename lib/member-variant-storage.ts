@@ -1,7 +1,12 @@
 import { createHash } from 'crypto';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
-import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
+import {
+  GRAMMAR_HARD_CORRECT_ANSWER_PATTERN,
+  GRAMMAR_HARD_VARIANT_OPTIONS_FIXED,
+  GRAMMAR_VARIANT_OPTIONS_FIXED,
+  normalizeGrammarHardCorrectAnswer,
+} from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 
 export const MEMBER_PASSAGES_COLLECTION = 'member_passages';
@@ -112,6 +117,19 @@ export async function insertMemberGeneratedQuestion(
   if (type === '어법') {
     question_data = { ...question_data, Options: GRAMMAR_VARIANT_OPTIONS_FIXED };
   }
+  if (type === '어법-고난도') {
+    question_data = { ...question_data, Options: GRAMMAR_HARD_VARIANT_OPTIONS_FIXED };
+    const rawCa = typeof question_data.CorrectAnswer === 'string' ? question_data.CorrectAnswer : '';
+    const normalized = normalizeGrammarHardCorrectAnswer(rawCa);
+    if (GRAMMAR_HARD_CORRECT_ANSWER_PATTERN.test(normalized)) {
+      question_data = { ...question_data, CorrectAnswer: normalized };
+    } else {
+      return {
+        ok: false,
+        error: `어법-고난도 CorrectAnswer는 동그라미 번호 2~5개 연속(예: ①③) 형식이어야 합니다. 받은 값: "${rawCa}"`,
+      };
+    }
+  }
   if (type === '삽입' || type === '삽입-고난도') {
     question_data = { ...question_data, Options: INSERTION_OPTIONS_FIXED };
   }
@@ -130,7 +148,7 @@ export async function insertMemberGeneratedQuestion(
 
   const now = new Date();
   const difficulty =
-    type === '삽입-고난도'
+    type === '삽입-고난도' || type === '어법-고난도'
       ? '상'
       : ((input.difficulty ?? (question_data.DifficultyLevel as string | undefined) ?? '중').trim() || '중');
 

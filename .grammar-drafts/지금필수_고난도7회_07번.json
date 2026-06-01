@@ -1,0 +1,291 @@
+{
+  "passageId": "69d4eca372a886137cd83f21",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 07번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 07번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 07번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "At its core, city making involves arguing about values and making choices based thereon.",
+      "tokens": ["At","its","core,","city","making","involves","arguing","about","values","and","making","choices","based","thereon."],
+      "korean": "그것의 핵심에서, 도시를 만드는 것은 가치에 대해 논쟁하고 그것을 기반으로 선택하는 것을 포함한다."
+    },
+    {
+      "idx": 1,
+      "text": "Then it entails applying values, using politics to turn values into policies and exerting power to get your way.",
+      "tokens": ["Then","it","entails","applying","values,","using","politics","to","turn","values","into","policies","and","exerting","power","to","get","your","way."],
+      "korean": "그 다음 그것은 가치를 적용하고 정치를 사용하여 가치를 정책으로 바꾸고, 여러분의 생각대로 하기 위해 힘을 발휘하는 것을 수반한다."
+    },
+    {
+      "idx": 2,
+      "text": "Choices reflect beliefs and attitudes based on values and value judgements.",
+      "tokens": ["Choices","reflect","beliefs","and","attitudes","based","on","values","and","value","judgements."],
+      "korean": "선택은 가치와 가치 판단에 근거한 믿음과 태도를 반영한다."
+    },
+    {
+      "idx": 3,
+      "text": "These are shaped by our culture.",
+      "tokens": ["These","are","shaped","by","our","culture."],
+      "korean": "이것들은 우리 문화에 의해 형성된다."
+    },
+    {
+      "idx": 4,
+      "text": "In this way, the scope, possibilities, style, and tenor of a city’s physical look and its social, ecological, and economic development are culturally shaped, and culture moves centre stage.",
+      "tokens": ["In","this","way,","the","scope,","possibilities,","style,","and","tenor","of","a","city’s","physical","look","and","its","social,","ecological,","and","economic","development","are","culturally","shaped,","and","culture","moves","centre","stage."],
+      "korean": "이런 식으로, 도시의 물리적 겉모습의 범위, 가능성, 스타일 및 취지와 그것의 사회적, 생태적, 그리고 경제적 발달이 문화적으로 형성되고, 문화가 중심 무대를 움직인다."
+    },
+    {
+      "idx": 5,
+      "text": "If, for example, a culture invests its faith only in the market principle and trusts the drive of capital to produce sensible choices, the logic, interests, and points of view of those who control the markets will count for more than those who believe market-based decision making is an impoverished theory of choice making.",
+      "tokens": ["If,","for","example,","a","culture","invests","its","faith","only","in","the","market","principle","and","trusts","the","drive","of","capital","to","produce","sensible","choices,","the","logic,","interests,","and","points","of","view","of","those","who","control","the","markets","will","count","for","more","than","those","who","believe","market-based","decision","making","is","an","impoverished","theory","of","choice","making."],
+      "korean": "예를 들어, 만약 어떤 문화가 그 믿음을 시장 원리에만 투자하고 합리적인 선택을 하는 자본의 추진력을 신뢰한다면, 시장을 지배하는 사람들의 논리, 이익, 그리고 관점이 시장 기반의 의사 결정이 선택의 빈곤한 이론이라고 믿는 사람들보다 더 중요할 것이다."
+    },
+    {
+      "idx": 6,
+      "text": "If a culture holds that individual choice is everything ― individuals always know best ― this impacts the city.",
+      "tokens": ["If","a","culture","holds","that","individual","choice","is","everything","―","individuals","always","know","best","―","this","impacts","the","city."],
+      "korean": "만약 한 문화가 개인의 선택이 모든 것이라고, 즉 개인이 항상 가장 잘 알고 있다고 주장한다면, 이것은 도시에 영향을 미친다."
+    },
+    {
+      "idx": 7,
+      "text": "Conversely, if people believe the idea of a public, common, or collective good has value and is beyond the vagaries of the market, a different city evolves.",
+      "tokens": ["Conversely,","if","people","believe","the","idea","of","a","public,","common,","or","collective","good","has","value","and","is","beyond","the","vagaries","of","the","market,","a","different","city","evolves."],
+      "korean": "반대로, 만약 사람들이 공공의, 공동의, 혹은 집단적인 재화의 개념이 가치가 있고 시장의 별난 생각을 넘어선다면, 다른 도시가 진화한다."
+    },
+    {
+      "idx": 8,
+      "text": "Any culture-based argument implies or proposes a trajectory, a plan of action, or even a manifesto of what to do next.",
+      "tokens": ["Any","culture-based","argument","implies","or","proposes","a","trajectory,","a","plan","of","action,","or","even","a","manifesto","of","what","to","do","next."],
+      "korean": "문화에 기반한 주장이면 어떤 것이든 궤적, 행동 계획, 혹은 심지어 다음에 무엇을 할 것인가에 대한 선언까지 암시하거나 제안한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T5-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "involves",
+          "wrongCandidates": ["involve"],
+          "grammarType": "수일치",
+          "explanation": "주어 'city making'은 동명사구로 단수 취급되므로 단수 동사 'involves'가 맞다. 복수형 'involve'는 단수 주어와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "involve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T15-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 15,
+          "endTokenIdx": 16,
+          "correctForm": "to get",
+          "wrongCandidates": ["get"],
+          "grammarType": "부정사",
+          "explanation": "'~하기 위해'의 목적을 나타내는 부사적 용법의 to부정사 'to get'이 맞다. 단순 동사원형 'get'은 절을 이끌 수 없고 목적의 의미도 만들지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "based",
+          "wrongCandidates": ["basing"],
+          "grammarType": "분사",
+          "explanation": "'beliefs and attitudes'를 뒤에서 수식하는 분사로, '가치에 근거한(되어진)' 수동의 의미이므로 과거분사 'based'가 맞다. 현재분사 'basing'은 능동의 의미로 명사를 수식할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "base",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T2-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "shaped",
+          "wrongCandidates": ["shaping"],
+          "grammarType": "수동태",
+          "explanation": "주어 'These'가 문화에 의해 형성되는 대상(수동)이므로 'be + 과거분사' 구조의 'are shaped'가 맞다. 현재분사 'shaping'은 능동·진행의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "shape",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T21-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'the scope, possibilities, style, and tenor ... and ... development'로 and로 연결된 복수 주어이므로 복수형 'are'가 맞다. 단수 'is'는 복수 주어와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T32-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 32,
+          "endTokenIdx": 32,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'those'가 사람을 가리키므로 주격 관계대명사는 'who'가 맞다. 'which'는 사물·동물을 선행사로 받기 때문에 사람 선행사에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "동사 'holds'의 목적어로 완전한 절(individual choice is everything)을 이끌어야 하므로 명사절 접속사 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사로 불완전한 절을 이끌기에 완전한 절 앞에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T26-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 26,
+          "endTokenIdx": 26,
+          "correctForm": "evolves",
+          "wrongCandidates": ["evolve"],
+          "grammarType": "수일치",
+          "explanation": "주어 'a different city'가 단수이므로 단수 동사 'evolves'가 맞다. 복수형 'evolve'는 단수 주어와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "evolve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T10-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "of",
+          "wrongCandidates": ["for"],
+          "grammarType": "전치사",
+          "explanation": "'a plan of action(행동 계획)'은 '~의 계획'이라는 동격·소속 의미를 나타내는 전치사 'of'가 맞다. 전치사 'for'는 목적·용도의 의미로 이 명사구의 관습적 결합과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "involves", "baseForm": "involve"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "based", "baseForm": "base"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "shaped", "baseForm": "shape"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "evolves", "baseForm": "evolve"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "involves", "wrongForm": "involve", "explanation": "주어 'city making'은 동명사구로 단수 취급되므로 단수 동사 'involves'가 맞다. 복수형 'involve'는 단수 주어와 일치하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 16, "correctForm": "to get", "wrongForm": "get", "explanation": "'~하기 위해'의 목적을 나타내는 부사적 용법의 to부정사 'to get'이 맞다. 단순 동사원형 'get'은 절을 이끌 수 없고 목적의 의미도 만들지 못한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "based", "wrongForm": "basing", "explanation": "'beliefs and attitudes'를 뒤에서 수식하는 분사로, '가치에 근거한(되어진)' 수동의 의미이므로 과거분사 'based'가 맞다. 현재분사 'basing'은 능동의 의미로 명사를 수식할 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "shaped", "wrongForm": "shaping", "explanation": "주어 'These'가 문화에 의해 형성되는 대상(수동)이므로 'be + 과거분사' 구조의 'are shaped'가 맞다. 현재분사 'shaping'은 능동·진행의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "are", "wrongForm": "is", "explanation": "주어가 'the scope, possibilities, style, and tenor ... and ... development'로 and로 연결된 복수 주어이므로 복수형 'are'가 맞다. 단수 'is'는 복수 주어와 일치하지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 32, "endTokenIdx": 32, "correctForm": "who", "wrongForm": "which", "explanation": "선행사 'those'가 사람을 가리키므로 주격 관계대명사는 'who'가 맞다. 'which'는 사물·동물을 선행사로 받기 때문에 사람 선행사에는 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "that", "wrongForm": "what", "explanation": "동사 'holds'의 목적어로 완전한 절을 이끌어야 하므로 명사절 접속사 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사로 불완전한 절을 이끌기에 완전한 절 앞에는 쓸 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "evolves", "wrongForm": "evolve", "explanation": "주어 'a different city'가 단수이므로 단수 동사 'evolves'가 맞다. 복수형 'evolve'는 단수 주어와 일치하지 않는다."},
+        {"sentenceIdx": 8, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "of", "wrongForm": "for", "explanation": "'a plan of action(행동 계획)'은 '~의 계획'이라는 동격·소속 의미를 나타내는 전치사 'of'가 맞다. 'for'는 목적·용도의 의미로 이 결합과 맞지 않는다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "involve", "correction": "involves", "explanation": "주어 'city making'이 단수이므로 단수형 'involves'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 16, "isError": true, "wrongForm": "get", "correction": "to get", "explanation": "목적의 부사적 용법으로 to부정사 'to get'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "basing", "correction": "based", "explanation": "수동의 의미로 명사를 수식하므로 과거분사 'based'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "shaping", "correction": "shaped", "explanation": "'be + 과거분사' 수동태이므로 'shaped'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "and로 연결된 복수 주어이므로 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 32, "endTokenIdx": 32, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "선행사 'those'가 사람이므로 주격 관계대명사 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "완전한 절을 이끄는 명사절 접속사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 26, "endTokenIdx": 26, "isError": true, "wrongForm": "evolve", "correction": "evolves", "explanation": "단수 주어 'a different city'에 맞춰 'evolves'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "for", "correction": "of", "explanation": "'a plan of action'의 관습적 결합으로 전치사 'of'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "At its core, city making involve arguing about values and making choices based thereon.",
+          "isCorrect": false,
+          "correction": "At its core, city making involves arguing about values and making choices based thereon.",
+          "explanation": "주어 'city making'이 동명사구로 단수이므로 단수형 'involves'가 맞다."
+        },
+        {
+          "text": "Then it entails applying values, using politics to turn values into policies and exerting power get your way.",
+          "isCorrect": false,
+          "correction": "Then it entails applying values, using politics to turn values into policies and exerting power to get your way.",
+          "explanation": "목적의 부사적 용법으로 to부정사 'to get'이 맞다."
+        },
+        {
+          "text": "Choices reflect beliefs and attitudes basing on values and value judgements.",
+          "isCorrect": false,
+          "correction": "Choices reflect beliefs and attitudes based on values and value judgements.",
+          "explanation": "명사를 수동의 의미로 수식하므로 과거분사 'based'가 맞다."
+        },
+        {
+          "text": "These are shaping by our culture.",
+          "isCorrect": false,
+          "correction": "These are shaped by our culture.",
+          "explanation": "주어가 형성되는 대상(수동)이므로 'be + 과거분사' 'shaped'가 맞다."
+        },
+        {
+          "text": "In this way, the scope, possibilities, style, and tenor of a city’s physical look and its social, ecological, and economic development is culturally shaped, and culture moves centre stage.",
+          "isCorrect": false,
+          "correction": "In this way, the scope, possibilities, style, and tenor of a city’s physical look and its social, ecological, and economic development are culturally shaped, and culture moves centre stage.",
+          "explanation": "and로 연결된 복수 주어이므로 복수형 'are'가 맞다."
+        },
+        {
+          "text": "If, for example, a culture invests its faith only in the market principle and trusts the drive of capital to produce sensible choices, the logic, interests, and points of view of those which control the markets will count for more than those who believe market-based decision making is an impoverished theory of choice making.",
+          "isCorrect": false,
+          "correction": "If, for example, a culture invests its faith only in the market principle and trusts the drive of capital to produce sensible choices, the logic, interests, and points of view of those who control the markets will count for more than those who believe market-based decision making is an impoverished theory of choice making.",
+          "explanation": "사람 선행사 'those'에는 주격 관계대명사 'who'가 맞다."
+        },
+        {
+          "text": "If a culture holds what individual choice is everything ― individuals always know best ― this impacts the city.",
+          "isCorrect": false,
+          "correction": "If a culture holds that individual choice is everything ― individuals always know best ― this impacts the city.",
+          "explanation": "완전한 절을 이끄는 명사절 접속사 'that'이 맞다."
+        },
+        {
+          "text": "Conversely, if people believe the idea of a public, common, or collective good has value and is beyond the vagaries of the market, a different city evolve.",
+          "isCorrect": false,
+          "correction": "Conversely, if people believe the idea of a public, common, or collective good has value and is beyond the vagaries of the market, a different city evolves.",
+          "explanation": "단수 주어 'a different city'이므로 단수형 'evolves'가 맞다."
+        },
+        {
+          "text": "Any culture-based argument implies or proposes a trajectory, a plan for action, or even a manifesto of what to do next.",
+          "isCorrect": false,
+          "correction": "Any culture-based argument implies or proposes a trajectory, a plan of action, or even a manifesto of what to do next.",
+          "explanation": "'a plan of action'의 관습적 결합으로 전치사 'of'가 맞다."
+        }
+      ]
+    }
+  }
+}

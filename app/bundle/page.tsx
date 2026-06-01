@@ -10,6 +10,7 @@ import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT, ORDER_FOOTER_MESSAGE } from '@/l
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 import { ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES } from '@/app/data/essay-categories';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
+import { variantUnitPrice, variantVolumeDiscountRate, VARIANT_PRICE } from '@/lib/variant-pricing';
 
 /* ────────── 타입 ────────── */
 
@@ -71,13 +72,13 @@ function computeVariantPrice(
   let basePrice = 0;
   for (const type of selectedTypes) {
     const n = lessonCount * questionsPerType;
-    const unit = ORDER_INSERT_TYPES.has(type) ? (insertExpl[type as '순서' | '삽입'] ? 80 : 50) : 80;
-    basePrice += n * unit;
+    const withExplanation = ORDER_INSERT_TYPES.has(type)
+      ? insertExpl[type as '순서' | '삽입']
+      : true;
+    basePrice += n * variantUnitPrice(type, { withExplanation });
   }
   const totalQuestions = selectedTypes.length * questionsPerType * lessonCount;
-  let discountRate = 0;
-  if (totalQuestions >= 200) discountRate = 0.2;
-  else if (totalQuestions >= 100) discountRate = 0.1;
+  const discountRate = variantVolumeDiscountRate(totalQuestions);
   const discountAmount = basePrice * discountRate;
   const totalPrice = Math.round(basePrice - discountAmount);
   return { basePrice, totalQuestions, discountRate, discountAmount, totalPrice, isDiscounted: totalQuestions >= 100 };
@@ -628,7 +629,7 @@ export default function BundlePage() {
                       {(['순서', '삽입'] as const).filter((t) => variantTypes.includes(t)).map((t) => (
                         <label key={t} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                           <input type="checkbox" checked={orderInsertExplanation[t]} onChange={() => setOrderInsertExplanation((p) => ({ ...p, [t]: !p[t] }))} className="rounded text-blue-600" />
-                          {t} 해설 포함 (포함 80원 / 미포함 50원)
+                          {t} 해설 포함 (포함 {VARIANT_PRICE.orderInsertWithExplanation}원 / 미포함 {VARIANT_PRICE.orderInsertNoExplanation}원)
                         </label>
                       ))}
                     </div>

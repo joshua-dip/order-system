@@ -99,7 +99,7 @@ function pointHistoryKindLabel(kind: string): string {
     case 'point_charge':
       return '포인트 충전';
     case 'member_variant_hard':
-      return '변형문제(삽입-고난도)';
+      return '변형문제(고난도)';
     case 'member_variant_refund':
       return '변형문제(포인트 환급)';
     case 'order_cancel_refund':
@@ -1974,7 +1974,9 @@ export default function MyPage() {
                                       ? `취소 환급 · ${orderNumber}`
                                       : '주문 취소 환급'
                                     : row.kind === 'member_variant_hard'
-                                      ? '삽입-고난도 초안 생성'
+                                      ? (typeof row.meta?.type === 'string' && row.meta.type.trim()
+                                          ? `${row.meta.type.trim()} 초안 생성`
+                                          : '고난도 초안 생성')
                                       : '';
                             const deltaStr =
                               row.delta > 0

@@ -1,0 +1,401 @@
+{
+  "passageId": "69d4eca372a886137cd83f12",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 08~09번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 08~09번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 08~09번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In the late 19th century, a second industrial revolution based upon one key invention (electrification) and one key German idea (systematic investments in industrial research and development based upon academic science) again disrupted the economic system.",
+      "tokens": ["In","the","late","19th","century,","a","second","industrial","revolution","based","upon","one","key","invention","(electrification)","and","one","key","German","idea","(systematic","investments","in","industrial","research","and","development","based","upon","academic","science)","again","disrupted","the","economic","system."],
+      "korean": "19세기 후반에, 하나의 핵심적인 발명인 전자화와 하나의 핵심적인 독일의 아이디어(학문적 과학에 기초한 산업 연구와 개발에 대한 체계적 투자)에 바탕을 둔 제2차 산업 혁명이 다시 한 번 경제 체계를 붕괴시켰다."
+    },
+    {
+      "idx": 1,
+      "text": "Systematic industrial research and development speeded up the pace of technical change and changed its nature.",
+      "tokens": ["Systematic","industrial","research","and","development","speeded","up","the","pace","of","technical","change","and","changed","its","nature."],
+      "korean": "체계적인 산업 연구와 개발은 기술 변화의 속도를 빠르게 하고 그것의 본질을 변화시켰다."
+    },
+    {
+      "idx": 2,
+      "text": "Those who would be economic leaders had to invest in industrial research and development.",
+      "tokens": ["Those","who","would","be","economic","leaders","had","to","invest","in","industrial","research","and","development."],
+      "korean": "경제 지도자가 되기를 원하는 사람들은 산업 연구와 개발에 투자해야했다."
+    },
+    {
+      "idx": 3,
+      "text": "For the first time, a large educated workforce became central to economic success.",
+      "tokens": ["For","the","first","time,","a","large","educated","workforce","became","central","to","economic","success."],
+      "korean": "처음으로, 대규모 교육을 받은 노동자들이 경제적 성공의 중심이 되었다."
+    },
+    {
+      "idx": 4,
+      "text": "Germany and the United States made the investments; Britain did not.",
+      "tokens": ["Germany","and","the","United","States","made","the","investments;","Britain","did","not."],
+      "korean": "독일과 미국은 투자를 했지만, 영국은 투자를 하지 않았다."
+    },
+    {
+      "idx": 5,
+      "text": "America’s catch-up with the per capita income of Great Britain prior to World War I is attributed to a much better educated labor force and the higher productivity that goes with an educated workforce.",
+      "tokens": ["America’s","catch-up","with","the","per","capita","income","of","Great","Britain","prior","to","World","War","I","is","attributed","to","a","much","better","educated","labor","force","and","the","higher","productivity","that","goes","with","an","educated","workforce."],
+      "korean": "미국이 제1차 세계대전 전에 영국의 1인당 소득을 따라잡은 것은 훨씬 더 나은 교육을 받은 노동 인구와 교육을 받은 노동 인구에 딸려 나오는 더 높은 생산성 덕분이다."
+    },
+    {
+      "idx": 6,
+      "text": "Britain was still listed among the rich, but it lost its position as the technological and economic leader of the world.",
+      "tokens": ["Britain","was","still","listed","among","the","rich,","but","it","lost","its","position","as","the","technological","and","economic","leader","of","the","world."],
+      "korean": "영국은 여전히 부유한 국가들의 목록에 속해 있지만, 세계의 기술적, 경제적 지도자로서의 지위를 잃었다."
+    },
+    {
+      "idx": 7,
+      "text": "It fell from having the world’s highest per capita income in 1880 to being tied for the 16th and 17th places in the world tables in 2002.",
+      "tokens": ["It","fell","from","having","the","world’s","highest","per","capita","income","in","1880","to","being","tied","for","the","16th","and","17th","places","in","the","world","tables","in","2002."],
+      "korean": "그 나라(영국)는 1880년 세계에서 가장 높은 1인당 소득에서 2002년 세계 순위표에서 16위 및 17위와 동률을 이루는 상태로 떨어졌다."
+    },
+    {
+      "idx": 8,
+      "text": "Again some countries leapt into this second industrial revolution and others did not.",
+      "tokens": ["Again","some","countries","leapt","into","this","second","industrial","revolution","and","others","did","not."],
+      "korean": "다시 말하면 어떤 나라들은 제2차 산업 혁명에 뛰어들었고 다른 나라들은 그렇지 않았다."
+    },
+    {
+      "idx": 9,
+      "text": "Those who did not make the leap remain where they were with per capita incomes similar to those that existed during feudal times.",
+      "tokens": ["Those","who","did","not","make","the","leap","remain","where","they","were","with","per","capita","incomes","similar","to","those","that","existed","during","feudal","times."],
+      "korean": "도약하지 못한 사람들은 봉건시대에 존재했던 1인당 소득과 비슷한 소득 수준으로 남아 있다."
+    },
+    {
+      "idx": 10,
+      "text": "Starting from equality in 1700, three hundred years later in the year 2000, the gap in per capita GDP between the world’s richest country and the world’s poorest country is approximately 140 to 1.",
+      "tokens": ["Starting","from","equality","in","1700,","three","hundred","years","later","in","the","year","2000,","the","gap","in","per","capita","GDP","between","the","world’s","richest","country","and","the","world’s","poorest","country","is","approximately","140","to","1."],
+      "korean": "1700년에 대등한 상태에서 시작했지만, 3백 년 후인 2000년에 세계에서 가장 부유한 나라와 세계에서 가장 가난한 나라 사이의 1인당 국내 총생산의 격차는 약 140대 1이다."
+    },
+    {
+      "idx": 11,
+      "text": "Great inequality has replaced equality.",
+      "tokens": ["Great","inequality","has","replaced","equality."],
+      "korean": "큰 불균등이 균등을 대체했다."
+    },
+    {
+      "idx": 12,
+      "text": "But billions of people are also living better than the kings and queens of just a few centuries earlier.",
+      "tokens": ["But","billions","of","people","are","also","living","better","than","the","kings","and","queens","of","just","a","few","centuries","earlier."],
+      "korean": "하지만 수십억 명의 사람들 또한 불과 몇 세기 이전의 왕과 여왕들보다도 더 잘 살고 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T9-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "based",
+          "wrongCandidates": ["basing"],
+          "grammarType": "분사",
+          "explanation": "명사 'a second industrial revolution'을 뒤에서 수식하는 분사구로, 혁명이 '~에 기초된' 수동의 의미이므로 과거분사 'based'가 맞다. 현재분사 'basing'은 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "base",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T5-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "speeded",
+          "wrongCandidates": ["speed"],
+          "grammarType": "시제",
+          "explanation": "주어 'Systematic industrial research and development'에 대응하는 과거 시제 본동사가 필요하므로 'speeded'가 맞다. 원형 'speed'는 시제·수일치 모두 충족하지 못하므로 본동사가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "speed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T7-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 7,
+          "endTokenIdx": 8,
+          "correctForm": "to invest",
+          "wrongCandidates": ["investing"],
+          "grammarType": "부정사",
+          "explanation": "'have to + 동사원형' 구조로 의무를 나타내므로 'to invest'가 맞다. 동명사 'investing'은 'had'와 결합해 '투자해야 했다'라는 의무의 의미를 만들 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "educated",
+          "wrongCandidates": ["educating"],
+          "grammarType": "분사",
+          "explanation": "명사 'workforce'를 수식하는 분사로, 노동자가 '교육을 받은' 수동의 의미이므로 과거분사 'educated'가 맞다. 현재분사 'educating'은 '교육하는' 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "educate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T9-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "did",
+          "wrongCandidates": ["does"],
+          "grammarType": "시제",
+          "explanation": "앞 절의 과거 시제 동사 'made'를 대신하는 대동사이므로 시제가 일치하는 'did'가 맞다. 현재형 'does'는 앞 절의 과거 시제와 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "do",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T16-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "attributed",
+          "wrongCandidates": ["attributing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'America's catch-up'은 ‘~ 덕분이라고 여겨지는’ 대상이므로 'be attributed to' 수동태 구조의 과거분사 'attributed'가 맞다. 현재분사 'attributing'은 주어가 능동적으로 귀속시키는 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "attribute",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T7-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "but",
+          "wrongCandidates": ["and"],
+          "grammarType": "접속사",
+          "explanation": "앞 절 '부유한 국가에 속해 있다'와 뒤 절 '지도자 지위를 잃었다'는 의미상 대조 관계이므로 역접 접속사 'but'이 맞다. 'and'는 단순 연결이라 대조의 흐름을 살리지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T13-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "being",
+          "wrongCandidates": ["be"],
+          "grammarType": "전치사",
+          "explanation": "'from -ing ... to -ing' 병렬 구조에서 'to'는 전치사이므로 뒤에는 동명사 'being'이 와야 한다. 동사원형 'be'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T3-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "leapt",
+          "wrongCandidates": ["leap"],
+          "grammarType": "시제",
+          "explanation": "역사적 사건을 서술하는 과거 시제 문맥이고 뒤 절의 'did not'도 과거이므로 과거형 'leapt'가 맞다. 원형 'leap'는 시제·수일치 모두 충족하지 못한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "leap",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T18-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'those'(=incomes)가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 별도의 선행사가 있을 때 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T29-001",
+          "sentenceIdx": 10,
+          "startTokenIdx": 29,
+          "endTokenIdx": 29,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 단수 명사 'the gap'이므로 단수형 'is'가 맞다. 사이에 끼어든 'countries' 같은 복수 명사에 이끌려 'are'를 쓰면 안 된다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S11-T2-001",
+          "sentenceIdx": 11,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "has",
+          "wrongCandidates": ["have"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Great inequality'는 단수 추상명사이므로 현재완료 조동사도 단수형 'has'가 맞다. 복수형 'have'는 단수 주어와 호응하지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S12-T6-001",
+          "sentenceIdx": 12,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "living",
+          "wrongCandidates": ["lived"],
+          "grammarType": "시제",
+          "explanation": "'are also ___' 구조의 현재진행형이므로 현재분사 'living'이 맞다. 과거형 'lived'는 진행 시제의 보조 'are'와 결합할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "based", "baseForm": "base"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "speeded", "baseForm": "speed"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "educated", "baseForm": "educate"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "did", "baseForm": "do"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "attributed", "baseForm": "attribute"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "leapt", "baseForm": "leap"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "based", "wrongForm": "basing", "explanation": "명사 'a second industrial revolution'을 뒤에서 수식하는 분사구로, 혁명이 '~에 기초된' 수동의 의미이므로 과거분사 'based'가 맞다. 현재분사 'basing'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "speeded", "wrongForm": "speed", "explanation": "주어 'Systematic industrial research and development'에 대응하는 과거 시제 본동사가 필요하므로 'speeded'가 맞다. 원형 'speed'는 시제·수일치 모두 충족하지 못하므로 본동사가 될 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 8, "correctForm": "to invest", "wrongForm": "investing", "explanation": "'have to + 동사원형' 구조로 의무를 나타내므로 'to invest'가 맞다. 동명사 'investing'은 'had'와 결합해 '투자해야 했다'라는 의무의 의미를 만들 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "educated", "wrongForm": "educating", "explanation": "명사 'workforce'를 수식하는 분사로, 노동자가 '교육을 받은' 수동의 의미이므로 과거분사 'educated'가 맞다. 현재분사 'educating'은 '교육하는' 능동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "did", "wrongForm": "does", "explanation": "앞 절의 과거 시제 동사 'made'를 대신하는 대동사이므로 시제가 일치하는 'did'가 맞다. 현재형 'does'는 앞 절의 과거 시제와 어긋난다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "attributed", "wrongForm": "attributing", "explanation": "주어 'America's catch-up'은 ‘~ 덕분이라고 여겨지는’ 대상이므로 'be attributed to' 수동태 구조의 과거분사 'attributed'가 맞다. 현재분사 'attributing'은 주어가 능동적으로 귀속시키는 의미가 되어 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "but", "wrongForm": "and", "explanation": "앞 절 '부유한 국가에 속해 있다'와 뒤 절 '지도자 지위를 잃었다'는 의미상 대조 관계이므로 역접 접속사 'but'이 맞다. 'and'는 단순 연결이라 대조의 흐름을 살리지 못한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "being", "wrongForm": "be", "explanation": "'from -ing ... to -ing' 병렬 구조에서 'to'는 전치사이므로 뒤에는 동명사 'being'이 와야 한다. 동사원형 'be'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "leapt", "wrongForm": "leap", "explanation": "역사적 사건을 서술하는 과거 시제 문맥이고 뒤 절의 'did not'도 과거이므로 과거형 'leapt'가 맞다. 원형 'leap'는 시제·수일치 모두 충족하지 못한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'those'(=incomes)가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 별도의 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 10, "startTokenIdx": 29, "endTokenIdx": 29, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵은 단수 명사 'the gap'이므로 단수형 'is'가 맞다. 사이에 끼어든 'countries' 같은 복수 명사에 이끌려 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 11, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "has", "wrongForm": "have", "explanation": "주어 'Great inequality'는 단수 추상명사이므로 현재완료 조동사도 단수형 'has'가 맞다. 복수형 'have'는 단수 주어와 호응하지 못한다."},
+        {"sentenceIdx": 12, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "living", "wrongForm": "lived", "explanation": "'are also ___' 구조의 현재진행형이므로 현재분사 'living'이 맞다. 과거형 'lived'는 진행 시제의 보조 'are'와 결합할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "basing", "correction": "based", "explanation": "혁명이 '~에 기초된' 수동의 의미이므로 과거분사 'based'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "speed", "correction": "speeded", "explanation": "본동사 자리이고 과거 시제 문맥이므로 'speeded'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 8, "isError": true, "wrongForm": "investing", "correction": "to invest", "explanation": "'have to + 동사원형' 의무 구조이므로 'to invest'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "educating", "correction": "educated", "explanation": "노동자가 '교육을 받은' 수동 의미이므로 과거분사 'educated'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "does", "correction": "did", "explanation": "앞 절 과거 동사 'made'를 대신하는 대동사이므로 'did'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "attributing", "correction": "attributed", "explanation": "주어가 ‘~ 덕분이라고 여겨지는’ 대상이므로 수동태의 과거분사 'attributed'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "and", "correction": "but", "explanation": "앞뒤 절이 대조 관계이므로 역접 접속사 'but'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "be", "correction": "being", "explanation": "전치사 'to' 뒤이므로 동명사 'being'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "leap", "correction": "leapt", "explanation": "과거 시제 문맥이므로 'leapt'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'those'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 10, "startTokenIdx": 29, "endTokenIdx": 29, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어의 핵 'the gap'이 단수이므로 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 11, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "have", "correction": "has", "explanation": "단수 주어 'Great inequality'에 맞춰 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 12, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "lived", "correction": "living", "explanation": "현재진행형이므로 현재분사 'living'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "In the late 19th century, a second industrial revolution basing upon one key invention (electrification) and one key German idea (systematic investments in industrial research and development based upon academic science) again disrupted the economic system.",
+          "isCorrect": false,
+          "correction": "In the late 19th century, a second industrial revolution based upon one key invention (electrification) and one key German idea (systematic investments in industrial research and development based upon academic science) again disrupted the economic system.",
+          "explanation": "명사 'revolution'을 수식하는 분사로 '~에 기초된' 수동 의미이므로 과거분사 'based'가 맞다."
+        },
+        {
+          "text": "Systematic industrial research and development speed up the pace of technical change and changed its nature.",
+          "isCorrect": false,
+          "correction": "Systematic industrial research and development speeded up the pace of technical change and changed its nature.",
+          "explanation": "과거 시제 본동사 자리이므로 'speeded'가 맞다."
+        },
+        {
+          "text": "Those who would be economic leaders had investing in industrial research and development.",
+          "isCorrect": false,
+          "correction": "Those who would be economic leaders had to invest in industrial research and development.",
+          "explanation": "'have to + 동사원형'으로 의무를 나타내야 하므로 'to invest'가 맞다."
+        },
+        {
+          "text": "For the first time, a large educating workforce became central to economic success.",
+          "isCorrect": false,
+          "correction": "For the first time, a large educated workforce became central to economic success.",
+          "explanation": "노동자가 '교육을 받은' 수동 의미이므로 과거분사 'educated'가 맞다."
+        },
+        {
+          "text": "Germany and the United States made the investments; Britain does not.",
+          "isCorrect": false,
+          "correction": "Germany and the United States made the investments; Britain did not.",
+          "explanation": "앞 절 'made'를 대신하는 대동사이므로 과거형 'did'가 맞다."
+        },
+        {
+          "text": "America’s catch-up with the per capita income of Great Britain prior to World War I is attributing to a much better educated labor force and the higher productivity that goes with an educated workforce.",
+          "isCorrect": false,
+          "correction": "America’s catch-up with the per capita income of Great Britain prior to World War I is attributed to a much better educated labor force and the higher productivity that goes with an educated workforce.",
+          "explanation": "'be attributed to' 수동태 구조이므로 과거분사 'attributed'가 맞다."
+        },
+        {
+          "text": "Britain was still listed among the rich, and it lost its position as the technological and economic leader of the world.",
+          "isCorrect": false,
+          "correction": "Britain was still listed among the rich, but it lost its position as the technological and economic leader of the world.",
+          "explanation": "앞뒤 절이 대조 관계이므로 역접 접속사 'but'이 맞다."
+        },
+        {
+          "text": "It fell from having the world’s highest per capita income in 1880 to be tied for the 16th and 17th places in the world tables in 2002.",
+          "isCorrect": false,
+          "correction": "It fell from having the world’s highest per capita income in 1880 to being tied for the 16th and 17th places in the world tables in 2002.",
+          "explanation": "'from -ing ... to -ing' 병렬 구조의 전치사 'to' 뒤이므로 동명사 'being'이 맞다."
+        },
+        {
+          "text": "Again some countries leap into this second industrial revolution and others did not.",
+          "isCorrect": false,
+          "correction": "Again some countries leapt into this second industrial revolution and others did not.",
+          "explanation": "과거 시제 문맥이므로 'leapt'가 맞다."
+        },
+        {
+          "text": "Those who did not make the leap remain where they were with per capita incomes similar to those what existed during feudal times.",
+          "isCorrect": false,
+          "correction": "Those who did not make the leap remain where they were with per capita incomes similar to those that existed during feudal times.",
+          "explanation": "선행사 'those'가 있으므로 주격 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "Starting from equality in 1700, three hundred years later in the year 2000, the gap in per capita GDP between the world’s richest country and the world’s poorest country are approximately 140 to 1.",
+          "isCorrect": false,
+          "correction": "Starting from equality in 1700, three hundred years later in the year 2000, the gap in per capita GDP between the world’s richest country and the world’s poorest country is approximately 140 to 1.",
+          "explanation": "주어의 핵 'the gap'이 단수이므로 단수형 'is'가 맞다."
+        },
+        {
+          "text": "Great inequality have replaced equality.",
+          "isCorrect": false,
+          "correction": "Great inequality has replaced equality.",
+          "explanation": "단수 주어 'Great inequality'에 맞춰 'has'가 맞다."
+        },
+        {
+          "text": "But billions of people are also lived better than the kings and queens of just a few centuries earlier.",
+          "isCorrect": false,
+          "correction": "But billions of people are also living better than the kings and queens of just a few centuries earlier.",
+          "explanation": "현재진행형이므로 현재분사 'living'이 맞다."
+        }
+      ]
+    }
+  }
+}

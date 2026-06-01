@@ -1,0 +1,320 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd29",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 19번",
+  "title": "26년 3월 고3 영어모의고사 19번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "19번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Having been guided to a small desk surrounded by dividers, I sat. It was my first day.",
+      "tokens": ["Having","been","guided","to","a","small","desk","surrounded","by","dividers,","I","sat.","It","was","my","first","day."],
+      "korean": "칸막이로 둘러싸인 작은 책상으로 안내되어 나는 착석했다. 나의 근무 첫날이었다."
+    },
+    {
+      "idx": 1,
+      "text": "Everyone in the office seemed busy and no one even looked at me.",
+      "tokens": ["Everyone","in","the","office","seemed","busy","and","no","one","even","looked","at","me."],
+      "korean": "사무실의 모든 사람들은 바쁜 것 같았고, 심지어 아무도 나를 쳐다보지 않았다."
+    },
+    {
+      "idx": 2,
+      "text": "It felt as if no one knew I was there.",
+      "tokens": ["It","felt","as","if","no","one","knew","I","was","there."],
+      "korean": "마치 아무도 내가 거기에 있다는 것을 모르는 것 같았다."
+    },
+    {
+      "idx": 3,
+      "text": "I wanted to ask someone a question, but there wasn't anyone I could possibly talk to. I felt invisible.",
+      "tokens": ["I","wanted","to","ask","someone","a","question,","but","there","wasn't","anyone","I","could","possibly","talk","to.","I","felt","invisible."],
+      "korean": "나는 누군가에게 질문을 하고 싶었지만, 말을 걸 수 있는 사람이 도저히 없었다. 나는 눈에 보이지 않는 것 같았다."
+    },
+    {
+      "idx": 4,
+      "text": "After lunch, I returned to my desk and found a bouquet of flowers on my desk.",
+      "tokens": ["After","lunch,","I","returned","to","my","desk","and","found","a","bouquet","of","flowers","on","my","desk."],
+      "korean": "점심 식사 후, 내 책상으로 돌아와서, 내 책상에 있는 꽃다발을 발견했다."
+    },
+    {
+      "idx": 5,
+      "text": "Then, a coworker at the desk next to mine came over.",
+      "tokens": ["Then,","a","coworker","at","the","desk","next","to","mine","came","over."],
+      "korean": "그때, 내 옆 책상의 동료 한 명이 다가왔다."
+    },
+    {
+      "idx": 6,
+      "text": "She said she couldn't greet me earlier because of an urgent issue that morning.",
+      "tokens": ["She","said","she","couldn't","greet","me","earlier","because","of","an","urgent","issue","that","morning."],
+      "korean": "그녀는 그날 아침 급한 문제 때문에 더 일찍이 나에게 인사하지 못했다고 말했다."
+    },
+    {
+      "idx": 7,
+      "text": "She added that she was excited to work with me.",
+      "tokens": ["She","added","that","she","was","excited","to","work","with","me."],
+      "korean": "그녀는 나와 함께 일하게 되어 기쁘다고 덧붙였다."
+    },
+    {
+      "idx": 8,
+      "text": "She introduced me to the rest of the team, and I received warm greetings from everyone.",
+      "tokens": ["She","introduced","me","to","the","rest","of","the","team,","and","I","received","warm","greetings","from","everyone."],
+      "korean": "그녀는 나를 팀의 나머지 사람들에게 소개했고, 나는 모두에게서 따뜻한 인사를 받았다."
+    },
+    {
+      "idx": 9,
+      "text": "Her kindness made me feel truly accepted.",
+      "tokens": ["Her","kindness","made","me","feel","truly","accepted."],
+      "korean": "그녀의 친절은 내가 진정으로 받아들여졌다고 느끼게 해 주었다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T2-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "guided",
+          "wrongCandidates": ["guiding"],
+          "grammarType": "수동태",
+          "explanation": "'Having been + 과거분사'는 완료수동 분사구문으로, 의미상 주어 'I'가 책상으로 '안내받은' 대상이므로 과거분사 'guided'가 맞다. 현재분사 'guiding'은 능동의 의미가 되어 '내가 안내한' 꼴이 되므로 문맥과 정반대가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "guide",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "seemed",
+          "wrongCandidates": ["seems"],
+          "grammarType": "시제",
+          "explanation": "글 전체가 화자의 근무 첫날을 회상하는 과거 시제로 일관되므로 과거형 'seemed'가 맞다. 현재형 'seems'는 시제 일치(뒤이어지는 'looked' 등 과거 동사들과의 흐름)에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "seem",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "knew",
+          "wrongCandidates": ["knows"],
+          "grammarType": "시제",
+          "explanation": "주절 동사 'felt'가 과거이므로 종속절(as if 절)도 시제 일치에 따라 과거형 'knew'가 와야 한다. 현재형 'knows'는 과거 회상 흐름과 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "know",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T9-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "wasn't",
+          "wrongCandidates": ["weren't"],
+          "grammarType": "수일치",
+          "explanation": "'there + be' 구문에서는 be동사가 뒤따르는 명사구의 수에 일치한다. 뒤의 'anyone'은 단수 취급되는 부정대명사이므로 단수형 'wasn't'가 맞다. 복수형 'weren't'는 단수 주어 'anyone'과 어울리지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T8-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "found",
+          "wrongCandidates": ["finding"],
+          "grammarType": "시제",
+          "explanation": "등위접속사 'and'로 'returned'와 병렬을 이루는 본동사 자리이므로 과거형 'found'가 맞다. 분사형 'finding'은 본동사가 될 수 없어 'returned'와 병렬 구조를 깨뜨린다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "find",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "at",
+          "wrongCandidates": ["on"],
+          "grammarType": "전치사",
+          "explanation": "'책상에 (앉아) 있는' 특정 지점·자리를 가리킬 때는 전치사 'at'을 써서 'at the desk'로 표현한다. 'on'은 '책상 위에' 놓여 있는 사물에 어울리는 전치사로, 사람의 자리를 가리키는 데 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T7-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 7,
+          "endTokenIdx": 8,
+          "correctForm": "because of",
+          "wrongCandidates": ["because"],
+          "grammarType": "전치사",
+          "explanation": "뒤에 명사구 'an urgent issue'가 오므로 전치사구 'because of'가 맞다. 접속사 'because'는 뒤에 주어+동사를 갖춘 절이 와야 하므로 명사구만 있는 이 자리에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "excited",
+          "wrongCandidates": ["exciting"],
+          "grammarType": "분사",
+          "explanation": "감정 동사 'excite'는 주어가 감정을 '느끼는' 사람일 때 과거분사 'excited'를 쓴다. 'she'가 기쁨을 느끼는 주체이므로 'excited'가 맞다. 현재분사 'exciting'은 주어가 '흥분시키는' 대상일 때 쓰는 형태로 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "excite",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T9-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "and",
+          "wrongCandidates": ["but"],
+          "grammarType": "접속사",
+          "explanation": "앞 절(동료가 나를 팀에 소개한 행위)과 뒤 절(따뜻한 인사를 받음)이 자연스럽게 이어지는 결과 관계이므로 순접 접속사 'and'가 맞다. 역접 접속사 'but'은 앞뒤가 대조되는 내용을 연결할 때 쓰며, 이 문맥에서는 어색하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T4-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "feel",
+          "wrongCandidates": ["to feel"],
+          "grammarType": "부정사",
+          "explanation": "사역동사 'make'는 목적격 보어로 동사원형(원형부정사)을 취하므로 'made me feel'이 맞다. to부정사 'to feel'을 쓰면 사역동사의 구문 규칙을 어기게 되어 비문이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "feel",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "guided", "baseForm": "guide"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "seemed", "baseForm": "seem"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "knew", "baseForm": "know"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "found", "baseForm": "find"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "excited", "baseForm": "excite"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "feel", "baseForm": "feel"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "guided", "wrongForm": "guiding", "explanation": "'Having been + 과거분사'는 완료수동 분사구문으로, 의미상 주어 'I'가 책상으로 '안내받은' 대상이므로 과거분사 'guided'가 맞다. 현재분사 'guiding'은 능동의 의미가 되어 '내가 안내한' 꼴이 되므로 문맥과 정반대가 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "seemed", "wrongForm": "seems", "explanation": "글 전체가 화자의 근무 첫날을 회상하는 과거 시제로 일관되므로 과거형 'seemed'가 맞다. 현재형 'seems'는 시제 일치(뒤이어지는 'looked' 등 과거 동사들과의 흐름)에 어긋난다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "knew", "wrongForm": "knows", "explanation": "주절 동사 'felt'가 과거이므로 종속절(as if 절)도 시제 일치에 따라 과거형 'knew'가 와야 한다. 현재형 'knows'는 과거 회상 흐름과 맞지 않는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "wasn't", "wrongForm": "weren't", "explanation": "'there + be' 구문에서는 be동사가 뒤따르는 명사구의 수에 일치한다. 뒤의 'anyone'은 단수 취급되는 부정대명사이므로 단수형 'wasn't'가 맞다. 복수형 'weren't'는 단수 주어 'anyone'과 어울리지 않는다."},
+        {"sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "found", "wrongForm": "finding", "explanation": "등위접속사 'and'로 'returned'와 병렬을 이루는 본동사 자리이므로 과거형 'found'가 맞다. 분사형 'finding'은 본동사가 될 수 없어 'returned'와 병렬 구조를 깨뜨린다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "at", "wrongForm": "on", "explanation": "'책상에 (앉아) 있는' 특정 지점·자리를 가리킬 때는 전치사 'at'을 써서 'at the desk'로 표현한다. 'on'은 '책상 위에' 놓여 있는 사물에 어울리는 전치사로, 사람의 자리를 가리키는 데 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 8, "correctForm": "because of", "wrongForm": "because", "explanation": "뒤에 명사구 'an urgent issue'가 오므로 전치사구 'because of'가 맞다. 접속사 'because'는 뒤에 주어+동사를 갖춘 절이 와야 하므로 명사구만 있는 이 자리에는 쓸 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "excited", "wrongForm": "exciting", "explanation": "감정 동사 'excite'는 주어가 감정을 '느끼는' 사람일 때 과거분사 'excited'를 쓴다. 'she'가 기쁨을 느끼는 주체이므로 'excited'가 맞다. 현재분사 'exciting'은 주어가 '흥분시키는' 대상일 때 쓰는 형태로 문맥과 맞지 않다."},
+        {"sentenceIdx": 8, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "and", "wrongForm": "but", "explanation": "앞 절(동료가 나를 팀에 소개한 행위)과 뒤 절(따뜻한 인사를 받음)이 자연스럽게 이어지는 결과 관계이므로 순접 접속사 'and'가 맞다. 역접 접속사 'but'은 앞뒤가 대조되는 내용을 연결할 때 쓰며, 이 문맥에서는 어색하다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "feel", "wrongForm": "to feel", "explanation": "사역동사 'make'는 목적격 보어로 동사원형(원형부정사)을 취하므로 'made me feel'이 맞다. to부정사 'to feel'을 쓰면 사역동사의 구문 규칙을 어기게 되어 비문이 된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "guiding", "correction": "guided", "explanation": "완료수동 분사구문이므로 'I'가 안내받은 대상 → 과거분사 'guided'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "seems", "correction": "seemed", "explanation": "글 전체가 과거 시제이므로 'seemed'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "knows", "correction": "knew", "explanation": "주절이 과거이므로 시제 일치에 따라 'knew'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "weren't", "correction": "wasn't", "explanation": "'there + be + anyone' 구조에서 'anyone'은 단수 → 'wasn't'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "finding", "correction": "found", "explanation": "'returned'와 병렬되는 본동사 자리이므로 과거형 'found'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "on", "correction": "at", "explanation": "사람의 자리·위치는 'at the desk'로 → 전치사 'at'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 8, "isError": true, "wrongForm": "because", "correction": "because of", "explanation": "뒤에 명사구가 오므로 전치사구 'because of'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "exciting", "correction": "excited", "explanation": "감정의 주체(she)는 과거분사 'excited'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "but", "correction": "and", "explanation": "앞뒤가 자연스럽게 이어지는 결과 관계이므로 순접 'and'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "to feel", "correction": "feel", "explanation": "사역동사 'make'의 보어이므로 동사원형 'feel'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Having been guiding to a small desk surrounded by dividers, I sat. It was my first day.",
+          "isCorrect": false,
+          "correction": "Having been guided to a small desk surrounded by dividers, I sat. It was my first day.",
+          "explanation": "완료수동 분사구문이므로 'I'가 안내받은 대상 → 과거분사 'guided'가 맞다."
+        },
+        {
+          "text": "Everyone in the office seems busy and no one even looked at me.",
+          "isCorrect": false,
+          "correction": "Everyone in the office seemed busy and no one even looked at me.",
+          "explanation": "글 전체가 과거 시제이므로 'seemed'가 맞다."
+        },
+        {
+          "text": "It felt as if no one knows I was there.",
+          "isCorrect": false,
+          "correction": "It felt as if no one knew I was there.",
+          "explanation": "주절 'felt'가 과거이므로 시제 일치에 따라 'knew'가 맞다."
+        },
+        {
+          "text": "I wanted to ask someone a question, but there weren't anyone I could possibly talk to. I felt invisible.",
+          "isCorrect": false,
+          "correction": "I wanted to ask someone a question, but there wasn't anyone I could possibly talk to. I felt invisible.",
+          "explanation": "'anyone'은 단수 취급이므로 'there wasn't'가 맞다."
+        },
+        {
+          "text": "After lunch, I returned to my desk and finding a bouquet of flowers on my desk.",
+          "isCorrect": false,
+          "correction": "After lunch, I returned to my desk and found a bouquet of flowers on my desk.",
+          "explanation": "'returned'와 병렬되는 본동사 자리이므로 과거형 'found'가 맞다."
+        },
+        {
+          "text": "Then, a coworker on the desk next to mine came over.",
+          "isCorrect": false,
+          "correction": "Then, a coworker at the desk next to mine came over.",
+          "explanation": "사람의 자리·위치는 'at the desk'로 표현하는 것이 맞다."
+        },
+        {
+          "text": "She said she couldn't greet me earlier because an urgent issue that morning.",
+          "isCorrect": false,
+          "correction": "She said she couldn't greet me earlier because of an urgent issue that morning.",
+          "explanation": "뒤에 명사구가 오므로 전치사구 'because of'가 맞다."
+        },
+        {
+          "text": "She added that she was exciting to work with me.",
+          "isCorrect": false,
+          "correction": "She added that she was excited to work with me.",
+          "explanation": "감정을 느끼는 주체(she)이므로 과거분사 'excited'가 맞다."
+        },
+        {
+          "text": "She introduced me to the rest of the team, but I received warm greetings from everyone.",
+          "isCorrect": false,
+          "correction": "She introduced me to the rest of the team, and I received warm greetings from everyone.",
+          "explanation": "자연스러운 결과 관계이므로 순접 'and'가 맞다."
+        },
+        {
+          "text": "Her kindness made me to feel truly accepted.",
+          "isCorrect": false,
+          "correction": "Her kindness made me feel truly accepted.",
+          "explanation": "사역동사 'make'의 보어이므로 동사원형 'feel'이 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,353 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd2c",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 22번",
+  "title": "26년 3월 고3 영어모의고사 22번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "고3",
+    "questionNumber": "어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "We often express problems interrogatively.",
+      "tokens": ["We", "often", "express", "problems", "interrogatively."],
+      "korean": "우리는 자주 문제를 의문문의 형태로 표현한다."
+    },
+    {
+      "idx": 1,
+      "text": "Instead of commanding you to find my keys, I might ask you where they are.",
+      "tokens": ["Instead", "of", "commanding", "you", "to", "find", "my", "keys,", "I", "might", "ask", "you", "where", "they", "are."],
+      "korean": "여러분에게 내 열쇠를 찾으라고 명령하는 대신, 나는 아마도 여러분에게 그것이 어디에 있는지 물을 것이다."
+    },
+    {
+      "idx": 2,
+      "text": "But \"Where are my keys?\" is a problem hiding in question clothing.",
+      "tokens": ["But", "\"Where", "are", "my", "keys?\"", "is", "a", "problem", "hiding", "in", "question", "clothing."],
+      "korean": "하지만 '내 열쇠 어디에 있어?'는 질문이라는 덮개 속에 숨어 있는 문제이다."
+    },
+    {
+      "idx": 3,
+      "text": "To see this, consider some possible answers.",
+      "tokens": ["To", "see", "this,", "consider", "some", "possible", "answers."],
+      "korean": "이것을 이해하기 위해, 몇 가지 가능한 대답을 고려해 보라."
+    },
+    {
+      "idx": 4,
+      "text": "\"Not on the surface of the sun\" truthfully gives the location of my keys, as does, \"Wherever your keys are.\"",
+      "tokens": ["\"Not", "on", "the", "surface", "of", "the", "sun\"", "truthfully", "gives", "the", "location", "of", "my", "keys,", "as", "does,", "\"Wherever", "your", "keys", "are.\""],
+      "korean": "'태양의 표면에는 없어.'는 내 열쇠의 위치를 사실대로 알려주며, '네 열쇠가 있는 곳 어디든지.'도 마찬가지이다."
+    },
+    {
+      "idx": 5,
+      "text": "Nonetheless, these are bad answers, and they are bad precisely because they do not help me achieve the goal ─ leaving the house, opening a locked door ─ to which keylessness constituted an obstacle.",
+      "tokens": ["Nonetheless,", "these", "are", "bad", "answers,", "and", "they", "are", "bad", "precisely", "because", "they", "do", "not", "help", "me", "achieve", "the", "goal", "─", "leaving", "the", "house,", "opening", "a", "locked", "door", "─", "to", "which", "keylessness", "constituted", "an", "obstacle."],
+      "korean": "그럼에도 불구하고, 이것들은 안 좋은 대답이며, 정확히 왜냐하면 열쇠가 없음이 장애물이 되었던, 집을 떠나는 것, 잠긴 문을 여는 그 목표를 내가 달성하도록 도와주지 않기 때문에 그것들은 좋지 않다."
+    },
+    {
+      "idx": 6,
+      "text": "Consider the reply \"They are in your room.\"",
+      "tokens": ["Consider", "the", "reply", "\"They", "are", "in", "your", "room.\""],
+      "korean": "'그것은 네 방에 있어.'라는 답변을 고려해 보라."
+    },
+    {
+      "idx": 7,
+      "text": "This is a good reply if you have a small, tidy room, but if your room is large and messy, you might need the location more clearly specified.",
+      "tokens": ["This", "is", "a", "good", "reply", "if", "you", "have", "a", "small,", "tidy", "room,", "but", "if", "your", "room", "is", "large", "and", "messy,", "you", "might", "need", "the", "location", "more", "clearly", "specified."],
+      "korean": "여러분이 작고 잘 정돈된 방을 가지고 있다면 이것은 좋은 답변이지만, 여러분의 방이 크고 지저분하다면, 여러분은 더 구체적으로 명시된 위치가 필요할 수도 있다."
+    },
+    {
+      "idx": 8,
+      "text": "Whether or not it is a good reply is a function of whether or not it solves the problem.",
+      "tokens": ["Whether", "or", "not", "it", "is", "a", "good", "reply", "is", "a", "function", "of", "whether", "or", "not", "it", "solves", "the", "problem."],
+      "korean": "그것이 좋은 답변인지 아닌지는 그것이 문제를 해결하는지 아닌지와 함수 관계에 있다."
+    },
+    {
+      "idx": 9,
+      "text": "Indeed, \"Here, take mine\" could be a good reply to \"Where are my keys?\" if what is needed is to leave the house quickly.",
+      "tokens": ["Indeed,", "\"Here,", "take", "mine\"", "could", "be", "a", "good", "reply", "to", "\"Where", "are", "my", "keys?\"", "if", "what", "is", "needed", "is", "to", "leave", "the", "house", "quickly."],
+      "korean": "실제로, 만약 필요한 것이 집을 빨리 떠나는 것이라면, '여기, 내 거 가져가.'는 '내 열쇠 어디에 있어?'에 대한 좋은 답변이 될 수 있다."
+    },
+    {
+      "idx": 10,
+      "text": "A good reply doesn't need to offer an answer to the question, \"Where are my keys?\" as long as it resolves the problem of not being able to leave the house.",
+      "tokens": ["A", "good", "reply", "doesn't", "need", "to", "offer", "an", "answer", "to", "the", "question,", "\"Where", "are", "my", "keys?\"", "as", "long", "as", "it", "resolves", "the", "problem", "of", "not", "being", "able", "to", "leave", "the", "house."],
+      "korean": "좋은 답변은 집을 떠날 수 없다는 문제를 해결하기만 한다면, '내 열쇠 어디에 있어?'라는 질문에 대한 대답을 제공할 필요가 없다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "F": { "blocks": [] },
+    "P": {
+      "points": [
+        {
+          "id": "S0-T2-001",
+          "sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "express", "wrongCandidates": ["expresses"],
+          "grammarType": "수일치",
+          "explanation": "주어 We 는 복수이므로 동사도 복수 일치형 express. 단수 expresses 는 We 와 수가 맞지 않아 틀림.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "express",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T4-002",
+          "sentenceIdx": 0, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "interrogatively.", "wrongCandidates": ["interrogative."],
+          "grammarType": "분사",
+          "explanation": "동사 express 를 수식하므로 부사 interrogatively 가 맞고, 형용사 interrogative 는 동사 수식 불가.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "interrogative",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-003",
+          "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "commanding", "wrongCandidates": ["command"],
+          "grammarType": "분사",
+          "explanation": "전치사 of 뒤에는 동명사가 와야 하므로 commanding 이 맞고, 동사원형 command 는 올 수 없음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "command",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-004",
+          "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 5,
+          "correctForm": "to find", "wrongCandidates": ["finding"],
+          "grammarType": "부정사",
+          "explanation": "command + 목적어 + to 부정사 구문으로 to find 가 맞음. 동명사 finding 은 command 의 어법 구조에 맞지 않음.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T12-005",
+          "sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "where", "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "ask 의 목적절을 이끌며 장소(위치)를 묻는 의문사 where 가 맞음. which 는 선택의 의미라 문맥상 부적절.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-006",
+          "sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "is", "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "인용된 의문문 전체가 하나의 단수 주어 역할을 하므로 단수 동사 is 가 맞음. 복수 are 는 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-007",
+          "sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "hiding", "wrongCandidates": ["hidden"],
+          "grammarType": "분사",
+          "explanation": "problem 이 '숨고 있는' 능동 의미이므로 현재분사 hiding 이 맞음. 과거분사 hidden(숨겨진) 은 수동 의미라 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "hide",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T9-008",
+          "sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "in", "wrongCandidates": ["on"],
+          "grammarType": "전치사",
+          "explanation": "'~안에 숨다' 는 hide in 으로 표현. on(표면 위에) 은 의미상 어색.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T1-009",
+          "sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "see", "wrongCandidates": ["seeing"],
+          "grammarType": "부정사",
+          "explanation": "목적을 나타내는 to 부정사 To see 구조이므로 동사원형 see 가 맞음. 동명사 seeing 은 to 와 결합 불가.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "see",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T3-010",
+          "sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "consider", "wrongCandidates": ["considering"],
+          "grammarType": "시제",
+          "explanation": "명령문은 동사원형으로 시작하므로 consider 가 맞음. 현재분사/동명사 considering 으로는 명령문을 구성할 수 없음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "consider",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T8-011",
+          "sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "gives", "wrongCandidates": ["give"],
+          "grammarType": "수일치",
+          "explanation": "인용된 표현이 단수 주어 역할을 하므로 단수 동사 gives 가 맞음. give 는 복수 일치형이라 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "give",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T14-012",
+          "sentenceIdx": 4, "startTokenIdx": 14, "endTokenIdx": 14,
+          "correctForm": "as", "wrongCandidates": ["so"],
+          "grammarType": "접속사",
+          "explanation": "'~도 마찬가지' 의 도치 구문은 as + 도치동사. so 도 도치 가능하지만 앞 절의 동의를 의미하는 본 문맥에서는 as 가 자연스러움.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T15-013",
+          "sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15,
+          "correctForm": "does,", "wrongCandidates": ["do,"],
+          "grammarType": "수일치",
+          "explanation": "as 뒤의 도치문에서 주어 \"Wherever your keys are\" 가 단수 의미이므로 단수형 does 가 맞음. 복수 do 는 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "do",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T10-014",
+          "sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "because", "wrongCandidates": ["because of"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 절(주어 + 동사)이 이어지므로 접속사 because 가 맞음. because of 는 전치사구라 명사구가 뒤따라야 함.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T16-015",
+          "sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16,
+          "correctForm": "achieve", "wrongCandidates": ["achieving"],
+          "grammarType": "부정사",
+          "explanation": "help + 목적어 + 원형부정사(또는 to 부정사) 구조이므로 동사원형 achieve 가 맞음. 동명사 achieving 은 help 의 어법 구조에 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "achieve",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T31-016",
+          "sentenceIdx": 5, "startTokenIdx": 31, "endTokenIdx": 31,
+          "correctForm": "constituted", "wrongCandidates": ["constitutes"],
+          "grammarType": "시제",
+          "explanation": "과거에 장애물이었던 상황을 회상하는 문맥이므로 과거시제 constituted 가 맞음. 현재시제 constitutes 는 시제 흐름과 불일치.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "constitute",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-017",
+          "sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "are", "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어 They 는 복수이므로 복수동사 are 가 맞음. 단수 is 는 수가 맞지 않음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-018",
+          "sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "in", "wrongCandidates": ["on"],
+          "grammarType": "전치사",
+          "explanation": "내부 공간 안에 있음을 나타낼 때는 in your room. on(표면 위) 은 의미상 어색.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T7-019",
+          "sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7,
+          "correctForm": "have", "wrongCandidates": ["has"],
+          "grammarType": "수일치",
+          "explanation": "주어 you 는 2인칭이므로 동사는 have. has 는 3인칭 단수형이라 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T22-020",
+          "sentenceIdx": 7, "startTokenIdx": 22, "endTokenIdx": 22,
+          "correctForm": "need", "wrongCandidates": ["needs"],
+          "grammarType": "시제",
+          "explanation": "조동사 might 뒤에는 동사원형이 오므로 need 가 맞음. 3인칭 단수 needs 는 조동사 뒤에 올 수 없음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "need",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T27-021",
+          "sentenceIdx": 7, "startTokenIdx": 27, "endTokenIdx": 27,
+          "correctForm": "specified.", "wrongCandidates": ["specifying."],
+          "grammarType": "분사",
+          "explanation": "the location 이 '명시되는' 수동 관계이므로 과거분사 specified 가 맞음. 현재분사 specifying 은 능동 의미라 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "specify",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T8-022",
+          "sentenceIdx": 8, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "is", "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "Whether or not 이 이끄는 명사절은 단수 취급되므로 단수 동사 is 가 맞음. are 는 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T16-023",
+          "sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16,
+          "correctForm": "solves", "wrongCandidates": ["solve"],
+          "grammarType": "수일치",
+          "explanation": "주어 it 은 3인칭 단수이므로 동사도 단수형 solves. 복수 solve 는 수일치 위반.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "solve",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T5-024",
+          "sentenceIdx": 9, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "be", "wrongCandidates": ["being"],
+          "grammarType": "시제",
+          "explanation": "조동사 could 뒤에는 동사원형이 오므로 be 가 맞음. being 은 조동사 뒤에 단독으로 올 수 없음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T17-025",
+          "sentenceIdx": 9, "startTokenIdx": 17, "endTokenIdx": 17,
+          "correctForm": "needed", "wrongCandidates": ["needing"],
+          "grammarType": "수동태",
+          "explanation": "what 이 needed 되는 수동 관계 (is needed) 이므로 과거분사 needed 가 맞음. 현재분사 needing 은 능동이라 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "need",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T20-026",
+          "sentenceIdx": 9, "startTokenIdx": 20, "endTokenIdx": 20,
+          "correctForm": "leave", "wrongCandidates": ["leaving"],
+          "grammarType": "부정사",
+          "explanation": "to + 동사원형 구조이므로 leave 가 맞음. leaving 은 to 뒤에 올 수 없음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "leave",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T6-027",
+          "sentenceIdx": 10, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "offer", "wrongCandidates": ["offering"],
+          "grammarType": "부정사",
+          "explanation": "need + to 부정사 구문 (to offer) 이므로 동사원형 offer 가 맞음. 동명사 offering 은 to 뒤에 부적절.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "offer",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T20-028",
+          "sentenceIdx": 10, "startTokenIdx": 20, "endTokenIdx": 20,
+          "correctForm": "resolves", "wrongCandidates": ["resolve"],
+          "grammarType": "수일치",
+          "explanation": "주어 it 은 3인칭 단수이므로 단수동사 resolves 가 맞음. 복수 resolve 는 수일치 위반.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "resolve",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T25-029",
+          "sentenceIdx": 10, "startTokenIdx": 25, "endTokenIdx": 25,
+          "correctForm": "being", "wrongCandidates": ["been"],
+          "grammarType": "분사",
+          "explanation": "전치사 of 뒤에 동명사가 와야 하므로 being 이 맞음. 과거분사 been 은 단독으로 of 뒤에 올 수 없음.",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        }
+      ]
+    },
+    "G": { "points": [] },
+    "H": { "spans": [] },
+    "J": { "items": [] }
+  }
+}

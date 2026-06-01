@@ -1,0 +1,208 @@
+{
+  "passageId": "69d4eca372a886137cd83f14",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 02번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 02번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 02번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "What was bothersome was not so much the time consumed in reading a just-arrived e-mail message as the time it took to get back to what a worker was doing before the interruption.",
+      "tokens": ["What","was","bothersome","was","not","so","much","the","time","consumed","in","reading","a","just-arrived","e-mail","message","as","the","time","it","took","to","get","back","to","what","a","worker","was","doing","before","the","interruption."],
+      "korean": "방해가 되는 부분은 방금 도착한 이메일 내용을 읽는 데 소비된 시간이라기보다는 그 방해 전에 근로자가 하고 있었던 일로 되돌아가는 데 걸리는 시간이었다."
+    },
+    {
+      "idx": 1,
+      "text": "As with the speed bump, it is not so much the slowing down for the bump itself as its enduring effects after the bump has been passed ― whether in the jarring letdown or the need to get back up to speed.",
+      "tokens": ["As","with","the","speed","bump,","it","is","not","so","much","the","slowing","down","for","the","bump","itself","as","its","enduring","effects","after","the","bump","has","been","passed","―","whether","in","the","jarring","letdown","or","the","need","to","get","back","up","to","speed."],
+      "korean": "과속 방지턱의 경우에서처럼, 그것(귀찮은 것)은 방지턱 그 자체 때문에 속도를 늦추는 것이라기보다는 방지턱을 지난 후에 지속되는 효과, 즉 덜컹덜컹 흔들리며 속도가 줄어들거나 혹은 속도를 다시 올릴 필요성 때문이다."
+    },
+    {
+      "idx": 2,
+      "text": "To deal with the Frankenstein known as e-mail, affected companies formed the nonprofit Information Overload Research Group to discuss solutions.",
+      "tokens": ["To","deal","with","the","Frankenstein","known","as","e-mail,","affected","companies","formed","the","nonprofit","Information","Overload","Research","Group","to","discuss","solutions."],
+      "korean": "이메일이라고 알려진 괴물(Frankenstein)을 다루기 위해, 영향을 받은 회사들은 비영리의 ‘정보 과부하 연구 그룹’을 결성하여 해결책을 논의하였다."
+    },
+    {
+      "idx": 3,
+      "text": "Even before the group met, however, some approaches were being tried.",
+      "tokens": ["Even","before","the","group","met,","however,","some","approaches","were","being","tried."],
+      "korean": "그러나 이 그룹이 만나기 전부터, 몇 가지 접근법이 시도되고 있었다."
+    },
+    {
+      "idx": 4,
+      "text": "An IBM engineer named Michael Davidson devised an “E-mail Addict” feature whereby a user could click on a “Take a Break” link that caused the screen to go gray and display the message, “Take a walk, get some real work done, or have a snack. We’ll be back in 15 minutes!”",
+      "tokens": ["An","IBM","engineer","named","Michael","Davidson","devised","an","“E-mail","Addict”","feature","whereby","a","user","could","click","on","a","“Take","a","Break”","link","that","caused","the","screen","to","go","gray","and","display","the","message,","“Take","a","walk,","get","some","real","work","done,","or","have","a","snack.","We’ll","be","back","in","15","minutes!”"],
+      "korean": "IBM 엔지니어 Michael Davidson은 사용자가 ‘휴식하기’ 링크를 클릭함으로써 화면이 흐려지면서 ‘산책을 하시오, 실제 작업을 마무리하시오, 혹은 간식을 드시오. 우리는 15분 후에 돌아올 것입니다!’라는 메시지를 내보내는 ‘E-mail Addict’라는 기능을 고안했다."
+    },
+    {
+      "idx": 5,
+      "text": "There seemed to be no acknowledgment that taking a walk or having a snack might be more disruptive than reading another e-mail message.",
+      "tokens": ["There","seemed","to","be","no","acknowledgment","that","taking","a","walk","or","having","a","snack","might","be","more","disruptive","than","reading","another","e-mail","message."],
+      "korean": "산책을 하거나 간식을 먹는 것이 다른 이메일 메시지를 읽는 것보다 더 방해가 될 수 있다는 것을 인정하는 것은 없는 듯 보였다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T9-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "consumed",
+          "wrongCandidates": ["consuming"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'the time'이 사람에 의해 '소비되는' 대상(수동)이므로 과거분사 'consumed'가 맞다. 현재분사 'consuming'은 시간이 무언가를 능동적으로 소비한다는 의미가 되어 문맥에 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "consume",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T26-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 26,
+          "endTokenIdx": 26,
+          "correctForm": "passed",
+          "wrongCandidates": ["passing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the bump'(방지턱)은 차량이 '지나가는' 대상이므로 'has been + 과거분사' 형태의 현재완료 수동태가 필요하다. 따라서 과거분사 'passed'가 맞고, 현재분사 'passing'은 능동의 의미가 되어 수동태 구조를 깨뜨린다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "pass",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T18-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "discuss",
+          "wrongCandidates": ["discussing"],
+          "grammarType": "부정사",
+          "explanation": "'to + 동사원형' 형태의 부사적 용법(목적: ~하기 위하여)이므로 동사원형 'discuss'가 맞다. 동명사 'discussing'은 'to' 뒤에 올 수 없으며, 결성한 목적을 나타내는 to부정사 구조를 무너뜨린다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "discuss",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T4-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "met,",
+          "wrongCandidates": ["meets,"],
+          "grammarType": "시제",
+          "explanation": "뒤 절의 'were being tried'와 시제를 맞춰야 하는 과거 시점의 서술이므로 과거형 'met'이 맞다. 현재형 'meets'는 시제 일치에 어긋나며, 'before' 시간 부사절이 가리키는 과거 시점과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "meet",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T22-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 22,
+          "endTokenIdx": 22,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'a … link'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사여서 별도의 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T18-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "than",
+          "wrongCandidates": ["then"],
+          "grammarType": "접속사",
+          "explanation": "비교급 'more disruptive' 뒤에서 비교 대상을 연결하는 비교 접속사가 필요하므로 'than'이 맞다. 'then'은 '그때·그 다음에'의 시간 부사로 비교 구조에서 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "consumed", "baseForm": "consume"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "passed", "baseForm": "pass"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "discuss", "baseForm": "discuss"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "met,", "baseForm": "meet"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "consumed", "wrongForm": "consuming", "explanation": "수식받는 명사 'the time'이 '소비되는' 대상(수동)이므로 과거분사 'consumed'가 맞다. 'consuming'은 시간이 능동적으로 무언가를 소비한다는 뜻이 되어 문맥과 어긋난다."},
+        {"sentenceIdx": 1, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "passed", "wrongForm": "passing", "explanation": "주어 'the bump'은 지나가지는 대상이고 'has been + 과거분사' 형태가 필요하므로 'passed'가 맞다. 'passing'은 능동이 되어 수동태 구조를 깨뜨린다."},
+        {"sentenceIdx": 2, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "discuss", "wrongForm": "discussing", "explanation": "to부정사 부사적 용법(목적)이므로 'to' 뒤에는 동사원형 'discuss'가 와야 한다. 'discussing'은 to 뒤에 올 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "met,", "wrongForm": "meets,", "explanation": "뒤 절의 'were being tried'가 과거이고 'before' 시간 부사절 또한 과거 시점이므로 과거형 'met'이 맞다. 현재형 'meets'는 시제 일치에 어긋난다."},
+        {"sentenceIdx": 4, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'a … link'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사를 포함해서 별도의 선행사가 있는 경우에는 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "than", "wrongForm": "then", "explanation": "비교급 'more disruptive' 뒤에서 비교 대상을 연결하므로 비교 접속사 'than'이 맞다. 'then'은 시간 부사여서 비교 구조에 쓸 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "consuming", "correction": "consumed", "explanation": "수식받는 'the time'이 소비되는 대상(수동)이므로 과거분사 'consumed'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 26, "endTokenIdx": 26, "isError": true, "wrongForm": "passing", "correction": "passed", "explanation": "'has been + 과거분사'의 현재완료 수동태이므로 'passed'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "discussing", "correction": "discuss", "explanation": "목적을 나타내는 to부정사 구조이므로 to 뒤는 동사원형 'discuss'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "meets,", "correction": "met,", "explanation": "뒤 절 'were being tried'와 시제를 맞추어 과거형 'met'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 22, "endTokenIdx": 22, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'a … link'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "then", "correction": "than", "explanation": "비교급 뒤에서 비교 대상을 연결하는 비교 접속사 'than'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "What was bothersome was not so much the time consuming in reading a just-arrived e-mail message as the time it took to get back to what a worker was doing before the interruption.",
+          "isCorrect": false,
+          "correction": "What was bothersome was not so much the time consumed in reading a just-arrived e-mail message as the time it took to get back to what a worker was doing before the interruption.",
+          "explanation": "수식받는 'the time'이 소비되는 대상(수동)이므로 과거분사 'consumed'가 맞다."
+        },
+        {
+          "text": "As with the speed bump, it is not so much the slowing down for the bump itself as its enduring effects after the bump has been passing ― whether in the jarring letdown or the need to get back up to speed.",
+          "isCorrect": false,
+          "correction": "As with the speed bump, it is not so much the slowing down for the bump itself as its enduring effects after the bump has been passed ― whether in the jarring letdown or the need to get back up to speed.",
+          "explanation": "'has been + 과거분사'의 현재완료 수동태이므로 'passed'가 맞다."
+        },
+        {
+          "text": "To deal with the Frankenstein known as e-mail, affected companies formed the nonprofit Information Overload Research Group to discussing solutions.",
+          "isCorrect": false,
+          "correction": "To deal with the Frankenstein known as e-mail, affected companies formed the nonprofit Information Overload Research Group to discuss solutions.",
+          "explanation": "목적을 나타내는 to부정사 구조이므로 to 뒤에는 동사원형 'discuss'가 와야 한다."
+        },
+        {
+          "text": "Even before the group meets, however, some approaches were being tried.",
+          "isCorrect": false,
+          "correction": "Even before the group met, however, some approaches were being tried.",
+          "explanation": "뒤 절 'were being tried'와 시제를 맞추어 과거형 'met'이 맞다."
+        },
+        {
+          "text": "An IBM engineer named Michael Davidson devised an “E-mail Addict” feature whereby a user could click on a “Take a Break” link what caused the screen to go gray and display the message, “Take a walk, get some real work done, or have a snack. We’ll be back in 15 minutes!”",
+          "isCorrect": false,
+          "correction": "An IBM engineer named Michael Davidson devised an “E-mail Addict” feature whereby a user could click on a “Take a Break” link that caused the screen to go gray and display the message, “Take a walk, get some real work done, or have a snack. We’ll be back in 15 minutes!”",
+          "explanation": "선행사 'link'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "There seemed to be no acknowledgment that taking a walk or having a snack might be more disruptive then reading another e-mail message.",
+          "isCorrect": false,
+          "correction": "There seemed to be no acknowledgment that taking a walk or having a snack might be more disruptive than reading another e-mail message.",
+          "explanation": "비교급 뒤에서 비교 대상을 연결하는 비교 접속사 'than'이 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd39",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 35번",
+  "title": "26년 3월 고3 영어모의고사 35번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "35번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Morality has been associated with the rational human beings for more than one reason.",
+      "tokens": ["Morality","has","been","associated","with","the","rational","human","beings","for","more","than","one","reason."],
+      "korean": "도덕성은 한 가지 이상의 이유로 이성적인 인간 존재와 연관되어 있다."
+    },
+    {
+      "idx": 1,
+      "text": "First of all, it is human beings who are gifted with the faculty of reasoning; secondly, human beings have free will to choose what is the best for them among many alternatives.",
+      "tokens": ["First","of","all,","it","is","human","beings","who","are","gifted","with","the","faculty","of","reasoning;","secondly,","human","beings","have","free","will","to","choose","what","is","the","best","for","them","among","many","alternatives."],
+      "korean": "첫째, 추론 능력을 부여받은 존재가 바로 인간 존재이며, 둘째, 인간 존재는 많은 대안 중에서 자신에게 최선인 것을 선택할 자유 의지를 가지고 있다."
+    },
+    {
+      "idx": 2,
+      "text": "To think and reason about things is the primary function of the human mind as has been noted by all philosophers since Descartes.",
+      "tokens": ["To","think","and","reason","about","things","is","the","primary","function","of","the","human","mind","as","has","been","noted","by","all","philosophers","since","Descartes."],
+      "korean": "사물에 대해 생각하고 추론하는 것은 데카르트 이래로 모든 철학자가 주목했듯이 인간 정신의 주된 기능이다."
+    },
+    {
+      "idx": 3,
+      "text": "It is because of this capacity to think and weigh the pros and cons of actions that human beings can plan for their future and make sufficient effort to achieve their chosen goals in life.",
+      "tokens": ["It","is","because","of","this","capacity","to","think","and","weigh","the","pros","and","cons","of","actions","that","human","beings","can","plan","for","their","future","and","make","sufficient","effort","to","achieve","their","chosen","goals","in","life."],
+      "korean": "인간 존재가 자신의 미래를 계획하고 자신의 삶에서 선택된 목표들을 달성하기 위해 충분한 노력을 기울일 수 있는 것은 바로 생각하고 행동의 장단점을 따져보는 이러한 능력 때문이다."
+    },
+    {
+      "idx": 4,
+      "text": "Besides, human beings make free choices in all given situations, except where they are constrained to act.",
+      "tokens": ["Besides,","human","beings","make","free","choices","in","all","given","situations,","except","where","they","are","constrained","to","act."],
+      "korean": "게다가, 인간 존재는, 행동하도록 강요받는 경우를 제외하고는, 모든 주어진 상황에서 자유로운 선택을 한다."
+    },
+    {
+      "idx": 5,
+      "text": "Thus freedom is a basic feature of human life which distinguishes humans from other animals.",
+      "tokens": ["Thus","freedom","is","a","basic","feature","of","human","life","which","distinguishes","humans","from","other","animals."],
+      "korean": "그러므로 자유는 인간을 다른 동물들과 구별 짓는 인간 삶의 근본적인 특징이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T3-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "associated",
+          "wrongCandidates": ["associating"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Morality'는 사람들에 의해 연관 '지어지는' 대상이므로 'has been + 과거분사' 수동태 형태인 'associated'가 맞다. 현재분사 'associating'을 쓰면 능동 진행의 의미가 되어 '도덕성이 인간을 연관시키고 있다'는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "associate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "'It is ... that/who ...' 강조구문에서 강조 대상이 사람 'human beings'이므로 주격 관계대명사 'who'가 맞다. 사물·동물을 가리키는 'which'는 사람 선행사에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어가 to부정사구 'To think and reason about things'로, to부정사 주어는 단일 행위로 취급되어 단수 동사 'is'가 맞다. 복수형 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T31-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 31,
+          "endTokenIdx": 31,
+          "correctForm": "chosen",
+          "wrongCandidates": ["choosing"],
+          "grammarType": "분사",
+          "explanation": "'goals'(목표)는 인간에 의해 '선택되는' 대상이므로 수동의 의미를 가진 과거분사 'chosen'이 명사를 수식해야 한다. 현재분사 'choosing'은 능동·진행의 의미라 '선택하는 목표'가 되어 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "choose",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T14-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "constrained",
+          "wrongCandidates": ["constraining"],
+          "grammarType": "수동태",
+          "explanation": "주어 'they(=human beings)'는 외부 요인에 의해 행동하도록 '강요받는' 대상이므로 'are + 과거분사' 수동태 형태인 'constrained'가 맞다. 현재분사 'constraining'을 쓰면 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "constrain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T10-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "distinguishes",
+          "wrongCandidates": ["distinguish"],
+          "grammarType": "수일치",
+          "explanation": "관계대명사 'which'의 선행사는 단수 명사구 'a basic feature'이므로 관계절 동사는 단수형 'distinguishes'가 맞다. 가까이 있는 복수명사 'humans/animals'에 이끌려 'distinguish'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "distinguish",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "associated", "baseForm": "associate"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 31, "endTokenIdx": 31, "correctForm": "chosen", "baseForm": "choose"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "constrained", "baseForm": "constrain"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "distinguishes", "baseForm": "distinguish"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "associated", "wrongForm": "associating", "explanation": "주어 'Morality'는 연관 '지어지는' 대상이므로 'has been + 과거분사' 수동태 형태인 'associated'가 맞다. 'associating'은 능동·진행의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "who", "wrongForm": "which", "explanation": "강조구문 'It is ... that/who ...'에서 강조 대상이 사람 'human beings'이므로 주격 관계대명사 'who'가 맞다. 'which'는 사람 선행사에 쓸 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "wrongForm": "are", "explanation": "주어가 to부정사구 'To think and reason about things'로 단일 행위로 취급되어 단수 동사 'is'가 맞다."},
+        {"sentenceIdx": 3, "startTokenIdx": 31, "endTokenIdx": 31, "correctForm": "chosen", "wrongForm": "choosing", "explanation": "'goals'는 '선택되는' 대상이므로 수동 의미의 과거분사 'chosen'이 명사를 수식한다. 'choosing'은 능동이라 부적절."},
+        {"sentenceIdx": 4, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "constrained", "wrongForm": "constraining", "explanation": "주어 they가 강요'받는' 대상이므로 수동태 'are constrained'가 맞다. 'constraining'은 능동의 의미라 부적절."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "distinguishes", "wrongForm": "distinguish", "explanation": "관계대명사 which의 선행사가 단수 'a basic feature'이므로 관계절 동사는 단수 'distinguishes'가 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "associating", "correction": "associated", "explanation": "주어 'Morality'가 연관되는 대상이므로 수동태 과거분사 'associated'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "강조 대상이 사람 'human beings'이므로 주격 관계대명사 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "to부정사구 주어는 단수 취급이므로 단수 동사 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 31, "endTokenIdx": 31, "isError": true, "wrongForm": "choosing", "correction": "chosen", "explanation": "'goals'가 선택되는 대상이므로 수동의 과거분사 'chosen'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "constraining", "correction": "constrained", "explanation": "주어가 강요받는 대상이므로 수동태 'constrained'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "distinguish", "correction": "distinguishes", "explanation": "선행사 'a basic feature'가 단수이므로 단수 동사 'distinguishes'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Morality has been associating with the rational human beings for more than one reason.",
+          "isCorrect": false,
+          "correction": "Morality has been associated with the rational human beings for more than one reason.",
+          "explanation": "주어 'Morality'가 연관되는 대상이므로 수동태 'has been associated'가 맞다."
+        },
+        {
+          "text": "First of all, it is human beings which are gifted with the faculty of reasoning; secondly, human beings have free will to choose what is the best for them among many alternatives.",
+          "isCorrect": false,
+          "correction": "First of all, it is human beings who are gifted with the faculty of reasoning; secondly, human beings have free will to choose what is the best for them among many alternatives.",
+          "explanation": "강조 대상이 사람 'human beings'이므로 주격 관계대명사 'who'가 맞다."
+        },
+        {
+          "text": "To think and reason about things are the primary function of the human mind as has been noted by all philosophers since Descartes.",
+          "isCorrect": false,
+          "correction": "To think and reason about things is the primary function of the human mind as has been noted by all philosophers since Descartes.",
+          "explanation": "to부정사구 주어는 단수 취급이므로 단수 동사 'is'가 맞다."
+        },
+        {
+          "text": "It is because of this capacity to think and weigh the pros and cons of actions that human beings can plan for their future and make sufficient effort to achieve their choosing goals in life.",
+          "isCorrect": false,
+          "correction": "It is because of this capacity to think and weigh the pros and cons of actions that human beings can plan for their future and make sufficient effort to achieve their chosen goals in life.",
+          "explanation": "'goals'가 선택되는 대상이므로 수동의 과거분사 'chosen'이 맞다."
+        },
+        {
+          "text": "Besides, human beings make free choices in all given situations, except where they are constraining to act.",
+          "isCorrect": false,
+          "correction": "Besides, human beings make free choices in all given situations, except where they are constrained to act.",
+          "explanation": "주어 they가 강요받는 대상이므로 수동태 'are constrained'가 맞다."
+        },
+        {
+          "text": "Thus freedom is a basic feature of human life which distinguish humans from other animals.",
+          "isCorrect": false,
+          "correction": "Thus freedom is a basic feature of human life which distinguishes humans from other animals.",
+          "explanation": "선행사 'a basic feature'가 단수이므로 단수 동사 'distinguishes'가 맞다."
+        }
+      ]
+    }
+  }
+}

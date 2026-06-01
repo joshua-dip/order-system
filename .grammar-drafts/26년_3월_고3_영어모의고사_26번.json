@@ -1,0 +1,270 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd30",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 26번",
+  "title": "26년 3월 고3 영어모의고사 26번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "26번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Douglass Houghton was an American geologist and physician born in New York in 1809.",
+      "tokens": ["Douglass","Houghton","was","an","American","geologist","and","physician","born","in","New","York","in","1809."],
+      "korean": "Douglass Houghton은 1809년에 뉴욕에서 태어난 미국의 지질학자이자 의사였다."
+    },
+    {
+      "idx": 1,
+      "text": "He enrolled in the Rensselaer Scientific School, where he earned a degree in 1829.",
+      "tokens": ["He","enrolled","in","the","Rensselaer","Scientific","School,","where","he","earned","a","degree","in","1829."],
+      "korean": "그는 Rensselaer Scientific School에 입학하여 1829년에 학위를 받았다."
+    },
+    {
+      "idx": 2,
+      "text": "Amos Eaton, a former teacher of Houghton, offered a position as an assistant professor for chemistry and natural history to Houghton in 1830.",
+      "tokens": ["Amos","Eaton,","a","former","teacher","of","Houghton,","offered","a","position","as","an","assistant","professor","for","chemistry","and","natural","history","to","Houghton","in","1830."],
+      "korean": "Houghton의 전(前) 스승인 Amos Eaton은 1830년에 화학과 자연사 조교수직을 Houghton에게 제안했다."
+    },
+    {
+      "idx": 3,
+      "text": "That same year, he was recommended by Eaton to travel to Detroit, where soon he became a popular science lecturer.",
+      "tokens": ["That","same","year,","he","was","recommended","by","Eaton","to","travel","to","Detroit,","where","soon","he","became","a","popular","science","lecturer."],
+      "korean": "같은 해, 그는 Eaton에게서 Detroit에 갈 것을 추천 받았고, 그곳에서 그는 곧 인기 있는 과학 강연자가 되었다."
+    },
+    {
+      "idx": 4,
+      "text": "While pursuing his academic career, Houghton also studied medicine and earned his license in 1831.",
+      "tokens": ["While","pursuing","his","academic","career,","Houghton","also","studied","medicine","and","earned","his","license","in","1831."],
+      "korean": "학문적 경력을 쌓아 나가는 동안, Houghton은 또한 의학을 공부했으며 1831년에 면허를 취득했다."
+    },
+    {
+      "idx": 5,
+      "text": "His career reached a major turning point in 1837, when he was appointed Michigan's first State Geologist.",
+      "tokens": ["His","career","reached","a","major","turning","point","in","1837,","when","he","was","appointed","Michigan's","first","State","Geologist."],
+      "korean": "그의 경력은 1837년에 중대한 전환점에 이르렀는데, 그해 그는 Michigan 최초의 주(州) 지질학자로 임명되었다."
+    },
+    {
+      "idx": 6,
+      "text": "In 1842, Houghton was elected as Mayor of Detroit, a position he was at first reluctant to accept.",
+      "tokens": ["In","1842,","Houghton","was","elected","as","Mayor","of","Detroit,","a","position","he","was","at","first","reluctant","to","accept."],
+      "korean": "1842년에, Houghton은 Detroit의 시장으로 선출되었는데, 이는 그가 처음에는 받아들이기를 주저했던 직위였다."
+    },
+    {
+      "idx": 7,
+      "text": "Upon hearing the advice of friends, he accepted the mayor's position and served two terms.",
+      "tokens": ["Upon","hearing","the","advice","of","friends,","he","accepted","the","mayor's","position","and","served","two","terms."],
+      "korean": "친구들의 조언을 듣고, 그는 시장직을 받아들였으며 두 차례 임기를 수행했다."
+    },
+    {
+      "idx": 8,
+      "text": "His contributions to science and public service left a lasting impact on Michigan's development.",
+      "tokens": ["His","contributions","to","science","and","public","service","left","a","lasting","impact","on","Michigan's","development."],
+      "korean": "과학과 공공 서비스에 대한 그의 공헌은 Michigan의 발전에 지속적인 영향을 남겼다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T8-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "born",
+          "wrongCandidates": ["bearing"],
+          "grammarType": "분사",
+          "explanation": "명사구 'an American geologist and physician'를 뒤에서 수식하는 분사로, 그가 '태어나진(수동)' 대상이므로 과거분사 'born'이 맞다. 현재분사 'bearing'은 능동의 의미(낳다)가 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "bear",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "where",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the Rensselaer Scientific School'은 장소이고 뒤따르는 절('he earned a degree in 1829')이 완전한 절이므로 관계부사 'where'가 맞다. 관계대명사 'which'는 뒤에 불완전한 절이 와야 한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T7-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "offered",
+          "wrongCandidates": ["offering"],
+          "grammarType": "시제",
+          "explanation": "주어 'Amos Eaton'에 대한 본동사가 필요하고 시점이 '1830년'으로 과거이므로 과거시제 동사 'offered'가 맞다. 'offering'은 동사 역할을 할 수 없어 문장의 본동사가 사라진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "offer",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T9-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "travel",
+          "wrongCandidates": ["traveling"],
+          "grammarType": "부정사",
+          "explanation": "'recommend + 사람 + to-V' 구조의 수동태 'was recommended to V'에서 'to' 뒤에는 동사원형이 와야 하므로 'travel'이 맞다. 동명사/현재분사 'traveling'은 to-부정사 구조에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T1-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "pursuing",
+          "wrongCandidates": ["pursued"],
+          "grammarType": "분사",
+          "explanation": "접속사 While 뒤의 분사구문에서 의미상 주어 'Houghton'이 자신의 경력을 능동적으로 추구하므로 현재분사 'pursuing'이 맞다. 과거분사 'pursued'는 수동의 의미가 되어 'career'가 누군가에 의해 추구된다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "pursue",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T12-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "appointed",
+          "wrongCandidates": ["appointing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'he'가 'Michigan's first State Geologist'로 '임명되는' 대상이므로 'be + 과거분사'의 수동태 'was appointed'가 맞다. 'was appointing'은 능동 진행이 되어 그가 누군가를 임명한다는 뜻이 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "appoint",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T17-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "accept",
+          "wrongCandidates": ["accepting"],
+          "grammarType": "부정사",
+          "explanation": "형용사 'reluctant'는 to-부정사를 보어로 취하는 어휘이므로 'to' 뒤에 동사원형 'accept'가 와야 한다. 동명사 'accepting'은 'reluctant to' 구조에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T1-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "hearing",
+          "wrongCandidates": ["heard"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'Upon' 뒤에는 (동)명사가 와야 하므로 동명사 'hearing'이 맞다. 과거분사/과거형 'heard'는 전치사의 목적어 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "hear",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "born", "baseForm": "bear"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "offered", "baseForm": "offer"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "pursuing", "baseForm": "pursue"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "appointed", "baseForm": "appoint"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "hearing", "baseForm": "hear"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "born", "wrongForm": "bearing", "explanation": "명사구를 뒤에서 수식하는 분사로, 주어가 '태어나진(수동)' 대상이므로 과거분사 'born'이 맞다. 'bearing'은 능동(낳다)이 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "where", "wrongForm": "which", "explanation": "선행사가 장소(the Rensselaer Scientific School)이고 뒤가 완전한 절이므로 관계부사 'where'가 맞다. 'which'는 뒤에 불완전한 절이 와야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "offered", "wrongForm": "offering", "explanation": "주어 'Amos Eaton'의 본동사가 필요하고 시점이 1830년(과거)이므로 과거시제 'offered'가 맞다. 'offering'은 동사 역할을 할 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "travel", "wrongForm": "traveling", "explanation": "'was recommended to V' 구조의 to 뒤에는 동사원형이 와야 하므로 'travel'이 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "pursuing", "wrongForm": "pursued", "explanation": "While + 분사구문에서 의미상 주어 'Houghton'이 능동적으로 경력을 추구하므로 현재분사 'pursuing'이 맞다."},
+        {"sentenceIdx": 5, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "appointed", "wrongForm": "appointing", "explanation": "주어 'he'가 임명되는 대상(수동)이므로 'was appointed'가 맞다. 'was appointing'은 능동 진행이 되어 문맥에 어긋난다."},
+        {"sentenceIdx": 6, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "accept", "wrongForm": "accepting", "explanation": "형용사 'reluctant'는 to-부정사 보어를 취하므로 to 뒤에 동사원형 'accept'가 와야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "hearing", "wrongForm": "heard", "explanation": "전치사 'Upon' 뒤이므로 (동)명사 'hearing'이 와야 한다. 과거형/과거분사 'heard'는 전치사 목적어가 될 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "bearing", "correction": "born", "explanation": "수동의 의미로 명사구를 후치 수식하므로 과거분사 'born'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "which", "correction": "where", "explanation": "선행사가 장소이고 뒤가 완전한 절이므로 관계부사 'where'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "offering", "correction": "offered", "explanation": "본동사가 필요하고 시점이 과거이므로 과거시제 'offered'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "traveling", "correction": "travel", "explanation": "'be recommended to V' 구조의 to 뒤이므로 동사원형 'travel'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "pursued", "correction": "pursuing", "explanation": "의미상 주어가 능동적으로 추구하므로 현재분사 'pursuing'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "appointing", "correction": "appointed", "explanation": "주어가 임명되는 대상(수동)이므로 과거분사 'appointed'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "accepting", "correction": "accept", "explanation": "'reluctant to' 뒤에는 동사원형 'accept'가 와야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "heard", "correction": "hearing", "explanation": "전치사 'Upon' 뒤이므로 동명사 'hearing'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Douglass Houghton was an American geologist and physician bearing in New York in 1809.",
+          "isCorrect": false,
+          "correction": "Douglass Houghton was an American geologist and physician born in New York in 1809.",
+          "explanation": "주어(geologist and physician)가 '태어나진(수동)' 대상이므로 과거분사 'born'이 맞다."
+        },
+        {
+          "text": "He enrolled in the Rensselaer Scientific School, which he earned a degree in 1829.",
+          "isCorrect": false,
+          "correction": "He enrolled in the Rensselaer Scientific School, where he earned a degree in 1829.",
+          "explanation": "선행사가 장소이고 뒤가 완전한 절이므로 관계부사 'where'가 맞다."
+        },
+        {
+          "text": "Amos Eaton, a former teacher of Houghton, offering a position as an assistant professor for chemistry and natural history to Houghton in 1830.",
+          "isCorrect": false,
+          "correction": "Amos Eaton, a former teacher of Houghton, offered a position as an assistant professor for chemistry and natural history to Houghton in 1830.",
+          "explanation": "문장의 본동사가 필요하고 시점이 1830년 과거이므로 'offered'가 맞다."
+        },
+        {
+          "text": "That same year, he was recommended by Eaton to traveling to Detroit, where soon he became a popular science lecturer.",
+          "isCorrect": false,
+          "correction": "That same year, he was recommended by Eaton to travel to Detroit, where soon he became a popular science lecturer.",
+          "explanation": "to 뒤에는 동사원형이 와야 하므로 'travel'이 맞다."
+        },
+        {
+          "text": "While pursued his academic career, Houghton also studied medicine and earned his license in 1831.",
+          "isCorrect": false,
+          "correction": "While pursuing his academic career, Houghton also studied medicine and earned his license in 1831.",
+          "explanation": "While + 분사구문에서 의미상 주어가 능동적으로 추구하므로 'pursuing'이 맞다."
+        },
+        {
+          "text": "His career reached a major turning point in 1837, when he was appointing Michigan's first State Geologist.",
+          "isCorrect": false,
+          "correction": "His career reached a major turning point in 1837, when he was appointed Michigan's first State Geologist.",
+          "explanation": "주어 'he'가 임명되는 대상(수동)이므로 'was appointed'가 맞다."
+        },
+        {
+          "text": "In 1842, Houghton was elected as Mayor of Detroit, a position he was at first reluctant to accepting.",
+          "isCorrect": false,
+          "correction": "In 1842, Houghton was elected as Mayor of Detroit, a position he was at first reluctant to accept.",
+          "explanation": "'reluctant to' 뒤에는 동사원형 'accept'가 와야 한다."
+        },
+        {
+          "text": "Upon heard the advice of friends, he accepted the mayor's position and served two terms.",
+          "isCorrect": false,
+          "correction": "Upon hearing the advice of friends, he accepted the mayor's position and served two terms.",
+          "explanation": "전치사 'Upon' 뒤이므로 동명사 'hearing'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

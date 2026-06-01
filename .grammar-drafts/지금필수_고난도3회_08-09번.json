@@ -1,0 +1,388 @@
+{
+  "passageId": "69d4eca372a886137cd83f02",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 08~09번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 08~09번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 08~09번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Imagine that you were living 1,000 years ago with a small group of people in the deepest jungles of South America.",
+      "tokens": ["Imagine","that","you","were","living","1,000","years","ago","with","a","small","group","of","people","in","the","deepest","jungles","of","South","America."],
+      "korean": "여러분이 1,000년 전에 남아메리카의 가장 깊은 정글에서 작은 집단의 사람들과 함께 살고 있었다고 상상해 보라."
+    },
+    {
+      "idx": 1,
+      "text": "Imagine further that food is sometimes abundant but other times quite scarce.",
+      "tokens": ["Imagine","further","that","food","is","sometimes","abundant","but","other","times","quite","scarce."],
+      "korean": "더 나아가서 음식이 때때로 풍부하지만 다른 때에는 매우 부족하다고 상상해 보라."
+    },
+    {
+      "idx": 2,
+      "text": "You have a lucky day at the local fishing hole and come home with a 12-pound fish.",
+      "tokens": ["You","have","a","lucky","day","at","the","local","fishing","hole","and","come","home","with","a","12-pound","fish."],
+      "korean": "여러분은 동네 낚시터에서 운이 좋은 하루를 보내고 12파운드짜리 물고기 한 마리를 들고 집에 온다."
+    },
+    {
+      "idx": 3,
+      "text": "Do you keep it to yourself and your immediate family, of do you share?",
+      "tokens": ["Do","you","keep","it","to","yourself","and","your","immediate","family,","of","do","you","share?"],
+      "korean": "여러분은 그것을 자신과 직계 가족만을 위해 간직하는가, 아니면 공유하는가?"
+    },
+    {
+      "idx": 4,
+      "text": "For most of the history of the human species, our ancestors spent their time in just such small groups.",
+      "tokens": ["For","most","of","the","history","of","the","human","species,","our","ancestors","spent","their","time","in","just","such","small","groups."],
+      "korean": "인류 역사의 대부분 동안, 우리의 조상들은 그런 아주 작은 집단에서 자신들의 시간을 보냈다."
+    },
+    {
+      "idx": 5,
+      "text": "Research involving modern hunter-gatherers reveals that if they did not share goods and services with one another, they would often perish.",
+      "tokens": ["Research","involving","modern","hunter-gatherers","reveals","that","if","they","did","not","share","goods","and","services","with","one","another,","they","would","often","perish."],
+      "korean": "현대의 수렵·채집꾼들에 관한 연구는, 그들이 서로 물품(재화)과 서비스(용역)를 공유하지 않는다면, 그들은 보통 멸망할 것임을 보여 준다."
+    },
+    {
+      "idx": 6,
+      "text": "Hunters in the Ache tribe, living in the Paraguayan jungle, for example, have a lot of ups and downs in their daily success at the hunt.",
+      "tokens": ["Hunters","in","the","Ache","tribe,","living","in","the","Paraguayan","jungle,","for","example,","have","a","lot","of","ups","and","downs","in","their","daily","success","at","the","hunt."],
+      "korean": "예를 들어, 파라과이 정글에 사는 Ache 부족의 사냥꾼들은 사냥에서 매일의 성공에 많은 기복을 겪는다."
+    },
+    {
+      "idx": 7,
+      "text": "Some days they bring home much more food than they could possibly eat; other days they come home empty-handed.",
+      "tokens": ["Some","days","they","bring","home","much","more","food","than","they","could","possibly","eat;","other","days","they","come","home","empty-handed."],
+      "korean": "어떤 날은 그들이 먹을 수 있는 양보다 훨씬 더 많은 음식을 집으로 가져오기도 하고, 또 어떤 날은 빈손으로 돌아오기도 한다."
+    },
+    {
+      "idx": 8,
+      "text": "If a man caught a wild pig and kept it to himself and his family, much of it would go to waste (there are no deep freeze refrigerators in the Paraguayan jungle).",
+      "tokens": ["If","a","man","caught","a","wild","pig","and","kept","it","to","himself","and","his","family,","much","of","it","would","go","to","waste","(there","are","no","deep","freeze","refrigerators","in","the","Paraguayan","jungle)."],
+      "korean": "만약 한 남자가 멧돼지를 잡아서 자신과 그 가족에게만 간직한다면, 그것의 많은 부분이 낭비될 것이다(파라과이 정글에는 급속 냉동 냉장고가 없다)."
+    },
+    {
+      "idx": 9,
+      "text": "During unlucky periods, individual hunters and their families would starve.",
+      "tokens": ["During","unlucky","periods,","individual","hunters","and","their","families","would","starve."],
+      "korean": "불운한 기간 동안, 각 사냥꾼들과 그 가족들은 굶주릴 것이다."
+    },
+    {
+      "idx": 10,
+      "text": "Instead of living by a philosophy of “rugged individualism,” however, hunters who have a lucky day share their meat with other families.",
+      "tokens": ["Instead","of","living","by","a","philosophy","of","“rugged","individualism,”","however,","hunters","who","have","a","lucky","day","share","their","meat","with","other","families."],
+      "korean": "하지만, ‘단호한 개인주의’의 철학에 따라 사는 대신에, 행운의 날을 맞은 사냥꾼들은 다른 가족들과 함께 자신들의 고기를 공유한다."
+    },
+    {
+      "idx": 11,
+      "text": "And they don’t just share a little; they share a lot ― fully 90%.",
+      "tokens": ["And","they","don’t","just","share","a","little;","they","share","a","lot","―","fully","90%."],
+      "korean": "그리고 그들은 단지 조금씩만 나누는 것이 아니라 많이, 온전히 90퍼센트를 공유한다."
+    },
+    {
+      "idx": 12,
+      "text": "In exchange for this generosity, their neighbors share with them on days when the luck runs the other way.",
+      "tokens": ["In","exchange","for","this","generosity,","their","neighbors","share","with","them","on","days","when","the","luck","runs","the","other","way."],
+      "korean": "이런 관대함에 대한 대가로, 그들의 이웃은 운이 반대로 가는 날에 그들과 함께 공유한다."
+    },
+    {
+      "idx": 13,
+      "text": "By exchanging resources in this way, the group provides a mutual insurance policy against starvation.",
+      "tokens": ["By","exchanging","resources","in","this","way,","the","group","provides","a","mutual","insurance","policy","against","starvation."],
+      "korean": "이런 식으로 자원을 교환함으로써, 그 집단은 기아에 대비한 상호 보험 증서를 제공한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T3-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "were",
+          "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "주어가 2인칭 'you'이므로 be동사의 과거형은 단수·복수 구분 없이 'were'가 맞다. 단수 취급을 잘못 적용한 'was'는 'you'와 함께 쓰일 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'food'는 셀 수 없는 명사로 단수 취급되므로 단수 동사 'is'가 맞다. 복수형 'are'는 셀 수 있는 복수 주어에만 사용된다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T11-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "come",
+          "wrongCandidates": ["comes"],
+          "grammarType": "수일치",
+          "explanation": "주어 'You'에 등위접속사 'and'로 'have ... and ___'가 병렬 연결된 구조이므로 앞 동사 'have'와 형태를 맞춰 동사원형 'come'이 맞다. 'comes'는 3인칭 단수 주어용이라 'You'에는 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "come",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "spent",
+          "wrongCandidates": ["spend"],
+          "grammarType": "시제",
+          "explanation": "'For most of the history ...'라는 과거의 장기간을 가리키는 부사구가 있으므로 과거시제 'spent'가 맞다. 동사원형/현재형 'spend'는 시제가 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "spend",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T1-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "involving",
+          "wrongCandidates": ["involved"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'Research'가 현대 수렵·채집꾼들을 능동적으로 '포함하는' 의미이므로 현재분사 'involving'이 맞다. 과거분사 'involved'는 수동/완료의 의미가 되어 '연구가 ~에 포함된'이라는 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "involve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "living",
+          "wrongCandidates": ["lived"],
+          "grammarType": "분사",
+          "explanation": "'Hunters'가 파라과이 정글에 능동적으로 살고 있다는 의미의 분사구이므로 현재분사 'living'이 맞다. 과거분사 'lived'는 수동·완료의 의미가 되어 사람 주어를 수식하기에 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "live",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T8-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "than",
+          "wrongCandidates": ["as"],
+          "grammarType": "접속사",
+          "explanation": "비교급 'more food'와 호응하는 비교 접속사 'than'이 맞다. 'as'는 원급 비교(as ~ as)에 쓰이는 접속사로 비교급과는 함께 사용될 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T3-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "caught",
+          "wrongCandidates": ["catches"],
+          "grammarType": "시제",
+          "explanation": "현재 사실의 반대를 가정하는 가정법 과거 구문 'If 주어 + 과거동사 ..., 주어 + would + 동사원형'에서 if절 동사는 과거형이어야 하므로 'caught'가 맞다. 현재형 'catches'는 가정법 과거 구문에 사용할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "catch",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T8-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "would",
+          "wrongCandidates": ["will"],
+          "grammarType": "시제",
+          "explanation": "앞 문장에서 시작된 가정법 과거의 주절 일부로, 현재 사실의 반대를 가정하므로 'would + 동사원형'이 맞다. 'will'은 직설법 미래로 가정법 구문에는 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T2-001",
+          "sentenceIdx": 10,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "living",
+          "wrongCandidates": ["live"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'living'이 맞다('Instead of + -ing' 구조). 동사원형 'live'는 전치사 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "live",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S12-T12-001",
+          "sentenceIdx": 12,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "when",
+          "wrongCandidates": ["where"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'days'가 시간을 나타내는 명사이므로 시간의 관계부사 'when'이 맞다. 'where'는 장소 선행사를 받는 관계부사로 시간 명사에는 사용할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S13-T1-001",
+          "sentenceIdx": 13,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "exchanging",
+          "wrongCandidates": ["exchange"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'By' 뒤에는 동명사가 와야 하므로 'exchanging'이 맞다('By + -ing'은 수단/방법). 동사원형 'exchange'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "exchange",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "come", "baseForm": "come"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "spent", "baseForm": "spend"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "involving", "baseForm": "involve"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "living", "baseForm": "live"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "caught", "baseForm": "catch"},
+        {"kind": "word", "sentenceIdx": 10, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "living", "baseForm": "live"},
+        {"kind": "word", "sentenceIdx": 13, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "exchanging", "baseForm": "exchange"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "were", "wrongForm": "was", "explanation": "주어가 'you'이므로 be동사의 과거형은 'were'가 맞다. 'was'는 'you'에 사용될 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'food'는 셀 수 없는 명사로 단수 취급되므로 단수 동사 'is'가 맞다."},
+        {"sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "come", "wrongForm": "comes", "explanation": "주어 'You'에 'have ... and ___'가 병렬 연결되므로 동사원형 'come'이 맞다. 'comes'는 3인칭 단수용이라 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "spent", "wrongForm": "spend", "explanation": "'For most of the history ...'는 과거 시점을 나타내므로 과거시제 'spent'가 맞다."},
+        {"sentenceIdx": 5, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "involving", "wrongForm": "involved", "explanation": "'Research'가 능동적으로 수렵·채집꾼들을 포함하는 의미이므로 현재분사 'involving'이 맞다. 과거분사 'involved'는 수동의 의미가 되어 부적절."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "living", "wrongForm": "lived", "explanation": "'Hunters'가 정글에 능동적으로 살고 있다는 의미이므로 현재분사 'living'이 맞다."},
+        {"sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "than", "wrongForm": "as", "explanation": "비교급 'more food'와 호응하는 비교 접속사는 'than'이다. 'as'는 원급 비교에만 사용된다."},
+        {"sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "caught", "wrongForm": "catches", "explanation": "가정법 과거 'If 주어 + 과거동사 ..., 주어 + would + V'에서 if절 동사는 과거형 'caught'가 맞다."},
+        {"sentenceIdx": 9, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "would", "wrongForm": "will", "explanation": "가정법 과거의 주절이므로 'would + 동사원형'이 맞다. 'will'은 직설법 미래라 부적절하다."},
+        {"sentenceIdx": 10, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "living", "wrongForm": "live", "explanation": "'Instead of + 동명사' 구조이므로 'living'이 맞다. 전치사 뒤에 동사원형은 올 수 없다."},
+        {"sentenceIdx": 12, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "when", "wrongForm": "where", "explanation": "선행사 'days'가 시간 명사이므로 관계부사 'when'이 맞다. 'where'는 장소 선행사용이다."},
+        {"sentenceIdx": 13, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "exchanging", "wrongForm": "exchange", "explanation": "전치사 'By' 뒤에는 동명사 'exchanging'이 와야 한다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "was", "correction": "were", "explanation": "주어 'you'에 맞춰 be동사 과거형은 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어 'food'는 셀 수 없는 명사이므로 단수 동사 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "comes", "correction": "come", "explanation": "주어 'You'와 병렬 동사 'have'에 맞춰 동사원형 'come'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "spend", "correction": "spent", "explanation": "과거 시점을 나타내는 부사구가 있으므로 과거형 'spent'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "involved", "correction": "involving", "explanation": "'Research'와 능동 관계이므로 현재분사 'involving'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "lived", "correction": "living", "explanation": "'Hunters'와 능동 관계이므로 현재분사 'living'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "as", "correction": "than", "explanation": "비교급 'more food'와 호응하는 접속사 'than'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "catches", "correction": "caught", "explanation": "가정법 과거 if절이므로 과거형 'caught'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "will", "correction": "would", "explanation": "가정법 과거의 주절이므로 'would'로 고쳐야 한다."},
+        {"sentenceIdx": 10, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "live", "correction": "living", "explanation": "전치사 'of' 뒤이므로 동명사 'living'으로 고쳐야 한다."},
+        {"sentenceIdx": 12, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "where", "correction": "when", "explanation": "선행사가 시간 명사 'days'이므로 관계부사 'when'으로 고쳐야 한다."},
+        {"sentenceIdx": 13, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "exchange", "correction": "exchanging", "explanation": "전치사 'By' 뒤이므로 동명사 'exchanging'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Imagine that you was living 1,000 years ago with a small group of people in the deepest jungles of South America.",
+          "isCorrect": false,
+          "correction": "Imagine that you were living 1,000 years ago with a small group of people in the deepest jungles of South America.",
+          "explanation": "주어 'you'에는 be동사의 과거형으로 'were'를 써야 한다."
+        },
+        {
+          "text": "Imagine further that food are sometimes abundant but other times quite scarce.",
+          "isCorrect": false,
+          "correction": "Imagine further that food is sometimes abundant but other times quite scarce.",
+          "explanation": "'food'는 셀 수 없는 명사로 단수 취급되므로 'is'가 맞다."
+        },
+        {
+          "text": "You have a lucky day at the local fishing hole and comes home with a 12-pound fish.",
+          "isCorrect": false,
+          "correction": "You have a lucky day at the local fishing hole and come home with a 12-pound fish.",
+          "explanation": "주어 'You'와 'have'에 병렬로 연결되므로 동사원형 'come'이 맞다."
+        },
+        {
+          "text": "For most of the history of the human species, our ancestors spend their time in just such small groups.",
+          "isCorrect": false,
+          "correction": "For most of the history of the human species, our ancestors spent their time in just such small groups.",
+          "explanation": "과거의 시간을 가리키는 문맥이므로 과거형 'spent'가 맞다."
+        },
+        {
+          "text": "Research involved modern hunter-gatherers reveals that if they did not share goods and services with one another, they would often perish.",
+          "isCorrect": false,
+          "correction": "Research involving modern hunter-gatherers reveals that if they did not share goods and services with one another, they would often perish.",
+          "explanation": "'Research'가 능동적으로 수렵·채집꾼들을 포함하는 의미이므로 현재분사 'involving'이 맞다."
+        },
+        {
+          "text": "Hunters in the Ache tribe, lived in the Paraguayan jungle, for example, have a lot of ups and downs in their daily success at the hunt.",
+          "isCorrect": false,
+          "correction": "Hunters in the Ache tribe, living in the Paraguayan jungle, for example, have a lot of ups and downs in their daily success at the hunt.",
+          "explanation": "'Hunters'와 능동 관계이므로 현재분사 'living'이 맞다."
+        },
+        {
+          "text": "Some days they bring home much more food as they could possibly eat; other days they come home empty-handed.",
+          "isCorrect": false,
+          "correction": "Some days they bring home much more food than they could possibly eat; other days they come home empty-handed.",
+          "explanation": "비교급 'more food'와 호응하는 접속사는 'than'이다."
+        },
+        {
+          "text": "If a man catches a wild pig and kept it to himself and his family, much of it would go to waste (there are no deep freeze refrigerators in the Paraguayan jungle).",
+          "isCorrect": false,
+          "correction": "If a man caught a wild pig and kept it to himself and his family, much of it would go to waste (there are no deep freeze refrigerators in the Paraguayan jungle).",
+          "explanation": "가정법 과거 if절이므로 동사는 과거형 'caught'가 맞다."
+        },
+        {
+          "text": "During unlucky periods, individual hunters and their families will starve.",
+          "isCorrect": false,
+          "correction": "During unlucky periods, individual hunters and their families would starve.",
+          "explanation": "가정법 과거의 주절이므로 'would'가 맞다."
+        },
+        {
+          "text": "Instead of live by a philosophy of “rugged individualism,” however, hunters who have a lucky day share their meat with other families.",
+          "isCorrect": false,
+          "correction": "Instead of living by a philosophy of “rugged individualism,” however, hunters who have a lucky day share their meat with other families.",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'living'이 맞다."
+        },
+        {
+          "text": "In exchange for this generosity, their neighbors share with them on days where the luck runs the other way.",
+          "isCorrect": false,
+          "correction": "In exchange for this generosity, their neighbors share with them on days when the luck runs the other way.",
+          "explanation": "선행사 'days'가 시간 명사이므로 관계부사 'when'이 맞다."
+        },
+        {
+          "text": "By exchange resources in this way, the group provides a mutual insurance policy against starvation.",
+          "isCorrect": false,
+          "correction": "By exchanging resources in this way, the group provides a mutual insurance policy against starvation.",
+          "explanation": "전치사 'By' 뒤에는 동명사 'exchanging'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

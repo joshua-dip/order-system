@@ -1,0 +1,346 @@
+{
+  "passageId": "69fe3e8d36e33281b7111f7d",
+  "textbook": "26년 5월 고3 영어모의고사",
+  "sourceKey": "26년 5월 고3 영어모의고사 23번",
+  "title": "26년 5월 고3 영어모의고사 23번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "고3",
+    "questionNumber": "어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The gene-centric view separates the organism from its environment, and in large part, removes agency from the organism.",
+      "tokens": ["The", "gene-centric", "view", "separates", "the", "organism", "from", "its", "environment,", "and", "in", "large", "part,", "removes", "agency", "from", "the", "organism."],
+      "korean": "유전자 중심적 관점은 유기체를 그것의 환경으로부터 분리하여 대체로 유기체로부터 주체성을 제거한다."
+    },
+    {
+      "idx": 1,
+      "text": "The 'environment' becomes a box within which 'gene-motivated' organisms behave.",
+      "tokens": ["The", "'environment'", "becomes", "a", "box", "within", "which", "'gene-motivated'", "organisms", "behave."],
+      "korean": "'환경'은 '유전자에 의해 움직여지는' 유기체들이 행동하는 하나의 상자가 된다."
+    },
+    {
+      "idx": 2,
+      "text": "Thus, it misleadingly partitions 'genetic' from 'environmental' causes, giving primacy to the former.",
+      "tokens": ["Thus,", "it", "misleadingly", "partitions", "'genetic'", "from", "'environmental'", "causes,", "giving", "primacy", "to", "the", "former."],
+      "korean": "따라서, 그것은 오해를 불러 일으키게 '유전적' 원인들을 '환경적' 원인들로부터 분리하며, 전자에게 높은 지위를 부여한다."
+    },
+    {
+      "idx": 3,
+      "text": "Therefore, altruism is denied because 'in reality' organisms behave to enhance their genes in the 'gene pool' ─ and love, hate, desires and other motivations flow through and from genes.",
+      "tokens": ["Therefore,", "altruism", "is", "denied", "because", "'in", "reality'", "organisms", "behave", "to", "enhance", "their", "genes", "in", "the", "'gene", "pool'", "─", "and", "love,", "hate,", "desires", "and", "other", "motivations", "flow", "through", "and", "from", "genes."],
+      "korean": "따라서 이타심은 부정되는데 왜냐하면 '실제로는' 유기체들은 '유전자 풀' 안에 있는 자신의 유전자들을 강화하기 위해 행동하기 때문이며, 사랑, 증오, 욕구 그리고 다른 동기들은 유전자들을 거쳐 그리고 그것들로부터 흘러나온다."
+    },
+    {
+      "idx": 4,
+      "text": "With this there can be no creativity.",
+      "tokens": ["With", "this", "there", "can", "be", "no", "creativity."],
+      "korean": "이런 식이라면 창의성은 있을 수 없다."
+    },
+    {
+      "idx": 5,
+      "text": "The organism is a prisoner of its genes.",
+      "tokens": ["The", "organism", "is", "a", "prisoner", "of", "its", "genes."],
+      "korean": "유기체는 자신의 유전자들의 포로이다."
+    },
+    {
+      "idx": 6,
+      "text": "This is evidently nonsense because, if there is a prisoner, it must be the genes, locked in the organism and obeying its will.",
+      "tokens": ["This", "is", "evidently", "nonsense", "because,", "if", "there", "is", "a", "prisoner,", "it", "must", "be", "the", "genes,", "locked", "in", "the", "organism", "and", "obeying", "its", "will."],
+      "korean": "이것은 명백히 터무니없는 소리인데, 만약 포로가 있다면, 그것은 유기체 안에 갇혀 그것의 의지에 복종하는, 유전자들임에 틀림 없기 때문이다."
+    },
+    {
+      "idx": 7,
+      "text": "It is the organism as a self-organising entity that has motivation and uses genes in its capacity to act.",
+      "tokens": ["It", "is", "the", "organism", "as", "a", "self-organising", "entity", "that", "has", "motivation", "and", "uses", "genes", "in", "its", "capacity", "to", "act."],
+      "korean": "동기를 가지고 그것의 행동하는 능력 안에서 유전자들을 사용하는 것은 바로 스스로를 조직하는 존재로서의 유기체이다."
+    },
+    {
+      "idx": 8,
+      "text": "The word 'organism' has its origins in defining organisms as self-organising beings, going back at least to Immanuel Kant's 1790 Critique of Judgement.",
+      "tokens": ["The", "word", "'organism'", "has", "its", "origins", "in", "defining", "organisms", "as", "self-organising", "beings,", "going", "back", "at", "least", "to", "Immanuel", "Kant's", "1790", "Critique", "of", "Judgement."],
+      "korean": "'유기체'라는 단어는 적어도 Immanuel Kant의 1790년 작인 Critique of Judgment까지 거슬러 올라가 유기체들을 스스로를 조직하는 존재들로 정의하는 데 그것의 어원을 가지고 있다."
+    },
+    {
+      "idx": 9,
+      "text": "The gene-centric view strips the organism of its definitive self.",
+      "tokens": ["The", "gene-centric", "view", "strips", "the", "organism", "of", "its", "definitive", "self."],
+      "korean": "유전자 중심적 관점은 유기체에게서 그것의 결정적 자아를 박탈한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "F": { "blocks": [] },
+    "P": {
+      "points": [
+        {
+          "id": "S0-T3-001",
+          "sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "separates", "wrongCandidates": ["separate"],
+          "grammarType": "수일치",
+          "explanation": "주어 The gene-centric view 는 단수이므로 단수동사 separates 가 맞음. 복수 separate 는 수일치 위반.",
+          "koCorrect": "분리하여",
+          "uses": ["F", "G", "H", "J"], "baseForm": "separate",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T6-002",
+          "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "from", "wrongCandidates": ["of"],
+          "grammarType": "전치사",
+          "explanation": "separate A from B (A 를 B 로부터 분리하다) 의 전치사 from 이 맞음. of 는 이 결합형에 부적절.",
+          "koCorrect": "으로부터",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-003",
+          "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "becomes", "wrongCandidates": ["become"],
+          "grammarType": "수일치",
+          "explanation": "주어 The 'environment' 는 단수이므로 단수동사 becomes 가 맞음. 복수 become 은 수일치 위반.",
+          "koCorrect": "된다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "become",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T6-004",
+          "sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "which", "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "전치사 within 뒤에는 관계대명사 which 가 와야 함 (within which). 관계대명사 that 은 전치사 뒤에 올 수 없으므로 부적절.",
+          "koCorrect": "상자",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T9-005",
+          "sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "behave.", "wrongCandidates": ["behaves."],
+          "grammarType": "수일치",
+          "explanation": "관계사절 주어 organisms 는 복수이므로 복수동사 behave 가 맞음. 단수 behaves 는 수일치 위반.",
+          "koCorrect": "행동하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "behave",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T2-006",
+          "sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "misleadingly", "wrongCandidates": ["misleading"],
+          "grammarType": "형용사",
+          "explanation": "동사 partitions 를 수식하므로 부사 misleadingly 가 맞음. 형용사 misleading 은 동사 수식 불가.",
+          "koCorrect": "오해를 불러 일으키게",
+          "uses": ["F", "G", "H", "J"], "baseForm": "misleading",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T3-007",
+          "sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "partitions", "wrongCandidates": ["partition"],
+          "grammarType": "수일치",
+          "explanation": "주어 it 은 3인칭 단수이므로 단수동사 partitions 가 맞음. 복수 partition 은 수일치 위반.",
+          "koCorrect": "분리하며",
+          "uses": ["F", "G", "H", "J"], "baseForm": "partition",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-008",
+          "sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "giving", "wrongCandidates": ["given"],
+          "grammarType": "분사",
+          "explanation": "주어 it 이 primacy 를 '부여하는' 능동 분사구문이므로 현재분사 giving 이 맞음. 과거분사 given 은 수동이라 부적절(분사구문 능동/수동 고빈도 함정).",
+          "koCorrect": "부여한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "give",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T3-009",
+          "sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "denied", "wrongCandidates": ["denying"],
+          "grammarType": "수동태",
+          "explanation": "altruism 이 '부정되는' 수동 관계 (is denied) 이므로 과거분사 denied 가 맞음. 현재분사 denying 은 능동이라 부적절.",
+          "koCorrect": "부정되는데",
+          "uses": ["F", "G", "H", "J"], "baseForm": "deny",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T10-010",
+          "sentenceIdx": 3, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "enhance", "wrongCandidates": ["enhancing"],
+          "grammarType": "부정사",
+          "explanation": "목적을 나타내는 to 부정사(to enhance) 이므로 동사원형 enhance 가 맞음. 동명사 enhancing 은 to 뒤에 올 수 없음.",
+          "koCorrect": "강화하기",
+          "uses": ["F", "G", "H", "J"], "baseForm": "enhance",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T25-011",
+          "sentenceIdx": 3, "startTokenIdx": 25, "endTokenIdx": 25,
+          "correctForm": "flow", "wrongCandidates": ["flows"],
+          "grammarType": "수일치",
+          "explanation": "주어가 love, hate, desires and other motivations 의 병렬 복수 명사구이므로 복수동사 flow 가 맞음. 단수 flows 는 수일치 위반(복수 병렬 주어 뒤 수일치 함정).",
+          "koCorrect": "흘러나온다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "flow",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T0-012",
+          "sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0,
+          "correctForm": "With", "wrongCandidates": ["For"],
+          "grammarType": "전치사",
+          "explanation": "'이런 식으로/이로 인해' 의 의미를 나타내는 With this 가 맞음. For this 는 목적/이유 의미로 본 문맥에서 부적절.",
+          "koCorrect": "이런 식이라면",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T4-013",
+          "sentenceIdx": 4, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "be", "wrongCandidates": ["being"],
+          "grammarType": "시제",
+          "explanation": "조동사 can 뒤에는 동사원형이 오므로 be 가 맞음. being 은 조동사 뒤에 단독으로 올 수 없음.",
+          "koCorrect": "있을",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T2-014",
+          "sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "is", "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 The organism 은 단수이므로 단수동사 is 가 맞음. 복수 are 는 수일치 위반.",
+          "koCorrect": "이다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T5-015",
+          "sentenceIdx": 5, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "of", "wrongCandidates": ["for"],
+          "grammarType": "전치사",
+          "explanation": "'~의 포로' 라는 소유/소속 의미는 a prisoner of 의 of 가 맞음. for 는 목적/대상 의미라 부적절.",
+          "koCorrect": "의",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-016",
+          "sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "if", "wrongCandidates": ["that"],
+          "grammarType": "접속사",
+          "explanation": "'만약 ~ 라면' 의 조건절을 이끄는 접속사 if 가 맞음. that 은 조건 의미가 없어 부적절.",
+          "koCorrect": "만약",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T15-017",
+          "sentenceIdx": 6, "startTokenIdx": 15, "endTokenIdx": 15,
+          "correctForm": "locked", "wrongCandidates": ["locking"],
+          "grammarType": "분사",
+          "explanation": "the genes 가 '갇히는' 수동 분사구문이므로 과거분사 locked 가 맞음. 현재분사 locking 은 능동(가두는)이라 부적절(분사구문 능동/수동 고빈도 함정).",
+          "koCorrect": "갇혀",
+          "uses": ["F", "G", "H", "J"], "baseForm": "lock",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T20-018",
+          "sentenceIdx": 6, "startTokenIdx": 20, "endTokenIdx": 20,
+          "correctForm": "obeying", "wrongCandidates": ["obeyed"],
+          "grammarType": "분사",
+          "explanation": "the genes 가 '복종하는' 능동 분사구문이므로 현재분사 obeying 이 맞음. 과거분사 obeyed 는 수동(복종받는)이라 부적절(분사구문 능동/수동 고빈도 함정).",
+          "koCorrect": "복종하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "obey",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T6-019",
+          "sentenceIdx": 7, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "self-organising", "wrongCandidates": ["self-organised"],
+          "grammarType": "분사",
+          "explanation": "entity 가 '스스로를 조직하는' 능동 의미이므로 현재분사 self-organising 이 맞음. 과거분사 self-organised 는 수동이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "스스로를 조직하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "self-organise",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T8-020",
+          "sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "that", "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "It is ~ that 강조구문에서 선행사가 있고 뒤 절이 주어 자리 불완전이므로 관계대명사 that 가 맞음. what 은 선행사를 포함해 강조구문에 부적절.",
+          "koCorrect": "유기체",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T18-021",
+          "sentenceIdx": 7, "startTokenIdx": 18, "endTokenIdx": 18,
+          "correctForm": "act.", "wrongCandidates": ["acting."],
+          "grammarType": "부정사",
+          "explanation": "명사 capacity 를 수식하는 to 부정사 (to act) 이므로 동사원형 act 가 맞음. 동명사 acting 은 to 뒤에 올 수 없음.",
+          "koCorrect": "행동하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "act",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T3-022",
+          "sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "has", "wrongCandidates": ["have"],
+          "grammarType": "수일치",
+          "explanation": "주어 The word 'organism' 은 단수이므로 단수동사 has 가 맞음. 복수 have 는 수일치 위반.",
+          "koCorrect": "가지고 있다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T6-023",
+          "sentenceIdx": 8, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "in", "wrongCandidates": ["on"],
+          "grammarType": "전치사",
+          "explanation": "have one's origins in (~에 기원을 두다) 의 정해진 전치사 in 이 맞음. on 은 이 결합형에 부적절.",
+          "koCorrect": "데",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T12-024",
+          "sentenceIdx": 8, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "going", "wrongCandidates": ["gone"],
+          "grammarType": "분사",
+          "explanation": "주어 The word 가 '거슬러 올라가는' 능동 분사구문이므로 현재분사 going 이 맞음. 과거분사 gone 은 수동/완료라 부적절(분사구문 능동/수동 함정).",
+          "koCorrect": "거슬러 올라가",
+          "uses": ["F", "G", "H", "J"], "baseForm": "go",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T3-025",
+          "sentenceIdx": 9, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "strips", "wrongCandidates": ["strip"],
+          "grammarType": "수일치",
+          "explanation": "주어 The gene-centric view 는 단수이므로 단수동사 strips 가 맞음. 복수 strip 은 수일치 위반.",
+          "koCorrect": "박탈한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "strip",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T6-026",
+          "sentenceIdx": 9, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "of", "wrongCandidates": ["from"],
+          "grammarType": "전치사",
+          "explanation": "strip A of B (A 에게서 B 를 박탈하다) 의 정해진 전치사 of 가 맞음. from 은 이 결합형에 부적절.",
+          "koCorrect": "에게서",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        }
+      ]
+    },
+    "G": { "points": [] },
+    "H": { "spans": [] },
+    "J": { "items": [] }
+  }
+}

@@ -216,6 +216,7 @@ const TYPE_COLORS: Record<string, string> = {
   불일치: '#0ea5e9', 함의: '#3b82f6', 빈칸: '#f59e0b', 요약: '#10b981',
   어법: '#ef4444', 순서: '#f97316', 삽입: '#ec4899', 무관한문장: '#84cc16',
   '삽입-고난도': '#e11d48',
+  '어법-고난도': '#b91c1c',
 };
 function typeColor(type: string) { return TYPE_COLORS[type] ?? '#94a3b8'; }
 

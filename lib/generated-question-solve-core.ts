@@ -8,16 +8,44 @@ export function normalizeSolveAnswer(s: string) {
   return s.replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+const CIRCLED_DIGITS = ['①', '②', '③', '④', '⑤'] as const;
+
+/**
+ * 문자열에서 동그라미 번호(또는 1~5 숫자)를 set 으로 추출.
+ * 예: "①③" → {1,3}, "①, ③, ⑤" → {1,3,5}, "1 and 3" → {1,3}
+ */
+function extractCircledNumberSet(s: string): Set<number> {
+  const out = new Set<number>();
+  for (const ch of s) {
+    const idx = (CIRCLED_DIGITS as readonly string[]).indexOf(ch);
+    if (idx >= 0) out.add(idx + 1);
+    if (/^[1-5]$/.test(ch)) out.add(parseInt(ch, 10));
+  }
+  return out;
+}
+
+function setsEqual(a: Set<number>, b: Set<number>): boolean {
+  if (a.size !== b.size) return false;
+  for (const v of a) if (!b.has(v)) return false;
+  return true;
+}
+
 export function checkSolveCorrect(claudeAnswer: string, correctAnswer: string): boolean {
   const ca = normalizeSolveAnswer(correctAnswer);
   const ans = normalizeSolveAnswer(claudeAnswer);
+
+  // 어법-고난도 등 복수 답: 동그라미 번호 2개 이상이면 set 동등 비교
+  const caSet = extractCircledNumberSet(ca);
+  if (caSet.size >= 2) {
+    const ansSet = extractCircledNumberSet(ans);
+    return setsEqual(caSet, ansSet);
+  }
 
   if (ans === ca) return true;
   if (ans.includes(ca) || ca.includes(ans)) return true;
 
   if (/^[1-5]$/.test(ca)) {
-    const circled = ['①', '②', '③', '④', '⑤'];
-    const circledMatch = circled[parseInt(ca, 10) - 1];
+    const circledMatch = CIRCLED_DIGITS[parseInt(ca, 10) - 1];
     if (ans.includes(circledMatch)) return true;
     const rx = new RegExp(`(?<![0-9])${ca}(?![0-9])`);
     if (rx.test(ans)) return true;

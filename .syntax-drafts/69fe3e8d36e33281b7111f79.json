@@ -1,0 +1,809 @@
+{
+  "passageId": "69fe3e8d36e33281b7111f79",
+  "main": {
+    "sentences": [
+      "Paul was standing in the train station.",
+      "This was real.",
+      "His long-awaited holiday had just begun.",
+      "The long, silver train was already there, and as he boarded, he felt alive with anticipation.",
+      "He found his seat and it was perfect ─ a window seat with a great view.",
+      "A moment later, the train began to move.",
+      "Paul leaned back in his seat and smiled, looking forward to the journey ahead.",
+      "About twenty minutes later, a man in a uniform walked toward him checking tickets.",
+      "\"Tickets, please,\" said the man.",
+      "Paul reached into his pocket.",
+      "His ticket wasn't there.",
+      "He searched his jacket, then his backpack.",
+      "\"I'm sorry.",
+      "I know I bought the ticket, but I can't find it now,\" said Paul, pulling his shaking hands out of the backpack.",
+      "\"I am sorry, sir.",
+      "I'm afraid you'll have to get off at the next station,\" replied the man.",
+      "Paul's heart raced, and his hands grew sweaty.",
+      "He had no idea what to do."
+    ],
+    "koreanSentences": [
+      "Paul은 기차역에 서 있었다.",
+      "이것은 현실이었다.",
+      "그의 오랫동안 기다려 온 휴가가 막 시작된 참이었다.",
+      "긴 은색 기차는 이미 그곳에 있었고, 그가 탑승했을 때, 그는 기대감으로 충만한 느낌이었다.",
+      "그는 자신의 좌석을 찾았고 그것은 완벽했다. 전망이 훌륭한 창가 좌석이었다.",
+      "잠시 후, 기차가 움직이기 시작했다.",
+      "Paul은 자신의 좌석에 몸을 뒤로 기대었고, 앞으로의 여정을 고대하며 미소 지었다.",
+      "약 20분 후, 유니폼을 입은 한 남자가 티켓을 검사하며 그를 향해 걸어왔다.",
+      "\"티켓 부탁드립니다.\"라고 그 남자가 말했다.",
+      "Paul은 자신의 주머니 속으로 손을 뻗었다.",
+      "그의 티켓은 그곳에 없었다.",
+      "그는 자신의 재킷을 뒤졌고, 그러고 나서 배낭을 뒤졌다.",
+      "\"죄송합니다.",
+      "제가 티켓을 산 것은 틀림없는데, 지금 찾을 수가 없네요.\"라고 Paul은 자신의 떨리는 두 손을 배낭 밖으로 꺼내며 말했다.",
+      "\"죄송합니다, 손님.",
+      "유감스럽게도 당신은 다음 역에서 내리셔야겠습니다.\"라고 그 남자가 대답했다.",
+      "Paul의 심장이 요동쳤고, 그의 손은 땀으로 젖었다.",
+      "그는 무엇을 해야 할지 몰랐다."
+    ],
+    "analysisResults": {
+      "comprehensive": {
+        "1": "오랫동안 기다려 온 휴가의 시작과 그 설렘이 뜻밖의 사건으로 무너지는 Paul의 심경 변화.",
+        "2": "Paul은 기대감에 부풀어 기차에 탑승했지만, 검표원에게 티켓을 보여 줄 수 없게 되자 당황하고 불안에 휩싸인다.",
+        "3": "기차역에서 휴가의 시작에 들뜬 Paul은 좌석과 전망에 만족하며 여행을 즐기려 한다. 그러나 검표원이 티켓을 요구하자 주머니, 재킷, 배낭 어디에서도 티켓을 찾지 못하고, 다음 역에서 내려야 한다는 말을 듣고 심장이 요동치며 어찌할 바를 모른다.",
+        "4": "도입부의 'alive with anticipation', 'perfect'와 후반부의 'shaking hands', 'heart raced', 'hands grew sweaty'가 대조를 이루며, 일상적 사건 하나가 인물의 심리 상태를 어떻게 급격히 뒤집는지 신체 반응을 통해 사실적으로 보여 준다.",
+        "5": "행복한 출발조차 작은 실수 하나로 위기로 전환될 수 있음을 시사하며, 인물의 감정은 외부 사건과 그에 반응하는 신체 묘사를 통해 효과적으로 전달된다는 점이 드러난다."
+      }
+    },
+    "topicHighlightedSentences": [3, 16],
+    "essayHighlightedSentences": [3, 6, 7, 13],
+    "grammarSelectedWords": [
+      "was standing",
+      "had just begun",
+      "boarded",
+      "began to move",
+      "looking",
+      "checking",
+      "wasn't",
+      "pulling",
+      "shaking",
+      "have to get off",
+      "what to do"
+    ],
+    "contextSelectedWords": [
+      "real",
+      "anticipation",
+      "perfect",
+      "A moment later",
+      "About twenty minutes later",
+      "Nothing",
+      "raced",
+      "sweaty"
+    ],
+    "sentenceBreaks": {
+      "0": [0, 2],
+      "1": [0],
+      "2": [2],
+      "3": [3, 6, 10, 13],
+      "4": [3, 7, 11],
+      "5": [2, 4],
+      "6": [0, 2, 5, 7, 9],
+      "7": [3, 5, 8, 9, 11],
+      "8": [1],
+      "9": [0, 1],
+      "10": [1],
+      "11": [0, 3],
+      "12": [0],
+      "13": [1, 5, 6, 11, 13, 17],
+      "14": [2],
+      "15": [1, 6, 10],
+      "16": [1, 2, 5],
+      "17": [3]
+    },
+    "svocData": {
+      "0": {
+        "subject": "Paul",
+        "subjectStart": 0,
+        "subjectEnd": 4,
+        "verb": "was standing",
+        "verbStart": 5,
+        "verbEnd": 17
+      },
+      "1": {
+        "subject": "This",
+        "subjectStart": 0,
+        "subjectEnd": 4,
+        "verb": "was",
+        "verbStart": 5,
+        "verbEnd": 8,
+        "subjectComplement": "real",
+        "subjectComplementStart": 9,
+        "subjectComplementEnd": 13
+      },
+      "2": {
+        "subject": "His long-awaited holiday",
+        "subjectStart": 0,
+        "subjectEnd": 24,
+        "verb": "had just begun",
+        "verbStart": 25,
+        "verbEnd": 39
+      },
+      "3": {
+        "subject": "he",
+        "subjectStart": 61,
+        "subjectEnd": 63,
+        "verb": "felt",
+        "verbStart": 64,
+        "verbEnd": 68,
+        "subjectComplement": "alive",
+        "subjectComplementStart": 69,
+        "subjectComplementEnd": 74
+      },
+      "4": {
+        "subject": "He",
+        "subjectStart": 0,
+        "subjectEnd": 2,
+        "verb": "found",
+        "verbStart": 3,
+        "verbEnd": 8,
+        "object": "his seat",
+        "objectStart": 9,
+        "objectEnd": 17
+      },
+      "5": {
+        "subject": "the train",
+        "subjectStart": 16,
+        "subjectEnd": 25,
+        "verb": "began",
+        "verbStart": 26,
+        "verbEnd": 31,
+        "object": "to move",
+        "objectStart": 32,
+        "objectEnd": 39
+      },
+      "6": {
+        "subject": "Paul",
+        "subjectStart": 0,
+        "subjectEnd": 4,
+        "verb": "leaned",
+        "verbStart": 5,
+        "verbEnd": 11
+      },
+      "7": {
+        "subject": "a man in a uniform",
+        "subjectStart": 28,
+        "subjectEnd": 46,
+        "verb": "walked",
+        "verbStart": 47,
+        "verbEnd": 53
+      },
+      "8": {
+        "object": "\"Tickets, please,\"",
+        "objectStart": 0,
+        "objectEnd": 18,
+        "verb": "said",
+        "verbStart": 19,
+        "verbEnd": 23,
+        "subject": "the man",
+        "subjectStart": 24,
+        "subjectEnd": 31
+      },
+      "9": {
+        "subject": "Paul",
+        "subjectStart": 0,
+        "subjectEnd": 4,
+        "verb": "reached",
+        "verbStart": 5,
+        "verbEnd": 12
+      },
+      "10": {
+        "subject": "His ticket",
+        "subjectStart": 0,
+        "subjectEnd": 10,
+        "verb": "wasn't",
+        "verbStart": 11,
+        "verbEnd": 17
+      },
+      "11": {
+        "subject": "He",
+        "subjectStart": 0,
+        "subjectEnd": 2,
+        "verb": "searched",
+        "verbStart": 3,
+        "verbEnd": 11,
+        "object": "his jacket, then his backpack",
+        "objectStart": 12,
+        "objectEnd": 41
+      },
+      "12": {
+        "subject": "I",
+        "subjectStart": 1,
+        "subjectEnd": 2,
+        "verb": "'m",
+        "verbStart": 2,
+        "verbEnd": 4,
+        "subjectComplement": "sorry",
+        "subjectComplementStart": 5,
+        "subjectComplementEnd": 10
+      },
+      "13": {
+        "subject": "I",
+        "subjectStart": 0,
+        "subjectEnd": 1,
+        "verb": "know",
+        "verbStart": 2,
+        "verbEnd": 6,
+        "object": "I bought the ticket",
+        "objectStart": 7,
+        "objectEnd": 26
+      },
+      "14": {
+        "subject": "I",
+        "subjectStart": 1,
+        "subjectEnd": 2,
+        "verb": "am",
+        "verbStart": 3,
+        "verbEnd": 5,
+        "subjectComplement": "sorry",
+        "subjectComplementStart": 6,
+        "subjectComplementEnd": 11
+      },
+      "15": {
+        "subject": "I",
+        "subjectStart": 0,
+        "subjectEnd": 1,
+        "verb": "'m",
+        "verbStart": 1,
+        "verbEnd": 3,
+        "subjectComplement": "afraid",
+        "subjectComplementStart": 4,
+        "subjectComplementEnd": 10
+      },
+      "16": {
+        "subject": "Paul's heart",
+        "subjectStart": 0,
+        "subjectEnd": 12,
+        "verb": "raced",
+        "verbStart": 13,
+        "verbEnd": 18
+      },
+      "17": {
+        "subject": "He",
+        "subjectStart": 0,
+        "subjectEnd": 2,
+        "verb": "had",
+        "verbStart": 3,
+        "verbEnd": 6,
+        "object": "no idea",
+        "objectStart": 7,
+        "objectEnd": 14
+      }
+    },
+    "syntaxPhrases": {
+      "0": [
+        {
+          "text": "in the train station",
+          "label": "전치사구",
+          "type": "phrase",
+          "startIndex": 3,
+          "endIndex": 6,
+          "color": "#f59e0b",
+          "depth": 0,
+          "modifies": "was standing"
+        }
+      ],
+      "2": [
+        {
+          "text": "had just begun",
+          "label": "과거완료",
+          "type": "phrase",
+          "startIndex": 3,
+          "endIndex": 5,
+          "color": "#a855f7",
+          "depth": 0
+        }
+      ],
+      "3": [
+        {
+          "text": "as he boarded",
+          "label": "부사절(시간)",
+          "type": "clause",
+          "startIndex": 8,
+          "endIndex": 10,
+          "color": "#f59e0b",
+          "depth": 0,
+          "modifies": "he felt"
+        },
+        {
+          "text": "with anticipation",
+          "label": "전치사구",
+          "type": "phrase",
+          "startIndex": 14,
+          "endIndex": 15,
+          "color": "#f59e0b",
+          "depth": 0,
+          "modifies": "felt alive"
+        }
+      ],
+      "5": [
+        {
+          "text": "to move",
+          "label": "to부정사",
+          "type": "phrase",
+          "startIndex": 6,
+          "endIndex": 7,
+          "color": "#ef4444",
+          "depth": 0,
+          "modifies": "began"
+        }
+      ],
+      "6": [
+        {
+          "text": "in his seat",
+          "label": "전치사구",
+          "type": "phrase",
+          "startIndex": 3,
+          "endIndex": 5,
+          "color": "#f59e0b",
+          "depth": 0,
+          "modifies": "leaned back"
+        },
+        {
+          "text": "looking forward to the journey ahead",
+          "label": "분사구문",
+          "type": "phrase",
+          "startIndex": 8,
+          "endIndex": 13,
+          "color": "#a855f7",
+          "depth": 0,
+          "modifies": "Paul"
+        }
+      ],
+      "7": [
+        {
+          "text": "in a uniform",
+          "label": "전치사구",
+          "type": "phrase",
+          "startIndex": 6,
+          "endIndex": 8,
+          "color": "#f59e0b",
+          "depth": 0,
+          "modifies": "a man"
+        },
+        {
+          "text": "toward him",
+          "label": "전치사구",
+          "type": "phrase",
+          "startIndex": 10,
+          "endIndex": 11,
+          "color": "#f59e0b",
+          "depth": 0,
+          "modifies": "walked"
+        },
+        {
+          "text": "checking tickets",
+          "label": "분사구문",
+          "type": "phrase",
+          "startIndex": 12,
+          "endIndex": 13,
+          "color": "#a855f7",
+          "depth": 0,
+          "modifies": "a man"
+        }
+      ],
+      "13": [
+        {
+          "text": "I bought the ticket",
+          "label": "명사절(목적어)",
+          "type": "clause",
+          "startIndex": 2,
+          "endIndex": 5,
+          "color": "#3b82f6",
+          "depth": 0,
+          "modifies": "know"
+        },
+        {
+          "text": "pulling his shaking hands out of the backpack",
+          "label": "분사구문",
+          "type": "phrase",
+          "startIndex": 14,
+          "endIndex": 21,
+          "color": "#a855f7",
+          "depth": 0,
+          "modifies": "Paul"
+        }
+      ],
+      "15": [
+        {
+          "text": "to get off at the next station",
+          "label": "to부정사",
+          "type": "phrase",
+          "startIndex": 4,
+          "endIndex": 10,
+          "color": "#ef4444",
+          "depth": 0,
+          "modifies": "have"
+        }
+      ],
+      "17": [
+        {
+          "text": "what to do",
+          "label": "의문사+to부정사",
+          "type": "phrase",
+          "startIndex": 4,
+          "endIndex": 6,
+          "color": "#ef4444",
+          "depth": 0,
+          "modifies": "no idea"
+        }
+      ]
+    },
+    "grammarTags": [
+      {
+        "sentenceIndex": 0,
+        "tagName": "과거진행",
+        "selectedText": "was standing",
+        "startWordIndex": 1,
+        "endWordIndex": 2,
+        "category": "시제",
+        "explanation": "be동사 과거형 + 현재분사로 과거 어느 시점의 진행 동작을 나타냄."
+      },
+      {
+        "sentenceIndex": 2,
+        "tagName": "과거완료",
+        "selectedText": "had just begun",
+        "startWordIndex": 3,
+        "endWordIndex": 5,
+        "category": "시제",
+        "explanation": "과거 시점까지 완료된 동작. just가 완료 시점을 강조."
+      },
+      {
+        "sentenceIndex": 3,
+        "tagName": "시간 부사절",
+        "selectedText": "as he boarded",
+        "startWordIndex": 8,
+        "endWordIndex": 10,
+        "category": "접속사",
+        "explanation": "접속사 as가 '~할 때'의 의미로 시간 부사절을 이끎."
+      },
+      {
+        "sentenceIndex": 5,
+        "tagName": "to부정사 보어",
+        "selectedText": "began to move",
+        "startWordIndex": 5,
+        "endWordIndex": 7,
+        "category": "부정사·동명사",
+        "explanation": "begin은 목적어로 to부정사·동명사를 모두 취할 수 있는 동사."
+      },
+      {
+        "sentenceIndex": 6,
+        "tagName": "분사구문",
+        "selectedText": "looking forward to the journey ahead",
+        "startWordIndex": 8,
+        "endWordIndex": 13,
+        "category": "분사",
+        "explanation": "주절 주어 Paul의 동시 동작을 나타내는 분사구문. look forward to + 명사구."
+      },
+      {
+        "sentenceIndex": 7,
+        "tagName": "분사구문",
+        "selectedText": "checking tickets",
+        "startWordIndex": 12,
+        "endWordIndex": 13,
+        "category": "분사",
+        "explanation": "주절의 a man을 수식하는 현재분사구. walked와 동시 동작."
+      },
+      {
+        "sentenceIndex": 10,
+        "tagName": "과거 부정",
+        "selectedText": "wasn't",
+        "startWordIndex": 2,
+        "endWordIndex": 2,
+        "category": "시제",
+        "explanation": "was + not의 축약형으로 단순과거 부정."
+      },
+      {
+        "sentenceIndex": 13,
+        "tagName": "분사구문(동시 동작)",
+        "selectedText": "pulling his shaking hands out of the backpack",
+        "startWordIndex": 14,
+        "endWordIndex": 21,
+        "category": "분사",
+        "explanation": "said와 동시에 일어나는 동작을 나타내는 현재분사 구문."
+      },
+      {
+        "sentenceIndex": 13,
+        "tagName": "현재분사 수식",
+        "selectedText": "shaking hands",
+        "startWordIndex": 16,
+        "endWordIndex": 17,
+        "category": "분사",
+        "explanation": "능동·진행의 의미로 hands를 앞에서 수식하는 현재분사."
+      },
+      {
+        "sentenceIndex": 15,
+        "tagName": "have to + 동사원형",
+        "selectedText": "have to get off",
+        "startWordIndex": 3,
+        "endWordIndex": 6,
+        "category": "어휘",
+        "explanation": "have to + 동사원형은 '~해야 한다'는 의무. will과 결합해 미래 의무를 표현."
+      },
+      {
+        "sentenceIndex": 17,
+        "tagName": "의문사+to부정사",
+        "selectedText": "what to do",
+        "startWordIndex": 4,
+        "endWordIndex": 6,
+        "category": "부정사·동명사",
+        "explanation": "의문사 + to부정사가 명사구로 idea를 동격으로 수식."
+      },
+      {
+        "sentenceIndex": 4,
+        "tagName": "등위접속사 and",
+        "selectedText": "and it was perfect",
+        "startWordIndex": 4,
+        "endWordIndex": 7,
+        "category": "접속사",
+        "explanation": "두 개의 절을 대등하게 연결하는 등위접속사 and."
+      }
+    ],
+    "grammarPointsBySentence": {
+      "0": [
+        { "title": "과거진행", "content": "was standing — 과거 시점의 진행 동작을 묘사." }
+      ],
+      "2": [
+        { "title": "과거완료", "content": "had just begun — 과거 시점까지 완료된 사건. just가 완료 직후를 강조." }
+      ],
+      "3": [
+        { "title": "시간 접속사 as", "content": "as he boarded — '그가 탑승했을 때'. when으로 바꿔도 의미가 통함." },
+        { "title": "felt + 형용사", "content": "felt alive — 감각동사 feel은 형용사를 보어로 취함." }
+      ],
+      "5": [
+        { "title": "begin + to부정사", "content": "began to move — begin은 to부정사·동명사 모두 가능." }
+      ],
+      "6": [
+        { "title": "분사구문", "content": "looking forward to ... — 주절과 동시에 일어나는 부수적 동작." }
+      ],
+      "7": [
+        { "title": "분사구문", "content": "checking tickets — a man을 수식하는 현재분사구." }
+      ],
+      "13": [
+        { "title": "분사구문(동시 동작)", "content": "pulling ... — said Paul과 동시에 일어나는 동작 묘사." },
+        { "title": "현재분사 vs 과거분사", "content": "shaking hands — 능동·진행 → 현재분사로 hands를 수식." }
+      ],
+      "15": [
+        { "title": "will have to", "content": "you'll have to get off — 미래의 의무. must의 미래 대용." }
+      ],
+      "17": [
+        { "title": "의문사+to부정사", "content": "what to do — '무엇을 해야 할지'. idea와 동격으로 쓰임." }
+      ]
+    },
+    "vocabularyList": [
+      {
+        "word": "station",
+        "meaning": "역",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 0, "position": 6 }]
+      },
+      {
+        "word": "real",
+        "meaning": "실제의, 현실의",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 1, "position": 2 }]
+      },
+      {
+        "word": "long-awaited",
+        "meaning": "오랫동안 기다려 온",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "B2",
+        "positions": [{ "sentence": 2, "position": 1 }]
+      },
+      {
+        "word": "holiday",
+        "meaning": "휴가, 휴일",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A1",
+        "positions": [{ "sentence": 2, "position": 2 }]
+      },
+      {
+        "word": "begun",
+        "meaning": "시작하다(begin의 과거분사)",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "A1",
+        "positions": [{ "sentence": 2, "position": 5 }]
+      },
+      {
+        "word": "silver",
+        "meaning": "은색의",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 3, "position": 2 }]
+      },
+      {
+        "word": "boarded",
+        "meaning": "탑승했다",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "B1",
+        "synonym": "got on",
+        "positions": [{ "sentence": 3, "position": 10 }]
+      },
+      {
+        "word": "alive",
+        "meaning": "살아있는, (감정으로) 충만한",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 3, "position": 13 }]
+      },
+      {
+        "word": "anticipation",
+        "meaning": "기대, 예상",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "C1",
+        "synonym": "expectation",
+        "positions": [{ "sentence": 3, "position": 15 }]
+      },
+      {
+        "word": "seat",
+        "meaning": "좌석",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A1",
+        "positions": [{ "sentence": 4, "position": 3 }]
+      },
+      {
+        "word": "perfect",
+        "meaning": "완벽한",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 4, "position": 7 }]
+      },
+      {
+        "word": "view",
+        "meaning": "전망, 경치",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 4, "position": 15 }]
+      },
+      {
+        "word": "moment",
+        "meaning": "잠시, 순간",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A1",
+        "positions": [{ "sentence": 5, "position": 1 }]
+      },
+      {
+        "word": "leaned",
+        "meaning": "기댔다",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "B1",
+        "positions": [{ "sentence": 6, "position": 1 }]
+      },
+      {
+        "word": "journey",
+        "meaning": "여정, 여행",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A2",
+        "synonym": "trip",
+        "positions": [{ "sentence": 6, "position": 12 }]
+      },
+      {
+        "word": "ahead",
+        "meaning": "앞에, 앞으로",
+        "wordType": "word",
+        "partOfSpeech": "adv.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 6, "position": 13 }]
+      },
+      {
+        "word": "uniform",
+        "meaning": "제복, 유니폼",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 7, "position": 8 }]
+      },
+      {
+        "word": "toward",
+        "meaning": "~을 향하여",
+        "wordType": "word",
+        "partOfSpeech": "prep.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 7, "position": 10 }]
+      },
+      {
+        "word": "checking",
+        "meaning": "확인하는, 검사하는",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 7, "position": 12 }]
+      },
+      {
+        "word": "reached",
+        "meaning": "(손을) 뻗었다",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 9, "position": 1 }]
+      },
+      {
+        "word": "pocket",
+        "meaning": "주머니",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A1",
+        "positions": [{ "sentence": 9, "position": 4 }]
+      },
+      {
+        "word": "searched",
+        "meaning": "뒤졌다, 찾았다",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 11, "position": 1 }]
+      },
+      {
+        "word": "backpack",
+        "meaning": "배낭",
+        "wordType": "word",
+        "partOfSpeech": "n.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 11, "position": 6 }]
+      },
+      {
+        "word": "shaking",
+        "meaning": "떨리는",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "B1",
+        "synonym": "trembling",
+        "positions": [{ "sentence": 13, "position": 16 }]
+      },
+      {
+        "word": "afraid",
+        "meaning": "미안한, 두려운",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "A2",
+        "positions": [{ "sentence": 15, "position": 1 }]
+      },
+      {
+        "word": "replied",
+        "meaning": "대답했다",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "A2",
+        "synonym": "answered",
+        "positions": [{ "sentence": 15, "position": 11 }]
+      },
+      {
+        "word": "raced",
+        "meaning": "(심장이) 요동쳤다",
+        "wordType": "word",
+        "partOfSpeech": "v.",
+        "cefr": "B2",
+        "positions": [{ "sentence": 16, "position": 2 }]
+      },
+      {
+        "word": "sweaty",
+        "meaning": "땀에 젖은",
+        "wordType": "word",
+        "partOfSpeech": "adj.",
+        "cefr": "B2",
+        "positions": [{ "sentence": 16, "position": 7 }]
+      }
+    ]
+  }
+}

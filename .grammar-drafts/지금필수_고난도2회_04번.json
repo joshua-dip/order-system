@@ -1,0 +1,266 @@
+{
+  "passageId": "69d4eca372a886137cd83ef6",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 04번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 04번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 04번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Ethnographic studies of isolated Stone Age hunter-gatherers and pre-modern agriculturalists suggest that primitive peoples lived lives of relative leisure and affluence.",
+      "tokens": ["Ethnographic","studies","of","isolated","Stone","Age","hunter-gatherers","and","pre-modern","agriculturalists","suggest","that","primitive","peoples","lived","lives","of","relative","leisure","and","affluence."],
+      "korean": "고립된 석기 시대 수렵채집인과 근대 이전의 농업인들에 대한 민족학 연구는 원시인들이 비교적 여유롭고 풍요로운 삶을 살았다는 것을 시사한다."
+    },
+    {
+      "idx": 1,
+      "text": "An oft-cited example is the !Kung of the Kalahari Desert in southern Africa, who were studied by the anthropologist Richard Lee.",
+      "tokens": ["An","oft-cited","example","is","the","!Kung","of","the","Kalahari","Desert","in","southern","Africa,","who","were","studied","by","the","anthropologist","Richard","Lee."],
+      "korean": "자주 인용되는 사례는 인류학자 Richard Lee에 의해 연구된 남아프리카의 Kalahari 사막의 !Kung 족이다."
+    },
+    {
+      "idx": 2,
+      "text": "He followed them around for four weeks, kept a log of all their activities, and calculated an average workweek of approximately 20 hours spent in subsistence activities.",
+      "tokens": ["He","followed","them","around","for","four","weeks,","kept","a","log","of","all","their","activities,","and","calculated","an","average","workweek","of","approximately","20","hours","spent","in","subsistence","activities."],
+      "korean": "그는 약 4주 동안 그들을 따라다니며, 그들의 모든 활동의 일지를 작성했으며, 생계 활동에 쓰인 평균 약 20시간의 주당 노동 시간을 계산했다."
+    },
+    {
+      "idx": 3,
+      "text": "This figure was confirmed by subsequent studies by Lee and other researchers in the same region.",
+      "tokens": ["This","figure","was","confirmed","by","subsequent","studies","by","Lee","and","other","researchers","in","the","same","region."],
+      "korean": "이 수치는 Lee와 다른 연구원들에 의한 동일한 지역의 후속 연구에서 확인되었다."
+    },
+    {
+      "idx": 4,
+      "text": "In one of the harshest climates in the world, the !Kung enjoyed a leisurely life with high nutritional intake.",
+      "tokens": ["In","one","of","the","harshest","climates","in","the","world,","the","!Kung","enjoyed","a","leisurely","life","with","high","nutritional","intake."],
+      "korean": "세계에서 가장 혹독한 기후들 중 하나가 있는 곳에서, !Kung 족은 고영양 섭취와 함께 여유로운 삶을 즐겼다."
+    },
+    {
+      "idx": 5,
+      "text": "This compares to the modern standard of 40 hours of work per week.",
+      "tokens": ["This","compares","to","the","modern","standard","of","40","hours","of","work","per","week."],
+      "korean": "이것은 주당 40시간의 현대 표준 노동과 비교된다."
+    },
+    {
+      "idx": 6,
+      "text": "If we add in commuting time, shopping, housework, cooking and so forth, the typical American spends about 80 hours per week aside from leisure time, eating, and sleep.",
+      "tokens": ["If","we","add","in","commuting","time,","shopping,","housework,","cooking","and","so","forth,","the","typical","American","spends","about","80","hours","per","week","aside","from","leisure","time,","eating,","and","sleep."],
+      "korean": "만약 우리가 통근 시간, 쇼핑, 집안일, 요리 등을 더한다면, 보통 미국인은 여가시간, 식사, 그리고 수면 외에 주당 약 80시간을 쓴다."
+    },
+    {
+      "idx": 7,
+      "text": "The comparable figure for the !Kung is 40 hours including such necessary activities as making tools and clothes.",
+      "tokens": ["The","comparable","figure","for","the","!Kung","is","40","hours","including","such","necessary","activities","as","making","tools","and","clothes."],
+      "korean": "!Kung 족의 비교 수치는 도구나 옷 만들기와 같은 필요한 활동을 포함하여 40시간이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T10-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "suggest",
+          "wrongCandidates": ["suggests"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 복수명사 'Ethnographic studies'이므로 복수형 동사 'suggest'가 맞다. 'of isolated Stone Age hunter-gatherers and pre-modern agriculturalists' 같은 긴 수식어구에 이끌려 단수 'suggests'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "suggest",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T13-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the !Kung'은 사람(부족 구성원)을 가리키므로 사람을 받는 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받으므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T7-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "kept",
+          "wrongCandidates": ["keeping"],
+          "grammarType": "시제",
+          "explanation": "주어 'He'의 술어동사가 'followed ... , kept ... , and calculated ...'로 과거시제 동사 셋이 and로 병렬 연결되는 구조이므로 과거형 'kept'가 맞다. 분사 'keeping'은 술어동사가 될 수 없어 문장 구조가 깨진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "keep",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T3-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "confirmed",
+          "wrongCandidates": ["confirming"],
+          "grammarType": "수동태",
+          "explanation": "주어 'This figure'가 확인되는 대상이고 바로 앞에 be동사 'was'가 있어 수동태가 와야 하므로 과거분사 'confirmed'가 맞다. 현재분사 'confirming'은 능동의 의미가 되어 'was confirming'은 과거진행이 되며 'by ~에 의해 확인되었다'라는 본문 의미와 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "confirm",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "enjoyed",
+          "wrongCandidates": ["enjoying"],
+          "grammarType": "시제",
+          "explanation": "이 문장은 주절로, 주어 'the !Kung' 뒤에 술어동사가 필요하다. 글 전체가 과거의 연구를 기술하는 과거시제이므로 과거형 'enjoyed'가 맞다. 분사 'enjoying'은 술어동사 역할을 할 수 없어 문장이 성립하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "enjoy",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T11-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "per",
+          "wrongCandidates": ["of"],
+          "grammarType": "전치사",
+          "explanation": "'~당, ~마다'의 의미로 단위(week)를 표시할 때는 전치사 'per'가 맞다. 'of'는 소유·소속 관계를 나타내어 '주당'이라는 의미를 만들 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "commuting",
+          "wrongCandidates": ["commuted"],
+          "grammarType": "분사",
+          "explanation": "뒤에 오는 명사 'time'을 수식하는 분사로, '통근하는 시간'의 능동·진행 의미이므로 현재분사 'commuting'이 맞다. 과거분사 'commuted'는 '통근된'의 수동 의미가 되어 'time'을 수식할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "commute",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T14-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "making",
+          "wrongCandidates": ["made"],
+          "grammarType": "분사",
+          "explanation": "전치사 'as' 뒤에서 명사적 역할을 하며 '도구와 옷을 만들기'라는 능동의 의미이므로 동명사 'making'이 맞다. 과거분사 'made'는 '만들어진'의 수동·완료 의미가 되어 뒤의 목적어 'tools and clothes'를 취할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "suggest", "baseForm": "suggest"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "kept", "baseForm": "keep"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "confirmed", "baseForm": "confirm"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "enjoyed", "baseForm": "enjoy"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "commuting", "baseForm": "commute"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "making", "baseForm": "make"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "suggest", "wrongForm": "suggests", "explanation": "주어의 핵은 복수명사 'Ethnographic studies'이므로 복수형 동사 'suggest'가 맞다. 'of isolated Stone Age hunter-gatherers and pre-modern agriculturalists' 같은 긴 수식어구에 이끌려 단수 'suggests'를 쓰면 안 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "who", "wrongForm": "which", "explanation": "선행사 'the !Kung'은 사람(부족 구성원)을 가리키므로 사람을 받는 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받으므로 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "kept", "wrongForm": "keeping", "explanation": "주어 'He'의 술어동사가 'followed ... , kept ... , and calculated ...'로 과거시제 동사 셋이 and로 병렬 연결되는 구조이므로 과거형 'kept'가 맞다. 분사 'keeping'은 술어동사가 될 수 없어 문장 구조가 깨진다."},
+        {"sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "confirmed", "wrongForm": "confirming", "explanation": "주어 'This figure'가 확인되는 대상이고 바로 앞에 be동사 'was'가 있어 수동태가 와야 하므로 과거분사 'confirmed'가 맞다. 현재분사 'confirming'은 능동의 의미가 되어 본문 의미와 맞지 않는다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "enjoyed", "wrongForm": "enjoying", "explanation": "이 문장은 주절로 주어 'the !Kung' 뒤에 술어동사가 필요하다. 글 전체가 과거시제이므로 과거형 'enjoyed'가 맞다. 분사 'enjoying'은 술어동사 역할을 할 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "per", "wrongForm": "of", "explanation": "'~당, ~마다'의 의미로 단위(week)를 표시할 때는 전치사 'per'가 맞다. 'of'는 소유·소속 관계를 나타내어 '주당'이라는 의미를 만들 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "commuting", "wrongForm": "commuted", "explanation": "뒤에 오는 명사 'time'을 수식하는 분사로, '통근하는 시간'의 능동·진행 의미이므로 현재분사 'commuting'이 맞다. 과거분사 'commuted'는 'time'을 수식할 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "making", "wrongForm": "made", "explanation": "전치사 'as' 뒤에서 '도구와 옷을 만들기'라는 능동 의미이므로 동명사 'making'이 맞다. 과거분사 'made'는 수동·완료 의미여서 뒤의 목적어 'tools and clothes'를 취할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "suggests", "correction": "suggest", "explanation": "주어의 핵 'studies'가 복수이므로 복수형 'suggest'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "선행사 'the !Kung'이 사람이므로 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "keeping", "correction": "kept", "explanation": "and로 연결된 과거시제 술어동사 자리이므로 과거형 'kept'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "confirming", "correction": "confirmed", "explanation": "was 다음 수동태가 와야 하므로 과거분사 'confirmed'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "enjoying", "correction": "enjoyed", "explanation": "주절의 술어동사 자리이므로 과거형 'enjoyed'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "of", "correction": "per", "explanation": "'~당'의 의미를 나타내는 전치사 'per'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "commuted", "correction": "commuting", "explanation": "명사 'time'을 능동으로 수식하므로 현재분사 'commuting'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "made", "correction": "making", "explanation": "전치사 'as' 뒤에서 목적어를 취하는 동명사 'making'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Ethnographic studies of isolated Stone Age hunter-gatherers and pre-modern agriculturalists suggests that primitive peoples lived lives of relative leisure and affluence.",
+          "isCorrect": false,
+          "correction": "Ethnographic studies of isolated Stone Age hunter-gatherers and pre-modern agriculturalists suggest that primitive peoples lived lives of relative leisure and affluence.",
+          "explanation": "주어의 핵 'studies'가 복수이므로 복수형 동사 'suggest'가 맞다."
+        },
+        {
+          "text": "An oft-cited example is the !Kung of the Kalahari Desert in southern Africa, which were studied by the anthropologist Richard Lee.",
+          "isCorrect": false,
+          "correction": "An oft-cited example is the !Kung of the Kalahari Desert in southern Africa, who were studied by the anthropologist Richard Lee.",
+          "explanation": "선행사 'the !Kung'이 사람을 가리키므로 'who'가 맞다."
+        },
+        {
+          "text": "He followed them around for four weeks, keeping a log of all their activities, and calculated an average workweek of approximately 20 hours spent in subsistence activities.",
+          "isCorrect": false,
+          "correction": "He followed them around for four weeks, kept a log of all their activities, and calculated an average workweek of approximately 20 hours spent in subsistence activities.",
+          "explanation": "and로 병렬 연결되는 과거시제 술어동사 자리이므로 'kept'가 맞다."
+        },
+        {
+          "text": "This figure was confirming by subsequent studies by Lee and other researchers in the same region.",
+          "isCorrect": false,
+          "correction": "This figure was confirmed by subsequent studies by Lee and other researchers in the same region.",
+          "explanation": "주어가 확인되는 대상이므로 수동태 'was confirmed'가 맞다."
+        },
+        {
+          "text": "In one of the harshest climates in the world, the !Kung enjoying a leisurely life with high nutritional intake.",
+          "isCorrect": false,
+          "correction": "In one of the harshest climates in the world, the !Kung enjoyed a leisurely life with high nutritional intake.",
+          "explanation": "주절의 술어동사가 필요하므로 과거형 'enjoyed'가 맞다."
+        },
+        {
+          "text": "This compares to the modern standard of 40 hours of work of week.",
+          "isCorrect": false,
+          "correction": "This compares to the modern standard of 40 hours of work per week.",
+          "explanation": "'주당'의 의미는 전치사 'per'로 표현해야 한다."
+        },
+        {
+          "text": "If we add in commuted time, shopping, housework, cooking and so forth, the typical American spends about 80 hours per week aside from leisure time, eating, and sleep.",
+          "isCorrect": false,
+          "correction": "If we add in commuting time, shopping, housework, cooking and so forth, the typical American spends about 80 hours per week aside from leisure time, eating, and sleep.",
+          "explanation": "명사 'time'을 능동으로 수식하므로 현재분사 'commuting'이 맞다."
+        },
+        {
+          "text": "The comparable figure for the !Kung is 40 hours including such necessary activities as made tools and clothes.",
+          "isCorrect": false,
+          "correction": "The comparable figure for the !Kung is 40 hours including such necessary activities as making tools and clothes.",
+          "explanation": "전치사 'as' 뒤에서 목적어를 취하는 동명사 'making'이 맞다."
+        }
+      ]
+    }
+  }
+}

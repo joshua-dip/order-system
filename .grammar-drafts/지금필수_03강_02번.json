@@ -1,0 +1,237 @@
+{
+  "passageId": "69d4eca372a886137cd83ed6",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "03강 02번",
+  "title": "지금필수 고난도유형(2026) 03강 02번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "03강 02번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Meetings are vital for team functioning.",
+      "tokens": ["Meetings","are","vital","for","team","functioning."],
+      "korean": "회의는 팀 기능 수행에 필수적이다."
+    },
+    {
+      "idx": 1,
+      "text": "Without regular meetings, both formal and informal, important information is withheld and assumptions and expectations may be built up which are not matched by reality.",
+      "tokens": ["Without","regular","meetings,","both","formal","and","informal,","important","information","is","withheld","and","assumptions","and","expectations","may","be","built","up","which","are","not","matched","by","reality."],
+      "korean": "정기적인 회의가 없으면, 공식적이고 비공식적인 중요한 정보가 주어지지 않고, 현실과 맞지 않는 가정과 억측이 형성될 수 있다."
+    },
+    {
+      "idx": 2,
+      "text": "Indeed research results reveal that even poor team meetings are better than no team meetings at all, since members get to exchange information in small informal dyads or groups before, after and even during meetings.",
+      "tokens": ["Indeed","research","results","reveal","that","even","poor","team","meetings","are","better","than","no","team","meetings","at","all,","since","members","get","to","exchange","information","in","small","informal","dyads","or","groups","before,","after","and","even","during","meetings."],
+      "korean": "실제로, 형편없는 팀 회의라도 전혀 없는 것보다 더 좋다는 것이 연구 결과에 나타나는데, 왜냐하면 구성원들이 작은 비공식적인 쌍 또는 무리로 회의 전후, 그리고 심지어 회의가 진행되고 있는 중에도 정보를 교환하기 때문이다."
+    },
+    {
+      "idx": 3,
+      "text": "Without frequent interaction, team members begin to diverge in their views about what is important for the team, and perceptions and expectations of other team members’ actions become more and more inaccurate.",
+      "tokens": ["Without","frequent","interaction,","team","members","begin","to","diverge","in","their","views","about","what","is","important","for","the","team,","and","perceptions","and","expectations","of","other","team","members’","actions","become","more","and","more","inaccurate."],
+      "korean": "빈번한 상호 작용이 없으면, 팀 구성원들은 팀에게 무엇이 중요한지에 관해 그들의 견해가 나뉘기 시작하고 다른 팀 구성원들의 행동에 대한 인지와 기대가 점점 더 부정확해진다."
+    },
+    {
+      "idx": 4,
+      "text": "Misapprehension and misunderstanding lead to poor coordination and to conflict.",
+      "tokens": ["Misapprehension","and","misunderstanding","lead","to","poor","coordination","and","to","conflict."],
+      "korean": "오해와 착오는 부조화와 갈등으로 이어진다."
+    },
+    {
+      "idx": 5,
+      "text": "These in turn lead to team ineffectiveness.",
+      "tokens": ["These","in","turn","lead","to","team","ineffectiveness."],
+      "korean": "이것은 결과적으로 팀 비효율성으로 이어진다."
+    },
+    {
+      "idx": 6,
+      "text": "Poor relationships, negativity and suspicion are the product of insufficient interaction and fatally undermine team functioning.",
+      "tokens": ["Poor","relationships,","negativity","and","suspicion","are","the","product","of","insufficient","interaction","and","fatally","undermine","team","functioning."],
+      "korean": "원만하지 못한 관계, 부정적 성향, 그리고 의심은 불충분한 상호 작용의 산물이며, 팀 기능 수행을 치명적으로 손상시킨다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T1-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Meetings'는 복수형이므로 복수 동사 'are'가 맞다. 단수형 'is'는 단수 주어에 사용되는 형태로, 복수 주어에는 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T17-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "built",
+          "wrongCandidates": ["building"],
+          "grammarType": "수동태",
+          "explanation": "'may be ___ up' 구조에서 주어 'assumptions and expectations'가 '형성되는' 대상(수동)이므로 과거분사 'built'가 맞다. 'building'은 능동·진행의 의미가 되어 수동 구조와 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "build",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T21-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "exchange",
+          "wrongCandidates": ["exchanging"],
+          "grammarType": "부정사",
+          "explanation": "'get to + 동사원형' 구조에서 to부정사의 'to' 뒤에는 동사원형이 와야 하므로 'exchange'가 맞다. 동명사 'exchanging'은 to부정사 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "exchange",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T12-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "what",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "'about ___ is important for the team'에서 선행사가 없으므로 선행사를 포함하는 관계대명사 'what'(= the thing that)이 맞다. 'which'는 선행사가 있어야 쓸 수 있는 관계대명사라 이 자리에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T3-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "lead",
+          "wrongCandidates": ["leads"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'Misapprehension and misunderstanding'로 and로 연결된 복수 주어이므로 복수 동사 'lead'가 맞다. 단수형 'leads'는 단수 주어에만 쓸 수 있어 이 문장과 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "lead",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T4-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "to",
+          "wrongCandidates": ["for"],
+          "grammarType": "전치사",
+          "explanation": "'lead to + 명사' 구조로 '~로 이어지다'라는 결과를 나타낼 때는 전치사 'to'가 맞다. 'for'는 '~을 위해'라는 의미라 'lead'와 결합하여 결과·귀결을 나타내지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T13-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "undermine",
+          "wrongCandidates": ["undermines"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'Poor relationships, negativity and suspicion'으로 셋이 and로 연결된 복수 주어이므로 복수 동사 'undermine'이 맞다. 단수형 'undermines'는 단수 주어에 쓰는 형태라 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "undermine",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "built", "baseForm": "build"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "exchange", "baseForm": "exchange"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "lead", "baseForm": "lead"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "undermine", "baseForm": "undermine"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "are", "wrongForm": "is", "explanation": "주어 'Meetings'는 복수형이므로 복수 동사 'are'가 맞다. 단수형 'is'는 단수 주어에 사용되는 형태로, 복수 주어에는 어울리지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "built", "wrongForm": "building", "explanation": "'may be ___ up' 구조에서 주어 'assumptions and expectations'가 '형성되는' 대상(수동)이므로 과거분사 'built'가 맞다. 'building'은 능동·진행의 의미가 되어 수동 구조와 맞지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "exchange", "wrongForm": "exchanging", "explanation": "'get to + 동사원형' 구조에서 to부정사의 'to' 뒤에는 동사원형이 와야 하므로 'exchange'가 맞다. 동명사 'exchanging'은 to부정사 자리에 올 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "what", "wrongForm": "which", "explanation": "'about ___ is important for the team'에서 선행사가 없으므로 선행사를 포함하는 관계대명사 'what'(= the thing that)이 맞다. 'which'는 선행사가 있어야 쓸 수 있는 관계대명사라 이 자리에 올 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "lead", "wrongForm": "leads", "explanation": "주어가 'Misapprehension and misunderstanding'로 and로 연결된 복수 주어이므로 복수 동사 'lead'가 맞다. 단수형 'leads'는 단수 주어에만 쓸 수 있어 이 문장과 맞지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "to", "wrongForm": "for", "explanation": "'lead to + 명사' 구조로 '~로 이어지다'라는 결과를 나타낼 때는 전치사 'to'가 맞다. 'for'는 '~을 위해'라는 의미라 'lead'와 결합하여 결과·귀결을 나타내지 못한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "undermine", "wrongForm": "undermines", "explanation": "주어가 'Poor relationships, negativity and suspicion'으로 셋이 and로 연결된 복수 주어이므로 복수 동사 'undermine'이 맞다. 단수형 'undermines'는 단수 주어에 쓰는 형태라 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'Meetings'에 맞춰 복수 동사 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "building", "correction": "built", "explanation": "'may be ___ up' 수동 구조이므로 과거분사 'built'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "exchanging", "correction": "exchange", "explanation": "to부정사의 'to' 뒤에는 동사원형이 와야 하므로 'exchange'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "which", "correction": "what", "explanation": "선행사가 없으므로 선행사를 포함하는 관계대명사 'what'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "leads", "correction": "lead", "explanation": "and로 연결된 복수 주어이므로 복수 동사 'lead'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "for", "correction": "to", "explanation": "'lead to + 명사' 구조로 결과·귀결을 나타내므로 전치사 'to'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "undermines", "correction": "undermine", "explanation": "셋이 and로 연결된 복수 주어이므로 복수 동사 'undermine'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Meetings is vital for team functioning.",
+          "isCorrect": false,
+          "correction": "Meetings are vital for team functioning.",
+          "explanation": "주어 'Meetings'는 복수형이므로 복수 동사 'are'가 맞다."
+        },
+        {
+          "text": "Without regular meetings, both formal and informal, important information is withheld and assumptions and expectations may be building up which are not matched by reality.",
+          "isCorrect": false,
+          "correction": "Without regular meetings, both formal and informal, important information is withheld and assumptions and expectations may be built up which are not matched by reality.",
+          "explanation": "'may be ___ up' 수동 구조이므로 과거분사 'built'가 맞다."
+        },
+        {
+          "text": "Indeed research results reveal that even poor team meetings are better than no team meetings at all, since members get to exchanging information in small informal dyads or groups before, after and even during meetings.",
+          "isCorrect": false,
+          "correction": "Indeed research results reveal that even poor team meetings are better than no team meetings at all, since members get to exchange information in small informal dyads or groups before, after and even during meetings.",
+          "explanation": "to부정사의 'to' 뒤에는 동사원형이 와야 하므로 'exchange'가 맞다."
+        },
+        {
+          "text": "Without frequent interaction, team members begin to diverge in their views about which is important for the team, and perceptions and expectations of other team members’ actions become more and more inaccurate.",
+          "isCorrect": false,
+          "correction": "Without frequent interaction, team members begin to diverge in their views about what is important for the team, and perceptions and expectations of other team members’ actions become more and more inaccurate.",
+          "explanation": "선행사가 없으므로 선행사를 포함하는 관계대명사 'what'이 맞다."
+        },
+        {
+          "text": "Misapprehension and misunderstanding leads to poor coordination and to conflict.",
+          "isCorrect": false,
+          "correction": "Misapprehension and misunderstanding lead to poor coordination and to conflict.",
+          "explanation": "and로 연결된 복수 주어이므로 복수 동사 'lead'가 맞다."
+        },
+        {
+          "text": "These in turn lead for team ineffectiveness.",
+          "isCorrect": false,
+          "correction": "These in turn lead to team ineffectiveness.",
+          "explanation": "'lead to + 명사' 구조로 결과·귀결을 나타내므로 전치사 'to'가 맞다."
+        },
+        {
+          "text": "Poor relationships, negativity and suspicion are the product of insufficient interaction and fatally undermines team functioning.",
+          "isCorrect": false,
+          "correction": "Poor relationships, negativity and suspicion are the product of insufficient interaction and fatally undermine team functioning.",
+          "explanation": "셋이 and로 연결된 복수 주어이므로 복수 동사 'undermine'이 맞다."
+        }
+      ]
+    }
+  }
+}

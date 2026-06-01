@@ -947,8 +947,15 @@ ${fragmentE(opts)}`);
 // ── F. 어법 변형 ──────────────────────────────────────────────────────────────
 
 function fragmentF(opts: BuildOptions): string {
-  // F 어법 변형용으로 표기된 word 블록만 (uses 미설정 = 백워드 호환)
-  const wordBlocks = opts.selection.blocks.filter(b => b.kind === 'word' && blockUseIncludes(b, 'F'));
+  // F 어법 변형 — block-workbook-types 가 F 를 deprecated 처리해 blockUseIncludes 가 항상 false.
+  // 본 렌더러는 「어법공략 워크북」 전용이므로 직접 필터:
+  //   uses 미설정/빈 배열 → 백워드 호환으로 포함
+  //   uses 설정 → 'F' 가 명시돼 있을 때만
+  const wordBlocks = opts.selection.blocks.filter(b => {
+    if (b.kind !== 'word') return false;
+    if (!b.uses || b.uses.length === 0) return true;
+    return b.uses.includes('F');
+  });
   let missingCount = 0;
 
   const sentenceHtmls = opts.selection.sentences.map(s => {

@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     // 유형 순서: BOOK_VARIANT_QUESTION_TYPES 순으로 정렬
     const TYPE_ORDER = [
       '주제', '제목', '주장', '일치', '불일치', '함의',
-      '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도',
+      '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도',
     ];
     const sortedTypes = [...typeSet].sort(
       (a, b) => (TYPE_ORDER.indexOf(a) === -1 ? 999 : TYPE_ORDER.indexOf(a))

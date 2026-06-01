@@ -1,0 +1,264 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd38",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 34번",
+  "title": "26년 3월 고3 영어모의고사 34번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "34번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Think of the totality of your interactions where behavioral and interactional data is recorded and collected.",
+      "tokens": ["Think","of","the","totality","of","your","interactions","where","behavioral","and","interactional","data","is","recorded","and","collected."],
+      "korean": "행동과 상호 작용 데이터가 기록되고 수집되는 여러분의 상호 작용 전체를 생각해 보라."
+    },
+    {
+      "idx": 1,
+      "text": "All of those traces represent a kind of resource.",
+      "tokens": ["All","of","those","traces","represent","a","kind","of","resource."],
+      "korean": "그 모든 흔적은 일종의 자원을 나타낸다."
+    },
+    {
+      "idx": 2,
+      "text": "It is accumulated over the long history of your recorded actions and choices, built up from traces left on everything from social media to credit reporting agencies, shopping websites and loyalty programs, courthouses, social welfare agencies, pharmacies, and the content of emails and chats.",
+      "tokens": ["It","is","accumulated","over","the","long","history","of","your","recorded","actions","and","choices,","built","up","from","traces","left","on","everything","from","social","media","to","credit","reporting","agencies,","shopping","websites","and","loyalty","programs,","courthouses,","social","welfare","agencies,","pharmacies,","and","the","content","of","emails","and","chats."],
+      "korean": "그것은 여러분의 기록된 행동과 선택의 오랜 역사에 걸쳐 축적되며, 소셜 미디어에서 신용 조사 기관, 쇼핑 웹사이트와 고객 충성도 프로그램, 법원, 사회 복지 기관, 약국, 이메일과 채팅의 내용에 이르기까지 모든 것에 남겨진 흔적으로부터 구축된다."
+    },
+    {
+      "idx": 3,
+      "text": "It incorporates whatever value is in your social network, along with synthetic measures of your trustworthiness or accountability in the world.",
+      "tokens": ["It","incorporates","whatever","value","is","in","your","social","network,","along","with","synthetic","measures","of","your","trustworthiness","or","accountability","in","the","world."],
+      "korean": "그것은 세상에서 여러분의 신뢰성이나 책임감에 대한 종합적인 측정치와 더불어, 여러분의 사회 관계망에 있는 어떠한 가치든 포함한다."
+    },
+    {
+      "idx": 4,
+      "text": "It is diverse and multidimensional and, of course, it is not all gathered into a single place or condensed down to a single quantity.",
+      "tokens": ["It","is","diverse","and","multidimensional","and,","of","course,","it","is","not","all","gathered","into","a","single","place","or","condensed","down","to","a","single","quantity."],
+      "korean": "그것은 다양하고 다차원적이며, 물론 모두 단 한곳에 모이거나 단 하나의 양으로 압축되지는 않는다."
+    },
+    {
+      "idx": 5,
+      "text": "But in principle it might be.",
+      "tokens": ["But","in","principle","it","might","be."],
+      "korean": "하지만 이론상으로는 그럴 수도 있다."
+    },
+    {
+      "idx": 6,
+      "text": "It might take the form of some vector of information that summarizes your situation and value across many features ─ something that compactly represents your position in the multidimensional space of classification situations.",
+      "tokens": ["It","might","take","the","form","of","some","vector","of","information","that","summarizes","your","situation","and","value","across","many","features","─","something","that","compactly","represents","your","position","in","the","multidimensional","space","of","classification","situations."],
+      "korean": "그것은 많은 특징에 걸쳐 여러분의 상황과 가치를 요약하는 어떤 정보 벡터의 형태를 취할 수도 있는데, 즉 분류 상황의 다차원적 공간에서 여러분의 위치를 간결하게 나타내는 무언가이다."
+    },
+    {
+      "idx": 7,
+      "text": "It would, in short, characterize your social location.",
+      "tokens": ["It","would,","in","short,","characterize","your","social","location."],
+      "korean": "요약하자면, 그것은 여러분의 사회적 위치를 특징지을 것이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "recorded",
+          "wrongCandidates": ["recording"],
+          "grammarType": "수동태",
+          "explanation": "주어 'data'가 사람에 의해 '기록되는' 대상이므로 'is recorded'와 같이 be동사 + 과거분사의 수동태가 맞다. 현재분사 'recording'을 쓰면 'is recording'이 되어 데이터가 능동적으로 기록하는 의미가 되어 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "record",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "represent",
+          "wrongCandidates": ["represents"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'All of those traces'에서 'those traces'가 복수이므로 동사도 복수형 'represent'가 와야 한다. 단수형 'represents'는 단수 주어에 쓰이는 형태로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "represent",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T17-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "left",
+          "wrongCandidates": ["leaving"],
+          "grammarType": "분사",
+          "explanation": "'traces left on everything'은 'traces (that were) left on everything'에서 '주격 관계대명사 + be동사'가 생략된 구조로, 흔적이 '남겨진' 대상이므로 과거분사 'left'가 맞다. 현재분사 'leaving'은 흔적이 능동적으로 떠나는 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "leave",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T2-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "whatever",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "동사 'incorporates'의 목적어 자리에 명사절을 이끌면서 '어떠한 ~든'의 의미를 가지므로 복합관계대명사 'whatever'가 맞다. 'what'은 '~한 것'의 의미로 의미 흐름이 어색하고, 또한 양보·임의 선택의 어감을 살리지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T12-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "gathered",
+          "wrongCandidates": ["gathering"],
+          "grammarType": "수동태",
+          "explanation": "주어 'it'(자원)이 한곳으로 '모이게 되는' 대상이므로 'is not all gathered'와 같이 be동사 + 과거분사의 수동태가 맞다. 현재분사 'gathering'은 능동의 의미가 되어 주어가 스스로 다른 무언가를 모은다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "gather",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T0-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "But",
+          "wrongCandidates": ["Because"],
+          "grammarType": "접속사",
+          "explanation": "앞 문장에서는 '자원이 한곳에 모이지는 않는다'고 했고, 이 문장은 '이론상으로는 그럴 수도 있다'는 반대 흐름을 제시하므로 역접의 접속사 'But'이 맞다. 'Because'는 원인·이유를 나타내는 접속사로 문맥상 흐름과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T10-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'some vector of information'을 수식하면서 뒤따르는 절(summarizes ~)에서 주어 역할을 하는 주격 관계대명사가 필요하므로 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사이므로 이미 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T4-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "characterize",
+          "wrongCandidates": ["characterizing"],
+          "grammarType": "부정사",
+          "explanation": "조동사 'would' 뒤에는 동사원형이 와야 하므로 'characterize'가 맞다. 현재분사 'characterizing'은 조동사 뒤에 올 수 없는 형태로 문법적으로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "characterize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "recorded", "baseForm": "record"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "represent", "baseForm": "represent"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "left", "baseForm": "leave"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "gathered", "baseForm": "gather"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "characterize", "baseForm": "characterize"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "recorded", "wrongForm": "recording", "explanation": "주어 'data'가 기록되는 대상이므로 수동태 'is recorded'에 해당하는 과거분사 'recorded'가 맞다. 'recording'은 능동의 의미가 되어 어색하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "represent", "wrongForm": "represents", "explanation": "주어의 핵 'those traces'가 복수이므로 복수형 동사 'represent'가 맞다. 단수형 'represents'는 단수 주어에 쓰인다."},
+        {"sentenceIdx": 2, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "left", "wrongForm": "leaving", "explanation": "'traces (that were) left on everything' 구조로 흔적이 '남겨진' 수동의 의미이므로 과거분사 'left'가 맞다. 'leaving'은 능동이라 부적절하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "whatever", "wrongForm": "what", "explanation": "'어떠한 ~든'의 의미로 명사절을 이끄는 복합관계대명사 'whatever'가 맞다. 'what'은 '~한 것'의 뜻으로 양보·임의의 의미를 살리지 못한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "gathered", "wrongForm": "gathering", "explanation": "주어 'it'이 모이게 되는 대상이므로 수동태 'is not all gathered'에 맞춰 과거분사 'gathered'가 맞다. 'gathering'은 능동이라 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "But", "wrongForm": "Because", "explanation": "앞 문장의 '모이지 않는다'와 '그럴 수도 있다'를 역접으로 잇는 'But'이 맞다. 'Because'는 원인을 나타내어 흐름이 맞지 않는다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'some vector of information'이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 7, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "characterize", "wrongForm": "characterizing", "explanation": "조동사 'would' 뒤에는 동사원형 'characterize'가 와야 한다. 'characterizing'은 조동사 뒤에 올 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "recording", "correction": "recorded", "explanation": "주어 'data'가 기록되는 대상이므로 수동태 'recorded'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "represents", "correction": "represent", "explanation": "복수 주어 'those traces'에 맞춰 복수형 'represent'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "leaving", "correction": "left", "explanation": "흔적이 남겨지는 수동 의미이므로 과거분사 'left'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "what", "correction": "whatever", "explanation": "'어떠한 ~든'의 의미를 살리는 복합관계대명사 'whatever'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "gathering", "correction": "gathered", "explanation": "주어가 모이는 대상이므로 수동태에 맞춰 과거분사 'gathered'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Because", "correction": "But", "explanation": "앞뒤 문장이 역접이므로 'But'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "characterizing", "correction": "characterize", "explanation": "조동사 'would' 뒤이므로 동사원형 'characterize'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Think of the totality of your interactions where behavioral and interactional data is recording and collected.",
+          "isCorrect": false,
+          "correction": "Think of the totality of your interactions where behavioral and interactional data is recorded and collected.",
+          "explanation": "주어 'data'가 기록되는 대상이므로 수동태 'recorded'가 맞다."
+        },
+        {
+          "text": "All of those traces represents a kind of resource.",
+          "isCorrect": false,
+          "correction": "All of those traces represent a kind of resource.",
+          "explanation": "주어의 핵 'those traces'가 복수이므로 'represent'가 맞다."
+        },
+        {
+          "text": "It is accumulated over the long history of your recorded actions and choices, built up from traces leaving on everything from social media to credit reporting agencies, shopping websites and loyalty programs, courthouses, social welfare agencies, pharmacies, and the content of emails and chats.",
+          "isCorrect": false,
+          "correction": "It is accumulated over the long history of your recorded actions and choices, built up from traces left on everything from social media to credit reporting agencies, shopping websites and loyalty programs, courthouses, social welfare agencies, pharmacies, and the content of emails and chats.",
+          "explanation": "흔적이 남겨지는 수동의 의미이므로 과거분사 'left'가 맞다."
+        },
+        {
+          "text": "It incorporates what value is in your social network, along with synthetic measures of your trustworthiness or accountability in the world.",
+          "isCorrect": false,
+          "correction": "It incorporates whatever value is in your social network, along with synthetic measures of your trustworthiness or accountability in the world.",
+          "explanation": "'어떠한 가치든'의 의미를 살리는 복합관계대명사 'whatever'가 맞다."
+        },
+        {
+          "text": "It is diverse and multidimensional and, of course, it is not all gathering into a single place or condensed down to a single quantity.",
+          "isCorrect": false,
+          "correction": "It is diverse and multidimensional and, of course, it is not all gathered into a single place or condensed down to a single quantity.",
+          "explanation": "주어가 모이는 대상이므로 수동태에 맞춰 'gathered'가 맞다."
+        },
+        {
+          "text": "Because in principle it might be.",
+          "isCorrect": false,
+          "correction": "But in principle it might be.",
+          "explanation": "앞뒤 흐름이 역접이므로 'But'이 맞다."
+        },
+        {
+          "text": "It might take the form of some vector of information what summarizes your situation and value across many features ─ something that compactly represents your position in the multidimensional space of classification situations.",
+          "isCorrect": false,
+          "correction": "It might take the form of some vector of information that summarizes your situation and value across many features ─ something that compactly represents your position in the multidimensional space of classification situations.",
+          "explanation": "선행사 'some vector of information'이 있으므로 주격 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "It would, in short, characterizing your social location.",
+          "isCorrect": false,
+          "correction": "It would, in short, characterize your social location.",
+          "explanation": "조동사 'would' 뒤에는 동사원형 'characterize'가 와야 한다."
+        }
+      ]
+    }
+  }
+}

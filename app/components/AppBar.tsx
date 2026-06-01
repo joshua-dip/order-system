@@ -10,6 +10,7 @@ import {
   DEFAULT_APP_BAR_TITLE,
 } from '@/lib/site-branding';
 import MembershipApplyModal from './MembershipApplyModal';
+import { MEMBERSHIP_APPLY_OPEN_EVENT } from '@/lib/membership-apply-event';
 
 interface AppBarProps {
   title?: string;
@@ -40,6 +41,13 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
       .then((res) => res.json())
       .then((data) => data.user && setUser(data.user))
       .catch(() => {});
+  }, []);
+
+  // 공지 모달 등 외부에서 가입신청 모달을 열 수 있도록 전역 이벤트 수신
+  useEffect(() => {
+    const onOpen = () => setApplyOpen(true);
+    window.addEventListener(MEMBERSHIP_APPLY_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(MEMBERSHIP_APPLY_OPEN_EVENT, onOpen);
   }, []);
 
   const handleHomeClick = () => {

@@ -1,0 +1,237 @@
+{
+  "passageId": "69d4eca372a886137cd83f0c",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 02번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 02번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 02번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Plea-bargaining represents a significant component of the criminal justice system.",
+      "tokens": ["Plea-bargaining","represents","a","significant","component","of","the","criminal","justice","system."],
+      "korean": "양형 거래는 형사 사법 체계의 중요한 구성 요소를 나타낸다."
+    },
+    {
+      "idx": 1,
+      "text": "The defendant is given the opportunity to enter a plea of guilty in exchange for some compromise from the prosecution, either in the form of reduced charges or a recommendation for generous or alternative sentencing.",
+      "tokens": ["The","defendant","is","given","the","opportunity","to","enter","a","plea","of","guilty","in","exchange","for","some","compromise","from","the","prosecution,","either","in","the","form","of","reduced","charges","or","a","recommendation","for","generous","or","alternative","sentencing."],
+      "korean": "피고인은 죄를 순순히 인정할 기회를 받는데, (죄를 인정하는) 그 대가로 죄과를 경감받거나, 관대한 선고 또는 대안이 되는 선고를 권고받는 형태로 검찰로부터 어떤 절충안을 받는다."
+    },
+    {
+      "idx": 2,
+      "text": "While it is difficult to estimate accurately the percentage of cases that involve some form of plea-bargaining, one authoritative study places the figure as high as 90%.",
+      "tokens": ["While","it","is","difficult","to","estimate","accurately","the","percentage","of","cases","that","involve","some","form","of","plea-bargaining,","one","authoritative","study","places","the","figure","as","high","as","90%."],
+      "korean": "어떤 형태의 양형 거래를 포함하는 사건의 비율을 정확하게 추정하는 것은 어렵지만, 한 권위 있는 연구는 그 수치를 90퍼센트에 달할 것으로 평가한다."
+    },
+    {
+      "idx": 3,
+      "text": "On first inspection, plea-bargaining appears to offer advantages to both defendant and prosecution.",
+      "tokens": ["On","first","inspection,","plea-bargaining","appears","to","offer","advantages","to","both","defendant","and","prosecution."],
+      "korean": "첫 번째 조사에서, 양형 거래는 피고인과 검찰 모두에게 이점을 제공하는 것으로 보인다."
+    },
+    {
+      "idx": 4,
+      "text": "The act of pleading guilty to a crime essentially results in the defendant giving up all rights to a trial.",
+      "tokens": ["The","act","of","pleading","guilty","to","a","crime","essentially","results","in","the","defendant","giving","up","all","rights","to","a","trial."],
+      "korean": "범죄에 대해 유죄라고 답변하는 행위는 기본적으로 피고가 재판에 대한 모든 권리를 포기하는 결과를 낳는다."
+    },
+    {
+      "idx": 5,
+      "text": "The defendant is thus allowed to not have the potentially disastrous consequences of a trial.",
+      "tokens": ["The","defendant","is","thus","allowed","to","not","have","the","potentially","disastrous","consequences","of","a","trial."],
+      "korean": "따라서 피고에게는 잠재적으로 재판에서 손해가 큰 결과를 겪지 않는 것이 허용된다."
+    },
+    {
+      "idx": 6,
+      "text": "The prosecution avoids the possibility of defeat, always a potential outcome in any trial, and, importantly, saves the state the responsibility of paying for costly trial proceedings.",
+      "tokens": ["The","prosecution","avoids","the","possibility","of","defeat,","always","a","potential","outcome","in","any","trial,","and,","importantly,","saves","the","state","the","responsibility","of","paying","for","costly","trial","proceedings."],
+      "korean": "검찰은 항상 어떤 재판에서든 잠재적 결과가 될 수 있는 패배의 가능성을 피하고, 중요한 것은, 국가가 비싼 소송 절차에 대한 비용을 지불하는 책임을 면하게 한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T1-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "represents",
+          "wrongCandidates": ["represent"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Plea-bargaining'은 단수 동명사구이므로 단수형 동사 'represents'가 맞다. 복수형 'represent'는 단수 주어와 호응하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "represent",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T3-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "given",
+          "wrongCandidates": ["giving"],
+          "grammarType": "수동태",
+          "explanation": "주어 'The defendant'가 기회를 '받는' 대상이므로 수동태 'is given'의 과거분사 'given'이 맞다. 능동의 현재분사 'giving'은 피고가 기회를 준다는 의미가 되어 문맥과 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "give",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T11-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'cases'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사이므로 선행사가 있을 때 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T5-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "to",
+          "wrongCandidates": ["offering"],
+          "grammarType": "부정사",
+          "explanation": "동사 'appears'는 to부정사를 보어로 취하므로 'to offer'가 맞다. 동명사 'offering'은 'appear' 뒤에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T13-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "giving",
+          "wrongCandidates": ["given"],
+          "grammarType": "분사",
+          "explanation": "'result in' 뒤에 동명사가 와야 하며, 의미상 주어 'the defendant'가 능동적으로 권리를 포기하는 행위이므로 현재분사·동명사 'giving'이 맞다. 과거분사 'given'은 수동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "give",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T4-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "allowed",
+          "wrongCandidates": ["allowing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'The defendant'가 허용을 '받는' 대상이므로 수동태 'is allowed'의 과거분사 'allowed'가 맞다. 'allowing'은 능동의 의미가 되어 피고가 허용한다는 부적절한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "allow",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T22-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 22,
+          "endTokenIdx": 22,
+          "correctForm": "paying",
+          "wrongCandidates": ["pay"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'paying'이 맞다. 동사원형 'pay'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "pay",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "represents", "baseForm": "represent"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "given", "baseForm": "give"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "giving", "baseForm": "give"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "allowed", "baseForm": "allow"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "paying", "baseForm": "pay"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "represents", "wrongForm": "represent", "explanation": "주어 'Plea-bargaining'은 단수 동명사구이므로 단수형 동사 'represents'가 맞다. 복수형 'represent'는 단수 주어와 호응하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "given", "wrongForm": "giving", "explanation": "주어 'The defendant'가 기회를 '받는' 대상이므로 수동태 'is given'의 과거분사 'given'이 맞다. 능동의 현재분사 'giving'은 피고가 기회를 준다는 의미가 되어 문맥과 맞지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'cases'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사이므로 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "to", "wrongForm": "offering", "explanation": "동사 'appears'는 to부정사를 보어로 취하므로 'to offer'가 맞다. 동명사 'offering'은 'appear' 뒤에 올 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "giving", "wrongForm": "given", "explanation": "'result in' 뒤에 동명사가 와야 하며, 의미상 주어 'the defendant'가 능동적으로 권리를 포기하는 행위이므로 현재분사·동명사 'giving'이 맞다. 과거분사 'given'은 수동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "allowed", "wrongForm": "allowing", "explanation": "주어 'The defendant'가 허용을 '받는' 대상이므로 수동태 'is allowed'의 과거분사 'allowed'가 맞다. 'allowing'은 능동의 의미가 되어 피고가 허용한다는 부적절한 의미가 된다."},
+        {"sentenceIdx": 6, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "paying", "wrongForm": "pay", "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'paying'이 맞다. 동사원형 'pay'는 전치사의 목적어가 될 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "represent", "correction": "represents", "explanation": "단수 주어 'Plea-bargaining'에 맞춰 단수 동사 'represents'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "giving", "correction": "given", "explanation": "주어가 기회를 받는 대상(수동)이므로 'is given'의 과거분사 'given'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'cases'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "offering", "correction": "to", "explanation": "동사 'appears'는 to부정사를 취하므로 'to offer'의 'to'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "given", "correction": "giving", "explanation": "'result in' 뒤 동명사·능동의 의미로 'giving'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "allowing", "correction": "allowed", "explanation": "주어가 허용을 받는 대상(수동)이므로 'is allowed'의 과거분사 'allowed'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 22, "endTokenIdx": 22, "isError": true, "wrongForm": "pay", "correction": "paying", "explanation": "전치사 'of' 뒤이므로 동명사 'paying'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Plea-bargaining represent a significant component of the criminal justice system.",
+          "isCorrect": false,
+          "correction": "Plea-bargaining represents a significant component of the criminal justice system.",
+          "explanation": "단수 주어 'Plea-bargaining'에 맞춰 단수 동사 'represents'가 맞다."
+        },
+        {
+          "text": "The defendant is giving the opportunity to enter a plea of guilty in exchange for some compromise from the prosecution, either in the form of reduced charges or a recommendation for generous or alternative sentencing.",
+          "isCorrect": false,
+          "correction": "The defendant is given the opportunity to enter a plea of guilty in exchange for some compromise from the prosecution, either in the form of reduced charges or a recommendation for generous or alternative sentencing.",
+          "explanation": "주어 'The defendant'가 기회를 받는 대상(수동)이므로 'is given'이 맞다."
+        },
+        {
+          "text": "While it is difficult to estimate accurately the percentage of cases what involve some form of plea-bargaining, one authoritative study places the figure as high as 90%.",
+          "isCorrect": false,
+          "correction": "While it is difficult to estimate accurately the percentage of cases that involve some form of plea-bargaining, one authoritative study places the figure as high as 90%.",
+          "explanation": "선행사 'cases'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "On first inspection, plea-bargaining appears offering advantages to both defendant and prosecution.",
+          "isCorrect": false,
+          "correction": "On first inspection, plea-bargaining appears to offer advantages to both defendant and prosecution.",
+          "explanation": "동사 'appears'는 to부정사 'to offer'를 보어로 취한다."
+        },
+        {
+          "text": "The act of pleading guilty to a crime essentially results in the defendant given up all rights to a trial.",
+          "isCorrect": false,
+          "correction": "The act of pleading guilty to a crime essentially results in the defendant giving up all rights to a trial.",
+          "explanation": "'result in' 뒤 동명사·능동의 의미로 'giving'이 맞다."
+        },
+        {
+          "text": "The defendant is thus allowing to not have the potentially disastrous consequences of a trial.",
+          "isCorrect": false,
+          "correction": "The defendant is thus allowed to not have the potentially disastrous consequences of a trial.",
+          "explanation": "주어가 허용을 받는 대상(수동)이므로 'is allowed'가 맞다."
+        },
+        {
+          "text": "The prosecution avoids the possibility of defeat, always a potential outcome in any trial, and, importantly, saves the state the responsibility of pay for costly trial proceedings.",
+          "isCorrect": false,
+          "correction": "The prosecution avoids the possibility of defeat, always a potential outcome in any trial, and, importantly, saves the state the responsibility of paying for costly trial proceedings.",
+          "explanation": "전치사 'of' 뒤이므로 동명사 'paying'이 맞다."
+        }
+      ]
+    }
+  }
+}

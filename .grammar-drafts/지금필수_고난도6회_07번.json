@@ -1,0 +1,243 @@
+{
+  "passageId": "69d4eca372a886137cd83f19",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 07번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 07번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 07번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In the European Union, one immediate consequence of the aging of populations affects the number of available young entrants into the labor force.",
+      "tokens": ["In","the","European","Union,","one","immediate","consequence","of","the","aging","of","populations","affects","the","number","of","available","young","entrants","into","the","labor","force."],
+      "korean": "유럽 연합에서, 인구 노령화의 한 가지 직접적인 결과는 노동 인구로 편입되는 일할 수 있는 젊은이의 수에 영향을 미친다."
+    },
+    {
+      "idx": 1,
+      "text": "In the global core, about 140 jobseekers still are available per 100 workers retiring annually, but toward 2020, the ratio will be below 90.",
+      "tokens": ["In","the","global","core,","about","140","jobseekers","still","are","available","per","100","workers","retiring","annually,","but","toward","2020,","the","ratio","will","be","below","90."],
+      "korean": "지구의 (경제적) 중심 지역에서, 매년 은퇴하는 100명의 근로자당 140명의 구직자가 여전히 유효하지만, 2020년경에는 그 비율이 90명 미만일 것이다."
+    },
+    {
+      "idx": 2,
+      "text": "Thus the need for immigrants will grow exponentially, despite negative perceptions of migrants at their destinations.",
+      "tokens": ["Thus","the","need","for","immigrants","will","grow","exponentially,","despite","negative","perceptions","of","migrants","at","their","destinations."],
+      "korean": "따라서 이민자들에 대한 수요는, 이민자들에 대한 그 목적지의 부정적인 인식에도 불구하고 기하급수적으로 증가할 것이다."
+    },
+    {
+      "idx": 3,
+      "text": "For example, although it is often argued that migrants reduce the wages of low-skilled workers, studies show that, over time, low-paid migrants cause locals to seek and secure higher-paying employment.",
+      "tokens": ["For","example,","although","it","is","often","argued","that","migrants","reduce","the","wages","of","low-skilled","workers,","studies","show","that,","over","time,","low-paid","migrants","cause","locals","to","seek","and","secure","higher-paying","employment."],
+      "korean": "예를 들어, 이민자들이 저숙련 노동자들의 임금을 줄인다고 흔히 주장되고 있지만, 연구에 따르면 시간이 흐르면서 저임금이민자들이 지역 주민들로 하여금 고임금의 일자리를 찾고 확보하게 만든다."
+    },
+    {
+      "idx": 4,
+      "text": "And what about the situation at the source?",
+      "tokens": ["And","what","about","the","situation","at","the","source?"],
+      "korean": "그리고 (저임금 노동자들이 나오는) 그 근원지에서의 상황은 어떤가?"
+    },
+    {
+      "idx": 5,
+      "text": "In the poorer world, the UN report states, there are more than 340 candidates for every 100 jobs that become available annually.",
+      "tokens": ["In","the","poorer","world,","the","UN","report","states,","there","are","more","than","340","candidates","for","every","100","jobs","that","become","available","annually."],
+      "korean": "빈곤한 세계에서는, 매년 생기는 100개의 일자리에 대해 340명 이상의 후보자들이 있다고 UN보고서는 말한다."
+    },
+    {
+      "idx": 6,
+      "text": "Joblessness and poverty create markets for political, religious, and other forms of extremism.",
+      "tokens": ["Joblessness","and","poverty","create","markets","for","political,","religious,","and","other","forms","of","extremism."],
+      "korean": "무직과 빈곤은 정치적, 종교적, 그리고 다른 형태의 극단주의를 위한 장을 만든다."
+    },
+    {
+      "idx": 7,
+      "text": "Internationally coordinated migration could be the planet’s safety valve, but its passage remains mostly blocked.",
+      "tokens": ["Internationally","coordinated","migration","could","be","the","planet’s","safety","valve,","but","its","passage","remains","mostly","blocked."],
+      "korean": "국제적으로 조정된 이민은 지구의 안전밸브가 될 수 있지만, 그것의 통로는 대부분 막혀 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T12-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "affects",
+          "wrongCandidates": ["affect"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 단수 명사 'one immediate consequence'이므로 단수 동사 'affects'가 맞다. 사이의 'of the aging of populations'는 수식어구이며, 마지막 명사 'populations'(복수)에 이끌려 'affect'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "affect",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T13-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "retiring",
+          "wrongCandidates": ["retired"],
+          "grammarType": "분사",
+          "explanation": "명사 'workers'를 뒤에서 수식하는 분사로, 근로자가 스스로 '은퇴하는' 능동·진행의 의미이므로 현재분사 'retiring'이 맞다. 과거분사 'retired'는 '은퇴된/은퇴한 (이미 완료된)' 수동·완료의 의미가 되어 매년 은퇴해 가는 흐름을 나타내는 본 문맥과 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "retire",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "despite",
+          "wrongCandidates": ["although"],
+          "grammarType": "전치사",
+          "explanation": "뒤에 명사구 'negative perceptions of migrants ...'가 이어지므로 전치사 'despite'가 맞다. 'although'는 접속사로 뒤에 「주어+동사」를 갖춘 절이 와야 하므로 명사구 앞에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "argued",
+          "wrongCandidates": ["arguing"],
+          "grammarType": "수동태",
+          "explanation": "'it is often ___ that ...' 구조에서 가주어 it과 진주어 that절 사이에 「be + p.p.」 수동태가 와야 하며, '~라고 주장된다'는 수동의 의미이므로 과거분사 'argued'가 맞다. 'arguing'은 능동의 현재분사로 'be + -ing(진행형)'이 되어 의미와 구조 모두 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "argue",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T18-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 '100 jobs'가 있고 뒤에 주어가 빠진 불완전한 절(become available annually)이 이어지므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 별도의 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T3-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "create",
+          "wrongCandidates": ["creates"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Joblessness and poverty'는 and로 연결된 복수 주어이므로 복수형 동사 'create'가 맞다. 단수형 'creates'는 단수 주어에 사용되므로 본 문장의 복수 주어와 호응하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "create",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T14-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "blocked",
+          "wrongCandidates": ["blocking"],
+          "grammarType": "수동태",
+          "explanation": "주어 'its passage(그 통로)'는 스스로 막는 것이 아니라 '막혀 있는' 대상이므로, 'remain + 과거분사' 형태로 수동·상태를 나타내는 'blocked'가 맞다. 현재분사 'blocking'은 '막고 있는'이라는 능동의 의미가 되어 통로가 다른 것을 막는 부적절한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "block",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "affects", "baseForm": "affect"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "retiring", "baseForm": "retire"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "argued", "baseForm": "argue"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "create", "baseForm": "create"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "blocked", "baseForm": "block"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "affects", "wrongForm": "affect", "explanation": "주어의 핵은 단수 'one immediate consequence'이므로 단수 동사 'affects'가 맞다. 'populations'(복수)에 이끌리지 말 것."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "retiring", "wrongForm": "retired", "explanation": "근로자가 스스로 은퇴하는 능동의 의미로 명사 'workers'를 뒤에서 수식하므로 현재분사 'retiring'이 맞다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "despite", "wrongForm": "although", "explanation": "뒤에 명사구가 이어지므로 전치사 'despite'가 맞다. 접속사 'although'는 절 앞에만 쓸 수 있다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "argued", "wrongForm": "arguing", "explanation": "'it is ___ that ...' 수동 구조이므로 과거분사 'argued'가 맞다. 'arguing'은 능동·진행 의미라 부적절."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 '100 jobs'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "create", "wrongForm": "creates", "explanation": "복수 주어 'Joblessness and poverty'에 맞춰 복수형 동사 'create'가 맞다."},
+        {"sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "blocked", "wrongForm": "blocking", "explanation": "'remain + p.p.' 수동·상태 구조이므로 과거분사 'blocked'가 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "affect", "correction": "affects", "explanation": "단수 주어 'one immediate consequence'에 맞춰 'affects'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "retired", "correction": "retiring", "explanation": "근로자가 능동적으로 은퇴하는 의미이므로 현재분사 'retiring'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "although", "correction": "despite", "explanation": "뒤에 명사구가 오므로 전치사 'despite'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "arguing", "correction": "argued", "explanation": "수동태 구조 'it is ___ that ...'이므로 과거분사 'argued'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 '100 jobs'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "creates", "correction": "create", "explanation": "복수 주어이므로 복수형 동사 'create'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "blocking", "correction": "blocked", "explanation": "통로가 막혀 있는 수동·상태 의미이므로 과거분사 'blocked'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "In the European Union, one immediate consequence of the aging of populations affect the number of available young entrants into the labor force.",
+          "isCorrect": false,
+          "correction": "In the European Union, one immediate consequence of the aging of populations affects the number of available young entrants into the labor force.",
+          "explanation": "주어의 핵 'one immediate consequence'가 단수이므로 단수 동사 'affects'가 맞다."
+        },
+        {
+          "text": "In the global core, about 140 jobseekers still are available per 100 workers retired annually, but toward 2020, the ratio will be below 90.",
+          "isCorrect": false,
+          "correction": "In the global core, about 140 jobseekers still are available per 100 workers retiring annually, but toward 2020, the ratio will be below 90.",
+          "explanation": "근로자가 능동적으로 은퇴하는 의미이므로 현재분사 'retiring'이 맞다."
+        },
+        {
+          "text": "Thus the need for immigrants will grow exponentially, although negative perceptions of migrants at their destinations.",
+          "isCorrect": false,
+          "correction": "Thus the need for immigrants will grow exponentially, despite negative perceptions of migrants at their destinations.",
+          "explanation": "뒤에 명사구가 오므로 전치사 'despite'가 맞다. 'although'는 절 앞에만 쓸 수 있다."
+        },
+        {
+          "text": "For example, although it is often arguing that migrants reduce the wages of low-skilled workers, studies show that, over time, low-paid migrants cause locals to seek and secure higher-paying employment.",
+          "isCorrect": false,
+          "correction": "For example, although it is often argued that migrants reduce the wages of low-skilled workers, studies show that, over time, low-paid migrants cause locals to seek and secure higher-paying employment.",
+          "explanation": "'it is ___ that ...' 수동 구조이므로 과거분사 'argued'가 맞다."
+        },
+        {
+          "text": "In the poorer world, the UN report states, there are more than 340 candidates for every 100 jobs what become available annually.",
+          "isCorrect": false,
+          "correction": "In the poorer world, the UN report states, there are more than 340 candidates for every 100 jobs that become available annually.",
+          "explanation": "선행사 '100 jobs'가 있으므로 주격 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "Joblessness and poverty creates markets for political, religious, and other forms of extremism.",
+          "isCorrect": false,
+          "correction": "Joblessness and poverty create markets for political, religious, and other forms of extremism.",
+          "explanation": "복수 주어 'Joblessness and poverty'에 맞춰 복수형 동사 'create'가 맞다."
+        },
+        {
+          "text": "Internationally coordinated migration could be the planet’s safety valve, but its passage remains mostly blocking.",
+          "isCorrect": false,
+          "correction": "Internationally coordinated migration could be the planet’s safety valve, but its passage remains mostly blocked.",
+          "explanation": "통로가 막혀 있는 수동·상태 의미이므로 과거분사 'blocked'가 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,237 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd2a",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 20번",
+  "title": "26년 3월 고3 영어모의고사 20번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "20번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Some argue that if science is embedded in culture and bound up with art and philosophy, if it is a human activity, then this undermines science's claims to be genuine knowledge.",
+      "tokens": ["Some","argue","that","if","science","is","embedded","in","culture","and","bound","up","with","art","and","philosophy,","if","it","is","a","human","activity,","then","this","undermines","science's","claims","to","be","genuine","knowledge."],
+      "korean": "일부 사람들은 만약 과학이 문화에 파묻혀 있고 예술과 철학에 밀접하게 연관되어 있다면, 즉 만약 그것이 인간의 활동이라면, 이것은 과학이 진짜 지식이라고 주장하는 기반을 약화시킨다고 주장한다."
+    },
+    {
+      "idx": 1,
+      "text": "At best, science is no better than religion, just another practice with its own subjective methodology.",
+      "tokens": ["At","best,","science","is","no","better","than","religion,","just","another","practice","with","its","own","subjective","methodology."],
+      "korean": "잘 해야, 과학은 종교보다 별로 나을 것이 없으며, 그저 그것만의 주관적인 방법론을 가진 또 다른 관습일 뿐이다."
+    },
+    {
+      "idx": 2,
+      "text": "But why say this? Just the opposite is true.",
+      "tokens": ["But","why","say","this?","Just","the","opposite","is","true."],
+      "korean": "하지만 왜 이렇게 말하는가? 정확히 그 반대가 참이다."
+    },
+    {
+      "idx": 3,
+      "text": "In order to hit the target with my bow and arrow, I need to do something, to take aim and concentrate.",
+      "tokens": ["In","order","to","hit","the","target","with","my","bow","and","arrow,","I","need","to","do","something,","to","take","aim","and","concentrate."],
+      "korean": "나의 활과 화살로 과녁을 맞히기 위해, 나는 무언가를 해야 하는데, 즉 겨냥하고 집중해야 한다."
+    },
+    {
+      "idx": 4,
+      "text": "The fact that I am a being with a body, embedded in a culturally rich situation, is no obstacle to my sometimes succeeding.",
+      "tokens": ["The","fact","that","I","am","a","being","with","a","body,","embedded","in","a","culturally","rich","situation,","is","no","obstacle","to","my","sometimes","succeeding."],
+      "korean": "내가 육체를 가진 존재라는, 즉 문화적으로 풍요로운 상황에 파묻혀 있다는 사실은, 내가 때때로 성공하는 것에 대한 장애물이 아니다."
+    },
+    {
+      "idx": 5,
+      "text": "In fact, it is that embedding that supplies me not only with the physical means ─ the bow and the arrow, and the training ─ but also with the motivation to hit the target in the first place.",
+      "tokens": ["In","fact,","it","is","that","embedding","that","supplies","me","not","only","with","the","physical","means","─","the","bow","and","the","arrow,","and","the","training","─","but","also","with","the","motivation","to","hit","the","target","in","the","first","place."],
+      "korean": "사실, 나에게 물리적인 수단인 활과 화살, 그리고 훈련 뿐만 아니라 애초에 과녁을 맞히려는 동기를 주는 것은 바로 그 파묻혀 있는 상태이다."
+    },
+    {
+      "idx": 6,
+      "text": "Science and perception too are similarly human activities that aim at secure knowledge of the world.",
+      "tokens": ["Science","and","perception","too","are","similarly","human","activities","that","aim","at","secure","knowledge","of","the","world."],
+      "korean": "과학과 지각 역시 마찬가지로 세계에 대한 확실한 지식을 겨냥하는 인간의 활동이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T6-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "embedded",
+          "wrongCandidates": ["embedding"],
+          "grammarType": "수동태",
+          "explanation": "주어 'science'가 '문화에 파묻혀 있는' 대상이므로 수동의 의미로 be동사 뒤에 과거분사 'embedded'가 와야 한다. 현재분사 'embedding'은 능동의 의미가 되어 'science가 무언가를 파묻고 있다'는 비문맥적 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "embed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T3-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'science'는 단수 명사이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 복수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T7-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'the opposite'(그 반대)는 단수이므로 단수 동사 'is'가 맞다. 복수형 'are'는 복수 주어에 어울린다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T13-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 13,
+          "endTokenIdx": 14,
+          "correctForm": "to do",
+          "wrongCandidates": ["doing"],
+          "grammarType": "부정사",
+          "explanation": "동사 'need'는 to부정사를 목적어로 취하므로 'to do'가 맞다. 동명사 'doing'은 'need + 동명사' 구조에서 수동의 의미('~될 필요가 있다')가 되어 이 문맥(능동적으로 해야 한다)과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T16-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'The fact'가 단수이므로 단수형 동사 'is'가 맞다. 'that I am ... rich situation' 같은 동격절·삽입어구에 이끌려 복수형 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "'It is ~ that ...' 강조구문으로, 강조 대상 'that embedding' 뒤에 오는 'that'은 관계대명사 역할을 한다. 'what'은 선행사를 포함하는 관계대명사로 이 강조구문 자리에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T9-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "aim",
+          "wrongCandidates": ["aims"],
+          "grammarType": "수일치",
+          "explanation": "선행사 'human activities'가 복수이므로 주격 관계대명사 'that' 뒤의 동사는 복수형 'aim'이 맞다. 단수형 'aims'는 단수 선행사에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "aim",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "embedded", "baseForm": "embed"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "aim", "baseForm": "aim"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "embedded", "wrongForm": "embedding", "explanation": "주어 'science'가 '문화에 파묻혀 있는' 대상이므로 수동의 의미로 be동사 뒤에 과거분사 'embedded'가 와야 한다. 현재분사 'embedding'은 능동의 의미가 되어 'science가 무언가를 파묻고 있다'는 비문맥적 의미가 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'science'는 단수 명사이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 복수 주어에 사용된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'the opposite'(그 반대)는 단수이므로 단수 동사 'is'가 맞다. 복수형 'are'는 복수 주어에 어울린다."},
+        {"sentenceIdx": 3, "startTokenIdx": 13, "endTokenIdx": 14, "correctForm": "to do", "wrongForm": "doing", "explanation": "동사 'need'는 to부정사를 목적어로 취하므로 'to do'가 맞다. 동명사 'doing'은 'need + 동명사' 구조에서 수동의 의미('~될 필요가 있다')가 되어 이 문맥(능동적으로 해야 한다)과 맞지 않는다."},
+        {"sentenceIdx": 4, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵 'The fact'가 단수이므로 단수형 동사 'is'가 맞다. 'that I am ... rich situation' 같은 동격절·삽입어구에 이끌려 복수형 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "that", "wrongForm": "what", "explanation": "'It is ~ that ...' 강조구문으로, 강조 대상 'that embedding' 뒤에 오는 'that'은 관계대명사 역할을 한다. 'what'은 선행사를 포함하는 관계대명사로 이 강조구문 자리에 올 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "aim", "wrongForm": "aims", "explanation": "선행사 'human activities'가 복수이므로 주격 관계대명사 'that' 뒤의 동사는 복수형 'aim'이 맞다. 단수형 'aims'는 단수 선행사에 사용된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "embedding", "correction": "embedded", "explanation": "주어 'science'가 파묻히는 대상(수동)이므로 과거분사 'embedded'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'science'에 맞춰 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'the opposite'에 맞춰 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 13, "endTokenIdx": 14, "isError": true, "wrongForm": "doing", "correction": "to do", "explanation": "동사 'need'는 to부정사를 목적어로 취하므로 'to do'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어의 핵 'The fact'가 단수이므로 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "'It is ~ that ...' 강조구문이므로 'that'으로 고쳐야 한다. 'what'은 선행사를 포함하여 강조구문에 올 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "aims", "correction": "aim", "explanation": "복수 선행사 'human activities'에 맞춰 복수형 'aim'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Some argue that if science is embedding in culture and bound up with art and philosophy, if it is a human activity, then this undermines science's claims to be genuine knowledge.",
+          "isCorrect": false,
+          "correction": "Some argue that if science is embedded in culture and bound up with art and philosophy, if it is a human activity, then this undermines science's claims to be genuine knowledge.",
+          "explanation": "주어 'science'가 문화에 파묻히는 대상(수동)이므로 과거분사 'embedded'가 맞다."
+        },
+        {
+          "text": "At best, science are no better than religion, just another practice with its own subjective methodology.",
+          "isCorrect": false,
+          "correction": "At best, science is no better than religion, just another practice with its own subjective methodology.",
+          "explanation": "주어 'science'는 단수이므로 단수형 'is'가 맞다."
+        },
+        {
+          "text": "But why say this? Just the opposite are true.",
+          "isCorrect": false,
+          "correction": "But why say this? Just the opposite is true.",
+          "explanation": "주어 'the opposite'는 단수이므로 단수형 'is'가 맞다."
+        },
+        {
+          "text": "In order to hit the target with my bow and arrow, I need doing something, to take aim and concentrate.",
+          "isCorrect": false,
+          "correction": "In order to hit the target with my bow and arrow, I need to do something, to take aim and concentrate.",
+          "explanation": "동사 'need'는 to부정사를 목적어로 취하므로 'to do'가 맞다."
+        },
+        {
+          "text": "The fact that I am a being with a body, embedded in a culturally rich situation, are no obstacle to my sometimes succeeding.",
+          "isCorrect": false,
+          "correction": "The fact that I am a being with a body, embedded in a culturally rich situation, is no obstacle to my sometimes succeeding.",
+          "explanation": "주어의 핵 'The fact'가 단수이므로 단수형 'is'가 맞다."
+        },
+        {
+          "text": "In fact, it is that embedding what supplies me not only with the physical means ─ the bow and the arrow, and the training ─ but also with the motivation to hit the target in the first place.",
+          "isCorrect": false,
+          "correction": "In fact, it is that embedding that supplies me not only with the physical means ─ the bow and the arrow, and the training ─ but also with the motivation to hit the target in the first place.",
+          "explanation": "'It is ~ that ...' 강조구문이므로 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "Science and perception too are similarly human activities that aims at secure knowledge of the world.",
+          "isCorrect": false,
+          "correction": "Science and perception too are similarly human activities that aim at secure knowledge of the world.",
+          "explanation": "복수 선행사 'human activities'에 맞춰 복수형 'aim'이 맞다."
+        }
+      ]
+    }
+  }
+}

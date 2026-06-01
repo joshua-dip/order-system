@@ -3,6 +3,12 @@ import { ObjectId } from 'mongodb';
 /** MongoDB: gomijoshua.generated_question_claude_reviews */
 export const GENERATED_QUESTION_CLAUDE_REVIEWS_COL = 'generated_question_claude_reviews';
 
+export type ReviewLogValidationIssue = {
+  rule: string;
+  severity: 'error' | 'warning';
+  message: string;
+};
+
 export type ReviewLogDoc = {
   generated_question_id: ObjectId;
   textbook: string;
@@ -19,6 +25,10 @@ export type ReviewLogDoc = {
   error: string | null;
   admin_login_id: string | null;
   created_at: Date;
+  /** per-question 검증 결과. error 1건 이상이면 status를 검수불일치로 강제. */
+  validation_issues?: ReviewLogValidationIssue[];
+  /** validation_issues 중 error severity 가 있어 status를 강제로 검수불일치로 보냈는지 */
+  forced_mismatch_by_validation?: boolean;
 };
 
 export function serializeReviewLog(doc: Record<string, unknown>) {

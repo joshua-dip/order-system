@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       if (afterDoc == null || typeof pts !== 'number' || !Number.isFinite(pts) || pts < 0) {
         return NextResponse.json(
           {
-            error: `삽입-고난도는 1문항당 ${VARIANT_HARD_INSERTION_POINT_COST}포인트가 필요합니다. 포인트를 충전하거나 충분히 보유한 뒤 다시 시도해 주세요.`,
+            error: `고난도 유형(삽입-고난도·어법-고난도)은 1문항당 ${VARIANT_HARD_INSERTION_POINT_COST}포인트가 필요합니다. 포인트를 충전하거나 충분히 보유한 뒤 다시 시도해 주세요.`,
           },
           { status: 402 },
         );
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
           delta: -VARIANT_HARD_INSERTION_POINT_COST,
           balanceAfter: balanceAfterHardDebit,
           kind: 'member_variant_hard',
-          meta: { type: '삽입-고난도', passage_id: String(passage_id) },
+          meta: { type, passage_id: String(passage_id) },
         });
         hardInsertionSpendLedgerWritten = true;
       } catch (ledgerErr) {

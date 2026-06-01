@@ -1,0 +1,291 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd35",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 31번",
+  "title": "26년 3월 고3 영어모의고사 31번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "31번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "\"Art without commerce is a hobby.\"",
+      "tokens": ["\"Art","without","commerce","is","a","hobby.\""],
+      "korean": "\"상업이 없는 예술은 취미이다.\""
+    },
+    {
+      "idx": 1,
+      "text": "These words, spoken with much authority to senior fine arts majors, are the kind that those who create art are unable to ignore.",
+      "tokens": ["These","words,","spoken","with","much","authority","to","senior","fine","arts","majors,","are","the","kind","that","those","who","create","art","are","unable","to","ignore."],
+      "korean": "졸업반 미술 전공생들에게 큰 권위를 가지고 전달된 이 말은 예술을 창조하는 이들이 무시할 수 없는 종류의 말이다."
+    },
+    {
+      "idx": 2,
+      "text": "We worry about this idea that if we are not engaged in commerce, then we are not professional; and if we are not professional, can we even call ourselves artists?",
+      "tokens": ["We","worry","about","this","idea","that","if","we","are","not","engaged","in","commerce,","then","we","are","not","professional;","and","if","we","are","not","professional,","can","we","even","call","ourselves","artists?"],
+      "korean": "우리는 만약 상업에 종사하지 않으면 전문가가 아니라는 이 생각에 대해 걱정하며, 그러면 만약 우리가 전문가가 아니라면 자신을 예술가라고 심지어 부를 수 있겠는가?"
+    },
+    {
+      "idx": 3,
+      "text": "Art of any form, by its very nature, cannot or should not be quantified, and yet writers measure pages and words; visual artists measure canvases completed all in an effort to appear \"productive,\" to perhaps justify this urge to create.",
+      "tokens": ["Art","of","any","form,","by","its","very","nature,","cannot","or","should","not","be","quantified,","and","yet","writers","measure","pages","and","words;","visual","artists","measure","canvases","completed","all","in","an","effort","to","appear","\"productive,\"","to","perhaps","justify","this","urge","to","create."],
+      "korean": "어떤 형태의 예술이든 바로 그 본질상 수량화될 수 없거나 되어서는 안 되는 것임에도 불구하고, 작가들은 쪽수와 단어 수를 세고, 시각 예술가는 완성된 캔버스 개수를 세는데, (이는) 모두 '생산적'으로 보이기 위한, 어쩌면 창작하고자 하는 이 충동을 정당화하기 위한 노력이다."
+    },
+    {
+      "idx": 4,
+      "text": "The notion of creating for art's sake is then seen as hopelessly romantic and nearly indefensible.",
+      "tokens": ["The","notion","of","creating","for","art's","sake","is","then","seen","as","hopelessly","romantic","and","nearly","indefensible."],
+      "korean": "예술을 위한 창작이라는 개념은 그러면 어찌할 도리가 없을 정도로 낭만적이고 거의 옹호의 여지가 없는 것으로 보인다."
+    },
+    {
+      "idx": 5,
+      "text": "Of course one can engage in art, but it better be for money, for that is the only marker of success.",
+      "tokens": ["Of","course","one","can","engage","in","art,","but","it","better","be","for","money,","for","that","is","the","only","marker","of","success."],
+      "korean": "물론 한 사람은 예술에 종사할 수 있지만, 그것은 돈을 위한 것인 편이 나은데, 돈이 성공의 유일한 지표이기 때문이다."
+    },
+    {
+      "idx": 6,
+      "text": "But was that professor's declaration merely an old talker with a title mindlessly repeating the cultural norms and expectations that had, in fact, labeled him as \"successful\"?",
+      "tokens": ["But","was","that","professor's","declaration","merely","an","old","talker","with","a","title","mindlessly","repeating","the","cultural","norms","and","expectations","that","had,","in","fact,","labeled","him","as","\"successful\"?"],
+      "korean": "하지만 그 교수의 선언은, 직함을 가진 나이 든 수다쟁이가 사실상 그에게 '성공한' 사람이라는 명칭을 붙여 준 문화적 규범과 기대를 아무 생각 없이 되풀이하는 것에 불과한가?"
+    },
+    {
+      "idx": 7,
+      "text": "In Western culture, it is almost impossible to separate professional from commercial, and so the artist is legitimized by their ability to earn money.",
+      "tokens": ["In","Western","culture,","it","is","almost","impossible","to","separate","professional","from","commercial,","and","so","the","artist","is","legitimized","by","their","ability","to","earn","money."],
+      "korean": "서양 문화권에서는 상업성에서 전문성을 분리하는 것이 거의 불가능하며, 따라서 예술가는 돈을 버는 능력에 의해 정당성을 부여받는다."
+    },
+    {
+      "idx": 8,
+      "text": "Professional art, then, is inherently capitalist.",
+      "tokens": ["Professional","art,","then,","is","inherently","capitalist."],
+      "korean": "그렇다면, 전문 예술은 본질적으로 자본주의적이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T1-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "without",
+          "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'상업이 없는 예술'이라는 의미이므로 '없는'을 뜻하는 전치사 'without'이 맞다. 'with'는 '~을 가지고/~와 함께'의 의미가 되어 원문 '상업이 없는'과 정반대의 뜻이 된다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "spoken",
+          "wrongCandidates": ["speaking"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'These words'는 사람에 의해 '말해지는' 대상(수동)이므로 과거분사 'spoken'이 맞다. 현재분사 'speaking'은 'words'가 능동적으로 말하는 의미가 되어 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "speak",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "추상명사 'this idea'의 구체적 내용을 풀어 주는 동격절을 이끄는 접속사 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사로, 앞에 명사가 있는 동격절을 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T25-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 25,
+          "endTokenIdx": 25,
+          "correctForm": "completed",
+          "wrongCandidates": ["completing"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'canvases'는 사람에 의해 '완성되는' 대상(수동)이므로 과거분사 'completed'가 맞다. 현재분사 'completing'은 캔버스가 능동적으로 무언가를 완성한다는 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "complete",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T9-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "seen",
+          "wrongCandidates": ["seeing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'The notion of creating for art's sake'은 사람들에 의해 '여겨지는' 대상(수동)이므로 'is seen as'의 과거분사 'seen'이 맞다. 'seeing'은 능동의 의미가 되어 주어와 의미가 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "see",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T10-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "be",
+          "wrongCandidates": ["being"],
+          "grammarType": "조동사",
+          "explanation": "'had better'(여기서는 had가 축약·생략된 'it better')는 뒤에 동사원형이 와야 하므로 'be'가 맞다. 동명사·현재분사 'being'은 'had better' 구문에서 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T13-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "repeating",
+          "wrongCandidates": ["repeated"],
+          "grammarType": "분사",
+          "explanation": "'an old talker'를 후위 수식하는 현재분사구로, 수다쟁이가 능동적으로 규범과 기대를 '되풀이하는' 의미이므로 현재분사 'repeating'이 맞다. 과거분사 'repeated'는 수다쟁이가 되풀이되는 수동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "repeat",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T10-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "from",
+          "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'separate A from B'(A를 B로부터 분리하다)라는 짝을 이루는 전치사 'from'이 맞다. 'separate A with B'는 'B를 이용해 A를 분리하다'라는 다른 의미가 되어 문맥과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T4-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "inherently",
+          "wrongCandidates": ["inherent"],
+          "grammarType": "부사",
+          "explanation": "보어 자리의 형용사 'capitalist'를 수식하는 자리이므로 부사 'inherently'가 맞다. 형용사 'inherent'는 다른 형용사를 수식할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "spoken", "baseForm": "speak"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "completed", "baseForm": "complete"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "seen", "baseForm": "see"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "be", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "repeating", "baseForm": "repeat"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "without", "wrongForm": "with", "explanation": "'상업이 없는 예술'이라는 의미이므로 '없는'을 뜻하는 전치사 'without'이 맞다. 'with'는 '~을 가지고/~와 함께'의 의미가 되어 정반대 뜻이 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "spoken", "wrongForm": "speaking", "explanation": "수식받는 명사 'These words'가 '말해지는' 수동의 대상이므로 과거분사 'spoken'이 맞다. 'speaking'은 능동의 의미가 되어 어색하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "that", "wrongForm": "what", "explanation": "'this idea'의 내용을 풀어 주는 동격절을 이끄는 접속사 'that'이 맞다. 'what'은 선행사를 포함한 관계대명사로 동격절을 이끌 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "completed", "wrongForm": "completing", "explanation": "수식받는 명사 'canvases'는 '완성되는' 대상(수동)이므로 과거분사 'completed'가 맞다. 'completing'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "seen", "wrongForm": "seeing", "explanation": "주어 'The notion'이 '여겨지는' 대상(수동)이므로 'is seen as'의 과거분사 'seen'이 맞다. 'seeing'은 능동이 되어 의미가 충돌한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "be", "wrongForm": "being", "explanation": "'had better'(여기서 had가 축약된 'it better')는 동사원형을 취하므로 'be'가 맞다. 'being'은 'had better' 구문에 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "repeating", "wrongForm": "repeated", "explanation": "'an old talker'를 후위 수식하며 능동적으로 '되풀이하는' 의미이므로 현재분사 'repeating'이 맞다. 'repeated'는 수다쟁이가 되풀이되는 수동의 의미가 되어 어색하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "from", "wrongForm": "with", "explanation": "'separate A from B' 짝을 이루는 전치사 'from'이 맞다. 'with'는 '~를 이용해 분리하다'라는 다른 의미가 되어 문맥과 어울리지 않는다."},
+        {"sentenceIdx": 8, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "inherently", "wrongForm": "inherent", "explanation": "형용사 'capitalist'를 수식하는 자리이므로 부사 'inherently'가 맞다. 형용사 'inherent'는 다른 형용사를 수식할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "with", "correction": "without", "explanation": "'상업이 없는 예술'이라는 의미이므로 전치사 'without'으로 고쳐야 한다. 'with'는 정반대의 뜻이다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "speaking", "correction": "spoken", "explanation": "수식받는 'These words'가 수동의 대상이므로 과거분사 'spoken'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "'this idea'의 동격절을 이끄는 접속사이므로 'that'으로 고쳐야 한다. 'what'은 동격절에 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 25, "endTokenIdx": 25, "isError": true, "wrongForm": "completing", "correction": "completed", "explanation": "'canvases'가 '완성되는' 수동의 대상이므로 과거분사 'completed'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "seeing", "correction": "seen", "explanation": "주어가 '여겨지는' 수동의 대상이므로 'is seen as'의 과거분사 'seen'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "being", "correction": "be", "explanation": "'had better' 뒤에는 동사원형이 와야 하므로 'be'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "repeated", "correction": "repeating", "explanation": "'an old talker'를 능동적으로 수식하므로 현재분사 'repeating'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "with", "correction": "from", "explanation": "'separate A from B'의 짝을 이루므로 'from'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "inherent", "correction": "inherently", "explanation": "형용사 'capitalist'를 수식하므로 부사 'inherently'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "\"Art with commerce is a hobby.\"",
+          "isCorrect": false,
+          "correction": "\"Art without commerce is a hobby.\"",
+          "explanation": "원문은 '상업이 없는 예술'이라는 의미이므로 'without'이 맞다."
+        },
+        {
+          "text": "These words, speaking with much authority to senior fine arts majors, are the kind that those who create art are unable to ignore.",
+          "isCorrect": false,
+          "correction": "These words, spoken with much authority to senior fine arts majors, are the kind that those who create art are unable to ignore.",
+          "explanation": "'These words'가 '말해지는' 수동의 대상이므로 과거분사 'spoken'이 맞다."
+        },
+        {
+          "text": "We worry about this idea what if we are not engaged in commerce, then we are not professional; and if we are not professional, can we even call ourselves artists?",
+          "isCorrect": false,
+          "correction": "We worry about this idea that if we are not engaged in commerce, then we are not professional; and if we are not professional, can we even call ourselves artists?",
+          "explanation": "'this idea'의 내용을 풀어 주는 동격절을 이끄는 접속사 'that'이 맞다."
+        },
+        {
+          "text": "Art of any form, by its very nature, cannot or should not be quantified, and yet writers measure pages and words; visual artists measure canvases completing all in an effort to appear \"productive,\" to perhaps justify this urge to create.",
+          "isCorrect": false,
+          "correction": "Art of any form, by its very nature, cannot or should not be quantified, and yet writers measure pages and words; visual artists measure canvases completed all in an effort to appear \"productive,\" to perhaps justify this urge to create.",
+          "explanation": "'canvases'가 '완성되는' 수동의 대상이므로 과거분사 'completed'가 맞다."
+        },
+        {
+          "text": "The notion of creating for art's sake is then seeing as hopelessly romantic and nearly indefensible.",
+          "isCorrect": false,
+          "correction": "The notion of creating for art's sake is then seen as hopelessly romantic and nearly indefensible.",
+          "explanation": "주어가 '여겨지는' 수동의 대상이므로 'is seen as'의 과거분사 'seen'이 맞다."
+        },
+        {
+          "text": "Of course one can engage in art, but it better being for money, for that is the only marker of success.",
+          "isCorrect": false,
+          "correction": "Of course one can engage in art, but it better be for money, for that is the only marker of success.",
+          "explanation": "'had better' 뒤에는 동사원형이 와야 하므로 'be'가 맞다."
+        },
+        {
+          "text": "But was that professor's declaration merely an old talker with a title mindlessly repeated the cultural norms and expectations that had, in fact, labeled him as \"successful\"?",
+          "isCorrect": false,
+          "correction": "But was that professor's declaration merely an old talker with a title mindlessly repeating the cultural norms and expectations that had, in fact, labeled him as \"successful\"?",
+          "explanation": "'an old talker'를 능동적으로 수식하므로 현재분사 'repeating'이 맞다."
+        },
+        {
+          "text": "In Western culture, it is almost impossible to separate professional with commercial, and so the artist is legitimized by their ability to earn money.",
+          "isCorrect": false,
+          "correction": "In Western culture, it is almost impossible to separate professional from commercial, and so the artist is legitimized by their ability to earn money.",
+          "explanation": "'separate A from B' 짝을 이루므로 'from'이 맞다."
+        },
+        {
+          "text": "Professional art, then, is inherent capitalist.",
+          "isCorrect": false,
+          "correction": "Professional art, then, is inherently capitalist.",
+          "explanation": "형용사 'capitalist'를 수식하므로 부사 'inherently'가 맞다."
+        }
+      ]
+    }
+  }
+}

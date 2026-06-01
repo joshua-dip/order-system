@@ -4,7 +4,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { extractJsonObject } from '@/lib/llm-json';
 import { VARIANT_DRAFT_BLANK_AND_SUMMARY_RULES } from '@/lib/variant-draft-blank-summary-rules';
-import { GRAMMAR_VARIANT_OPTIONS_FIXED, VARIANT_DRAFT_GRAMMAR_RULES } from '@/lib/variant-draft-grammar-rules';
+import {
+  GRAMMAR_HARD_VARIANT_OPTIONS_FIXED,
+  GRAMMAR_VARIANT_OPTIONS_FIXED,
+  VARIANT_DRAFT_GRAMMAR_RULES,
+} from '@/lib/variant-draft-grammar-rules';
 import { HARD_INSERTION_PROMPT } from '@/lib/hard-insertion-generator';
 import { IRRELEVANT_SENTENCE_PROMPT } from '@/lib/irrelevant-sentence-generator';
 
@@ -12,14 +16,15 @@ export function buildVariantDraftSystemPrompt(nextNum: number): string {
   return `당신은 한국 수능 영어 변형문제 출제자입니다. 주어진 지문과 문제 유형에 맞는 객관식 1문항을 새로 만듭니다.
 반드시 아래 키만 갖는 JSON 한 개만 출력하세요. 다른 설명·마크다운 금지.
 
-키: 순서(number), Source(string, 보통 빈 문자열), NumQuestion(number), Category(string), Question(string, 발문), Paragraph(string), Options(string), OptionType(string), CorrectAnswer(string, 1~5 또는 ①~⑤), Explanation(string, 한국어 해설)
+키: 순서(number), Source(string, 보통 빈 문자열), NumQuestion(number), Category(string), Question(string, 발문), Paragraph(string), Options(string), OptionType(string), CorrectAnswer(string, 1~5 또는 ①~⑤ — 단 어법-고난도는 ①③ 처럼 2~3개 연속), Explanation(string, 한국어 해설)
 
 공통 규칙:
 1) Paragraph: 지문을 입력과 동일하게 유지. 주제·제목·주장·일치·불일치에서는 <u> 없이 원문 그대로 복사. 함의(함축의미)·어법은 지정 형식으로 <u>...</u> 사용. 빈칸 유형은 정답 구절 **한 곳만** 빼고 그 자리를 \`<u>_____</u>\` 밑줄로 두고 나머지는 원문과 동일. 어법은 5개 밑줄을 "③ <u>표현</u>" 형식(동그라미는 <u> 밖, 번호와 <u> 사이 공백 1칸)으로 표시. **지문 앞→뒤 읽는 순서가 곧 ①→②→③→④→⑤**(첫 밑줄=①, 건너뛰기 금지). 한 문장당 동그라미 1개. **어법의 Options**는 아래 어법 유형 규칙(번호만 \`①###②###③###④###⑤\`).
-2) Options: **어법·삽입·삽입-고난도·무관한문장 제외** 모든 유형의 5개 보기 텍스트는 **반드시 영어로만** 작성한다. **한국어 선택지 절대 금지**(함의·요약·주제·제목·주장·일치·불일치·빈칸·순서 — 모두 영어). **5개 보기는 하나의 문자열**로, 보기 사이는 **오직 \`###\` 세 개**로만 구분. 예: \`① ... ### ② ... ### ③ ... ### ④ ... ### ⑤ ...\`. **객체(JSON dict) 형태로 Options를 출력하면 안 된다** — 반드시 위 문자열 형식. **어법**은 예외 — \`①###②###③###④###⑤\`만(번호만, Paragraph의 \`<u>\` 안에 보기 내용). **삽입·삽입-고난도·무관한문장**은 \`① ### ② ### ③ ### ④ ### ⑤\` 형태(번호만).
+2) Options: **어법·어법-고난도·삽입·삽입-고난도·무관한문장 제외** 모든 유형의 5개 보기 텍스트는 **반드시 영어로만** 작성한다. **한국어 선택지 절대 금지**(함의·요약·주제·제목·주장·일치·불일치·빈칸·순서 — 모두 영어). **5개 보기는 하나의 문자열**로, 보기 사이는 **오직 \`###\` 세 개**로만 구분. 예: \`① ... ### ② ... ### ③ ... ### ④ ... ### ⑤ ...\`. **객체(JSON dict) 형태로 Options를 출력하면 안 된다** — 반드시 위 문자열 형식. **어법·어법-고난도**는 예외 — \`①###②###③###④###⑤\`만(번호만, Paragraph의 \`<u>\` 안에 보기 내용). **삽입·삽입-고난도·무관한문장**은 \`① ### ② ### ③ ### ④ ### ⑤\` 형태(번호만).
 3) OptionType: 항상 "English".
 4) NumQuestion과 순서는 ${nextNum}.
 5) Explanation(해설): **짧게**. 한국어 **450자 이하**(대략 4~7문장). 다른 보기·번호를 두고 **망설이다 결론을 바꾸는 서술**(실제로 맞다/틀리다가 엇갈리는 문장) 금지. CorrectAnswer와 **하나의 결론**만 명확히.
+6) **CorrectAnswer 위치 분포**: 주제·제목·주장·일치·불일치·함의·빈칸·요약 유형의 정답 번호는 ①~⑤ 중 **무작위로 선택**해 한 자리(특히 ①)에 치우치지 말 것. 보기 5개 중 어느 위치에 정답을 둘지 매번 임의로 정한 뒤 그 위치에 정답 문장을, 나머지 4곳에 오답을 배치한다. (서버가 저장 시 추가로 분포를 보정하지만, 작성 단계에서도 분산할 것.)
 
 유형별 규칙:
 - 함의(함축의미): Paragraph는 입력 지문 전체를 그대로 복사하되, 함축적 의미가 담긴 구절(보통 한 문장 또는 의미 단위)을 \`<u>...</u>\`로 감싼다. Question은 "밑줄 친 부분이 다음 글에서 의미하는 바로 가장 적절한 것은?" 형식. 정답은 밑줄 부분의 함축적 의미와 일치하는 보기 하나, 오답은 그럴듯하지만 지문과 맞지 않는 내용. **5개 보기 모두 반드시 영어로**(한국어 금지). 밑줄 부분이 소문자로 시작하면 모든 선택지도 소문자로 시작, 대문자로 시작하면 선택지도 대문자로 시작. 고등학교 수준 어휘·표현 사용.
@@ -88,6 +93,9 @@ export function normalizeClaudeDraftJsonToQuestionData(
   if (typeT === '어법') {
     question_data.Options = GRAMMAR_VARIANT_OPTIONS_FIXED;
   }
+  if (typeT === '어법-고난도') {
+    question_data.Options = GRAMMAR_HARD_VARIANT_OPTIONS_FIXED;
+  }
 
   return question_data;
 }
@@ -98,6 +106,8 @@ export function buildVariantDraftUserMessage(params: VariantDraftClaudeParams): 
   const diff = (typeof difficulty === 'string' ? difficulty : '중').trim() || '중';
   /** 유형 `삽입-고난도` 또는 (구버전/관리자) `삽입` + 난이도 상 */
   const isHardInsertion = typeT === '삽입-고난도' || (diff === '상' && typeT === '삽입');
+  /** 유형 `어법-고난도` (모두 고르기 — 정답 2~3개) */
+  const isHardGrammar = typeT === '어법-고난도' || (diff === '상' && typeT === '어법');
   const extra =
     (process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA && process.env.ANTHROPIC_VARIANT_DRAFT_EXTRA.trim()) ||
     '';
@@ -111,7 +121,7 @@ export function buildVariantDraftUserMessage(params: VariantDraftClaudeParams): 
     ? `【무관한문장 유형 전용 규칙】\n${IRRELEVANT_SENTENCE_PROMPT}\n\n`
     : '';
 
-  return `문제 유형(type): ${type}${isHardInsertion ? ' (고난도 삽입 규칙 — 새 문장 생성)' : ''}${isIrrelevant ? ' (무관한 문장 생성)' : ''}
+  return `문제 유형(type): ${type}${isHardInsertion ? ' (고난도 삽입 규칙 — 새 문장 생성)' : ''}${isHardGrammar ? ' (고난도 어법 — 틀린 곳 2~3개를 모두 고르는 형식)' : ''}${isIrrelevant ? ' (무관한 문장 생성)' : ''}
 ${extra ? `운영자 공통 지시(.env): ${extra}\n` : ''}${hardBlock}${irrelevantBlock}${typePrompt ? `【이 유형 전용 출제 지침】\n${typePrompt}\n\n` : ''}${userHint ? `이번 문항만의 추가 지시: ${userHint}\n` : ''}
 [지문 Paragraph]
 ${paragraph}`;

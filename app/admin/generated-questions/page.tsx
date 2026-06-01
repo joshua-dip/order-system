@@ -16,6 +16,7 @@ import { OpenQCountFromQuery } from './OpenQCountFromQuery';
 import { PageModeFromQuery, type GqPageMode } from './PageModeFromQuery';
 import { QuestionStatsModal } from './QuestionStatsModal';
 import { MEMBER_ESSAY_QUESTION_TYPES } from '@/lib/member-essay-draft-claude';
+import { VALIDATION_CATALOG } from '@/lib/variant-review-catalog';
 
 const ESSAY_TYPE_SET = new Set<string>(MEMBER_ESSAY_QUESTION_TYPES as readonly string[]);
 const isEssayType = (t: string) => ESSAY_TYPE_SET.has(t);
@@ -681,6 +682,54 @@ export default function AdminGeneratedQuestionsPage() {
   const [explanationNanSelectedIds, setExplanationNanSelectedIds] = useState<Set<string>>(() => new Set());
   /** Explanation/Options 검증 모달에서 셀 클릭 시 전체 텍스트 보기 */
   const [fullTextView, setFullTextView] = useState<{ title: string; text: string } | null>(null);
+  /** 빈칸 Paragraph 검증 — Paragraph 안에 빈칸 표시(<u>·____ 등) 없음 */
+  const [blankParagraphOpen, setBlankParagraphOpen] = useState(false);
+  const [blankParagraphLoading, setBlankParagraphLoading] = useState(false);
+  const [blankParagraphError, setBlankParagraphError] = useState<string | null>(null);
+  const [blankParagraphData, setBlankParagraphData] = useState<{
+    filters: { textbook: string | null; type: string };
+    totalScanned: number;
+    totalMatched: number;
+    noParagraph: number;
+    note?: string;
+    items: {
+      id: string;
+      textbook: string;
+      source: string;
+      type: string;
+      status: string;
+      difficulty: string;
+      reason: string;
+      snippet: string;
+      full: string;
+    }[];
+    truncated?: boolean;
+  } | null>(null);
+
+  /** 요약 Paragraph 검증 — (A)/(B) 누락·본문 위 위치 */
+  const [summaryParagraphOpen, setSummaryParagraphOpen] = useState(false);
+  const [summaryParagraphLoading, setSummaryParagraphLoading] = useState(false);
+  const [summaryParagraphError, setSummaryParagraphError] = useState<string | null>(null);
+  const [summaryParagraphData, setSummaryParagraphData] = useState<{
+    filters: { textbook: string | null; type: string };
+    totalScanned: number;
+    totalMatched: number;
+    breakdown: Record<string, number>;
+    note?: string;
+    items: {
+      id: string;
+      textbook: string;
+      source: string;
+      type: string;
+      status: string;
+      difficulty: string;
+      reason: string;
+      snippet: string;
+      full: string;
+    }[];
+    truncated?: boolean;
+  } | null>(null);
+
   /** Options 'API' 검증 */
   const [optionsApiOpen, setOptionsApiOpen] = useState(false);
   const [optionsApiLoading, setOptionsApiLoading] = useState(false);
@@ -795,6 +844,40 @@ export default function AdminGeneratedQuestionsPage() {
   const [grammarRegenBatchSize, setGrammarRegenBatchSize] = useState(30);
   /** 메뉴 접기/펼치기 (검증 버튼 아래 나머지 메뉴) */
   const [extraMenuExpanded, setExtraMenuExpanded] = useState(false);
+
+  /** 전체검수CLI 모달 — 어떤 검증 단계가 검수에서 자동 실행되는지 가이드 + CLI 복사 */
+  const [reviewCliOpen, setReviewCliOpen] = useState(false);
+  const [reviewCliOrderNumber, setReviewCliOrderNumber] = useState('');
+  const [reviewCliCopied, setReviewCliCopied] = useState(false);
+
+  /** 어법 해설 모순 검증: 해설이 "모든 어법이 맞다" 단언 → 정답 없는 불량 문항 */
+  const [grammarExplAllOpen, setGrammarExplAllOpen] = useState(false);
+  const [grammarExplAllLoading, setGrammarExplAllLoading] = useState(false);
+  const [grammarExplAllError, setGrammarExplAllError] = useState<string | null>(null);
+  const [grammarExplAllData, setGrammarExplAllData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalScanned: number;
+    scanned: number;
+    truncated: boolean;
+    maxScan: number;
+    withHits: number;
+    strongHits: number;
+    byLabel: { label: string; count: number }[];
+    items: {
+      id: string;
+      textbook: string;
+      source: string;
+      passageId: string;
+      status: string;
+      correctAnswer: string;
+      labels: string[];
+      strong: boolean;
+      snippet: string;
+    }[];
+  } | null>(null);
+  const [grammarExplAllMarkLoading, setGrammarExplAllMarkLoading] = useState(false);
+  const [grammarExplAllMarkMessage, setGrammarExplAllMarkMessage] = useState<string | null>(null);
+  const [grammarExplAllOnlyStrong, setGrammarExplAllOnlyStrong] = useState(true);
 
   type QCountNoRow = {
     passageId: string;
@@ -2542,6 +2625,68 @@ export default function AdminGeneratedQuestionsPage() {
     if (textbooks.length === 0) fetchMeta();
   };
 
+  const openBlankParagraphModal = () => {
+    setBlankParagraphOpen(true);
+    setBlankParagraphData(null);
+    setBlankParagraphError(null);
+    setBlankParagraphLoading(true);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/blank-paragraph-missing-underline?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setBlankParagraphError(d.error || '검증 실패');
+          return;
+        }
+        setBlankParagraphData({
+          filters: d.filters ?? { textbook: null, type: '빈칸' },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          noParagraph: d.noParagraph ?? 0,
+          note: typeof d.note === 'string' ? d.note : undefined,
+          items: Array.isArray(d.items) ? d.items : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setBlankParagraphError('네트워크 오류'))
+      .finally(() => setBlankParagraphLoading(false));
+  };
+  const runBlankParagraphValidate = openBlankParagraphModal;
+
+  const openSummaryParagraphModal = () => {
+    setSummaryParagraphOpen(true);
+    setSummaryParagraphData(null);
+    setSummaryParagraphError(null);
+    setSummaryParagraphLoading(true);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/summary-paragraph-structure?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setSummaryParagraphError(d.error || '검증 실패');
+          return;
+        }
+        setSummaryParagraphData({
+          filters: d.filters ?? { textbook: null, type: '요약' },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          breakdown: (d.breakdown ?? {}) as Record<string, number>,
+          note: typeof d.note === 'string' ? d.note : undefined,
+          items: Array.isArray(d.items) ? d.items : [],
+          truncated: !!d.truncated,
+        });
+      })
+      .catch(() => setSummaryParagraphError('네트워크 오류'))
+      .finally(() => setSummaryParagraphLoading(false));
+  };
+  const runSummaryParagraphValidate = openSummaryParagraphModal;
+
   const openExplanationApiModal = () => {
     setExplanationApiOpen(true);
     setExplanationApiData(null);
@@ -3051,6 +3196,92 @@ export default function AdminGeneratedQuestionsPage() {
       })
       .catch(() => setGrammarVariantError('네트워크 오류'))
       .finally(() => setGrammarVariantLoading(false));
+  };
+
+  const openGrammarExplAllModal = () => {
+    setGrammarExplAllOpen(true);
+    setGrammarExplAllData(null);
+    setGrammarExplAllError(null);
+    setGrammarExplAllMarkMessage(null);
+    runGrammarExplAllValidate();
+  };
+
+  const runGrammarExplAllValidate = () => {
+    setGrammarExplAllLoading(true);
+    setGrammarExplAllError(null);
+    setGrammarExplAllData(null);
+    setGrammarExplAllMarkMessage(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    fetch(`/api/admin/generated-questions/validate/grammar-explanation-all-correct?${params}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setGrammarExplAllError(d.error || '검증 실패');
+          return;
+        }
+        setGrammarExplAllData({
+          filters: d.filters ?? { textbook: null, type: '어법' },
+          totalScanned: d.totalScanned ?? 0,
+          scanned: d.scanned ?? 0,
+          truncated: !!d.truncated,
+          maxScan: d.maxScan ?? 0,
+          withHits: d.withHits ?? 0,
+          strongHits: d.strongHits ?? 0,
+          byLabel: Array.isArray(d.byLabel) ? d.byLabel : [],
+          items: Array.isArray(d.items) ? d.items : [],
+        });
+      })
+      .catch(() => setGrammarExplAllError('네트워크 오류'))
+      .finally(() => setGrammarExplAllLoading(false));
+  };
+
+  const grammarExplAllVisibleItems = useMemo(() => {
+    if (!grammarExplAllData?.items?.length) return [];
+    return grammarExplAllOnlyStrong
+      ? grammarExplAllData.items.filter((it) => it.strong)
+      : grammarExplAllData.items;
+  }, [grammarExplAllData, grammarExplAllOnlyStrong]);
+
+  const runGrammarExplAllMarkMismatch = async () => {
+    const ids = grammarExplAllVisibleItems
+      .filter((it) => it.status !== '검수불일치')
+      .map((it) => it.id);
+    if (ids.length === 0) return;
+    if (
+      !confirm(
+        `해설이 "모든 어법이 맞다"고 단언한 ${ids.length}건의 status 를 「검수불일치」로 변경합니다.\nClaude API 호출 없이 DB 메타만 갱신합니다. 계속할까요?`
+      )
+    ) {
+      return;
+    }
+    setGrammarExplAllMarkLoading(true);
+    setGrammarExplAllMarkMessage(null);
+    setGrammarExplAllError(null);
+    try {
+      const res = await fetch(
+        '/api/admin/generated-questions/validate/grammar-explanation-all-correct/mark-mismatch',
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        }
+      );
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        setGrammarExplAllError(d.error || '마킹 실패');
+      } else {
+        setGrammarExplAllMarkMessage(
+          `요청 ${d.requested}건 중 ${d.modified}건을 검수불일치로 변경했습니다. (이미 동일 status면 modified 에서 제외)`
+        );
+        runGrammarExplAllValidate();
+      }
+    } catch {
+      setGrammarExplAllError('네트워크 오류');
+    } finally {
+      setGrammarExplAllMarkLoading(false);
+    }
   };
 
   const grammarBlocksErrorIds = useMemo(() => {
@@ -3603,6 +3834,17 @@ export default function AdminGeneratedQuestionsPage() {
             </Link>
             <button
               type="button"
+              onClick={() => {
+                setReviewCliOpen(true);
+                setReviewCliCopied(false);
+              }}
+              className="text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg border border-sky-700/50 hover:border-sky-500/60 text-sky-200/90 font-semibold"
+              title="검수 시 자동으로 실행되는 모든 검증 단계 안내 + CLI 명령 복사"
+            >
+              전체검수 CLI
+            </button>
+            <button
+              type="button"
               onClick={openCreate}
               className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold px-4 py-2 rounded-lg"
             >
@@ -3892,6 +4134,24 @@ export default function AdminGeneratedQuestionsPage() {
                 Options 중복 검증
                 </button>
                 <button
+                  type="button"
+                  disabled={blankParagraphLoading}
+                  onClick={openBlankParagraphModal}
+                  className="shrink-0 bg-cyan-900/80 hover:bg-cyan-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-cyan-100 border border-cyan-500/40"
+                  title="type=빈칸 · Paragraph 안에 빈칸 표시(<u>·____·———— 등)가 없는 문항"
+                >
+                  빈칸 검증
+                </button>
+                <button
+                  type="button"
+                  disabled={summaryParagraphLoading}
+                  onClick={openSummaryParagraphModal}
+                  className="shrink-0 bg-fuchsia-900/80 hover:bg-fuchsia-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-fuchsia-100 border border-fuchsia-500/40"
+                  title="type=요약 · Paragraph에 (A)/(B) 누락 또는 요약문이 본문 위에 위치한 문항"
+                >
+                  요약 검증
+                </button>
+                <button
                 type="button"
                 disabled={optionsOverlapLoading}
                 onClick={openOptionsOverlapModal}
@@ -3951,6 +4211,15 @@ export default function AdminGeneratedQuestionsPage() {
                   title="type=어법만: ①~⑤·밑줄 형식, Options가 ①###②###③###④###⑤(번호만)이면 보기↔밑줄 비교 생략, 구형 보기는 CorrectAnswer만 일치 검사, 원문 대비 오답 칸·전체 평문"
                 >
                   어법 변형 검증
+                </button>
+                <button
+                  type="button"
+                  disabled={grammarExplAllLoading}
+                  onClick={openGrammarExplAllModal}
+                  className="shrink-0 bg-fuchsia-900/80 hover:bg-fuchsia-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-fuchsia-100 border border-fuchsia-500/40"
+                  title="type=어법: 해설이 「모든 어법이 맞다 · 정답이 없다 · 오류 없다」 등으로 5개 보기 전부를 정답 처리해 사실상 정답이 없는 문항 검출. 「나머지는 모두 옳다」 류 정상 해설은 약한 시그널에서 제외."
+                >
+                  어법 해설 모순 검증
                 </button>
                 <button
                   type="button"
@@ -5378,6 +5647,264 @@ export default function AdminGeneratedQuestionsPage() {
         </div>
       )}
 
+      {blankParagraphOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-cyan-600/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-cyan-200">빈칸 검증 — Paragraph에 빈칸 표시 없음</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <strong className="text-cyan-300">type=빈칸</strong> 만 스캔. 상단 <strong className="text-slate-300">교재</strong> 필터가 적용됩니다.
+                  Paragraph 안에 <code className="text-cyan-300">{'<u>…</u>'}</code> · <code className="text-cyan-300">____</code>(4개+) · <code className="text-cyan-300">————</code>(4개+) · <code className="text-cyan-300">------</code>(6개+) 중 어느 것도 없으면 이상으로 분류합니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBlankParagraphOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {blankParagraphLoading && !blankParagraphData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-cyan-300">
+                  <span className="inline-block w-6 h-6 border-2 border-cyan-500/50 border-t-cyan-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {blankParagraphError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {blankParagraphError}
+                </div>
+              )}
+              {blankParagraphData && !blankParagraphLoading && (
+                <>
+                  {blankParagraphData.note && (
+                    <p className="mb-3 text-xs text-slate-400 leading-relaxed border border-slate-600/80 rounded-lg p-3 bg-slate-900/50">
+                      {blankParagraphData.note}
+                    </p>
+                  )}
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-cyan-200">스캔 총</strong>:{' '}
+                      <strong className="text-white">{blankParagraphData.totalScanned.toLocaleString()}</strong>건 ·{' '}
+                      <strong className="text-cyan-200">이상</strong>:{' '}
+                      <strong className="text-white">{blankParagraphData.totalMatched.toLocaleString()}</strong>건
+                      {blankParagraphData.filters.textbook && (
+                        <> · 교재: <strong className="text-cyan-200">{blankParagraphData.filters.textbook}</strong></>
+                      )}
+                      {blankParagraphData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">
+                          (최대 {blankParagraphData.items.length}건만 표시)
+                        </span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runBlankParagraphValidate}
+                      disabled={blankParagraphLoading}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-cyan-800/80 hover:bg-cyan-700 text-cyan-200 disabled:opacity-50"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {blankParagraphData.totalMatched === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      해당 없음 — 선택한 교재 필터에서 빈칸 표시가 누락된 문항이 없습니다.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[55vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">상태</th>
+                            <th className="py-2 px-2">사유</th>
+                            <th className="py-2 px-2">Paragraph 머리</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {blankParagraphData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBlankParagraphOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-sky-400 hover:text-sky-300 underline text-left"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-slate-300 whitespace-nowrap">{it.status}</td>
+                              <td className="py-1.5 px-2 text-amber-200/95 whitespace-nowrap">{it.reason}</td>
+                              <td
+                                className="py-1.5 px-2 text-slate-400 max-w-[420px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                title="클릭하면 전체 Paragraph 보기"
+                                onClick={() =>
+                                  setFullTextView({
+                                    title: `Paragraph · ${it.source} · ${it.type}`,
+                                    text: it.full || it.snippet,
+                                  })
+                                }
+                              >
+                                {it.snippet}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summaryParagraphOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-fuchsia-600/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-fuchsia-200">요약 검증 — Paragraph 구조</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <strong className="text-fuchsia-300">type=요약</strong> 만 스캔. 상단 <strong className="text-slate-300">교재</strong> 필터가 적용됩니다.
+                  표준은 「본문 → 빈 줄 → 요약문 <code className="text-fuchsia-300">(A) … (B) …</code>」 입니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSummaryParagraphOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {summaryParagraphLoading && !summaryParagraphData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-fuchsia-300">
+                  <span className="inline-block w-6 h-6 border-2 border-fuchsia-500/50 border-t-fuchsia-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {summaryParagraphError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {summaryParagraphError}
+                </div>
+              )}
+              {summaryParagraphData && !summaryParagraphLoading && (
+                <>
+                  {summaryParagraphData.note && (
+                    <p className="mb-3 text-xs text-slate-400 leading-relaxed border border-slate-600/80 rounded-lg p-3 bg-slate-900/50">
+                      {summaryParagraphData.note}
+                    </p>
+                  )}
+                  <div className="mb-3 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-fuchsia-200">스캔 총</strong>:{' '}
+                      <strong className="text-white">{summaryParagraphData.totalScanned.toLocaleString()}</strong>건 ·{' '}
+                      <strong className="text-fuchsia-200">이상</strong>:{' '}
+                      <strong className="text-white">{summaryParagraphData.totalMatched.toLocaleString()}</strong>건
+                      {summaryParagraphData.filters.textbook && (
+                        <> · 교재: <strong className="text-fuchsia-200">{summaryParagraphData.filters.textbook}</strong></>
+                      )}
+                      {summaryParagraphData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">
+                          (최대 {summaryParagraphData.items.length}건만 표시)
+                        </span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runSummaryParagraphValidate}
+                      disabled={summaryParagraphLoading}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-fuchsia-800/80 hover:bg-fuchsia-700 text-fuchsia-200 disabled:opacity-50"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {Object.keys(summaryParagraphData.breakdown).length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-2 text-xs">
+                      {Object.entries(summaryParagraphData.breakdown).map(([k, v]) => (
+                        <span
+                          key={k}
+                          className="px-2 py-1 rounded bg-slate-900/70 border border-slate-700 text-slate-300"
+                        >
+                          {k}: <strong className="text-fuchsia-200">{v}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {summaryParagraphData.totalMatched === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      해당 없음 — 선택한 교재 필터에서 요약 구조 이상 문항이 없습니다.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[55vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">상태</th>
+                            <th className="py-2 px-2">사유</th>
+                            <th className="py-2 px-2">Paragraph 머리</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {summaryParagraphData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSummaryParagraphOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-sky-400 hover:text-sky-300 underline text-left"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-slate-300 whitespace-nowrap">{it.status}</td>
+                              <td className="py-1.5 px-2 text-amber-200/95 whitespace-nowrap">{it.reason}</td>
+                              <td
+                                className="py-1.5 px-2 text-slate-400 max-w-[420px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                title="클릭하면 전체 Paragraph 보기"
+                                onClick={() =>
+                                  setFullTextView({
+                                    title: `Paragraph · ${it.source} · ${it.type}`,
+                                    text: it.full || it.snippet,
+                                  })
+                                }
+                              >
+                                {it.snippet}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {grammarVariantOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
           <div className="bg-slate-800 border border-indigo-600/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
@@ -5550,6 +6077,364 @@ export default function AdminGeneratedQuestionsPage() {
                   )}
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {grammarExplAllOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-fuchsia-600/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-fuchsia-200">어법 해설 모순 검증</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <strong className="text-fuchsia-300">type=어법</strong> 중 해설이{' '}
+                  「모든 어법이 맞다 · 정답이 없다 · 오류 없다 · ①~⑤ 모두 옳다」 등으로 5개 보기 전부를 정답 처리한 문항을 검출.
+                  「<span className="text-slate-300">나머지는 모두 옳다</span>」 류 정상 해설은 약한 시그널에서 자동 제외.
+                  <br />
+                  <span className="text-fuchsia-300">강한 시그널만</span> 보기 체크박스로 약한 시그널을 함께 볼지 선택할 수 있습니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGrammarExplAllOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {grammarExplAllLoading && !grammarExplAllData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-fuchsia-300">
+                  <span className="inline-block w-6 h-6 border-2 border-fuchsia-500/50 border-t-fuchsia-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {grammarExplAllError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {grammarExplAllError}
+                </div>
+              )}
+              {grammarExplAllData && !grammarExplAllLoading && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      어법 전체 <strong className="text-white">{grammarExplAllData.totalScanned.toLocaleString()}</strong>건 중{' '}
+                      <strong className="text-white">{grammarExplAllData.scanned.toLocaleString()}</strong>건 검사
+                      {grammarExplAllData.truncated && (
+                        <span className="text-amber-400 text-xs ml-1">(스캔 상한 {grammarExplAllData.maxScan.toLocaleString()}건)</span>
+                      )}
+                      {grammarExplAllData.filters.textbook && (
+                        <> · 교재: <strong className="text-fuchsia-200">{grammarExplAllData.filters.textbook}</strong></>
+                      )}
+                      <br />
+                      <span className="text-red-300">강한 시그널 {grammarExplAllData.strongHits.toLocaleString()}건</span>
+                      {' · '}
+                      <span className="text-amber-200">전체 hit {grammarExplAllData.withHits.toLocaleString()}건</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runGrammarExplAllValidate}
+                      disabled={grammarExplAllLoading || grammarExplAllMarkLoading}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-fuchsia-800/80 hover:bg-fuchsia-700 text-fuchsia-200 disabled:opacity-50"
+                    >
+                      다시 검증
+                    </button>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={grammarExplAllOnlyStrong}
+                        onChange={(e) => setGrammarExplAllOnlyStrong(e.target.checked)}
+                        className="accent-fuchsia-500"
+                      />
+                      강한 시그널만
+                    </label>
+                    <button
+                      type="button"
+                      onClick={runGrammarExplAllMarkMismatch}
+                      disabled={grammarExplAllLoading || grammarExplAllMarkLoading || grammarExplAllVisibleItems.length === 0}
+                      title="현재 표시된 항목 중 status 가 검수불일치가 아닌 것을 일괄 「검수불일치」로 변경합니다. Anthropic API 호출 없음."
+                      className="text-xs px-3 py-1.5 rounded-lg bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-amber-600/40 disabled:opacity-50"
+                    >
+                      {grammarExplAllMarkLoading
+                        ? '마킹 중…'
+                        : `표시된 ${grammarExplAllVisibleItems.length}건을 검수불일치로 마킹`}
+                    </button>
+                  </div>
+                  {grammarExplAllData.byLabel.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                      {grammarExplAllData.byLabel.map((b) => (
+                        <span
+                          key={b.label}
+                          className="px-2 py-0.5 rounded-full bg-slate-700/70 border border-slate-600/60 text-slate-300"
+                        >
+                          {b.label} · {b.count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {grammarExplAllMarkMessage && (
+                    <p className="text-xs text-emerald-400/90 mb-2">{grammarExplAllMarkMessage}</p>
+                  )}
+                  {grammarExplAllVisibleItems.length === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      현재 필터에서 검출된 문항이 없습니다.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[55vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">시그널</th>
+                            <th className="py-2 px-2">정답</th>
+                            <th className="py-2 px-2">status</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">해설 발췌</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {grammarExplAllVisibleItems.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setGrammarExplAllOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-fuchsia-400 hover:text-fuchsia-300 underline"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 whitespace-nowrap">
+                                {it.strong ? (
+                                  <span className="text-red-400 font-medium">강함</span>
+                                ) : (
+                                  <span className="text-amber-300 font-medium">약함</span>
+                                )}
+                                <div className="text-[10px] text-slate-500 leading-tight">
+                                  {it.labels.join(', ')}
+                                </div>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-200 font-semibold">{it.correctAnswer || '—'}</td>
+                              <td className="py-1.5 px-2 whitespace-nowrap">
+                                {it.status === '검수불일치' ? (
+                                  <span className="text-amber-300">{it.status}</span>
+                                ) : (
+                                  <span className="text-slate-400">{it.status || '(미설정)'}</span>
+                                )}
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-slate-400 align-top max-w-[420px]">
+                                <div className="whitespace-pre-wrap leading-snug">{it.snippet}</div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reviewCliOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-sky-600/40 rounded-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-sky-200">전체검수 CLI · 검수 자동 검증 안내</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <strong className="text-sky-300">variant_review_pending_record</strong> (MCP) /{' '}
+                  <strong className="text-sky-300">npm run cc:variant</strong> (CLI) 로 대기 문항을 검수할 때,
+                  서버가 DB 정답 비교와 함께 <strong className="text-sky-200">per-question 종합 검증</strong>을 동시에 돌려{' '}
+                  <code className="px-1 rounded bg-slate-700/60">validation_issues</code> 로 같이 기록합니다.
+                  검증 결과 <strong className="text-rose-300">error</strong> 가 1건이라도 있으면 정답이라도{' '}
+                  <strong className="text-amber-300">검수불일치</strong> 로 강제 전이됩니다 ·{' '}
+                  <code className="px-1 rounded bg-slate-700/60">forced_mismatch_by_validation=true</code>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewCliOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5 space-y-5">
+              <section>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">1. 검수 명령 (Pro-only · Anthropic API 호출 없음)</h3>
+                <div className="rounded-lg border border-slate-600 bg-slate-900/60 p-3 space-y-3">
+                  <label className="block text-xs text-slate-300">
+                    교재명 또는 주문번호 (둘 다 선택 가능)
+                    <input
+                      type="text"
+                      value={reviewCliOrderNumber}
+                      onChange={(e) => {
+                        setReviewCliOrderNumber(e.target.value);
+                        setReviewCliCopied(false);
+                      }}
+                      placeholder="BV-20260529-001  또는  26년 3월 고1 영어모의고사"
+                      className="mt-1 w-full bg-slate-800 border border-slate-600 text-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-sky-500 font-mono"
+                    />
+                  </label>
+                  {(() => {
+                    const arg = reviewCliOrderNumber.trim();
+                    const isOrder = /^[A-Za-z]{2}-\d{8}-\d+$/.test(arg);
+                    const cmd = !arg
+                      ? '# 1) 대기 일괄 검수 (DB 정답으로 자기-풀이 + 종합 검증)\nnpm run cc:variant -- record-review-bulk --textbook "교재명"\n\n# 2) Pro 채팅 워크플로우 (주문번호 기반)\nnpm run claude -- claude:BV-20260529-001\n# 위 출력 보고 채팅에서 "검수해줘" 라고 말하면\n# MCP variant_review_pending_list → 풀이 → variant_review_pending_record 자동 진행'
+                      : isOrder
+                        ? `# 주문 한 줄 워크플로우 (Pro 채팅)\nnpm run claude -- claude:${arg}\n# 이어 채팅에서 "이 주문 검수까지 이어서 진행해줘" 라고 입력`
+                        : `# 교재 단위 일괄 검수 (DB 정답 + per-question 종합 검증)\nnpm run cc:variant -- record-review-bulk --textbook "${arg}"\n# dry-run 으로 먼저 확인하려면 끝에 --dry-run true 추가`;
+                    return (
+                      <>
+                        <pre className="text-xs bg-slate-950/80 border border-slate-700 rounded p-3 text-sky-200 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                          {cmd}
+                        </pre>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(cmd);
+                                setReviewCliCopied(true);
+                                setTimeout(() => setReviewCliCopied(false), 1800);
+                              } catch {
+                                /* ignore */
+                              }
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-sky-700/80 hover:bg-sky-600 text-sky-100 font-semibold"
+                          >
+                            {reviewCliCopied ? '복사 완료 ✓' : '클립보드 복사'}
+                          </button>
+                          <p className="text-xs text-slate-400">
+                            {!arg
+                              ? '교재 입력 시 일괄 명령으로, 주문번호(BV-/MV-…) 입력 시 채팅 워크플로우로 자동 전환.'
+                              : isOrder
+                                ? '주문번호 단축어. shortage 출력 후 채팅 한 줄로 검수 진행.'
+                                : '교재 내 status=대기 전체를 DB 정답으로 record-review. 검증 error 있으면 자동 검수불일치.'}
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">2. 검수 흐름 (status 전이표)</h3>
+                <div className="overflow-x-auto rounded-lg border border-slate-600">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-900/80">
+                      <tr className="text-left text-slate-400 border-b border-slate-600">
+                        <th className="px-2 py-1.5">status_at_run</th>
+                        <th className="px-2 py-1.5">is_correct</th>
+                        <th className="px-2 py-1.5">validation error</th>
+                        <th className="px-2 py-1.5">attemptNumber</th>
+                        <th className="px-2 py-1.5">결과 status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-slate-300">
+                      {[
+                        ['대기', 'true', '없음', '미지정·1', '완료'],
+                        ['대기', 'true', '없음', '≥ 2', '검수불일치'],
+                        ['대기', 'true', '있음', '—', '검수불일치 (forced)'],
+                        ['대기', 'false', '있음', '—', '검수불일치 (forced)'],
+                        ['대기', 'false', '없음', '—', '그대로 (로그만)'],
+                        ['완료·검수불일치·기타', '—', '—', '—', '그대로 (대기 가드)'],
+                      ].map((row, i) => (
+                        <tr key={i} className="border-b border-slate-700/40">
+                          {row.map((c, j) => (
+                            <td key={j} className="px-2 py-1.5 align-top">
+                              {c}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  대기 가드: <code className="px-1 rounded bg-slate-700/60">updateOne({'{'} _id, status: &apos;대기&apos; {'}'}…)</code> 매치 조건이 들어 있어 동시 검수가 겹쳐도 한 번만 전이됩니다.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">3. per-question 검증 — 검수에서 자동 실행</h3>
+                <p className="text-xs text-slate-400 mb-2">
+                  한 문항만으로 판단 가능한 검사. <code className="px-1 rounded bg-slate-700/60">recordReviewLogFromClaudeCode</code> 가 호출될 때마다 자동 실행되어 로그·status 전이에 반영됩니다.
+                </p>
+                <div className="space-y-2">
+                  {VALIDATION_CATALOG.filter((v) => v.scope === 'per-question').map((v) => (
+                    <div
+                      key={v.title}
+                      className="rounded-lg border border-slate-700 bg-slate-900/50 p-3"
+                    >
+                      <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+                        <span className="text-sm font-semibold text-sky-200">{v.title}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/80 text-slate-300">
+                          {v.appliesTo}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">{v.description}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono break-all">
+                        rule: {v.rule}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-amber-300 mb-2">4. cross-question 검증 — 별도 모달 또는 CLI</h3>
+                <p className="text-xs text-slate-400 mb-2">
+                  한 문항만으로는 판단할 수 없어 그룹·교재·passage 단위로 묶어 검사합니다. 검수에서는 실행되지 않으며, 상단 검증 버튼이나 별도 CLI로 따로 돌려야 합니다.
+                </p>
+                <div className="space-y-2">
+                  {VALIDATION_CATALOG.filter((v) => v.scope === 'cross-question').map((v) => (
+                    <div
+                      key={v.title}
+                      className="rounded-lg border border-amber-900/40 bg-amber-950/20 p-3"
+                    >
+                      <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+                        <span className="text-sm font-semibold text-amber-200">{v.title}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-200">
+                          {v.appliesTo}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">{v.description}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono break-all">
+                        rule: {v.rule}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">5. 검증 결과 로그 위치</h3>
+                <ul className="text-xs text-slate-300 list-disc pl-5 space-y-1">
+                  <li>
+                    컬렉션: <code className="px-1 rounded bg-slate-700/60">gomijoshua.generated_question_claude_reviews</code>
+                  </li>
+                  <li>
+                    필드: <code className="px-1 rounded bg-slate-700/60">validation_issues: [{'{ rule, severity, message }'}]</code>,{' '}
+                    <code className="px-1 rounded bg-slate-700/60">forced_mismatch_by_validation: boolean</code>
+                  </li>
+                  <li>
+                    UI: 헤더 「Claude Code 검수 로그」 링크에서 확인. 검수불일치는 「문제 검수」에서 큐에 노출됨.
+                  </li>
+                </ul>
+              </section>
             </div>
           </div>
         </div>

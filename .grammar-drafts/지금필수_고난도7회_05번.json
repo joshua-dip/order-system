@@ -1,0 +1,266 @@
+{
+  "passageId": "69d4eca372a886137cd83f1f",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 05번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 05번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 05번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Our understanding of realism is often guided by a broad assumption that reality is not pretty.",
+      "tokens": ["Our","understanding","of","realism","is","often","guided","by","a","broad","assumption","that","reality","is","not","pretty."],
+      "korean": "사실주의에 대한 우리의 이해는 현실이 예쁘지 않다는 광범위한 가정에 의해 흔히 이끌린다."
+    },
+    {
+      "idx": 1,
+      "text": "Any content can potentially be captured in a realistic manner, but we generally do not picture high tea in a formal English garden when we discuss realism.",
+      "tokens": ["Any","content","can","potentially","be","captured","in","a","realistic","manner,","but","we","generally","do","not","picture","high","tea","in","a","formal","English","garden","when","we","discuss","realism."],
+      "korean": "어쩌면 어떤 내용이든 현실적인 방법으로 포착될 수 있지만, 우리가 사실주의를 논의할 때 우리는 일반적으로 격식을 차린 영국식 정원에서의 티타임을 상상하지 않는다."
+    },
+    {
+      "idx": 2,
+      "text": "If a Hollywood fiction film shot with the dramatic look is considered to be particularly realistic, it often is set in a less-than-glamorous world.",
+      "tokens": ["If","a","Hollywood","fiction","film","shot","with","the","dramatic","look","is","considered","to","be","particularly","realistic,","it","often","is","set","in","a","less-than-glamorous","world."],
+      "korean": "만약 극적인 모습으로 촬영된 할리우드 극영화가 특히 현실적인 것으로 여겨진다면, 그것은 흔히 화려하지 않은 세상을 배경으로 하고 있다."
+    },
+    {
+      "idx": 3,
+      "text": "There is a bias in what we generally think of as realistic content toward the gritty, the untidy, the lower class.",
+      "tokens": ["There","is","a","bias","in","what","we","generally","think","of","as","realistic","content","toward","the","gritty,","the","untidy,","the","lower","class."],
+      "korean": "우리가 일반적으로 불쾌한 현실을 그대로 보여 주는 것, 단정치 못한 것, 하층 계급에 대해 우리가 사실적인 내용으로 여기는 것에는 편견이 있다."
+    },
+    {
+      "idx": 4,
+      "text": "This is not because we think that aristocrats are not real or that beautiful objects do not exist, but there is a long history of realism being used to expose harsh conditions that we need to reform in the world.",
+      "tokens": ["This","is","not","because","we","think","that","aristocrats","are","not","real","or","that","beautiful","objects","do","not","exist,","but","there","is","a","long","history","of","realism","being","used","to","expose","harsh","conditions","that","we","need","to","reform","in","the","world."],
+      "korean": "이것은 귀족들이 진짜가 아니거나 아름다운 물건들이 존재하지 않는다고 우리가 생각하기 때문이 아니라, 우리가 세상에서 개선할 필요가 있는 거친 환경을 드러내기 위해 사용되고 있는 사실주의의 오랜 역사가 있기 때문이다."
+    },
+    {
+      "idx": 5,
+      "text": "This historical link remains powerful in the way we think about the very nature of what is realistic.",
+      "tokens": ["This","historical","link","remains","powerful","in","the","way","we","think","about","the","very","nature","of","what","is","realistic."],
+      "korean": "이 역사적 연계는 우리가 사실적인 것의 바로 그 본질에 대해 생각하는 방식에 영향력이 있다."
+    },
+    {
+      "idx": 6,
+      "text": "It inclines realistic media toward the unpolished, both in terms of their content and their style.",
+      "tokens": ["It","inclines","realistic","media","toward","the","unpolished,","both","in","terms","of","their","content","and","their","style."],
+      "korean": "그것은 (그들이 다루는) 내용과 그들의 양식 둘 다에 있어서 세련되지 않은 것 쪽으로 사실적인 매체를 기울인다."
+    },
+    {
+      "idx": 7,
+      "text": "The documentary look is particularly associated with a style that appears messier, less controlled, and less planned.",
+      "tokens": ["The","documentary","look","is","particularly","associated","with","a","style","that","appears","messier,","less","controlled,","and","less","planned."],
+      "korean": "다큐멘터리의 장면은 더 혼란스럽고, 덜 통제되며, 그리고 덜 계획된 것처럼 보이는 양식과 특히 관련이 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T6-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "guided",
+          "wrongCandidates": ["guiding"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Our understanding'은 가정에 의해 이끌리는 대상이므로 'is + 과거분사' 형태의 수동태 'guided'가 맞다. 현재분사 'guiding'을 쓰면 능동의 의미가 되어 주체-동작 관계가 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "guide",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T23-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 23,
+          "endTokenIdx": 23,
+          "correctForm": "when",
+          "wrongCandidates": ["during"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 'we discuss realism'이라는 「주어+동사」의 절이 이어지므로 접속사 'when'이 맞다. 'during'은 전치사라서 뒤에 명사구만 올 수 있고 절을 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "shot",
+          "wrongCandidates": ["shooting"],
+          "grammarType": "분사",
+          "explanation": "명사 'film'을 뒤에서 수식하는 분사로, 영화는 촬영되는 대상(수동)이므로 과거분사 'shot'이 맞다. 현재분사 'shooting'은 능동의 의미가 되어 'film'이 무엇을 촬영한다는 어색한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "shoot",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T5-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "what",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "전치사 'in' 뒤에 선행사가 없고 뒤따르는 절 'we generally think of ___ as realistic content'에서 of의 목적어가 빠져 있으므로, 선행사를 포함하는 관계대명사 'what'이 맞다. 'which'는 선행사가 필요해 여기서는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T26-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 26,
+          "endTokenIdx": 26,
+          "correctForm": "being",
+          "wrongCandidates": ["been"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'being used'의 'being'이 맞다. 'been'은 완료형(have been) 형태로만 쓰여 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "remains",
+          "wrongCandidates": ["remain"],
+          "grammarType": "수일치",
+          "explanation": "주어 'This historical link'는 단수이므로 단수 동사 'remains'가 맞다. 복수형 'remain'을 쓰면 단수 주어와 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "remain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T1-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "inclines",
+          "wrongCandidates": ["incline"],
+          "grammarType": "수일치",
+          "explanation": "주어 'It'은 3인칭 단수이므로 현재시제에서 단수 동사 'inclines'가 맞다. 'incline'은 복수/원형으로 단수 주어 'It'과 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "incline",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T10-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "appears",
+          "wrongCandidates": ["appearing"],
+          "grammarType": "시제",
+          "explanation": "관계대명사 'that'의 선행사 'a style'이 주어 역할이고 동사가 필요하므로 현재시제 단수 동사 'appears'가 맞다. 현재분사 'appearing'은 동사 역할을 할 수 없어 절의 술어가 빠지게 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "appear",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "guided", "baseForm": "guide"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "shot", "baseForm": "shoot"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "being", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "remains", "baseForm": "remain"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "inclines", "baseForm": "incline"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "appears", "baseForm": "appear"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "guided", "wrongForm": "guiding", "explanation": "주어 'Our understanding'은 가정에 의해 이끌리는 대상이므로 'is + 과거분사' 형태의 수동태 'guided'가 맞다. 현재분사 'guiding'을 쓰면 능동의 의미가 되어 주체-동작 관계가 맞지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "when", "wrongForm": "during", "explanation": "뒤에 'we discuss realism'이라는 「주어+동사」의 절이 이어지므로 접속사 'when'이 맞다. 'during'은 전치사라서 뒤에 명사구만 올 수 있고 절을 이끌 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "shot", "wrongForm": "shooting", "explanation": "명사 'film'을 뒤에서 수식하는 분사로, 영화는 촬영되는 대상(수동)이므로 과거분사 'shot'이 맞다. 현재분사 'shooting'은 능동의 의미가 되어 'film'이 무엇을 촬영한다는 어색한 의미가 된다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "what", "wrongForm": "which", "explanation": "전치사 'in' 뒤에 선행사가 없고 뒤따르는 절 'we generally think of ___ as realistic content'에서 of의 목적어가 빠져 있으므로, 선행사를 포함하는 관계대명사 'what'이 맞다. 'which'는 선행사가 필요해 여기서는 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "being", "wrongForm": "been", "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'being used'의 'being'이 맞다. 'been'은 완료형(have been) 형태로만 쓰여 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "remains", "wrongForm": "remain", "explanation": "주어 'This historical link'는 단수이므로 단수 동사 'remains'가 맞다. 복수형 'remain'을 쓰면 단수 주어와 수가 일치하지 않는다."},
+        {"sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "inclines", "wrongForm": "incline", "explanation": "주어 'It'은 3인칭 단수이므로 현재시제에서 단수 동사 'inclines'가 맞다. 'incline'은 복수/원형으로 단수 주어 'It'과 수가 일치하지 않는다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "appears", "wrongForm": "appearing", "explanation": "관계대명사 'that'의 선행사 'a style'이 주어 역할이고 동사가 필요하므로 현재시제 단수 동사 'appears'가 맞다. 현재분사 'appearing'은 동사 역할을 할 수 없어 절의 술어가 빠지게 된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "guiding", "correction": "guided", "explanation": "주어가 가정에 의해 이끌리는 대상(수동)이므로 과거분사 'guided'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 23, "endTokenIdx": 23, "isError": true, "wrongForm": "during", "correction": "when", "explanation": "뒤에 절이 이어지므로 접속사 'when'으로 고쳐야 한다. 'during'은 전치사라 절을 이끌 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "shooting", "correction": "shot", "explanation": "'film'이 촬영되는 대상(수동)이므로 과거분사 'shot'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "which", "correction": "what", "explanation": "선행사가 없고 of의 목적어가 빠져 있으므로 선행사 포함 관계대명사 'what'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 26, "endTokenIdx": 26, "isError": true, "wrongForm": "been", "correction": "being", "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'being'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "remain", "correction": "remains", "explanation": "단수 주어 'This historical link'에 맞춰 단수 동사 'remains'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "incline", "correction": "inclines", "explanation": "3인칭 단수 주어 'It'에 맞춰 'inclines'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "appearing", "correction": "appears", "explanation": "관계절의 술어가 필요하므로 동사 'appears'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Our understanding of realism is often guiding by a broad assumption that reality is not pretty.",
+          "isCorrect": false,
+          "correction": "Our understanding of realism is often guided by a broad assumption that reality is not pretty.",
+          "explanation": "주어가 가정에 의해 이끌리는 대상(수동)이므로 과거분사 'guided'가 맞다."
+        },
+        {
+          "text": "Any content can potentially be captured in a realistic manner, but we generally do not picture high tea in a formal English garden during we discuss realism.",
+          "isCorrect": false,
+          "correction": "Any content can potentially be captured in a realistic manner, but we generally do not picture high tea in a formal English garden when we discuss realism.",
+          "explanation": "뒤에 절이 이어지므로 접속사 'when'이 와야 한다. 'during'은 전치사라 절을 이끌 수 없다."
+        },
+        {
+          "text": "If a Hollywood fiction film shooting with the dramatic look is considered to be particularly realistic, it often is set in a less-than-glamorous world.",
+          "isCorrect": false,
+          "correction": "If a Hollywood fiction film shot with the dramatic look is considered to be particularly realistic, it often is set in a less-than-glamorous world.",
+          "explanation": "'film'이 촬영되는 대상(수동)이므로 과거분사 'shot'이 맞다."
+        },
+        {
+          "text": "There is a bias in which we generally think of as realistic content toward the gritty, the untidy, the lower class.",
+          "isCorrect": false,
+          "correction": "There is a bias in what we generally think of as realistic content toward the gritty, the untidy, the lower class.",
+          "explanation": "선행사가 없고 of의 목적어가 빠져 있으므로 선행사 포함 관계대명사 'what'이 맞다."
+        },
+        {
+          "text": "This is not because we think that aristocrats are not real or that beautiful objects do not exist, but there is a long history of realism been used to expose harsh conditions that we need to reform in the world.",
+          "isCorrect": false,
+          "correction": "This is not because we think that aristocrats are not real or that beautiful objects do not exist, but there is a long history of realism being used to expose harsh conditions that we need to reform in the world.",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'being'이 맞다."
+        },
+        {
+          "text": "This historical link remain powerful in the way we think about the very nature of what is realistic.",
+          "isCorrect": false,
+          "correction": "This historical link remains powerful in the way we think about the very nature of what is realistic.",
+          "explanation": "단수 주어 'This historical link'에 맞춰 단수 동사 'remains'가 맞다."
+        },
+        {
+          "text": "It incline realistic media toward the unpolished, both in terms of their content and their style.",
+          "isCorrect": false,
+          "correction": "It inclines realistic media toward the unpolished, both in terms of their content and their style.",
+          "explanation": "3인칭 단수 주어 'It'에 맞춰 'inclines'가 맞다."
+        },
+        {
+          "text": "The documentary look is particularly associated with a style that appearing messier, less controlled, and less planned.",
+          "isCorrect": false,
+          "correction": "The documentary look is particularly associated with a style that appears messier, less controlled, and less planned.",
+          "explanation": "관계절의 술어가 필요하므로 동사 'appears'가 맞다."
+        }
+      ]
+    }
+  }
+}

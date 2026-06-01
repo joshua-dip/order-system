@@ -1,0 +1,320 @@
+{
+  "passageId": "69d4eca372a886137cd83ef7",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 05번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 05번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 05번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "How do we know that change is accelerating? There is, after all, no absolute way to measure change.",
+      "tokens": ["How","do","we","know","that","change","is","accelerating?","There","is,","after","all,","no","absolute","way","to","measure","change."],
+      "korean": "우리는 변화가 가속하고 있다는 것을 어떻게 아는가? 결국, 변화를 측정하는 절대적인 방법은 없다."
+    },
+    {
+      "idx": 1,
+      "text": "In the awesome complexity of the universe, even within any given society, a virtually infinite number of streams of change occur simultaneously.",
+      "tokens": ["In","the","awesome","complexity","of","the","universe,","even","within","any","given","society,","a","virtually","infinite","number","of","streams","of","change","occur","simultaneously."],
+      "korean": "우주의 놀라울 정도의 복잡함 속에서, 어느 사회 안에서나, 사실상 무한한 수의 연속적인 변화가 동시에 일어난다."
+    },
+    {
+      "idx": 2,
+      "text": "All “things” ― from the tiniest virus to the greatest galaxy ― are, in reality, not things at all, but processes.",
+      "tokens": ["All","“things”","―","from","the","tiniest","virus","to","the","greatest","galaxy","―","are,","in","reality,","not","things","at","all,","but","processes."],
+      "korean": "가장 작은 바이러스부터 가장 큰 은하계에 이르기까지 모든 ‘것’이 실제로는 전혀 존재가 아니라 과정이다."
+    },
+    {
+      "idx": 3,
+      "text": "There is no static point, no nirvana, like unchange, against which to measure change.",
+      "tokens": ["There","is","no","static","point,","no","nirvana,","like","unchange,","against","which","to","measure","change."],
+      "korean": "변화를 측정할 정적인 시점, 즉 열반과 같은 무변화는 없다."
+    },
+    {
+      "idx": 4,
+      "text": "Change, is therefore, necessarily relative and uneven as well.",
+      "tokens": ["Change,","is","therefore,","necessarily","relative","and","uneven","as","well."],
+      "korean": "그러므로, 변화는 필연적으로 상대적이며 고르지도 않다."
+    },
+    {
+      "idx": 5,
+      "text": "If all processes occurred at the same speed, or even if they accelerated or decelerated in unison, it would be impossible to observe change.",
+      "tokens": ["If","all","processes","occurred","at","the","same","speed,","or","even","if","they","accelerated","or","decelerated","in","unison,","it","would","be","impossible","to","observe","change."],
+      "korean": "만약 모든 과정이 동일한 속도로 발생한다면, 혹은 그것들이 일제히 가속이나 감속하더라도, 변화를 관찰하는 것은 불가능할 것이다."
+    },
+    {
+      "idx": 6,
+      "text": "The future, however, invades the present at differing speeds.",
+      "tokens": ["The","future,","however,","invades","the","present","at","differing","speeds."],
+      "korean": "그러나 미래는 다양한 속도로 현재에 쇄도한다."
+    },
+    {
+      "idx": 7,
+      "text": "Thus it becomes possible to compare the speed of different processes as they unfold.",
+      "tokens": ["Thus","it","becomes","possible","to","compare","the","speed","of","different","processes","as","they","unfold."],
+      "korean": "따라서 다른 과정들이 펼쳐질 때 그것들의 속도를 비교하는 것이 가능해진다."
+    },
+    {
+      "idx": 8,
+      "text": "We know, for example, that compared with the biological evolution of the species, cultural and social evolution is extremely rapid.",
+      "tokens": ["We","know,","for","example,","that","compared","with","the","biological","evolution","of","the","species,","cultural","and","social","evolution","is","extremely","rapid."],
+      "korean": "예를 들어, 종의 생물학적 진화와 비교될 때, 문화와 사회적 진화는 매우 빠르다는 것을 우리는 안다."
+    },
+    {
+      "idx": 9,
+      "text": "We know that some societies transform themselves technologically or economically more rapidly than others.",
+      "tokens": ["We","know","that","some","societies","transform","themselves","technologically","or","economically","more","rapidly","than","others."],
+      "korean": "어떤 사회가 다른 사회보다 기술적으로 혹은 경제적으로 더 빨리 스스로를 변화시킨다는 것을 우리는 안다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T6-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'change'는 추상명사(불가산)로 단수 취급이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 가산 복수 주어에 쓰이므로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T20-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 20,
+          "endTokenIdx": 20,
+          "correctForm": "occur",
+          "wrongCandidates": ["occurs"],
+          "grammarType": "수일치",
+          "explanation": "'a number of + 복수명사'는 '많은 ~'의 의미로 복수 취급한다. 따라서 'streams ... occur'로 복수 동사 'occur'가 맞다. 단수형 'occurs'는 'the number of'(~의 수)일 때만 가능하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "occur",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "tiniest",
+          "wrongCandidates": ["tinier"],
+          "grammarType": "형용사",
+          "explanation": "정관사 'the' 뒤이고 'from the tiniest virus to the greatest galaxy'처럼 'greatest'와 짝을 이루는 최상급 표현이므로 최상급 'tiniest'가 맞다. 비교급 'tinier'는 'than ~' 같은 비교 대상이 와야 자연스럽다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T10-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "which",
+          "wrongCandidates": ["where"],
+          "grammarType": "관계사",
+          "explanation": "'against ___ to measure change'에서 빈칸은 전치사 'against'의 목적어가 되는 관계대명사 자리이므로 'which'가 맞다. 관계부사 'where'는 전치사의 목적어가 될 수 없고 그 자체가 부사 역할이라 전치사와 함께 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T6-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "uneven",
+          "wrongCandidates": ["unevenly"],
+          "grammarType": "형용사",
+          "explanation": "be동사 'is'의 보어 자리이고 앞의 형용사 'relative'와 등위접속사 'and'로 병렬을 이루므로 형용사 'uneven'이 맞다. 부사 'unevenly'는 동사·형용사·부사를 수식하므로 주격보어로 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T18-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "would",
+          "wrongCandidates": ["will"],
+          "grammarType": "가정법",
+          "explanation": "조건절이 'If all processes occurred ...'로 과거 시제이므로 가정법 과거 구문이다. 따라서 주절에는 'would + 동사원형'이 와야 한다. 'will'은 단순 조건문(직설법)에서 현재 시제 if절과 호응하므로 여기서는 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "will",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T3-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "invades",
+          "wrongCandidates": ["invade"],
+          "grammarType": "수일치",
+          "explanation": "주어 'The future'는 단수이고 삽입어구 'however,'를 제외하면 단수 동사가 와야 하므로 'invades'가 맞다. 복수형 'invade'는 복수 주어와 호응하므로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "invade",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "compare",
+          "wrongCandidates": ["comparing"],
+          "grammarType": "부정사",
+          "explanation": "가주어 'it' 진주어 'to compare ...' 구문이므로 to 뒤에는 동사원형 'compare'가 와야 한다. 동명사 'comparing'은 'to' 뒤에 올 수 없으며 'to부정사'와 '전치사 to + 동명사'는 구분된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "compare",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T5-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "compared",
+          "wrongCandidates": ["comparing"],
+          "grammarType": "수동태",
+          "explanation": "분사구문 'compared with ...'는 'when (it is) compared with ...'에서 'when it is'가 생략된 형태로, 주어 'cultural and social evolution'이 비교되는 대상(수동)이므로 과거분사 'compared'가 맞다. 현재분사 'comparing'은 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "compare",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T6-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "themselves",
+          "wrongCandidates": ["them"],
+          "grammarType": "대명사",
+          "explanation": "동사 'transform'의 목적어가 주어 'some societies'와 동일한 대상이므로 재귀대명사 'themselves'가 맞다. 인칭대명사 'them'은 주어와 다른 대상을 가리킬 때 쓰므로 여기서는 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "occur", "baseForm": "occur"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "would", "baseForm": "will"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "invades", "baseForm": "invade"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "compare", "baseForm": "compare"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "compared", "baseForm": "compare"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'change'는 추상명사(불가산)로 단수 취급이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 가산 복수 주어에 쓰이므로 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "occur", "wrongForm": "occurs", "explanation": "'a number of + 복수명사'는 '많은 ~'의 의미로 복수 취급한다. 따라서 'streams ... occur'로 복수 동사 'occur'가 맞다. 단수형 'occurs'는 'the number of'(~의 수)일 때만 가능하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "tiniest", "wrongForm": "tinier", "explanation": "정관사 'the' 뒤이고 'from the tiniest virus to the greatest galaxy'처럼 'greatest'와 짝을 이루는 최상급 표현이므로 최상급 'tiniest'가 맞다. 비교급 'tinier'는 'than ~' 같은 비교 대상이 와야 자연스럽다."},
+        {"sentenceIdx": 3, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "which", "wrongForm": "where", "explanation": "'against ___ to measure change'에서 빈칸은 전치사 'against'의 목적어가 되는 관계대명사 자리이므로 'which'가 맞다. 관계부사 'where'는 전치사의 목적어가 될 수 없고 그 자체가 부사 역할이라 전치사와 함께 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "uneven", "wrongForm": "unevenly", "explanation": "be동사 'is'의 보어 자리이고 앞의 형용사 'relative'와 등위접속사 'and'로 병렬을 이루므로 형용사 'uneven'이 맞다. 부사 'unevenly'는 동사·형용사·부사를 수식하므로 주격보어로 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "would", "wrongForm": "will", "explanation": "조건절이 'If all processes occurred ...'로 과거 시제이므로 가정법 과거 구문이다. 따라서 주절에는 'would + 동사원형'이 와야 한다. 'will'은 단순 조건문(직설법)에서 현재 시제 if절과 호응하므로 여기서는 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "invades", "wrongForm": "invade", "explanation": "주어 'The future'는 단수이고 삽입어구 'however,'를 제외하면 단수 동사가 와야 하므로 'invades'가 맞다. 복수형 'invade'는 복수 주어와 호응하므로 부적절하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "compare", "wrongForm": "comparing", "explanation": "가주어 'it' 진주어 'to compare ...' 구문이므로 to 뒤에는 동사원형 'compare'가 와야 한다. 동명사 'comparing'은 'to' 뒤에 올 수 없으며 'to부정사'와 '전치사 to + 동명사'는 구분된다."},
+        {"sentenceIdx": 8, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "compared", "wrongForm": "comparing", "explanation": "분사구문 'compared with ...'는 'when (it is) compared with ...'에서 'when it is'가 생략된 형태로, 주어 'cultural and social evolution'이 비교되는 대상(수동)이므로 과거분사 'compared'가 맞다. 현재분사 'comparing'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 9, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "themselves", "wrongForm": "them", "explanation": "동사 'transform'의 목적어가 주어 'some societies'와 동일한 대상이므로 재귀대명사 'themselves'가 맞다. 인칭대명사 'them'은 주어와 다른 대상을 가리킬 때 쓰므로 여기서는 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어 'change'가 불가산명사(단수)이므로 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "isError": true, "wrongForm": "occurs", "correction": "occur", "explanation": "'a number of streams of change'는 복수 취급이므로 복수형 'occur'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "tinier", "correction": "tiniest", "explanation": "'from the ___ virus to the greatest galaxy' 구조의 최상급 표현이므로 'tiniest'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "where", "correction": "which", "explanation": "전치사 'against'의 목적어 자리이므로 관계대명사 'which'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "unevenly", "correction": "uneven", "explanation": "be동사 보어이고 'relative'와 병렬이므로 형용사 'uneven'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "will", "correction": "would", "explanation": "가정법 과거 구문이므로 'would'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "invade", "correction": "invades", "explanation": "단수 주어 'The future'에 맞춰 단수형 'invades'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "comparing", "correction": "compare", "explanation": "to부정사 구문이므로 동사원형 'compare'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "comparing", "correction": "compared", "explanation": "주어가 비교되는 대상(수동)이므로 과거분사 'compared'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "them", "correction": "themselves", "explanation": "주어와 목적어가 동일한 대상이므로 재귀대명사 'themselves'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "How do we know that change are accelerating? There is, after all, no absolute way to measure change.",
+          "isCorrect": false,
+          "correction": "How do we know that change is accelerating? There is, after all, no absolute way to measure change.",
+          "explanation": "주어 'change'가 불가산명사(단수)이므로 단수형 'is'가 맞다."
+        },
+        {
+          "text": "In the awesome complexity of the universe, even within any given society, a virtually infinite number of streams of change occurs simultaneously.",
+          "isCorrect": false,
+          "correction": "In the awesome complexity of the universe, even within any given society, a virtually infinite number of streams of change occur simultaneously.",
+          "explanation": "'a number of + 복수명사'는 복수 취급이므로 'occur'가 맞다."
+        },
+        {
+          "text": "All “things” ― from the tinier virus to the greatest galaxy ― are, in reality, not things at all, but processes.",
+          "isCorrect": false,
+          "correction": "All “things” ― from the tiniest virus to the greatest galaxy ― are, in reality, not things at all, but processes.",
+          "explanation": "'greatest'와 짝을 이루는 최상급 표현이므로 'tiniest'가 맞다."
+        },
+        {
+          "text": "There is no static point, no nirvana, like unchange, against where to measure change.",
+          "isCorrect": false,
+          "correction": "There is no static point, no nirvana, like unchange, against which to measure change.",
+          "explanation": "전치사 'against'의 목적어 자리이므로 관계대명사 'which'가 맞다."
+        },
+        {
+          "text": "Change, is therefore, necessarily relative and unevenly as well.",
+          "isCorrect": false,
+          "correction": "Change, is therefore, necessarily relative and uneven as well.",
+          "explanation": "be동사 보어이고 'relative'와 병렬이므로 형용사 'uneven'이 맞다."
+        },
+        {
+          "text": "If all processes occurred at the same speed, or even if they accelerated or decelerated in unison, it will be impossible to observe change.",
+          "isCorrect": false,
+          "correction": "If all processes occurred at the same speed, or even if they accelerated or decelerated in unison, it would be impossible to observe change.",
+          "explanation": "가정법 과거 구문이므로 'would'가 맞다."
+        },
+        {
+          "text": "The future, however, invade the present at differing speeds.",
+          "isCorrect": false,
+          "correction": "The future, however, invades the present at differing speeds.",
+          "explanation": "단수 주어 'The future'에 맞춰 'invades'가 맞다."
+        },
+        {
+          "text": "Thus it becomes possible to comparing the speed of different processes as they unfold.",
+          "isCorrect": false,
+          "correction": "Thus it becomes possible to compare the speed of different processes as they unfold.",
+          "explanation": "to부정사 구문이므로 동사원형 'compare'가 맞다."
+        },
+        {
+          "text": "We know, for example, that comparing with the biological evolution of the species, cultural and social evolution is extremely rapid.",
+          "isCorrect": false,
+          "correction": "We know, for example, that compared with the biological evolution of the species, cultural and social evolution is extremely rapid.",
+          "explanation": "주어가 비교되는 대상(수동)이므로 과거분사 'compared'가 맞다."
+        },
+        {
+          "text": "We know that some societies transform them technologically or economically more rapidly than others.",
+          "isCorrect": false,
+          "correction": "We know that some societies transform themselves technologically or economically more rapidly than others.",
+          "explanation": "주어 'some societies'와 동일한 대상이므로 재귀대명사 'themselves'가 맞다."
+        }
+      ]
+    }
+  }
+}

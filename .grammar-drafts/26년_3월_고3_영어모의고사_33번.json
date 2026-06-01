@@ -1,0 +1,264 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd37",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 33번",
+  "title": "26년 3월 고3 영어모의고사 33번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "33번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "All architectural structures are forms of spatial choreography that guides action; space facilitates or prohibits, encourages or prevents, invites or inhibits.",
+      "tokens": ["All","architectural","structures","are","forms","of","spatial","choreography","that","guides","action;","space","facilitates","or","prohibits,","encourages","or","prevents,","invites","or","inhibits."],
+      "korean": "모든 건축 구조물은 행동을 유도하는 공간적 연출의 형태인데, 공간은 촉진하거나 금지하고, 권장하거나 막고, 초대하거나 억제한다."
+    },
+    {
+      "idx": 1,
+      "text": "This choreography predetermines patterns of movement and behavior, but it also guides experiential characteristics, perceptions, imageries, emotions and feelings.",
+      "tokens": ["This","choreography","predetermines","patterns","of","movement","and","behavior,","but","it","also","guides","experiential","characteristics,","perceptions,","imageries,","emotions","and","feelings."],
+      "korean": "이러한 연출은 움직임과 행동 양식을 미리 결정하지만, 그것은 또한 경험적 특성, 지각, 심상, 감정과 느낌을 유도한다."
+    },
+    {
+      "idx": 2,
+      "text": "A sensitive and empathic designer intuits human behavior and desire, and this intuitive architectural scripting resonates with the actual user/occupant's natural and instinctual needs and intentions.",
+      "tokens": ["A","sensitive","and","empathic","designer","intuits","human","behavior","and","desire,","and","this","intuitive","architectural","scripting","resonates","with","the","actual","user/occupant's","natural","and","instinctual","needs","and","intentions."],
+      "korean": "세심하고 공감할 수 있는 설계자는 인간의 행동과 욕망을 직관으로 알며, 이러한 직관적인 건축적 대본 쓰기는 실제 사용자 또는 입주자의 자연스럽고 본능적인 욕구 및 의도와 공명한다."
+    },
+    {
+      "idx": 3,
+      "text": "While designing a house, the designer lives, uses and feels the non-existent house in his imagination on behalf of the future dweller.",
+      "tokens": ["While","designing","a","house,","the","designer","lives,","uses","and","feels","the","non-existent","house","in","his","imagination","on","behalf","of","the","future","dweller."],
+      "korean": "주택을 설계하는 동안, 설계자는 자신의 상상 속에서 미래 거주자를 대신하여 존재하지 않는 집을 경험하고, 사용하고, 느낀다."
+    },
+    {
+      "idx": 4,
+      "text": "A correctly placed window is located exactly where the occupant wishes to look out into the garden, or where daylight is needed.",
+      "tokens": ["A","correctly","placed","window","is","located","exactly","where","the","occupant","wishes","to","look","out","into","the","garden,","or","where","daylight","is","needed."],
+      "korean": "올바르게 배치된 창문은 입주자가 정원을 내다보고 싶어 하는, 또는 햇빛이 필요한 바로 그곳에 설치된다."
+    },
+    {
+      "idx": 5,
+      "text": "The stairway is located where the dweller wishes to enter the floor above or below.",
+      "tokens": ["The","stairway","is","located","where","the","dweller","wishes","to","enter","the","floor","above","or","below."],
+      "korean": "계단은 거주자가 위층이나 아래층으로 들어가고 싶어 하는 곳에 설치된다."
+    },
+    {
+      "idx": 6,
+      "text": "Successful architecture does not need manuals or signage for its use, as it reveals its very structure and use in a wordless manner.",
+      "tokens": ["Successful","architecture","does","not","need","manuals","or","signage","for","its","use,","as","it","reveals","its","very","structure","and","use","in","a","wordless","manner."],
+      "korean": "성공적인 건축에는 그것의 사용을 위한 설명서나 표지판이 필요하지 않은데, 성공적인 건축은 무언의 방식으로 바로 그 구조와 용도를 드러내기 때문이다."
+    },
+    {
+      "idx": 7,
+      "text": "A profound building is an extension of human bodily and mental actions and capabilities.",
+      "tokens": ["A","profound","building","is","an","extension","of","human","bodily","and","mental","actions","and","capabilities."],
+      "korean": "심오한 건물은 인간의 신체적 그리고 정신적 행동과 능력의 연장이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T9-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "guides",
+          "wrongCandidates": ["guide"],
+          "grammarType": "수일치",
+          "explanation": "관계대명사 that의 선행사가 단수 명사 'choreography'이므로 단수 동사 'guides'가 맞다. 가까운 복수 명사 'forms'에 이끌려 'guide'를 쓰면 안 된다. 뒤이어 나오는 'space facilitates ... prohibits ... encourages' 등 모두 단수 동사임을 보면 'choreography/space'를 단수로 받고 있음을 확인할 수 있다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "guide",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "predetermines",
+          "wrongCandidates": ["predetermine"],
+          "grammarType": "수일치",
+          "explanation": "주어가 단수 명사 'This choreography'이므로 단수 동사 'predetermines'가 맞다. 동일 문장 뒤쪽의 'it also guides'에서 단수 대명사 it과 단수 동사 guides가 호응하는 것과 같은 원리로, 주어가 단수일 때 동사도 단수형 -s 를 붙여야 한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "predetermine",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T15-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "resonates",
+          "wrongCandidates": ["resonate"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵이 단수 명사 'this intuitive architectural scripting'이므로 단수 동사 'resonates'가 맞다. 'with the actual user/occupant's natural and instinctual needs and intentions'의 복수 명사들에 이끌려 'resonate'를 쓰면 안 된다. 동사의 수는 주어의 핵(scripting)에 일치시켜야 한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T1-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "designing",
+          "wrongCandidates": ["designed"],
+          "grammarType": "분사",
+          "explanation": "'While ___ a house'는 분사구문으로, 의미상 주어 'the designer'가 능동적으로 집을 설계하는 것이므로 현재분사 'designing'이 맞다. 과거분사 'designed'를 쓰면 설계자가 집에 의해 설계되는 수동 의미가 되어 문맥에 맞지 않다. 'While (he is) designing'에서 'he is'가 생략된 형태로 본다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "design",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "located",
+          "wrongCandidates": ["locating"],
+          "grammarType": "수동태",
+          "explanation": "주어 'A correctly placed window'는 사람이 설치하는 대상이므로 'is + 과거분사' 형태의 수동태 'is located'가 맞다. 현재분사 'locating'을 쓰면 능동의 진행 의미('창문이 무언가를 위치시키고 있다')가 되어 문맥과 충돌한다. 동일 문장 뒷부분 'is needed'에서도 수동태가 일관되게 쓰이고 있다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "locate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T9-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "enter",
+          "wrongCandidates": ["entering"],
+          "grammarType": "부정사",
+          "explanation": "'wishes to ___' 구조에서 'to' 뒤에는 동사원형이 와야 하므로 'enter'가 맞다. 'wish'는 to부정사를 목적어로 취하는 동사이고, 동명사 'entering'은 to 뒤에 올 수 없다. 같은 문장 앞쪽 'the dweller wishes to enter'에서 to부정사의 기본 형태(to + 동사원형)를 확인할 수 있다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "enter",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T11-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "as",
+          "wrongCandidates": ["due to"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 절(it reveals its very structure ...)이 이어지므로 절을 이끄는 이유 접속사 'as'가 맞다. 'due to'는 전치사구로 뒤에 명사(구)만 올 수 있어 절을 이끌 수 없다. 절 앞에는 because/since/as 같은 접속사가, 명사구 앞에는 because of/due to 같은 전치사구가 와야 한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T3-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "시제",
+          "explanation": "주어가 단수 명사 'A profound building'이므로 단수형 be동사 'is'가 맞다. 보어 'an extension of human bodily and mental actions and capabilities'에 들어 있는 복수 명사들(actions, capabilities)에 이끌려 'are'를 쓰면 안 된다. 보어가 아니라 주어의 수에 동사를 일치시켜야 한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "guides", "baseForm": "guide"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "predetermines", "baseForm": "predetermine"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "designing", "baseForm": "design"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "located", "baseForm": "locate"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "enter", "baseForm": "enter"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "guides", "wrongForm": "guide", "explanation": "관계대명사 that의 선행사가 단수 'choreography'이므로 단수 동사 'guides'가 맞다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "predetermines", "wrongForm": "predetermine", "explanation": "단수 주어 'This choreography'에 맞춰 단수 동사 'predetermines'가 맞다."},
+        {"sentenceIdx": 2, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "resonates", "wrongForm": "resonate", "explanation": "주어의 핵이 단수 'this intuitive architectural scripting'이므로 단수 동사 'resonates'가 맞다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "designing", "wrongForm": "designed", "explanation": "분사구문의 의미상 주어 'the designer'가 능동적으로 설계하므로 현재분사 'designing'이 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "located", "wrongForm": "locating", "explanation": "주어 'A correctly placed window'가 설치되는 대상(수동)이므로 'is located'가 맞다."},
+        {"sentenceIdx": 5, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "enter", "wrongForm": "entering", "explanation": "'wishes to ___' 구조에서 to 뒤에는 동사원형 'enter'가 와야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "as", "wrongForm": "due to", "explanation": "뒤에 절이 오므로 접속사 'as'가 맞다. 'due to'는 전치사구라 절을 이끌 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "is", "wrongForm": "are", "explanation": "단수 주어 'A profound building'에 맞춰 단수 'is'가 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "guide", "correction": "guides", "explanation": "선행사 'choreography'가 단수이므로 단수 동사 'guides'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "predetermine", "correction": "predetermines", "explanation": "단수 주어 'This choreography'에 맞춰 'predetermines'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "resonate", "correction": "resonates", "explanation": "단수 주어 'this intuitive architectural scripting'에 맞춰 'resonates'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "designed", "correction": "designing", "explanation": "분사구문 의미상 주어가 능동으로 설계하므로 현재분사 'designing'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "locating", "correction": "located", "explanation": "수동의 의미이므로 과거분사 'located'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "entering", "correction": "enter", "explanation": "to부정사 구조이므로 동사원형 'enter'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "due to", "correction": "as", "explanation": "뒤에 절이 이어지므로 접속사 'as'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'A profound building'에 맞춰 'is'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "All architectural structures are forms of spatial choreography that guide action; space facilitates or prohibits, encourages or prevents, invites or inhibits.",
+          "isCorrect": false,
+          "correction": "All architectural structures are forms of spatial choreography that guides action; space facilitates or prohibits, encourages or prevents, invites or inhibits.",
+          "explanation": "관계대명사 that의 선행사가 단수 'choreography'이므로 단수 동사 'guides'가 맞다."
+        },
+        {
+          "text": "This choreography predetermine patterns of movement and behavior, but it also guides experiential characteristics, perceptions, imageries, emotions and feelings.",
+          "isCorrect": false,
+          "correction": "This choreography predetermines patterns of movement and behavior, but it also guides experiential characteristics, perceptions, imageries, emotions and feelings.",
+          "explanation": "단수 주어 'This choreography'에 맞춰 단수 동사 'predetermines'가 맞다."
+        },
+        {
+          "text": "A sensitive and empathic designer intuits human behavior and desire, and this intuitive architectural scripting resonate with the actual user/occupant's natural and instinctual needs and intentions.",
+          "isCorrect": false,
+          "correction": "A sensitive and empathic designer intuits human behavior and desire, and this intuitive architectural scripting resonates with the actual user/occupant's natural and instinctual needs and intentions.",
+          "explanation": "주어의 핵 'this intuitive architectural scripting'이 단수이므로 'resonates'가 맞다."
+        },
+        {
+          "text": "While designed a house, the designer lives, uses and feels the non-existent house in his imagination on behalf of the future dweller.",
+          "isCorrect": false,
+          "correction": "While designing a house, the designer lives, uses and feels the non-existent house in his imagination on behalf of the future dweller.",
+          "explanation": "분사구문의 의미상 주어 'the designer'가 능동적으로 설계하므로 현재분사 'designing'이 맞다."
+        },
+        {
+          "text": "A correctly placed window is locating exactly where the occupant wishes to look out into the garden, or where daylight is needed.",
+          "isCorrect": false,
+          "correction": "A correctly placed window is located exactly where the occupant wishes to look out into the garden, or where daylight is needed.",
+          "explanation": "주어 'A correctly placed window'가 설치되는 대상(수동)이므로 'is located'가 맞다."
+        },
+        {
+          "text": "The stairway is located where the dweller wishes to entering the floor above or below.",
+          "isCorrect": false,
+          "correction": "The stairway is located where the dweller wishes to enter the floor above or below.",
+          "explanation": "'wishes to ___' 구조에서 to 뒤에는 동사원형 'enter'가 와야 한다."
+        },
+        {
+          "text": "Successful architecture does not need manuals or signage for its use, due to it reveals its very structure and use in a wordless manner.",
+          "isCorrect": false,
+          "correction": "Successful architecture does not need manuals or signage for its use, as it reveals its very structure and use in a wordless manner.",
+          "explanation": "뒤에 절이 오므로 절을 이끄는 이유 접속사 'as'가 맞다. 'due to'는 전치사구라 절을 이끌 수 없다."
+        },
+        {
+          "text": "A profound building are an extension of human bodily and mental actions and capabilities.",
+          "isCorrect": false,
+          "correction": "A profound building is an extension of human bodily and mental actions and capabilities.",
+          "explanation": "단수 주어 'A profound building'에 맞춰 단수 'is'가 맞다."
+        }
+      ]
+    }
+  }
+}

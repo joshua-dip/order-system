@@ -1,0 +1,268 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd2b",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 21번",
+  "title": "26년 3월 고3 영어모의고사 21번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "고3",
+    "questionNumber": "어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "A brilliant musician can in fact be an innovator without strictly speaking being an inventor.",
+      "tokens": ["A", "brilliant", "musician", "can", "in", "fact", "be", "an", "innovator", "without", "strictly", "speaking", "being", "an", "inventor."],
+      "korean": "뛰어난 음악가는 엄밀히 말해 발명가가 아니고서도 사실 혁신가일 수 있다."
+    },
+    {
+      "idx": 1,
+      "text": "In such cases, those who expect \"great discoveries\" will be disappointed.",
+      "tokens": ["In", "such", "cases,", "those", "who", "expect", "\"great", "discoveries\"", "will", "be", "disappointed."],
+      "korean": "그러한 경우, '위대한 발견'을 기대하는 사람들은 실망하게 될 것이다."
+    },
+    {
+      "idx": 2,
+      "text": "Let there be no doubt: the eager need for novelty, so characteristic of the escalating modernist auction, involves the idea that a musical act is a thing, in which case, music is no more than technique, technique alone.",
+      "tokens": ["Let", "there", "be", "no", "doubt:", "the", "eager", "need", "for", "novelty,", "so", "characteristic", "of", "the", "escalating", "modernist", "auction,", "involves", "the", "idea", "that", "a", "musical", "act", "is", "a", "thing,", "in", "which", "case,", "music", "is", "no", "more", "than", "technique,", "technique", "alone."],
+      "korean": "의심의 여지가 없게 해 두자면, 점점 고조되는 현대주의적 경매의 전형적 특징인 새로움에 대한 열렬한 욕구는 음악적 행위가 하나의 '사물'이라는 관념을 수반하며, 이 경우 음악은 기교에 불과한 것, 단지 기교일 뿐이다."
+    },
+    {
+      "idx": 3,
+      "text": "And just as technique is the consequence of an indefinite process of perfection ─ with each automobile or kitchen appliance show introducing what is new and improved in comparison to last year's ─ so never-ending progress shall be the law of music.",
+      "tokens": ["And", "just", "as", "technique", "is", "the", "consequence", "of", "an", "indefinite", "process", "of", "perfection", "─", "with", "each", "automobile", "or", "kitchen", "appliance", "show", "introducing", "what", "is", "new", "and", "improved", "in", "comparison", "to", "last", "year's", "─", "so", "never-ending", "progress", "shall", "be", "the", "law", "of", "music."],
+      "korean": "그리고 각 자동차나 주방용품 전시회가 작년과 비교하여 무엇이 새롭고 개선되었는지 소개하고, 기교가 무기한의 완성 과정의 결과물인 것과 꼭 마찬가지로, 끝없는 진보가 음악의 법칙이 될 것이다."
+    },
+    {
+      "idx": 4,
+      "text": "Farther, faster, more powerful!",
+      "tokens": ["Farther,", "faster,", "more", "powerful!"],
+      "korean": "더 멀리, 더 빠르게, 더 강력하게!"
+    },
+    {
+      "idx": 5,
+      "text": "In this arms race, each new music, breaking its predecessor's records, offers itself as the last thing in modernity; and each musician, forcing predecessors into the category of the unfashionable and outmoded, claims the patent on the invention.",
+      "tokens": ["In", "this", "arms", "race,", "each", "new", "music,", "breaking", "its", "predecessor's", "records,", "offers", "itself", "as", "the", "last", "thing", "in", "modernity;", "and", "each", "musician,", "forcing", "predecessors", "into", "the", "category", "of", "the", "unfashionable", "and", "outmoded,", "claims", "the", "patent", "on", "the", "invention."],
+      "korean": "이 군비 확장 경쟁 속에서 각각의 새로운 음악은, 이전 것의 기록을 깨트리며, 자신을 현대성의 최신형으로 내놓고, 각각의 음악가는 전임자를 유행에 뒤떨어지고 구식인 범주로 몰아넣으며, 그 발명품에 대한 특허를 주장한다."
+    },
+    {
+      "idx": 6,
+      "text": "In an era where pastiches of \"scientific investigation\" have become quasi-universal, musicians owe it to themselves to become \"researchers\" just like everyone else.",
+      "tokens": ["In", "an", "era", "where", "pastiches", "of", "\"scientific", "investigation\"", "have", "become", "quasi-universal,", "musicians", "owe", "it", "to", "themselves", "to", "become", "\"researchers\"", "just", "like", "everyone", "else."],
+      "korean": "'과학적 연구'의 모방작이 준(準)보편적이 된 시대에, 음악가는 자신을 위해 다른 모든 사람과 마찬가지로 '연구자'가 되어야 한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "F": { "blocks": [] },
+    "P": {
+      "points": [
+        {
+          "id": "S0-T6-001",
+          "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "be", "wrongCandidates": ["being"],
+          "grammarType": "시제",
+          "explanation": "조동사 can 뒤에는 동사원형이 오므로 be 가 맞음. being 은 조동사 뒤에 단독으로 올 수 없음.",
+          "koCorrect": "있다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T9-002",
+          "sentenceIdx": 0, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "without", "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'~없이/아니고서도' 의 의미이므로 without 이 맞음. with 는 '~함께' 라 문맥과 정반대.",
+          "koCorrect": "아니고서도",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T12-003",
+          "sentenceIdx": 0, "startTokenIdx": 12, "endTokenIdx": 12,
+          "correctForm": "being", "wrongCandidates": ["be"],
+          "grammarType": "분사",
+          "explanation": "전치사 without 뒤에는 동명사가 와야 하므로 being 이 맞음. 동사원형 be 는 전치사 뒤에 올 수 없음.",
+          "koCorrect": "아니",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-004",
+          "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "who", "wrongCandidates": ["whom"],
+          "grammarType": "관계사",
+          "explanation": "관계사절 안에서 expect 의 주어 역할을 하므로 주격 관계대명사 who 가 맞음. 목적격 whom 은 주어 자리에 부적절.",
+          "koCorrect": "사람들",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T5-005",
+          "sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "expect", "wrongCandidates": ["expects"],
+          "grammarType": "수일치",
+          "explanation": "관계사절 주어 who 의 선행사 those 가 복수이므로 복수동사 expect 가 맞음. 단수 expects 는 수일치 위반.",
+          "koCorrect": "기대하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "expect",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T10-006",
+          "sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "disappointed.", "wrongCandidates": ["disappointing."],
+          "grammarType": "수동태",
+          "explanation": "those 가 '실망되는' 수동 관계 (will be disappointed) 이므로 과거분사 disappointed 가 맞음. 현재분사 disappointing 은 '실망시키는' 능동 의미라 부적절.",
+          "koCorrect": "실망하게 될",
+          "uses": ["F", "G", "H", "J"], "baseForm": "disappoint",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T2-007",
+          "sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "be", "wrongCandidates": ["to be"],
+          "grammarType": "부정사",
+          "explanation": "사역동사 Let + 목적어(there) + 원형부정사 구조이므로 be 가 맞음. to be 는 사역동사의 목적격보어 자리에 부적절(고빈도 오답).",
+          "koCorrect": "없게",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T17-008",
+          "sentenceIdx": 2, "startTokenIdx": 17, "endTokenIdx": 17,
+          "correctForm": "involves", "wrongCandidates": ["involve"],
+          "grammarType": "수일치",
+          "explanation": "삽입어구(so characteristic ~ auction)를 걷어내면 주어 the eager need 는 단수이므로 단수동사 involves 가 맞음. 복수 involve 는 수일치 위반(삽입어구 뒤 수일치 함정).",
+          "koCorrect": "수반하며",
+          "uses": ["F", "G", "H", "J"], "baseForm": "involve",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T20-009",
+          "sentenceIdx": 2, "startTokenIdx": 20, "endTokenIdx": 20,
+          "correctForm": "that", "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "추상명사 idea 뒤에 완전한 절(a musical act is a thing)이 이어지므로 동격 접속사 that 가 맞음. 관계대명사 what 은 선행사를 포함하고 뒤 절이 불완전해야 하므로 부적절.",
+          "koCorrect": "이라는",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T2-010",
+          "sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "as", "wrongCandidates": ["like"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 절(주어 + 동사) 이 이어지는 'just as ~ so ~' 상관 구문이므로 접속사 as 가 맞음. like 는 전치사라 절을 이끌 수 없음.",
+          "koCorrect": "꼭 마찬가지로",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T4-011",
+          "sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "is", "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 technique 는 단수 명사이므로 단수동사 is 가 맞음. 복수 are 는 수일치 위반.",
+          "koCorrect": "결과물인",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T21-012",
+          "sentenceIdx": 3, "startTokenIdx": 21, "endTokenIdx": 21,
+          "correctForm": "introducing", "wrongCandidates": ["introduced"],
+          "grammarType": "분사",
+          "explanation": "with + 명사(show) + 분사 부대상황 구문에서 show 가 '소개하는' 능동 의미이므로 현재분사 introducing 이 맞음. 과거분사 introduced 는 수동이라 부적절.",
+          "koCorrect": "소개하고",
+          "uses": ["F", "G", "H", "J"], "baseForm": "introduce",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T0-013",
+          "sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0,
+          "correctForm": "Farther,", "wrongCandidates": ["Far,"],
+          "grammarType": "기타",
+          "explanation": "감탄 구문이 비교의 의미를 담으므로 비교급 Farther 가 맞음. 원급 Far 는 비교 표현이 빠져 부적절.",
+          "koCorrect": "더 멀리",
+          "uses": ["F", "G", "H", "J"], "baseForm": "far",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T1-014",
+          "sentenceIdx": 4, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "faster,", "wrongCandidates": ["fast,"],
+          "grammarType": "기타",
+          "explanation": "비교의 의미를 담은 감탄 구문이므로 비교급 부사 faster 가 맞음. 원급 fast 는 비교 표현이 빠져 부적절.",
+          "koCorrect": "더 빠르게",
+          "uses": ["F", "G", "H", "J"], "baseForm": "fast",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T7-015",
+          "sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7,
+          "correctForm": "breaking", "wrongCandidates": ["broken"],
+          "grammarType": "분사",
+          "explanation": "주어 each new music 이 records 를 '깨뜨리는' 능동 분사구문이므로 현재분사 breaking 이 맞음. 과거분사 broken 은 수동이라 부적절(분사구문 능동/수동 함정).",
+          "koCorrect": "깨트리며",
+          "uses": ["F", "G", "H", "J"], "baseForm": "break",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T22-016",
+          "sentenceIdx": 5, "startTokenIdx": 22, "endTokenIdx": 22,
+          "correctForm": "forcing", "wrongCandidates": ["forced"],
+          "grammarType": "분사",
+          "explanation": "주어 each musician 이 predecessors 를 '몰아넣는' 능동 분사구문이므로 현재분사 forcing 이 맞음. 과거분사 forced 는 수동이라 부적절(분사구문 능동/수동 고빈도 함정).",
+          "koCorrect": "몰아넣으며",
+          "uses": ["F", "G", "H", "J"], "baseForm": "force",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T32-017",
+          "sentenceIdx": 5, "startTokenIdx": 32, "endTokenIdx": 32,
+          "correctForm": "claims", "wrongCandidates": ["claim"],
+          "grammarType": "수일치",
+          "explanation": "삽입된 분사구(forcing ~ outmoded)를 걷어내면 주어 each musician 은 each 가 붙어 단수 취급이므로 단수동사 claims 가 맞음. 복수 claim 은 수일치 위반(삽입어구 뒤 수일치 고빈도 함정).",
+          "koCorrect": "주장한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "claim",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T3-018",
+          "sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "where", "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 era 가 시간/배경의 의미이고 뒤 절이 완전하므로 관계부사 where 가 맞음. 관계대명사 which 는 뒤 절이 불완전해야 하므로 부적절.",
+          "koCorrect": "시대에",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T8-019",
+          "sentenceIdx": 6, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "have", "wrongCandidates": ["has"],
+          "grammarType": "수일치",
+          "explanation": "주어 pastiches 가 복수이므로 복수형 have 가 맞음. 단수 has 는 수일치 위반.",
+          "koCorrect": "된",
+          "uses": ["F", "G", "H", "J"], "baseForm": "have",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T17-020",
+          "sentenceIdx": 6, "startTokenIdx": 17, "endTokenIdx": 17,
+          "correctForm": "become", "wrongCandidates": ["becoming"],
+          "grammarType": "부정사",
+          "explanation": "to + 동사원형 구조이므로 become 이 맞음. 동명사 becoming 은 to 뒤에 올 수 없음.",
+          "koCorrect": "되어야",
+          "uses": ["F", "G", "H", "J"], "baseForm": "become",
+          "hRole": "error", "jVariant": "wrong"
+        }
+      ]
+    },
+    "G": { "points": [] },
+    "H": { "spans": [] },
+    "J": { "items": [] }
+  }
+}

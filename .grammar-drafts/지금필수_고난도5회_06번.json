@@ -1,0 +1,264 @@
+{
+  "passageId": "69d4eca372a886137cd83f10",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 06번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 06번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 06번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Aesthetics has much to do with pattern, order, and symmetry.",
+      "tokens": ["Aesthetics","has","much","to","do","with","pattern,","order,","and","symmetry."],
+      "korean": "미학은 패턴, 질서, 그리고 대칭과 많은 관련이 있다."
+    },
+    {
+      "idx": 1,
+      "text": "The most basic aesthetic sense is the pleasure derived from recognizing, understanding, and enjoying a pattern that stands out from surrounding chaos.",
+      "tokens": ["The","most","basic","aesthetic","sense","is","the","pleasure","derived","from","recognizing,","understanding,","and","enjoying","a","pattern","that","stands","out","from","surrounding","chaos."],
+      "korean": "가장 기본적인 미적 감각은 주변의 혼돈에서 두드러지는 패턴을 인식하고, 이해하고, 즐기는 데서 얻는 즐거움이다."
+    },
+    {
+      "idx": 2,
+      "text": "This is probably yet another evolutionary matter: we evolved an ability not only to pick out the fruit from the leaves, the snake from the grass, and the flower from the bush but also to enjoy the search and the recognition.",
+      "tokens": ["This","is","probably","yet","another","evolutionary","matter:","we","evolved","an","ability","not","only","to","pick","out","the","fruit","from","the","leaves,","the","snake","from","the","grass,","and","the","flower","from","the","bush","but","also","to","enjoy","the","search","and","the","recognition."],
+      "korean": "이것은 아마도 또 다른 진화적인 문제일 것이다. 우리는 나뭇잎에서 열매를, 풀에서 뱀을, 그리고 덤불 속에서 꽃을 식별할 뿐만 아니라 탐색과 인식을 즐길 수 있는 능력도 발달시켰다."
+    },
+    {
+      "idx": 3,
+      "text": "So our foraging career may be the foundation of our love for geometric patterns, just as music is based on recurrent themes and rhythms, which must have something to do with heartbeat and breathing.",
+      "tokens": ["So","our","foraging","career","may","be","the","foundation","of","our","love","for","geometric","patterns,","just","as","music","is","based","on","recurrent","themes","and","rhythms,","which","must","have","something","to","do","with","heartbeat","and","breathing."],
+      "korean": "그래서 우리의 식량을 찾는 생활은 기하학적인 패턴에 대한 사랑의 토대가 될 수 있는데, 이는 마치 음악이, 심장박동과 호흡과 분명 어떤 관련이 있는, 반복되는 주제와 리듬을 기반으로 하는 것과 같다."
+    },
+    {
+      "idx": 4,
+      "text": "In all these patterns, we like subtle surprises.",
+      "tokens": ["In","all","these","patterns,","we","like","subtle","surprises."],
+      "korean": "이 모든 패턴에서, 우리는 미묘한 놀라움을 좋아한다."
+    },
+    {
+      "idx": 5,
+      "text": "We want the pattern to be varied just a bit, in systematic but exciting ways.",
+      "tokens": ["We","want","the","pattern","to","be","varied","just","a","bit,","in","systematic","but","exciting","ways."],
+      "korean": "우리는 그 패턴이 체계적이지만 흥미로운 방식으로 약간만 다양화되기를 바란다."
+    },
+    {
+      "idx": 6,
+      "text": "Simple mindless repetition is all very well, but complex, understated variations on the theme are much preferred.",
+      "tokens": ["Simple","mindless","repetition","is","all","very","well,","but","complex,","understated","variations","on","the","theme","are","much","preferred."],
+      "korean": "단순하고 생각할 필요가 없는 반복은 모두 좋지만, 주제에 대한 복잡하고, 절제된 변형이 훨씬 더 선호된다."
+    },
+    {
+      "idx": 7,
+      "text": "This is why “keyboard” and “synthesizer” music set to produce an automatically repeated sequence sounds so dull and boring.",
+      "tokens": ["This","is","why","“keyboard”","and","“synthesizer”","music","set","to","produce","an","automatically","repeated","sequence","sounds","so","dull","and","boring."],
+      "korean": "이러한 이유로 자동으로 반복되는 시퀀스를 만들도록 맞추어진 ‘키보드’와 ‘신시사이저’ 음악은 아주 지루하고 따분하게 들린다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T1-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "has",
+          "wrongCandidates": ["have"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Aesthetics'는 -ics로 끝나는 학문명으로 형태는 복수처럼 보이지만 단수 취급하므로 단수형 동사 'has'가 맞다. 복수형 'have'를 쓰면 학문명 단수 일치 원칙에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T8-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "derived",
+          "wrongCandidates": ["deriving"],
+          "grammarType": "분사",
+          "explanation": "수식받는 명사 'the pleasure'가 '얻어지는' 대상(수동)이므로 과거분사 'derived'가 맞다. 현재분사 'deriving'은 즐거움이 무언가를 능동적으로 얻어낸다는 의미가 되어 문맥에 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "derive",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T35-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 35,
+          "endTokenIdx": 35,
+          "correctForm": "enjoy",
+          "wrongCandidates": ["enjoying"],
+          "grammarType": "부정사",
+          "explanation": "'not only to pick out ... but also to enjoy ...' 의 병렬 구조에서 앞의 'to pick'과 짝을 이루는 to부정사가 와야 하므로 동사원형 'enjoy'가 맞다. 동명사 'enjoying'은 to 뒤에 올 수 없고 병렬 구조를 깨뜨린다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "enjoy",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T24-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 24,
+          "endTokenIdx": 24,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "콤마 뒤의 계속적 용법으로 선행사 'recurrent themes and rhythms'를 받는 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사이며 계속적 용법으로도 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T0-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "In",
+          "wrongCandidates": ["At"],
+          "grammarType": "전치사",
+          "explanation": "'all these patterns'라는 추상적 범위 안의 의미를 나타낼 때는 전치사 'In'(~안에서)이 맞다. 'At'은 특정 지점·시점을 가리키므로 추상적 범위에는 적합하지 않다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "varied",
+          "wrongCandidates": ["varying"],
+          "grammarType": "수동태",
+          "explanation": "의미상 주어 'the pattern'이 우리에 의해 '다양화되는' 대상(수동)이므로 'to be + 과거분사' 형태의 'varied'가 맞다. 현재분사 'varying'을 쓰면 패턴이 스스로 다양화한다는 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "vary",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T7-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "but",
+          "wrongCandidates": ["and"],
+          "grammarType": "접속사",
+          "explanation": "앞 절 '단순한 반복이 좋다'와 뒤 절 '복잡하고 절제된 변형이 더 선호된다'가 서로 대조 관계이므로 역접 접속사 'but'이 맞다. 단순 나열의 'and'는 두 절의 대조를 반영하지 못한다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T14-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "sounds",
+          "wrongCandidates": ["sounded"],
+          "grammarType": "시제",
+          "explanation": "일반적·반복적인 속성(키보드·신시사이저 음악이 늘 지루하게 들린다)을 진술하므로 현재시제 'sounds'가 맞다. 과거시제 'sounded'는 특정 과거 시점만을 가리켜 일반적 진리 진술과 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "sound",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "has", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "derived", "baseForm": "derive"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 35, "endTokenIdx": 35, "correctForm": "enjoy", "baseForm": "enjoy"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "varied", "baseForm": "vary"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "sounds", "baseForm": "sound"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "has", "wrongForm": "have", "explanation": "주어 'Aesthetics'는 -ics 학문명으로 단수 취급하므로 단수형 'has'가 맞다. 복수형 'have'는 학문명 단수 일치에 어긋난다."},
+        {"sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "derived", "wrongForm": "deriving", "explanation": "'the pleasure'는 얻어지는 대상(수동)이므로 과거분사 'derived'가 맞다. 'deriving'은 능동 의미가 되어 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 35, "endTokenIdx": 35, "correctForm": "enjoy", "wrongForm": "enjoying", "explanation": "'not only to pick ... but also to enjoy ...' 병렬 구조에서 to 뒤에는 동사원형 'enjoy'가 와야 한다. 'enjoying'은 병렬을 깨뜨린다."},
+        {"sentenceIdx": 3, "startTokenIdx": 24, "endTokenIdx": 24, "correctForm": "which", "wrongForm": "what", "explanation": "계속적 용법으로 선행사 'recurrent themes and rhythms'를 받는 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하므로 불가."},
+        {"sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "In", "wrongForm": "At", "explanation": "추상적 범위 'all these patterns' 안의 의미는 'In'(~안에서)이 맞다. 'At'은 특정 지점·시점에 쓰인다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "varied", "wrongForm": "varying", "explanation": "'the pattern'이 다양화되는 대상(수동)이므로 'to be varied'의 과거분사 'varied'가 맞다. 'varying'은 능동 의미라 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "but", "wrongForm": "and", "explanation": "앞·뒤 절이 대조 관계이므로 역접 'but'이 맞다. 단순 나열 'and'는 대조를 반영하지 못한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "sounds", "wrongForm": "sounded", "explanation": "일반적 속성을 진술하므로 현재시제 'sounds'가 맞다. 과거시제 'sounded'는 일반 진리와 어긋난다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "have", "correction": "has", "explanation": "학문명 'Aesthetics'는 단수 취급이므로 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "deriving", "correction": "derived", "explanation": "'the pleasure'가 얻어지는 대상(수동)이므로 과거분사 'derived'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 35, "endTokenIdx": 35, "isError": true, "wrongForm": "enjoying", "correction": "enjoy", "explanation": "to부정사 병렬 구조이므로 동사원형 'enjoy'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 24, "endTokenIdx": 24, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사가 있는 계속적 용법이므로 'which'로 고쳐야 한다. 'what'은 선행사를 포함하므로 불가."},
+        {"sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "At", "correction": "In", "explanation": "추상적 범위 의미는 'In'이 맞으므로 'In'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "varying", "correction": "varied", "explanation": "주어가 다양화되는 대상(수동)이므로 과거분사 'varied'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "and", "correction": "but", "explanation": "두 절이 대조 관계이므로 역접 'but'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "sounded", "correction": "sounds", "explanation": "일반적 진술이므로 현재시제 'sounds'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Aesthetics have much to do with pattern, order, and symmetry.",
+          "isCorrect": false,
+          "correction": "Aesthetics has much to do with pattern, order, and symmetry.",
+          "explanation": "학문명 'Aesthetics'는 단수 취급이므로 단수형 'has'가 맞다."
+        },
+        {
+          "text": "The most basic aesthetic sense is the pleasure deriving from recognizing, understanding, and enjoying a pattern that stands out from surrounding chaos.",
+          "isCorrect": false,
+          "correction": "The most basic aesthetic sense is the pleasure derived from recognizing, understanding, and enjoying a pattern that stands out from surrounding chaos.",
+          "explanation": "'the pleasure'가 얻어지는 대상(수동)이므로 과거분사 'derived'가 맞다."
+        },
+        {
+          "text": "This is probably yet another evolutionary matter: we evolved an ability not only to pick out the fruit from the leaves, the snake from the grass, and the flower from the bush but also to enjoying the search and the recognition.",
+          "isCorrect": false,
+          "correction": "This is probably yet another evolutionary matter: we evolved an ability not only to pick out the fruit from the leaves, the snake from the grass, and the flower from the bush but also to enjoy the search and the recognition.",
+          "explanation": "to부정사 병렬 구조에서 동사원형 'enjoy'가 맞다."
+        },
+        {
+          "text": "So our foraging career may be the foundation of our love for geometric patterns, just as music is based on recurrent themes and rhythms, what must have something to do with heartbeat and breathing.",
+          "isCorrect": false,
+          "correction": "So our foraging career may be the foundation of our love for geometric patterns, just as music is based on recurrent themes and rhythms, which must have something to do with heartbeat and breathing.",
+          "explanation": "선행사가 있는 계속적 용법이므로 관계대명사 'which'가 맞다."
+        },
+        {
+          "text": "At all these patterns, we like subtle surprises.",
+          "isCorrect": false,
+          "correction": "In all these patterns, we like subtle surprises.",
+          "explanation": "추상적 범위 의미는 전치사 'In'이 맞다."
+        },
+        {
+          "text": "We want the pattern to be varying just a bit, in systematic but exciting ways.",
+          "isCorrect": false,
+          "correction": "We want the pattern to be varied just a bit, in systematic but exciting ways.",
+          "explanation": "주어가 다양화되는 대상(수동)이므로 과거분사 'varied'가 맞다."
+        },
+        {
+          "text": "Simple mindless repetition is all very well, and complex, understated variations on the theme are much preferred.",
+          "isCorrect": false,
+          "correction": "Simple mindless repetition is all very well, but complex, understated variations on the theme are much preferred.",
+          "explanation": "두 절이 대조 관계이므로 역접 접속사 'but'이 맞다."
+        },
+        {
+          "text": "This is why “keyboard” and “synthesizer” music set to produce an automatically repeated sequence sounded so dull and boring.",
+          "isCorrect": false,
+          "correction": "This is why “keyboard” and “synthesizer” music set to produce an automatically repeated sequence sounds so dull and boring.",
+          "explanation": "일반적 진술이므로 현재시제 'sounds'가 맞다."
+        }
+      ]
+    }
+  }
+}

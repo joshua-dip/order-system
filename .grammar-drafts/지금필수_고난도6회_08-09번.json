@@ -1,0 +1,320 @@
+{
+  "passageId": "69d4eca372a886137cd83f1a",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 08~09번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 08~09번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 08~09번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "We can take the words of a song and put them to different music, or we can take the music of a song and sing different words.",
+      "tokens": ["We","can","take","the","words","of","a","song","and","put","them","to","different","music,","or","we","can","take","the","music","of","a","song","and","sing","different","words."],
+      "korean": "우리는 어느 노래의 가사를 가져다가 다른 음악에 붙일 수도 있고, 혹은 어느 노래의 음악에 다른 가사를 붙여 부를 수도 있다."
+    },
+    {
+      "idx": 1,
+      "text": "The early folk song collectors sometimes notated the music of a song but could not be bothered to write down the words.",
+      "tokens": ["The","early","folk","song","collectors","sometimes","notated","the","music","of","a","song","but","could","not","be","bothered","to","write","down","the","words."],
+      "korean": "초기의 민요수집가들은 흔히 노래의 음악을 악보에 기보했지만, 가사를 적는 것에 신경 쓰지 않았다."
+    },
+    {
+      "idx": 2,
+      "text": "They treated the words and music of songs as separable entities.",
+      "tokens": ["They","treated","the","words","and","music","of","songs","as","separable","entities."],
+      "korean": "그들은 노래의 가사와 음악을 분리 가능한 개체로 취급했다."
+    },
+    {
+      "idx": 3,
+      "text": "Indeed, the hybrid model seems correct because we know of many songs that came into being when a previously written text was set to music.",
+      "tokens": ["Indeed,","the","hybrid","model","seems","correct","because","we","know","of","many","songs","that","came","into","being","when","a","previously","written","text","was","set","to","music."],
+      "korean": "사실, 우리는 먼저 작사됐던 가사를 음악에 붙여서 생긴 많은 노래를 알기 때문에 혼성 모델(음악과 가사가 함께 있는 노래)이 올바른 것처럼 보인다."
+    },
+    {
+      "idx": 4,
+      "text": "But it would be mistaken to think that all songs began in such a way, or that all songs are best understood in such a way.",
+      "tokens": ["But","it","would","be","mistaken","to","think","that","all","songs","began","in","such","a","way,","or","that","all","songs","are","best","understood","in","such","a","way."],
+      "korean": "그러나 모든 노래가 그런 방식으로 시작되었거나, 모든 노래가 그런 방식으로 가장 잘 이해된다고 생각하는 것은 잘못된 것이다."
+    },
+    {
+      "idx": 5,
+      "text": "Despite its intuitive appeal and despite the fact that many songs do indeed come into being when a text is set to music, the hybrid model is an inadequate account of songs generally.",
+      "tokens": ["Despite","its","intuitive","appeal","and","despite","the","fact","that","many","songs","do","indeed","come","into","being","when","a","text","is","set","to","music,","the","hybrid","model","is","an","inadequate","account","of","songs","generally."],
+      "korean": "그러한 생각의 직관적인 매력과, 가사가 음악에 붙여질 때 실제로 많은 노래들이 생겨난다는 사실에도 불구하고, 혼성 모델은 일반적으로 노래에 대한 부적절한 설명이다."
+    },
+    {
+      "idx": 6,
+      "text": "The most philosophically rich account of hybrid art forms is that of Jerrold Levinson.",
+      "tokens": ["The","most","philosophically","rich","account","of","hybrid","art","forms","is","that","of","Jerrold","Levinson."],
+      "korean": "가장 철학적으로 의미심장한 혼성 예술 형태에 대한 설명은 Jerrold Levinson의 그것(설명)이다."
+    },
+    {
+      "idx": 7,
+      "text": "For Levinson, the key difference between a “hybrid” art form (such as opera or collage) and a “non-hybrid” (such as instrumental music or painting) is that hybrid art forms should be taken into account in our responses.",
+      "tokens": ["For","Levinson,","the","key","difference","between","a","“hybrid”","art","form","(such","as","opera","or","collage)","and","a","“non-hybrid”","(such","as","instrumental","music","or","painting)","is","that","hybrid","art","forms","should","be","taken","into","account","in","our","responses."],
+      "korean": "Levinson에게 있어, ‘혼성’ 예술 형태(오페라나 콜라주)와 ‘비혼성’ 예술 형태(악기 연주 음악이나 그림)의 주요 차이점은 우리의 반응에 혼성예술 형태가 고려되어야 한다는 것이다."
+    },
+    {
+      "idx": 8,
+      "text": "Opera, for example, is recognizable as a combination of drama and music and an appropriate response takes both into account.",
+      "tokens": ["Opera,","for","example,","is","recognizable","as","a","combination","of","drama","and","music","and","an","appropriate","response","takes","both","into","account."],
+      "korean": "예를 들어, 오페라는 드라마와 음악의 조합으로 인식할 수 있어서, 적절한 반응은 둘 다를 고려하는 것이다."
+    },
+    {
+      "idx": 9,
+      "text": "There would be something a little perverse in attending an opera and ignoring much of the dramatic aspect by keeping your eyes closed throughout the performance, while there would be nothing amiss in doing so at a concert of (non-hybrid) instrumental music.",
+      "tokens": ["There","would","be","something","a","little","perverse","in","attending","an","opera","and","ignoring","much","of","the","dramatic","aspect","by","keeping","your","eyes","closed","throughout","the","performance,","while","there","would","be","nothing","amiss","in","doing","so","at","a","concert","of","(non-hybrid)","instrumental","music."],
+      "korean": "오페라를 관람하면서 공연 내내 눈을 감아 극적인 면을 무시하는 데는 약간 그릇된 면이 있을 수 있는 반면, ‘비혼성’ 악기 연주회에서는 그렇게 하는 것에는 잘못된 어떤 것도 없을 것이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S1-T16-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "bothered",
+          "wrongCandidates": ["bothering"],
+          "grammarType": "수동태",
+          "explanation": "'be bothered to V'는 '~하려고 신경 쓰다'라는 수동태 관용표현이다. 주어 'collectors'가 '신경이 쓰이는' 입장이므로 과거분사 'bothered'가 맞고, 현재분사 'bothering'은 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "bother",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T1-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "treated",
+          "wrongCandidates": ["treating"],
+          "grammarType": "시제",
+          "explanation": "주어 'They' 뒤에 본동사가 와야 한다. 문맥상 과거의 행위를 서술하므로 과거시제 'treated'가 맞다. 현재분사 'treating'은 본동사 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "treat",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T12-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'many songs'가 있고 뒤따르는 절에 주어가 비어 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하므로 선행사가 있을 때 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T22-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 22,
+          "endTokenIdx": 22,
+          "correctForm": "set",
+          "wrongCandidates": ["setting"],
+          "grammarType": "수동태",
+          "explanation": "주어 'a previously written text'가 '음악에 붙여지는' 대상이므로 'was + 과거분사' 수동태 구조의 과거분사 'set'이 맞다. 현재분사 'setting'은 능동으로 의미가 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "set",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 5,
+          "endTokenIdx": 6,
+          "correctForm": "to think",
+          "wrongCandidates": ["thinking"],
+          "grammarType": "부정사",
+          "explanation": "'it ~ to V' 가주어·진주어 구문이다. 가주어 'it'에 호응하는 진주어로 to부정사 'to think'가 와야 한다. 동명사 'thinking'은 이 구문의 진주어 역할을 할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T0-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Despite",
+          "wrongCandidates": ["Although"],
+          "grammarType": "전치사",
+          "explanation": "뒤에 명사구 'its intuitive appeal'이 이어지므로 전치사 'Despite'가 맞다. 'Although'는 접속사라서 뒤에 「주어+동사」 절이 필요하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T11-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "do",
+          "wrongCandidates": ["does"],
+          "grammarType": "수일치",
+          "explanation": "강조의 조동사이다. 주어 'many songs'가 복수이므로 복수형 'do'가 맞다. 단수형 'does'는 단수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "do",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T26-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 26,
+          "endTokenIdx": 26,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "be동사 'is'의 보어 자리에 「주어+동사+목적어」가 완전한 절이 이어지므로 명사절 접속사 'that'이 맞다. 'what'은 뒤 절에 빠진 성분이 있을 때만 쓰며, 여기서는 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T16-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "takes",
+          "wrongCandidates": ["take"],
+          "grammarType": "수일치",
+          "explanation": "주어가 단수명사 'an appropriate response'이므로 3인칭 단수 동사 'takes'가 맞다. 복수형 'take'는 복수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "take",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T19-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 19,
+          "endTokenIdx": 19,
+          "correctForm": "keeping",
+          "wrongCandidates": ["keep"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'keeping'이 맞다. 동사원형 'keep'은 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "keep",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "bothered", "baseForm": "bother"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "treated", "baseForm": "treat"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "set", "baseForm": "set"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "do", "baseForm": "do"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "takes", "baseForm": "take"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "keeping", "baseForm": "keep"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 1, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "bothered", "wrongForm": "bothering", "explanation": "'be bothered to V'는 '~하려고 신경 쓰다'라는 수동태 관용표현이다. 주어 'collectors'가 '신경이 쓰이는' 입장이므로 과거분사 'bothered'가 맞고, 현재분사 'bothering'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "treated", "wrongForm": "treating", "explanation": "주어 'They' 뒤에 본동사가 와야 한다. 문맥상 과거의 행위를 서술하므로 과거시제 'treated'가 맞다. 현재분사 'treating'은 본동사 자리에 올 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'many songs'가 있고 뒤따르는 절에 주어가 비어 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하므로 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "set", "wrongForm": "setting", "explanation": "주어 'a previously written text'가 '음악에 붙여지는' 대상이므로 'was + 과거분사' 수동태 구조의 과거분사 'set'이 맞다. 현재분사 'setting'은 능동으로 의미가 어긋난다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 6, "correctForm": "to think", "wrongForm": "thinking", "explanation": "'it ~ to V' 가주어·진주어 구문이다. 가주어 'it'에 호응하는 진주어로 to부정사 'to think'가 와야 한다. 동명사 'thinking'은 이 구문의 진주어 역할을 할 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Despite", "wrongForm": "Although", "explanation": "뒤에 명사구 'its intuitive appeal'이 이어지므로 전치사 'Despite'가 맞다. 'Although'는 접속사라서 뒤에 「주어+동사」 절이 필요하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "do", "wrongForm": "does", "explanation": "강조의 조동사이다. 주어 'many songs'가 복수이므로 복수형 'do'가 맞다. 단수형 'does'는 단수 주어에 사용된다."},
+        {"sentenceIdx": 7, "startTokenIdx": 26, "endTokenIdx": 26, "correctForm": "that", "wrongForm": "what", "explanation": "be동사 'is'의 보어 자리에 「주어+동사+목적어」가 완전한 절이 이어지므로 명사절 접속사 'that'이 맞다. 'what'은 뒤 절에 빠진 성분이 있을 때만 쓰며, 여기서는 부적절하다."},
+        {"sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "takes", "wrongForm": "take", "explanation": "주어가 단수명사 'an appropriate response'이므로 3인칭 단수 동사 'takes'가 맞다. 복수형 'take'는 복수 주어에 사용된다."},
+        {"sentenceIdx": 9, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "keeping", "wrongForm": "keep", "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'keeping'이 맞다. 동사원형 'keep'은 전치사의 목적어가 될 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 1, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "bothering", "correction": "bothered", "explanation": "'be bothered to V' 관용표현이므로 과거분사 'bothered'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "treating", "correction": "treated", "explanation": "본동사 자리이며 과거 시제이므로 'treated'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'many songs'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 3, "startTokenIdx": 22, "endTokenIdx": 22, "isError": true, "wrongForm": "setting", "correction": "set", "explanation": "주어가 음악에 붙여지는 대상(수동)이므로 과거분사 'set'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 6, "isError": true, "wrongForm": "thinking", "correction": "to think", "explanation": "가주어 'it'의 진주어이므로 to부정사 'to think'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Although", "correction": "Despite", "explanation": "뒤에 명사구가 오므로 전치사 'Despite'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "does", "correction": "do", "explanation": "복수 주어 'many songs'에 맞춰 'do'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 26, "endTokenIdx": 26, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "뒤가 완전한 절이므로 명사절 접속사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "take", "correction": "takes", "explanation": "단수 주어 'an appropriate response'에 맞춰 'takes'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 19, "endTokenIdx": 19, "isError": true, "wrongForm": "keep", "correction": "keeping", "explanation": "전치사 'by' 뒤이므로 동명사 'keeping'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The early folk song collectors sometimes notated the music of a song but could not be bothering to write down the words.",
+          "isCorrect": false,
+          "correction": "The early folk song collectors sometimes notated the music of a song but could not be bothered to write down the words.",
+          "explanation": "'be bothered to V' 관용표현이므로 과거분사 'bothered'가 맞다."
+        },
+        {
+          "text": "They treating the words and music of songs as separable entities.",
+          "isCorrect": false,
+          "correction": "They treated the words and music of songs as separable entities.",
+          "explanation": "주어 'They' 뒤 본동사 자리이며 과거 시제이므로 'treated'가 맞다."
+        },
+        {
+          "text": "Indeed, the hybrid model seems correct because we know of many songs what came into being when a previously written text was set to music.",
+          "isCorrect": false,
+          "correction": "Indeed, the hybrid model seems correct because we know of many songs that came into being when a previously written text was set to music.",
+          "explanation": "선행사 'many songs'가 있으므로 주격 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "Indeed, the hybrid model seems correct because we know of many songs that came into being when a previously written text was setting to music.",
+          "isCorrect": false,
+          "correction": "Indeed, the hybrid model seems correct because we know of many songs that came into being when a previously written text was set to music.",
+          "explanation": "주어가 음악에 붙여지는 대상(수동)이므로 과거분사 'set'이 맞다."
+        },
+        {
+          "text": "But it would be mistaken thinking that all songs began in such a way, or that all songs are best understood in such a way.",
+          "isCorrect": false,
+          "correction": "But it would be mistaken to think that all songs began in such a way, or that all songs are best understood in such a way.",
+          "explanation": "가주어 'it'의 진주어이므로 to부정사 'to think'가 맞다."
+        },
+        {
+          "text": "Although its intuitive appeal and despite the fact that many songs do indeed come into being when a text is set to music, the hybrid model is an inadequate account of songs generally.",
+          "isCorrect": false,
+          "correction": "Despite its intuitive appeal and despite the fact that many songs do indeed come into being when a text is set to music, the hybrid model is an inadequate account of songs generally.",
+          "explanation": "뒤에 명사구 'its intuitive appeal'이 오므로 전치사 'Despite'가 맞다."
+        },
+        {
+          "text": "Despite its intuitive appeal and despite the fact that many songs does indeed come into being when a text is set to music, the hybrid model is an inadequate account of songs generally.",
+          "isCorrect": false,
+          "correction": "Despite its intuitive appeal and despite the fact that many songs do indeed come into being when a text is set to music, the hybrid model is an inadequate account of songs generally.",
+          "explanation": "강조 조동사로, 복수 주어 'many songs'에 맞춰 'do'가 맞다."
+        },
+        {
+          "text": "For Levinson, the key difference between a “hybrid” art form (such as opera or collage) and a “non-hybrid” (such as instrumental music or painting) is what hybrid art forms should be taken into account in our responses.",
+          "isCorrect": false,
+          "correction": "For Levinson, the key difference between a “hybrid” art form (such as opera or collage) and a “non-hybrid” (such as instrumental music or painting) is that hybrid art forms should be taken into account in our responses.",
+          "explanation": "뒤가 완전한 절이므로 명사절 접속사 'that'이 맞다."
+        },
+        {
+          "text": "Opera, for example, is recognizable as a combination of drama and music and an appropriate response take both into account.",
+          "isCorrect": false,
+          "correction": "Opera, for example, is recognizable as a combination of drama and music and an appropriate response takes both into account.",
+          "explanation": "단수 주어 'an appropriate response'에 맞춰 'takes'가 맞다."
+        },
+        {
+          "text": "There would be something a little perverse in attending an opera and ignoring much of the dramatic aspect by keep your eyes closed throughout the performance, while there would be nothing amiss in doing so at a concert of (non-hybrid) instrumental music.",
+          "isCorrect": false,
+          "correction": "There would be something a little perverse in attending an opera and ignoring much of the dramatic aspect by keeping your eyes closed throughout the performance, while there would be nothing amiss in doing so at a concert of (non-hybrid) instrumental music.",
+          "explanation": "전치사 'by' 뒤에는 동명사 'keeping'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

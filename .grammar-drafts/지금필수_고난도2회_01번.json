@@ -1,0 +1,264 @@
+{
+  "passageId": "69d4eca372a886137cd83ef3",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 01번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 01번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 01번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "We have an expectation that the “documentary look” will involve “documentary listening”; in other words, the universe will be more verbally spontaneous.",
+      "tokens": ["We","have","an","expectation","that","the","“documentary","look”","will","involve","“documentary","listening”;","in","other","words,","the","universe","will","be","more","verbally","spontaneous."],
+      "korean": "우리는 ‘다큐멘터리 장면’이 ‘다큐멘터리 청취’를 수반할 것이라는 기대를 가지는데, 다시 말해서, (우리의) 경험 세계는 언어적으로 더 자연스러울 것이라는 것이다."
+    },
+    {
+      "idx": 1,
+      "text": "It is acceptable for the dramatic look to show us classically staged dialogue scenes with characters pronouncing clearly and taking turns exchanging well-crafted lines. (My wife once said she could recognize when I was watching a 1930s or 1940s era film in the next room simply by listening to the rhythms of the crisply articulate speech.)",
+      "tokens": ["It","is","acceptable","for","the","dramatic","look","to","show","us","classically","staged","dialogue","scenes","with","characters","pronouncing","clearly","and","taking","turns","exchanging","well-crafted","lines.","(My","wife","once","said","she","could","recognize","when","I","was","watching","a","1930s","or","1940s","era","film","in","the","next","room","simply","by","listening","to","the","rhythms","of","the","crisply","articulate","speech.)"],
+      "korean": "극적인 장면은 등장인물이 명료하게 발음하고, 잘 다듬어진 대사를 번갈아 주고받으면서 고전적으로 상연되는 대화 장면을 우리에게 보여 주는 것이 용인된다. (나의 아내는 언젠가 그저 또렷하게 분명히 발음된 대사의 리듬을 듣는 것만으로도 옆방에서 내가 1930년대나 1940년대 영화를 보고 있을 때를 알아챌 수 있었다고 말했다.)"
+    },
+    {
+      "idx": 2,
+      "text": "The overall effect can be elegant, as if the characters were passing a conversational baton back and forth.",
+      "tokens": ["The","overall","effect","can","be","elegant,","as","if","the","characters","were","passing","a","conversational","baton","back","and","forth."],
+      "korean": "전체적인 효과는 등장인물들이 대화의 바통을 이리저리로 건네는 듯이 우아할 수 있다."
+    },
+    {
+      "idx": 3,
+      "text": "The more that a film leans toward the documentary look, the more it tends to break up that rhythm.",
+      "tokens": ["The","more","that","a","film","leans","toward","the","documentary","look,","the","more","it","tends","to","break","up","that","rhythm."],
+      "korean": "영화가 다큐멘터리 장면 쪽으로 더 많이 기울수록, 그것이 그 리듬을 깨뜨리는 경향이 더 많다."
+    },
+    {
+      "idx": 4,
+      "text": "Ordinary speech tends to be much more fragmentary.",
+      "tokens": ["Ordinary","speech","tends","to","be","much","more","fragmentary."],
+      "korean": "보통의 말은 훨씬 더 조각나 있는 경향이 있다."
+    },
+    {
+      "idx": 5,
+      "text": "People interrupt each other; they talk over each other’s words instead of waiting for their turn.",
+      "tokens": ["People","interrupt","each","other;","they","talk","over","each","other’s","words","instead","of","waiting","for","their","turn."],
+      "korean": "사람들은 서로를 방해하고, 그들은 자신들의 차례를 기다리는 대신 상대방이 말할 때 이야기한다."
+    },
+    {
+      "idx": 6,
+      "text": "They halt, not knowing quite how to phrase what they want to say, and they start again.",
+      "tokens": ["They","halt,","not","knowing","quite","how","to","phrase","what","they","want","to","say,","and","they","start","again."],
+      "korean": "그들은 그들이 말하고자 하는 것을 어떻게 말로 표현해야 할지 잘 몰라서 멈추고는 (대화를) 다시 시작한다."
+    },
+    {
+      "idx": 7,
+      "text": "We assume that real conversation is messy.",
+      "tokens": ["We","assume","that","real","conversation","is","messy."],
+      "korean": "우리는 실제의 대화가 엉망인 것은 당연하다고 생각한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T4-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "추상명사 'expectation'을 뒤에서 보충 설명하는 동격절을 이끄는 접속사 자리이므로 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사로 뒤에 불완전한 절이 와야 하지만, 여기서는 'the documentary look will involve documentary listening'이라는 완전한 절이 이어지므로 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T11-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "staged",
+          "wrongCandidates": ["staging"],
+          "grammarType": "분사",
+          "explanation": "수식 받는 명사 'dialogue scenes'는 사람에 의해 상연되는 대상이므로 수동의 의미를 갖는 과거분사 'staged'가 와야 한다. 현재분사 'staging'은 능동의 의미가 되어 '대화 장면이 무언가를 상연하는' 어색한 뜻이 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "stage",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T10-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "were",
+          "wrongCandidates": ["are"],
+          "grammarType": "시제",
+          "explanation": "'as if' 뒤에는 현재 사실의 반대를 가정하는 가정법 과거가 와야 하므로 be동사는 과거형 'were'를 쓴다. 'are'를 쓰면 직설법이 되어 'as if'가 만들어 내는 '마치 ~인 것처럼'이라는 비현실적 비유의 뉘앙스가 사라진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T5-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "leans",
+          "wrongCandidates": ["lean"],
+          "grammarType": "수일치",
+          "explanation": "'The 비교급 ~, the 비교급 ~' 구문에서 첫 절의 주어는 단수 'a film'이므로 단수형 동사 'leans'가 와야 한다. 원형 'lean'은 복수 주어나 조동사 뒤에 쓰는 형태로, 이 자리에는 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "lean",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T4-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "be",
+          "wrongCandidates": ["being"],
+          "grammarType": "부정사",
+          "explanation": "동사 'tend'는 to부정사를 목적어로 취하므로 'to' 뒤에는 동사원형 'be'가 와야 한다. 'being'은 동명사·현재분사형이라 to부정사 구조에 들어갈 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T12-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "waiting",
+          "wrongCandidates": ["wait"],
+          "grammarType": "전치사",
+          "explanation": "'instead of'는 전치사구이므로 뒤에 동명사 'waiting'이 와야 한다. 동사원형 'wait'는 전치사의 목적어가 될 수 없어 문장 구조가 깨진다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T8-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "what",
+          "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "동사 'phrase'의 목적어 자리이면서 뒤따르는 절 'they want to say'에 'say'의 목적어가 빠진 불완전한 구조이다. 따라서 선행사를 포함하면서 명사절을 이끄는 관계대명사 'what'이 맞다. 'that'은 선행사가 있어야 쓰이고 뒤에 완전한 절을 이끄는 접속사 용법과 혼동될 수 있어 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "that절 안의 주어 'real conversation'은 단수 불가산 명사로 취급되므로 단수형 be동사 'is'가 와야 한다. 'are'는 복수 주어에 쓰는 형태로, 단수 주어와 결합할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "staged", "baseForm": "stage"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "were", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "leans", "baseForm": "lean"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "be", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "is", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "that", "wrongForm": "what", "explanation": "추상명사 'expectation'을 뒤에서 보충 설명하는 동격절을 이끄는 접속사 자리이므로 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사로 뒤에 불완전한 절이 와야 하지만, 여기서는 'the documentary look will involve documentary listening'이라는 완전한 절이 이어지므로 쓸 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "staged", "wrongForm": "staging", "explanation": "수식 받는 명사 'dialogue scenes'는 사람에 의해 상연되는 대상이므로 수동의 의미를 갖는 과거분사 'staged'가 와야 한다. 현재분사 'staging'은 능동의 의미가 되어 '대화 장면이 무언가를 상연하는' 어색한 뜻이 되어 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "were", "wrongForm": "are", "explanation": "'as if' 뒤에는 현재 사실의 반대를 가정하는 가정법 과거가 와야 하므로 be동사는 과거형 'were'를 쓴다. 'are'를 쓰면 직설법이 되어 'as if'가 만들어 내는 '마치 ~인 것처럼'이라는 비현실적 비유의 뉘앙스가 사라진다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "leans", "wrongForm": "lean", "explanation": "'The 비교급 ~, the 비교급 ~' 구문에서 첫 절의 주어는 단수 'a film'이므로 단수형 동사 'leans'가 와야 한다. 원형 'lean'은 복수 주어나 조동사 뒤에 쓰는 형태로, 이 자리에는 어울리지 않는다."},
+        {"sentenceIdx": 4, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "be", "wrongForm": "being", "explanation": "동사 'tend'는 to부정사를 목적어로 취하므로 'to' 뒤에는 동사원형 'be'가 와야 한다. 'being'은 동명사·현재분사형이라 to부정사 구조에 들어갈 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "waiting", "wrongForm": "wait", "explanation": "'instead of'는 전치사구이므로 뒤에 동명사 'waiting'이 와야 한다. 동사원형 'wait'는 전치사의 목적어가 될 수 없어 문장 구조가 깨진다."},
+        {"sentenceIdx": 6, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "what", "wrongForm": "that", "explanation": "동사 'phrase'의 목적어 자리이면서 뒤따르는 절 'they want to say'에 'say'의 목적어가 빠진 불완전한 구조이다. 따라서 선행사를 포함하면서 명사절을 이끄는 관계대명사 'what'이 맞다. 'that'은 선행사가 있어야 쓰이고 뒤에 완전한 절을 이끄는 접속사 용법과 혼동될 수 있어 부적절하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "is", "wrongForm": "are", "explanation": "that절 안의 주어 'real conversation'은 단수 불가산 명사로 취급되므로 단수형 be동사 'is'가 와야 한다. 'are'는 복수 주어에 쓰는 형태로, 단수 주어와 결합할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "동격절을 이끄는 접속사 자리이고 뒤에 완전한 절이 이어지므로 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "staging", "correction": "staged", "explanation": "'dialogue scenes'가 상연되는 대상(수동)이므로 과거분사 'staged'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "are", "correction": "were", "explanation": "'as if' 가정법 과거 구문이므로 be동사를 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "lean", "correction": "leans", "explanation": "단수 주어 'a film'에 맞춰 단수형 'leans'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "being", "correction": "be", "explanation": "'tend to + 동사원형' 구조이므로 'to' 뒤를 동사원형 'be'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "wait", "correction": "waiting", "explanation": "전치사구 'instead of' 뒤이므로 동명사 'waiting'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "that", "correction": "what", "explanation": "선행사 없이 불완전한 절을 이끄는 자리이므로 관계대명사 'what'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'real conversation'에 맞춰 단수형 'is'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "We have an expectation what the “documentary look” will involve “documentary listening”; in other words, the universe will be more verbally spontaneous.",
+          "isCorrect": false,
+          "correction": "We have an expectation that the “documentary look” will involve “documentary listening”; in other words, the universe will be more verbally spontaneous.",
+          "explanation": "추상명사 'expectation' 뒤 동격절을 이끄는 접속사 자리이므로 'that'이 맞다."
+        },
+        {
+          "text": "It is acceptable for the dramatic look to show us classically staging dialogue scenes with characters pronouncing clearly and taking turns exchanging well-crafted lines. (My wife once said she could recognize when I was watching a 1930s or 1940s era film in the next room simply by listening to the rhythms of the crisply articulate speech.)",
+          "isCorrect": false,
+          "correction": "It is acceptable for the dramatic look to show us classically staged dialogue scenes with characters pronouncing clearly and taking turns exchanging well-crafted lines. (My wife once said she could recognize when I was watching a 1930s or 1940s era film in the next room simply by listening to the rhythms of the crisply articulate speech.)",
+          "explanation": "'dialogue scenes'는 상연되는 대상(수동)이므로 과거분사 'staged'가 맞다."
+        },
+        {
+          "text": "The overall effect can be elegant, as if the characters are passing a conversational baton back and forth.",
+          "isCorrect": false,
+          "correction": "The overall effect can be elegant, as if the characters were passing a conversational baton back and forth.",
+          "explanation": "'as if' 가정법 과거 구문이므로 be동사는 'were'를 쓴다."
+        },
+        {
+          "text": "The more that a film lean toward the documentary look, the more it tends to break up that rhythm.",
+          "isCorrect": false,
+          "correction": "The more that a film leans toward the documentary look, the more it tends to break up that rhythm.",
+          "explanation": "단수 주어 'a film'에 맞춰 단수형 'leans'가 맞다."
+        },
+        {
+          "text": "Ordinary speech tends to being much more fragmentary.",
+          "isCorrect": false,
+          "correction": "Ordinary speech tends to be much more fragmentary.",
+          "explanation": "'tend to + 동사원형' 구조이므로 'to' 뒤는 'be'가 맞다."
+        },
+        {
+          "text": "People interrupt each other; they talk over each other’s words instead of wait for their turn.",
+          "isCorrect": false,
+          "correction": "People interrupt each other; they talk over each other’s words instead of waiting for their turn.",
+          "explanation": "전치사구 'instead of' 뒤에는 동명사 'waiting'이 맞다."
+        },
+        {
+          "text": "They halt, not knowing quite how to phrase that they want to say, and they start again.",
+          "isCorrect": false,
+          "correction": "They halt, not knowing quite how to phrase what they want to say, and they start again.",
+          "explanation": "선행사 없이 불완전한 절을 이끄는 자리이므로 관계대명사 'what'이 맞다."
+        },
+        {
+          "text": "We assume that real conversation are messy.",
+          "isCorrect": false,
+          "correction": "We assume that real conversation is messy.",
+          "explanation": "단수 주어 'real conversation'에 맞춰 단수형 'is'가 맞다."
+        }
+      ]
+    }
+  }
+}

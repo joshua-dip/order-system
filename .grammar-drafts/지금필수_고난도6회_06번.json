@@ -1,0 +1,293 @@
+{
+  "passageId": "69d4eca372a886137cd83f18",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 06번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 06번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 06번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Birds are so much a part of our lives, even in cities, that we can barely imagine what it would be like without them.",
+      "tokens": ["Birds","are","so","much","a","part","of","our","lives,","even","in","cities,","that","we","can","barely","imagine","what","it","would","be","like","without","them."],
+      "korean": "심지어 도시에서도, 새들은 우리 삶의 너무 많은 부분을 차지해서 우리는 그것들이 없는 것이 어떨지 거의 상상할 수 없을 정도이다."
+    },
+    {
+      "idx": 1,
+      "text": "Recently, we suffered a devastating hailstorm in Armidale, New South Wales.",
+      "tokens": ["Recently,","we","suffered","a","devastating","hailstorm","in","Armidale,","New","South","Wales."],
+      "korean": "최근, New South Wales의 Armidale에는 우박을 동반한 엄청난 폭풍우가 닥쳤다."
+    },
+    {
+      "idx": 2,
+      "text": "Buildings and power poles were mangled.",
+      "tokens": ["Buildings","and","power","poles","were","mangled."],
+      "korean": "건물과 전봇대가 심하게 훼손되었다."
+    },
+    {
+      "idx": 3,
+      "text": "Trees were stripped of their leaves and branches broken as if they were matchsticks.",
+      "tokens": ["Trees","were","stripped","of","their","leaves","and","branches","broken","as","if","they","were","matchsticks."],
+      "korean": "나무들의 잎들이 뜯어지고 가지들은 마치 성냥개비처럼 부러졌다."
+    },
+    {
+      "idx": 4,
+      "text": "Unexpectedly, the worst part of our experience was not the storm itself but the aftermath.",
+      "tokens": ["Unexpectedly,","the","worst","part","of","our","experience","was","not","the","storm","itself","but","the","aftermath."],
+      "korean": "예기치 않게, 우리가 겪은 일 중에서 가장 최악의 부분은 폭풍 그 자체가 아니라 그 여파였다."
+    },
+    {
+      "idx": 5,
+      "text": "We were struck by the quiet, a stillness of foreboding or mourning, and then we realized what was missing.",
+      "tokens": ["We","were","struck","by","the","quiet,","a","stillness","of","foreboding","or","mourning,","and","then","we","realized","what","was","missing."],
+      "korean": "우리는 조용함, 즉 불길한 예감이나 애도의 고요함에 충격을 받았고, 그러고 나서 우리는 무엇이 사라졌는지 깨달았다."
+    },
+    {
+      "idx": 6,
+      "text": "There were no sounds of insects or birds.",
+      "tokens": ["There","were","no","sounds","of","insects","or","birds."],
+      "korean": "곤충이나 새의 소리가 없었다."
+    },
+    {
+      "idx": 7,
+      "text": "Not a single tone or indication of life could be heard.",
+      "tokens": ["Not","a","single","tone","or","indication","of","life","could","be","heard."],
+      "korean": "생명이 있다는 단 하나의 음색이나 조짐도 들리지 않았다."
+    },
+    {
+      "idx": 8,
+      "text": "We realized how much background noise, including the songs and calls of birds, was part of our subconscious, how much we really lived with the birds in our garden and how very important they were to us.",
+      "tokens": ["We","realized","how","much","background","noise,","including","the","songs","and","calls","of","birds,","was","part","of","our","subconscious,","how","much","we","really","lived","with","the","birds","in","our","garden","and","how","very","important","they","were","to","us."],
+      "korean": "우리는 새들의 노래와 울음소리를 포함한 얼마나 많은 배경 소음이 우리의 잠재의식의 일부분을 차지했는지, 우리가 정말로 정원의 새들과 함께 얼마나 많이 살았는지, 그리고 그것들이 우리에게 얼마나 중요한지 깨달았다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T17-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "what",
+          "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "imagine 의 목적어 자리에 들어가는 명사절을 이끌면서 그 절 안에서 'be like'의 보어 역할까지 하므로, 선행사를 포함한 관계대명사 'what'이 맞다. 'that'은 선행사가 따로 있어야 하며 절 안에서 보어가 비어 있는 구조에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "suffered",
+          "wrongCandidates": ["suffer"],
+          "grammarType": "시제",
+          "explanation": "문두의 'Recently'와 뒤이은 서사적 과거 사건(폭풍 피해) 흐름으로 보아 과거 시제 'suffered'가 맞다. 동사원형 'suffer'는 주어가 3인칭 단수가 아닌 'we'라 해도 시제가 표시되지 않아, 단독 본동사로 과거 사건을 진술할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "suffer",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T4-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "were",
+          "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'Buildings and power poles'로 and 로 연결된 복수 주어이므로 복수형 be 동사 'were'가 맞다. 단수형 'was'는 단수 주어에만 쓸 수 있어 수의 일치에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T8-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "broken",
+          "wrongCandidates": ["breaking"],
+          "grammarType": "분사",
+          "explanation": "and 로 연결된 두 번째 절 'branches (were) broken'에서 be 동사가 생략된 수동 구조이다. 주어 'branches'가 부러뜨려지는 대상(수동)이므로 과거분사 'broken'이 맞다. 현재분사 'breaking'은 능동 의미가 되어 가지가 무엇을 부수는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "break",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T12-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "but",
+          "wrongCandidates": ["and"],
+          "grammarType": "접속사",
+          "explanation": "앞에 'not the storm itself'가 있으므로 'not A but B(A가 아니라 B)' 구문을 이루는 등위접속사 'but'이 맞다. 'and'를 쓰면 '폭풍 자체도 아니고 여파도 아니다' 식의 어색한 병렬이 되어 문맥과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "by",
+          "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'be struck by ~(~에 의해 충격을 받다)'는 수동태 행위자를 표시하는 정형 표현으로, 행위자/원인을 이끄는 전치사 'by'가 맞다. 'with'는 도구·동반의 의미라 '~을 가지고 충격받았다'는 어색한 뜻이 되어 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T1-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "were",
+          "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "유도부사 'There ~' 구문에서는 뒤따르는 실제 주어와 수를 맞춰야 한다. 진주어 'no sounds'가 복수이므로 복수 be 동사 'were'가 맞다. 'was'는 단수형으로 복수 주어와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T10-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "heard",
+          "wrongCandidates": ["hear"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Not a single tone or indication of life'가 듣는 주체가 아니라 들려지는 대상이므로 'could be + 과거분사'의 수동태 'could be heard'가 맞다. 동사원형 'hear'는 'be + 원형' 결합이 불가능해 수동태 구조를 이룰 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "hear",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T13-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "was",
+          "wrongCandidates": ["were"],
+          "grammarType": "수일치",
+          "explanation": "how much 절의 주어인 'background noise'는 셀 수 없는 단수 명사이므로 단수 be 동사 'was'가 맞다. 사이에 'including the songs and calls of birds'라는 삽입구가 있어도 핵 주어는 단수이므로 복수형 'were'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "suffered", "baseForm": "suffer"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "were", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "broken", "baseForm": "break"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "were", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "heard", "baseForm": "hear"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "was", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "what", "wrongForm": "that", "explanation": "imagine 의 목적어 자리에 들어가는 명사절을 이끌면서 그 절 안에서 'be like'의 보어 역할까지 하므로, 선행사를 포함한 관계대명사 'what'이 맞다. 'that'은 선행사가 따로 있어야 하며 절 안에서 보어가 비어 있는 구조에 쓸 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "suffered", "wrongForm": "suffer", "explanation": "문두의 'Recently'와 뒤이은 서사적 과거 사건(폭풍 피해) 흐름으로 보아 과거 시제 'suffered'가 맞다. 동사원형 'suffer'는 주어가 3인칭 단수가 아닌 'we'라 해도 시제가 표시되지 않아, 단독 본동사로 과거 사건을 진술할 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "were", "wrongForm": "was", "explanation": "주어가 'Buildings and power poles'로 and 로 연결된 복수 주어이므로 복수형 be 동사 'were'가 맞다. 단수형 'was'는 단수 주어에만 쓸 수 있어 수의 일치에 어긋난다."},
+        {"sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "broken", "wrongForm": "breaking", "explanation": "and 로 연결된 두 번째 절 'branches (were) broken'에서 be 동사가 생략된 수동 구조이다. 주어 'branches'가 부러뜨려지는 대상(수동)이므로 과거분사 'broken'이 맞다. 현재분사 'breaking'은 능동 의미가 되어 가지가 무엇을 부수는 어색한 뜻이 된다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "but", "wrongForm": "and", "explanation": "앞에 'not the storm itself'가 있으므로 'not A but B(A가 아니라 B)' 구문을 이루는 등위접속사 'but'이 맞다. 'and'를 쓰면 '폭풍 자체도 아니고 여파도 아니다' 식의 어색한 병렬이 되어 문맥과 맞지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "by", "wrongForm": "with", "explanation": "'be struck by ~(~에 의해 충격을 받다)'는 수동태 행위자를 표시하는 정형 표현으로, 행위자/원인을 이끄는 전치사 'by'가 맞다. 'with'는 도구·동반의 의미라 '~을 가지고 충격받았다'는 어색한 뜻이 되어 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "were", "wrongForm": "was", "explanation": "유도부사 'There ~' 구문에서는 뒤따르는 실제 주어와 수를 맞춰야 한다. 진주어 'no sounds'가 복수이므로 복수 be 동사 'were'가 맞다. 'was'는 단수형으로 복수 주어와 일치하지 않는다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "heard", "wrongForm": "hear", "explanation": "주어 'Not a single tone or indication of life'가 듣는 주체가 아니라 들려지는 대상이므로 'could be + 과거분사'의 수동태 'could be heard'가 맞다. 동사원형 'hear'는 'be + 원형' 결합이 불가능해 수동태 구조를 이룰 수 없다."},
+        {"sentenceIdx": 8, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "was", "wrongForm": "were", "explanation": "how much 절의 주어인 'background noise'는 셀 수 없는 단수 명사이므로 단수 be 동사 'was'가 맞다. 사이에 'including the songs and calls of birds'라는 삽입구가 있어도 핵 주어는 단수이므로 복수형 'were'를 쓰면 안 된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "that", "correction": "what", "explanation": "선행사 없이 imagine 의 목적어 명사절을 이끌면서 절 내부의 보어 자리도 비어 있으므로 선행사 포함 관계대명사 'what'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "suffer", "correction": "suffered", "explanation": "'Recently'와 과거 서사 흐름이므로 과거 시제 'suffered'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "was", "correction": "were", "explanation": "and 로 연결된 복수 주어 'Buildings and power poles'에 맞춰 복수 be 동사 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "breaking", "correction": "broken", "explanation": "'branches (were) broken'의 수동 구조이므로 과거분사 'broken'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "and", "correction": "but", "explanation": "앞의 'not the storm itself'와 짝을 이루는 'not A but B' 구문이므로 'but'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "with", "correction": "by", "explanation": "'be struck by ~' 수동태 행위자 표시이므로 전치사 'by'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "was", "correction": "were", "explanation": "'There ~' 구문의 진주어 'no sounds'가 복수이므로 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "hear", "correction": "heard", "explanation": "'could be + p.p.' 수동태가 필요하므로 과거분사 'heard'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "were", "correction": "was", "explanation": "how much 절의 핵 주어 'background noise'가 셀 수 없는 단수 명사이므로 단수 'was'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Birds are so much a part of our lives, even in cities, that we can barely imagine that it would be like without them.",
+          "isCorrect": false,
+          "correction": "Birds are so much a part of our lives, even in cities, that we can barely imagine what it would be like without them.",
+          "explanation": "imagine 의 목적어 명사절을 이끌면서 'be like'의 보어 자리까지 채우는 선행사 포함 관계대명사 'what'이 맞다."
+        },
+        {
+          "text": "Recently, we suffer a devastating hailstorm in Armidale, New South Wales.",
+          "isCorrect": false,
+          "correction": "Recently, we suffered a devastating hailstorm in Armidale, New South Wales.",
+          "explanation": "'Recently'와 함께 과거 사건을 서술하므로 과거 시제 'suffered'가 맞다."
+        },
+        {
+          "text": "Buildings and power poles was mangled.",
+          "isCorrect": false,
+          "correction": "Buildings and power poles were mangled.",
+          "explanation": "and 로 연결된 복수 주어이므로 복수 be 동사 'were'가 맞다."
+        },
+        {
+          "text": "Trees were stripped of their leaves and branches breaking as if they were matchsticks.",
+          "isCorrect": false,
+          "correction": "Trees were stripped of their leaves and branches broken as if they were matchsticks.",
+          "explanation": "주어 'branches'가 부러뜨려지는 대상(수동)이므로 과거분사 'broken'이 맞다."
+        },
+        {
+          "text": "Unexpectedly, the worst part of our experience was not the storm itself and the aftermath.",
+          "isCorrect": false,
+          "correction": "Unexpectedly, the worst part of our experience was not the storm itself but the aftermath.",
+          "explanation": "'not A but B' 구문이므로 등위접속사 'but'이 맞다."
+        },
+        {
+          "text": "We were struck with the quiet, a stillness of foreboding or mourning, and then we realized what was missing.",
+          "isCorrect": false,
+          "correction": "We were struck by the quiet, a stillness of foreboding or mourning, and then we realized what was missing.",
+          "explanation": "'be struck by ~' 수동태 행위자 표시이므로 'by'가 맞다."
+        },
+        {
+          "text": "There was no sounds of insects or birds.",
+          "isCorrect": false,
+          "correction": "There were no sounds of insects or birds.",
+          "explanation": "진주어 'no sounds'가 복수이므로 'were'가 맞다."
+        },
+        {
+          "text": "Not a single tone or indication of life could be hear.",
+          "isCorrect": false,
+          "correction": "Not a single tone or indication of life could be heard.",
+          "explanation": "'could be + p.p.' 수동태 구조이므로 과거분사 'heard'가 맞다."
+        },
+        {
+          "text": "We realized how much background noise, including the songs and calls of birds, were part of our subconscious, how much we really lived with the birds in our garden and how very important they were to us.",
+          "isCorrect": false,
+          "correction": "We realized how much background noise, including the songs and calls of birds, was part of our subconscious, how much we really lived with the birds in our garden and how very important they were to us.",
+          "explanation": "핵 주어 'background noise'가 셀 수 없는 단수 명사이므로 단수 'was'가 맞다."
+        }
+      ]
+    }
+  }
+}

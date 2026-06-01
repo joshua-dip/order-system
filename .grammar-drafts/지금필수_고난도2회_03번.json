@@ -1,0 +1,262 @@
+{
+  "passageId": "69d4eca372a886137cd83ef5",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 03번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 03번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 03번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "One of reasons to control weeds is to reduce effects on transportation.",
+      "tokens": ["One","of","reasons","to","control","weeds","is","to","reduce","effects","on","transportation."],
+      "korean": "잡초를 방제하는 이유 중 하나는 운송에 미치는 영향을 줄이기 위함이다."
+    },
+    {
+      "idx": 1,
+      "text": "Some rivers and lakes in the tropics and subtropics are clogged by aquatic weeds, making travel on them nearly impossible.",
+      "tokens": ["Some","rivers","and","lakes","in","the","tropics","and","subtropics","are","clogged","by","aquatic","weeds,","making","travel","on","them","nearly","impossible."],
+      "korean": "열대 지방과 아열대 지방의 일부 강과 호수는 수생 잡초로 막혀 있어서 그 위를 다니는 것이 거의 불가능하다."
+    },
+    {
+      "idx": 2,
+      "text": "Ross and Lembi provide an interesting example of how weeds influence transportation costs.",
+      "tokens": ["Ross","and","Lembi","provide","an","interesting","example","of","how","weeds","influence","transportation","costs."],
+      "korean": "Ross와 Lembi는 잡초가 운송비에 어떻게 영향을 미치는지에 대한 흥미로운 예를 보여 준다."
+    },
+    {
+      "idx": 3,
+      "text": "They indicate that in 1969 and 1970, 487,000 tons of wild oat seed were inadvertently transported from Canada to the United States along with 16 million tons of grain.",
+      "tokens": ["They","indicate","that","in","1969","and","1970,","487,000","tons","of","wild","oat","seed","were","inadvertently","transported","from","Canada","to","the","United","States","along","with","16","million","tons","of","grain."],
+      "korean": "그들은 1969년과 1970년에 487,000톤의 야생 귀리 씨앗이 1600만 톤의 곡물과 함께 부주의로 캐나다에서 미국으로 옮겨졌다는 것을 보여 준다."
+    },
+    {
+      "idx": 4,
+      "text": "The transportation costs for the wild oat were estimated at $2 million, which did not include the $2 million cost for cleaning the grain to remove contamination.",
+      "tokens": ["The","transportation","costs","for","the","wild","oat","were","estimated","at","$2","million,","which","did","not","include","the","$2","million","cost","for","cleaning","the","grain","to","remove","contamination."],
+      "korean": "야생 귀리의 운송비는 2백만 달러로 추산되었는데, 이 돈에는 오염을 제거하기 위해 그 곡물을 청소하는 데 드는 2백만 달러가 포함되지 않았다."
+    },
+    {
+      "idx": 5,
+      "text": "Weeds are kept free from highway intersections to prevent accidents.",
+      "tokens": ["Weeds","are","kept","free","from","highway","intersections","to","prevent","accidents."],
+      "korean": "잡초는 고속도로 교차로에서 사고를 방지하기 위해 제거된다."
+    },
+    {
+      "idx": 6,
+      "text": "Airports and railways also keep signs and lights free of weeds so that maximum visibility can be maintained.",
+      "tokens": ["Airports","and","railways","also","keep","signs","and","lights","free","of","weeds","so","that","maximum","visibility","can","be","maintained."],
+      "korean": "공항과 철도도 최대의 가시성이 유지될 수 있도록 표지판과 조명에 잡초가 없도록 관리한다."
+    },
+    {
+      "idx": 7,
+      "text": "Power line rights-of-way are kept free of tall growing vegetation to prevent power outages if trees contact power lines during storms and increase access to downed power lines.",
+      "tokens": ["Power","line","rights-of-way","are","kept","free","of","tall","growing","vegetation","to","prevent","power","outages","if","trees","contact","power","lines","during","storms","and","increase","access","to","downed","power","lines."],
+      "korean": "송전선이 지나가는 땅은 나무가 폭풍우 중에 송전선과 접촉할 경우의 정전을 방지하고, 쓰러진 송전선에 대한 접근성을 증가시키기 위해 크게 자라는 식물이 없도록 유지된다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T6-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 'One'이므로 단수형 동사 'is'가 맞다. 'of reasons to control weeds'는 수식어구일 뿐이고, 'reasons'에 이끌려 복수형 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T14-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "making",
+          "wrongCandidates": ["made"],
+          "grammarType": "분사구문",
+          "explanation": "분사구문의 의미상 주어는 앞 절 전체(또는 'rivers and lakes ... are clogged ...')이며, 그것이 통행을 거의 불가능하게 '만드는' 능동의 의미이므로 현재분사 'making'이 맞다. 과거분사 'made'는 수동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "how",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계부사",
+          "explanation": "'example of ___ weeds influence transportation costs'는 '잡초가 운송비에 어떻게 영향을 미치는지'라는 방법을 나타내는 명사절이 필요하므로 관계부사 'how'(=the way in which)가 맞다. 관계대명사 'which'는 선행사를 받는 형용사절을 이끌며 뒤 절이 완전한 문장이라 들어갈 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T15-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "transported",
+          "wrongCandidates": ["transporting"],
+          "grammarType": "수동태",
+          "explanation": "주어 '487,000 tons of wild oat seed'가 '옮겨지는' 대상이므로 'were'와 결합하여 수동태를 이루는 과거분사 'transported'가 맞다. 현재분사 'transporting'을 쓰면 능동 진행의 의미가 되어 주어와의 관계가 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "transport",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T12-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "콤마 뒤에서 앞 절 전체나 '$2 million'을 선행사로 받는 계속적 용법의 관계대명사 자리이므로 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때, 또한 계속적 용법으로 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T7-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 7,
+          "endTokenIdx": 8,
+          "correctForm": "to prevent",
+          "wrongCandidates": ["preventing"],
+          "grammarType": "부정사",
+          "explanation": "'잡초가 제거되는' 목적을 나타내는 부사적 용법으로는 to부정사 'to prevent'가 자연스럽다. 동명사 'preventing'은 목적의 의미를 분명히 드러내지 못해 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T11-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 11,
+          "endTokenIdx": 12,
+          "correctForm": "so that",
+          "wrongCandidates": ["such that"],
+          "grammarType": "접속사",
+          "explanation": "뒤따르는 'maximum visibility can be maintained'은 '~할 수 있도록'이라는 목적을 나타내는 부사절이므로 목적의 접속사 'so that'이 맞다. 'such that'은 정도·결과를 나타내며 이 자리에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T8-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "growing",
+          "wrongCandidates": ["grown"],
+          "grammarType": "분사",
+          "explanation": "명사 'vegetation'을 능동·진행의 의미('자라는')로 수식하므로 현재분사 'growing'이 맞다. 과거분사 'grown'은 '재배된'이라는 수동의 의미가 되어 'tall growing vegetation'의 문맥에 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "grow",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "making", "baseForm": "make"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "transported", "baseForm": "transport"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "growing", "baseForm": "grow"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵은 'One'이므로 단수형 'is'가 맞다. 'of reasons'의 'reasons'에 이끌려 복수 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "making", "wrongForm": "made", "explanation": "앞 절이 통행을 '불가능하게 만드는' 능동의 의미이므로 분사구문의 현재분사 'making'이 맞다. 'made'는 수동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "how", "wrongForm": "which", "explanation": "방법을 나타내는 명사절을 이끄는 관계부사 'how'가 맞다. 'which'는 관계대명사로 뒤에 불완전한 절이 와야 하지만, 여기서는 완전한 절이 이어진다."},
+        {"sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "transported", "wrongForm": "transporting", "explanation": "주어 'tons of wild oat seed'가 '옮겨지는' 대상이므로 'were'와 함께 수동태를 이루는 과거분사 'transported'가 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "which", "wrongForm": "what", "explanation": "콤마 뒤에서 앞의 명사구를 선행사로 받는 계속적 용법의 관계대명사 'which'가 맞다. 'what'은 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 8, "correctForm": "to prevent", "wrongForm": "preventing", "explanation": "'사고를 방지하기 위해'라는 목적의 부사적 용법은 to부정사 'to prevent'가 맞다. 동명사 'preventing'은 목적을 분명히 드러내지 못한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 12, "correctForm": "so that", "wrongForm": "such that", "explanation": "'~할 수 있도록'이라는 목적의 부사절을 이끄는 접속사는 'so that'이다. 'such that'은 결과·정도를 나타내어 자리에 맞지 않는다."},
+        {"sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "growing", "wrongForm": "grown", "explanation": "명사 'vegetation'을 능동·진행으로 수식하므로 현재분사 'growing'이 맞다. 'grown'은 '재배된'이라는 수동의 의미가 되어 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어의 핵 'One'은 단수이므로 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "made", "correction": "making", "explanation": "능동의 의미를 갖는 분사구문이므로 현재분사 'making'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "which", "correction": "how", "explanation": "뒤에 완전한 절이 이어지므로 관계부사 'how'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "transporting", "correction": "transported", "explanation": "주어가 옮겨지는 대상이므로 수동태의 과거분사 'transported'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사가 있는 계속적 용법이므로 관계대명사 'which'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 8, "isError": true, "wrongForm": "preventing", "correction": "to prevent", "explanation": "목적을 나타내는 부사적 용법이므로 to부정사 'to prevent'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 12, "isError": true, "wrongForm": "such that", "correction": "so that", "explanation": "목적의 부사절을 이끄는 'so that'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "grown", "correction": "growing", "explanation": "능동·진행으로 명사를 수식하는 현재분사 'growing'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "One of reasons to control weeds are to reduce effects on transportation.",
+          "isCorrect": false,
+          "correction": "One of reasons to control weeds is to reduce effects on transportation.",
+          "explanation": "주어의 핵 'One'이 단수이므로 'is'가 맞다."
+        },
+        {
+          "text": "Some rivers and lakes in the tropics and subtropics are clogged by aquatic weeds, made travel on them nearly impossible.",
+          "isCorrect": false,
+          "correction": "Some rivers and lakes in the tropics and subtropics are clogged by aquatic weeds, making travel on them nearly impossible.",
+          "explanation": "통행을 불가능하게 '만드는' 능동의 분사구문이므로 현재분사 'making'이 맞다."
+        },
+        {
+          "text": "Ross and Lembi provide an interesting example of which weeds influence transportation costs.",
+          "isCorrect": false,
+          "correction": "Ross and Lembi provide an interesting example of how weeds influence transportation costs.",
+          "explanation": "뒤에 완전한 절이 이어지며 방법을 나타내므로 관계부사 'how'가 맞다."
+        },
+        {
+          "text": "They indicate that in 1969 and 1970, 487,000 tons of wild oat seed were inadvertently transporting from Canada to the United States along with 16 million tons of grain.",
+          "isCorrect": false,
+          "correction": "They indicate that in 1969 and 1970, 487,000 tons of wild oat seed were inadvertently transported from Canada to the United States along with 16 million tons of grain.",
+          "explanation": "주어가 옮겨지는 대상이므로 수동태 'were transported'가 맞다."
+        },
+        {
+          "text": "The transportation costs for the wild oat were estimated at $2 million, what did not include the $2 million cost for cleaning the grain to remove contamination.",
+          "isCorrect": false,
+          "correction": "The transportation costs for the wild oat were estimated at $2 million, which did not include the $2 million cost for cleaning the grain to remove contamination.",
+          "explanation": "선행사가 있는 계속적 용법이므로 관계대명사 'which'가 맞다."
+        },
+        {
+          "text": "Weeds are kept free from highway intersections preventing accidents.",
+          "isCorrect": false,
+          "correction": "Weeds are kept free from highway intersections to prevent accidents.",
+          "explanation": "목적의 부사적 용법은 to부정사 'to prevent'가 맞다."
+        },
+        {
+          "text": "Airports and railways also keep signs and lights free of weeds such that maximum visibility can be maintained.",
+          "isCorrect": false,
+          "correction": "Airports and railways also keep signs and lights free of weeds so that maximum visibility can be maintained.",
+          "explanation": "목적의 부사절을 이끄는 접속사는 'so that'이 맞다."
+        },
+        {
+          "text": "Power line rights-of-way are kept free of tall grown vegetation to prevent power outages if trees contact power lines during storms and increase access to downed power lines.",
+          "isCorrect": false,
+          "correction": "Power line rights-of-way are kept free of tall growing vegetation to prevent power outages if trees contact power lines during storms and increase access to downed power lines.",
+          "explanation": "명사 'vegetation'을 능동·진행으로 수식하므로 현재분사 'growing'이 맞다."
+        }
+      ]
+    }
+  }
+}

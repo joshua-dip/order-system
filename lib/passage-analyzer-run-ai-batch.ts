@@ -112,22 +112,42 @@ export async function runPassageAnalyzerAiBatch(opts: {
   const sv = { ...(cur.svocData || {}) };
   for (const row of svocResult || []) {
     const idx = Number(row.sentenceIndex);
-    const base = sv[idx] || {};
-    sv[idx] = {
-      ...(base as SvocSentenceData),
-      subject: String(row.subject || ''),
-      verb: String(row.verb || ''),
-      object: row.object != null ? String(row.object) : null,
-      complement: row.complement != null ? String(row.complement) : null,
-      subjectStart: Number(row.subjectStart),
-      subjectEnd: Number(row.subjectEnd),
-      verbStart: Number(row.verbStart),
-      verbEnd: Number(row.verbEnd),
-      objectStart: row.objectStart as number | null,
-      objectEnd: row.objectEnd as number | null,
-      complementStart: row.complementStart as number | null,
-      complementEnd: row.complementEnd as number | null,
-    };
+    // AI 가 절 array 반환 (신규). 레거시 단일 절 응답도 [1개] 로 호환.
+    const aiClausesRaw = Array.isArray(row.clauses)
+      ? (row.clauses as Array<Record<string, unknown>>)
+      : null;
+    const aiClauses: SvocSentenceData[] = aiClausesRaw
+      ? aiClausesRaw.map((c) => ({
+          subject: String(c.subject || ''),
+          verb: String(c.verb || ''),
+          object: c.object != null ? String(c.object) : null,
+          complement: c.complement != null ? String(c.complement) : null,
+          subjectStart: Number(c.subjectStart),
+          subjectEnd: Number(c.subjectEnd),
+          verbStart: Number(c.verbStart),
+          verbEnd: Number(c.verbEnd),
+          objectStart: c.objectStart as number | null,
+          objectEnd: c.objectEnd as number | null,
+          complementStart: c.complementStart as number | null,
+          complementEnd: c.complementEnd as number | null,
+        }))
+      : [
+          {
+            subject: String(row.subject || ''),
+            verb: String(row.verb || ''),
+            object: row.object != null ? String(row.object) : null,
+            complement: row.complement != null ? String(row.complement) : null,
+            subjectStart: Number(row.subjectStart),
+            subjectEnd: Number(row.subjectEnd),
+            verbStart: Number(row.verbStart),
+            verbEnd: Number(row.verbEnd),
+            objectStart: row.objectStart as number | null,
+            objectEnd: row.objectEnd as number | null,
+            complementStart: row.complementStart as number | null,
+            complementEnd: row.complementEnd as number | null,
+          },
+        ];
+    sv[idx] = aiClauses;
   }
   cur = { ...cur, syntaxPhrases: sp, svocData: sv };
 

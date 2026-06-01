@@ -1,0 +1,314 @@
+{
+  "passageId": "69fe3e8d36e33281b7111f7c",
+  "textbook": "26년 5월 고3 영어모의고사",
+  "sourceKey": "26년 5월 고3 영어모의고사 22번",
+  "title": "26년 5월 고3 영어모의고사 22번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "고3",
+    "questionNumber": "어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In some sense, cities generate themselves ─ they are complex, adaptive, self-organizing systems.",
+      "tokens": ["In", "some", "sense,", "cities", "generate", "themselves", "─", "they", "are", "complex,", "adaptive,", "self-organizing", "systems."],
+      "korean": "어떤 의미에서, 도시들은 스스로를 생성한다. 그것들은 복잡하고, 적응할 수 있으며, 스스로를 조직하는 체계이다."
+    },
+    {
+      "idx": 1,
+      "text": "Of course, it is actually people who create cities, either individually or as organized into businesses, governments, and other institutions.",
+      "tokens": ["Of", "course,", "it", "is", "actually", "people", "who", "create", "cities,", "either", "individually", "or", "as", "organized", "into", "businesses,", "governments,", "and", "other", "institutions."],
+      "korean": "물론, 개인으로든 혹은 기업, 정부 그리고 다른 기관들로 조직되어서든, 도시를 만드는 것은 실제로는 사람들이다."
+    },
+    {
+      "idx": 2,
+      "text": "But, for the most part, they do so unintentionally as they go about their daily lives.",
+      "tokens": ["But,", "for", "the", "most", "part,", "they", "do", "so", "unintentionally", "as", "they", "go", "about", "their", "daily", "lives."],
+      "korean": "그러나, 대부분의 경우, 그들은 자신의 일상생활을 영위하면서 의도치 않게 그렇게 한다."
+    },
+    {
+      "idx": 3,
+      "text": "They move to satisfy immediate needs ─ drop the children off at school, get to work, find a location for a new branch office, build a house to live in.",
+      "tokens": ["They", "move", "to", "satisfy", "immediate", "needs", "─", "drop", "the", "children", "off", "at", "school,", "get", "to", "work,", "find", "a", "location", "for", "a", "new", "branch", "office,", "build", "a", "house", "to", "live", "in."],
+      "korean": "그들은 아이들을 학교에 데려다주고, 직장에 출근하고, 새로운 지점을 위한 장소를 찾고, 살 집을 짓는 것과 같은 즉각적 필요를 충족시키기 위해 움직인다."
+    },
+    {
+      "idx": 4,
+      "text": "They do not intend to build a city; that just happens.",
+      "tokens": ["They", "do", "not", "intend", "to", "build", "a", "city;", "that", "just", "happens."],
+      "korean": "그들은 도시를 건설하고자 의도하지 않는다. 그런 일은 그저 발생한다."
+    },
+    {
+      "idx": 5,
+      "text": "Even though, along the way, there are many acts of planning, these tend to be local, temporary, or incomplete.",
+      "tokens": ["Even", "though,", "along", "the", "way,", "there", "are", "many", "acts", "of", "planning,", "these", "tend", "to", "be", "local,", "temporary,", "or", "incomplete."],
+      "korean": "비록 그 과정에서 많은 계획 행위들이 있을지라도, 이것들은 국지적이거나, 일시적이거나 혹은 불완전한 경향이 있다."
+    },
+    {
+      "idx": 6,
+      "text": "So, ultimately, a city emerges as the collective result of many individual events, most of which are not intended to be city building.",
+      "tokens": ["So,", "ultimately,", "a", "city", "emerges", "as", "the", "collective", "result", "of", "many", "individual", "events,", "most", "of", "which", "are", "not", "intended", "to", "be", "city", "building."],
+      "korean": "따라서, 궁극적으로 하나의 도시는 많은 개별적 사건들의 집합적 결과로서 나타나며, 그것들 대부분은 도시를 만드는 일로 의도되지 않는다."
+    },
+    {
+      "idx": 7,
+      "text": "But the acts of planning are intended to guide the development of the city, and these, to be successful, must rely on an understanding of the processes by which the city generates itself.",
+      "tokens": ["But", "the", "acts", "of", "planning", "are", "intended", "to", "guide", "the", "development", "of", "the", "city,", "and", "these,", "to", "be", "successful,", "must", "rely", "on", "an", "understanding", "of", "the", "processes", "by", "which", "the", "city", "generates", "itself."],
+      "korean": "그러나 계획 행위들은 그 도시의 발전을 이끌도록 의도'되며', 이것들이 성공적이려면 그 도시가 스스로를 생성하는 과정들에 대한 이해에 의존해야 한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "F": { "blocks": [] },
+    "P": {
+      "points": [
+        {
+          "id": "S0-T4-001",
+          "sentenceIdx": 0, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "generate", "wrongCandidates": ["generates"],
+          "grammarType": "수일치",
+          "explanation": "주어 cities 는 복수이므로 복수동사 generate 가 맞음. 단수 generates 는 수일치 위반.",
+          "koCorrect": "생성한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "generate",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T5-002",
+          "sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "themselves", "wrongCandidates": ["them"],
+          "grammarType": "대명사",
+          "explanation": "주어 cities 와 목적어가 같은 대상을 가리키므로 재귀대명사 themselves 가 맞음. 인칭대명사 them 은 주어와 다른 대상을 가리키므로 부적절(재귀대명사 고빈도 함정).",
+          "koCorrect": "스스로를",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T11-003",
+          "sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11,
+          "correctForm": "self-organizing", "wrongCandidates": ["self-organized"],
+          "grammarType": "분사",
+          "explanation": "systems 가 '스스로를 조직하는' 능동 의미이므로 현재분사 self-organizing 이 맞음. 과거분사 self-organized 는 수동(조직된)이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "스스로를 조직하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "self-organize",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T6-004",
+          "sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "who", "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "it is ~ who 강조구문에서 선행사 people 이 사람이므로 who 가 맞음. which 는 사물 선행사용이라 부적절.",
+          "koCorrect": "사람들",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-005",
+          "sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7,
+          "correctForm": "create", "wrongCandidates": ["creates"],
+          "grammarType": "수일치",
+          "explanation": "관계사절 주어 who 의 선행사 people 이 복수이므로 복수동사 create 가 맞음. 단수 creates 는 수일치 위반.",
+          "koCorrect": "만드는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "create",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T13-006",
+          "sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13,
+          "correctForm": "organized", "wrongCandidates": ["organizing"],
+          "grammarType": "분사",
+          "explanation": "people 이 '조직되는' 수동 분사구문(as organized into …)이므로 과거분사 organized 가 맞음. 현재분사 organizing 은 능동이라 부적절(분사구문 능동/수동 고빈도 함정).",
+          "koCorrect": "조직되어서든",
+          "uses": ["F", "G", "H", "J"], "baseForm": "organize",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-007",
+          "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "do", "wrongCandidates": ["does"],
+          "grammarType": "수일치",
+          "explanation": "주어 they 는 복수이므로 복수동사 do 가 맞음. 단수 does 는 수일치 위반.",
+          "koCorrect": "한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "do",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-008",
+          "sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "unintentionally", "wrongCandidates": ["unintentional"],
+          "grammarType": "형용사",
+          "explanation": "동사 do so 를 수식하므로 부사 unintentionally 가 맞음. 형용사 unintentional 은 동사 수식 불가(2형식 보어 형용사 함정의 역방향: 동사 수식엔 부사).",
+          "koCorrect": "의도치 않게",
+          "uses": ["F", "G", "H", "J"], "baseForm": "unintentional",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T9-009",
+          "sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "as", "wrongCandidates": ["during"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 절(they go about their daily lives)이 이어지므로 접속사 as (~하면서) 가 맞음. during 은 전치사라 절을 이끌 수 없음.",
+          "koCorrect": "면서",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T1-010",
+          "sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "move", "wrongCandidates": ["moves"],
+          "grammarType": "수일치",
+          "explanation": "주어 They 는 복수이므로 복수동사 move 가 맞음. 단수 moves 는 수일치 위반.",
+          "koCorrect": "움직인다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "move",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T3-011",
+          "sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "satisfy", "wrongCandidates": ["satisfying"],
+          "grammarType": "부정사",
+          "explanation": "목적을 나타내는 to 부정사 (to satisfy) 이므로 동사원형 satisfy 가 맞음. 동명사 satisfying 은 to 뒤에 올 수 없음.",
+          "koCorrect": "충족시키기",
+          "uses": ["F", "G", "H", "J"], "baseForm": "satisfy",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T29-012",
+          "sentenceIdx": 3, "startTokenIdx": 29, "endTokenIdx": 29,
+          "correctForm": "in.", "wrongCandidates": ["into."],
+          "grammarType": "전치사",
+          "explanation": "'살 집' (a house to live in) 의 의미로 'live in (a house)' 의 전치사 in 이 맞음. into 는 방향성 의미라 거주 의미에 부적절.",
+          "koCorrect": "살",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T3-013",
+          "sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "intend", "wrongCandidates": ["intending"],
+          "grammarType": "시제",
+          "explanation": "조동사 do 뒤에는 동사원형이 오므로 intend 가 맞음. 동명사/현재분사 intending 은 do 뒤에 단독으로 올 수 없음.",
+          "koCorrect": "의도하지",
+          "uses": ["F", "G", "H", "J"], "baseForm": "intend",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-014",
+          "sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "build", "wrongCandidates": ["building"],
+          "grammarType": "부정사",
+          "explanation": "intend + to 부정사 구문이므로 동사원형 build 가 맞음. 동명사 building 은 to 뒤에 올 수 없음.",
+          "koCorrect": "건설하고자",
+          "uses": ["F", "G", "H", "J"], "baseForm": "build",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T10-015",
+          "sentenceIdx": 4, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "happens.", "wrongCandidates": ["happen."],
+          "grammarType": "수일치",
+          "explanation": "주어 that 은 단수 지시대명사이므로 단수동사 happens 가 맞음. 복수 happen 은 수일치 위반.",
+          "koCorrect": "발생한다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "happen",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T1-016",
+          "sentenceIdx": 5, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "though,", "wrongCandidates": ["if,"],
+          "grammarType": "접속사",
+          "explanation": "even + though 결합으로 '비록 ~일지라도' 양보 절을 이끌므로 though 가 맞음. even if 는 가정의 의미로 본 문장의 양보 흐름과 다름.",
+          "koCorrect": "비록",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-017",
+          "sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "are", "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "there + be + 복수 명사(many acts) 도치 구문이므로 복수형 are 가 맞음. 단수 is 는 수일치 위반.",
+          "koCorrect": "있을지라도",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T15-018",
+          "sentenceIdx": 5, "startTokenIdx": 15, "endTokenIdx": 15,
+          "correctForm": "local,", "wrongCandidates": ["locally,"],
+          "grammarType": "형용사",
+          "explanation": "2형식 동사 be 의 보어 자리이므로 형용사 local 이 맞음. 부사 locally 는 보어 자리에 부적절(2형식 + 형용사 보어 고빈도 함정).",
+          "koCorrect": "국지적이거나",
+          "uses": ["F", "G", "H", "J"], "baseForm": "local",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-019",
+          "sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "emerges", "wrongCandidates": ["emerge"],
+          "grammarType": "수일치",
+          "explanation": "주어 a city 는 단수이므로 단수동사 emerges 가 맞음. 복수 emerge 는 수일치 위반.",
+          "koCorrect": "나타나며",
+          "uses": ["F", "G", "H", "J"], "baseForm": "emerge",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T15-020",
+          "sentenceIdx": 6, "startTokenIdx": 15, "endTokenIdx": 15,
+          "correctForm": "which", "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 events 가 있고 most of which 구조이므로 관계대명사 which 가 맞음. what 은 선행사를 포함해 선행사 뒤 자리에 부적절.",
+          "koCorrect": "그것들 대부분",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T18-021",
+          "sentenceIdx": 6, "startTokenIdx": 18, "endTokenIdx": 18,
+          "correctForm": "intended", "wrongCandidates": ["intending"],
+          "grammarType": "수동태",
+          "explanation": "events 가 '의도되는' 수동 관계 (are not intended) 이므로 과거분사 intended 가 맞음. 현재분사 intending 은 능동(의도하는) 이라 부적절.",
+          "koCorrect": "의도되지",
+          "uses": ["F", "G", "H", "J"], "baseForm": "intend",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-022",
+          "sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "are", "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "삽입 전치사구(of planning)를 걷어내면 주어 the acts 는 복수이므로 복수형 are 가 맞음. 단수 is 는 수일치 위반(삽입어구 뒤 수일치 고빈도 함정).",
+          "koCorrect": "의도'되며'",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T28-023",
+          "sentenceIdx": 7, "startTokenIdx": 28, "endTokenIdx": 28,
+          "correctForm": "which", "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "전치사 by 뒤에는 관계대명사 which 가 와야 함 (by which). 관계대명사 that 은 전치사 뒤에 올 수 없으므로 부적절.",
+          "koCorrect": "과정들",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T32-024",
+          "sentenceIdx": 7, "startTokenIdx": 32, "endTokenIdx": 32,
+          "correctForm": "itself.", "wrongCandidates": ["it."],
+          "grammarType": "대명사",
+          "explanation": "주어 the city 와 목적어가 같은 대상을 가리키므로 재귀대명사 itself 가 맞음. 인칭대명사 it 은 주어와 다른 대상을 가리키므로 부적절(재귀대명사 고빈도 함정).",
+          "koCorrect": "스스로를",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        }
+      ]
+    },
+    "G": { "points": [] },
+    "H": { "spans": [] },
+    "J": { "items": [] }
+  }
+}

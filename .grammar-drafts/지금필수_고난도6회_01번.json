@@ -1,0 +1,210 @@
+{
+  "passageId": "69d4eca372a886137cd83f13",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 01번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 01번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 01번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Though our drinking glasses passed inspection and were sold at full price they must have had some flaws, albeit virtually imperceptible ones.",
+      "tokens": ["Though","our","drinking","glasses","passed","inspection","and","were","sold","at","full","price","they","must","have","had","some","flaws,","albeit","virtually","imperceptible","ones."],
+      "korean": "우리가 음료를 마시는 유리잔은 검사를 통과했고 제값에 팔렸지만, 사실 감지할 수 없는 것이라고는 해도 그것에는 분명히 어떤 결점이 있었음에 틀림없다."
+    },
+    {
+      "idx": 1,
+      "text": "Their imperfections are just more subtle and more difficult to pick up with the naked eye, even the trained inspector’s eye.",
+      "tokens": ["Their","imperfections","are","just","more","subtle","and","more","difficult","to","pick","up","with","the","naked","eye,","even","the","trained","inspector’s","eye."],
+      "korean": "그것의 결함은 숙련된 검사관의 눈이라 해도, 맨눈으로는 찾기가 더 미묘하고 더 어렵다."
+    },
+    {
+      "idx": 2,
+      "text": "The goal of good design and manufacturing is not to achieve perfection but to minimize imperfection and render it acceptable, unimportant, negligible, unnoticeable.",
+      "tokens": ["The","goal","of","good","design","and","manufacturing","is","not","to","achieve","perfection","but","to","minimize","imperfection","and","render","it","acceptable,","unimportant,","negligible,","unnoticeable."],
+      "korean": "좋은 설계와 제조의 목표는 완벽을 성취하는 것이 아니라 결함을 최소화하고 그것을 수용 가능하고, 중요하지 않고, 무시할 수 있고, 눈에 띄지 않게 만드는 것이다."
+    },
+    {
+      "idx": 3,
+      "text": "Designers can achieve this best by keeping in mind the constraints of the design problem on which they are working, by making design choices that enable at least the most important of the constraints to be satisfied, and by incorporating strong design features that distract us from minor flaws.",
+      "tokens": ["Designers","can","achieve","this","best","by","keeping","in","mind","the","constraints","of","the","design","problem","on","which","they","are","working,","by","making","design","choices","that","enable","at","least","the","most","important","of","the","constraints","to","be","satisfied,","and","by","incorporating","strong","design","features","that","distract","us","from","minor","flaws."],
+      "korean": "설계자들은 그들이 작업하고 있는 설계 문제의 제약 조건을 염두에 두고, 최소한 그 제약들 중 가장 중요한 것만은 만족시킬 설계를 선택하며, 사소한 결함은 우리가 눈치챌 수 없게 할 확실한 설계 특징을 통합함으로써 이(이러한 목표)를 가장 잘 달성할 수 있다."
+    },
+    {
+      "idx": 4,
+      "text": "The resulting (imperfect) design is most commonly judged by how well it appears to be perfect in displaying its form and fulfilling its function at a reasonable price.",
+      "tokens": ["The","resulting","(imperfect)","design","is","most","commonly","judged","by","how","well","it","appears","to","be","perfect","in","displaying","its","form","and","fulfilling","its","function","at","a","reasonable","price."],
+      "korean": "결과적으로 나오는 (불완전한) 설계는 그 형태를 보이고 합리적인 가격으로 그것의 기능을 충족시키는 데 있어 그것(불완전한 설계)이 얼마나 제대로 완벽해 보이는가에 의해 판단된다."
+    },
+    {
+      "idx": 5,
+      "text": "Indeed, it is the irritant in the oyster that produces the pearl.",
+      "tokens": ["Indeed,","it","is","the","irritant","in","the","oyster","that","produces","the","pearl."],
+      "korean": "사실, 진주를 만드는 것은 굴 속에 있는 자극물이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T15-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "had",
+          "wrongCandidates": ["have"],
+          "grammarType": "시제",
+          "explanation": "'must have + p.p.' 구조로 과거에 대한 강한 추측을 나타내므로 과거분사 'had'가 맞다. 'have'를 쓰면 'must have'만으로는 현재 추측이 되어 'passed', 'were sold'와 같은 과거 시제 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Their imperfections'는 복수이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어와 어울리며, 'imperfections'의 -s 어미를 보고 단수로 착각하면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T14-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "minimize",
+          "wrongCandidates": ["minimizing"],
+          "grammarType": "부정사",
+          "explanation": "'not to achieve ... but to minimize ...' 구조에서 'to' 뒤에는 동사원형이 와야 하므로 'minimize'가 맞다. 동명사 'minimizing'은 to부정사 뒤에 올 수 없고 'achieve'와의 병렬 구조도 깨진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "minimize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T21-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "making",
+          "wrongCandidates": ["make"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'making'이 맞다. 앞뒤의 'by keeping', 'by incorporating'과 병렬을 이루는 구조이며, 동사원형 'make'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T7-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "judged",
+          "wrongCandidates": ["judging"],
+          "grammarType": "수동태",
+          "explanation": "주어 'The resulting (imperfect) design'은 판단되는 대상이므로 'be + 과거분사' 형태인 'is ... judged' 수동태가 맞다. 현재분사 'judging'을 쓰면 설계가 능동적으로 판단한다는 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "judge",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T8-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "'It is ~ that ...' 강조 구문으로, 강조 대상 'the irritant in the oyster'를 받는 자리이므로 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사라 선행사(the irritant)가 이미 있는 이 구조에서는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "had", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "minimize", "baseForm": "minimize"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "making", "baseForm": "make"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "judged", "baseForm": "judge"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "had", "wrongForm": "have", "explanation": "'must have + p.p.' 구조로 과거에 대한 강한 추측을 나타내므로 과거분사 'had'가 맞다. 'have'를 쓰면 'must have'만으로는 현재 추측이 되어 'passed', 'were sold'와 같은 과거 시제 문맥과 충돌한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "are", "wrongForm": "is", "explanation": "주어 'Their imperfections'는 복수이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어와 어울리며, 'imperfections'의 -s 어미를 보고 단수로 착각하면 안 된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "minimize", "wrongForm": "minimizing", "explanation": "'not to achieve ... but to minimize ...' 구조에서 'to' 뒤에는 동사원형이 와야 하므로 'minimize'가 맞다. 동명사 'minimizing'은 to부정사 뒤에 올 수 없고 'achieve'와의 병렬 구조도 깨진다."},
+        {"sentenceIdx": 3, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "making", "wrongForm": "make", "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'making'이 맞다. 앞뒤의 'by keeping', 'by incorporating'과 병렬을 이루는 구조이며, 동사원형 'make'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "judged", "wrongForm": "judging", "explanation": "주어 'The resulting (imperfect) design'은 판단되는 대상이므로 'be + 과거분사' 형태인 'is ... judged' 수동태가 맞다. 현재분사 'judging'을 쓰면 설계가 능동적으로 판단한다는 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "that", "wrongForm": "what", "explanation": "'It is ~ that ...' 강조 구문으로, 강조 대상 'the irritant in the oyster'를 받는 자리이므로 'that'이 맞다. 'what'은 선행사를 포함하는 관계대명사라 선행사(the irritant)가 이미 있는 이 구조에서는 쓸 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "have", "correction": "had", "explanation": "'must have + p.p.' 구조로 과거 추측을 나타내야 하므로 과거분사 'had'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'Their imperfections'에 맞춰 복수형 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "minimizing", "correction": "minimize", "explanation": "'not to achieve but to ___' 병렬 구조에서 'to' 뒤에는 동사원형이 와야 하므로 'minimize'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "make", "correction": "making", "explanation": "전치사 'by' 뒤이므로 동명사 'making'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "judging", "correction": "judged", "explanation": "주어 'design'이 판단되는 대상(수동)이므로 과거분사 'judged'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "'It is ~ that ...' 강조 구문이고 선행사 'the irritant'가 있으므로 'that'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Though our drinking glasses passed inspection and were sold at full price they must have have some flaws, albeit virtually imperceptible ones.",
+          "isCorrect": false,
+          "correction": "Though our drinking glasses passed inspection and were sold at full price they must have had some flaws, albeit virtually imperceptible ones.",
+          "explanation": "'must have + p.p.' 구조로 과거 추측을 나타내므로 과거분사 'had'가 맞다."
+        },
+        {
+          "text": "Their imperfections is just more subtle and more difficult to pick up with the naked eye, even the trained inspector’s eye.",
+          "isCorrect": false,
+          "correction": "Their imperfections are just more subtle and more difficult to pick up with the naked eye, even the trained inspector’s eye.",
+          "explanation": "복수 주어 'Their imperfections'에 맞춰 'are'가 맞다."
+        },
+        {
+          "text": "The goal of good design and manufacturing is not to achieve perfection but to minimizing imperfection and render it acceptable, unimportant, negligible, unnoticeable.",
+          "isCorrect": false,
+          "correction": "The goal of good design and manufacturing is not to achieve perfection but to minimize imperfection and render it acceptable, unimportant, negligible, unnoticeable.",
+          "explanation": "to부정사의 'to' 뒤에는 동사원형이 와야 하므로 'minimize'가 맞다."
+        },
+        {
+          "text": "Designers can achieve this best by keeping in mind the constraints of the design problem on which they are working, by make design choices that enable at least the most important of the constraints to be satisfied, and by incorporating strong design features that distract us from minor flaws.",
+          "isCorrect": false,
+          "correction": "Designers can achieve this best by keeping in mind the constraints of the design problem on which they are working, by making design choices that enable at least the most important of the constraints to be satisfied, and by incorporating strong design features that distract us from minor flaws.",
+          "explanation": "전치사 'by' 뒤에는 동명사 'making'이 와야 한다."
+        },
+        {
+          "text": "The resulting (imperfect) design is most commonly judging by how well it appears to be perfect in displaying its form and fulfilling its function at a reasonable price.",
+          "isCorrect": false,
+          "correction": "The resulting (imperfect) design is most commonly judged by how well it appears to be perfect in displaying its form and fulfilling its function at a reasonable price.",
+          "explanation": "주어가 판단되는 대상(수동)이므로 과거분사 'judged'가 맞다."
+        },
+        {
+          "text": "Indeed, it is the irritant in the oyster what produces the pearl.",
+          "isCorrect": false,
+          "correction": "Indeed, it is the irritant in the oyster that produces the pearl.",
+          "explanation": "'It is ~ that ...' 강조 구문이고 선행사 'the irritant'가 있으므로 'that'이 맞다."
+        }
+      ]
+    }
+  }
+}

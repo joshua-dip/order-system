@@ -1,0 +1,270 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd3b",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 37번",
+  "title": "26년 3월 고3 영어모의고사 37번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "37번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "When the concept of expansion gets mentioned, it is difficult to resist the urge to picture the Universe with a finite and growing boundary.",
+      "tokens": ["When","the","concept","of","expansion","gets","mentioned,","it","is","difficult","to","resist","the","urge","to","picture","the","Universe","with","a","finite","and","growing","boundary."],
+      "korean": "'팽창'이라는 개념이 언급되면, 경계가 유한하고 늘어나는 우주를 상상하고 싶은 충동을 참기 어렵다."
+    },
+    {
+      "idx": 1,
+      "text": "Our natural instinct is to wonder what the Universe could possibly be expanding into.",
+      "tokens": ["Our","natural","instinct","is","to","wonder","what","the","Universe","could","possibly","be","expanding","into."],
+      "korean": "우리의 타고난 본능은 우주가 가능한 한 어디로 팽창하고 있는지 궁금해할 것이다."
+    },
+    {
+      "idx": 2,
+      "text": "Unfortunately, the only answer I can give you is the one that I am sure will satisfy you the least, but let me say it anyway: the Universe expands into nothingness.",
+      "tokens": ["Unfortunately,","the","only","answer","I","can","give","you","is","the","one","that","I","am","sure","will","satisfy","you","the","least,","but","let","me","say","it","anyway:","the","Universe","expands","into","nothingness."],
+      "korean": "안타깝게도, 내가 여러분에게 줄 수 있는 유일한 답은 여러분을 가장 만족시키지 못하리라 확신하는 답이지만, 그래도 말해보자면 우주는 '무(無)'로 팽창한다."
+    },
+    {
+      "idx": 3,
+      "text": "To be more accurate, the Universe does not expand into anything.",
+      "tokens": ["To","be","more","accurate,","the","Universe","does","not","expand","into","anything."],
+      "korean": "더 정확히 말하자면, 우주는 그 어느 곳'으로도' 팽창하지 않는다."
+    },
+    {
+      "idx": 4,
+      "text": "It simply expands by itself within itself.",
+      "tokens": ["It","simply","expands","by","itself","within","itself."],
+      "korean": "그것은 단지 그 자체 내에서 스스로 팽창할 뿐이다."
+    },
+    {
+      "idx": 5,
+      "text": "In contrast to our inflating balloon or, say, a pipe leak that causes gas to spread into a room that exists in its own right, our expanding Universe is not spilling into another separate entity, nor even another dimension.",
+      "tokens": ["In","contrast","to","our","inflating","balloon","or,","say,","a","pipe","leak","that","causes","gas","to","spread","into","a","room","that","exists","in","its","own","right,","our","expanding","Universe","is","not","spilling","into","another","separate","entity,","nor","even","another","dimension."],
+      "korean": "팽창하는 풍선이나, 예컨대 독립적으로 존재하는 방 안에 가스가 퍼지게 하는 파이프 구멍과는 다르게, 우리의 팽창하는 우주는 또 다른 분리된 독립체 속으로 흘러 들어가는 것이 아니며, 또 다른 차원 속으로도 (흘러 들어가는 것이) 아니다."
+    },
+    {
+      "idx": 6,
+      "text": "It is the structure of space and time that stretches, a structure that has always existed, at least since the Big Bang.",
+      "tokens": ["It","is","the","structure","of","space","and","time","that","stretches,","a","structure","that","has","always","existed,","at","least","since","the","Big","Bang."],
+      "korean": "뻗어 나가는 것은 바로 공간과 시간의 구조, 적어도 빅뱅 이후로 항상 존재했던 구조이다."
+    },
+    {
+      "idx": 7,
+      "text": "This structure or fabric of space and time is elastic and malleable.",
+      "tokens": ["This","structure","or","fabric","of","space","and","time","is","elastic","and","malleable."],
+      "korean": "공간과 시간의 이 구조, 혹은 조직은 탄력적이고 가단성이 있다."
+    },
+    {
+      "idx": 8,
+      "text": "Just as it can pull us apart as we fall inside a black hole, it can also expand and cause anything and anyone embedded in it to move farther apart.",
+      "tokens": ["Just","as","it","can","pull","us","apart","as","we","fall","inside","a","black","hole,","it","can","also","expand","and","cause","anything","and","anyone","embedded","in","it","to","move","farther","apart."],
+      "korean": "우리가 블랙홀 안으로 떨어질 때 우리를 찢어놓을 수 있는 것처럼, 그것은 또한 팽창할 수 있고 안에 파묻혀 있는 무엇이든 그리고 누구든 서로 더 멀리 떨어져 이동하게 만들 수 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T6-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "mentioned,",
+          "wrongCandidates": ["mentioning,"],
+          "grammarType": "수동태",
+          "explanation": "'gets + 과거분사' 구조는 'be + 과거분사'와 같이 수동의 의미를 만든다. 주어 'the concept of expansion'은 언급되는 대상(수동)이므로 과거분사 'mentioned'가 맞다. 현재분사 'mentioning'은 능동의 의미가 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "mention",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T5-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "wonder",
+          "wrongCandidates": ["wondering"],
+          "grammarType": "부정사",
+          "explanation": "'is to + 동사원형' 구조에서 to부정사의 동사 자리이므로 동사원형 'wonder'가 맞다. 동명사 'wondering'은 'to' 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "wonder",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T11-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the one'이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "does",
+          "wrongCandidates": ["do"],
+          "grammarType": "수일치",
+          "explanation": "주어 'the Universe'는 3인칭 단수이므로 조동사 'does'가 맞다. 복수 주어에 쓰는 'do'를 쓰면 수일치에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "do",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T3-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "by",
+          "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'by itself'는 '스스로, 혼자서'를 의미하는 관용 전치사구이므로 'by'가 맞다. 'with itself'는 이 의미를 나타낼 수 없는 부자연스러운 표현이다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T35-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 35,
+          "endTokenIdx": 35,
+          "correctForm": "nor",
+          "wrongCandidates": ["or"],
+          "grammarType": "접속사",
+          "explanation": "앞 절이 'is not spilling ...'으로 부정문이므로 두 번째 부정 항목을 연결할 때는 'nor'를 써서 부정의 의미를 이어가야 한다. 'or'를 쓰면 부정 호응이 깨져 어색하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T13-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "has",
+          "wrongCandidates": ["had"],
+          "grammarType": "시제",
+          "explanation": "'at least since the Big Bang'(빅뱅 이래로)이라는 표현은 과거부터 현재까지 계속됨을 나타내므로 현재완료 'has ... existed'가 맞다. 과거완료 'had ... existed'는 과거 어느 시점까지의 완료를 나타내어 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T23-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 23,
+          "endTokenIdx": 23,
+          "correctForm": "embedded",
+          "wrongCandidates": ["embedding"],
+          "grammarType": "분사",
+          "explanation": "'anything and anyone'은 (공간과 시간의 구조 안에) 박혀 있는 대상(수동)이므로 과거분사 'embedded'가 명사를 뒤에서 수식하는 것이 맞다. 현재분사 'embedding'은 능동의 의미가 되어 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "embed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "mentioned,", "baseForm": "mention"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "wonder", "baseForm": "wonder"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "does", "baseForm": "do"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "has", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "embedded", "baseForm": "embed"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "mentioned,", "wrongForm": "mentioning,", "explanation": "'gets + 과거분사' 구조는 수동의 의미이고, 주어 'the concept of expansion'은 언급되는 대상이므로 과거분사 'mentioned'가 맞다. 'mentioning'은 능동이라 문맥과 충돌한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "wonder", "wrongForm": "wondering", "explanation": "'is to + 동사원형' 구조에서 to부정사의 동사 자리이므로 동사원형 'wonder'가 맞다. 'wondering'은 'to' 뒤에 올 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'the one'이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사라 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "does", "wrongForm": "do", "explanation": "주어 'the Universe'는 3인칭 단수이므로 조동사 'does'가 맞다. 복수형 'do'는 수일치에 어긋난다."},
+        {"sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "by", "wrongForm": "with", "explanation": "'by itself'는 '스스로'를 뜻하는 관용 전치사구이므로 'by'가 맞다. 'with itself'는 같은 의미를 나타낼 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 35, "endTokenIdx": 35, "correctForm": "nor", "wrongForm": "or", "explanation": "앞 절이 부정문이므로 두 번째 부정 항목은 'nor'로 이어 부정 호응을 유지해야 한다. 'or'은 어색하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "has", "wrongForm": "had", "explanation": "'at least since the Big Bang'은 과거부터 현재까지 지속됨을 나타내므로 현재완료 'has ... existed'가 맞다. 'had'는 과거완료로 문맥과 맞지 않다."},
+        {"sentenceIdx": 8, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "embedded", "wrongForm": "embedding", "explanation": "'anything and anyone'이 박혀 있는 대상(수동)이므로 과거분사 'embedded'가 맞다. 'embedding'은 능동의 의미라 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "mentioning,", "correction": "mentioned,", "explanation": "'gets + p.p.'의 수동 구조 — 주어가 언급되는 대상이므로 과거분사 'mentioned'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "wondering", "correction": "wonder", "explanation": "'is to + 동사원형' 구조 — to 뒤에는 동사원형 'wonder'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'the one'이 있으므로 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "do", "correction": "does", "explanation": "단수 주어 'the Universe'에 맞춰 조동사 'does'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "with", "correction": "by", "explanation": "'스스로'의 의미는 관용 전치사구 'by itself'이므로 'by'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 35, "endTokenIdx": 35, "isError": true, "wrongForm": "or", "correction": "nor", "explanation": "앞 절이 부정문이므로 부정 호응을 위해 'nor'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "had", "correction": "has", "explanation": "'since the Big Bang' 이래로 지속되는 의미이므로 현재완료 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 23, "endTokenIdx": 23, "isError": true, "wrongForm": "embedding", "correction": "embedded", "explanation": "수동의 의미로 명사를 후위 수식하므로 과거분사 'embedded'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "When the concept of expansion gets mentioning, it is difficult to resist the urge to picture the Universe with a finite and growing boundary.",
+          "isCorrect": false,
+          "correction": "When the concept of expansion gets mentioned, it is difficult to resist the urge to picture the Universe with a finite and growing boundary.",
+          "explanation": "'gets + 과거분사'의 수동 구조 — 주어가 언급되는 대상이므로 'mentioned'가 맞다."
+        },
+        {
+          "text": "Our natural instinct is to wondering what the Universe could possibly be expanding into.",
+          "isCorrect": false,
+          "correction": "Our natural instinct is to wonder what the Universe could possibly be expanding into.",
+          "explanation": "'is to + 동사원형' 구조에서 to부정사의 동사 자리이므로 동사원형 'wonder'가 맞다."
+        },
+        {
+          "text": "Unfortunately, the only answer I can give you is the one what I am sure will satisfy you the least, but let me say it anyway: the Universe expands into nothingness.",
+          "isCorrect": false,
+          "correction": "Unfortunately, the only answer I can give you is the one that I am sure will satisfy you the least, but let me say it anyway: the Universe expands into nothingness.",
+          "explanation": "선행사 'the one'이 있으므로 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "To be more accurate, the Universe do not expand into anything.",
+          "isCorrect": false,
+          "correction": "To be more accurate, the Universe does not expand into anything.",
+          "explanation": "단수 주어 'the Universe'에 맞춰 조동사 'does'가 맞다."
+        },
+        {
+          "text": "It simply expands with itself within itself.",
+          "isCorrect": false,
+          "correction": "It simply expands by itself within itself.",
+          "explanation": "'스스로'를 의미하는 관용 전치사구는 'by itself'이므로 'by'가 맞다."
+        },
+        {
+          "text": "In contrast to our inflating balloon or, say, a pipe leak that causes gas to spread into a room that exists in its own right, our expanding Universe is not spilling into another separate entity, or even another dimension.",
+          "isCorrect": false,
+          "correction": "In contrast to our inflating balloon or, say, a pipe leak that causes gas to spread into a room that exists in its own right, our expanding Universe is not spilling into another separate entity, nor even another dimension.",
+          "explanation": "앞 절이 부정문이므로 부정 호응을 위해 'nor'가 맞다."
+        },
+        {
+          "text": "It is the structure of space and time that stretches, a structure that had always existed, at least since the Big Bang.",
+          "isCorrect": false,
+          "correction": "It is the structure of space and time that stretches, a structure that has always existed, at least since the Big Bang.",
+          "explanation": "'since the Big Bang' 이래로 현재까지 지속되는 의미이므로 현재완료 'has'가 맞다."
+        },
+        {
+          "text": "Just as it can pull us apart as we fall inside a black hole, it can also expand and cause anything and anyone embedding in it to move farther apart.",
+          "isCorrect": false,
+          "correction": "Just as it can pull us apart as we fall inside a black hole, it can also expand and cause anything and anyone embedded in it to move farther apart.",
+          "explanation": "수동의 의미로 명사를 후위 수식하므로 과거분사 'embedded'가 맞다."
+        }
+      ]
+    }
+  }
+}

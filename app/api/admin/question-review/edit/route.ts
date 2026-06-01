@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     $set.difficulty = difficulty;
   }
 
-  if (typeof type === 'string' && ['빈칸', '순서', '삽입', '무관한문장', '삽입-고난도', '주제', '어법', '주장', '제목', '일치', '불일치', '함의', '요약'].includes(type)) {
+  if (typeof type === 'string' && ['빈칸', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도', '주제', '어법', '주장', '제목', '일치', '불일치', '함의', '요약'].includes(type)) {
     $set.type = type;
   }
 

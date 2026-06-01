@@ -1,0 +1,237 @@
+{
+  "passageId": "69d4eca372a886137cd83f00",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 06번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 06번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 06번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Mendelssohn had a great disliking for the music of Meyerbeer.",
+      "tokens": ["Mendelssohn","had","a","great","disliking","for","the","music","of","Meyerbeer."],
+      "korean": "Mendelssohn은 Meyerbeer의 음악에 대단히 큰 반감을 가지고 있었다."
+    },
+    {
+      "idx": 1,
+      "text": "Mendelssohn’s music was polished, elegant, and scholarly, devoid of effects attempted for mere show.",
+      "tokens": ["Mendelssohn’s","music","was","polished,","elegant,","and","scholarly,","devoid","of","effects","attempted","for","mere","show."],
+      "korean": "Mendelssohn의 음악은 그저 쇼를 위해 시도되는 효과들이 전혀 없는, 정제되고, 우아하고, 그리고 학구적인 것이었다."
+    },
+    {
+      "idx": 2,
+      "text": "Meyerbeer’s music, on the contrary, while containing much that was good and being especially effective in instrumentation, had much that was blatant, and that savored largely of the sensational.",
+      "tokens": ["Meyerbeer’s","music,","on","the","contrary,","while","containing","much","that","was","good","and","being","especially","effective","in","instrumentation,","had","much","that","was","blatant,","and","that","savored","largely","of","the","sensational."],
+      "korean": "반면에, Meyerbeer의 음악은 좋은 것을 많이 담고 있고 특히 기악 편성에서 효과적이지만, 노골적인 것을, 주로 선정적인 기미가 보이는 것을 많이 가지고 있었다."
+    },
+    {
+      "idx": 3,
+      "text": "But both men had several points of personal resemblance.",
+      "tokens": ["But","both","men","had","several","points","of","personal","resemblance."],
+      "korean": "하지만 두 사람 모두 여러 가지 점에서 개인적으로 유사하다."
+    },
+    {
+      "idx": 4,
+      "text": "Both were of Jewish descent and inherited a Hebrew cast of countenance; both were of slender build, and they were accustomed to dressing the hair in the same fashion.",
+      "tokens": ["Both","were","of","Jewish","descent","and","inherited","a","Hebrew","cast","of","countenance;","both","were","of","slender","build,","and","they","were","accustomed","to","dressing","the","hair","in","the","same","fashion."],
+      "korean": "두 사람은 유대인 혈통이고 히브리인의 얼굴 생김새를 물려받았다. 즉 두 사람 모두 체구가 호리호리했고, 그들은 똑같은 방식으로 머리를 꾸미는 데 익숙해 있었다."
+    },
+    {
+      "idx": 5,
+      "text": "The disliking held by Mendelssohn for Meyerbeer’s music extended somewhat to Meyerbeer himself; and great was Mendelssohn’s disgust if someone of his friends teased him on his resemblance to the detested composer.",
+      "tokens": ["The","disliking","held","by","Mendelssohn","for","Meyerbeer’s","music","extended","somewhat","to","Meyerbeer","himself;","and","great","was","Mendelssohn’s","disgust","if","someone","of","his","friends","teased","him","on","his","resemblance","to","the","detested","composer."],
+      "korean": "Meyerbeer의 음악에 대해 Mendelssohn이 지녔던 반감은 Meyerbeer 자신에게까지 어느 정도 확대되었고, 그의 친구 중 어느 누군가가 그의 외모가 그 혐오하는 작곡가와 닮았다고 놀릴 경우에 Mendelssohn의 혐오감은 대단히 컸다."
+    },
+    {
+      "idx": 6,
+      "text": "On one occasion, in Paris, after having been subject to some good-natured jokes about the similarity of his personal appearance to that of Meyerbeer, Mendelssohn rushed off to the barber and had his hair clipped short to dispel the likeness.",
+      "tokens": ["On","one","occasion,","in","Paris,","after","having","been","subject","to","some","good-natured","jokes","about","the","similarity","of","his","personal","appearance","to","that","of","Meyerbeer,","Mendelssohn","rushed","off","to","the","barber","and","had","his","hair","clipped","short","to","dispel","the","likeness."],
+      "korean": "한 번은 파리에서, 그의 개인적인 외모와 Meyerbeer의 외모가 비슷한 것에 대해 몇 가지 온화한 농담을 듣게 된 후에, Mendelssohn은 서둘러 이발사에게 달려가 유사함을 없애기 위해 머리카락을 짧게 깎았다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T5-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "for",
+          "wrongCandidates": ["to"],
+          "grammarType": "전치사",
+          "explanation": "'have a disliking for + 목적어'는 '~에 대한 반감을 가지다'를 의미하는 고정 표현으로, 반감의 대상을 나타낼 때 전치사 'for'를 쓴다. 'to'는 이 표현의 짝이 아니며 의미상 방향성을 부여해 어색하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T10-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "attempted",
+          "wrongCandidates": ["attempting"],
+          "grammarType": "수동태",
+          "explanation": "'effects'가 시도되는 대상이므로 명사를 뒤에서 수식하는 과거분사 'attempted'(시도된)가 맞다. 현재분사 'attempting'은 효과들이 스스로 무언가를 시도한다는 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "attempt",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "containing",
+          "wrongCandidates": ["contained"],
+          "grammarType": "분사",
+          "explanation": "'while (it is) containing ~'으로 생략된 분사구문이며 의미상 주어 'Meyerbeer's music'이 좋은 것을 능동적으로 담고 있으므로 현재분사 'containing'이 맞다. 과거분사 'contained'는 수동의 의미가 되어 음악이 담겨 있다는 어색한 해석을 낳는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "contain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T3-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "had",
+          "wrongCandidates": ["has"],
+          "grammarType": "시제",
+          "explanation": "앞뒤 문장이 모두 과거 시제(was, were, inherited 등)로 일관되게 서술되므로 과거시제 'had'가 맞다. 현재시제 'has'는 시제 일치를 깨뜨릴 뿐 아니라 복수 주어 'both men'과도 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T22-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 22,
+          "endTokenIdx": 22,
+          "correctForm": "dressing",
+          "wrongCandidates": ["dress"],
+          "grammarType": "전치사",
+          "explanation": "'be accustomed to'에서 to는 부정사가 아니라 전치사이므로 뒤에 동명사가 와야 한다. 따라서 'dressing'이 맞고, 동사원형 'dress'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "dress",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T18-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "if",
+          "wrongCandidates": ["that"],
+          "grammarType": "접속사",
+          "explanation": "'~할 경우에/~하면'이라는 조건의 부사절을 이끄는 접속사 'if'가 맞다. 'that'은 명사절·동격절을 이끄는 접속사로, 여기서는 조건을 나타내야 하므로 의미·기능 모두 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T37-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 37,
+          "endTokenIdx": 37,
+          "correctForm": "dispel",
+          "wrongCandidates": ["dispelling"],
+          "grammarType": "부정사",
+          "explanation": "'유사함을 없애기 위해'라는 목적을 나타내는 to부정사이므로 'to' 뒤에는 동사원형 'dispel'이 와야 한다. 'dispelling'은 동명사 형태로, to부정사 구조에 들어갈 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "dispel",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "attempted", "baseForm": "attempt"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "containing", "baseForm": "contain"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "had", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "dressing", "baseForm": "dress"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 37, "endTokenIdx": 37, "correctForm": "dispel", "baseForm": "dispel"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "for", "wrongForm": "to", "explanation": "'have a disliking for + 목적어'는 '~에 대한 반감을 가지다'를 의미하는 고정 표현으로, 반감의 대상을 나타낼 때 전치사 'for'를 쓴다. 'to'는 이 표현의 짝이 아니며 의미상 방향성을 부여해 어색하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "attempted", "wrongForm": "attempting", "explanation": "'effects'가 시도되는 대상이므로 명사를 뒤에서 수식하는 과거분사 'attempted'(시도된)가 맞다. 현재분사 'attempting'은 효과들이 스스로 무언가를 시도한다는 능동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "containing", "wrongForm": "contained", "explanation": "'while (it is) containing ~'으로 생략된 분사구문이며 의미상 주어 'Meyerbeer's music'이 좋은 것을 능동적으로 담고 있으므로 현재분사 'containing'이 맞다. 과거분사 'contained'는 수동의 의미가 되어 음악이 담겨 있다는 어색한 해석을 낳는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "had", "wrongForm": "has", "explanation": "앞뒤 문장이 모두 과거 시제(was, were, inherited 등)로 일관되게 서술되므로 과거시제 'had'가 맞다. 현재시제 'has'는 시제 일치를 깨뜨릴 뿐 아니라 복수 주어 'both men'과도 어울리지 않는다."},
+        {"sentenceIdx": 4, "startTokenIdx": 22, "endTokenIdx": 22, "correctForm": "dressing", "wrongForm": "dress", "explanation": "'be accustomed to'에서 to는 부정사가 아니라 전치사이므로 뒤에 동명사가 와야 한다. 따라서 'dressing'이 맞고, 동사원형 'dress'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "if", "wrongForm": "that", "explanation": "'~할 경우에/~하면'이라는 조건의 부사절을 이끄는 접속사 'if'가 맞다. 'that'은 명사절·동격절을 이끄는 접속사로, 여기서는 조건을 나타내야 하므로 의미·기능 모두 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 37, "endTokenIdx": 37, "correctForm": "dispel", "wrongForm": "dispelling", "explanation": "'유사함을 없애기 위해'라는 목적을 나타내는 to부정사이므로 'to' 뒤에는 동사원형 'dispel'이 와야 한다. 'dispelling'은 동명사 형태로, to부정사 구조에 들어갈 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "to", "correction": "for", "explanation": "'have a disliking for'는 반감의 대상을 나타내는 고정 표현이므로 전치사 'for'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "attempting", "correction": "attempted", "explanation": "'effects'가 시도되는 대상(수동)이므로 과거분사 'attempted'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "contained", "correction": "containing", "explanation": "분사구문의 의미상 주어가 능동적으로 담고 있으므로 현재분사 'containing'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "has", "correction": "had", "explanation": "주변 문장이 모두 과거시제이므로 시제 일치를 위해 'had'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 22, "endTokenIdx": 22, "isError": true, "wrongForm": "dress", "correction": "dressing", "explanation": "'be accustomed to'의 to는 전치사이므로 뒤에 동명사 'dressing'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "that", "correction": "if", "explanation": "조건의 부사절을 이끌어야 하므로 접속사 'if'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 37, "endTokenIdx": 37, "isError": true, "wrongForm": "dispelling", "correction": "dispel", "explanation": "목적을 나타내는 to부정사 뒤이므로 동사원형 'dispel'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Mendelssohn had a great disliking to the music of Meyerbeer.",
+          "isCorrect": false,
+          "correction": "Mendelssohn had a great disliking for the music of Meyerbeer.",
+          "explanation": "'have a disliking for'는 반감의 대상을 나타내는 고정 표현으로 전치사 'for'가 맞다."
+        },
+        {
+          "text": "Mendelssohn’s music was polished, elegant, and scholarly, devoid of effects attempting for mere show.",
+          "isCorrect": false,
+          "correction": "Mendelssohn’s music was polished, elegant, and scholarly, devoid of effects attempted for mere show.",
+          "explanation": "'effects'가 시도되는 대상이므로 과거분사 'attempted'가 맞다."
+        },
+        {
+          "text": "Meyerbeer’s music, on the contrary, while contained much that was good and being especially effective in instrumentation, had much that was blatant, and that savored largely of the sensational.",
+          "isCorrect": false,
+          "correction": "Meyerbeer’s music, on the contrary, while containing much that was good and being especially effective in instrumentation, had much that was blatant, and that savored largely of the sensational.",
+          "explanation": "분사구문의 의미상 주어가 능동적으로 담고 있으므로 현재분사 'containing'이 맞다."
+        },
+        {
+          "text": "But both men has several points of personal resemblance.",
+          "isCorrect": false,
+          "correction": "But both men had several points of personal resemblance.",
+          "explanation": "주변 문장이 모두 과거시제이므로 과거형 'had'가 맞다."
+        },
+        {
+          "text": "Both were of Jewish descent and inherited a Hebrew cast of countenance; both were of slender build, and they were accustomed to dress the hair in the same fashion.",
+          "isCorrect": false,
+          "correction": "Both were of Jewish descent and inherited a Hebrew cast of countenance; both were of slender build, and they were accustomed to dressing the hair in the same fashion.",
+          "explanation": "'be accustomed to'의 to는 전치사이므로 뒤에 동명사 'dressing'이 와야 한다."
+        },
+        {
+          "text": "The disliking held by Mendelssohn for Meyerbeer’s music extended somewhat to Meyerbeer himself; and great was Mendelssohn’s disgust that someone of his friends teased him on his resemblance to the detested composer.",
+          "isCorrect": false,
+          "correction": "The disliking held by Mendelssohn for Meyerbeer’s music extended somewhat to Meyerbeer himself; and great was Mendelssohn’s disgust if someone of his friends teased him on his resemblance to the detested composer.",
+          "explanation": "조건을 나타내는 부사절을 이끌어야 하므로 접속사 'if'가 맞다."
+        },
+        {
+          "text": "On one occasion, in Paris, after having been subject to some good-natured jokes about the similarity of his personal appearance to that of Meyerbeer, Mendelssohn rushed off to the barber and had his hair clipped short to dispelling the likeness.",
+          "isCorrect": false,
+          "correction": "On one occasion, in Paris, after having been subject to some good-natured jokes about the similarity of his personal appearance to that of Meyerbeer, Mendelssohn rushed off to the barber and had his hair clipped short to dispel the likeness.",
+          "explanation": "목적을 나타내는 to부정사 뒤이므로 동사원형 'dispel'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

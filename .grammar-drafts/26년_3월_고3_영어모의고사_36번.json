@@ -1,0 +1,262 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd3a",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 36번",
+  "title": "26년 3월 고3 영어모의고사 36번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "36번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Daniel Dennett argues that one benefit of having moral considerations in our conceptual repertoire is that they can serve as conversation-stoppers: their value is to bring deliberations to a close.",
+      "tokens": ["Daniel","Dennett","argues","that","one","benefit","of","having","moral","considerations","in","our","conceptual","repertoire","is","that","they","can","serve","as","conversation-stoppers:","their","value","is","to","bring","deliberations","to","a","close."],
+      "korean": "Daniel Dennett은 우리의 개념적 레퍼토리에 도덕적 고려 사항들을 포함하는 것의 한 가지 이점은 그것들이 '대화 중단자'의 역할을 할 수 있다는 것이라고 주장하는데, 즉 그것들의 가치는 심사숙고를 끝내는 데 있다."
+    },
+    {
+      "idx": 1,
+      "text": "We are rational creatures, always able to ask for justification, and this is a trait that has served us well in many contexts.",
+      "tokens": ["We","are","rational","creatures,","always","able","to","ask","for","justification,","and","this","is","a","trait","that","has","served","us","well","in","many","contexts."],
+      "korean": "우리는 이성적인 피조물로, 항상 타당한 이유를 요구할 수 있으며, 이것은 많은 맥락에서 우리에게 상당히 도움이 되어 온 특성이다."
+    },
+    {
+      "idx": 2,
+      "text": "The problem is that upon receiving a perfectly good answer we can always sensibly respond \"Okay, but what justifies that?\" ─ and we can potentially do so endlessly, never coming to a decision, forever hesitant and doubting, undone by our own rational capacity.",
+      "tokens": ["The","problem","is","that","upon","receiving","a","perfectly","good","answer","we","can","always","sensibly","respond","\"Okay,","but","what","justifies","that?\"","─","and","we","can","potentially","do","so","endlessly,","never","coming","to","a","decision,","forever","hesitant","and","doubting,","undone","by","our","own","rational","capacity."],
+      "korean": "문제는 우리가 충분히 타당한 답변을 받자마자 언제든지 \"좋아, 그런데 무엇이 '그것'의 타당함을 보여 주는가?\"라고 분별 있게 응수할 수 있다는 점이고, 우리는 어쩌면 무한히 그렇게 할 수 있으며 결코 결정을 내리지 못하고, 영원히 망설이고 의심하며, 우리 자신의 이성적 역량에 의해 완전히 좌절하고 만다."
+    },
+    {
+      "idx": 3,
+      "text": "This is potentially as much a problem for our own private deliberations as for our public interpersonal ones.",
+      "tokens": ["This","is","potentially","as","much","a","problem","for","our","own","private","deliberations","as","for","our","public","interpersonal","ones."],
+      "korean": "이것은 우리의 공적인 대인 간 심사숙고에서만큼이나 우리 자신의 사적인 심사숙고에서도 잠재적으로 문제이다."
+    },
+    {
+      "idx": 4,
+      "text": "Dennett suggests that it is useful to have \"consideration-generator-squelchers\": items that, once introduced, stop any further deliberation in its tracks.",
+      "tokens": ["Dennett","suggests","that","it","is","useful","to","have","\"consideration-generator-squelchers\":","items","that,","once","introduced,","stop","any","further","deliberation","in","its","tracks."],
+      "korean": "Dennett은 '고려 사항 생성기를 찍소리 못하게 하는 말'을 갖는 것이 쓸모 있다고 말하는데, 이는 일단 도입되면 어떤 그 이상의 심사숙고도 즉시 멈추게 하는 항목이다."
+    },
+    {
+      "idx": 5,
+      "text": "\"That would be morally wrong!\" would appear to work in this manner.",
+      "tokens": ["\"That","would","be","morally","wrong!\"","would","appear","to","work","in","this","manner."],
+      "korean": "\"그것은 도덕적으로 잘못된 것일 거야!\"는 이러한 방식으로 작동하는 것처럼 보일 것이다."
+    },
+    {
+      "idx": 6,
+      "text": "Once the claim is accepted then there is no need or room for seeking further justification: the action mustn't be done, even if it is tempting, and that's all there is to it.",
+      "tokens": ["Once","the","claim","is","accepted","then","there","is","no","need","or","room","for","seeking","further","justification:","the","action","mustn't","be","done,","even","if","it","is","tempting,","and","that's","all","there","is","to","it."],
+      "korean": "일단 그 주장이 받아들여지면, 더 이상의 타당한 이유를 찾을 필요도 여지도 없고, 그 행동은 비록 솔깃해도 해서는 안되며, 그저 그뿐이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T7-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "having",
+          "wrongCandidates": ["have"],
+          "grammarType": "동명사",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'having'이 맞다. 동사원형 'have'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T15-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'a trait'이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T37-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 37,
+          "endTokenIdx": 37,
+          "correctForm": "undone",
+          "wrongCandidates": ["undoing"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'we'가 자신의 이성적 역량에 의해 '좌절당하는' 수동의 의미이므로 과거분사 'undone'이 맞다. 현재분사 'undoing'은 능동의 의미로 'we가 무엇을 풀다/좌절시키다'가 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "undo",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T4-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "much",
+          "wrongCandidates": ["many"],
+          "grammarType": "수량형용사",
+          "explanation": "'as ___ a problem' 구조에서 'as ... as' 동등비교 안의 수식어는 단수 가산명사 'a problem'을 한정하는 형용사 'much'가 와야 한다. 'many'는 복수명사를 수식하므로 단수 'a problem' 앞에 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "much",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "useful",
+          "wrongCandidates": ["usefully"],
+          "grammarType": "형용사·부사",
+          "explanation": "be동사 'is'의 보어 자리이므로 형용사 'useful'이 맞다. 부사 'usefully'는 보어가 될 수 없으며 동사·형용사·다른 부사를 수식한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "useful",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "morally",
+          "wrongCandidates": ["moral"],
+          "grammarType": "형용사·부사",
+          "explanation": "뒤에 오는 형용사 'wrong'을 수식하는 자리이므로 부사 'morally'가 맞다. 형용사 'moral'은 명사를 수식하므로 형용사 'wrong'을 수식할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "morally",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "accepted",
+          "wrongCandidates": ["accepting"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the claim'은 사람에 의해 받아들여지는 대상(수동)이므로 'is accepted'의 과거분사 'accepted'가 맞다. 현재분사 'accepting'은 능동이 되어 '주장이 받아들이는'의 의미로 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "accept",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T18-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "mustn't",
+          "wrongCandidates": ["doesn't"],
+          "grammarType": "조동사",
+          "explanation": "뒤에 'be done' 수동태 동사구가 이어지므로 조동사 'mustn't'(must + not)가 맞다. 'doesn't'는 일반동사의 부정에 쓰이는 do의 부정형이라서 뒤에 동사원형이 와야 하므로 'be done'과 결합할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "must",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "having", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 37, "endTokenIdx": 37, "correctForm": "undone", "baseForm": "undo"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "much", "baseForm": "much"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "useful", "baseForm": "useful"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "morally", "baseForm": "morally"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "accepted", "baseForm": "accept"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "mustn't", "baseForm": "must"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "having", "wrongForm": "have", "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'having'이 맞다. 동사원형 'have'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'a trait'이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 37, "endTokenIdx": 37, "correctForm": "undone", "wrongForm": "undoing", "explanation": "분사구문의 의미상 주어 'we'가 자신의 이성적 역량에 의해 좌절당하는 수동이므로 과거분사 'undone'이 맞다. 현재분사 'undoing'은 능동이 되어 문맥에 맞지 않다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "much", "wrongForm": "many", "explanation": "'as ___ a problem' 구조에서 단수 가산명사 'a problem'을 한정하는 형용사 'much'가 와야 한다. 'many'는 복수명사를 수식하므로 단수 'a problem' 앞에 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "useful", "wrongForm": "usefully", "explanation": "be동사 'is'의 보어 자리이므로 형용사 'useful'이 맞다. 부사 'usefully'는 보어가 될 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "morally", "wrongForm": "moral", "explanation": "뒤에 오는 형용사 'wrong'을 수식하는 자리이므로 부사 'morally'가 맞다. 형용사 'moral'은 형용사를 수식할 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "accepted", "wrongForm": "accepting", "explanation": "주어 'the claim'은 수동의 대상이므로 'is' 뒤에 과거분사 'accepted'가 와야 한다. 현재분사 'accepting'은 능동이 되어 어색하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "mustn't", "wrongForm": "doesn't", "explanation": "뒤에 'be done' 수동태가 이어지므로 조동사 'mustn't'가 맞다. 'doesn't'는 일반동사 부정형이라 수동태 'be done'과 결합할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "have", "correction": "having", "explanation": "전치사 'of' 뒤이므로 동명사 'having'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'a trait'이 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 37, "endTokenIdx": 37, "isError": true, "wrongForm": "undoing", "correction": "undone", "explanation": "주어가 수동의 대상이므로 과거분사 'undone'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "many", "correction": "much", "explanation": "'as ___ a problem'의 단수 가산명사 한정사로 'much'가 와야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "usefully", "correction": "useful", "explanation": "be동사의 보어 자리이므로 형용사 'useful'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "moral", "correction": "morally", "explanation": "형용사 'wrong'을 수식하므로 부사 'morally'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "accepting", "correction": "accepted", "explanation": "주어가 수동의 대상이므로 과거분사 'accepted'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "doesn't", "correction": "mustn't", "explanation": "뒤에 'be done' 수동태가 이어지므로 조동사 'mustn't'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Daniel Dennett argues that one benefit of have moral considerations in our conceptual repertoire is that they can serve as conversation-stoppers: their value is to bring deliberations to a close.",
+          "isCorrect": false,
+          "correction": "Daniel Dennett argues that one benefit of having moral considerations in our conceptual repertoire is that they can serve as conversation-stoppers: their value is to bring deliberations to a close.",
+          "explanation": "전치사 'of' 뒤에는 동명사 'having'이 와야 한다."
+        },
+        {
+          "text": "We are rational creatures, always able to ask for justification, and this is a trait what has served us well in many contexts.",
+          "isCorrect": false,
+          "correction": "We are rational creatures, always able to ask for justification, and this is a trait that has served us well in many contexts.",
+          "explanation": "선행사 'a trait'이 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "The problem is that upon receiving a perfectly good answer we can always sensibly respond \"Okay, but what justifies that?\" ─ and we can potentially do so endlessly, never coming to a decision, forever hesitant and doubting, undoing by our own rational capacity.",
+          "isCorrect": false,
+          "correction": "The problem is that upon receiving a perfectly good answer we can always sensibly respond \"Okay, but what justifies that?\" ─ and we can potentially do so endlessly, never coming to a decision, forever hesitant and doubting, undone by our own rational capacity.",
+          "explanation": "주어 'we'가 자신의 이성적 역량에 의해 좌절당하는 수동이므로 과거분사 'undone'이 맞다."
+        },
+        {
+          "text": "This is potentially as many a problem for our own private deliberations as for our public interpersonal ones.",
+          "isCorrect": false,
+          "correction": "This is potentially as much a problem for our own private deliberations as for our public interpersonal ones.",
+          "explanation": "'as ___ a problem'에서 단수 가산명사 앞이라 'much'가 맞다."
+        },
+        {
+          "text": "Dennett suggests that it is usefully to have \"consideration-generator-squelchers\": items that, once introduced, stop any further deliberation in its tracks.",
+          "isCorrect": false,
+          "correction": "Dennett suggests that it is useful to have \"consideration-generator-squelchers\": items that, once introduced, stop any further deliberation in its tracks.",
+          "explanation": "be동사의 보어 자리이므로 형용사 'useful'이 맞다."
+        },
+        {
+          "text": "\"That would be moral wrong!\" would appear to work in this manner.",
+          "isCorrect": false,
+          "correction": "\"That would be morally wrong!\" would appear to work in this manner.",
+          "explanation": "형용사 'wrong'을 수식하므로 부사 'morally'가 맞다."
+        },
+        {
+          "text": "Once the claim is accepting then there is no need or room for seeking further justification: the action mustn't be done, even if it is tempting, and that's all there is to it.",
+          "isCorrect": false,
+          "correction": "Once the claim is accepted then there is no need or room for seeking further justification: the action mustn't be done, even if it is tempting, and that's all there is to it.",
+          "explanation": "주어 'the claim'은 수동의 대상이므로 과거분사 'accepted'가 맞다."
+        },
+        {
+          "text": "Once the claim is accepted then there is no need or room for seeking further justification: the action doesn't be done, even if it is tempting, and that's all there is to it.",
+          "isCorrect": false,
+          "correction": "Once the claim is accepted then there is no need or room for seeking further justification: the action mustn't be done, even if it is tempting, and that's all there is to it.",
+          "explanation": "수동태 'be done'과 결합 가능한 조동사 'mustn't'가 맞다. 'doesn't'는 일반동사 부정형이라 불가."
+        }
+      ]
+    }
+  }
+}

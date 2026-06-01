@@ -1,0 +1,264 @@
+{
+  "passageId": "69d4eca372a886137cd83eff",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 05번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 05번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 05번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Many things happen in our brains that we are unaware of.",
+      "tokens": ["Many","things","happen","in","our","brains","that","we","are","unaware","of."],
+      "korean": "우리가 알지 못하는 많은 일들이 우리의 뇌에서 일어난다."
+    },
+    {
+      "idx": 1,
+      "text": "The autonomic nervous system is controlled by a small group of cells deep in the brain that targets most body functions, including heart rate, blood pressure, and digestion.",
+      "tokens": ["The","autonomic","nervous","system","is","controlled","by","a","small","group","of","cells","deep","in","the","brain","that","targets","most","body","functions,","including","heart","rate,","blood","pressure,","and","digestion."],
+      "korean": "자율 신경계는 심박수, 혈압, 그리고 소화를 포함한 대부분의 신체 기능에 영향을 미치는, 뇌 속 깊은 곳의 작은 세포 집단에 의해 제어된다."
+    },
+    {
+      "idx": 2,
+      "text": "Other unconscious events are more directly associated with mental activity.",
+      "tokens": ["Other","unconscious","events","are","more","directly","associated","with","mental","activity."],
+      "korean": "다른 무의식적인 사건들은 정신 활동과 더 직접적으로 연관되어 있다."
+    },
+    {
+      "idx": 3,
+      "text": "Negative comments in the operating room about a patient under general anesthesia can influence subsequent patient feelings, even though the patient expresses no awareness of the comments.",
+      "tokens": ["Negative","comments","in","the","operating","room","about","a","patient","under","general","anesthesia","can","influence","subsequent","patient","feelings,","even","though","the","patient","expresses","no","awareness","of","the","comments."],
+      "korean": "수술실에서 전신 마취 상태에 있는 환자에 대한 부정적인 의견은, 그 환자가 그 의견에 대한 인식을 표현하지 못하더라도, 이후의 환자의 감정에 영향을 미칠 수 있다."
+    },
+    {
+      "idx": 4,
+      "text": "Research subjects viewing rapid screen displays of pictures lasting only 10 milliseconds report no image awareness.",
+      "tokens": ["Research","subjects","viewing","rapid","screen","displays","of","pictures","lasting","only","10","milliseconds","report","no","image","awareness."],
+      "korean": "오직 100분의 1초 동안만 지속되는 사진의 빠른 화면 디스플레이를 보는 연구 피실험자들은 이미지를 전혀 인식하지 못했다고 말한다."
+    },
+    {
+      "idx": 5,
+      "text": "But in later tests, these same subjects score well above chance when asked to pick target pictures from a larger collection, showing that the pictures impacted memory without the subject’s awareness.",
+      "tokens": ["But","in","later","tests,","these","same","subjects","score","well","above","chance","when","asked","to","pick","target","pictures","from","a","larger","collection,","showing","that","the","pictures","impacted","memory","without","the","subject’s","awareness."],
+      "korean": "하지만 나중의 시험에서, 이 똑같은 피실험자들은 더 큰 수집품에서 대상 사진을 선택하라는 요구를 받았을 때 우연을 훨씬 능가했는데, 그것은 사진이 피실험자의 인식 없이 기억에 영향을 미친다는 것을 보여 준다."
+    },
+    {
+      "idx": 6,
+      "text": "Essentially the same process is repeated in our daily lives.",
+      "tokens": ["Essentially","the","same","process","is","repeated","in","our","daily","lives."],
+      "korean": "본질적으로 똑같은 과정이 우리 일상에서 반복된다."
+    },
+    {
+      "idx": 7,
+      "text": "Much of our knowledge, skills, experiences, and prejudices are acquired with no awareness of causal input to our brains.",
+      "tokens": ["Much","of","our","knowledge,","skills,","experiences,","and","prejudices","are","acquired","with","no","awareness","of","causal","input","to","our","brains."],
+      "korean": "우리의 지식, 기술, 경험, 그리고 선입견의 많은 부분은 우리의 두뇌에 인과적 입력에 대한 인식 없이 얻어진다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T2-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "happen",
+          "wrongCandidates": ["happens"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Many things'는 복수이므로 복수형 동사 'happen'이 맞다. 단수형 'happens'는 단수 주어에만 쓰인다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "happen",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T16-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'a small group of cells'(또는 'cells')가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 따로 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "associated",
+          "wrongCandidates": ["associating"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Other unconscious events'가 정신 활동과 '연관되는' 대상이므로 'be + 과거분사'의 수동태 'are associated'가 맞다. 현재분사 'associating'은 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "associate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T4-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "operating",
+          "wrongCandidates": ["operated"],
+          "grammarType": "분사",
+          "explanation": "'operating room'은 '수술실'이라는 복합명사로, 명사 'room'을 능동적으로 수식하는 현재분사 'operating'이 맞다. 과거분사 'operated'는 '수술받은 방'이라는 수동의 의미가 되어 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "operate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T12-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "report",
+          "wrongCandidates": ["reports"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 복수 명사 'Research subjects'이므로 복수형 동사 'report'가 맞다. 사이의 분사구 'viewing ... milliseconds'에 이끌려 단수 'reports'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "report",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T11-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "when",
+          "wrongCandidates": ["during"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 분사구문 'asked to pick ...'이라는 절 구조가 이어지므로 접속사 'when'(when (they were) asked ...)이 맞다. 'during'은 전치사로 뒤에 명사(구)만 올 수 있어 분사·절 구조를 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "repeated",
+          "wrongCandidates": ["repeating"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the same process'가 반복되는 대상이므로 'be + 과거분사'의 수동태 'is repeated'가 맞다. 현재분사 'repeating'은 능동의 의미가 되어 주어가 스스로 반복한다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "repeat",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T10-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "with",
+          "wrongCandidates": ["by"],
+          "grammarType": "전치사",
+          "explanation": "'with no awareness'는 '인식 없이'라는 동반·부수 상황을 나타내므로 전치사 'with'가 맞다. 'by'는 수단·행위자(by + 행위자/수단)를 나타내므로 'by no awareness'(인식에 의해)는 문맥상 부자연스럽다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "happen", "baseForm": "happen"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "associated", "baseForm": "associate"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "operating", "baseForm": "operate"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "report", "baseForm": "report"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "repeated", "baseForm": "repeat"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "happen", "wrongForm": "happens", "explanation": "주어 'Many things'는 복수이므로 복수형 동사 'happen'이 맞다. 단수형 'happens'는 단수 주어에만 쓰인다."},
+        {"sentenceIdx": 1, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'a small group of cells'(또는 'cells')가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 따로 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "associated", "wrongForm": "associating", "explanation": "주어 'Other unconscious events'가 정신 활동과 '연관되는' 대상이므로 'be + 과거분사'의 수동태 'are associated'가 맞다. 현재분사 'associating'은 능동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "operating", "wrongForm": "operated", "explanation": "'operating room'은 '수술실'이라는 복합명사로, 명사 'room'을 능동적으로 수식하는 현재분사 'operating'이 맞다. 과거분사 'operated'는 '수술받은 방'이라는 수동의 의미가 되어 어색하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "report", "wrongForm": "reports", "explanation": "주어의 핵은 복수 명사 'Research subjects'이므로 복수형 동사 'report'가 맞다. 사이의 분사구 'viewing ... milliseconds'에 이끌려 단수 'reports'를 쓰면 안 된다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "when", "wrongForm": "during", "explanation": "뒤에 분사구문 'asked to pick ...'이라는 절 구조가 이어지므로 접속사 'when'(when (they were) asked ...)이 맞다. 'during'은 전치사로 뒤에 명사(구)만 올 수 있어 분사·절 구조를 이끌 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "repeated", "wrongForm": "repeating", "explanation": "주어 'the same process'가 반복되는 대상이므로 'be + 과거분사'의 수동태 'is repeated'가 맞다. 현재분사 'repeating'은 능동의 의미가 되어 주어가 스스로 반복한다는 어색한 뜻이 된다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "with", "wrongForm": "by", "explanation": "'with no awareness'는 '인식 없이'라는 동반·부수 상황을 나타내므로 전치사 'with'가 맞다. 'by'는 수단·행위자(by + 행위자/수단)를 나타내므로 'by no awareness'(인식에 의해)는 문맥상 부자연스럽다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "happens", "correction": "happen", "explanation": "복수 주어 'Many things'에 맞춰 복수형 'happen'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'a small group of cells'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "associating", "correction": "associated", "explanation": "주어가 연관되는 대상(수동)이므로 과거분사 'associated'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "operated", "correction": "operating", "explanation": "명사 'room'을 능동으로 수식하므로 현재분사 'operating'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "reports", "correction": "report", "explanation": "복수 주어 'Research subjects'에 맞춰 복수형 'report'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "during", "correction": "when", "explanation": "뒤에 분사구문이 이어지므로 접속사 'when'으로 고쳐야 한다. 'during'은 전치사로 절을 이끌 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "repeating", "correction": "repeated", "explanation": "주어가 반복되는 대상(수동)이므로 과거분사 'repeated'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "by", "correction": "with", "explanation": "동반·부수 상황을 나타내므로 전치사 'with'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Many things happens in our brains that we are unaware of.",
+          "isCorrect": false,
+          "correction": "Many things happen in our brains that we are unaware of.",
+          "explanation": "복수 주어 'Many things'에 맞춰 복수형 'happen'이 맞다."
+        },
+        {
+          "text": "The autonomic nervous system is controlled by a small group of cells deep in the brain what targets most body functions, including heart rate, blood pressure, and digestion.",
+          "isCorrect": false,
+          "correction": "The autonomic nervous system is controlled by a small group of cells deep in the brain that targets most body functions, including heart rate, blood pressure, and digestion.",
+          "explanation": "선행사 'a small group of cells'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "Other unconscious events are more directly associating with mental activity.",
+          "isCorrect": false,
+          "correction": "Other unconscious events are more directly associated with mental activity.",
+          "explanation": "주어가 연관되는 대상(수동)이므로 과거분사 'associated'가 맞다."
+        },
+        {
+          "text": "Negative comments in the operated room about a patient under general anesthesia can influence subsequent patient feelings, even though the patient expresses no awareness of the comments.",
+          "isCorrect": false,
+          "correction": "Negative comments in the operating room about a patient under general anesthesia can influence subsequent patient feelings, even though the patient expresses no awareness of the comments.",
+          "explanation": "명사 'room'을 능동으로 수식하므로 현재분사 'operating'이 맞다."
+        },
+        {
+          "text": "Research subjects viewing rapid screen displays of pictures lasting only 10 milliseconds reports no image awareness.",
+          "isCorrect": false,
+          "correction": "Research subjects viewing rapid screen displays of pictures lasting only 10 milliseconds report no image awareness.",
+          "explanation": "복수 주어 'Research subjects'에 맞춰 복수형 'report'가 맞다."
+        },
+        {
+          "text": "But in later tests, these same subjects score well above chance during asked to pick target pictures from a larger collection, showing that the pictures impacted memory without the subject’s awareness.",
+          "isCorrect": false,
+          "correction": "But in later tests, these same subjects score well above chance when asked to pick target pictures from a larger collection, showing that the pictures impacted memory without the subject’s awareness.",
+          "explanation": "뒤에 분사구문이 이어지므로 접속사 'when'이 맞다. 'during'은 전치사로 절을 이끌 수 없다."
+        },
+        {
+          "text": "Essentially the same process is repeating in our daily lives.",
+          "isCorrect": false,
+          "correction": "Essentially the same process is repeated in our daily lives.",
+          "explanation": "주어가 반복되는 대상(수동)이므로 과거분사 'repeated'가 맞다."
+        },
+        {
+          "text": "Much of our knowledge, skills, experiences, and prejudices are acquired by no awareness of causal input to our brains.",
+          "isCorrect": false,
+          "correction": "Much of our knowledge, skills, experiences, and prejudices are acquired with no awareness of causal input to our brains.",
+          "explanation": "동반·부수 상황을 나타내므로 전치사 'with'가 맞다. 'by'는 수단·행위자에 쓰여 문맥상 부적절."
+        }
+      ]
+    }
+  }
+}

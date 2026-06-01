@@ -1,0 +1,208 @@
+{
+  "passageId": "69d4eca372a886137cd83efd",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 03번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 03번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 03번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Because music neither represents the phenomenal world, nor makes statements about it, it bypasses both the pictorial and the verbal.",
+      "tokens": ["Because","music","neither","represents","the","phenomenal","world,","nor","makes","statements","about","it,","it","bypasses","both","the","pictorial","and","the","verbal."],
+      "korean": "음악은 경이로운 세상을 나타내지도, 그것에 대해 진술을 하지도 않기 때문에, 그것은 그림과 언어 모두를 우회한다."
+    },
+    {
+      "idx": 1,
+      "text": "When we look at a picture, the fact of the picture’s existence as a tangible object in the external world acts as an intermediary between ourselves and the underlying idea which the artist is expressing.",
+      "tokens": ["When","we","look","at","a","picture,","the","fact","of","the","picture’s","existence","as","a","tangible","object","in","the","external","world","acts","as","an","intermediary","between","ourselves","and","the","underlying","idea","which","the","artist","is","expressing."],
+      "korean": "우리가 그림을 볼 때, 외부 세계에 있는 유형(有形) 물체로서 그림이 존재한다는 사실은 우리 자신과 예술가가 표현하고 있는 근본적인 생각 사이의 매개자 역할을 한다."
+    },
+    {
+      "idx": 2,
+      "text": "When we read a poem, the words in which the poem is written act similarly.",
+      "tokens": ["When","we","read","a","poem,","the","words","in","which","the","poem","is","written","act","similarly."],
+      "korean": "우리가 시를 읽을 때, 그 시에 쓰인 단어도 비슷하게 역할을 한다."
+    },
+    {
+      "idx": 3,
+      "text": "Since the painter must, by definition, express what he has to express in a picture, and the poet must express what he has to express in words, it may seem stupid to write of pictures and words as intermediaries.",
+      "tokens": ["Since","the","painter","must,","by","definition,","express","what","he","has","to","express","in","a","picture,","and","the","poet","must","express","what","he","has","to","express","in","words,","it","may","seem","stupid","to","write","of","pictures","and","words","as","intermediaries."],
+      "korean": "화가는 당연히 그림으로 그가 표현해야 할 것을 표현해야 하고, 시인은 단어로 그가 표현해야 할 것을 표현해야 하기 때문에, 매개자로서 그림과 단어에 대해 글을 쓰는 것은 어리석은 것처럼 보일 수도 있다."
+    },
+    {
+      "idx": 4,
+      "text": "But, if we consider that paintings are representations of something which the painter wishes to convey to us, and if we also accept that language is intrinsically metaphorical, we can appreciate that the medium is not identical with the message, and may, in some sense, distort it, or present it incompletely.",
+      "tokens": ["But,","if","we","consider","that","paintings","are","representations","of","something","which","the","painter","wishes","to","convey","to","us,","and","if","we","also","accept","that","language","is","intrinsically","metaphorical,","we","can","appreciate","that","the","medium","is","not","identical","with","the","message,","and","may,","in","some","sense,","distort","it,","or","present","it","incompletely."],
+      "korean": "그러나 만약 우리가 그림이 화가가 우리에게 전달하고자 하는 어떤 것에 대한 표현임을 고려한다면 그리고 또한 언어가 본질적으로 은유적임을 우리가 받아들인다면, 매체가 메시지와 동일하지 않고, 어떤 의미에서 그것을 왜곡하거나 그것을 불완전하게 제시할 수도 있음을 우리는 인식할 수 있다."
+    },
+    {
+      "idx": 5,
+      "text": "This, of course, is why artists are never satisfied with what they have produced, but are compelled to go on striving to find a yet more perfect way of expressing whatever it is that they want to convey.",
+      "tokens": ["This,","of","course,","is","why","artists","are","never","satisfied","with","what","they","have","produced,","but","are","compelled","to","go","on","striving","to","find","a","yet","more","perfect","way","of","expressing","whatever","it","is","that","they","want","to","convey."],
+      "korean": "물론, 이것이, 예술가들이 자신들이 만들어 낸 것에 결코 만족하지 않으나, 자신들이 전달하고 싶은 것이면 무엇이든지 그것을 표현할 훨씬 더 완벽한 방법을 찾기 위해 할 수 없이 계속 노력해야만 하는 이유이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "bypasses",
+          "wrongCandidates": ["bypass"],
+          "grammarType": "수일치",
+          "explanation": "주절의 주어가 단수 대명사 'it'(=music)이므로 단수형 동사 'bypasses'가 맞다. 동사원형 'bypass'는 3인칭 단수 주어와 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "bypass",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T34-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 34,
+          "endTokenIdx": 34,
+          "correctForm": "expressing.",
+          "wrongCandidates": ["expressed."],
+          "grammarType": "분사",
+          "explanation": "'the artist is ___' 구조에서 의미상 주어 'the artist'가 능동적으로 생각을 '표현하고 있는' 진행의 의미이므로 현재분사 'expressing'이 맞다. 과거분사 'expressed'는 수동(예술가가 표현되는)의 의미가 되어 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "express",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the words'가 앞에 있고 전치사 'in' 뒤이므로 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T0-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Since",
+          "wrongCandidates": ["During"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 「주어+동사」 절이 이어지고 '~ 때문에'라는 이유의 의미이므로 접속사 'Since'가 맞다. 'During'은 전치사로 명사구를 이끌며 절을 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T13-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "wishes",
+          "wrongCandidates": ["wish"],
+          "grammarType": "수일치",
+          "explanation": "관계절의 주어가 단수 'the painter'이므로 단수형 동사 'wishes'가 맞다. 동사원형 'wish'는 3인칭 단수 주어와 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "wish",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T16-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "compelled",
+          "wrongCandidates": ["compelling"],
+          "grammarType": "수동태",
+          "explanation": "주어 'artists'가 'compel(강요하다)'의 행위를 받는 대상이므로 'be + p.p.' 수동태 형태인 'are compelled'가 맞다. 현재분사 'compelling'은 능동(강요하는)의 의미가 되어 문맥과 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "compel",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "bypasses", "baseForm": "bypass"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 34, "endTokenIdx": 34, "correctForm": "expressing.", "baseForm": "express"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "wishes", "baseForm": "wish"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "compelled", "baseForm": "compel"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "bypasses", "wrongForm": "bypass", "explanation": "주절의 주어가 단수 대명사 'it'(=music)이므로 단수형 동사 'bypasses'가 맞다. 동사원형 'bypass'는 3인칭 단수 주어와 수가 일치하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 34, "endTokenIdx": 34, "correctForm": "expressing.", "wrongForm": "expressed.", "explanation": "'the artist is ___' 구조에서 의미상 주어 'the artist'가 능동적으로 생각을 '표현하고 있는' 진행의 의미이므로 현재분사 'expressing'이 맞다. 과거분사 'expressed'는 수동(예술가가 표현되는)의 의미가 되어 어색하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "which", "wrongForm": "what", "explanation": "선행사 'the words'가 앞에 있고 전치사 'in' 뒤이므로 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Since", "wrongForm": "During", "explanation": "뒤에 「주어+동사」 절이 이어지고 '~ 때문에'라는 이유의 의미이므로 접속사 'Since'가 맞다. 'During'은 전치사로 명사구를 이끌며 절을 이끌 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "wishes", "wrongForm": "wish", "explanation": "관계절의 주어가 단수 'the painter'이므로 단수형 동사 'wishes'가 맞다. 동사원형 'wish'는 3인칭 단수 주어와 수가 일치하지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "compelled", "wrongForm": "compelling", "explanation": "주어 'artists'가 'compel(강요하다)'의 행위를 받는 대상이므로 'be + p.p.' 수동태 형태인 'are compelled'가 맞다. 현재분사 'compelling'은 능동(강요하는)의 의미가 되어 문맥과 맞지 않는다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "bypass", "correction": "bypasses", "explanation": "단수 주어 'it'에 맞춰 단수형 동사 'bypasses'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 34, "endTokenIdx": 34, "isError": true, "wrongForm": "expressed.", "correction": "expressing.", "explanation": "주어 'the artist'가 능동·진행이므로 현재분사 'expressing'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사 'the words'가 있으므로 관계대명사 'which'로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 3, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "During", "correction": "Since", "explanation": "뒤에 절이 이어지므로 접속사 'Since'로 고쳐야 한다. 'During'은 전치사라 절을 이끌 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "wish", "correction": "wishes", "explanation": "단수 주어 'the painter'에 맞춰 단수형 동사 'wishes'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "compelling", "correction": "compelled", "explanation": "주어 'artists'가 강요받는 대상(수동)이므로 과거분사 'compelled'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Because music neither represents the phenomenal world, nor makes statements about it, it bypass both the pictorial and the verbal.",
+          "isCorrect": false,
+          "correction": "Because music neither represents the phenomenal world, nor makes statements about it, it bypasses both the pictorial and the verbal.",
+          "explanation": "단수 주어 'it'(=music)에 맞춰 단수형 동사 'bypasses'가 와야 한다."
+        },
+        {
+          "text": "When we look at a picture, the fact of the picture’s existence as a tangible object in the external world acts as an intermediary between ourselves and the underlying idea which the artist is expressed.",
+          "isCorrect": false,
+          "correction": "When we look at a picture, the fact of the picture’s existence as a tangible object in the external world acts as an intermediary between ourselves and the underlying idea which the artist is expressing.",
+          "explanation": "주어 'the artist'가 능동·진행의 의미이므로 현재분사 'expressing'이 맞다."
+        },
+        {
+          "text": "When we read a poem, the words in what the poem is written act similarly.",
+          "isCorrect": false,
+          "correction": "When we read a poem, the words in which the poem is written act similarly.",
+          "explanation": "선행사 'the words'가 있으므로 관계대명사 'which'가 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "During the painter must, by definition, express what he has to express in a picture, and the poet must express what he has to express in words, it may seem stupid to write of pictures and words as intermediaries.",
+          "isCorrect": false,
+          "correction": "Since the painter must, by definition, express what he has to express in a picture, and the poet must express what he has to express in words, it may seem stupid to write of pictures and words as intermediaries.",
+          "explanation": "뒤에 「주어+동사」 절이 이어지므로 접속사 'Since'가 맞다. 'During'은 전치사라 절을 이끌 수 없다."
+        },
+        {
+          "text": "But, if we consider that paintings are representations of something which the painter wish to convey to us, and if we also accept that language is intrinsically metaphorical, we can appreciate that the medium is not identical with the message, and may, in some sense, distort it, or present it incompletely.",
+          "isCorrect": false,
+          "correction": "But, if we consider that paintings are representations of something which the painter wishes to convey to us, and if we also accept that language is intrinsically metaphorical, we can appreciate that the medium is not identical with the message, and may, in some sense, distort it, or present it incompletely.",
+          "explanation": "관계절의 주어가 단수 'the painter'이므로 단수형 동사 'wishes'가 맞다."
+        },
+        {
+          "text": "This, of course, is why artists are never satisfied with what they have produced, but are compelling to go on striving to find a yet more perfect way of expressing whatever it is that they want to convey.",
+          "isCorrect": false,
+          "correction": "This, of course, is why artists are never satisfied with what they have produced, but are compelled to go on striving to find a yet more perfect way of expressing whatever it is that they want to convey.",
+          "explanation": "주어 'artists'가 강요받는 대상(수동)이므로 과거분사 'compelled'가 맞다."
+        }
+      ]
+    }
+  }
+}

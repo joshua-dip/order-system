@@ -1,0 +1,284 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd2e",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 24번",
+  "title": "26년 3월 고3 영어모의고사 24번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "24번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Something too domesticated isn't actually more accessible or approachable, it evaporates altogether ─ we just take it for granted until art restores its visibility.",
+      "tokens": ["Something","too","domesticated","isn't","actually","more","accessible","or","approachable,","it","evaporates","altogether","─","we","just","take","it","for","granted","until","art","restores","its","visibility."],
+      "korean": "너무나 길든 것은 실제로 더 다가가기 쉽거나 이해하기 쉬운 것이 아니라, 모두 증발해 버리며, 우리는 예술이 그것의 가시성을 회복할 때까지 그것을 당연하게 여길 뿐이다."
+    },
+    {
+      "idx": 1,
+      "text": "And perhaps translation is an art especially well suited for this task: while a great work of literature accumulates imitations and clichés and a body of scholarship and analysis and study guides that may well bury it, translations of that work free it from its stodgy fame and make the stone stony again, precisely by putting it in another language.",
+      "tokens": ["And","perhaps","translation","is","an","art","especially","well","suited","for","this","task:","while","a","great","work","of","literature","accumulates","imitations","and","clichés","and","a","body","of","scholarship","and","analysis","and","study","guides","that","may","well","bury","it,","translations","of","that","work","free","it","from","its","stodgy","fame","and","make","the","stone","stony","again,","precisely","by","putting","it","in","another","language."],
+      "korean": "그리고 아마도 번역은 이러한 과업에 특히 잘 맞는 예술인데, 위대한 문학 작품은 모방작과 상투적인 표현과 많은 양의 학술 연구와 분석과 학습 가이드를 축적하고 이는 그것을 묻어 버릴 수도 있는 반면, 그 작품의 번역본은 정확히는 그것을 다른 언어로 옮김으로써, 그 작품을 자신의 따분한 명성으로부터 해방시키고 그 돌을 다시 돌답게 만든다."
+    },
+    {
+      "idx": 2,
+      "text": "A bad text is one that, in Berman's terms, lacks \"native strangeness\" ─ and when you translate it, nothing happens.",
+      "tokens": ["A","bad","text","is","one","that,","in","Berman's","terms,","lacks","\"native","strangeness\"","─","and","when","you","translate","it,","nothing","happens."],
+      "korean": "안 좋은 텍스트란 Berman의 용어로 '본래의 낯섦'이 결여된 것이며, 여러분이 그것을 번역할 때 아무 일도 일어나지 않는다."
+    },
+    {
+      "idx": 3,
+      "text": "The translation of a true work of art is significant because it reinforces and enhances qualities already inherent in it: \"translation is not a makeshift, but the mode of existence by which a work reaches us as étrange\" (translated by Heyvaert as \"foreign,\" but I'm not sure about that).",
+      "tokens": ["The","translation","of","a","true","work","of","art","is","significant","because","it","reinforces","and","enhances","qualities","already","inherent","in","it:","\"translation","is","not","a","makeshift,","but","the","mode","of","existence","by","which","a","work","reaches","us","as","étrange\"","(translated","by","Heyvaert","as","\"foreign,\"","but","I'm","not","sure","about","that)."],
+      "korean": "진정한 예술 작품의 번역은 그것이 작품 안에 이미 내재된 자질을 강화하고 높이기 때문에 의미 있다. \"번역은 임시방편이 아니라, 한 작품이 우리에게 '낯선 것'(Heyvaert에 의해 '이질적인'으로 번역되었지만, 나는 그것에 대해 확신하지 못한다.)으로 다가오는 존재 양식이다.\""
+    },
+    {
+      "idx": 4,
+      "text": "As Wilson put it, translation makes the work \"seem more strange, and newly strange.\"",
+      "tokens": ["As","Wilson","put","it,","translation","makes","the","work","\"seem","more","strange,","and","newly","strange.\""],
+      "korean": "Wilson이 말했듯, 번역은 작품을 '더 낯설게, 그리고 새롭게 낯설게 보이도록' 한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T2-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "domesticated",
+          "wrongCandidates": ["domesticating"],
+          "grammarType": "분사",
+          "explanation": "Something이 '길들여지는' 대상이므로 수동의 의미를 갖는 과거분사 'domesticated'가 맞다. 현재분사 'domesticating'은 Something이 능동적으로 길들이는 주체가 되어 의미상 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "domesticate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T18-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "accumulates",
+          "wrongCandidates": ["accumulate"],
+          "grammarType": "수일치",
+          "explanation": "주어 'a great work of literature'의 핵은 단수 'a great work'이므로 단수 동사 'accumulates'가 맞다. 'of literature'에 이끌려 복수처럼 보이는 것을 경계한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "accumulate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "that,",
+          "wrongCandidates": ["what,"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'one'(= a bad text)이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사라 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T12-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "reinforces",
+          "wrongCandidates": ["reinforced"],
+          "grammarType": "시제",
+          "explanation": "글 전체가 일반적 사실을 진술하는 현재시제(is significant, reaches, makes 등)이므로 현재 'reinforces'가 맞다. 과거형 'reinforced'는 흐름과 어긋나며, 등위로 이어지는 'enhances'(현재)와도 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "reinforce",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T8-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "\"seem",
+          "wrongCandidates": ["\"to seem"],
+          "grammarType": "부정사",
+          "explanation": "사역동사 makes + 목적어(the work) 뒤에는 원형부정사 'seem'이 와야 한다. to-부정사 'to seem'은 사역동사(make/have/let) 구문에 쓰지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "seem",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {
+          "kind": "word",
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "domesticated",
+          "baseForm": "domesticate"
+        },
+        {
+          "kind": "word",
+          "sentenceIdx": 1,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "accumulates",
+          "baseForm": "accumulate"
+        },
+        {
+          "kind": "word",
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "reinforces",
+          "baseForm": "reinforce"
+        },
+        {
+          "kind": "word",
+          "sentenceIdx": 4,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "\"seem",
+          "baseForm": "seem"
+        }
+      ]
+    },
+    "G": {
+      "points": [
+        {
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "domesticated",
+          "wrongForm": "domesticating",
+          "explanation": "Something이 '길들여지는' 대상이므로 수동의 의미를 갖는 과거분사 'domesticated'가 맞다. 현재분사 'domesticating'은 Something이 능동적으로 길들이는 주체가 되어 의미상 맞지 않다."
+        },
+        {
+          "sentenceIdx": 1,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "accumulates",
+          "wrongForm": "accumulate",
+          "explanation": "주어 'a great work of literature'의 핵은 단수 'a great work'이므로 단수 동사 'accumulates'가 맞다. 'of literature'에 이끌려 복수처럼 보이는 것을 경계한다."
+        },
+        {
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "that,",
+          "wrongForm": "what,",
+          "explanation": "선행사 'one'(= a bad text)이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사라 선행사가 있을 때는 쓸 수 없다."
+        },
+        {
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "reinforces",
+          "wrongForm": "reinforced",
+          "explanation": "글 전체가 일반적 사실을 진술하는 현재시제(is significant, reaches, makes 등)이므로 현재 'reinforces'가 맞다. 과거형 'reinforced'는 흐름과 어긋나며, 등위로 이어지는 'enhances'(현재)와도 어울리지 않는다."
+        },
+        {
+          "sentenceIdx": 4,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "\"seem",
+          "wrongForm": "\"to seem",
+          "explanation": "사역동사 makes + 목적어(the work) 뒤에는 원형부정사 'seem'이 와야 한다. to-부정사 'to seem'은 사역동사(make/have/let) 구문에 쓰지 않는다."
+        }
+      ]
+    },
+    "H": {
+      "spans": [
+        {
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "isError": true,
+          "wrongForm": "domesticating",
+          "correction": "domesticated",
+          "explanation": "Something이 '길들여지는' 대상이므로 수동의 의미를 갖는 과거분사 'domesticated'로 고쳐야 한다."
+        },
+        {
+          "sentenceIdx": 1,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "isError": true,
+          "wrongForm": "accumulate",
+          "correction": "accumulates",
+          "explanation": "주어의 핵 'a great work'가 단수이므로 단수 동사 'accumulates'로 고쳐야 한다."
+        },
+        {
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "isError": true,
+          "wrongForm": "what,",
+          "correction": "that,",
+          "explanation": "선행사 'one'이 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함."
+        },
+        {
+          "sentenceIdx": 3,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "isError": true,
+          "wrongForm": "reinforced",
+          "correction": "reinforces",
+          "explanation": "현재시제 흐름과 등위로 이어지는 'enhances'에 맞추어 현재 'reinforces'로 고쳐야 한다."
+        },
+        {
+          "sentenceIdx": 4,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "isError": true,
+          "wrongForm": "\"to seem",
+          "correction": "\"seem",
+          "explanation": "사역동사 makes 뒤이므로 원형부정사 'seem'으로 고쳐야 한다."
+        }
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Something too domesticating isn't actually more accessible or approachable, it evaporates altogether ─ we just take it for granted until art restores its visibility.",
+          "isCorrect": false,
+          "correction": "Something too domesticated isn't actually more accessible or approachable, it evaporates altogether ─ we just take it for granted until art restores its visibility.",
+          "explanation": "Something은 '길들여지는' 대상이므로 과거분사 'domesticated'가 맞다. 현재분사 'domesticating'은 능동의 의미로 맞지 않다."
+        },
+        {
+          "text": "And perhaps translation is an art especially well suited for this task: while a great work of literature accumulate imitations and clichés and a body of scholarship and analysis and study guides that may well bury it, translations of that work free it from its stodgy fame and make the stone stony again, precisely by putting it in another language.",
+          "isCorrect": false,
+          "correction": "And perhaps translation is an art especially well suited for this task: while a great work of literature accumulates imitations and clichés and a body of scholarship and analysis and study guides that may well bury it, translations of that work free it from its stodgy fame and make the stone stony again, precisely by putting it in another language.",
+          "explanation": "주어 'a great work of literature'의 핵은 단수 'a great work'이므로 단수 동사 'accumulates'가 맞다."
+        },
+        {
+          "text": "A bad text is one what, in Berman's terms, lacks \"native strangeness\" ─ and when you translate it, nothing happens.",
+          "isCorrect": false,
+          "correction": "A bad text is one that, in Berman's terms, lacks \"native strangeness\" ─ and when you translate it, nothing happens.",
+          "explanation": "선행사 'one'이 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "The translation of a true work of art is significant because it reinforced and enhances qualities already inherent in it: \"translation is not a makeshift, but the mode of existence by which a work reaches us as étrange\" (translated by Heyvaert as \"foreign,\" but I'm not sure about that).",
+          "isCorrect": false,
+          "correction": "The translation of a true work of art is significant because it reinforces and enhances qualities already inherent in it: \"translation is not a makeshift, but the mode of existence by which a work reaches us as étrange\" (translated by Heyvaert as \"foreign,\" but I'm not sure about that).",
+          "explanation": "현재시제 흐름이고 등위로 'enhances'(현재)와 이어지므로 'reinforces'(현재)가 맞다."
+        },
+        {
+          "text": "As Wilson put it, translation makes the work \"to seem more strange, and newly strange.\"",
+          "isCorrect": false,
+          "correction": "As Wilson put it, translation makes the work \"seem more strange, and newly strange.\"",
+          "explanation": "사역동사 makes + 목적어 뒤에는 원형부정사 'seem'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

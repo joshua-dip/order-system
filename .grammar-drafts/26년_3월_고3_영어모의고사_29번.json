@@ -1,0 +1,268 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd33",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 29번",
+  "title": "26년 3월 고3 영어모의고사 29번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "29번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Darwin understood that since inheritance is conservative, it is in the nature of the organism to impose itself on the surroundings, producing many highly similar but variable offspring regardless of the nature of the conditions.",
+      "tokens": ["Darwin","understood","that","since","inheritance","is","conservative,","it","is","in","the","nature","of","the","organism","to","impose","itself","on","the","surroundings,","producing","many","highly","similar","but","variable","offspring","regardless","of","the","nature","of","the","conditions."],
+      "korean": "다윈은 유전이 보수적이기 때문에, 유기체의 본성은 자신을 주변 환경에 강요하는 것에 있고, 상황의 성질과 무관하게 매우 유사하면서도 변이성이 있는 많은 자손을 생산한다는 점을 이해했다."
+    },
+    {
+      "idx": 1,
+      "text": "He further recognized that these fundamental aspects of the nature of the organism imply reproductive overrun, with organisms routinely producing more offspring than there are resources to support them.",
+      "tokens": ["He","further","recognized","that","these","fundamental","aspects","of","the","nature","of","the","organism","imply","reproductive","overrun,","with","organisms","routinely","producing","more","offspring","than","there","are","resources","to","support","them."],
+      "korean": "그는 또한 유기체의 본성에 관한 이러한 근본적인 측면이 과잉 생산을 수반하며, 유기체들이 (그들의) 자손을 부양할 자원이 있는 것보다 더 많은 자손을 통상적으로 생산한다는 점을 인식했다."
+    },
+    {
+      "idx": 2,
+      "text": "The need to survive implies that the capacity for using necessary resources must complement the opportunity to use them.",
+      "tokens": ["The","need","to","survive","implies","that","the","capacity","for","using","necessary","resources","must","complement","the","opportunity","to","use","them."],
+      "korean": "생존의 필요성은 필수적인 자원을 사용하는 능력이 그것을 사용할 기회를 보완해야 한다는 것을 시사한다."
+    },
+    {
+      "idx": 3,
+      "text": "But needs and opportunity do not perfectly match.",
+      "tokens": ["But","needs","and","opportunity","do","not","perfectly","match."],
+      "korean": "그러나 필요한 것들과 기회는 완벽히 일치하지는 않는다."
+    },
+    {
+      "idx": 4,
+      "text": "Inheritance produces the capacities for exploiting the surroundings, but in a way that is indifferent to the surroundings.",
+      "tokens": ["Inheritance","produces","the","capacities","for","exploiting","the","surroundings,","but","in","a","way","that","is","indifferent","to","the","surroundings."],
+      "korean": "유전은 주변 환경을 이용하는 능력을 만들어 내지만, 주변 환경을 개의치 않는 방식으로 그렇게 한다."
+    },
+    {
+      "idx": 5,
+      "text": "Offspring cannot anticipate the nature of the conditions in which they find themselves, much less alter themselves in ways that are suitable to any changes in those conditions.",
+      "tokens": ["Offspring","cannot","anticipate","the","nature","of","the","conditions","in","which","they","find","themselves,","much","less","alter","themselves","in","ways","that","are","suitable","to","any","changes","in","those","conditions."],
+      "korean": "자손은 자신들이 처하게 되는 상황의 성질을 예측할 수 없으며, 더군다나 그러한 상황 속 어떤 변화에도 적합한 방식으로 자신들을 바꾸는 것도 할 수 없다."
+    },
+    {
+      "idx": 6,
+      "text": "While it is true that organisms can express some amount of flexibility in their form and function in response to their immediate surroundings, these adjustments are minor compared to the constraints of inheritance.",
+      "tokens": ["While","it","is","true","that","organisms","can","express","some","amount","of","flexibility","in","their","form","and","function","in","response","to","their","immediate","surroundings,","these","adjustments","are","minor","compared","to","the","constraints","of","inheritance."],
+      "korean": "유기체가 자신과 인접한 주변 환경에 반응하여 자신의 형태와 기능에서 어느 정도의 유연성을 나타낼 수 있다는 것은 사실이지만, 이 적응은 유전의 제약과 비교하면 사소하다."
+    },
+    {
+      "idx": 7,
+      "text": "As a result, not every living thing can live everywhere.",
+      "tokens": ["As","a","result,","not","every","living","thing","can","live","everywhere."],
+      "korean": "그 결과, 모든 생명체가 어디에서나 살 수 있는 것은 아니다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T21-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "producing",
+          "wrongCandidates": ["produced"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'the organism'이 자손을 능동적으로 생산하므로 현재분사 'producing'이 맞다. 과거분사 'produced'는 유기체가 다른 것에 의해 생산되는 수동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "produce",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T13-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "imply",
+          "wrongCandidates": ["implies"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'these fundamental aspects'는 복수이므로 복수형 동사 'imply'가 맞다. 'of the nature of the organism' 같은 수식어구에 이끌려 단수 'implies'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "imply",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T9-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "using",
+          "wrongCandidates": ["use"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'for' 뒤에는 동명사가 와야 하므로 'using'이 맞다. 동사원형 'use'는 전치사 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "use",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T4-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "do",
+          "wrongCandidates": ["does"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'needs and opportunity'로 복수(and로 연결된 복수 주어)이므로 조동사 'do'가 맞다. 단수형 'does'는 단수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "do",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T12-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'a way'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T15-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "alter",
+          "wrongCandidates": ["altering"],
+          "grammarType": "부정사",
+          "explanation": "'cannot anticipate ... , much less alter ...' 구조에서 'much less'는 앞의 동사구와 동일한 조동사 'cannot'의 영향을 받아 동사원형 'alter'가 와야 한다. 동명사 'altering'은 이 구조에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "alter",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T27-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 27,
+          "endTokenIdx": 27,
+          "correctForm": "compared",
+          "wrongCandidates": ["comparing"],
+          "grammarType": "수동태",
+          "explanation": "이 분사구는 'when (they are) compared to ...'에서 'when they are'가 생략된 형태로, 주어 'these adjustments'가 비교되는 대상(수동)이므로 과거분사 'compared'가 맞다. 현재분사 'comparing'은 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "compare",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "living",
+          "wrongCandidates": ["lived"],
+          "grammarType": "분사",
+          "explanation": "'living thing'은 '살아 있는 것'의 의미로, 명사 'thing'을 능동적으로 수식하는 현재분사 'living'이 맞다. 과거분사 'lived'는 '살아진' 식의 수동/완료가 되어 명사 'thing'을 수식할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "live",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "producing", "baseForm": "produce"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "imply", "baseForm": "imply"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "using", "baseForm": "use"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "do", "baseForm": "do"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "alter", "baseForm": "alter"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 27, "endTokenIdx": 27, "correctForm": "compared", "baseForm": "compare"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "living", "baseForm": "live"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "producing", "wrongForm": "produced", "explanation": "분사구문의 의미상 주어 'the organism'이 자손을 능동적으로 생산하므로 현재분사 'producing'이 맞다. 과거분사 'produced'는 유기체가 다른 것에 의해 생산되는 수동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "imply", "wrongForm": "implies", "explanation": "주어의 핵 'these fundamental aspects'는 복수이므로 복수형 동사 'imply'가 맞다. 'of the nature of the organism' 같은 수식어구에 이끌려 단수 'implies'를 쓰면 안 된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "using", "wrongForm": "use", "explanation": "전치사 'for' 뒤에는 동명사가 와야 하므로 'using'이 맞다. 동사원형 'use'는 전치사 목적어가 될 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "do", "wrongForm": "does", "explanation": "주어가 'needs and opportunity'로 복수(and로 연결된 복수 주어)이므로 조동사 'do'가 맞다. 단수형 'does'는 단수 주어에 사용된다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'a way'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "alter", "wrongForm": "altering", "explanation": "'cannot anticipate ... , much less alter ...' 구조에서 'much less'는 앞의 동사구와 동일한 조동사 'cannot'의 영향을 받아 동사원형 'alter'가 와야 한다. 동명사 'altering'은 이 구조에 맞지 않다."},
+        {"sentenceIdx": 6, "startTokenIdx": 27, "endTokenIdx": 27, "correctForm": "compared", "wrongForm": "comparing", "explanation": "이 분사구는 'when (they are) compared to ...'에서 'when they are'가 생략된 형태로, 주어 'these adjustments'가 비교되는 대상(수동)이므로 과거분사 'compared'가 맞다. 현재분사 'comparing'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "living", "wrongForm": "lived", "explanation": "'living thing'은 '살아 있는 것'의 의미로, 명사 'thing'을 능동적으로 수식하는 현재분사 'living'이 맞다. 과거분사 'lived'는 '살아진' 식의 수동/완료가 되어 명사 'thing'을 수식할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "produced", "correction": "producing", "explanation": "분사구문의 의미상 주어가 능동적으로 생산하므로 현재분사 'producing'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "implies", "correction": "imply", "explanation": "복수 주어 'these fundamental aspects'에 맞춰 복수형 'imply'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "use", "correction": "using", "explanation": "전치사 'for' 뒤이므로 동명사 'using'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "does", "correction": "do", "explanation": "복수 주어 'needs and opportunity'에 맞춰 'do'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'a way'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 5, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "altering", "correction": "alter", "explanation": "'cannot ... much less ___' 구조에서 동사원형이 와야 하므로 'alter'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 27, "endTokenIdx": 27, "isError": true, "wrongForm": "comparing", "correction": "compared", "explanation": "주어가 비교의 대상(수동)이므로 과거분사 'compared'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "lived", "correction": "living", "explanation": "능동·진행의 의미로 명사 'thing'을 수식하므로 현재분사 'living'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Darwin understood that since inheritance is conservative, it is in the nature of the organism to impose itself on the surroundings, produced many highly similar but variable offspring regardless of the nature of the conditions.",
+          "isCorrect": false,
+          "correction": "Darwin understood that since inheritance is conservative, it is in the nature of the organism to impose itself on the surroundings, producing many highly similar but variable offspring regardless of the nature of the conditions.",
+          "explanation": "분사구문의 의미상 주어 'the organism'이 능동적으로 생산하므로 현재분사 'producing'이 맞다."
+        },
+        {
+          "text": "He further recognized that these fundamental aspects of the nature of the organism implies reproductive overrun, with organisms routinely producing more offspring than there are resources to support them.",
+          "isCorrect": false,
+          "correction": "He further recognized that these fundamental aspects of the nature of the organism imply reproductive overrun, with organisms routinely producing more offspring than there are resources to support them.",
+          "explanation": "주어의 핵 'these fundamental aspects'는 복수이므로 'imply'가 맞다."
+        },
+        {
+          "text": "The need to survive implies that the capacity for use necessary resources must complement the opportunity to use them.",
+          "isCorrect": false,
+          "correction": "The need to survive implies that the capacity for using necessary resources must complement the opportunity to use them.",
+          "explanation": "전치사 'for' 뒤에는 동명사 'using'이 와야 한다."
+        },
+        {
+          "text": "But needs and opportunity does not perfectly match.",
+          "isCorrect": false,
+          "correction": "But needs and opportunity do not perfectly match.",
+          "explanation": "주어 'needs and opportunity'가 복수이므로 'do'가 맞다."
+        },
+        {
+          "text": "Inheritance produces the capacities for exploiting the surroundings, but in a way what is indifferent to the surroundings.",
+          "isCorrect": false,
+          "correction": "Inheritance produces the capacities for exploiting the surroundings, but in a way that is indifferent to the surroundings.",
+          "explanation": "선행사 'a way'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "Offspring cannot anticipate the nature of the conditions in which they find themselves, much less altering themselves in ways that are suitable to any changes in those conditions.",
+          "isCorrect": false,
+          "correction": "Offspring cannot anticipate the nature of the conditions in which they find themselves, much less alter themselves in ways that are suitable to any changes in those conditions.",
+          "explanation": "'cannot ... much less ___' 구조에서는 동사원형 'alter'가 와야 한다."
+        },
+        {
+          "text": "While it is true that organisms can express some amount of flexibility in their form and function in response to their immediate surroundings, these adjustments are minor comparing to the constraints of inheritance.",
+          "isCorrect": false,
+          "correction": "While it is true that organisms can express some amount of flexibility in their form and function in response to their immediate surroundings, these adjustments are minor compared to the constraints of inheritance.",
+          "explanation": "주어 'these adjustments'가 비교되는 대상(수동)이므로 과거분사 'compared'가 맞다."
+        },
+        {
+          "text": "As a result, not every lived thing can live everywhere.",
+          "isCorrect": false,
+          "correction": "As a result, not every living thing can live everywhere.",
+          "explanation": "명사 'thing'을 능동으로 수식하므로 현재분사 'living'이 맞다."
+        }
+      ]
+    }
+  }
+}

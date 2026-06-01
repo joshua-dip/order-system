@@ -16,6 +16,7 @@ import {
   SVOC_COMPONENTS,
   SVOC_FIELDS,
   SVOC_WORD_BG,
+  getSvocClauses,
   passageAnalysisFileNameForPassageId,
 } from '@/lib/passage-analyzer-types';
 import CcSyntaxCliPanel from '@/app/admin/syntax-analyzer/_components/CcSyntaxCliPanel';
@@ -287,6 +288,8 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const [viewMode, setViewMode] = useState<EditorViewMode>('base');
   const [syntaxLabel, setSyntaxLabel] = useState(SYNTAX_LABEL_OPTIONS[0] || '명사구');
   const [svocPart, setSvocPart] = useState<SvocComponentId | null>(null);
+  /** SVOC 다절 편집: sentence 별로 현재 활성 절 인덱스. 기본 0. */
+  const [activeClauseBySentence, setActiveClauseBySentence] = useState<Record<number, number>>({});
   const [pending, setPending] = useState<{ si: number; wi: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
@@ -588,8 +591,11 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       const fields = SVOC_FIELDS[svocPart];
       const partLabel = SVOC_COMPONENTS.find((c) => c.id === svocPart)?.label ?? svocPart;
 
+      // 다절 데이터: 활성 절 (activeClauseBySentence[si] ?? 0) 만 편집. 다른 절은 silently preserve.
+      const activeIdx = activeClauseBySentence[si] ?? 0;
+
       if (!pending) {
-        const cur = state.svocData?.[si];
+        const cur = getSvocClauses(state.svocData, si)[activeIdx];
         if (cur) {
           const rs = cur[fields.start] as unknown;
           const re = cur[fields.end] as unknown;
@@ -603,8 +609,12 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           ) {
             updateState((s) => {
               const sv = { ...(s.svocData || {}) };
-              const prev = (sv[si] as SvocSentenceData | undefined) || defaultSvocSentence();
-              sv[si] = clearSvocComponentFields(prev, svocPart);
+              const existing = getSvocClauses(s.svocData, si);
+              const target = existing[activeIdx] ?? defaultSvocSentence();
+              const updated = clearSvocComponentFields(target, svocPart);
+              const nextClauses = [...existing];
+              nextClauses[activeIdx] = updated;
+              sv[si] = nextClauses;
               return { ...s, svocData: sv };
             });
             setMsg(`${partLabel} 표시를 지웠습니다.`);
@@ -633,12 +643,17 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
       }
       updateState((s) => {
         const sv = { ...(s.svocData || {}) };
-        const prev = (sv[si] as SvocSentenceData | undefined) || defaultSvocSentence();
-        const cur = { ...prev } as Record<string, unknown>;
+        const existing = getSvocClauses(s.svocData, si);
+        // 활성 절이 아직 생성 안 됐다면 자리만 만들어 둠 (defaultSvocSentence)
+        const nextClauses = [...existing];
+        while (nextClauses.length <= activeIdx) nextClauses.push(defaultSvocSentence());
+        const target = nextClauses[activeIdx];
+        const cur = { ...target } as Record<string, unknown>;
         cur[fields.text] = phrase;
         cur[fields.start] = idx.startWordIndex;
         cur[fields.end] = idx.endWordIndex;
-        sv[si] = cur as unknown as SvocSentenceData;
+        nextClauses[activeIdx] = cur as unknown as SvocSentenceData;
+        sv[si] = nextClauses;
         return { ...s, svocData: sv };
       });
       setPending(null);
@@ -839,22 +854,41 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         const sv = { ...(s.svocData || {}) };
         for (const row of result || []) {
           const idx = Number(row.sentenceIndex);
-          const base = sv[idx] || {};
-          sv[idx] = {
-            ...(base as SvocSentenceData),
-            subject: String(row.subject || ''),
-            verb: String(row.verb || ''),
-            object: row.object != null ? String(row.object) : null,
-            complement: row.complement != null ? String(row.complement) : null,
-            subjectStart: Number(row.subjectStart),
-            subjectEnd: Number(row.subjectEnd),
-            verbStart: Number(row.verbStart),
-            verbEnd: Number(row.verbEnd),
-            objectStart: row.objectStart as number | null,
-            objectEnd: row.objectEnd as number | null,
-            complementStart: row.complementStart as number | null,
-            complementEnd: row.complementEnd as number | null,
-          };
+          // AI 가 절 array 를 반환 (다절 sentence 도 모두 포함). 신규/레거시 shape 둘 다 호환.
+          const aiClausesRaw = Array.isArray(row.clauses) ? (row.clauses as Array<Record<string, unknown>>) : null;
+          const aiClauses: SvocSentenceData[] = aiClausesRaw
+            ? aiClausesRaw.map((c) => ({
+                subject: String(c.subject || ''),
+                verb: String(c.verb || ''),
+                object: c.object != null ? String(c.object) : null,
+                complement: c.complement != null ? String(c.complement) : null,
+                subjectStart: Number(c.subjectStart),
+                subjectEnd: Number(c.subjectEnd),
+                verbStart: Number(c.verbStart),
+                verbEnd: Number(c.verbEnd),
+                objectStart: c.objectStart as number | null,
+                objectEnd: c.objectEnd as number | null,
+                complementStart: c.complementStart as number | null,
+                complementEnd: c.complementEnd as number | null,
+              }))
+            : [
+                {
+                  subject: String(row.subject || ''),
+                  verb: String(row.verb || ''),
+                  object: row.object != null ? String(row.object) : null,
+                  complement: row.complement != null ? String(row.complement) : null,
+                  subjectStart: Number(row.subjectStart),
+                  subjectEnd: Number(row.subjectEnd),
+                  verbStart: Number(row.verbStart),
+                  verbEnd: Number(row.verbEnd),
+                  objectStart: row.objectStart as number | null,
+                  objectEnd: row.objectEnd as number | null,
+                  complementStart: row.complementStart as number | null,
+                  complementEnd: row.complementEnd as number | null,
+                },
+              ];
+          // AI 재분석은 sentence 의 모든 절을 새로 책정 → 기존 절 전부 교체 (admin 이 수동 추가한 것은 다시 만들면 됨)
+          sv[idx] = aiClauses;
         }
         return { ...s, svocData: sv };
       });
@@ -1946,12 +1980,13 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
         }
       }
 
-      const sv = state.svocData?.[si];
+      // 다절 SVOC: 모든 절을 순회하면서 매칭되는 첫 절의 paint 사용.
+      const svocClauses = getSvocClauses(state.svocData, si);
       let textDecoration: string | undefined;
       let textDecorationColor: string | undefined;
       let textUnderlineOffset: string | undefined;
 
-      if (sv && viewMode === 'svoc') {
+      if (svocClauses.length > 0 && viewMode === 'svoc') {
         const hit = (start: unknown, end: unknown) =>
           typeof start === 'number' &&
           start >= 0 &&
@@ -1960,23 +1995,34 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
           wi >= start &&
           wi <= end;
         let painted = false;
-        for (const comp of SVOC_COMPONENTS) {
-          const f = SVOC_FIELDS[comp.id];
-          const st = sv[f.start] as unknown;
-          const en = sv[f.end] as unknown;
-          if (hit(st, en)) {
-            bg = SVOC_WORD_BG[comp.color];
+        outer: for (const sv of svocClauses) {
+          for (const comp of SVOC_COMPONENTS) {
+            const f = SVOC_FIELDS[comp.id];
+            const st = sv[f.start] as unknown;
+            const en = sv[f.end] as unknown;
+            if (hit(st, en)) {
+              bg = SVOC_WORD_BG[comp.color];
+              painted = true;
+              break outer;
+            }
+          }
+          if (hit(sv.objectStart, sv.objectEnd)) {
+            bg = SVOC_WORD_BG.green;
+            painted = true;
+            break;
+          }
+          if (hit(sv.complementStart, sv.complementEnd)) {
+            bg = SVOC_WORD_BG.purple;
             painted = true;
             break;
           }
         }
-        if (!painted) {
-          if (hit(sv.objectStart, sv.objectEnd)) bg = SVOC_WORD_BG.green;
-          else if (hit(sv.complementStart, sv.complementEnd)) bg = SVOC_WORD_BG.purple;
-        }
-      } else if (sv && showSvOverlay) {
+        void painted;
+      } else if (svocClauses.length > 0 && showSvOverlay) {
         const inRange = (s: unknown, e: unknown) =>
           typeof s === 'number' && s >= 0 && typeof e === 'number' && e >= 0 && wi >= s && wi <= e;
+        // overlay 는 첫 절의 S/V 만 표시 (기존 UX 유지)
+        const sv = svocClauses[0];
         if (inRange(sv.subjectStart, sv.subjectEnd)) {
           textDecoration = 'underline wavy';
           textDecorationColor = 'rgba(234,179,8,0.7)';
@@ -4022,6 +4068,104 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
                   <span className="text-pink-400/95">서술형</span>
                 </span>
               )}
+              {/*
+               * SVOC 모드: 활성 절 선택 + 절 추가/삭제. 등위접속 sentence 처럼 한 sentence 안에
+               * S+V 가 여러 셋 있을 때 절 단위로 따로 편집.
+               */}
+              {viewMode === 'svoc' &&
+                state &&
+                (() => {
+                  const clauses = getSvocClauses(state.svocData, si);
+                  const activeIdx = activeClauseBySentence[si] ?? 0;
+                  const visibleCount = Math.max(clauses.length, 1);
+                  const CLAUSE_MARK = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
+                  return (
+                    <span className="ml-auto inline-flex flex-wrap items-center gap-1">
+                      <span className="text-[9px] font-medium text-amber-300/70 mr-0.5">절:</span>
+                      {Array.from({ length: visibleCount }).map((_, ci) => {
+                        const active = ci === activeIdx;
+                        const empty = !clauses[ci] || (!clauses[ci].subject?.trim() && !clauses[ci].verb?.trim());
+                        return (
+                          <span key={ci} className="inline-flex items-center">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveClauseBySentence((prev) => ({ ...prev, [si]: ci }));
+                                setPending(null);
+                              }}
+                              className={`rounded-l-md px-1.5 py-0.5 text-[10px] font-semibold transition ${
+                                active
+                                  ? 'bg-amber-500/90 text-white ring-1 ring-amber-200/50'
+                                  : empty
+                                    ? 'bg-slate-700/70 text-slate-400 hover:bg-slate-600/70'
+                                    : 'bg-amber-900/60 text-amber-100 hover:bg-amber-800/70'
+                              }`}
+                              title={`절 ${ci + 1}${empty ? ' (비어있음)' : ''} — 클릭하면 편집 활성`}
+                            >
+                              {CLAUSE_MARK[ci] ?? `${ci + 1}`}
+                            </button>
+                            {visibleCount > 1 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (clauses.length <= 1) return;
+                                  updateState((s) => {
+                                    const sv = { ...(s.svocData || {}) };
+                                    const existing = getSvocClauses(s.svocData, si);
+                                    const next = existing.filter((_, i) => i !== ci);
+                                    if (next.length === 0) {
+                                      delete sv[si];
+                                    } else {
+                                      sv[si] = next;
+                                    }
+                                    return { ...s, svocData: sv };
+                                  });
+                                  // active 인덱스 보정
+                                  setActiveClauseBySentence((prev) => {
+                                    const cur = prev[si] ?? 0;
+                                    const adjusted = cur > ci ? cur - 1 : cur === ci ? Math.max(0, cur - 1) : cur;
+                                    return { ...prev, [si]: adjusted };
+                                  });
+                                  setPending(null);
+                                  setMsg(`절 ${ci + 1} 삭제됨.`);
+                                }}
+                                className="rounded-r-md border-l border-amber-950/60 bg-rose-900/70 px-1 py-0.5 text-[10px] text-rose-200 hover:bg-rose-800/80"
+                                title="이 절 삭제"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </span>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateState((s) => {
+                            const sv = { ...(s.svocData || {}) };
+                            const existing = getSvocClauses(s.svocData, si);
+                            sv[si] = [...existing, defaultSvocSentence()];
+                            return { ...s, svocData: sv };
+                          });
+                          // 새 절을 active 로
+                          setActiveClauseBySentence((prev) => ({
+                            ...prev,
+                            [si]: getSvocClauses(state.svocData, si).length,
+                          }));
+                          setPending(null);
+                          setMsg('새 절 추가됨 — 시작 단어부터 SVOC 지정하세요.');
+                        }}
+                        className="rounded-md bg-emerald-700/80 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-emerald-600/90"
+                        title="등위접속 절 등 SVOC 셋이 더 있을 때 추가"
+                      >
+                        + 절
+                      </button>
+                    </span>
+                  );
+                })()}
             </div>
             <p className="text-slate-200 leading-relaxed">
               {(sentence.split(/\s+/).filter(Boolean) || []).map((w, wi) => {

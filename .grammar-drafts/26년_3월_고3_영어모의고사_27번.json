@@ -1,0 +1,194 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd31",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 27번",
+  "title": "26년 3월 고3 영어모의고사 27번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "27번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "<River Breeze Campsite>",
+      "tokens": ["<River","Breeze","Campsite>"],
+      "korean": "<River Breeze 캠프장>"
+    },
+    {
+      "idx": 1,
+      "text": "Operating Hours",
+      "tokens": ["Operating","Hours"],
+      "korean": "운영 시간"
+    },
+    {
+      "idx": 2,
+      "text": "∙ Picnic Area: 11:00 a.m. - 10:00 p.m.",
+      "tokens": ["∙","Picnic","Area:","11:00","a.m.","-","10:00","p.m."],
+      "korean": "* 피크닉 구역: 오전 11시 ~ 오후 10시"
+    },
+    {
+      "idx": 3,
+      "text": "∙ Tent Area: 11:00 a.m. - 10:00 a.m. (next day)",
+      "tokens": ["∙","Tent","Area:","11:00","a.m.","-","10:00","a.m.","(next","day)"],
+      "korean": "* 텐트 구역: 오전 11시 ~ 오전 10시 (다음 날)"
+    },
+    {
+      "idx": 4,
+      "text": "Fees",
+      "tokens": ["Fees"],
+      "korean": "요금"
+    },
+    {
+      "idx": 5,
+      "text": "∙ Picnic Area - Ages 8 and Up: $4 per person - Ages 7 and Under: Free",
+      "tokens": ["∙","Picnic","Area","-","Ages","8","and","Up:","$4","per","person","-","Ages","7","and","Under:","Free"],
+      "korean": "* 피크닉 구역 - 8세 이상: 한 사람당 4달러 - 7세 이하: 무료"
+    },
+    {
+      "idx": 6,
+      "text": "∙ Tent Area - Tent Site: $15 per night (no tent provided) - Tent Rental: $20 per night",
+      "tokens": ["∙","Tent","Area","-","Tent","Site:","$15","per","night","(no","tent","provided)","-","Tent","Rental:","$20","per","night"],
+      "korean": "* 텐트 구역 - 텐트 자리: 1박당 15달러(텐트는 제공되지 않음) - 텐트 대여료: 1박당 20달러"
+    },
+    {
+      "idx": 7,
+      "text": "Guidelines",
+      "tokens": ["Guidelines"],
+      "korean": "지침"
+    },
+    {
+      "idx": 8,
+      "text": "∙ Only guests with a valid admission ticket may enter.",
+      "tokens": ["∙","Only","guests","with","a","valid","admission","ticket","may","enter."],
+      "korean": "* 유효한 입장권을 가진 손님만 입장할 수 있습니다."
+    },
+    {
+      "idx": 9,
+      "text": "∙ Campsite lights are turned off at 10:00 p.m. and guests should keep the noise down.",
+      "tokens": ["∙","Campsite","lights","are","turned","off","at","10:00","p.m.","and","guests","should","keep","the","noise","down."],
+      "korean": "* 캠프장 조명은 오후 10시에 꺼지며 손님은 소리를 낮춰야 합니다."
+    },
+    {
+      "idx": 10,
+      "text": "∙ For safety, the following is not allowed: - Fireworks - Flying drones over the campsite",
+      "tokens": ["∙","For","safety,","the","following","is","not","allowed:","-","Fireworks","-","Flying","drones","over","the","campsite"],
+      "korean": "* 안전을 위해 다음은 허용되지 않습니다: - 불꽃놀이 - 캠프장 상공에서 드론 비행하기"
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S6-T11-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "provided)",
+          "wrongCandidates": ["providing)"],
+          "grammarType": "분사",
+          "explanation": "'(no tent provided)'는 'no tent (which is) provided' 의 관계절에서 'which is' 가 생략된 형태로, 텐트가 제공되는 대상(수동)이므로 과거분사 'provided'가 맞다. 현재분사 'providing'은 텐트가 직접 제공하는 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "provide",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T3-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "with",
+          "wrongCandidates": ["of"],
+          "grammarType": "전치사",
+          "explanation": "'유효한 입장권을 소지한(가진) 손님'이라는 소유·동반의 의미를 나타내려면 전치사 'with'가 맞다. 'of'는 소유격을 나타내지만 'guests of a valid admission ticket'은 한국어 어법상 어색하고 영어에서도 통용되지 않으며, '~을 가진(소지한)' 의미로는 'with + 명사'를 쓴다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T4-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "turned",
+          "wrongCandidates": ["turning"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Campsite lights'는 스스로 끄는 주체가 아니라 누군가에 의해 꺼지는 대상(수동)이므로 'be + 과거분사' 구조인 'are turned off'가 맞다. 현재분사 'turning'을 쓰면 'are turning off'(능동의 진행형)가 되어 조명이 스스로 꺼지고 있다는 의미가 되어 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "turn",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T5-001",
+          "sentenceIdx": 10,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'the following'은 '다음의 것(들)'을 가리키는 대명사 역할을 하지만, 안내문에서 뒤이어 나열된 항목 전체를 하나의 묶음으로 받을 때는 단수 취급이 일반적이며 단수 동사 'is'가 자연스럽다. 뒤에 'Fireworks', 'Flying drones' 같은 복수 항목이 보인다고 해서 무조건 복수 'are'로 받으면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "provided)", "baseForm": "provide"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "turned", "baseForm": "turn"},
+        {"kind": "word", "sentenceIdx": 10, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "is", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "provided)", "wrongForm": "providing)", "explanation": "'(no tent provided)'는 'no tent (which is) provided' 의 관계절에서 'which is' 가 생략된 형태로, 텐트가 제공되는 대상(수동)이므로 과거분사 'provided'가 맞다. 현재분사 'providing'은 텐트가 직접 제공하는 능동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "with", "wrongForm": "of", "explanation": "'유효한 입장권을 소지한(가진) 손님'이라는 소유·동반의 의미를 나타내려면 전치사 'with'가 맞다. 'of'는 소유격을 나타내지만 'guests of a valid admission ticket'은 한국어 어법상 어색하고 영어에서도 통용되지 않으며, '~을 가진(소지한)' 의미로는 'with + 명사'를 쓴다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "turned", "wrongForm": "turning", "explanation": "주어 'Campsite lights'는 스스로 끄는 주체가 아니라 누군가에 의해 꺼지는 대상(수동)이므로 'be + 과거분사' 구조인 'are turned off'가 맞다. 현재분사 'turning'을 쓰면 'are turning off'(능동의 진행형)가 되어 조명이 스스로 꺼지고 있다는 의미가 되어 어색하다."},
+        {"sentenceIdx": 10, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'the following'은 '다음의 것(들)'을 가리키는 대명사 역할을 하지만, 안내문에서 뒤이어 나열된 항목 전체를 하나의 묶음으로 받을 때는 단수 취급이 일반적이며 단수 동사 'is'가 자연스럽다. 뒤에 'Fireworks', 'Flying drones' 같은 복수 항목이 보인다고 해서 무조건 복수 'are'로 받으면 안 된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "providing)", "correction": "provided)", "explanation": "텐트가 제공되는 대상(수동)이므로 과거분사 'provided'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "of", "correction": "with", "explanation": "'~을 소지(가진) 손님'의 의미는 'with + 명사'로 표현하므로 'with'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "turning", "correction": "turned", "explanation": "주어 'Campsite lights'가 꺼지는 대상(수동)이므로 'are turned off' 의 과거분사 'turned'로 고쳐야 한다."},
+        {"sentenceIdx": 10, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어 'the following'은 안내문에서 뒤이어 나열되는 항목 전체를 단수로 받으므로 'is'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "∙ Tent Area - Tent Site: $15 per night (no tent providing) - Tent Rental: $20 per night",
+          "isCorrect": false,
+          "correction": "∙ Tent Area - Tent Site: $15 per night (no tent provided) - Tent Rental: $20 per night",
+          "explanation": "텐트가 제공되는 대상(수동)이므로 과거분사 'provided'가 맞다."
+        },
+        {
+          "text": "∙ Only guests of a valid admission ticket may enter.",
+          "isCorrect": false,
+          "correction": "∙ Only guests with a valid admission ticket may enter.",
+          "explanation": "'~을 소지한 손님'의 의미는 전치사 'with'로 표현해야 한다."
+        },
+        {
+          "text": "∙ Campsite lights are turning off at 10:00 p.m. and guests should keep the noise down.",
+          "isCorrect": false,
+          "correction": "∙ Campsite lights are turned off at 10:00 p.m. and guests should keep the noise down.",
+          "explanation": "조명이 누군가에 의해 꺼지는 수동의 의미이므로 과거분사 'turned'가 맞다."
+        },
+        {
+          "text": "∙ For safety, the following are not allowed: - Fireworks - Flying drones over the campsite",
+          "isCorrect": false,
+          "correction": "∙ For safety, the following is not allowed: - Fireworks - Flying drones over the campsite",
+          "explanation": "주어 'the following'은 안내문에서 단수로 받는 것이 자연스러우므로 'is'가 맞다."
+        }
+      ]
+    }
+  }
+}

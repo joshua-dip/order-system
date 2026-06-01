@@ -1,0 +1,320 @@
+{
+  "passageId": "69d4eca372a886137cd83ed7",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "03강 03번",
+  "title": "지금필수 고난도유형(2026) 03강 03번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "03강 03번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "F. M. Alexander was an opera singer in the late 19th century who lost his voice unexpectedly and with no explanation.",
+      "tokens": ["F.","M.","Alexander","was","an","opera","singer","in","the","late","19th","century","who","lost","his","voice","unexpectedly","and","with","no","explanation."],
+      "korean": "F. M. Alexander는 이유도 알지 못한 채 느닷없이 목소리를 잃은 19세기 후반의 오페라 가수였다."
+    },
+    {
+      "idx": 1,
+      "text": "He suspected that he was somehow causing the problem himself, so he commenced an intensive study of his own posture and body use through the use of mirrors.",
+      "tokens": ["He","suspected","that","he","was","somehow","causing","the","problem","himself,","so","he","commenced","an","intensive","study","of","his","own","posture","and","body","use","through","the","use","of","mirrors."],
+      "korean": "그는 어쩐지 자기 스스로가 그 문제를 야기하고 있지 않은지 의심했고, 그래서 거울을 사용하여 자신의 자세와 몸 사용에 대한 철저한 연구를 시작했다."
+    },
+    {
+      "idx": 2,
+      "text": "He discovered that the way he was using his body was not as he perceived it.",
+      "tokens": ["He","discovered","that","the","way","he","was","using","his","body","was","not","as","he","perceived","it."],
+      "korean": "그는 자신이 몸을 쓰는 방법이 자신이 그것을 인지하는 대로가 아니라는 것을 발견했다."
+    },
+    {
+      "idx": 3,
+      "text": "In particular, he discovered that the alignment of his neck on his torso changed slightly when he sang.",
+      "tokens": ["In","particular,","he","discovered","that","the","alignment","of","his","neck","on","his","torso","changed","slightly","when","he","sang."],
+      "korean": "특히, 그는 자신이 노래를 부를 때 목과 몸통의 정렬이 살짝 바뀐다는 것을 발견했다."
+    },
+    {
+      "idx": 4,
+      "text": "This was impairing his vocal cords.",
+      "tokens": ["This","was","impairing","his","vocal","cords."],
+      "korean": "이것이 그의 성대를 손상시키고 있었다."
+    },
+    {
+      "idx": 5,
+      "text": "Simply by becoming aware of how he was holding himself, he regained his voice.",
+      "tokens": ["Simply","by","becoming","aware","of","how","he","was","holding","himself,","he","regained","his","voice."],
+      "korean": "자신이 몸을 어떤 자세로 유지하고 있는지 알게 된 것만으로, 그는 자신의 목소리를 되찾았다."
+    },
+    {
+      "idx": 6,
+      "text": "His studies led to the Alexander Technique ― a method of analyzing the way we use our body in everyday life.",
+      "tokens": ["His","studies","led","to","the","Alexander","Technique","―","a","method","of","analyzing","the","way","we","use","our","body","in","everyday","life."],
+      "korean": "그의 연구는 Alexander 기법으로 이어졌는데, 그것은 우리가 일상생활에서 우리의 몸을 쓰는 방법을 분석하는 수단이다."
+    },
+    {
+      "idx": 7,
+      "text": "There are now teachers of the technique all over the world.",
+      "tokens": ["There","are","now","teachers","of","the","technique","all","over","the","world."],
+      "korean": "이제는 전 세계적으로 그 기법을 가르치는 교사들이 있다."
+    },
+    {
+      "idx": 8,
+      "text": "The premise is that how we use our body in standing, sitting, breathing, walking, bending, and so forth affects how it functions.",
+      "tokens": ["The","premise","is","that","how","we","use","our","body","in","standing,","sitting,","breathing,","walking,","bending,","and","so","forth","affects","how","it","functions."],
+      "korean": "전제는 우리가 서 있을 때, 앉아 있을 때, 숨 쉴 때, 걸을 때, 몸을 숙일 때, 그리고 기타 행동을 할 때 우리의 몸을 쓰는 방식이 그것이 기능하는 방식에 영향을 미친다는 것이다."
+    },
+    {
+      "idx": 9,
+      "text": "Becoming aware of our habitual patterns of improper use and consciously improving them can often reduce pain and slow disease processes.",
+      "tokens": ["Becoming","aware","of","our","habitual","patterns","of","improper","use","and","consciously","improving","them","can","often","reduce","pain","and","slow","disease","processes."],
+      "korean": "우리의 습관적인 부적절한 사용 유형을 알고 의식적으로 그것을 개선하는 것이 흔히 통증을 감소시키고 질병의 진행을 늦출 수 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "lost",
+          "wrongCandidates": ["loses"],
+          "grammarType": "시제",
+          "explanation": "이 문장은 19세기 후반의 일을 서술하는 과거 시제(was) 문맥이므로, 관계대명사절 안의 동사도 과거형 'lost'가 맞다. 현재형 'loses'는 시제 일치를 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "lose",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T6-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "causing",
+          "wrongCandidates": ["caused"],
+          "grammarType": "분사",
+          "explanation": "'was + V-ing' 과거진행 구조이므로 현재분사 'causing'이 맞다. 과거분사 'caused'를 쓰면 'was caused'(수동)가 되어, 그가 스스로 문제를 야기하고 있다는 능동의 의미와 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "cause",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T12-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "as",
+          "wrongCandidates": ["like"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 'he perceived it'이라는 「주어+동사」 절이 이어지므로 접속사 'as'가 맞다. 'like'는 격식체에서 전치사로만 쓰여 뒤에 절을 직접 이끌 수 없으므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T13-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "changed",
+          "wrongCandidates": ["changes"],
+          "grammarType": "시제",
+          "explanation": "주절의 'discovered'와 종속절 끝의 'sang' 모두 과거 시제이므로, that절 안의 동사도 과거형 'changed'로 시제를 일치시켜야 한다. 현재형 'changes'는 과거 서술 문맥과 어긋난다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T2-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "impairing",
+          "wrongCandidates": ["impaired"],
+          "grammarType": "수동태",
+          "explanation": "주어 'This'(앞 문장의 정렬 변화)가 성대를 적극적으로 손상시키는 능동의 의미이므로 'was impairing'(과거진행 능동)이 맞다. 'was impaired'는 수동태가 되어 주어가 손상되는 대상이 되므로 의미가 뒤집힌다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "impair",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T2-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "becoming",
+          "wrongCandidates": ["become"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'becoming'이 맞다. 동사원형 'become'은 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "become",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T11-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "analyzing",
+          "wrongCandidates": ["analyzed"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'analyzing'이 맞다. 과거분사 'analyzed'는 'method'를 수식하려 해도 뒤에 목적어 'the way ...'가 있어 능동의 동명사 형태가 필요하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T1-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "'There + be' 구문에서는 뒤따르는 실제 주어에 동사를 일치시킨다. 주어 'teachers'가 복수이므로 'are'가 맞다. 단수형 'is'는 복수 주어와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T4-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "how",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "뒤에 'we use our body in ...'라는 완전한 절이 이어지므로 방법을 나타내는 관계부사/의문부사 'how'가 맞다. 'what'은 뒤에 불완전한 절(목적어·주어 결여)이 와야 하므로 완전한 절 앞에서는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T11-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "improving",
+          "wrongCandidates": ["to improve"],
+          "grammarType": "부정사",
+          "explanation": "문장 첫머리 동명사 주어 'Becoming aware ...'와 등위접속사 'and'로 병렬을 이루는 자리이므로 같은 동명사 형태 'improving'이 맞다. 부정사 'to improve'를 쓰면 동명사와 부정사가 섞여 병렬 구조가 깨진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "improve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "lost", "baseForm": "lose"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "causing", "baseForm": "cause"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "impairing", "baseForm": "impair"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "becoming", "baseForm": "become"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "improving", "baseForm": "improve"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "lost", "wrongForm": "loses", "explanation": "이 문장은 19세기 후반의 일을 서술하는 과거 시제(was) 문맥이므로, 관계대명사절 안의 동사도 과거형 'lost'가 맞다. 현재형 'loses'는 시제 일치를 어긋난다."},
+        {"sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "causing", "wrongForm": "caused", "explanation": "'was + V-ing' 과거진행 구조이므로 현재분사 'causing'이 맞다. 과거분사 'caused'를 쓰면 'was caused'(수동)가 되어, 그가 스스로 문제를 야기하고 있다는 능동의 의미와 충돌한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "as", "wrongForm": "like", "explanation": "뒤에 'he perceived it'이라는 「주어+동사」 절이 이어지므로 접속사 'as'가 맞다. 'like'는 격식체에서 전치사로만 쓰여 뒤에 절을 직접 이끌 수 없으므로 부적절하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "changed", "wrongForm": "changes", "explanation": "주절의 'discovered'와 종속절 끝의 'sang' 모두 과거 시제이므로, that절 안의 동사도 과거형 'changed'로 시제를 일치시켜야 한다. 현재형 'changes'는 과거 서술 문맥과 어긋난다."},
+        {"sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "impairing", "wrongForm": "impaired", "explanation": "주어 'This'(앞 문장의 정렬 변화)가 성대를 적극적으로 손상시키는 능동의 의미이므로 'was impairing'(과거진행 능동)이 맞다. 'was impaired'는 수동태가 되어 주어가 손상되는 대상이 되므로 의미가 뒤집힌다."},
+        {"sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "becoming", "wrongForm": "become", "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'becoming'이 맞다. 동사원형 'become'은 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "analyzing", "wrongForm": "analyzed", "explanation": "전치사 'of' 뒤에는 동명사가 와야 하므로 'analyzing'이 맞다. 과거분사 'analyzed'는 'method'를 수식하려 해도 뒤에 목적어 'the way ...'가 있어 능동의 동명사 형태가 필요하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "are", "wrongForm": "is", "explanation": "'There + be' 구문에서는 뒤따르는 실제 주어에 동사를 일치시킨다. 주어 'teachers'가 복수이므로 'are'가 맞다. 단수형 'is'는 복수 주어와 일치하지 않는다."},
+        {"sentenceIdx": 8, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "how", "wrongForm": "what", "explanation": "뒤에 'we use our body in ...'라는 완전한 절이 이어지므로 방법을 나타내는 관계부사/의문부사 'how'가 맞다. 'what'은 뒤에 불완전한 절(목적어·주어 결여)이 와야 하므로 완전한 절 앞에서는 쓸 수 없다."},
+        {"sentenceIdx": 9, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "improving", "wrongForm": "to improve", "explanation": "문장 첫머리 동명사 주어 'Becoming aware ...'와 등위접속사 'and'로 병렬을 이루는 자리이므로 같은 동명사 형태 'improving'이 맞다. 부정사 'to improve'를 쓰면 동명사와 부정사가 섞여 병렬 구조가 깨진다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "loses", "correction": "lost", "explanation": "과거 시제 서술 문맥이므로 'lost'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "caused", "correction": "causing", "explanation": "'was + V-ing' 과거진행 능동이 되도록 'causing'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "like", "correction": "as", "explanation": "뒤에 절(주어+동사)이 오므로 접속사 'as'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "changes", "correction": "changed", "explanation": "과거 서술 문맥(discovered, sang)에 맞춰 'changed'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "impaired", "correction": "impairing", "explanation": "주어가 능동적으로 손상시키므로 과거진행 능동 'impairing'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "become", "correction": "becoming", "explanation": "전치사 'by' 뒤이므로 동명사 'becoming'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "analyzed", "correction": "analyzing", "explanation": "전치사 'of' 뒤이고 뒤에 목적어가 있으므로 동명사 'analyzing'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'teachers'에 맞춰 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "what", "correction": "how", "explanation": "뒤에 완전한 절이 오므로 'how'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "to improve", "correction": "improving", "explanation": "주어 'Becoming aware'와 병렬이므로 동명사 'improving'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "F. M. Alexander was an opera singer in the late 19th century who loses his voice unexpectedly and with no explanation.",
+          "isCorrect": false,
+          "correction": "F. M. Alexander was an opera singer in the late 19th century who lost his voice unexpectedly and with no explanation.",
+          "explanation": "과거 시제 서술 문맥이므로 'lost'가 맞다."
+        },
+        {
+          "text": "He suspected that he was somehow caused the problem himself, so he commenced an intensive study of his own posture and body use through the use of mirrors.",
+          "isCorrect": false,
+          "correction": "He suspected that he was somehow causing the problem himself, so he commenced an intensive study of his own posture and body use through the use of mirrors.",
+          "explanation": "능동의 과거진행이 되도록 'causing'이 맞다."
+        },
+        {
+          "text": "He discovered that the way he was using his body was not like he perceived it.",
+          "isCorrect": false,
+          "correction": "He discovered that the way he was using his body was not as he perceived it.",
+          "explanation": "뒤에 절이 오므로 접속사 'as'가 맞다."
+        },
+        {
+          "text": "In particular, he discovered that the alignment of his neck on his torso changes slightly when he sang.",
+          "isCorrect": false,
+          "correction": "In particular, he discovered that the alignment of his neck on his torso changed slightly when he sang.",
+          "explanation": "과거 서술 문맥에 맞춰 'changed'가 맞다."
+        },
+        {
+          "text": "This was impaired his vocal cords.",
+          "isCorrect": false,
+          "correction": "This was impairing his vocal cords.",
+          "explanation": "능동의 과거진행 'was impairing'이 맞다."
+        },
+        {
+          "text": "Simply by become aware of how he was holding himself, he regained his voice.",
+          "isCorrect": false,
+          "correction": "Simply by becoming aware of how he was holding himself, he regained his voice.",
+          "explanation": "전치사 'by' 뒤에는 동명사 'becoming'이 맞다."
+        },
+        {
+          "text": "His studies led to the Alexander Technique ― a method of analyzed the way we use our body in everyday life.",
+          "isCorrect": false,
+          "correction": "His studies led to the Alexander Technique ― a method of analyzing the way we use our body in everyday life.",
+          "explanation": "전치사 'of' 뒤에는 동명사 'analyzing'이 맞다."
+        },
+        {
+          "text": "There is now teachers of the technique all over the world.",
+          "isCorrect": false,
+          "correction": "There are now teachers of the technique all over the world.",
+          "explanation": "복수 주어 'teachers'에 맞춰 'are'가 맞다."
+        },
+        {
+          "text": "The premise is that what we use our body in standing, sitting, breathing, walking, bending, and so forth affects how it functions.",
+          "isCorrect": false,
+          "correction": "The premise is that how we use our body in standing, sitting, breathing, walking, bending, and so forth affects how it functions.",
+          "explanation": "뒤에 완전한 절이 오므로 관계부사 'how'가 맞다."
+        },
+        {
+          "text": "Becoming aware of our habitual patterns of improper use and consciously to improve them can often reduce pain and slow disease processes.",
+          "isCorrect": false,
+          "correction": "Becoming aware of our habitual patterns of improper use and consciously improving them can often reduce pain and slow disease processes.",
+          "explanation": "동명사 주어 'Becoming'과 병렬이므로 'improving'이 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -71,8 +71,12 @@ interface CreateAccountResult {
   loginId?: string;
   name?: string;
   initialPassword?: string;
+  couponGrantedPct?: number | null;
   error?: string;
 }
+
+/** 가입 환영 쿠폰 기본 할인율 (포인트 구매 할인) */
+const WELCOME_COUPON_PCT = 10;
 
 export default function AdminMembershipApplicationsPage() {
   const router = useRouter();
@@ -90,6 +94,8 @@ export default function AdminMembershipApplicationsPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [accountResult, setAccountResult] = useState<CreateAccountResult | null>(null);
   const [copyMsg, setCopyMsg] = useState('');
+  // 계정 자동 생성 시 가입 환영 쿠폰(포인트 10% 할인) 함께 지급 여부
+  const [grantWelcomeCoupon, setGrantWelcomeCoupon] = useState(true);
 
   // 인증
   useEffect(() => {
@@ -154,12 +160,17 @@ export default function AdminMembershipApplicationsPage() {
   };
 
   const createAccount = async (id: string, name: string) => {
-    if (!confirm(`「${name}」 신청자로부터 사용자 계정을 자동 생성합니다.\n전화번호 = 로그인ID, 초기 비밀번호 발급. 계속할까요?`)) return;
+    const couponMsg = grantWelcomeCoupon
+      ? `\n포인트 구매 ${WELCOME_COUPON_PCT}% 할인 쿠폰도 함께 지급됩니다.`
+      : '';
+    if (!confirm(`「${name}」 신청자로부터 사용자 계정을 자동 생성합니다.\n전화번호 = 로그인ID, 초기 비밀번호 발급.${couponMsg}\n계속할까요?`)) return;
     setActionId(id);
     try {
       const r = await fetch(`/api/admin/membership-applications/${id}/create-account`, {
         method: 'POST',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantCouponPct: grantWelcomeCoupon ? WELCOME_COUPON_PCT : undefined }),
       });
       const j = await r.json();
       if (!r.ok) {
@@ -170,11 +181,33 @@ export default function AdminMembershipApplicationsPage() {
           loginId: j.loginId,
           name: j.name,
           initialPassword: j.initialPassword,
+          couponGrantedPct: j.couponGrantedPct ?? null,
         });
         load();
       }
     } catch (e) {
       setAccountResult({ ok: false, error: (e as Error).message ?? '오류' });
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const grantCoupon = async (id: string, name: string) => {
+    if (!confirm(`「${name}」 회원에게 포인트 구매 ${WELCOME_COUPON_PCT}% 할인 쿠폰을 지급합니다.\n계속할까요?`)) return;
+    setActionId(id);
+    try {
+      const r = await fetch(`/api/admin/membership-applications/${id}/grant-coupon`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discountPct: WELCOME_COUPON_PCT }),
+      });
+      const j = await r.json();
+      setCopyMsg(r.ok ? `✓ ${WELCOME_COUPON_PCT}% 할인 쿠폰 지급 완료` : (j.error ?? '쿠폰 지급 실패'));
+      window.setTimeout(() => setCopyMsg(''), 2200);
+    } catch {
+      setCopyMsg('쿠폰 지급 실패');
+      window.setTimeout(() => setCopyMsg(''), 2200);
     } finally {
       setActionId(null);
     }
@@ -253,6 +286,18 @@ export default function AdminMembershipApplicationsPage() {
                 {lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} 기준
               </span>
             )}
+            <label
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-600 text-sm text-slate-300 cursor-pointer hover:bg-slate-700/60 select-none"
+              title="계정 자동 생성 시 포인트 구매 할인 쿠폰을 함께 지급합니다."
+            >
+              <input
+                type="checkbox"
+                checked={grantWelcomeCoupon}
+                onChange={(e) => setGrantWelcomeCoupon(e.target.checked)}
+                className="h-4 w-4 accent-amber-400"
+              />
+              🎟 계정 생성 시 {WELCOME_COUPON_PCT}% 쿠폰 함께 지급
+            </label>
             <button
               type="button"
               onClick={load}
@@ -498,6 +543,17 @@ export default function AdminMembershipApplicationsPage() {
                       거절
                     </button>
                   )}
+                  {app.status === 'completed' && (
+                    <button
+                      type="button"
+                      disabled={actionId === app.id}
+                      onClick={() => grantCoupon(app.id, app.name)}
+                      className="px-3 py-1.5 rounded-lg border border-amber-500/50 text-amber-300 text-sm font-medium hover:bg-amber-900/20 disabled:opacity-60 transition"
+                      title={`이미 만들어진 계정에 포인트 구매 ${WELCOME_COUPON_PCT}% 할인 쿠폰을 지급합니다.`}
+                    >
+                      🎟 쿠폰 지급
+                    </button>
+                  )}
                   {app.status !== 'pending' && (
                     <button
                       type="button"
@@ -590,6 +646,12 @@ export default function AdminMembershipApplicationsPage() {
                     </div>
                   </div>
                 </div>
+                {accountResult.couponGrantedPct ? (
+                  <div className="mt-3 rounded-xl border border-amber-500/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-200 flex items-center gap-2">
+                    <span className="text-lg">🎟</span>
+                    포인트 구매 {accountResult.couponGrantedPct}% 할인 쿠폰이 함께 지급되었습니다.
+                  </div>
+                ) : null}
                 <div className="mt-4 flex flex-col gap-2">
                   <button
                     type="button"

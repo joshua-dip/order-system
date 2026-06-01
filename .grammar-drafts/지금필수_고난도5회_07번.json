@@ -1,0 +1,264 @@
+{
+  "passageId": "69d4eca372a886137cd83f11",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 07번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 07번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 07번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Miners and mine owners were always looking for alternatives to candles.",
+      "tokens": ["Miners","and","mine","owners","were","always","looking","for","alternatives","to","candles."],
+      "korean": "광부와 광산 주인들은 항상 양초를 대신할 수 있는 것을 찾고 있었다."
+    },
+    {
+      "idx": 1,
+      "text": "Although miners’ candles were exceedingly small but it was believed a small candle might prevent the ignition of firedamp, everything thought of as a substitute for them provided less light than even those slim solitary candles.",
+      "tokens": ["Although","miners’","candles","were","exceedingly","small","but","it","was","believed","a","small","candle","might","prevent","the","ignition","of","firedamp,","everything","thought","of","as","a","substitute","for","them","provided","less","light","than","even","those","slim","solitary","candles."],
+      "korean": "광부들의 초는 너무나 작았지만, 작은 초가 탄갱 안의 폭발성 가스의 점화를 막을지도 모른다고 생각되었기 때문에 그 대체품으로 여겨졌던 모든 것은 그 얇고 하나뿐인 양초보다도 빛을 덜 제공했다."
+    },
+    {
+      "idx": 2,
+      "text": "It’s almost inconceivable now to imagine how slight and shifting was the illumination miners worked by so far below the earth’s surface.",
+      "tokens": ["It’s","almost","inconceivable","now","to","imagine","how","slight","and","shifting","was","the","illumination","miners","worked","by","so","far","below","the","earth’s","surface."],
+      "korean": "광부들이 지구 표면 아래 아주 멀리 떨어진 곳에서 의지하며 작업을 했던 조명이 얼마나 하찮고 변하기 쉬웠는지 상상하는 것은 지금으로서는 거의 생각도 할 수 없는 일이다."
+    },
+    {
+      "idx": 3,
+      "text": "One device, a flint mill, required boys to accompany the miners down the shafts.",
+      "tokens": ["One","device,","a","flint","mill,","required","boys","to","accompany","the","miners","down","the","shafts."],
+      "korean": "한 장치인 부싯돌을 가는 기구는 소년들에게 (탄광의) 수직 통로를 따라 광부들과 동행해 내려갈 것을 요구했다."
+    },
+    {
+      "idx": 4,
+      "text": "Each boy worked a mill, which might be strapped to his leg or hung from his neck.",
+      "tokens": ["Each","boy","worked","a","mill,","which","might","be","strapped","to","his","leg","or","hung","from","his","neck."],
+      "korean": "각각의 소년은 (부싯돌을) 가는 기구를 사용했는데, 그것은 그의 다리에 묶여 있거나 그의 목에 매달려있을 수도 있다."
+    },
+    {
+      "idx": 5,
+      "text": "It was made of a steel disk set in a small steel frame and a handle attached to a spur wheel, which turned the disk.",
+      "tokens": ["It","was","made","of","a","steel","disk","set","in","a","small","steel","frame","and","a","handle","attached","to","a","spur","wheel,","which","turned","the","disk."],
+      "korean": "그것은 작은 강철로 된 틀에 설치된 강철 디스크와 평톱니바퀴에 부착된 핸들로 만들어졌는데, 그것이 디스크를 돌렸다."
+    },
+    {
+      "idx": 6,
+      "text": "The boy held a piece of flint against the disk as he rotated it so as to produce streams of sparks for the miner to work by.",
+      "tokens": ["The","boy","held","a","piece","of","flint","against","the","disk","as","he","rotated","it","so","as","to","produce","streams","of","sparks","for","the","miner","to","work","by."],
+      "korean": "소년은 광부가 의지하며 일할 일련의 불꽃을 만들어 내기 위해 디스크를 회전시키면서 부싯돌 조각을 잡아서 디스크에 부딪치게 했다."
+    },
+    {
+      "idx": 7,
+      "text": "The sparks were usually too cool to set off the gas, but not always.",
+      "tokens": ["The","sparks","were","usually","too","cool","to","set","off","the","gas,","but","not","always."],
+      "korean": "불꽃은 보통 너무 차가워서 폭발 가스를 유발할 수 없었지만, 항상 그렇지는 않았다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T7-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "for",
+          "wrongCandidates": ["to"],
+          "grammarType": "전치사",
+          "explanation": "'look for ~'는 '~을 찾다'라는 의미의 숙어로 전치사 'for'가 와야 한다. 'look to'는 '~에 의지하다/기대다'의 의미가 되어 '양초를 대신할 것을 찾고 있었다'라는 문맥과 맞지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T20-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 20,
+          "endTokenIdx": 20,
+          "correctForm": "thought",
+          "wrongCandidates": ["thinking"],
+          "grammarType": "분사",
+          "explanation": "'everything (which was) thought of as a substitute'에서 'which was'가 생략된 수동 의미의 과거분사 'thought'가 명사 'everything'을 뒤에서 수식한다. 'everything'은 생각의 대상(수동)이므로 능동의 현재분사 'thinking'은 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "think",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T10-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "was",
+          "wrongCandidates": ["were"],
+          "grammarType": "수일치",
+          "explanation": "'how slight and shifting was the illumination'은 보어가 앞으로 나간 도치 구조로, 진주어는 단수 명사 'the illumination'이다. 따라서 단수 동사 'was'가 맞다. 보어 'slight and shifting'에 끌려 복수 'were'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T7-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 7,
+          "endTokenIdx": 8,
+          "correctForm": "to accompany",
+          "wrongCandidates": ["accompany"],
+          "grammarType": "부정사",
+          "explanation": "'require + 목적어 + to부정사'의 5형식 구조로, 목적격보어 자리에는 to부정사가 와야 한다. 따라서 'to accompany'가 맞고, 동사원형 'accompany'는 이 구조에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "콤마 뒤에 오는 계속적 용법의 관계사 자리이며 선행사 'a mill'을 받는다. 따라서 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없고, 계속적 용법으로도 쓰이지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T16-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "attached",
+          "wrongCandidates": ["attaching"],
+          "grammarType": "수동태",
+          "explanation": "'a handle (which was) attached to a spur wheel'에서 'which was'가 생략된 형태로, 핸들은 평톱니바퀴에 '부착되는' 대상(수동)이므로 과거분사 'attached'가 맞다. 능동을 나타내는 현재분사 'attaching'은 핸들이 무언가를 부착한다는 부적절한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "attach",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T12-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "rotated",
+          "wrongCandidates": ["rotating"],
+          "grammarType": "시제",
+          "explanation": "접속사 'as'가 이끄는 부사절 안에는 정형 동사가 필요하며, 주절의 동사 'held'(과거)와 시제 일치를 위해 과거형 'rotated'가 맞다. 'rotating'은 분사형이라 절의 본동사 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "rotate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T2-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "were",
+          "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "주어 'The sparks'가 복수이므로 복수형 be동사 'were'가 맞다. 단수 동사 'was'는 단수 주어와만 쓸 수 있어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "thought", "baseForm": "think"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "was", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "attached", "baseForm": "attach"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "rotated", "baseForm": "rotate"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "were", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "for", "wrongForm": "to", "explanation": "'look for ~'는 '~을 찾다'라는 의미의 숙어로 전치사 'for'가 와야 한다. 'look to'는 '~에 의지하다/기대다'의 의미가 되어 '양초를 대신할 것을 찾고 있었다'라는 문맥과 맞지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "thought", "wrongForm": "thinking", "explanation": "'everything (which was) thought of as a substitute'에서 'which was'가 생략된 수동 의미의 과거분사 'thought'가 명사 'everything'을 뒤에서 수식한다. 'everything'은 생각의 대상(수동)이므로 능동의 현재분사 'thinking'은 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "was", "wrongForm": "were", "explanation": "'how slight and shifting was the illumination'은 보어가 앞으로 나간 도치 구조로, 진주어는 단수 명사 'the illumination'이다. 따라서 단수 동사 'was'가 맞다. 보어 'slight and shifting'에 끌려 복수 'were'를 쓰면 안 된다."},
+        {"sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 8, "correctForm": "to accompany", "wrongForm": "accompany", "explanation": "'require + 목적어 + to부정사'의 5형식 구조로, 목적격보어 자리에는 to부정사가 와야 한다. 따라서 'to accompany'가 맞고, 동사원형 'accompany'는 이 구조에 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "which", "wrongForm": "what", "explanation": "콤마 뒤에 오는 계속적 용법의 관계사 자리이며 선행사 'a mill'을 받는다. 따라서 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때 쓸 수 없고, 계속적 용법으로도 쓰이지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "attached", "wrongForm": "attaching", "explanation": "'a handle (which was) attached to a spur wheel'에서 'which was'가 생략된 형태로, 핸들은 평톱니바퀴에 '부착되는' 대상(수동)이므로 과거분사 'attached'가 맞다. 능동을 나타내는 현재분사 'attaching'은 핸들이 무언가를 부착한다는 부적절한 의미가 된다."},
+        {"sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "rotated", "wrongForm": "rotating", "explanation": "접속사 'as'가 이끄는 부사절 안에는 정형 동사가 필요하며, 주절의 동사 'held'(과거)와 시제 일치를 위해 과거형 'rotated'가 맞다. 'rotating'은 분사형이라 절의 본동사 자리에 올 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "were", "wrongForm": "was", "explanation": "주어 'The sparks'가 복수이므로 복수형 be동사 'were'가 맞다. 단수 동사 'was'는 단수 주어와만 쓸 수 있어 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "to", "correction": "for", "explanation": "'look for ~'는 '~을 찾다'의 숙어이므로 전치사 'for'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "isError": true, "wrongForm": "thinking", "correction": "thought", "explanation": "'everything'이 생각의 대상(수동)이므로 'which was'가 생략된 과거분사 'thought'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "were", "correction": "was", "explanation": "도치된 구조의 진주어가 단수 'the illumination'이므로 'was'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 8, "isError": true, "wrongForm": "accompany", "correction": "to accompany", "explanation": "'require + 목적어 + to부정사' 구조이므로 'to accompany'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사 'a mill'이 있는 계속적 용법이므로 'which'로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 5, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "attaching", "correction": "attached", "explanation": "핸들이 부착되는 대상(수동)이므로 과거분사 'attached'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "rotating", "correction": "rotated", "explanation": "'as' 부사절의 본동사 자리이고 주절(held)과 시제 일치해야 하므로 과거형 'rotated'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "was", "correction": "were", "explanation": "주어 'The sparks'가 복수이므로 'were'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Miners and mine owners were always looking to alternatives to candles.",
+          "isCorrect": false,
+          "correction": "Miners and mine owners were always looking for alternatives to candles.",
+          "explanation": "'~을 찾다'는 'look for'이므로 전치사 'for'가 맞다."
+        },
+        {
+          "text": "Although miners’ candles were exceedingly small but it was believed a small candle might prevent the ignition of firedamp, everything thinking of as a substitute for them provided less light than even those slim solitary candles.",
+          "isCorrect": false,
+          "correction": "Although miners’ candles were exceedingly small but it was believed a small candle might prevent the ignition of firedamp, everything thought of as a substitute for them provided less light than even those slim solitary candles.",
+          "explanation": "'everything'이 생각의 대상(수동)이므로 과거분사 'thought'가 맞다."
+        },
+        {
+          "text": "It’s almost inconceivable now to imagine how slight and shifting were the illumination miners worked by so far below the earth’s surface.",
+          "isCorrect": false,
+          "correction": "It’s almost inconceivable now to imagine how slight and shifting was the illumination miners worked by so far below the earth’s surface.",
+          "explanation": "도치 구조의 진주어가 단수 'the illumination'이므로 'was'가 맞다."
+        },
+        {
+          "text": "One device, a flint mill, required boys accompany the miners down the shafts.",
+          "isCorrect": false,
+          "correction": "One device, a flint mill, required boys to accompany the miners down the shafts.",
+          "explanation": "'require + 목적어 + to부정사' 구조이므로 'to accompany'가 맞다."
+        },
+        {
+          "text": "Each boy worked a mill, what might be strapped to his leg or hung from his neck.",
+          "isCorrect": false,
+          "correction": "Each boy worked a mill, which might be strapped to his leg or hung from his neck.",
+          "explanation": "선행사 'a mill'이 있는 계속적 용법이므로 'which'가 맞다."
+        },
+        {
+          "text": "It was made of a steel disk set in a small steel frame and a handle attaching to a spur wheel, which turned the disk.",
+          "isCorrect": false,
+          "correction": "It was made of a steel disk set in a small steel frame and a handle attached to a spur wheel, which turned the disk.",
+          "explanation": "핸들이 부착되는 대상(수동)이므로 과거분사 'attached'가 맞다."
+        },
+        {
+          "text": "The boy held a piece of flint against the disk as he rotating it so as to produce streams of sparks for the miner to work by.",
+          "isCorrect": false,
+          "correction": "The boy held a piece of flint against the disk as he rotated it so as to produce streams of sparks for the miner to work by.",
+          "explanation": "'as' 부사절의 본동사이고 주절(held)과 시제 일치해야 하므로 'rotated'가 맞다."
+        },
+        {
+          "text": "The sparks was usually too cool to set off the gas, but not always.",
+          "isCorrect": false,
+          "correction": "The sparks were usually too cool to set off the gas, but not always.",
+          "explanation": "주어 'The sparks'가 복수이므로 'were'가 맞다."
+        }
+      ]
+    }
+  }
+}

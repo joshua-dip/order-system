@@ -1,0 +1,208 @@
+{
+  "passageId": "69d4eca372a886137cd83ed9",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "03강 05번",
+  "title": "지금필수 고난도유형(2026) 03강 05번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "03강 05번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The wise realize that self-knowledge requires ceaseless maintenance.",
+      "tokens": ["The","wise","realize","that","self-knowledge","requires","ceaseless","maintenance."],
+      "korean": "현명한 사람은 자기 지식이 끊임없는 유지가 필요하다는 것을 깨닫는다."
+    },
+    {
+      "idx": 1,
+      "text": "Socrates says that his pursuit of self-knowledge is a full time job, leaving him no opportunity to follow other interests.",
+      "tokens": ["Socrates","says","that","his","pursuit","of","self-knowledge","is","a","full","time","job,","leaving","him","no","opportunity","to","follow","other","interests."],
+      "korean": "Socrates는 자기 지식의 추구는 전일제 일자리여서, 그에게 다른 관심사를 추구할 기회를 남기지 않는다고 말한다."
+    },
+    {
+      "idx": 2,
+      "text": "Human wisdom is not an acquisition; it is a process sustained by frequent reminders of the wonders and terrors that we are.",
+      "tokens": ["Human","wisdom","is","not","an","acquisition;","it","is","a","process","sustained","by","frequent","reminders","of","the","wonders","and","terrors","that","we","are."],
+      "korean": "인간의 지혜는 습득물이 아니다. 그것은 우리가 존재한다는 놀라움과 공포를 빈번하게 상기시키는 것에 의해 유지되는 과정이다."
+    },
+    {
+      "idx": 3,
+      "text": "That is why we can make progress in human wisdom by seeing Hamlet more than once ― not because we need to see it often to understand the play (although that is true), but because we need to understand the same thing many times over so as to provide for it the deep roots from which it may flourish over time.",
+      "tokens": ["That","is","why","we","can","make","progress","in","human","wisdom","by","seeing","Hamlet","more","than","once","―","not","because","we","need","to","see","it","often","to","understand","the","play","(although","that","is","true),","but","because","we","need","to","understand","the","same","thing","many","times","over","so","as","to","provide","for","it","the","deep","roots","from","which","it","may","flourish","over","time."],
+      "korean": "그것이 우리가 <Hamlet>을 한 번 이상 보면서 인간의 지혜에 진전을 이룰 수 있는 이유인데, (사실이기는 하지만) 그 연극을 이해하기 위해 그것을 자주 볼 필요가 있기 때문이 아니라, 시간이 지나면서 인간의 지혜가 번성할 수 있는 깊은 뿌리를 그것에게 제공하기 위해 우리는 같은 것을 여러 번 반복해서 이해할 필요가 있기 때문이다."
+    },
+    {
+      "idx": 4,
+      "text": "But many reminders are not enough; we need to take them to heart, and this calls for courage and attention over time.",
+      "tokens": ["But","many","reminders","are","not","enough;","we","need","to","take","them","to","heart,","and","this","calls","for","courage","and","attention","over","time."],
+      "korean": "하지만 상기시키는 것으로는 충분하지 않다. 우리는 그것들을 마음에 새겨둘 필요가 있고, 이것은 시간이 흐르면서 용기와 관심을 요구한다."
+    },
+    {
+      "idx": 5,
+      "text": "Those who watch wisely do not watch absentmindedly; they watch with care and keep what they have seen on their minds afterward.",
+      "tokens": ["Those","who","watch","wisely","do","not","watch","absentmindedly;","they","watch","with","care","and","keep","what","they","have","seen","on","their","minds","afterward."],
+      "korean": "현명하게 보는 사람은 멍하니 보지 않는다. 그들은 주의 깊게 보고 나중에 자신들이 본 것을 마음에 간직한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T2-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "realize",
+          "wrongCandidates": ["realizes"],
+          "grammarType": "수일치",
+          "explanation": "주어 'The wise'는 'the + 형용사' 형태로 '현명한 사람들'을 뜻하는 복수 보통명사이므로 복수형 동사 'realize'가 맞다. 단수형 'realizes'는 단수 주어에 쓰여야 한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "realize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T12-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "leaving",
+          "wrongCandidates": ["left"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'his pursuit of self-knowledge'가 그에게 기회를 능동적으로 남기지 않는다는 의미이므로 현재분사 'leaving'이 맞다. 과거분사 'left'는 수동의 의미가 되어 주어가 '남겨지는' 대상이 되므로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "leave",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T10-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "sustained",
+          "wrongCandidates": ["sustaining"],
+          "grammarType": "수동태",
+          "explanation": "선행 명사 'a process'가 빈번한 상기시킴에 의해 '유지되는' 대상이므로 수동의 의미인 과거분사 'sustained'가 맞다. 현재분사 'sustaining'은 능동의 의미가 되어 'process'가 무언가를 유지한다는 뜻이 되므로 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "sustain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T55-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 55,
+          "endTokenIdx": 56,
+          "correctForm": "from which",
+          "wrongCandidates": ["from where"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the deep roots'는 사물(장소가 아닌 추상적 뿌리)이므로 '전치사 + 관계대명사' 'from which'가 맞다. 관계부사 'from where'는 일반적으로 사용되지 않으며, 'roots'를 장소처럼 다루는 것도 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T15-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "calls",
+          "wrongCandidates": ["call"],
+          "grammarType": "수일치",
+          "explanation": "주어 'this'는 단수 지시대명사이므로 3인칭 단수 현재형 'calls'가 맞다. 복수형 'call'은 복수 주어에 쓰여야 한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "call",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T14-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "what",
+          "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "동사 'keep'의 목적어 자리에 선행사 없이 명사절이 와야 하므로 선행사를 포함하는 관계대명사 'what'(= the thing(s) that)이 맞다. 'that'은 선행사가 있어야 하는 관계대명사이므로 선행사 없이 단독으로 명사절을 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "realize", "baseForm": "realize"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "leaving", "baseForm": "leave"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "sustained", "baseForm": "sustain"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "calls", "baseForm": "call"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "realize", "wrongForm": "realizes", "explanation": "주어 'The wise'는 'the + 형용사' 형태로 '현명한 사람들'을 뜻하는 복수 보통명사이므로 복수형 동사 'realize'가 맞다. 단수형 'realizes'는 단수 주어에 쓰여야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "leaving", "wrongForm": "left", "explanation": "분사구문의 의미상 주어 'his pursuit of self-knowledge'가 그에게 기회를 능동적으로 남기지 않는다는 의미이므로 현재분사 'leaving'이 맞다. 과거분사 'left'는 수동의 의미가 되어 주어가 '남겨지는' 대상이 되므로 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "sustained", "wrongForm": "sustaining", "explanation": "선행 명사 'a process'가 빈번한 상기시킴에 의해 '유지되는' 대상이므로 수동의 의미인 과거분사 'sustained'가 맞다. 현재분사 'sustaining'은 능동의 의미가 되어 'process'가 무언가를 유지한다는 뜻이 되므로 문맥과 맞지 않다."},
+        {"sentenceIdx": 3, "startTokenIdx": 55, "endTokenIdx": 56, "correctForm": "from which", "wrongForm": "from where", "explanation": "선행사 'the deep roots'는 사물(장소가 아닌 추상적 뿌리)이므로 '전치사 + 관계대명사' 'from which'가 맞다. 관계부사 'from where'는 일반적으로 사용되지 않으며, 'roots'를 장소처럼 다루는 것도 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "calls", "wrongForm": "call", "explanation": "주어 'this'는 단수 지시대명사이므로 3인칭 단수 현재형 'calls'가 맞다. 복수형 'call'은 복수 주어에 쓰여야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "what", "wrongForm": "that", "explanation": "동사 'keep'의 목적어 자리에 선행사 없이 명사절이 와야 하므로 선행사를 포함하는 관계대명사 'what'(= the thing(s) that)이 맞다. 'that'은 선행사가 있어야 하는 관계대명사이므로 선행사 없이 단독으로 명사절을 이끌 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "realizes", "correction": "realize", "explanation": "복수 주어 'The wise'(현명한 사람들)에 맞춰 복수형 'realize'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "left", "correction": "leaving", "explanation": "분사구문의 의미상 주어가 능동적으로 기회를 남기지 않는다는 의미이므로 현재분사 'leaving'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "sustaining", "correction": "sustained", "explanation": "'a process'가 유지되는 대상(수동)이므로 과거분사 'sustained'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 55, "endTokenIdx": 56, "isError": true, "wrongForm": "from where", "correction": "from which", "explanation": "선행사 'the deep roots'는 사물이므로 '전치사 + 관계대명사' 'from which'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "call", "correction": "calls", "explanation": "단수 주어 'this'에 맞춰 단수형 'calls'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "that", "correction": "what", "explanation": "선행사 없이 명사절을 이끄는 자리이므로 선행사 포함 관계대명사 'what'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The wise realizes that self-knowledge requires ceaseless maintenance.",
+          "isCorrect": false,
+          "correction": "The wise realize that self-knowledge requires ceaseless maintenance.",
+          "explanation": "주어 'The wise'는 '현명한 사람들'을 뜻하는 복수 보통명사이므로 'realize'가 맞다."
+        },
+        {
+          "text": "Socrates says that his pursuit of self-knowledge is a full time job, left him no opportunity to follow other interests.",
+          "isCorrect": false,
+          "correction": "Socrates says that his pursuit of self-knowledge is a full time job, leaving him no opportunity to follow other interests.",
+          "explanation": "분사구문의 의미상 주어가 능동적으로 기회를 남기지 않는다는 의미이므로 현재분사 'leaving'이 맞다."
+        },
+        {
+          "text": "Human wisdom is not an acquisition; it is a process sustaining by frequent reminders of the wonders and terrors that we are.",
+          "isCorrect": false,
+          "correction": "Human wisdom is not an acquisition; it is a process sustained by frequent reminders of the wonders and terrors that we are.",
+          "explanation": "'a process'가 유지되는 대상(수동)이므로 과거분사 'sustained'가 맞다."
+        },
+        {
+          "text": "That is why we can make progress in human wisdom by seeing Hamlet more than once ― not because we need to see it often to understand the play (although that is true), but because we need to understand the same thing many times over so as to provide for it the deep roots from where it may flourish over time.",
+          "isCorrect": false,
+          "correction": "That is why we can make progress in human wisdom by seeing Hamlet more than once ― not because we need to see it often to understand the play (although that is true), but because we need to understand the same thing many times over so as to provide for it the deep roots from which it may flourish over time.",
+          "explanation": "선행사 'the deep roots'는 사물이므로 '전치사 + 관계대명사' 'from which'가 맞다."
+        },
+        {
+          "text": "But many reminders are not enough; we need to take them to heart, and this call for courage and attention over time.",
+          "isCorrect": false,
+          "correction": "But many reminders are not enough; we need to take them to heart, and this calls for courage and attention over time.",
+          "explanation": "단수 주어 'this'에 맞춰 단수형 'calls'가 맞다."
+        },
+        {
+          "text": "Those who watch wisely do not watch absentmindedly; they watch with care and keep that they have seen on their minds afterward.",
+          "isCorrect": false,
+          "correction": "Those who watch wisely do not watch absentmindedly; they watch with care and keep what they have seen on their minds afterward.",
+          "explanation": "선행사 없이 'keep'의 목적어 명사절을 이끌어야 하므로 선행사 포함 관계대명사 'what'이 맞다."
+        }
+      ]
+    }
+  }
+}

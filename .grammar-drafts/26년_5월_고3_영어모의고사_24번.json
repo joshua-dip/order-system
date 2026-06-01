@@ -1,0 +1,340 @@
+{
+  "passageId": "69fe3e8d36e33281b7111f7e",
+  "textbook": "26년 5월 고3 영어모의고사",
+  "sourceKey": "26년 5월 고3 영어모의고사 24번",
+  "title": "26년 5월 고3 영어모의고사 24번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "고3",
+    "questionNumber": "어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "There are fundamental differences between our attention to animals and our attention to plants, and these are deeply embedded in our visual systems.",
+      "tokens": ["There", "are", "fundamental", "differences", "between", "our", "attention", "to", "animals", "and", "our", "attention", "to", "plants,", "and", "these", "are", "deeply", "embedded", "in", "our", "visual", "systems."],
+      "korean": "우리의 동물에 대한 주의와 식물에 대한 주의 사이에는 기본적인 차이점들이 있으며, 이것들은 우리의 시각 체계에 깊이 박혀 있다."
+    },
+    {
+      "idx": 1,
+      "text": "One study used a core tool from visual cognition studies called \"attentional blink.\"",
+      "tokens": ["One", "study", "used", "a", "core", "tool", "from", "visual", "cognition", "studies", "called", "\"attentional", "blink.\""],
+      "korean": "한 연구는 '주의 깜박임'이라고 불리는 시각 인지 연구들의 핵심 도구를 사용했다."
+    },
+    {
+      "idx": 2,
+      "text": "\"Blink\" is when the focus that is given to one object slows down our ability to engage with a new object.",
+      "tokens": ["\"Blink\"", "is", "when", "the", "focus", "that", "is", "given", "to", "one", "object", "slows", "down", "our", "ability", "to", "engage", "with", "a", "new", "object."],
+      "korean": "'깜박임'이란 하나의 대상에 주어진 주의가 새로운 대상에 관여하는 우리의 능력을 둔화시키는 현상이다."
+    },
+    {
+      "idx": 3,
+      "text": "Our visual processing power is a finite resource, so the more attention the first object takes up, the slower we are to shift on to the second.",
+      "tokens": ["Our", "visual", "processing", "power", "is", "a", "finite", "resource,", "so", "the", "more", "attention", "the", "first", "object", "takes", "up,", "the", "slower", "we", "are", "to", "shift", "on", "to", "the", "second."],
+      "korean": "우리의 시각 처리 능력은 유한한 자원이기 때문에, 첫 번째 대상이 더 많은 주의를 차지할수록 우리는 두 번째 대상으로 주의를 전환하는데 더 느려진다."
+    },
+    {
+      "idx": 4,
+      "text": "In this study, one group of people were first shown an animal and another group were first shown a plant.",
+      "tokens": ["In", "this", "study,", "one", "group", "of", "people", "were", "first", "shown", "an", "animal", "and", "another", "group", "were", "first", "shown", "a", "plant."],
+      "korean": "이 연구에서 한 집단의 사람들에게는 먼저 동물이 보여졌고, 다른 집단의 사람들에게는 먼저 식물이 보여졌다."
+    },
+    {
+      "idx": 5,
+      "text": "A second object, a water droplet, followed in quick succession.",
+      "tokens": ["A", "second", "object,", "a", "water", "droplet,", "followed", "in", "quick", "succession."],
+      "korean": "두 번째 대상인 물방울이 빠르게 뒤이어 제시되었다."
+    },
+    {
+      "idx": 6,
+      "text": "Those looking at an animal initially were much less likely to see the water than those first looking at a plant.",
+      "tokens": ["Those", "looking", "at", "an", "animal", "initially", "were", "much", "less", "likely", "to", "see", "the", "water", "than", "those", "first", "looking", "at", "a", "plant."],
+      "korean": "처음에 동물을 본 사람들은 식물을 먼저 본 사람들보다 그 물방울을 볼 가능성이 훨씬 낮았다."
+    },
+    {
+      "idx": 7,
+      "text": "The plant simply took up less of their attention, freeing up capacity to notice other things.",
+      "tokens": ["The", "plant", "simply", "took", "up", "less", "of", "their", "attention,", "freeing", "up", "capacity", "to", "notice", "other", "things."],
+      "korean": "그 식물은 단순히 그들의 주의를 덜 차지했고, 다른 것들을 알아차릴 수 있는 능력에 여유를 주었다."
+    },
+    {
+      "idx": 8,
+      "text": "Plants are not only thought of as less interesting, they are fundamentally given less processing power in our visual system, becoming a mass of crowded, unmoving background greenery.",
+      "tokens": ["Plants", "are", "not", "only", "thought", "of", "as", "less", "interesting,", "they", "are", "fundamentally", "given", "less", "processing", "power", "in", "our", "visual", "system,", "becoming", "a", "mass", "of", "crowded,", "unmoving", "background", "greenery."],
+      "korean": "식물은 단지 덜 흥미롭다고 '여겨질' 뿐만 아니라, 우리의 시각 체계에서 기본적으로 더 적은 처리 능력을 할당받아, 빽빽하게 모여 움직이지 않는 배후의 초록색 잎 덩어리가 된다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "F": { "blocks": [] },
+    "P": {
+      "points": [
+        {
+          "id": "S0-T1-001",
+          "sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "are", "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "There + be + 복수 명사(fundamental differences) 도치 구문이므로 복수형 are 가 맞음. 단수 is 는 수일치 위반.",
+          "koCorrect": "있으며",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T4-002",
+          "sentenceIdx": 0, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "between", "wrongCandidates": ["among"],
+          "grammarType": "전치사",
+          "explanation": "두 대상(animals vs plants) 사이의 차이를 나타내는 상관 구문 between A and B 의 between 이 맞음. among 은 셋 이상 사이를 의미해 부적절.",
+          "koCorrect": "사이에는",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S0-T18-003",
+          "sentenceIdx": 0, "startTokenIdx": 18, "endTokenIdx": 18,
+          "correctForm": "embedded", "wrongCandidates": ["embedding"],
+          "grammarType": "수동태",
+          "explanation": "these(=differences) 가 '박혀 있는' 수동 관계 (are embedded) 이므로 과거분사 embedded 가 맞음. 현재분사 embedding 은 능동이라 부적절.",
+          "koCorrect": "박혀 있다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "embed",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-004",
+          "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2,
+          "correctForm": "used", "wrongCandidates": ["uses"],
+          "grammarType": "시제",
+          "explanation": "본문이 과거 연구 사례를 서술하는 과거시제이므로 used 가 맞음. 현재시제 uses 는 과거 시제 흐름과 불일치.",
+          "koCorrect": "사용했다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "use",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T6-005",
+          "sentenceIdx": 1, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "from", "wrongCandidates": ["of"],
+          "grammarType": "전치사",
+          "explanation": "'~으로부터/~출처의' 의 출처 의미이므로 from 이 맞음. of 는 소속 의미라 본 문맥에서 부적절.",
+          "koCorrect": "들의",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T10-006",
+          "sentenceIdx": 1, "startTokenIdx": 10, "endTokenIdx": 10,
+          "correctForm": "called", "wrongCandidates": ["calling"],
+          "grammarType": "분사",
+          "explanation": "a core tool 이 '불리는' 수동 분사구이므로 과거분사 called 가 맞음. 현재분사 calling 은 능동(부르는)이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "불리는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "call",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-007",
+          "sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5,
+          "correctForm": "that", "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 the focus 가 있고 뒤 절이 주어 자리 불완전이므로 주격 관계대명사 that 가 맞음. what 은 선행사를 포함해 부적절.",
+          "koCorrect": "주의",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T11-008",
+          "sentenceIdx": 2, "startTokenIdx": 11, "endTokenIdx": 11,
+          "correctForm": "slows", "wrongCandidates": ["slow"],
+          "grammarType": "수일치",
+          "explanation": "관계사절(that is given to one object)을 걷어내면 주어 the focus 는 단수이므로 단수동사 slows 가 맞음. 복수 slow 는 수일치 위반(관계절 삽입 뒤 수일치 함정).",
+          "koCorrect": "둔화시키는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "slow",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T16-009",
+          "sentenceIdx": 2, "startTokenIdx": 16, "endTokenIdx": 16,
+          "correctForm": "engage", "wrongCandidates": ["engaging"],
+          "grammarType": "부정사",
+          "explanation": "명사 ability 를 수식하는 to 부정사 (to engage) 이므로 동사원형 engage 가 맞음. 동명사 engaging 은 to 뒤에 올 수 없음.",
+          "koCorrect": "관여하는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "engage",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T8-010",
+          "sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "so", "wrongCandidates": ["but"],
+          "grammarType": "접속사",
+          "explanation": "앞 절(자원이 유한하다)의 결과로 뒤 절을 잇는 결과 접속사 so 가 맞음. but 은 역접이라 인과 흐름과 모순.",
+          "koCorrect": "때문에",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T18-011",
+          "sentenceIdx": 3, "startTokenIdx": 18, "endTokenIdx": 18,
+          "correctForm": "slower", "wrongCandidates": ["slow"],
+          "grammarType": "형용사",
+          "explanation": "the more ~ the X-er 비교 상관구문이므로 비교급 slower 가 맞음. 원급 slow 는 비교 표현이 빠져 부적절.",
+          "koCorrect": "더 느려진다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "slow",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T22-012",
+          "sentenceIdx": 3, "startTokenIdx": 22, "endTokenIdx": 22,
+          "correctForm": "shift", "wrongCandidates": ["shifting"],
+          "grammarType": "부정사",
+          "explanation": "to 부정사 (be slower to shift) 구조이므로 동사원형 shift 가 맞음. 동명사 shifting 은 to 뒤에 올 수 없음.",
+          "koCorrect": "전환하는데",
+          "uses": ["F", "G", "H", "J"], "baseForm": "shift",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T7-013",
+          "sentenceIdx": 4, "startTokenIdx": 7, "endTokenIdx": 7,
+          "correctForm": "were", "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "주어 one group of people 에서 의미상의 복수 주체 people 에 동의해 복수형 were 가 맞음(영국식 group + 복수). 단수 was 는 본 문맥의 복수 동의에 부적절.",
+          "koCorrect": "에게는",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T9-014",
+          "sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "shown", "wrongCandidates": ["showing"],
+          "grammarType": "수동태",
+          "explanation": "people 이 동물을 '보여 받는' 수동 관계 (were shown) 이므로 과거분사 shown 이 맞음. 현재분사 showing 은 능동(보여주는)이라 부적절.",
+          "koCorrect": "보여졌고",
+          "uses": ["F", "G", "H", "J"], "baseForm": "show",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-015",
+          "sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "followed", "wrongCandidates": ["follows"],
+          "grammarType": "시제",
+          "explanation": "본문이 과거 연구 사례를 서술하는 과거시제이므로 followed 가 맞음. 현재시제 follows 는 시제 흐름과 불일치.",
+          "koCorrect": "뒤이어 제시되었다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "follow",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T7-016",
+          "sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7,
+          "correctForm": "in", "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'빠른 연속으로' 의 정해진 표현 in quick succession 의 in 이 맞음. with 는 이 결합형에 부적절.",
+          "koCorrect": "빠르게",
+          "uses": ["G", "H", "J"],
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T8-017",
+          "sentenceIdx": 5, "startTokenIdx": 8, "endTokenIdx": 8,
+          "correctForm": "quick", "wrongCandidates": ["quickly"],
+          "grammarType": "형용사",
+          "explanation": "명사 succession 을 수식하므로 형용사 quick 이 맞음. 부사 quickly 는 명사 수식 불가.",
+          "koCorrect": "빠르게",
+          "uses": ["F", "G", "H", "J"], "baseForm": "quick",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T1-018",
+          "sentenceIdx": 6, "startTokenIdx": 1, "endTokenIdx": 1,
+          "correctForm": "looking", "wrongCandidates": ["looked"],
+          "grammarType": "분사",
+          "explanation": "Those(=사람들) 가 동물을 '보는' 능동 의미이므로 현재분사 looking 이 맞음. 과거분사 looked 는 수동(보여진)이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "본",
+          "uses": ["F", "G", "H", "J"], "baseForm": "look",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T6-019",
+          "sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6,
+          "correctForm": "were", "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "삽입 분사구(looking at an animal initially)를 걷어내면 주어 Those 는 복수이므로 복수형 were 가 맞음. 단수 was 는 수일치 위반(삽입어구 뒤 수일치 고빈도 함정).",
+          "koCorrect": "낮았다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "be",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T11-020",
+          "sentenceIdx": 6, "startTokenIdx": 11, "endTokenIdx": 11,
+          "correctForm": "see", "wrongCandidates": ["seeing"],
+          "grammarType": "부정사",
+          "explanation": "형용사 likely + to 부정사 (likely to see) 구조이므로 동사원형 see 가 맞음. 동명사 seeing 은 to 뒤에 올 수 없음.",
+          "koCorrect": "볼",
+          "uses": ["F", "G", "H", "J"], "baseForm": "see",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T3-021",
+          "sentenceIdx": 7, "startTokenIdx": 3, "endTokenIdx": 3,
+          "correctForm": "took", "wrongCandidates": ["takes"],
+          "grammarType": "시제",
+          "explanation": "본문이 과거 연구 사례를 서술하는 과거시제이므로 took 가 맞음. 현재시제 takes 는 시제 흐름과 불일치.",
+          "koCorrect": "차지했고",
+          "uses": ["F", "G", "H", "J"], "baseForm": "take",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T9-022",
+          "sentenceIdx": 7, "startTokenIdx": 9, "endTokenIdx": 9,
+          "correctForm": "freeing", "wrongCandidates": ["freed"],
+          "grammarType": "분사",
+          "explanation": "주어 The plant 가 capacity 를 '풀어주는' 능동 분사구문이므로 현재분사 freeing 이 맞음. 과거분사 freed 는 수동이라 부적절(분사구문 능동/수동 고빈도 함정).",
+          "koCorrect": "여유를 주었다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "free",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T13-023",
+          "sentenceIdx": 7, "startTokenIdx": 13, "endTokenIdx": 13,
+          "correctForm": "notice", "wrongCandidates": ["noticing"],
+          "grammarType": "부정사",
+          "explanation": "명사 capacity 를 수식하는 to 부정사 (to notice) 이므로 동사원형 notice 가 맞음. 동명사 noticing 은 to 뒤에 올 수 없음.",
+          "koCorrect": "알아차릴",
+          "uses": ["F", "G", "H", "J"], "baseForm": "notice",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T4-024",
+          "sentenceIdx": 8, "startTokenIdx": 4, "endTokenIdx": 4,
+          "correctForm": "thought", "wrongCandidates": ["thinking"],
+          "grammarType": "수동태",
+          "explanation": "Plants 가 '여겨지는' 수동 관계 (are thought of as) 이므로 과거분사 thought 가 맞음. 현재분사 thinking 은 능동이라 부적절.",
+          "koCorrect": "여겨질",
+          "uses": ["F", "G", "H", "J"], "baseForm": "think",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T20-025",
+          "sentenceIdx": 8, "startTokenIdx": 20, "endTokenIdx": 20,
+          "correctForm": "becoming", "wrongCandidates": ["become"],
+          "grammarType": "분사",
+          "explanation": "주어 they(=Plants) 가 '되어가는' 능동 분사구문이므로 현재분사 becoming 이 맞음. 동사원형 become 은 분사구문 자리에 부적절(분사구문 능동/수동 함정).",
+          "koCorrect": "된다",
+          "uses": ["F", "G", "H", "J"], "baseForm": "become",
+          "hRole": "error", "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T24-026",
+          "sentenceIdx": 8, "startTokenIdx": 24, "endTokenIdx": 24,
+          "correctForm": "crowded,", "wrongCandidates": ["crowding,"],
+          "grammarType": "분사",
+          "explanation": "greenery 가 '빽빽하게 모인' 수동 의미이므로 과거분사 crowded 가 맞음. 현재분사 crowding 은 능동(모으는)이라 부적절(분사 능동/수동 함정).",
+          "koCorrect": "빽빽하게 모여",
+          "uses": ["F", "G", "H", "J"], "baseForm": "crowd",
+          "hRole": "error", "jVariant": "wrong"
+        }
+      ]
+    },
+    "G": { "points": [] },
+    "H": { "spans": [] },
+    "J": { "items": [] }
+  }
+}

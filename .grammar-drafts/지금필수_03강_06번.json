@@ -1,0 +1,239 @@
+{
+  "passageId": "69d4eca372a886137cd83eda",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "03강 06번",
+  "title": "지금필수 고난도유형(2026) 03강 06번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "03강 06번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "A great deal of attention has been placed on discovering ways in which human-computer interactions could be improved.",
+      "tokens": ["A","great","deal","of","attention","has","been","placed","on","discovering","ways","in","which","human-computer","interactions","could","be","improved."],
+      "korean": "인간과 컴퓨터의 상호 작용이 개선될 수 있는 방법을 찾는 데 많은 관심이 집중되어왔다."
+    },
+    {
+      "idx": 1,
+      "text": "The early work, when computers were still in their relative infancy, focused on a variety of factors, such as text display and means-steps analyses.",
+      "tokens": ["The","early","work,","when","computers","were","still","in","their","relative","infancy,","focused","on","a","variety","of","factors,","such","as","text","display","and","means-steps","analyses."],
+      "korean": "컴퓨터가 아직 상대적으로 유아기에 있었던 초기 연구는 텍스트 보여 주기와 수단 및 단계 분석과 같은 다양한 요인에 초점을 맞추었다."
+    },
+    {
+      "idx": 2,
+      "text": "In the main, these early studies were interested in linking computer operations with normal cognitive operations, so computers could become friendlier to the user.",
+      "tokens": ["In","the","main,","these","early","studies","were","interested","in","linking","computer","operations","with","normal","cognitive","operations,","so","computers","could","become","friendlier","to","the","user."],
+      "korean": "이러한 초기 연구들은 주로 컴퓨터 조작과 정상적인 인지 작용을 연결시키는 것에 관심이 있었는데, 그래서 컴퓨터가 사용자에게 더 친숙해질 수 있었다."
+    },
+    {
+      "idx": 3,
+      "text": "For example, early work provided clear evidence that people need to be able to see a certain amount of text in order to understand what they are reading.",
+      "tokens": ["For","example,","early","work","provided","clear","evidence","that","people","need","to","be","able","to","see","a","certain","amount","of","text","in","order","to","understand","what","they","are","reading."],
+      "korean": "예를 들어, 초기 연구는 사람들이 읽고 있는 것을 이해하기 위해 일정한 양의 텍스트를 볼 필요가 있다는 명백한 증거를 제공했다."
+    },
+    {
+      "idx": 4,
+      "text": "When the screen displayed too little text, the person was unable to remember sufficiently what had come before.",
+      "tokens": ["When","the","screen","displayed","too","little","text,","the","person","was","unable","to","remember","sufficiently","what","had","come","before."],
+      "korean": "화면이 너무 적은 텍스트를 보여 주었을 때, 사람은 이전에 나왔던 내용을 충분히 기억할 수 없었다."
+    },
+    {
+      "idx": 5,
+      "text": "This resulted in considerably poorer comprehension, and meant that they were forced to return to the earlier text, an unnecessary and cost-ineffective action.",
+      "tokens": ["This","resulted","in","considerably","poorer","comprehension,","and","meant","that","they","were","forced","to","return","to","the","earlier","text,","an","unnecessary","and","cost-ineffective","action."],
+      "korean": "이것은 상당히 이해력이 더 좋지 않게 되는 결과를 초래했고, 사람들이 불필요하고 비용상 비효율적인 행동인 이전의 텍스트로 돌아가야 함을 의미했다."
+    },
+    {
+      "idx": 6,
+      "text": "This early work had a significant impact on computer design; for example, the modification of text sizes (e.g. the zoom function).",
+      "tokens": ["This","early","work","had","a","significant","impact","on","computer","design;","for","example,","the","modification","of","text","sizes","(e.g.","the","zoom","function)."],
+      "korean": "이러한 초기 연구는 컴퓨터 설계, 예를 들어, 줌 기능과 같은 텍스트 크기의 수정에 상당한 영향을 미쳤다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T7-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "placed",
+          "wrongCandidates": ["placing"],
+          "grammarType": "수동태",
+          "explanation": "'has been + p.p.' 현재완료 수동태 구조이므로 과거분사 'placed'가 맞다. 'placing'은 능동의 현재분사로 수동의 의미를 만들지 못한다. 주어 'A great deal of attention'은 행위의 대상이므로 수동태가 적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "place",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T11-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "focused",
+          "wrongCandidates": ["focusing"],
+          "grammarType": "분사",
+          "explanation": "문장의 주어 'The early work'에 대한 본동사가 필요한 자리이므로 과거시제 동사 'focused'가 맞다. 'focusing'은 분사·동명사로 본동사 역할을 할 수 없어 문장에 동사가 사라진다. 'when ... infancy' 부분은 삽입된 시간 부사절이다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "focus",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T9-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "linking",
+          "wrongCandidates": ["link"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'in' 뒤에는 동명사가 와야 하므로 'linking'이 맞다. 동사원형 'link'는 전치사의 목적어가 될 수 없다. 'be interested in -ing'는 굳어진 표현이다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "link",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T24-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 24,
+          "endTokenIdx": 24,
+          "correctForm": "what",
+          "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "'understand'의 목적어 자리이며 뒤에 'they are reading'에 목적어가 빠진 불완전한 절이 오고 선행사가 없으므로 선행사를 포함한 관계대명사 'what'이 맞다. 'that'은 선행사가 필요해 이 자리에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T3-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "displayed",
+          "wrongCandidates": ["displays"],
+          "grammarType": "시제",
+          "explanation": "주절의 동사 'was'가 과거형이고 전반적인 서술 시제가 과거이므로 시간 부사절에도 과거시제 'displayed'가 맞다. 현재형 'displays'는 시제 일치를 깨뜨려 부자연스럽다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "display",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T11-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "forced",
+          "wrongCandidates": ["forcing"],
+          "grammarType": "수동태",
+          "explanation": "'be forced to + V'는 '~하도록 강요받다'라는 수동태 구문으로 과거분사 'forced'가 맞다. 'forcing'은 현재분사·동명사로 능동의 의미가 되어 주어 'they'가 강요당하는 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "force",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T3-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "had",
+          "wrongCandidates": ["has"],
+          "grammarType": "수일치",
+          "explanation": "주어 'This early work'는 단수이지만 앞뒤 문맥(과거 시제 서술)에 맞춰 과거형 'had'가 와야 한다. 현재완료 동사 'has'를 단독으로 쓰면 본동사가 빠진 불완전한 문장이 되고 시제도 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "placed", "baseForm": "place"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "focused", "baseForm": "focus"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "linking", "baseForm": "link"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "displayed", "baseForm": "display"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "forced", "baseForm": "force"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "had", "baseForm": "have"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "placed", "wrongForm": "placing", "explanation": "'has been + p.p.' 현재완료 수동태 구조이므로 과거분사 'placed'가 맞다. 'placing'은 능동의 현재분사로 수동의 의미를 만들지 못한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "focused", "wrongForm": "focusing", "explanation": "문장의 주어 'The early work'에 대한 본동사가 필요한 자리이므로 'focused'가 맞다. 'focusing'은 분사로 본동사 역할을 할 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "linking", "wrongForm": "link", "explanation": "전치사 'in' 뒤에는 동명사가 와야 하므로 'linking'이 맞다. 동사원형 'link'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 24, "endTokenIdx": 24, "correctForm": "what", "wrongForm": "that", "explanation": "'understand'의 목적어 자리이고 선행사가 없으므로 선행사를 포함한 관계대명사 'what'이 맞다. 'that'은 선행사가 필요해 이 자리에 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "displayed", "wrongForm": "displays", "explanation": "주절 동사가 과거형 'was'이므로 시간 부사절에도 과거시제 'displayed'가 맞다. 현재형 'displays'는 시제 일치를 깨뜨린다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "forced", "wrongForm": "forcing", "explanation": "'be forced to + V'는 수동태 구문으로 과거분사 'forced'가 맞다. 'forcing'은 능동의 의미가 되어 주어 'they'가 강요당하는 문맥과 충돌한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "had", "wrongForm": "has", "explanation": "앞뒤 문맥의 과거시제 흐름에 맞춰 과거형 'had'가 와야 한다. 'has'를 쓰면 본동사가 빠진 셈이 되고 시제도 어긋난다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "placing", "correction": "placed", "explanation": "'has been + p.p.' 수동태이므로 과거분사 'placed'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "focusing", "correction": "focused", "explanation": "주어 'The early work'의 본동사 자리이므로 'focused'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "link", "correction": "linking", "explanation": "전치사 'in' 뒤이므로 동명사 'linking'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 24, "endTokenIdx": 24, "isError": true, "wrongForm": "that", "correction": "what", "explanation": "선행사가 없으므로 선행사를 포함한 관계대명사 'what'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "displays", "correction": "displayed", "explanation": "주절 시제가 과거이므로 과거형 'displayed'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "forcing", "correction": "forced", "explanation": "'be forced to' 수동태 구문이므로 과거분사 'forced'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "has", "correction": "had", "explanation": "과거시제 문맥이므로 'had'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "A great deal of attention has been placing on discovering ways in which human-computer interactions could be improved.",
+          "isCorrect": false,
+          "correction": "A great deal of attention has been placed on discovering ways in which human-computer interactions could be improved.",
+          "explanation": "'has been + p.p.' 현재완료 수동태이므로 과거분사 'placed'가 맞다."
+        },
+        {
+          "text": "The early work, when computers were still in their relative infancy, focusing on a variety of factors, such as text display and means-steps analyses.",
+          "isCorrect": false,
+          "correction": "The early work, when computers were still in their relative infancy, focused on a variety of factors, such as text display and means-steps analyses.",
+          "explanation": "주어 'The early work'의 본동사가 필요하므로 'focused'가 맞다."
+        },
+        {
+          "text": "In the main, these early studies were interested in link computer operations with normal cognitive operations, so computers could become friendlier to the user.",
+          "isCorrect": false,
+          "correction": "In the main, these early studies were interested in linking computer operations with normal cognitive operations, so computers could become friendlier to the user.",
+          "explanation": "전치사 'in' 뒤에는 동명사 'linking'이 와야 한다."
+        },
+        {
+          "text": "For example, early work provided clear evidence that people need to be able to see a certain amount of text in order to understand that they are reading.",
+          "isCorrect": false,
+          "correction": "For example, early work provided clear evidence that people need to be able to see a certain amount of text in order to understand what they are reading.",
+          "explanation": "선행사 없이 'understand'의 목적어 절을 이끄므로 'what'이 맞다."
+        },
+        {
+          "text": "When the screen displays too little text, the person was unable to remember sufficiently what had come before.",
+          "isCorrect": false,
+          "correction": "When the screen displayed too little text, the person was unable to remember sufficiently what had come before.",
+          "explanation": "주절이 과거시제이므로 시간 부사절도 과거시제 'displayed'가 맞다."
+        },
+        {
+          "text": "This resulted in considerably poorer comprehension, and meant that they were forcing to return to the earlier text, an unnecessary and cost-ineffective action.",
+          "isCorrect": false,
+          "correction": "This resulted in considerably poorer comprehension, and meant that they were forced to return to the earlier text, an unnecessary and cost-ineffective action.",
+          "explanation": "'be forced to + V' 수동태 구문이므로 과거분사 'forced'가 맞다."
+        },
+        {
+          "text": "This early work has a significant impact on computer design; for example, the modification of text sizes (e.g. the zoom function).",
+          "isCorrect": false,
+          "correction": "This early work had a significant impact on computer design; for example, the modification of text sizes (e.g. the zoom function).",
+          "explanation": "과거시제 문맥이므로 'had'가 맞다."
+        }
+      ]
+    }
+  }
+}

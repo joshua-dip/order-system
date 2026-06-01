@@ -1,8 +1,10 @@
-/** 변형문제 만들기 — 삽입-고난도 1문항 생성 시 차감 포인트 */
+/** 변형문제 만들기 — 고난도 1문항 생성 시 차감 포인트 (삽입-고난도·어법-고난도) */
 export const VARIANT_HARD_INSERTION_POINT_COST = 5;
 
+const HARD_VARIANT_TYPES = new Set(['삽입-고난도', '어법-고난도']);
+
 export function variantTypeRequiresHardInsertionPoints(type: string): boolean {
-  return type.trim() === '삽입-고난도';
+  return HARD_VARIANT_TYPES.has(type.trim());
 }
 
 /** 초안 1개 생성 시 차감 포인트. 무료 유형은 null */

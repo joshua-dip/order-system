@@ -1,0 +1,264 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd2d",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 23번",
+  "title": "26년 3월 고3 영어모의고사 23번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "23번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Young employees agree that AI has more positive impact with the dynamics of the workforce, though there are major concerns on job loss and being left behind.",
+      "tokens": ["Young","employees","agree","that","AI","has","more","positive","impact","with","the","dynamics","of","the","workforce,","though","there","are","major","concerns","on","job","loss","and","being","left","behind."],
+      "korean": "젊은 직원들은 AI가 노동 인력의 역학에 더 긍정적인 영향을 미친다는 것에 동의하기는 하지만, 실직과 뒤처지는 것에 대한 큰 우려가 있다."
+    },
+    {
+      "idx": 1,
+      "text": "While AI has the potential to automate certain jobs, it is also giving rise to new career opportunities and demands.",
+      "tokens": ["While","AI","has","the","potential","to","automate","certain","jobs,","it","is","also","giving","rise","to","new","career","opportunities","and","demands."],
+      "korean": "AI가 특정 직업을 자동화할 잠재력이 있긴 하지만, 그것은 또한 새로운 직업 기회와 수요를 생기게 하고 있다."
+    },
+    {
+      "idx": 2,
+      "text": "The increasing application of AI technology has led to a sudden increase in the need for professionals who can effectively manage and get the most out of AI systems.",
+      "tokens": ["The","increasing","application","of","AI","technology","has","led","to","a","sudden","increase","in","the","need","for","professionals","who","can","effectively","manage","and","get","the","most","out","of","AI","systems."],
+      "korean": "AI 기술 적용의 증가는 AI 시스템을 효과적으로 관리하고 최대한으로 활용할 수 있는 전문가에 대한 필요성의 급증으로 이어졌다."
+    },
+    {
+      "idx": 3,
+      "text": "Moreover, soft skills such as innovative thinking, problem-solving abilities, and the capability for interdisciplinary collaboration are gaining greater recognition.",
+      "tokens": ["Moreover,","soft","skills","such","as","innovative","thinking,","problem-solving","abilities,","and","the","capability","for","interdisciplinary","collaboration","are","gaining","greater","recognition."],
+      "korean": "게다가, 혁신적 사고, 문제 해결 능력, 그리고 학문 간 협력을 위한 역량과 같은 소프트 스킬이 더 큰 인정을 받고 있다."
+    },
+    {
+      "idx": 4,
+      "text": "In the age of AI, continuous learning has become an essential quality for professionals in the workplace.",
+      "tokens": ["In","the","age","of","AI,","continuous","learning","has","become","an","essential","quality","for","professionals","in","the","workplace."],
+      "korean": "AI의 시대에, 지속적인 학습은 직장에서 전문가에게 필수적인 자질이 되었다."
+    },
+    {
+      "idx": 5,
+      "text": "The ever-evolving technological landscape necessitates employees to consistently update their skills, acquire new knowledge, and adapt to the dynamic changes in the work environment.",
+      "tokens": ["The","ever-evolving","technological","landscape","necessitates","employees","to","consistently","update","their","skills,","acquire","new","knowledge,","and","adapt","to","the","dynamic","changes","in","the","work","environment."],
+      "korean": "끊임없이 진화하는 기술적 지형은 직원이 지속적으로 자기 기술을 최신의 것으로 만들고, 새로운 지식을 습득하고, 직업 환경에서의 역동적인 변화에 적응할 것을 필요로 한다."
+    },
+    {
+      "idx": 6,
+      "text": "Only reskilling and adaptability can help resolve the workforce of the future.",
+      "tokens": ["Only","reskilling","and","adaptability","can","help","resolve","the","workforce","of","the","future."],
+      "korean": "오직 재교육과 적응력만이 미래의 노동 인력을 해결하는 데 도움을 줄 수 있다."
+    },
+    {
+      "idx": 7,
+      "text": "Implanting a culture of ongoing learning by fostering a workplace culture that encourages continuous learning and skill development should be a main priority for each organization.",
+      "tokens": ["Implanting","a","culture","of","ongoing","learning","by","fostering","a","workplace","culture","that","encourages","continuous","learning","and","skill","development","should","be","a","main","priority","for","each","organization."],
+      "korean": "지속적인 학습과 기술 개발을 장려하는 직장 문화를 조성함으로써 계속 진행되는 학습의 문화를 심어 주는 것은 각 조직의 주요 우선순위이어야 한다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T17-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "'there + be + 주어' 구문에서 진주어는 'major concerns'(복수)이므로 복수형 be 동사 'are'가 맞다. 'is'는 단수 주어에만 쓸 수 있어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T12-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "giving",
+          "wrongCandidates": ["given"],
+          "grammarType": "시제",
+          "explanation": "'is also ___ rise to' 구조는 현재진행형 'is giving'이 되어야 하므로 현재분사 'giving'이 맞다. 과거분사 'given'은 수동태가 되어 'AI가 rise를 받는다'는 어색한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "give",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T17-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'professionals'(사람)를 수식하는 주격 관계대명사이므로 'who'가 맞다. 'which'는 사물·동물을 선행사로 받을 때 쓰는 관계대명사라 사람에는 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T15-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'soft skills'는 복수이므로 복수형 be 동사 'are'가 맞다. 'such as ...'의 단수 명사들에 이끌려 'is'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T8-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "become",
+          "wrongCandidates": ["became"],
+          "grammarType": "시제",
+          "explanation": "앞에 조동사 'has'가 있으므로 현재완료(has + p.p.)를 이루는 과거분사 'become'이 맞다. 'became'은 단순 과거형으로 'has' 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "become",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "to",
+          "wrongCandidates": ["of"],
+          "grammarType": "부정사",
+          "explanation": "'necessitate' 같은 동사가 'employees ___ update ...' 구조를 취할 때 'to부정사'를 목적격 보어로 받으므로 'to'가 맞다. 전치사 'of'는 이 구조에서 쓰일 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T6-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "resolve",
+          "wrongCandidates": ["resolving"],
+          "grammarType": "부정사",
+          "explanation": "동사 'help'는 목적어로 동사원형(원형부정사) 또는 to부정사를 취하므로 'resolve'(원형)가 맞다. 동명사 'resolving'은 'help'의 목적어로 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "resolve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T11-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'a workplace culture'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "giving", "baseForm": "give"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "become", "baseForm": "become"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "resolve", "baseForm": "resolve"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "are", "wrongForm": "is", "explanation": "'there + be + 주어' 구문에서 진주어는 'major concerns'(복수)이므로 복수형 be 동사 'are'가 맞다. 'is'는 단수 주어에만 쓸 수 있어 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "giving", "wrongForm": "given", "explanation": "'is also ___ rise to' 구조는 현재진행형 'is giving'이 되어야 하므로 현재분사 'giving'이 맞다. 과거분사 'given'은 수동태가 되어 'AI가 rise를 받는다'는 어색한 의미가 된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "who", "wrongForm": "which", "explanation": "선행사 'professionals'(사람)를 수식하는 주격 관계대명사이므로 'who'가 맞다. 'which'는 사물·동물을 선행사로 받을 때 쓰는 관계대명사라 사람에는 부적절하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "are", "wrongForm": "is", "explanation": "주어의 핵 'soft skills'는 복수이므로 복수형 be 동사 'are'가 맞다. 'such as ...'의 단수 명사들에 이끌려 'is'를 쓰면 안 된다."},
+        {"sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "become", "wrongForm": "became", "explanation": "앞에 조동사 'has'가 있으므로 현재완료(has + p.p.)를 이루는 과거분사 'become'이 맞다. 'became'은 단순 과거형으로 'has' 뒤에 올 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "to", "wrongForm": "of", "explanation": "'necessitate' 같은 동사가 'employees ___ update ...' 구조를 취할 때 'to부정사'를 목적격 보어로 받으므로 'to'가 맞다. 전치사 'of'는 이 구조에서 쓰일 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "resolve", "wrongForm": "resolving", "explanation": "동사 'help'는 목적어로 동사원형(원형부정사) 또는 to부정사를 취하므로 'resolve'(원형)가 맞다. 동명사 'resolving'은 'help'의 목적어로 쓸 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'a workplace culture'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 선행사가 있을 때는 쓸 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "진주어 'major concerns'가 복수이므로 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "given", "correction": "giving", "explanation": "'is also ___ rise to' 현재진행형 구조이므로 현재분사 'giving'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "선행사 'professionals'(사람)이므로 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "주어의 핵 'soft skills'가 복수이므로 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "became", "correction": "become", "explanation": "현재완료 'has + p.p.' 형태이므로 'become'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "of", "correction": "to", "explanation": "'necessitate + 목적어 + to부정사' 구조이므로 'to'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "resolving", "correction": "resolve", "explanation": "'help + (to) 동사원형' 구조이므로 'resolve'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'a workplace culture'가 있으므로 'that'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Young employees agree that AI has more positive impact with the dynamics of the workforce, though there is major concerns on job loss and being left behind.",
+          "isCorrect": false,
+          "correction": "Young employees agree that AI has more positive impact with the dynamics of the workforce, though there are major concerns on job loss and being left behind.",
+          "explanation": "진주어 'major concerns'가 복수이므로 'are'가 맞다."
+        },
+        {
+          "text": "While AI has the potential to automate certain jobs, it is also given rise to new career opportunities and demands.",
+          "isCorrect": false,
+          "correction": "While AI has the potential to automate certain jobs, it is also giving rise to new career opportunities and demands.",
+          "explanation": "'is also ___ rise to'는 현재진행형이므로 현재분사 'giving'이 맞다."
+        },
+        {
+          "text": "The increasing application of AI technology has led to a sudden increase in the need for professionals which can effectively manage and get the most out of AI systems.",
+          "isCorrect": false,
+          "correction": "The increasing application of AI technology has led to a sudden increase in the need for professionals who can effectively manage and get the most out of AI systems.",
+          "explanation": "선행사 'professionals'는 사람이므로 관계대명사 'who'가 맞다."
+        },
+        {
+          "text": "Moreover, soft skills such as innovative thinking, problem-solving abilities, and the capability for interdisciplinary collaboration is gaining greater recognition.",
+          "isCorrect": false,
+          "correction": "Moreover, soft skills such as innovative thinking, problem-solving abilities, and the capability for interdisciplinary collaboration are gaining greater recognition.",
+          "explanation": "주어의 핵 'soft skills'가 복수이므로 'are'가 맞다."
+        },
+        {
+          "text": "In the age of AI, continuous learning has became an essential quality for professionals in the workplace.",
+          "isCorrect": false,
+          "correction": "In the age of AI, continuous learning has become an essential quality for professionals in the workplace.",
+          "explanation": "현재완료 'has + p.p.' 형태이므로 'become'이 맞다."
+        },
+        {
+          "text": "The ever-evolving technological landscape necessitates employees of consistently update their skills, acquire new knowledge, and adapt to the dynamic changes in the work environment.",
+          "isCorrect": false,
+          "correction": "The ever-evolving technological landscape necessitates employees to consistently update their skills, acquire new knowledge, and adapt to the dynamic changes in the work environment.",
+          "explanation": "'necessitate + 목적어 + to부정사' 구조이므로 'to'가 맞다."
+        },
+        {
+          "text": "Only reskilling and adaptability can help resolving the workforce of the future.",
+          "isCorrect": false,
+          "correction": "Only reskilling and adaptability can help resolve the workforce of the future.",
+          "explanation": "'help + (to) 동사원형' 구조이므로 'resolve'가 맞다."
+        },
+        {
+          "text": "Implanting a culture of ongoing learning by fostering a workplace culture what encourages continuous learning and skill development should be a main priority for each organization.",
+          "isCorrect": false,
+          "correction": "Implanting a culture of ongoing learning by fostering a workplace culture that encourages continuous learning and skill development should be a main priority for each organization.",
+          "explanation": "선행사 'a workplace culture'가 있으므로 관계대명사 'that'이 맞다."
+        }
+      ]
+    }
+  }
+}

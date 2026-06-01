@@ -51,9 +51,18 @@ export type MembershipApplicationDoc = {
   userAgent?: string;
   /** 가입 신청 시 받은 개인정보 수집·이용 동의 기록 (구버전 데이터는 undefined) */
   privacyConsent?: PrivacyConsentRecord;
+  /** PII (name/phone/ip/userAgent) 가 마스킹된 시점. completed/rejected 처리 시 자동 기록. */
+  privacyPurgedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 };
+
+/**
+ * 개인정보 보유 정책: 신청일로부터 90일.
+ * - MongoDB TTL 인덱스 `appliedAt_ttl_90d` 가 자동 파기.
+ * - 완료/거절된 신청은 즉시 PII 마스킹 (이름·전화 일부 + ip/UA 완전 제거).
+ */
+export const MEMBERSHIP_APPLICATION_RETENTION_DAYS = 90;
 
 export type MembershipApplicationRow = Omit<MembershipApplicationDoc, '_id'> & { id: string };
 
@@ -69,6 +78,53 @@ function toRow(doc: MembershipApplicationDoc & { _id: ObjectId }): MembershipApp
   return { id: _id.toString(), ...rest };
 }
 
+/**
+ * 이름 마스킹: 첫 글자만 남기고 나머지 `*`. idempotent (이미 마스킹된 값에 재호출해도 동일).
+ * 예: '박준규' → '박**', 'Park' → 'P***', 'X' → '**'.
+ */
+function maskName(name: string): string {
+  if (!name) return name;
+  const t = name.trim();
+  if (t.length <= 1) return '**';
+  return t[0] + '*'.repeat(t.length - 1);
+}
+
+/**
+ * 전화번호 마스킹: 중간 4자리를 `****` 로. 표준 `010-XXXX-YYYY` 형식이 아니면 마지막 4자리만 남김.
+ * idempotent: '010-****-5678' 에 재호출해도 동일.
+ */
+function maskPhone(phone: string): string {
+  if (!phone) return phone;
+  const m = phone.match(/^(\d{3})-(?:\d{4}|\*{4})-(\d{4})$/);
+  if (m) return `${m[1]}-****-${m[2]}`;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length >= 4) return `****-${digits.slice(-4)}`;
+  return '****';
+}
+
+let indexesEnsured = false;
+async function ensureIndexes(): Promise<void> {
+  if (indexesEnsured) return;
+  const db = await getDb('gomijoshua');
+  const col = db.collection(MEMBERSHIP_APPLICATIONS_COLLECTION);
+  // 인덱스 생성은 개별 try/catch — 기존 인덱스와 옵션 충돌이 있어도 다른 인덱스 보장은 진행.
+  await Promise.allSettled([
+    col.createIndex({ status: 1, appliedAt: -1 }, { name: 'status_appliedAt' }),
+    col.createIndex({ phone: 1, appliedAt: -1 }, { name: 'phone_appliedAt' }),
+    col.createIndex({ ip: 1, appliedAt: -1 }, { name: 'ip_appliedAt' }),
+    // 개인정보 보유 정책: 신청일(appliedAt) 로부터 90일이 지나면 MongoDB 가 자동 파기.
+    // status 와 무관 — 완료/거절된 건은 별도로 즉시 PII 마스킹되어 마스킹된 상태로 90일까지 남음.
+    col.createIndex(
+      { appliedAt: 1 },
+      {
+        name: 'appliedAt_ttl_90d',
+        expireAfterSeconds: MEMBERSHIP_APPLICATION_RETENTION_DAYS * 24 * 60 * 60,
+      },
+    ),
+  ]);
+  indexesEnsured = true;
+}
+
 export async function createApplication(data: {
   applicantType: MembershipApplicantType;
   name: string;
@@ -77,6 +133,7 @@ export async function createApplication(data: {
   userAgent?: string;
   privacyConsent?: PrivacyConsentRecord;
 }): Promise<MembershipApplicationRow> {
+  await ensureIndexes();
   const db = await getDb('gomijoshua');
   const now = new Date();
   const doc: MembershipApplicationDoc = {
@@ -217,6 +274,7 @@ export async function updateApplicationStatus(
 
   const now = new Date();
   const $set: Record<string, unknown> = { updatedAt: now };
+  const $unset: Record<string, unknown> = {};
 
   if (nextStatus === 'contacted') {
     $set.status = 'contacted';
@@ -233,9 +291,30 @@ export async function updateApplicationStatus(
 
   if (adminMemo !== undefined) $set.adminMemo = adminMemo;
 
+  // 동의 받은 보유 목적이 끝났으므로 (가입 완료 또는 거절) PII 즉시 마스킹.
+  // - name/phone: 통계용으로 마스킹된 형태로 남김 ('박**', '010-****-5678')
+  // - ip/userAgent: 완전 제거 ($unset)
+  // - privacyPurgedAt: 마스킹 시점 기록 (감사용)
+  // 90일 TTL 인덱스가 적용되어 있어 마스킹된 레코드도 최종적으로 자동 파기됨.
+  const shouldPurge = nextStatus === 'completed' || nextStatus === 'rejected';
+  if (shouldPurge) {
+    const col = db.collection<MembershipApplicationDoc>(MEMBERSHIP_APPLICATIONS_COLLECTION);
+    const doc = await col.findOne({ _id: oid } as unknown as Partial<MembershipApplicationDoc>);
+    if (doc) {
+      $set.name = maskName(doc.name);
+      $set.phone = maskPhone(doc.phone);
+      $set.privacyPurgedAt = now;
+      $unset.ip = '';
+      $unset.userAgent = '';
+    }
+  }
+
+  const update: Record<string, unknown> = { $set };
+  if (Object.keys($unset).length > 0) update.$unset = $unset;
+
   const result = await db
     .collection(MEMBERSHIP_APPLICATIONS_COLLECTION)
-    .updateOne({ _id: oid }, { $set });
+    .updateOne({ _id: oid }, update);
   return result.modifiedCount > 0;
 }
 

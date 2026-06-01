@@ -1,0 +1,181 @@
+{
+  "passageId": "69d4eca372a886137cd83f0d",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 03번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 03번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 03번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The knife is thought to have had its origins in shaped pieces of flint and obsidian, very hard stone and rock whose fractured edges can be extremely sharp and thus suitable to scrape, pierce, and cut such things as vegetable and animal flesh.",
+      "tokens": ["The","knife","is","thought","to","have","had","its","origins","in","shaped","pieces","of","flint","and","obsidian,","very","hard","stone","and","rock","whose","fractured","edges","can","be","extremely","sharp","and","thus","suitable","to","scrape,","pierce,","and","cut","such","things","as","vegetable","and","animal","flesh."],
+      "korean": "칼은 부싯돌과 흑요석으로 만들어진 조각이 그것의 기원이었던 것으로 여겨지는데, 그것은 그 깨진 모서리가 매우 날카로워서 채소와 동물의 살과 같은 것들을 긁고, 꿰뚫고, 그리고 잘라내기에 적합할 수 있는 매우 딱딱한 돌멩이와 바위이다."
+    },
+    {
+      "idx": 1,
+      "text": "How the effective properties of flints were first discovered is open to speculation, but it is easy to imagine how naturally fractured specimens may have been noticed by early men and women to be capable of doing things their hands and fingers could not.",
+      "tokens": ["How","the","effective","properties","of","flints","were","first","discovered","is","open","to","speculation,","but","it","is","easy","to","imagine","how","naturally","fractured","specimens","may","have","been","noticed","by","early","men","and","women","to","be","capable","of","doing","things","their","hands","and","fingers","could","not."],
+      "korean": "부싯돌의 효과적인 특성이 어떻게 처음 발견되었는지는 추측의 여지가 있으나, 초기 남녀가 자신의 손과 손가락은 할 수 없는 일을 깨진 견본이 할 수 있다는 것을 얼마나 자연스럽게 알아차렸는지 상상하기는 쉽다."
+    },
+    {
+      "idx": 2,
+      "text": "Such a discovery could have occurred, for example, to someone walking barefoot over a field and cutting a foot on a piece of flint.",
+      "tokens": ["Such","a","discovery","could","have","occurred,","for","example,","to","someone","walking","barefoot","over","a","field","and","cutting","a","foot","on","a","piece","of","flint."],
+      "korean": "예를 들어, 그러한 발견은 들판 위를 맨발로 걷고 부싯돌 조각에 발을 베는 사람에게 일어날 수 있었을 것이다."
+    },
+    {
+      "idx": 3,
+      "text": "Once the connection between accident and intention was made, it would have been a matter of lesser innovation to look for other sharp pieces of flint.",
+      "tokens": ["Once","the","connection","between","accident","and","intention","was","made,","it","would","have","been","a","matter","of","lesser","innovation","to","look","for","other","sharp","pieces","of","flint."],
+      "korean": "일단 사고와 의도 사이의 연결이 이루어지면, 다른 뾰족한 부싯돌 조각을 찾는 것은 덜 혁신적인 문제였을 것이다."
+    },
+    {
+      "idx": 4,
+      "text": "Failing to find an abundance of them, early innovators might have engaged in the rudiments of knapping, perhaps after noticing the naturally occurring fracture of falling rocks.",
+      "tokens": ["Failing","to","find","an","abundance","of","them,","early","innovators","might","have","engaged","in","the","rudiments","of","knapping,","perhaps","after","noticing","the","naturally","occurring","fracture","of","falling","rocks."],
+      "korean": "그것들을 풍부하게 찾지 못한 초기 혁신자들은 아마도 떨어지는 바위가 자연히 부서지는 것을 알아챈 후에, 기초적인 세게 치기를 했을 것이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T21-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "whose",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'very hard stone and rock'와 뒤에 오는 명사 'fractured edges' 사이에 소유 관계('돌과 바위의 깨진 모서리')가 성립하므로 소유격 관계대명사 'whose'가 맞다. 'which'는 주격/목적격 관계대명사로 바로 뒤에 명사를 동반해 소유 관계를 표현할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T9-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어가 'How the effective properties of flints were first discovered' 전체로 의문사절(명사절)이며, 명사절 주어는 단수 취급하므로 단수 동사 'is'가 맞다. 명사절 안의 복수 명사 'properties'에 이끌려 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T10-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "walking",
+          "wrongCandidates": ["walked"],
+          "grammarType": "분사",
+          "explanation": "선행 명사 'someone'을 능동·진행의 의미('걷고 있는 사람')로 수식하므로 현재분사 'walking'이 맞다. 과거분사 'walked'는 수동·완료의 의미가 되어 사람을 수식할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "walk",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T8-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "made,",
+          "wrongCandidates": ["making,"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the connection'이 사람에 의해 '이루어지는' 대상이므로 'was'와 결합해 수동태 'was made'가 되어야 한다. 따라서 과거분사 'made'가 맞고, 현재분사 'making'은 능동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T0-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Failing",
+          "wrongCandidates": ["Failed"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'early innovators'가 그것들을 찾지 못한 능동의 주체이므로 현재분사 'Failing'이 맞다. 과거분사 'Failed'는 수동의 의미가 되어 사람이 '실패되는' 어색한 뜻이 되므로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "fail",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "walking", "baseForm": "walk"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "made,", "baseForm": "make"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Failing", "baseForm": "fail"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "whose", "wrongForm": "which", "explanation": "선행사 'very hard stone and rock'와 뒤에 오는 명사 'fractured edges' 사이에 소유 관계('돌과 바위의 깨진 모서리')가 성립하므로 소유격 관계대명사 'whose'가 맞다. 'which'는 주격/목적격 관계대명사로 바로 뒤에 명사를 동반해 소유 관계를 표현할 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "is", "wrongForm": "are", "explanation": "주어가 'How the effective properties of flints were first discovered' 전체로 의문사절(명사절)이며, 명사절 주어는 단수 취급하므로 단수 동사 'is'가 맞다. 명사절 안의 복수 명사 'properties'에 이끌려 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "walking", "wrongForm": "walked", "explanation": "선행 명사 'someone'을 능동·진행의 의미('걷고 있는 사람')로 수식하므로 현재분사 'walking'이 맞다. 과거분사 'walked'는 수동·완료의 의미가 되어 사람을 수식할 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "made,", "wrongForm": "making,", "explanation": "주어 'the connection'이 사람에 의해 '이루어지는' 대상이므로 'was'와 결합해 수동태 'was made'가 되어야 한다. 따라서 과거분사 'made'가 맞고, 현재분사 'making'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Failing", "wrongForm": "Failed", "explanation": "분사구문의 의미상 주어 'early innovators'가 그것들을 찾지 못한 능동의 주체이므로 현재분사 'Failing'이 맞다. 과거분사 'Failed'는 수동의 의미가 되어 사람이 '실패되는' 어색한 뜻이 되므로 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "which", "correction": "whose", "explanation": "선행사와 뒤의 명사 사이에 소유 관계가 성립하므로 소유격 관계대명사 'whose'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어가 의문사 명사절이므로 단수 취급해 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "walked", "correction": "walking", "explanation": "'someone'을 능동으로 수식하므로 현재분사 'walking'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "making,", "correction": "made,", "explanation": "주어 'the connection'이 수동의 대상이므로 'was made'의 과거분사 'made'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Failed", "correction": "Failing", "explanation": "분사구문의 의미상 주어가 능동의 주체이므로 현재분사 'Failing'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The knife is thought to have had its origins in shaped pieces of flint and obsidian, very hard stone and rock which fractured edges can be extremely sharp and thus suitable to scrape, pierce, and cut such things as vegetable and animal flesh.",
+          "isCorrect": false,
+          "correction": "The knife is thought to have had its origins in shaped pieces of flint and obsidian, very hard stone and rock whose fractured edges can be extremely sharp and thus suitable to scrape, pierce, and cut such things as vegetable and animal flesh.",
+          "explanation": "선행사와 뒤의 명사 사이에 소유 관계가 성립하므로 소유격 관계대명사 'whose'가 맞다."
+        },
+        {
+          "text": "How the effective properties of flints were first discovered are open to speculation, but it is easy to imagine how naturally fractured specimens may have been noticed by early men and women to be capable of doing things their hands and fingers could not.",
+          "isCorrect": false,
+          "correction": "How the effective properties of flints were first discovered is open to speculation, but it is easy to imagine how naturally fractured specimens may have been noticed by early men and women to be capable of doing things their hands and fingers could not.",
+          "explanation": "의문사 명사절이 주어이므로 단수 취급해 'is'가 맞다."
+        },
+        {
+          "text": "Such a discovery could have occurred, for example, to someone walked barefoot over a field and cutting a foot on a piece of flint.",
+          "isCorrect": false,
+          "correction": "Such a discovery could have occurred, for example, to someone walking barefoot over a field and cutting a foot on a piece of flint.",
+          "explanation": "'someone'을 능동·진행으로 수식하므로 현재분사 'walking'이 맞다."
+        },
+        {
+          "text": "Once the connection between accident and intention was making, it would have been a matter of lesser innovation to look for other sharp pieces of flint.",
+          "isCorrect": false,
+          "correction": "Once the connection between accident and intention was made, it would have been a matter of lesser innovation to look for other sharp pieces of flint.",
+          "explanation": "주어가 수동의 대상이므로 'was made'의 과거분사 'made'가 맞다."
+        },
+        {
+          "text": "Failed to find an abundance of them, early innovators might have engaged in the rudiments of knapping, perhaps after noticing the naturally occurring fracture of falling rocks.",
+          "isCorrect": false,
+          "correction": "Failing to find an abundance of them, early innovators might have engaged in the rudiments of knapping, perhaps after noticing the naturally occurring fracture of falling rocks.",
+          "explanation": "분사구문의 의미상 주어가 능동의 주체이므로 현재분사 'Failing'이 맞다."
+        }
+      ]
+    }
+  }
+}

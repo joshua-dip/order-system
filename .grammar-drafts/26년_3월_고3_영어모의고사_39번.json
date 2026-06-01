@@ -1,0 +1,237 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd3d",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 39번",
+  "title": "26년 3월 고3 영어모의고사 39번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "39번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "To acquire expert knowledge, one needs to become a member of the relevant group of knowledge bearers, for which I will use the term \"epistemic communities.\"",
+      "tokens": ["To","acquire","expert","knowledge,","one","needs","to","become","a","member","of","the","relevant","group","of","knowledge","bearers,","for","which","I","will","use","the","term","\"epistemic","communities.\""],
+      "korean": "전문 지식을 습득하기 위해서는 관련 지식 보유자 집단의 구성원이 되어야 하는데, 그것에 나는 '지식 공동체'라는 용어를 사용하겠다."
+    },
+    {
+      "idx": 1,
+      "text": "A newcomer learns from experts and is socialized into the common practices of the relevant epistemic community.",
+      "tokens": ["A","newcomer","learns","from","experts","and","is","socialized","into","the","common","practices","of","the","relevant","epistemic","community."],
+      "korean": "새로 온 사람은 전문가들로부터 배우며, 관련 지식 공동체의 공동 관행에 사회화된다."
+    },
+    {
+      "idx": 2,
+      "text": "Often there are admittance processes, combined with tests of a candidate's abilities.",
+      "tokens": ["Often","there","are","admittance","processes,","combined","with","tests","of","a","candidate's","abilities."],
+      "korean": "자주 후보자의 능력에 대한 시험과 결합한 입회 절차가 존재한다."
+    },
+    {
+      "idx": 3,
+      "text": "In the premodern era, epistemic communities were often kept secret, with strict tests of loyalty for new members, not least because of fears that specialized knowledge would fall into the \"wrong hands.\"",
+      "tokens": ["In","the","premodern","era,","epistemic","communities","were","often","kept","secret,","with","strict","tests","of","loyalty","for","new","members,","not","least","because","of","fears","that","specialized","knowledge","would","fall","into","the","\"wrong","hands.\""],
+      "korean": "전근대적인 시대에는, 지식 공동체가 자주 비밀에 부쳐졌고, 신입 구성원에게 엄격한 충성심 시험이 있었는데, 특히 전문적인 지식이 '잘못된 손'에 들어갈 것이라는 두려움 때문이었다."
+    },
+    {
+      "idx": 4,
+      "text": "Some traces of these older practices may still be present today, but on the whole, the ideal has shifted to openness among the members of epistemic communities, and also, to some extent, toward outsiders.",
+      "tokens": ["Some","traces","of","these","older","practices","may","still","be","present","today,","but","on","the","whole,","the","ideal","has","shifted","to","openness","among","the","members","of","epistemic","communities,","and","also,","to","some","extent,","toward","outsiders."],
+      "korean": "이러한 오래된 관행의 일부 흔적이 오늘날에도 여전히 존재할 수 있지만, 전체적으로 보아, 이상(理想)은 지식 공동체 구성원 사이에서 개방성, 그리고 또한, 어느 정도는, 외부인을 향한 것으로 옮겨 갔다."
+    },
+    {
+      "idx": 5,
+      "text": "Nonetheless, for most outsiders even completely transparent practices do not lift the veil behind which such forms of knowledge are hidden ─ without the relevant training and acquisition of skills, which often take many years, one simply cannot make sense of the information that is being shared.",
+      "tokens": ["Nonetheless,","for","most","outsiders","even","completely","transparent","practices","do","not","lift","the","veil","behind","which","such","forms","of","knowledge","are","hidden","─","without","the","relevant","training","and","acquisition","of","skills,","which","often","take","many","years,","one","simply","cannot","make","sense","of","the","information","that","is","being","shared."],
+      "korean": "그럼에도 불구하고, 대부분의 외부인에게는 완전히 투명한 관행조차도 그러한 형태의 지식이 뒤에 감추어져 있는 장막을 들어 올리지 못하는데, 즉 자주 수년이 걸리는 관련 교육과 기술의 습득 없이는 공유되고 있는 정보를 그야말로 이해할 수 없다."
+    },
+    {
+      "idx": 6,
+      "text": "Other, more active strategies are needed to make certain forms of knowledge as \"accessible\" as is realistically possible.",
+      "tokens": ["Other,","more","active","strategies","are","needed","to","make","certain","forms","of","knowledge","as","\"accessible\"","as","is","realistically","possible."],
+      "korean": "특정한 형태의 지식을 현실적으로 가능한 한 '접근 가능하게' 만들기 위해서는, 다른, 보다 더 적극적인 전략이 필요하다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T5-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "needs",
+          "wrongCandidates": ["need"],
+          "grammarType": "수일치",
+          "explanation": "주어 'one'은 단수 부정대명사이므로 단수 동사 'needs'가 맞다. 동사원형 'need'는 복수 주어나 조동사 뒤에 쓰이는 형태로 단수 주어 'one'과 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "need",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "socialized",
+          "wrongCandidates": ["socializing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'A newcomer'가 사회화되는 대상(수동)이므로 'is + 과거분사' 구조의 'socialized'가 맞다. 현재분사 'socializing'은 '~을 사회화시키고 있다'는 능동·진행이 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "socialize",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T5-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "combined",
+          "wrongCandidates": ["combining"],
+          "grammarType": "분사",
+          "explanation": "분사구가 수식하는 'admittance processes'가 시험과 '결합된' 대상(수동)이므로 과거분사 'combined'가 맞다. 현재분사 'combining'은 능동의 의미가 되어 절차가 무언가를 결합한다는 부적절한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "combine",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T23-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 23,
+          "endTokenIdx": 23,
+          "correctForm": "that",
+          "wrongCandidates": ["which"],
+          "grammarType": "접속사",
+          "explanation": "'fears' 뒤의 절은 추상명사 'fears'의 구체적 내용을 설명하는 동격절이므로 동격 접속사 'that'이 맞다. 관계대명사 'which'는 동격 기능을 할 수 없고, 동격절을 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T17-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "has",
+          "wrongCandidates": ["have"],
+          "grammarType": "시제",
+          "explanation": "주어 'the ideal'은 단수이고 'shifted'와 결합해 현재완료 시제를 이루므로 단수형 조동사 'has'가 맞다. 'have'는 복수 주어에 쓰이는 형태로 단수 주어 'the ideal'과 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T14-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the veil'이 앞에 있고 전치사 'behind' 뒤에 오는 자리이므로 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로, 선행사 'the veil'이 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "needed",
+          "wrongCandidates": ["needing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Other, more active strategies'가 필요로 되어지는 대상(수동)이므로 'are + 과거분사' 구조의 'needed'가 맞다. 현재분사 'needing'은 능동의 의미가 되어 전략이 무언가를 필요로 한다는 부적절한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "need",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "needs", "baseForm": "need"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "socialized", "baseForm": "socialize"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "combined", "baseForm": "combine"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "has", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "needed", "baseForm": "need"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "needs", "wrongForm": "need", "explanation": "주어 'one'은 단수 부정대명사이므로 단수 동사 'needs'가 맞다. 동사원형 'need'는 복수 주어나 조동사 뒤에 쓰이는 형태로 단수 주어 'one'과 수가 일치하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "socialized", "wrongForm": "socializing", "explanation": "주어 'A newcomer'가 사회화되는 대상(수동)이므로 'is + 과거분사' 구조의 'socialized'가 맞다. 현재분사 'socializing'은 '~을 사회화시키고 있다'는 능동·진행이 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "combined", "wrongForm": "combining", "explanation": "분사구가 수식하는 'admittance processes'가 시험과 '결합된' 대상(수동)이므로 과거분사 'combined'가 맞다. 현재분사 'combining'은 능동의 의미가 되어 절차가 무언가를 결합한다는 부적절한 의미가 된다."},
+        {"sentenceIdx": 3, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "that", "wrongForm": "which", "explanation": "'fears' 뒤의 절은 추상명사 'fears'의 구체적 내용을 설명하는 동격절이므로 동격 접속사 'that'이 맞다. 관계대명사 'which'는 동격 기능을 할 수 없고, 동격절을 이끌 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "has", "wrongForm": "have", "explanation": "주어 'the ideal'은 단수이고 'shifted'와 결합해 현재완료 시제를 이루므로 단수형 조동사 'has'가 맞다. 'have'는 복수 주어에 쓰이는 형태로 단수 주어 'the ideal'과 수가 일치하지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "which", "wrongForm": "what", "explanation": "선행사 'the veil'이 앞에 있고 전치사 'behind' 뒤에 오는 자리이므로 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로, 선행사 'the veil'이 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "needed", "wrongForm": "needing", "explanation": "주어 'Other, more active strategies'가 필요로 되어지는 대상(수동)이므로 'are + 과거분사' 구조의 'needed'가 맞다. 현재분사 'needing'은 능동의 의미가 되어 전략이 무언가를 필요로 한다는 부적절한 의미가 된다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "need", "correction": "needs", "explanation": "단수 주어 'one'에 맞춰 단수 동사 'needs'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "socializing", "correction": "socialized", "explanation": "주어가 사회화되는 대상(수동)이므로 과거분사 'socialized'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "combining", "correction": "combined", "explanation": "수식 대상 'admittance processes'가 결합되는 대상(수동)이므로 과거분사 'combined'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 23, "endTokenIdx": 23, "isError": true, "wrongForm": "which", "correction": "that", "explanation": "추상명사 'fears'의 동격절을 이끄는 접속사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "have", "correction": "has", "explanation": "단수 주어 'the ideal'에 맞춰 단수형 조동사 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사 'the veil'이 있으므로 관계대명사 'which'로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "needing", "correction": "needed", "explanation": "주어가 필요로 되어지는 대상(수동)이므로 과거분사 'needed'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "To acquire expert knowledge, one need to become a member of the relevant group of knowledge bearers, for which I will use the term \"epistemic communities.\"",
+          "isCorrect": false,
+          "correction": "To acquire expert knowledge, one needs to become a member of the relevant group of knowledge bearers, for which I will use the term \"epistemic communities.\"",
+          "explanation": "단수 주어 'one'에 맞춰 단수 동사 'needs'가 맞다."
+        },
+        {
+          "text": "A newcomer learns from experts and is socializing into the common practices of the relevant epistemic community.",
+          "isCorrect": false,
+          "correction": "A newcomer learns from experts and is socialized into the common practices of the relevant epistemic community.",
+          "explanation": "주어가 사회화되는 대상(수동)이므로 'is + 과거분사'의 'socialized'가 맞다."
+        },
+        {
+          "text": "Often there are admittance processes, combining with tests of a candidate's abilities.",
+          "isCorrect": false,
+          "correction": "Often there are admittance processes, combined with tests of a candidate's abilities.",
+          "explanation": "수식 대상이 결합되는 대상(수동)이므로 과거분사 'combined'가 맞다."
+        },
+        {
+          "text": "In the premodern era, epistemic communities were often kept secret, with strict tests of loyalty for new members, not least because of fears which specialized knowledge would fall into the \"wrong hands.\"",
+          "isCorrect": false,
+          "correction": "In the premodern era, epistemic communities were often kept secret, with strict tests of loyalty for new members, not least because of fears that specialized knowledge would fall into the \"wrong hands.\"",
+          "explanation": "'fears'의 동격절을 이끄는 접속사 'that'이 맞다."
+        },
+        {
+          "text": "Some traces of these older practices may still be present today, but on the whole, the ideal have shifted to openness among the members of epistemic communities, and also, to some extent, toward outsiders.",
+          "isCorrect": false,
+          "correction": "Some traces of these older practices may still be present today, but on the whole, the ideal has shifted to openness among the members of epistemic communities, and also, to some extent, toward outsiders.",
+          "explanation": "단수 주어 'the ideal'에 맞춰 현재완료 'has shifted'가 맞다."
+        },
+        {
+          "text": "Nonetheless, for most outsiders even completely transparent practices do not lift the veil behind what such forms of knowledge are hidden ─ without the relevant training and acquisition of skills, which often take many years, one simply cannot make sense of the information that is being shared.",
+          "isCorrect": false,
+          "correction": "Nonetheless, for most outsiders even completely transparent practices do not lift the veil behind which such forms of knowledge are hidden ─ without the relevant training and acquisition of skills, which often take many years, one simply cannot make sense of the information that is being shared.",
+          "explanation": "선행사 'the veil'이 있으므로 관계대명사 'which'가 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "Other, more active strategies are needing to make certain forms of knowledge as \"accessible\" as is realistically possible.",
+          "isCorrect": false,
+          "correction": "Other, more active strategies are needed to make certain forms of knowledge as \"accessible\" as is realistically possible.",
+          "explanation": "주어가 필요로 되어지는 대상(수동)이므로 과거분사 'needed'가 맞다."
+        }
+      ]
+    }
+  }
+}

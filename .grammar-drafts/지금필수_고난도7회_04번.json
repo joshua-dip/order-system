@@ -1,0 +1,179 @@
+{
+  "passageId": "69d4eca372a886137cd83f1e",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 04번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 04번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 04번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In its extreme version, a narrative view of news can blur the distinction between fiction and nonfiction, arguing that all representations of reality are narrative constructions of equal epistemological status.",
+      "tokens": ["In","its","extreme","version,","a","narrative","view","of","news","can","blur","the","distinction","between","fiction","and","nonfiction,","arguing","that","all","representations","of","reality","are","narrative","constructions","of","equal","epistemological","status."],
+      "korean": "극단적인 형태로, 뉴스를 이야기의 관점에서는 보는 것은, 현실에 대한 모든 묘사가 동일한 인식(론)의 상태에 대한 이야기 구조임을 주장하며, 허구와 허구가 아닌 것의 차이를 모호하게 할 수 있다."
+    },
+    {
+      "idx": 1,
+      "text": "However, while one may accept the assumptions that there is always more than one valid way to tell a news story and that there is no one true story that needs to be discovered, it does not follow that there is an infinite number of possible narratives or that all narratives are equally valid.",
+      "tokens": ["However,","while","one","may","accept","the","assumptions","that","there","is","always","more","than","one","valid","way","to","tell","a","news","story","and","that","there","is","no","one","true","story","that","needs","to","be","discovered,","it","does","not","follow","that","there","is","an","infinite","number","of","possible","narratives","or","that","all","narratives","are","equally","valid."],
+      "korean": "하지만, 하나의 뉴스 기사를 전달하는 타당한 방법이 하나 이상 (여럿이) 있다는 것과, (그중) 발견될 필요가 있는 사실인 이야기가 하나뿐인 것은 아니라는 가정을 받아들일 수는 있다고 해도, 그것이 (뉴스를 전달하는 데 쓸) 가능한 묘사가 무한히 많이 있거나 모든 묘사들이 동일하게 타당하다는 것은 아니다."
+    },
+    {
+      "idx": 2,
+      "text": "News narratives, unlike fictional narratives, can still be seen as constrained by facts and by the actual events, and can still be judged as more or less faithful to an external reality.",
+      "tokens": ["News","narratives,","unlike","fictional","narratives,","can","still","be","seen","as","constrained","by","facts","and","by","the","actual","events,","and","can","still","be","judged","as","more","or","less","faithful","to","an","external","reality."],
+      "korean": "소설적 묘사와는 달리 뉴스 묘사는 여전히 사실과 실제 사건에 의해 제약을 받는 것으로 보일 수 있으며, 여전히 외적 현실에 대해 더 충실하거나 덜 충실한 것으로 판단될 수 있다."
+    },
+    {
+      "idx": 3,
+      "text": "Yet, even in its softer versions, the notion of news as narrative is in tension with accepted views of journalism and journalism’s own sense of self.",
+      "tokens": ["Yet,","even","in","its","softer","versions,","the","notion","of","news","as","narrative","is","in","tension","with","accepted","views","of","journalism","and","journalism’s","own","sense","of","self."],
+      "korean": "그렇지만 그것의 더 부드러운 형태에서조차, 이야기로서 뉴스의 개념은 일반적인 언론에 대한 관점, 그리고 언론의 자의식과 긴장을 이루고 있다."
+    },
+    {
+      "idx": 4,
+      "text": "Interestingly, while journalists commonly refer to news as stories, they tend to strongly reject the suggestion that they themselves are storytellers or that their stories are anything but a reflection of reality.",
+      "tokens": ["Interestingly,","while","journalists","commonly","refer","to","news","as","stories,","they","tend","to","strongly","reject","the","suggestion","that","they","themselves","are","storytellers","or","that","their","stories","are","anything","but","a","reflection","of","reality."],
+      "korean": "흥미롭게도, 언론인들은 보통 뉴스를 이야기라고 말하는 반면, 그들은 그들 스스로가 이야기꾼이거나 그들의 이야기가 결코 현실을 반영하지 않는다는 생각을 강하게 거부하는 경향이 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T17-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "arguing",
+          "wrongCandidates": ["argued"],
+          "grammarType": "분사",
+          "explanation": "주절 'a narrative view of news can blur ...'의 주어 'a narrative view'가 능동적으로 주장하는 의미상 주어이므로 현재분사 'arguing'을 쓴 분사구문이 맞다. 과거분사 'argued'는 수동 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "argue",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T23-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 23,
+          "endTokenIdx": 23,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "'there is no one true story ...' 구조에서 진주어의 핵 'story'가 단수이므로 단수 동사 'is'가 맞다. 복수 'are'는 단수 주어와 호응하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T10-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "constrained",
+          "wrongCandidates": ["constraining"],
+          "grammarType": "수동태",
+          "explanation": "'be seen as + 분사' 구조에서 의미상 주어 'News narratives'가 사실과 사건에 의해 제약을 받는 대상(수동)이므로 과거분사 'constrained'가 맞다. 현재분사 'constraining'은 능동 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "constrain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T2-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "in",
+          "wrongCandidates": ["on"],
+          "grammarType": "전치사",
+          "explanation": "'in its softer versions'는 '더 부드러운 형태에서'라는 추상적 범위를 나타내므로 전치사 'in'이 맞다. 'on'은 표면 접촉이나 매체를 나타내어 'versions'와 어울리지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T1-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "while",
+          "wrongCandidates": ["during"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 'journalists commonly refer ...'라는 절(주어+동사)이 이어지므로 접속사 'while'(~하는 반면에)이 맞다. 'during'은 전치사로 뒤에 명사구만 올 수 있어 절을 이끌 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "arguing", "baseForm": "argue"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "constrained", "baseForm": "constrain"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "arguing", "wrongForm": "argued", "explanation": "주절 주어 'a narrative view'가 능동적으로 주장하는 의미상 주어이므로 분사구문에 현재분사 'arguing'이 맞다. 과거분사 'argued'는 수동 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "is", "wrongForm": "are", "explanation": "'there is no one true story ...' 구조에서 진주어의 핵 'story'가 단수이므로 단수 동사 'is'가 맞다. 복수 'are'는 단수 주어와 호응하지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "constrained", "wrongForm": "constraining", "explanation": "'be seen as + 분사' 구조에서 의미상 주어 'News narratives'가 제약을 받는 대상(수동)이므로 과거분사 'constrained'가 맞다. 현재분사 'constraining'은 능동 의미라 부적절하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "in", "wrongForm": "on", "explanation": "'in its softer versions'는 추상적 범위를 나타내므로 전치사 'in'이 맞다. 'on'은 표면 접촉/매체를 나타내어 'versions'와 어울리지 않는다."},
+        {"sentenceIdx": 4, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "while", "wrongForm": "during", "explanation": "뒤에 절(주어+동사)이 이어지므로 접속사 'while'이 맞다. 'during'은 전치사로 절을 이끌 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "argued", "correction": "arguing", "explanation": "분사구문의 의미상 주어가 능동적으로 주장하므로 현재분사 'arguing'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 23, "endTokenIdx": 23, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "진주어 'story'가 단수이므로 단수 동사 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "constraining", "correction": "constrained", "explanation": "주어가 제약을 받는 대상(수동)이므로 과거분사 'constrained'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "on", "correction": "in", "explanation": "추상적 범위를 나타내야 하므로 전치사 'in'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "during", "correction": "while", "explanation": "뒤에 절이 이어지므로 접속사 'while'로 고쳐야 한다. 'during'은 전치사라 절을 이끌 수 없다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "In its extreme version, a narrative view of news can blur the distinction between fiction and nonfiction, argued that all representations of reality are narrative constructions of equal epistemological status.",
+          "isCorrect": false,
+          "correction": "In its extreme version, a narrative view of news can blur the distinction between fiction and nonfiction, arguing that all representations of reality are narrative constructions of equal epistemological status.",
+          "explanation": "주절 주어 'a narrative view'가 능동적으로 주장하므로 분사구문에 현재분사 'arguing'이 맞다."
+        },
+        {
+          "text": "However, while one may accept the assumptions that there is always more than one valid way to tell a news story and that there are no one true story that needs to be discovered, it does not follow that there is an infinite number of possible narratives or that all narratives are equally valid.",
+          "isCorrect": false,
+          "correction": "However, while one may accept the assumptions that there is always more than one valid way to tell a news story and that there is no one true story that needs to be discovered, it does not follow that there is an infinite number of possible narratives or that all narratives are equally valid.",
+          "explanation": "진주어 'story'가 단수이므로 단수 동사 'is'가 맞다."
+        },
+        {
+          "text": "News narratives, unlike fictional narratives, can still be seen as constraining by facts and by the actual events, and can still be judged as more or less faithful to an external reality.",
+          "isCorrect": false,
+          "correction": "News narratives, unlike fictional narratives, can still be seen as constrained by facts and by the actual events, and can still be judged as more or less faithful to an external reality.",
+          "explanation": "주어 'News narratives'가 제약을 받는 대상(수동)이므로 과거분사 'constrained'가 맞다."
+        },
+        {
+          "text": "Yet, even on its softer versions, the notion of news as narrative is in tension with accepted views of journalism and journalism’s own sense of self.",
+          "isCorrect": false,
+          "correction": "Yet, even in its softer versions, the notion of news as narrative is in tension with accepted views of journalism and journalism’s own sense of self.",
+          "explanation": "추상적 범위를 나타내므로 전치사 'in'이 맞다."
+        },
+        {
+          "text": "Interestingly, during journalists commonly refer to news as stories, they tend to strongly reject the suggestion that they themselves are storytellers or that their stories are anything but a reflection of reality.",
+          "isCorrect": false,
+          "correction": "Interestingly, while journalists commonly refer to news as stories, they tend to strongly reject the suggestion that they themselves are storytellers or that their stories are anything but a reflection of reality.",
+          "explanation": "뒤에 절이 이어지므로 접속사 'while'이 맞다. 'during'은 전치사라 절을 이끌 수 없다."
+        }
+      ]
+    }
+  }
+}

@@ -794,7 +794,7 @@ export default function QuestionReviewPage() {
           </select>
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm">
             <option value="">전체 유형</option>
-            {['빈칸', '순서', '삽입', '무관한문장', '삽입-고난도', '주제', '어법'].map((t) => <option key={t} value={t}>{t}</option>)}
+            {['빈칸', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도', '주제', '어법'].map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
           <select value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)} className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm">
             <option value="">전체 난이도</option>
@@ -906,7 +906,7 @@ export default function QuestionReviewPage() {
                     onChange={(e) => setEditDraft({ ...editDraft, type: e.target.value })}
                     className="bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded text-xs border-none outline-none"
                   >
-                    {['빈칸', '순서', '삽입', '무관한문장', '삽입-고난도', '주제', '어법'].map((t) => <option key={t} value={t}>{t}</option>)}
+                    {['빈칸', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도', '주제', '어법'].map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 ) : (
                   <span className="bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded">{current.type}</span>

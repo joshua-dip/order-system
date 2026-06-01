@@ -1,0 +1,266 @@
+{
+  "passageId": "69d4eca372a886137cd83ef9",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 07번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 07번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 07번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "A good journalist will always have a sense of why people might have acted in a certain way ― their possible emotions, motivations, and intentions.",
+      "tokens": ["A","good","journalist","will","always","have","a","sense","of","why","people","might","have","acted","in","a","certain","way","―","their","possible","emotions,","motivations,","and","intentions."],
+      "korean": "훌륭한 언론인에게는 왜 사람들이 특정한 방식으로 행동했는지, 즉 그들에게 있을 수 있는 감정, 동기, 그리고 의도에 대한 감각이 항상 있을 것이다."
+    },
+    {
+      "idx": 1,
+      "text": "Through exercising the sympathetic imagination, he or she will be able to understand characters from the inside.",
+      "tokens": ["Through","exercising","the","sympathetic","imagination,","he","or","she","will","be","able","to","understand","characters","from","the","inside."],
+      "korean": "공감적인 상상력을 발휘하는 것을 통해서 그[그녀]는 내부로부터 인물들을 이해할 수 있게 될 것이다."
+    },
+    {
+      "idx": 2,
+      "text": "Thus a good reporter should be able to take an audience to the heart of the matter through describing the sights, sounds, and human nuances that we might otherwise miss.",
+      "tokens": ["Thus","a","good","reporter","should","be","able","to","take","an","audience","to","the","heart","of","the","matter","through","describing","the","sights,","sounds,","and","human","nuances","that","we","might","otherwise","miss."],
+      "korean": "이렇게 하여 훌륭한 기자는 장면, 소리, 그리고 미묘한 인간적 차이를 기술하는 것을 통해 그렇지 않다면 우리가 놓칠지도 모르는 문제의 핵심으로 독자들을 이끌 수 있게 될 것이다."
+    },
+    {
+      "idx": 3,
+      "text": "But it is important not to confuse understanding with assent.",
+      "tokens": ["But","it","is","important","not","to","confuse","understanding","with","assent."],
+      "korean": "하지만 이해하는 것을 동의와 혼동하지 않는 것은 중요하다."
+    },
+    {
+      "idx": 4,
+      "text": "A journalist might, through grasping the pressures and motives involved, understand why a person acted in a certain way and yet still appropriately condemn the resultant action, say corruption, for what it was.",
+      "tokens": ["A","journalist","might,","through","grasping","the","pressures","and","motives","involved,","understand","why","a","person","acted","in","a","certain","way","and","yet","still","appropriately","condemn","the","resultant","action,","say","corruption,","for","what","it","was."],
+      "korean": "언론인은 관련된 압박감과 동기를 파악하는 것을 통해서 왜 한 사람이 특정한 방식으로 행동했는지 이해하면서도 여전히 결과적으로 일어난 행동, 이를테면 부패를 그것이 부패였다는 이유로 합당하게 비난할 수 있을 것이다."
+    },
+    {
+      "idx": 5,
+      "text": "Of course one of the problems is that we trust the journalist, often without independent means of verification.",
+      "tokens": ["Of","course","one","of","the","problems","is","that","we","trust","the","journalist,","often","without","independent","means","of","verification."],
+      "korean": "물론 문제들 중 하나는 우리가 언론인을 흔히 독자적인 확인 수단 없이 신뢰한다는 것이다."
+    },
+    {
+      "idx": 6,
+      "text": "Nonetheless, there are clear cases or paradigmatic reports where we can say that they exemplify the properties that we value in good journalism.",
+      "tokens": ["Nonetheless,","there","are","clear","cases","or","paradigmatic","reports","where","we","can","say","that","they","exemplify","the","properties","that","we","value","in","good","journalism."],
+      "korean": "그럼에도 불구하고, 우리가 훌륭한 언론에서 가치 있게 여기는 특성을 그들이 구현한다고 말할 수 있는 명확한 사례나 모범이 되는 보도들이 있다."
+    },
+    {
+      "idx": 7,
+      "text": "Hence when difficult or complex matters are involved, where appearances may be tricky or deceptive, we tend to look to what these journalists have to say.",
+      "tokens": ["Hence","when","difficult","or","complex","matters","are","involved,","where","appearances","may","be","tricky","or","deceptive,","we","tend","to","look","to","what","these","journalists","have","to","say."],
+      "korean": "그래서 어렵거나 복잡한 문제가 결부될 때, 겉모습이 다루기 까다롭거나 현혹적인 경우에, 우리는 이 언론인들이 하는 말에 의지하는 경향이 있다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "acted",
+          "wrongCandidates": ["act"],
+          "grammarType": "시제",
+          "explanation": "'might have + p.p.' 형태로 과거 사실에 대한 추측을 나타내므로 과거분사 'acted'가 맞다. 동사원형 'act'는 'might have' 뒤에 올 수 없으며 완료 추측 구조가 깨진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "act",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T1-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "exercising",
+          "wrongCandidates": ["exercise"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'Through' 뒤에는 동명사가 와야 하므로 'exercising'이 맞다. 동사원형 'exercise'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "exercise",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T25-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 25,
+          "endTokenIdx": 25,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the sights, sounds, and human nuances'가 있으므로 목적격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 이미 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "confuse",
+          "wrongCandidates": ["confusing"],
+          "grammarType": "부정사",
+          "explanation": "'not to + 동사원형' 구조의 to부정사이므로 동사원형 'confuse'가 맞다. 동명사 'confusing'은 'to' 뒤에 올 수 없으며 to부정사 구조가 성립하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "confuse",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T9-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "involved,",
+          "wrongCandidates": ["involving,"],
+          "grammarType": "분사",
+          "explanation": "명사 'pressures and motives'를 뒤에서 수식하는 분사로, '관련된'이라는 수동의 의미이므로 과거분사 'involved'가 맞다. 현재분사 'involving'은 능동(관련시키는)의 의미가 되어 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "involve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵이 'one'으로 단수이므로 단수형 동사 'is'가 맞다. 'of the problems' 같은 전치사구 안의 복수명사에 이끌려 'are'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T12-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 12,
+          "endTokenIdx": 12,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "동사 'say'의 목적어로 완전한 절을 이끄는 명사절 접속사 'that'이 맞다. 'what'은 자체가 절 안의 주어·목적어 역할을 해야 하므로 뒤따르는 절이 완전하면 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T7-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "involved,",
+          "wrongCandidates": ["involving,"],
+          "grammarType": "수동태",
+          "explanation": "주어 'matters'가 결부되는 대상이므로 'be + p.p.' 수동태 구조에 맞춰 과거분사 'involved'가 맞다. 현재분사 'involving'을 쓰면 능동의 의미가 되어 'matters'가 무엇을 결부시킨다는 어색한 해석이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "involve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "acted", "baseForm": "act"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "exercising", "baseForm": "exercise"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "confuse", "baseForm": "confuse"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "involved,", "baseForm": "involve"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "involved,", "baseForm": "involve"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "acted", "wrongForm": "act", "explanation": "'might have + p.p.' 형태로 과거 사실에 대한 추측을 나타내므로 과거분사 'acted'가 맞다. 동사원형 'act'는 'might have' 뒤에 올 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "exercising", "wrongForm": "exercise", "explanation": "전치사 'Through' 뒤에는 동명사가 와야 하므로 'exercising'이 맞다. 동사원형 'exercise'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'the sights, sounds, and human nuances'가 있으므로 목적격 관계대명사 'that'이 맞다. 'what'은 선행사가 있을 때 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "confuse", "wrongForm": "confusing", "explanation": "'not to + 동사원형' 구조의 to부정사이므로 동사원형 'confuse'가 맞다. 동명사 'confusing'은 to 뒤에 올 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "involved,", "wrongForm": "involving,", "explanation": "명사 'pressures and motives'를 후치 수식하는 분사로, '관련된'이라는 수동의 의미이므로 과거분사 'involved'가 맞다. 현재분사 'involving'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "is", "wrongForm": "are", "explanation": "주어의 핵 'one'이 단수이므로 단수형 동사 'is'가 맞다. 전치사구 안 복수명사에 이끌려 'are'를 쓰면 안 된다."},
+        {"sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "correctForm": "that", "wrongForm": "what", "explanation": "동사 'say'의 목적어로 완전한 절을 이끄는 명사절 접속사 'that'이 맞다. 'what'은 뒤따르는 절이 완전하면 쓸 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "involved,", "wrongForm": "involving,", "explanation": "주어 'matters'가 결부되는 대상이므로 'be + p.p.' 수동태에 맞춰 과거분사 'involved'가 맞다. 현재분사 'involving'은 능동이 되어 어색하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "act", "correction": "acted", "explanation": "'might have + p.p.' 구조이므로 과거분사 'acted'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "exercise", "correction": "exercising", "explanation": "전치사 'Through' 뒤이므로 동명사 'exercising'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 25, "endTokenIdx": 25, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사가 있으므로 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "confusing", "correction": "confuse", "explanation": "'not to + 동사원형' 구조이므로 동사원형 'confuse'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "involving,", "correction": "involved,", "explanation": "명사를 수동으로 후치 수식하므로 과거분사 'involved'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "주어의 핵 'one'이 단수이므로 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 12, "endTokenIdx": 12, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "완전한 절을 이끄는 명사절 접속사이므로 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "involving,", "correction": "involved,", "explanation": "'be + p.p.' 수동태이므로 과거분사 'involved'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "A good journalist will always have a sense of why people might have act in a certain way ― their possible emotions, motivations, and intentions.",
+          "isCorrect": false,
+          "correction": "A good journalist will always have a sense of why people might have acted in a certain way ― their possible emotions, motivations, and intentions.",
+          "explanation": "'might have + p.p.' 구조이므로 과거분사 'acted'가 맞다."
+        },
+        {
+          "text": "Through exercise the sympathetic imagination, he or she will be able to understand characters from the inside.",
+          "isCorrect": false,
+          "correction": "Through exercising the sympathetic imagination, he or she will be able to understand characters from the inside.",
+          "explanation": "전치사 'Through' 뒤에는 동명사 'exercising'이 와야 한다."
+        },
+        {
+          "text": "Thus a good reporter should be able to take an audience to the heart of the matter through describing the sights, sounds, and human nuances what we might otherwise miss.",
+          "isCorrect": false,
+          "correction": "Thus a good reporter should be able to take an audience to the heart of the matter through describing the sights, sounds, and human nuances that we might otherwise miss.",
+          "explanation": "선행사가 있으므로 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "But it is important not to confusing understanding with assent.",
+          "isCorrect": false,
+          "correction": "But it is important not to confuse understanding with assent.",
+          "explanation": "'not to + 동사원형' 구조이므로 동사원형 'confuse'가 맞다."
+        },
+        {
+          "text": "A journalist might, through grasping the pressures and motives involving, understand why a person acted in a certain way and yet still appropriately condemn the resultant action, say corruption, for what it was.",
+          "isCorrect": false,
+          "correction": "A journalist might, through grasping the pressures and motives involved, understand why a person acted in a certain way and yet still appropriately condemn the resultant action, say corruption, for what it was.",
+          "explanation": "명사를 수동으로 후치 수식하므로 과거분사 'involved'가 맞다."
+        },
+        {
+          "text": "Of course one of the problems are that we trust the journalist, often without independent means of verification.",
+          "isCorrect": false,
+          "correction": "Of course one of the problems is that we trust the journalist, often without independent means of verification.",
+          "explanation": "주어의 핵 'one'이 단수이므로 'is'가 맞다."
+        },
+        {
+          "text": "Nonetheless, there are clear cases or paradigmatic reports where we can say what they exemplify the properties that we value in good journalism.",
+          "isCorrect": false,
+          "correction": "Nonetheless, there are clear cases or paradigmatic reports where we can say that they exemplify the properties that we value in good journalism.",
+          "explanation": "완전한 절을 이끄는 명사절 접속사이므로 'that'이 맞다."
+        },
+        {
+          "text": "Hence when difficult or complex matters are involving, where appearances may be tricky or deceptive, we tend to look to what these journalists have to say.",
+          "isCorrect": false,
+          "correction": "Hence when difficult or complex matters are involved, where appearances may be tricky or deceptive, we tend to look to what these journalists have to say.",
+          "explanation": "'be + p.p.' 수동태이므로 과거분사 'involved'가 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "passageId": "69d4eca372a886137cd83efe",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 04번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 04번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 04번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "People are more likely to join a group when they worry that they may fail as individuals ― when they hold low expectations for personal success.",
+      "tokens": ["People","are","more","likely","to","join","a","group","when","they","worry","that","they","may","fail","as","individuals","―","when","they","hold","low","expectations","for","personal","success."],
+      "korean": "사람들은 개인으로서 실패할 수 있다고 걱정할 때, 즉 개인적인 성공에 대한 기대치가 낮을 때 집단에 합류할 가능성이 더 높다."
+    },
+    {
+      "idx": 1,
+      "text": "Jeffrey Vancouver and Daniel Ilgen tested this hypothesis at Michigan State University by allowing male and female students to choose whether to work alone or with another student on six different tasks.",
+      "tokens": ["Jeffrey","Vancouver","and","Daniel","Ilgen","tested","this","hypothesis","at","Michigan","State","University","by","allowing","male","and","female","students","to","choose","whether","to","work","alone","or","with","another","student","on","six","different","tasks."],
+      "korean": "Jeffrey Vancouver와 Daniel Ilgen은 남학생과 여학생이 여섯 가지 다른 과제에서 혼자 할 것인지 아니면 다른 학생들과 함께 할 것인지를 선택할 수 있게 함으로써, Michigan 주립 대학교에서 이 가설을 검증했다."
+    },
+    {
+      "idx": 2,
+      "text": "Some of the tasks were stereotypically “male,” like changing a car’s oil or designing a tool shed.",
+      "tokens": ["Some","of","the","tasks","were","stereotypically","“male,”","like","changing","a","car’s","oil","or","designing","a","tool","shed."],
+      "korean": "그 과제 중 일부는 자동차 기름을 바꾸거나 공구 창고를 디자인하는 것처럼 전형적으로 ‘남성적인’ 것이었다."
+    },
+    {
+      "idx": 3,
+      "text": "The others were stereotypically “female,” like designing a store window or taking a quiz on flowers.",
+      "tokens": ["The","others","were","stereotypically","“female,”","like","designing","a","store","window","or","taking","a","quiz","on","flowers."],
+      "korean": "다른 과제는 상점의 창문을 디자인하거나 꽃에 대한 퀴즈 풀기처럼 전형적으로 ‘여성적인’ 것이었다."
+    },
+    {
+      "idx": 4,
+      "text": "Vancouver and Ilgen presumed ― quite correctly, it turned out ― that men would be less confident in their abilities to do well on the female tasks and that women would be less confident in their abilities to do well on the male tasks.",
+      "tokens": ["Vancouver","and","Ilgen","presumed","―","quite","correctly,","it","turned","out","―","that","men","would","be","less","confident","in","their","abilities","to","do","well","on","the","female","tasks","and","that","women","would","be","less","confident","in","their","abilities","to","do","well","on","the","male","tasks."],
+      "korean": "Vancouver와 Ilgen은 남성은 여성적인 과제에서 잘할 수 있는 능력에 자신감이 덜할 것이고, 여성은 남성적인 과제에서 잘할 수 있는 능력에 자신감이 덜할 것이라고 추정했고, 더 정확하게 그렇게 밝혀졌다."
+    },
+    {
+      "idx": 5,
+      "text": "As a result, they predicted that the students would much prefer to work alone on gender-consistent tasks and with others on gender-inconsistent tasks.",
+      "tokens": ["As","a","result,","they","predicted","that","the","students","would","much","prefer","to","work","alone","on","gender-consistent","tasks","and","with","others","on","gender-inconsistent","tasks."],
+      "korean": "결과적으로, 그들은 학생들이 자신의 성별과 일치하는 과제에서는 혼자 일하기를, 자신의 성별과 일치하지 않는 과제에서는 다른 사람들과 함께 일하기를 훨씬 더 선호할 것이라고 예측했다."
+    },
+    {
+      "idx": 6,
+      "text": "This is indeed what they found.",
+      "tokens": ["This","is","indeed","what","they","found."],
+      "korean": "이것은 실제로 그들이 발견했던 것이다."
+    },
+    {
+      "idx": 7,
+      "text": "As students’ expectations of individual success went down, their desire to work with others went up.",
+      "tokens": ["As","students’","expectations","of","individual","success","went","down,","their","desire","to","work","with","others","went","up."],
+      "korean": "개인적인 성공에 대한 학생들의 기대치가 떨어지면서, 다른 사람들과 함께 일하고자 하는 욕구는 올라갔다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T14-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "fail",
+          "wrongCandidates": ["failing"],
+          "grammarType": "부정사",
+          "explanation": "조동사 'may' 뒤에는 동사원형이 와야 하므로 'fail'이 맞다. 동명사형 'failing'은 조동사 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "fail",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T13-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "allowing",
+          "wrongCandidates": ["allowed"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'allowing'이 맞다. 과거분사·과거형 'allowed'는 전치사의 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "allow",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T4-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "were",
+          "wrongCandidates": ["was"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Some of the tasks'에서 of 뒤 명사 'tasks'가 복수이므로 동사도 복수형 'were'가 맞다. 단수형 'was'는 부분 표현의 of 뒤 명사가 단수일 때 쓴다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "designing",
+          "wrongCandidates": ["designed"],
+          "grammarType": "분사",
+          "explanation": "전치사 'like' 뒤에 동명사로 예시를 들고 있으며, 뒤의 'taking'과 'or'로 병렬을 이루므로 현재분사형 'designing'이 맞다. 과거분사 'designed'는 수동의 의미이자 병렬 구조에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "design",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "동사 'presumed'의 목적어 자리에 완전한 절을 이끄는 명사절 접속사 'that'이 맞다. 'what'은 불완전한 절을 이끌어 'men would be ...'처럼 완전한 절 앞에 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T4-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "predicted",
+          "wrongCandidates": ["predict"],
+          "grammarType": "시제",
+          "explanation": "앞 문장들과 시제를 맞춰야 하는 과거 시점의 연구 서술이므로 과거형 'predicted'가 맞다. 현재형 'predict'는 'As a result' 문맥의 과거 시제 흐름과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "predict",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T3-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "what",
+          "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "보어 자리에 선행사가 없으므로 선행사를 포함하는 관계대명사 'what'이 맞다. 'that'은 선행사가 필요한 관계대명사로 이 자리에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T6-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "went",
+          "wrongCandidates": ["go"],
+          "grammarType": "시제",
+          "explanation": "주절 'their desire ... went up'이 과거 시제이고 부사절 'As ...'도 같은 과거 시점이므로 과거형 'went'가 맞다. 'go'는 현재형으로 과거 흐름의 시제 일치를 깨뜨린다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "go",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "fail", "baseForm": "fail"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "allowing", "baseForm": "allow"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "were", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "designing", "baseForm": "design"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "predicted", "baseForm": "predict"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "went", "baseForm": "go"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "fail", "wrongForm": "failing", "explanation": "조동사 'may' 뒤에는 동사원형이 와야 하므로 'fail'이 맞다. 동명사형 'failing'은 조동사 뒤에 올 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "allowing", "wrongForm": "allowed", "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'allowing'이 맞다. 과거분사·과거형 'allowed'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "were", "wrongForm": "was", "explanation": "주어 'Some of the tasks'에서 of 뒤 명사 'tasks'가 복수이므로 동사도 복수형 'were'가 맞다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "designing", "wrongForm": "designed", "explanation": "전치사 'like' 뒤 동명사이고 뒤의 'taking'과 병렬을 이루므로 현재분사형 'designing'이 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "that", "wrongForm": "what", "explanation": "동사 'presumed'의 목적어 자리에 완전한 절을 이끄는 명사절 접속사 'that'이 맞다. 'what'은 불완전한 절을 이끈다."},
+        {"sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "predicted", "wrongForm": "predict", "explanation": "과거 시점의 연구 서술이므로 과거형 'predicted'가 맞다. 현재형 'predict'는 과거 시제 흐름과 충돌한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "what", "wrongForm": "that", "explanation": "보어 자리에 선행사가 없으므로 선행사를 포함하는 관계대명사 'what'이 맞다. 'that'은 선행사가 필요하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "went", "wrongForm": "go", "explanation": "주절 'went up'과 같은 과거 시점이므로 과거형 'went'가 맞다. 현재형 'go'는 시제 일치를 깨뜨린다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "failing", "correction": "fail", "explanation": "조동사 'may' 뒤이므로 동사원형 'fail'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "allowed", "correction": "allowing", "explanation": "전치사 'by' 뒤이므로 동명사 'allowing'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "was", "correction": "were", "explanation": "of 뒤 명사 'tasks'가 복수이므로 복수 동사 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "designed", "correction": "designing", "explanation": "뒤의 'taking'과 병렬을 이루는 동명사 'designing'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "완전한 절을 이끄는 명사절 접속사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "predict", "correction": "predicted", "explanation": "과거 시제 흐름에 맞춰 과거형 'predicted'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "that", "correction": "what", "explanation": "선행사가 없으므로 선행사 포함 관계대명사 'what'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "go", "correction": "went", "explanation": "과거 시제 'went up'과 시제 일치를 위해 'went'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "People are more likely to join a group when they worry that they may failing as individuals ― when they hold low expectations for personal success.",
+          "isCorrect": false,
+          "correction": "People are more likely to join a group when they worry that they may fail as individuals ― when they hold low expectations for personal success.",
+          "explanation": "조동사 'may' 뒤에는 동사원형 'fail'이 와야 한다."
+        },
+        {
+          "text": "Jeffrey Vancouver and Daniel Ilgen tested this hypothesis at Michigan State University by allowed male and female students to choose whether to work alone or with another student on six different tasks.",
+          "isCorrect": false,
+          "correction": "Jeffrey Vancouver and Daniel Ilgen tested this hypothesis at Michigan State University by allowing male and female students to choose whether to work alone or with another student on six different tasks.",
+          "explanation": "전치사 'by' 뒤에는 동명사 'allowing'이 와야 한다."
+        },
+        {
+          "text": "Some of the tasks was stereotypically “male,” like changing a car’s oil or designing a tool shed.",
+          "isCorrect": false,
+          "correction": "Some of the tasks were stereotypically “male,” like changing a car’s oil or designing a tool shed.",
+          "explanation": "of 뒤 명사 'tasks'가 복수이므로 복수 동사 'were'가 맞다."
+        },
+        {
+          "text": "The others were stereotypically “female,” like designed a store window or taking a quiz on flowers.",
+          "isCorrect": false,
+          "correction": "The others were stereotypically “female,” like designing a store window or taking a quiz on flowers.",
+          "explanation": "뒤의 'taking'과 병렬을 이루는 동명사 'designing'이 맞다."
+        },
+        {
+          "text": "Vancouver and Ilgen presumed ― quite correctly, it turned out ― what men would be less confident in their abilities to do well on the female tasks and that women would be less confident in their abilities to do well on the male tasks.",
+          "isCorrect": false,
+          "correction": "Vancouver and Ilgen presumed ― quite correctly, it turned out ― that men would be less confident in their abilities to do well on the female tasks and that women would be less confident in their abilities to do well on the male tasks.",
+          "explanation": "완전한 절을 이끄는 명사절 접속사 'that'이 맞다."
+        },
+        {
+          "text": "As a result, they predict that the students would much prefer to work alone on gender-consistent tasks and with others on gender-inconsistent tasks.",
+          "isCorrect": false,
+          "correction": "As a result, they predicted that the students would much prefer to work alone on gender-consistent tasks and with others on gender-inconsistent tasks.",
+          "explanation": "과거 시제 흐름에 맞춰 'predicted'가 맞다."
+        },
+        {
+          "text": "This is indeed that they found.",
+          "isCorrect": false,
+          "correction": "This is indeed what they found.",
+          "explanation": "선행사가 없으므로 선행사 포함 관계대명사 'what'이 맞다."
+        },
+        {
+          "text": "As students’ expectations of individual success go down, their desire to work with others went up.",
+          "isCorrect": false,
+          "correction": "As students’ expectations of individual success went down, their desire to work with others went up.",
+          "explanation": "주절 'went up'과 같은 과거 시점이므로 'went'가 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -5,6 +5,11 @@ import {
   type ReviewLogDoc,
 } from '@/lib/generated-question-review-log';
 import { checkSolveCorrect } from '@/lib/generated-question-solve-core';
+import {
+  hasBlockingIssue,
+  runPerQuestionValidations,
+  type ReviewValidationIssue,
+} from '@/lib/variant-review-validators';
 
 /**
  * DB·MCP·수동 저장 등으로 키가 달라도 검수·목록에서 읽기.
@@ -117,6 +122,10 @@ export type RecordReviewResult = {
   status_updated_to_complete?: boolean;
   /** 재시도(attemptNumber≥2) 후 정답일 때 검수불일치로 갱신했으면 true */
   status_updated_to_mismatch?: boolean;
+  /** per-question 검증 결과 (error 1건 이상이면 정답이라도 검수불일치로 강제) */
+  validation_issues?: ReviewValidationIssue[];
+  /** 검증 error 가 있어 정답이라도 검수불일치로 보냈으면 true */
+  forced_mismatch_by_validation?: boolean;
 };
 
 /**
@@ -202,6 +211,41 @@ export async function recordReviewLogFromClaudeCode(opts: {
   const claudeResponse = opts.claude_response.trim();
   const isCorrect = correctAnswer ? checkSolveCorrect(claudeAnswer, correctAnswer) : null;
 
+  // per-question 종합 검증 — 정답 비교와 별개로 어법·해설·옵션 등 이상 여부 점검
+  const validationIssues = await runPerQuestionValidations(db, doc);
+  const blocking = hasBlockingIssue(validationIssues);
+
+  let status_updated_to_complete = false;
+  let status_updated_to_mismatch = false;
+  let forced_mismatch_by_validation = false;
+  if (String(doc.status ?? '') === '대기') {
+    const att = opts.attemptNumber;
+    const retry = att != null && Number.isFinite(att) && att >= 2;
+    let nextStatus: '완료' | '검수불일치' | null = null;
+    if (isCorrect === true) {
+      if (blocking) {
+        nextStatus = '검수불일치';
+        forced_mismatch_by_validation = true;
+      } else {
+        nextStatus = retry ? '검수불일치' : '완료';
+      }
+    } else if (isCorrect === false && blocking) {
+      // 정답 불일치 + 구조 이상 동시 발생: 다음 검수자가 바로 보도록 검수불일치로 보냄
+      nextStatus = '검수불일치';
+      forced_mismatch_by_validation = true;
+    }
+    if (nextStatus) {
+      const up = await gqCol.updateOne(
+        { _id: oid, status: '대기' },
+        { $set: { status: nextStatus, updated_at: new Date() } }
+      );
+      if (up.modifiedCount > 0) {
+        if (nextStatus === '완료') status_updated_to_complete = true;
+        else status_updated_to_mismatch = true;
+      }
+    }
+  }
+
   await logCol.insertOne({
     generated_question_id: oid,
     textbook: String(doc.textbook ?? ''),
@@ -218,23 +262,9 @@ export async function recordReviewLogFromClaudeCode(opts: {
     error: null,
     admin_login_id: opts.admin_login_id,
     created_at: new Date(),
+    validation_issues: validationIssues,
+    forced_mismatch_by_validation,
   } satisfies ReviewLogDoc);
-
-  let status_updated_to_complete = false;
-  let status_updated_to_mismatch = false;
-  if (isCorrect === true && String(doc.status ?? '') === '대기') {
-    const att = opts.attemptNumber;
-    const retry = att != null && Number.isFinite(att) && att >= 2;
-    const nextStatus = retry ? '검수불일치' : '완료';
-    const up = await gqCol.updateOne(
-      { _id: oid, status: '대기' },
-      { $set: { status: nextStatus, updated_at: new Date() } }
-    );
-    if (up.modifiedCount > 0) {
-      if (nextStatus === '완료') status_updated_to_complete = true;
-      else status_updated_to_mismatch = true;
-    }
-  }
 
   return {
     ok: true,
@@ -242,5 +272,7 @@ export async function recordReviewLogFromClaudeCode(opts: {
     is_correct: isCorrect,
     status_updated_to_complete,
     status_updated_to_mismatch,
+    validation_issues: validationIssues,
+    forced_mismatch_by_validation,
   };
 }

@@ -1,0 +1,239 @@
+{
+  "passageId": "69d4eca372a886137cd83f0e",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 5회 04번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 5회 04번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 5회 04번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The relationships between senses, sensory organs, and neural processing centers are not fixed, but can adapt themselves.",
+      "tokens": ["The","relationships","between","senses,","sensory","organs,","and","neural","processing","centers","are","not","fixed,","but","can","adapt","themselves."],
+      "korean": "감각과 감각 기관 그리고 신경 처리 센터 간의 관계는 고정된 것이 아니라 그들 스스로 적응할 수 있다."
+    },
+    {
+      "idx": 1,
+      "text": "Geerat Vermeij illustrates this well.",
+      "tokens": ["Geerat","Vermeij","illustrates","this","well."],
+      "korean": "Geerat Vermeij는 이것을 잘 보여준다."
+    },
+    {
+      "idx": 2,
+      "text": "When he lost his sight at a young age, his visual cortex wasn’t left as vacant space in his brain.",
+      "tokens": ["When","he","lost","his","sight","at","a","young","age,","his","visual","cortex","wasn’t","left","as","vacant","space","in","his","brain."],
+      "korean": "그가 어려서 시력을 잃었을 때, 그의 시각 피질은 그의 뇌 속에 빈 공간으로 남아 있지 않았다."
+    },
+    {
+      "idx": 3,
+      "text": "Rather, he feels, as he began to rely more and more on his tactile sense, the parts of his brain devoted to tactile information processing literally took over his visual processing center, so that, in his words, he can now see with his fingers.",
+      "tokens": ["Rather,","he","feels,","as","he","began","to","rely","more","and","more","on","his","tactile","sense,","the","parts","of","his","brain","devoted","to","tactile","information","processing","literally","took","over","his","visual","processing","center,","so","that,","in","his","words,","he","can","now","see","with","his","fingers."],
+      "korean": "오히려, 그는 촉각적 감각에 점점 더 의존하기 시작하면서, 그의 두뇌에서 촉각정보처리에 전념하는 부분이 문자 그대로 그의 시각정보처리 센터를 인수했으며, 그래서 그의 말을 빌자면, 이제 그는 자신의 손가락으로 볼 수 있게 되었다고 느낀다."
+    },
+    {
+      "idx": 4,
+      "text": "By contrast, special education instructor Daniel Kish adapted to early blindness in a completely different way ― learning early to use his auditory ability to “see” his surroundings by making clicking sounds and listening for the different echoes that came back to him when reflected off different shapes and materials.",
+      "tokens": ["By","contrast,","special","education","instructor","Daniel","Kish","adapted","to","early","blindness","in","a","completely","different","way","―","learning","early","to","use","his","auditory","ability","to","“see”","his","surroundings","by","making","clicking","sounds","and","listening","for","the","different","echoes","that","came","back","to","him","when","reflected","off","different","shapes","and","materials."],
+      "korean": "이와는 대조적으로, 특수교육강사인 Daniel Kish는 완전히 다른 방식으로 어린 시절에 생긴 실명에 적응했는데, 즉 딸깍하는 소리를 내고 (그 소리가) 다른 모양과 물질로부터 반사되었을 때 자신에게 되돌아온 다양한 울림을 들음으로써 자신의 주변 환경을 ‘볼 수 있는’ 청각 능력을 사용하는 법을 일찍 배웠다."
+    },
+    {
+      "idx": 5,
+      "text": "In addition to hard work and prodigious intellects, environment and cooperation have been invaluable to the incredible contributions these men have made.",
+      "tokens": ["In","addition","to","hard","work","and","prodigious","intellects,","environment","and","cooperation","have","been","invaluable","to","the","incredible","contributions","these","men","have","made."],
+      "korean": "열심히 노력하는 것과 엄청난 지적 능력을 가진 사람들뿐만 아니라, 환경과 협력은 이 사람들이 이룬 놀라운 공헌에 매우 귀중한 것이었다."
+    },
+    {
+      "idx": 6,
+      "text": "Yet at the core, their basic survival is attributable to having redundant and adaptable sensory systems.",
+      "tokens": ["Yet","at","the","core,","their","basic","survival","is","attributable","to","having","redundant","and","adaptable","sensory","systems."],
+      "korean": "그러나 핵심적으로, 그들의 기본적인 생존은 여분이 있고 적응할 수 있는 감각 체계를 가지고 있기 때문이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T10-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'The relationships'가 복수이므로 복수형 be동사 'are'가 맞다. 'between senses, sensory organs, and neural processing centers' 같은 전치사구 수식에 이끌려 단수 'is'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T2-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "illustrates",
+          "wrongCandidates": ["illustrate"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Geerat Vermeij'는 사람 이름으로 단수 주어이므로 3인칭 단수 현재형 'illustrates'가 맞다. 동사원형 'illustrate'는 복수 주어에 사용된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "illustrate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T13-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "left",
+          "wrongCandidates": ["leaving"],
+          "grammarType": "수동태",
+          "explanation": "주어 'his visual cortex'는 남겨지는 대상이므로 수동태 'wasn’t left'가 맞다. 현재분사 'leaving'은 능동의 의미가 되어 주어와의 관계가 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "leave",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T20-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 20,
+          "endTokenIdx": 20,
+          "correctForm": "devoted",
+          "wrongCandidates": ["devoting"],
+          "grammarType": "분사",
+          "explanation": "수식 받는 명사 'the parts (of his brain)'는 촉각 정보 처리에 '전념되어지는' 수동의 대상이므로 과거분사 'devoted'가 맞다. 현재분사 'devoting'은 능동(부분들이 무엇인가에 전념하는 행위 주체)이 되어 의미가 어색하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "devote",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T38-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 38,
+          "endTokenIdx": 38,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the different echoes'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 이미 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T21-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "made",
+          "wrongCandidates": ["making"],
+          "grammarType": "시제",
+          "explanation": "'these men have ___' 구조의 현재완료 시제이므로 과거분사 'made'가 와야 한다. 동명사·현재분사 'making'은 현재완료의 본동사 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "make",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T10-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "having",
+          "wrongCandidates": ["have"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'to' 뒤에는 동명사가 와야 하므로 'having'이 맞다. 'be attributable to'의 'to'는 to부정사가 아니라 전치사이므로 동사원형 'have'를 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "illustrates", "baseForm": "illustrate"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "left", "baseForm": "leave"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "devoted", "baseForm": "devote"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "made", "baseForm": "make"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "having", "baseForm": "have"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "are", "wrongForm": "is", "explanation": "주어의 핵 'The relationships'가 복수이므로 복수형 be동사 'are'가 맞다. 'between senses, sensory organs, and neural processing centers' 같은 전치사구 수식에 이끌려 단수 'is'를 쓰면 안 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "illustrates", "wrongForm": "illustrate", "explanation": "주어 'Geerat Vermeij'는 사람 이름으로 단수 주어이므로 3인칭 단수 현재형 'illustrates'가 맞다. 동사원형 'illustrate'는 복수 주어에 사용된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "left", "wrongForm": "leaving", "explanation": "주어 'his visual cortex'는 남겨지는 대상이므로 수동태 'wasn’t left'가 맞다. 현재분사 'leaving'은 능동의 의미가 되어 주어와의 관계가 맞지 않는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "devoted", "wrongForm": "devoting", "explanation": "수식 받는 명사 'the parts (of his brain)'는 촉각 정보 처리에 '전념되어지는' 수동의 대상이므로 과거분사 'devoted'가 맞다. 현재분사 'devoting'은 능동(부분들이 무엇인가에 전념하는 행위 주체)이 되어 의미가 어색하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 38, "endTokenIdx": 38, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'the different echoes'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로 이미 선행사가 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "made", "wrongForm": "making", "explanation": "'these men have ___' 구조의 현재완료 시제이므로 과거분사 'made'가 와야 한다. 동명사·현재분사 'making'은 현재완료의 본동사 자리에 올 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "having", "wrongForm": "have", "explanation": "전치사 'to' 뒤에는 동명사가 와야 하므로 'having'이 맞다. 'be attributable to'의 'to'는 to부정사가 아니라 전치사이므로 동사원형 'have'를 쓸 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'The relationships'에 맞춰 복수형 be동사 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "illustrate", "correction": "illustrates", "explanation": "단수 주어 'Geerat Vermeij'에 맞춰 3인칭 단수 현재형 'illustrates'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "leaving", "correction": "left", "explanation": "주어 'his visual cortex'가 수동의 대상이므로 수동태가 되도록 과거분사 'left'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 20, "endTokenIdx": 20, "isError": true, "wrongForm": "devoting", "correction": "devoted", "explanation": "명사 'the parts'를 수동으로 수식하는 자리이므로 과거분사 'devoted'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 38, "endTokenIdx": 38, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'the different echoes'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 5, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "making", "correction": "made", "explanation": "현재완료 'have ___' 구조이므로 과거분사 'made'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "have", "correction": "having", "explanation": "전치사 'to' 뒤이므로 동명사 'having'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The relationships between senses, sensory organs, and neural processing centers is not fixed, but can adapt themselves.",
+          "isCorrect": false,
+          "correction": "The relationships between senses, sensory organs, and neural processing centers are not fixed, but can adapt themselves.",
+          "explanation": "복수 주어 'The relationships'에 맞춰 복수형 be동사 'are'가 맞다."
+        },
+        {
+          "text": "Geerat Vermeij illustrate this well.",
+          "isCorrect": false,
+          "correction": "Geerat Vermeij illustrates this well.",
+          "explanation": "단수 주어 'Geerat Vermeij'에 맞춰 3인칭 단수 현재형 'illustrates'가 맞다."
+        },
+        {
+          "text": "When he lost his sight at a young age, his visual cortex wasn’t leaving as vacant space in his brain.",
+          "isCorrect": false,
+          "correction": "When he lost his sight at a young age, his visual cortex wasn’t left as vacant space in his brain.",
+          "explanation": "주어가 수동의 대상이므로 수동태 'wasn’t left'가 맞다."
+        },
+        {
+          "text": "Rather, he feels, as he began to rely more and more on his tactile sense, the parts of his brain devoting to tactile information processing literally took over his visual processing center, so that, in his words, he can now see with his fingers.",
+          "isCorrect": false,
+          "correction": "Rather, he feels, as he began to rely more and more on his tactile sense, the parts of his brain devoted to tactile information processing literally took over his visual processing center, so that, in his words, he can now see with his fingers.",
+          "explanation": "명사 'the parts'를 수동으로 수식하므로 과거분사 'devoted'가 맞다."
+        },
+        {
+          "text": "By contrast, special education instructor Daniel Kish adapted to early blindness in a completely different way ― learning early to use his auditory ability to “see” his surroundings by making clicking sounds and listening for the different echoes what came back to him when reflected off different shapes and materials.",
+          "isCorrect": false,
+          "correction": "By contrast, special education instructor Daniel Kish adapted to early blindness in a completely different way ― learning early to use his auditory ability to “see” his surroundings by making clicking sounds and listening for the different echoes that came back to him when reflected off different shapes and materials.",
+          "explanation": "선행사 'the different echoes'가 있으므로 주격 관계대명사 'that'이 맞다. 'what'은 선행사 포함이라 불가."
+        },
+        {
+          "text": "In addition to hard work and prodigious intellects, environment and cooperation have been invaluable to the incredible contributions these men have making.",
+          "isCorrect": false,
+          "correction": "In addition to hard work and prodigious intellects, environment and cooperation have been invaluable to the incredible contributions these men have made.",
+          "explanation": "현재완료 'have ___' 구조이므로 과거분사 'made'가 맞다."
+        },
+        {
+          "text": "Yet at the core, their basic survival is attributable to have redundant and adaptable sensory systems.",
+          "isCorrect": false,
+          "correction": "Yet at the core, their basic survival is attributable to having redundant and adaptable sensory systems.",
+          "explanation": "'be attributable to'의 'to'는 전치사이므로 동명사 'having'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

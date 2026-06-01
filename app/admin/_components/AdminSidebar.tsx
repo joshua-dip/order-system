@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import WorkbookMakerNav from './WorkbookMakerNav';
+import GeneratedQuestionsNav from './GeneratedQuestionsNav';
+import ClassKitNav from './ClassKitNav';
+import EssayGeneratorNav from './EssayGeneratorNav';
 
 interface AdminSidebarProps {
   loginId: string;
@@ -47,6 +51,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         </button>
         {/* 현재 페이지 활성 표시 */}
         <div className="mt-4 flex-1 flex flex-col items-center gap-1 w-full px-1">
+          {isActive('/admin/class-kit') && (
+            <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1" />
+          )}
           {isActive('/admin/essay-generator') && (
             <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1" />
           )}
@@ -95,55 +102,10 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <Link href="/admin/passages" className={linkCls('/admin/passages')}>
           원문 관리 (DB)
         </Link>
-        <Link href="/admin/generated-questions" className={linkCls('/admin/generated-questions')}>
-          변형문제 관리 (DB)
-        </Link>
-        <div className="ml-3 mt-0.5 mb-1 flex flex-col gap-0.5">
-          <Link
-            href="/admin/generated-questions?mode=objective"
-            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
-          >
-            ├ 객관식 관리
-          </Link>
-          <Link
-            href="/admin/generated-questions?mode=essay"
-            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
-          >
-            └ 서술형 관리
-          </Link>
-        </div>
-        <Link href="/admin/essay-generator" className={linkCls('/admin/essay-generator')}>
-          서술형 출제기
-        </Link>
-        <Link href="/admin/workbook-maker" className={linkCls('/admin/workbook-maker')}>
-          워크북 제작기
-        </Link>
-        <div className="ml-3 mt-0.5 mb-1 flex flex-col gap-0.5">
-          <Link
-            href="/admin/workbook-maker/block-blank"
-            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
-          >
-            ├ 블록 빈칸
-          </Link>
-          <Link
-            href="/admin/workbook-maker/sentence-order"
-            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
-          >
-            ├ 순서배열
-          </Link>
-          <Link
-            href="/admin/workbook-maker/grammar"
-            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
-          >
-            ├ 어법공략
-          </Link>
-          <Link
-            href="/admin/workbook-maker/essay-step"
-            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
-          >
-            └ 서술형집중
-          </Link>
-        </div>
+        <GeneratedQuestionsNav />
+        <ClassKitNav />
+        <EssayGeneratorNav />
+        <WorkbookMakerNav />
         <Link href="/admin/syntax-analyzer" className={linkCls('/admin/syntax-analyzer')}>
           구문 분석기
         </Link>

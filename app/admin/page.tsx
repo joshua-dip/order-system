@@ -10,6 +10,10 @@ import { isAnnualMemberActive } from '@/lib/annual-member';
 import { isMonthlyMemberActive, isSignupPremiumTrialActive } from '@/lib/premium-member';
 import { isEbsTextbook } from '@/lib/textbookSort';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
+import WorkbookMakerNav from './_components/WorkbookMakerNav';
+import GeneratedQuestionsNav from './_components/GeneratedQuestionsNav';
+import ClassKitNav from './_components/ClassKitNav';
+import EssayGeneratorNav from './_components/EssayGeneratorNav';
 
 interface EssayTypeItem {
   id: string;
@@ -2381,7 +2385,6 @@ export default function AdminDashboardPage() {
   const pendingNoLinkOrders = recentOrders.filter(
     (o) => (o.status || 'pending') !== 'cancelled' && !o.fileUrl
   );
-  const needLinkCount = pendingNoLinkOrders.length;
   /** 폴더는 만들어졌고 공유 링크만 없음 */
   const needShareLinkOrders = pendingNoLinkOrders.filter((o) => o.dropboxFolderCreated);
   const needShareLinkCount = needShareLinkOrders.length;
@@ -2397,6 +2400,11 @@ export default function AdminDashboardPage() {
     return true;
   });
   const needOtherPendingCount = needOtherPendingOrders.length;
+  /**
+   * 대시보드 「미처리」 집계 — 폴더 생성 전(자동 폴더 플로우 대기)은 제외.
+   * = 공유 링크만 필요(폴더 생성됨) + 기타(비회원·Dropbox 미설정 등).
+   */
+  const unprocessedCount = needShareLinkCount + needOtherPendingCount;
 
   const filteredOrders = recentOrders.filter((o) => {
     if (orderFilter !== 'all') {
@@ -2481,9 +2489,9 @@ export default function AdminDashboardPage() {
             className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-between ${section === 'orders' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             <span>전체 주문</span>
-            {needLinkCount > 0 && (
+            {unprocessedCount > 0 && (
               <span className="bg-red-500 text-white text-xs font-bold min-w-[1.25rem] h-5 px-1.5 rounded-full flex items-center justify-center">
-                {needLinkCount}
+                {unprocessedCount}
               </span>
             )}
           </button>
@@ -2520,18 +2528,13 @@ export default function AdminDashboardPage() {
           >
             원문 관리 (DB)
           </Link>
-          <Link
-            href="/admin/generated-questions"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
-          >
-            변형문제 관리 (DB)
-          </Link>
-          <Link
-            href="/admin/essay-generator"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
-          >
-            서술형 출제기
-          </Link>
+          <GeneratedQuestionsNav />
+          <div className="mt-1">
+            <ClassKitNav />
+          </div>
+          <div className="mt-1">
+            <EssayGeneratorNav />
+          </div>
           <Link
             href="/admin/syntax-analyzer"
             className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
@@ -2559,6 +2562,9 @@ export default function AdminDashboardPage() {
           >
             워크북 대시보드
           </Link>
+          <div className="mt-1">
+            <WorkbookMakerNav />
+          </div>
           <div className="border-t border-slate-700 my-2 pt-2">
             <p className="text-xs text-slate-500 px-1 mb-1 uppercase tracking-wide font-semibold">학생 관리</p>
           </div>
@@ -2670,21 +2676,25 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* Red alert: 미처리 주문 */}
-          {needLinkCount > 0 && (
+          {/* Red alert: 미처리 주문 (폴더 생성 전 = 자동 대기, 집계 제외) */}
+          {unprocessedCount > 0 && (
             <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
               <div className="text-red-200 flex-1 min-w-0 text-sm leading-relaxed">
-                <p className="font-medium text-red-100">미처리 주문 {needLinkCount}건 (공유 링크 미등록)</p>
+                <p className="font-medium text-red-100">미처리 주문 {unprocessedCount}건 (공유 링크 미등록)</p>
                 <p className="mt-1 text-red-200/95 text-xs sm:text-sm">
                   · 공유 링크만 필요 (폴더 생성됨){' '}
                   <span className="tabular-nums font-semibold text-red-100">{needShareLinkCount}</span>건
-                  <span className="text-red-300/80 mx-1.5">|</span>· Dropbox 폴더 생성 전 (회원·연동){' '}
-                  <span className="tabular-nums font-semibold text-red-100">{needCreateFolderCount}</span>건
                   {needOtherPendingCount > 0 && (
                     <>
                       <span className="text-red-300/80 mx-1.5">|</span>· 기타 (비회원·Dropbox 미설정 등){' '}
                       <span className="tabular-nums font-semibold text-red-100">{needOtherPendingCount}</span>건
                     </>
+                  )}
+                  {needCreateFolderCount > 0 && (
+                    <span className="block mt-1 text-red-300/70 text-[11px] sm:text-xs">
+                      폴더 생성 전 (회원·연동, 자동 대기){' '}
+                      <span className="tabular-nums font-semibold">{needCreateFolderCount}</span>건은 미처리 집계에서 제외
+                    </span>
                   )}
                 </p>
               </div>
@@ -2754,23 +2764,26 @@ export default function AdminDashboardPage() {
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
               <p className="text-slate-400 text-sm">미처리 주문</p>
               <p className="text-2xl font-bold text-amber-400 mt-1 flex items-center gap-2">
-                {needLinkCount}건
-                {needLinkCount > 0 && (
+                {unprocessedCount}건
+                {unprocessedCount > 0 && (
                   <span className="text-amber-400" title="드롭박스 공유 링크 미등록">⚠</span>
                 )}
               </p>
               <div className="text-slate-500 text-[11px] mt-2 space-y-1 leading-snug">
                 <p>
                   링크만 필요 <span className="text-amber-200/90 tabular-nums font-semibold">{needShareLinkCount}</span>
-                  <span className="text-slate-600 mx-1">·</span>
-                  폴더 생성 전 <span className="text-amber-200/90 tabular-nums font-semibold">{needCreateFolderCount}</span>
+                  {needOtherPendingCount > 0 && (
+                    <>
+                      <span className="text-slate-600 mx-1">·</span>
+                      기타 <span className="text-slate-300 tabular-nums font-semibold">{needOtherPendingCount}</span>
+                      <span className="text-slate-600"> (비회원·연동 불가)</span>
+                    </>
+                  )}
                 </p>
-                {needOtherPendingCount > 0 && (
-                  <p>
-                    기타 <span className="text-slate-300 tabular-nums font-semibold">{needOtherPendingCount}</span>
-                    <span className="text-slate-600"> (비회원·연동 불가)</span>
-                  </p>
-                )}
+                <p className="text-slate-600">
+                  폴더 생성 전 <span className="text-slate-400 tabular-nums font-semibold">{needCreateFolderCount}</span>
+                  <span className="text-slate-600"> (자동 대기 · 집계 제외)</span>
+                </p>
                 <p className="text-slate-600 pt-0.5">취소 제외 · fileUrl 없음 기준</p>
               </div>
             </div>
@@ -3084,15 +3097,40 @@ export default function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={async () => {
+                                  const text = o.orderNumber!;
+                                  let ok = false;
                                   try {
-                                    await navigator.clipboard.writeText(o.orderNumber!);
+                                    if (navigator.clipboard?.writeText) {
+                                      await navigator.clipboard.writeText(text);
+                                      ok = true;
+                                    }
+                                  } catch { ok = false; }
+                                  if (!ok) {
+                                    // 클립보드 API 차단 시 execCommand 폴백
+                                    try {
+                                      const ta = document.createElement('textarea');
+                                      ta.value = text;
+                                      ta.style.position = 'fixed';
+                                      ta.style.opacity = '0';
+                                      document.body.appendChild(ta);
+                                      ta.focus();
+                                      ta.select();
+                                      ok = document.execCommand('copy');
+                                      document.body.removeChild(ta);
+                                    } catch { ok = false; }
+                                  }
+                                  if (ok) {
                                     setCopiedOrderNumberId(o.id);
                                     setTimeout(() => setCopiedOrderNumberId(null), 1500);
-                                  } catch {
-                                    setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
+                                  } else {
+                                    setMessage({ type: 'error', text: '클립보드 복사 실패 — 주문번호를 직접 선택해 복사하세요.' });
                                   }
                                 }}
-                                className="shrink-0 rounded p-1 text-slate-500 hover:text-cyan-300 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                className={`shrink-0 rounded p-1 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/40 ${
+                                  copiedOrderNumberId === o.id
+                                    ? 'text-emerald-400 bg-emerald-500/15'
+                                    : 'text-slate-500 hover:text-cyan-300 hover:bg-slate-700/50'
+                                }`}
                                 title="주문번호 복사"
                                 aria-label={`주문번호 ${o.orderNumber} 클립보드에 복사`}
                               >
@@ -5367,15 +5405,40 @@ export default function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={async () => {
+                                  const text = o.orderNumber!;
+                                  let ok = false;
                                   try {
-                                    await navigator.clipboard.writeText(o.orderNumber!);
+                                    if (navigator.clipboard?.writeText) {
+                                      await navigator.clipboard.writeText(text);
+                                      ok = true;
+                                    }
+                                  } catch { ok = false; }
+                                  if (!ok) {
+                                    // 클립보드 API 차단 시 execCommand 폴백
+                                    try {
+                                      const ta = document.createElement('textarea');
+                                      ta.value = text;
+                                      ta.style.position = 'fixed';
+                                      ta.style.opacity = '0';
+                                      document.body.appendChild(ta);
+                                      ta.focus();
+                                      ta.select();
+                                      ok = document.execCommand('copy');
+                                      document.body.removeChild(ta);
+                                    } catch { ok = false; }
+                                  }
+                                  if (ok) {
                                     setCopiedOrderNumberId(o.id);
                                     setTimeout(() => setCopiedOrderNumberId(null), 1500);
-                                  } catch {
-                                    setMessage({ type: 'error', text: '클립보드 복사에 실패했습니다.' });
+                                  } else {
+                                    setMessage({ type: 'error', text: '클립보드 복사 실패 — 주문번호를 직접 선택해 복사하세요.' });
                                   }
                                 }}
-                                className="shrink-0 rounded p-1 text-slate-500 hover:text-cyan-300 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                className={`shrink-0 rounded p-1 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/40 ${
+                                  copiedOrderNumberId === o.id
+                                    ? 'text-emerald-400 bg-emerald-500/15'
+                                    : 'text-slate-500 hover:text-cyan-300 hover:bg-slate-700/50'
+                                }`}
                                 title="주문번호 복사"
                                 aria-label={`주문번호 ${o.orderNumber} 클립보드에 복사`}
                               >

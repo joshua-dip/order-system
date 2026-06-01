@@ -1,0 +1,595 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd40",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 43~45번",
+  "title": "26년 3월 고3 영어모의고사 43~45번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "43~45번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "While taking a break from her daily housework, Cora scrolled through the internet and read a friend's response to a family's post.",
+      "tokens": ["While","taking","a","break","from","her","daily","housework,","Cora","scrolled","through","the","internet","and","read","a","friend's","response","to","a","family's","post."],
+      "korean": "일상적인 집안일로부터 휴식을 취하는 동안, Cora는 인터넷 화면을 스크롤하다 한 가족의 게시물에 대한 친구의 응답을 읽었다."
+    },
+    {
+      "idx": 1,
+      "text": "The grieving parents were asking for prayers for their 7-year-old daughter.",
+      "tokens": ["The","grieving","parents","were","asking","for","prayers","for","their","7-year-old","daughter."],
+      "korean": "슬픔에 잠긴 부모가 그들의 7살 딸을 위해 기도를 요청하고 있었다."
+    },
+    {
+      "idx": 2,
+      "text": "Their daughter had a heart problem, so she needed a heart transplant.",
+      "tokens": ["Their","daughter","had","a","heart","problem,","so","she","needed","a","heart","transplant."],
+      "korean": "그들의 딸에게 심장 문제가 있어서 그녀는 심장 이식이 필요했다."
+    },
+    {
+      "idx": 3,
+      "text": "Cora did not know the family or their daughter personally.",
+      "tokens": ["Cora","did","not","know","the","family","or","their","daughter","personally."],
+      "korean": "Cora는 그 가족이나 그들의 딸을 개인적으로 알지 못했다."
+    },
+    {
+      "idx": 4,
+      "text": "However, they were from a small town called Appalachia which was also Cora's hometown.",
+      "tokens": ["However,","they","were","from","a","small","town","called","Appalachia","which","was","also","Cora's","hometown."],
+      "korean": "하지만, 그들은 Appalachia라고 불리는 작은 마을 출신이었고, 그곳은 또한 Cora의 고향이었다."
+    },
+    {
+      "idx": 5,
+      "text": "As she kept reading the post, she noticed that the family was in a nearby hospital.",
+      "tokens": ["As","she","kept","reading","the","post,","she","noticed","that","the","family","was","in","a","nearby","hospital."],
+      "korean": "게시물을 계속 읽으며, 그녀는 그 가족이 인근 병원에 있다는 것을 알아차렸다."
+    },
+    {
+      "idx": 6,
+      "text": "She sent a private message introducing herself and asked if there would be anything they needed.",
+      "tokens": ["She","sent","a","private","message","introducing","herself","and","asked","if","there","would","be","anything","they","needed."],
+      "korean": "그녀는 자신을 소개하는 비공개 메시지를 보내고 무엇이든 그들에게 필요한 것이 있는지 물어보았다."
+    },
+    {
+      "idx": 7,
+      "text": "Soon, Cora heard back from the girl herself that she would really like some apple butter, a local favorite in Appalachia.",
+      "tokens": ["Soon,","Cora","heard","back","from","the","girl","herself","that","she","would","really","like","some","apple","butter,","a","local","favorite","in","Appalachia."],
+      "korean": "머지않아, Cora는 그 소녀로부터 직접 그녀는 Appalachia의 인기 있는 지역 음식인 애플 버터 약간을 정말 먹고 싶다는 연락을 받았다."
+    },
+    {
+      "idx": 8,
+      "text": "So Cora made some apple butter, and bought biscuits to eat it with.",
+      "tokens": ["So","Cora","made","some","apple","butter,","and","bought","biscuits","to","eat","it","with."],
+      "korean": "그래서 Cora는 애플 버터를 약간 만들었고, 같이 먹을 비스킷을 샀다."
+    },
+    {
+      "idx": 9,
+      "text": "Then, she brought them to the hospital for the girl.",
+      "tokens": ["Then,","she","brought","them","to","the","hospital","for","the","girl."],
+      "korean": "그리고 그녀는 이것들을 소녀를 위해 병원에 가져갔다."
+    },
+    {
+      "idx": 10,
+      "text": "Though they were total strangers, they felt an instant connection since they were from the same hometown.",
+      "tokens": ["Though","they","were","total","strangers,","they","felt","an","instant","connection","since","they","were","from","the","same","hometown."],
+      "korean": "비록 그들은 완전히 낯선 사람들이었지만, 그들은 같은 고향 출신이었기 때문에 즉각적인 친밀감을 느꼈다."
+    },
+    {
+      "idx": 11,
+      "text": "During the visit, Cora learned more about the family's situation.",
+      "tokens": ["During","the","visit,","Cora","learned","more","about","the","family's","situation."],
+      "korean": "방문하던 중, Cora는 가족의 상황에 대해 더 알게 되었다."
+    },
+    {
+      "idx": 12,
+      "text": "Their daughter seemed to be a healthy girl until she suddenly collapsed.",
+      "tokens": ["Their","daughter","seemed","to","be","a","healthy","girl","until","she","suddenly","collapsed."],
+      "korean": "그들의 딸은 그녀가 갑자기 쓰러지기 전까지는 건강한 소녀인 것 같았다."
+    },
+    {
+      "idx": 13,
+      "text": "They found out that her heart was failing.",
+      "tokens": ["They","found","out","that","her","heart","was","failing."],
+      "korean": "그들은 그녀의 심장이 약해지고 있다는 걸 알게 되었다."
+    },
+    {
+      "idx": 14,
+      "text": "The doctors managed to get her stable but wanted her to remain close to the hospital in case of any complications and to await a donor.",
+      "tokens": ["The","doctors","managed","to","get","her","stable","but","wanted","her","to","remain","close","to","the","hospital","in","case","of","any","complications","and","to","await","a","donor."],
+      "korean": "의사들은 어렵사리 그녀를 안정시켰지만, 어떤 합병증에라도 대비하고 기증자를 기다리기 위해 그녀가 병원 가까이에 머무르길 원했다."
+    },
+    {
+      "idx": 15,
+      "text": "Knowing that the wait for a donor could take months, they worried about how they could afford to stay in the area as their home was four hours away from the hospital.",
+      "tokens": ["Knowing","that","the","wait","for","a","donor","could","take","months,","they","worried","about","how","they","could","afford","to","stay","in","the","area","as","their","home","was","four","hours","away","from","the","hospital."],
+      "korean": "기증자를 기다리는 것이 몇 달이 걸릴 수 있다는 것을 알고, 그들의 집이 병원에서 네 시간 거리에 있었기 때문에 그들은 어떻게 그 지역에 머무를 수 있을지 걱정했다."
+    },
+    {
+      "idx": 16,
+      "text": "Cora, unsure how much she could really help but wanting to do more for the girl and her family, invited them to stay with her.",
+      "tokens": ["Cora,","unsure","how","much","she","could","really","help","but","wanting","to","do","more","for","the","girl","and","her","family,","invited","them","to","stay","with","her."],
+      "korean": "Cora는 그녀가 얼마나 정말 도울 수 있을지 확신할 수 없었지만, 소녀와 그녀의 가족을 위해 더 많은 것을 해 주기를 원하여, 그녀와 머물도록 그들을 초대했다."
+    },
+    {
+      "idx": 17,
+      "text": "Cora wanted to make sure the girl felt comfortable, so she let her stay in the largest room in the house.",
+      "tokens": ["Cora","wanted","to","make","sure","the","girl","felt","comfortable,","so","she","let","her","stay","in","the","largest","room","in","the","house."],
+      "korean": "Cora는 소녀가 편안하게 느끼도록 확실히 하고 싶어서, 그녀가 집에서 가장 큰 방에 머물도록 했다."
+    },
+    {
+      "idx": 18,
+      "text": "Cora also prepared an extra mattress so that her parents could sleep nearby.",
+      "tokens": ["Cora","also","prepared","an","extra","mattress","so","that","her","parents","could","sleep","nearby."],
+      "korean": "Cora는 또한 추가 매트리스를 준비해서 그녀의 부모님이 근처에서 잘 수 있도록 했다."
+    },
+    {
+      "idx": 19,
+      "text": "The family was deeply touched by Cora's kindness and felt so grateful.",
+      "tokens": ["The","family","was","deeply","touched","by","Cora's","kindness","and","felt","so","grateful."],
+      "korean": "그 가족은 Cora의 친절함에 깊은 감동을 받았고 매우 감사했다."
+    },
+    {
+      "idx": 20,
+      "text": "Far from their friends and family, and forced to endure more than any family ever should, the family found a piece of home in Cora's.",
+      "tokens": ["Far","from","their","friends","and","family,","and","forced","to","endure","more","than","any","family","ever","should,","the","family","found","a","piece","of","home","in","Cora's."],
+      "korean": "그들의 친구들과 가족에게서 멀리 떨어져, 그리고 어떤 가족이든 한 번이라도 견뎌야 하는 것보다 더 많은 걸 어쩔 수 없이 견디며, 가족은 Cora의 집에서 고향 한 조각을 발견했다."
+    },
+    {
+      "idx": 21,
+      "text": "Her generosity showed that sharing the heart of a hometown created a friendship among strangers.",
+      "tokens": ["Her","generosity","showed","that","sharing","the","heart","of","a","hometown","created","a","friendship","among","strangers."],
+      "korean": "그녀의 관용은 고향의 마음을 나누는 것이 낯선 사람들 사이에 우정을 낳는다는 것을 보여 주었다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T1-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "taking",
+          "wrongCandidates": ["taken"],
+          "grammarType": "분사",
+          "explanation": "'While (she was) taking a break'에서 'she was'가 생략된 분사구문으로, 의미상 주어 'Cora'가 능동적으로 휴식을 취하는 것이므로 현재분사 'taking'이 맞다. 과거분사 'taken'은 수동의 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "take",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "asking",
+          "wrongCandidates": ["asked"],
+          "grammarType": "시제",
+          "explanation": "'were asking'은 과거진행시제로, 'were' 뒤에는 현재분사 'asking'이 와야 한다. 과거분사 'asked'를 쓰면 'were asked'가 되어 수동태(요청받고 있었다)가 되므로 문맥상 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "ask",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "needed",
+          "wrongCandidates": ["needs"],
+          "grammarType": "시제",
+          "explanation": "앞 절의 'had'와 일관되게 과거 시제 'needed'가 맞다. 글 전체가 과거 시점의 이야기 흐름이므로 현재형 'needs'는 시제 불일치이다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "need",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T9-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'Appalachia'(고유명사)가 있으므로 주격 관계대명사 'which'(계속적 용법)가 맞다. 'what'은 선행사를 포함하는 관계대명사라서 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "reading",
+          "wrongCandidates": ["to read"],
+          "grammarType": "분사",
+          "explanation": "동사 'keep'은 'keep + -ing'(계속 ~하다) 형태로 동명사를 목적어로 취한다. 따라서 'reading'이 맞고, 'keep + to부정사'는 영어에 없는 구조라 'to read'는 틀리다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "read",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "introducing",
+          "wrongCandidates": ["introduced"],
+          "grammarType": "분사",
+          "explanation": "'a private message introducing herself'는 명사 'message'를 뒤에서 수식하는 현재분사구로, 메시지가 능동적으로 자신을 소개하는 의미이므로 'introducing'이 맞다. 과거분사 'introduced'는 메시지가 소개되는 수동의 의미라 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "introduce",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T7-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "herself",
+          "wrongCandidates": ["her"],
+          "grammarType": "대명사",
+          "explanation": "'the girl herself'는 강조 용법의 재귀대명사로, '그 소녀가 직접'이라는 의미이다. 목적격 대명사 'her'는 동격으로 명사를 강조할 수 없으므로 'herself'가 맞다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T9-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 9,
+          "endTokenIdx": 10,
+          "correctForm": "to eat",
+          "wrongCandidates": ["eating"],
+          "grammarType": "부정사",
+          "explanation": "'biscuits to eat it with'는 '같이 먹을 비스킷'이라는 의미로, 명사 'biscuits'를 수식하는 형용사적 용법의 to부정사가 와야 한다. 동명사 'eating'은 명사를 수식하는 한정적 용법이 다르며 의미상 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S10-T10-001",
+          "sentenceIdx": 10,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "since",
+          "wrongCandidates": ["during"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 절(they were from the same hometown)이 오므로 '~이기 때문에'의 이유를 나타내는 접속사 'since'가 맞다. 'during'은 전치사라서 뒤에 절이 아니라 명사(구)만 올 수 있어 틀리다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S11-T0-001",
+          "sentenceIdx": 11,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "During",
+          "wrongCandidates": ["While"],
+          "grammarType": "전치사",
+          "explanation": "뒤에 명사구 'the visit'가 오므로 전치사 'During'(~ 동안)이 맞다. 'While'은 접속사라서 뒤에 절(주어+동사)이 와야 하므로 명사구만 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S12-T3-001",
+          "sentenceIdx": 12,
+          "startTokenIdx": 3,
+          "endTokenIdx": 4,
+          "correctForm": "to be",
+          "wrongCandidates": ["being"],
+          "grammarType": "부정사",
+          "explanation": "동사 'seem'은 'seem + to부정사' 형태(~인 것 같다)를 취하므로 'to be'가 맞다. 동명사 'being'은 'seem'의 보어로 쓸 수 없는 구조라서 틀리다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S13-T7-001",
+          "sentenceIdx": 13,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "failing",
+          "wrongCandidates": ["failed"],
+          "grammarType": "시제",
+          "explanation": "'was failing'은 과거진행시제로, be동사 'was' 뒤에는 현재분사 'failing'이 와야 한다. 과거분사 'failed'를 쓰면 'was failed'가 되어 '실패되었다'는 수동의 의미가 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "fail",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S14-T11-001",
+          "sentenceIdx": 14,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "remain",
+          "wrongCandidates": ["remained"],
+          "grammarType": "부정사",
+          "explanation": "'want + 목적어 + to부정사' 구조로, 'to' 뒤에는 동사원형이 와야 하므로 'remain'이 맞다. 과거분사 'remained'는 to부정사 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "remain",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S15-T0-001",
+          "sentenceIdx": 15,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Knowing",
+          "wrongCandidates": ["Known"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'they'가 능동적으로 '아는' 주체이므로 현재분사 'Knowing'이 맞다. 과거분사 'Known'은 '알려진'이라는 수동의 의미가 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "know",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S16-T9-001",
+          "sentenceIdx": 16,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "wanting",
+          "wrongCandidates": ["wanted"],
+          "grammarType": "분사",
+          "explanation": "삽입된 분사구문(unsure ... but wanting ...)에서 의미상 주어 'Cora'가 능동적으로 원하므로 현재분사 'wanting'이 맞다. 과거분사 'wanted'는 '원해진'의 수동 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "want",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S17-T13-001",
+          "sentenceIdx": 17,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "stay",
+          "wrongCandidates": ["stayed"],
+          "grammarType": "사역동사",
+          "explanation": "사역동사 'let'은 'let + 목적어 + 동사원형' 구조를 취하므로 동사원형 'stay'가 맞다. 과거분사 'stayed'는 사역동사 뒤 목적격보어 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "stay",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S18-T11-001",
+          "sentenceIdx": 18,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "sleep",
+          "wrongCandidates": ["slept"],
+          "grammarType": "조동사",
+          "explanation": "조동사 'could' 뒤에는 동사원형이 와야 하므로 'sleep'이 맞다. 과거분사 'slept'는 조동사 뒤에 올 수 없으며, 의미상으로도 '잘 수 있도록'의 가능 의미와 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "sleep",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S20-T7-001",
+          "sentenceIdx": 20,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "forced",
+          "wrongCandidates": ["forcing"],
+          "grammarType": "수동태",
+          "explanation": "'(being) forced to endure'에서 'being'이 생략된 수동 분사구문으로, 주어 'the family'가 견디는 것을 강요받은(수동) 입장이므로 과거분사 'forced'가 맞다. 현재분사 'forcing'은 능동(강요하는)이 되어 문맥에 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "force",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S21-T10-001",
+          "sentenceIdx": 21,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "created",
+          "wrongCandidates": ["create"],
+          "grammarType": "수일치",
+          "explanation": "that절의 주어인 동명사구 'sharing the heart of a hometown'은 단수 취급되고, 글 전체가 과거 시제이므로 단수 과거형 'created'가 맞다. 원형 'create'는 시제·수일치 모두 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "create",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "taking", "baseForm": "take"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "asking", "baseForm": "ask"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "needed", "baseForm": "need"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "reading", "baseForm": "read"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "introducing", "baseForm": "introduce"},
+        {"kind": "word", "sentenceIdx": 13, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "failing", "baseForm": "fail"},
+        {"kind": "word", "sentenceIdx": 14, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "remain", "baseForm": "remain"},
+        {"kind": "word", "sentenceIdx": 15, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Knowing", "baseForm": "know"},
+        {"kind": "word", "sentenceIdx": 16, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "wanting", "baseForm": "want"},
+        {"kind": "word", "sentenceIdx": 17, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "stay", "baseForm": "stay"},
+        {"kind": "word", "sentenceIdx": 18, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "sleep", "baseForm": "sleep"},
+        {"kind": "word", "sentenceIdx": 20, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "forced", "baseForm": "force"},
+        {"kind": "word", "sentenceIdx": 21, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "created", "baseForm": "create"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "taking", "wrongForm": "taken", "explanation": "분사구문의 의미상 주어 'Cora'가 능동적으로 휴식을 취하므로 현재분사 'taking'이 맞다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "asking", "wrongForm": "asked", "explanation": "'were asking'은 과거진행시제 — be동사 뒤에는 현재분사 'asking'."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "needed", "wrongForm": "needs", "explanation": "앞 절의 'had'와 일관된 과거 시제 'needed'가 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "which", "wrongForm": "what", "explanation": "선행사 'Appalachia'가 있으므로 주격 관계대명사 'which'가 맞다. 'what'은 선행사 포함이라 불가."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "reading", "wrongForm": "to read", "explanation": "'keep + -ing'(계속 ~하다) 구조 — 동명사 'reading'이 맞다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "introducing", "wrongForm": "introduced", "explanation": "명사 'message'를 능동적으로 수식하는 현재분사 'introducing'이 맞다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "herself", "wrongForm": "her", "explanation": "'the girl herself'는 강조 용법의 재귀대명사 — 'her'(목적격)는 강조 동격으로 쓸 수 없다."},
+        {"sentenceIdx": 8, "startTokenIdx": 9, "endTokenIdx": 10, "correctForm": "to eat", "wrongForm": "eating", "explanation": "명사 'biscuits'를 수식하는 형용사적 용법의 to부정사 'to eat'이 맞다."},
+        {"sentenceIdx": 10, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "since", "wrongForm": "during", "explanation": "뒤에 절이 오므로 이유 접속사 'since'. 'during'은 전치사라 절을 이끌 수 없다."},
+        {"sentenceIdx": 11, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "During", "wrongForm": "While", "explanation": "뒤에 명사구 'the visit'가 오므로 전치사 'During'. 'While'은 접속사라 명사구만으로는 불가."},
+        {"sentenceIdx": 12, "startTokenIdx": 3, "endTokenIdx": 4, "correctForm": "to be", "wrongForm": "being", "explanation": "'seem + to부정사' 구조이므로 'to be'가 맞다."},
+        {"sentenceIdx": 13, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "failing", "wrongForm": "failed", "explanation": "'was failing'은 과거진행시제 — be동사 뒤에는 현재분사 'failing'."},
+        {"sentenceIdx": 14, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "remain", "wrongForm": "remained", "explanation": "'want O to V' 구조 — 'to' 뒤 동사원형 'remain'이 맞다."},
+        {"sentenceIdx": 15, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Knowing", "wrongForm": "Known", "explanation": "분사구문의 의미상 주어 'they'가 능동적으로 알므로 현재분사 'Knowing'."},
+        {"sentenceIdx": 16, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "wanting", "wrongForm": "wanted", "explanation": "삽입 분사구문에서 'Cora'가 능동적으로 원하므로 현재분사 'wanting'."},
+        {"sentenceIdx": 17, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "stay", "wrongForm": "stayed", "explanation": "사역동사 'let + O + 동사원형' — 동사원형 'stay'가 맞다."},
+        {"sentenceIdx": 18, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "sleep", "wrongForm": "slept", "explanation": "조동사 'could' 뒤에는 동사원형 'sleep'이 와야 한다."},
+        {"sentenceIdx": 20, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "forced", "wrongForm": "forcing", "explanation": "'(being) forced'의 수동 분사구문 — 주어가 강요받는 입장이므로 'forced'."},
+        {"sentenceIdx": 21, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "created", "wrongForm": "create", "explanation": "동명사구 주어는 단수 취급 + 과거시제이므로 'created'가 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "taken", "correction": "taking", "explanation": "능동적 분사구문이므로 현재분사 'taking'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "asked", "correction": "asking", "explanation": "'were' 뒤 과거진행이므로 'asking'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "needs", "correction": "needed", "explanation": "과거 시점이므로 'needed'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사가 있으므로 'which'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "to read", "correction": "reading", "explanation": "'keep + -ing' 구조이므로 'reading'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "introduced", "correction": "introducing", "explanation": "명사를 능동적으로 수식하는 현재분사 'introducing'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "her", "correction": "herself", "explanation": "강조 용법의 재귀대명사 'herself'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 9, "endTokenIdx": 10, "isError": true, "wrongForm": "eating", "correction": "to eat", "explanation": "명사를 수식하는 형용사적 용법의 to부정사 'to eat'으로 고쳐야 한다."},
+        {"sentenceIdx": 10, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "during", "correction": "since", "explanation": "뒤에 절이 오므로 접속사 'since'로 고쳐야 한다."},
+        {"sentenceIdx": 11, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "While", "correction": "During", "explanation": "뒤에 명사구만 오므로 전치사 'During'으로 고쳐야 한다."},
+        {"sentenceIdx": 12, "startTokenIdx": 3, "endTokenIdx": 4, "isError": true, "wrongForm": "being", "correction": "to be", "explanation": "'seem + to부정사' 구조이므로 'to be'로 고쳐야 한다."},
+        {"sentenceIdx": 13, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "failed", "correction": "failing", "explanation": "'was failing' 과거진행이므로 'failing'으로 고쳐야 한다."},
+        {"sentenceIdx": 14, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "remained", "correction": "remain", "explanation": "'to' 뒤 동사원형이므로 'remain'으로 고쳐야 한다."},
+        {"sentenceIdx": 15, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Known", "correction": "Knowing", "explanation": "능동 분사구문이므로 'Knowing'으로 고쳐야 한다."},
+        {"sentenceIdx": 16, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "wanted", "correction": "wanting", "explanation": "능동 분사구문이므로 'wanting'으로 고쳐야 한다."},
+        {"sentenceIdx": 17, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "stayed", "correction": "stay", "explanation": "사역동사 let 뒤 동사원형 'stay'로 고쳐야 한다."},
+        {"sentenceIdx": 18, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "slept", "correction": "sleep", "explanation": "조동사 could 뒤 동사원형 'sleep'으로 고쳐야 한다."},
+        {"sentenceIdx": 20, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "forcing", "correction": "forced", "explanation": "수동 분사구문이므로 'forced'로 고쳐야 한다."},
+        {"sentenceIdx": 21, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "create", "correction": "created", "explanation": "동명사 주어 단수 + 과거시제이므로 'created'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "While taken a break from her daily housework, Cora scrolled through the internet and read a friend's response to a family's post.",
+          "isCorrect": false,
+          "correction": "While taking a break from her daily housework, Cora scrolled through the internet and read a friend's response to a family's post.",
+          "explanation": "의미상 주어 'Cora'가 능동적으로 휴식을 취하므로 현재분사 'taking'이 맞다."
+        },
+        {
+          "text": "The grieving parents were asked for prayers for their 7-year-old daughter.",
+          "isCorrect": false,
+          "correction": "The grieving parents were asking for prayers for their 7-year-old daughter.",
+          "explanation": "과거진행시제이므로 'asking'이 맞다 — 'were asked'는 수동(요청받고 있었다)이라 문맥에 맞지 않다."
+        },
+        {
+          "text": "Their daughter had a heart problem, so she needs a heart transplant.",
+          "isCorrect": false,
+          "correction": "Their daughter had a heart problem, so she needed a heart transplant.",
+          "explanation": "앞 절 'had'와 일관된 과거 시제 'needed'가 맞다."
+        },
+        {
+          "text": "However, they were from a small town called Appalachia what was also Cora's hometown.",
+          "isCorrect": false,
+          "correction": "However, they were from a small town called Appalachia which was also Cora's hometown.",
+          "explanation": "선행사 'Appalachia'가 있으므로 'which'가 맞다."
+        },
+        {
+          "text": "As she kept to read the post, she noticed that the family was in a nearby hospital.",
+          "isCorrect": false,
+          "correction": "As she kept reading the post, she noticed that the family was in a nearby hospital.",
+          "explanation": "'keep + -ing' 구조이므로 'reading'이 맞다."
+        },
+        {
+          "text": "She sent a private message introduced herself and asked if there would be anything they needed.",
+          "isCorrect": false,
+          "correction": "She sent a private message introducing herself and asked if there would be anything they needed.",
+          "explanation": "명사 'message'를 능동적으로 수식하므로 현재분사 'introducing'이 맞다."
+        },
+        {
+          "text": "Soon, Cora heard back from the girl her that she would really like some apple butter, a local favorite in Appalachia.",
+          "isCorrect": false,
+          "correction": "Soon, Cora heard back from the girl herself that she would really like some apple butter, a local favorite in Appalachia.",
+          "explanation": "강조 재귀대명사 'herself'가 맞다 — 'her'(목적격)은 동격 강조 불가."
+        },
+        {
+          "text": "So Cora made some apple butter, and bought biscuits eating it with.",
+          "isCorrect": false,
+          "correction": "So Cora made some apple butter, and bought biscuits to eat it with.",
+          "explanation": "명사 'biscuits'를 수식하는 to부정사 'to eat'이 맞다."
+        },
+        {
+          "text": "Though they were total strangers, they felt an instant connection during they were from the same hometown.",
+          "isCorrect": false,
+          "correction": "Though they were total strangers, they felt an instant connection since they were from the same hometown.",
+          "explanation": "뒤에 절이 오므로 이유 접속사 'since'가 맞다."
+        },
+        {
+          "text": "While the visit, Cora learned more about the family's situation.",
+          "isCorrect": false,
+          "correction": "During the visit, Cora learned more about the family's situation.",
+          "explanation": "뒤에 명사구만 오므로 전치사 'During'이 맞다."
+        },
+        {
+          "text": "Their daughter seemed being a healthy girl until she suddenly collapsed.",
+          "isCorrect": false,
+          "correction": "Their daughter seemed to be a healthy girl until she suddenly collapsed.",
+          "explanation": "'seem + to부정사' 구조이므로 'to be'가 맞다."
+        },
+        {
+          "text": "They found out that her heart was failed.",
+          "isCorrect": false,
+          "correction": "They found out that her heart was failing.",
+          "explanation": "과거진행시제 'was failing'이 맞다 — 'was failed'는 수동의 의미가 되어 어색하다."
+        },
+        {
+          "text": "The doctors managed to get her stable but wanted her to remained close to the hospital in case of any complications and to await a donor.",
+          "isCorrect": false,
+          "correction": "The doctors managed to get her stable but wanted her to remain close to the hospital in case of any complications and to await a donor.",
+          "explanation": "'to' 뒤에 동사원형 'remain'이 와야 한다."
+        },
+        {
+          "text": "Known that the wait for a donor could take months, they worried about how they could afford to stay in the area as their home was four hours away from the hospital.",
+          "isCorrect": false,
+          "correction": "Knowing that the wait for a donor could take months, they worried about how they could afford to stay in the area as their home was four hours away from the hospital.",
+          "explanation": "능동 분사구문이므로 'Knowing'이 맞다."
+        },
+        {
+          "text": "Cora, unsure how much she could really help but wanted to do more for the girl and her family, invited them to stay with her.",
+          "isCorrect": false,
+          "correction": "Cora, unsure how much she could really help but wanting to do more for the girl and her family, invited them to stay with her.",
+          "explanation": "능동 분사구문이므로 'wanting'이 맞다."
+        },
+        {
+          "text": "Cora wanted to make sure the girl felt comfortable, so she let her stayed in the largest room in the house.",
+          "isCorrect": false,
+          "correction": "Cora wanted to make sure the girl felt comfortable, so she let her stay in the largest room in the house.",
+          "explanation": "사역동사 'let' 뒤에는 동사원형 'stay'."
+        },
+        {
+          "text": "Cora also prepared an extra mattress so that her parents could slept nearby.",
+          "isCorrect": false,
+          "correction": "Cora also prepared an extra mattress so that her parents could sleep nearby.",
+          "explanation": "조동사 'could' 뒤에는 동사원형 'sleep'."
+        },
+        {
+          "text": "Far from their friends and family, and forcing to endure more than any family ever should, the family found a piece of home in Cora's.",
+          "isCorrect": false,
+          "correction": "Far from their friends and family, and forced to endure more than any family ever should, the family found a piece of home in Cora's.",
+          "explanation": "수동 분사구문이므로 'forced'가 맞다."
+        },
+        {
+          "text": "Her generosity showed that sharing the heart of a hometown create a friendship among strangers.",
+          "isCorrect": false,
+          "correction": "Her generosity showed that sharing the heart of a hometown created a friendship among strangers.",
+          "explanation": "동명사구 주어는 단수 취급되고 글 전체가 과거 시제이므로 'created'가 맞다."
+        }
+      ]
+    }
+  }
+}

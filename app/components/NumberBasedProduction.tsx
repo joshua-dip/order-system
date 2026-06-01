@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import AppBar from './AppBar';
 import mockExamsData from '../data/mock-exams.json';
 import type { OrderGenerateHandler } from './MockExamSettings';
+import { VARIANT_PRICE } from '@/lib/variant-pricing';
 
 interface NumberBasedProductionProps {
   onBack: () => void;
@@ -88,22 +89,22 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
     { id: 'workbook_word_arrangement', name: '워크북_낱말배열', price: 100, description: '낱말 배열 연습' },
     { id: 'workbook_grammar_either_or', name: '워크북_어법_양자택일', price: 100, description: '어법 양자택일 연습' },
     { id: 'workbook_grammar_error_correction', name: '워크북_어법_오류수정', price: 100, description: '어법 오류 수정 연습' },
-    { id: 'variant_subject', name: '변형문제_주제', price: 100, description: '주제 변형 문제' },
-    { id: 'variant_title', name: '변형문제_제목', price: 100, description: '제목 변형 문제' },
-    { id: 'variant_claim', name: '변형문제_주장', price: 100, description: '주장 변형 문제' },
-    { id: 'variant_match', name: '변형문제_일치', price: 100, description: '일치 변형 문제' },
-    { id: 'variant_mismatch', name: '변형문제_불일치', price: 100, description: '불일치 변형 문제' },
-    { id: 'variant_blank', name: '변형문제_빈칸', price: 100, description: '빈칸 변형 문제' },
-    { id: 'variant_implication', name: '변형문제_함의', price: 100, description: '함의 변형 문제' },
-    { id: 'variant_grammar', name: '변형문제_어법', price: 100, description: '어법 변형 문제' },
-    { id: 'variant_order', name: '변형문제_순서', price: 100, description: '순서 변형 문제' },
-    { id: 'variant_insertion', name: '변형문제_삽입', price: 100, description: '삽입 변형 문제' },
-    { id: 'variant_summary', name: '변형문제_요약', price: 100, description: '요약 변형 문제' }
+    { id: 'variant_subject', name: '변형문제_주제', price: VARIANT_PRICE.base, description: '주제 변형 문제' },
+    { id: 'variant_title', name: '변형문제_제목', price: VARIANT_PRICE.base, description: '제목 변형 문제' },
+    { id: 'variant_claim', name: '변형문제_주장', price: VARIANT_PRICE.base, description: '주장 변형 문제' },
+    { id: 'variant_match', name: '변형문제_일치', price: VARIANT_PRICE.base, description: '일치 변형 문제' },
+    { id: 'variant_mismatch', name: '변형문제_불일치', price: VARIANT_PRICE.base, description: '불일치 변형 문제' },
+    { id: 'variant_blank', name: '변형문제_빈칸', price: VARIANT_PRICE.base, description: '빈칸 변형 문제' },
+    { id: 'variant_implication', name: '변형문제_함의', price: VARIANT_PRICE.base, description: '함의 변형 문제' },
+    { id: 'variant_grammar', name: '변형문제_어법', price: VARIANT_PRICE.base, description: '어법 변형 문제' },
+    { id: 'variant_order', name: '변형문제_순서', price: VARIANT_PRICE.orderInsertWithExplanation, description: '순서 변형 문제' },
+    { id: 'variant_insertion', name: '변형문제_삽입', price: VARIANT_PRICE.orderInsertWithExplanation, description: '삽입 변형 문제' },
+    { id: 'variant_summary', name: '변형문제_요약', price: VARIANT_PRICE.base, description: '요약 변형 문제' }
   ];
 
   const getEffectiveUnitPrice = (matId: string) => {
-    if (matId === 'variant_order') return explanationVariantOrder ? 80 : 50;
-    if (matId === 'variant_insertion') return explanationVariantInsertion ? 80 : 50;
+    if (matId === 'variant_order') return explanationVariantOrder ? VARIANT_PRICE.orderInsertWithExplanation : VARIANT_PRICE.orderInsertNoExplanation;
+    if (matId === 'variant_insertion') return explanationVariantInsertion ? VARIANT_PRICE.orderInsertWithExplanation : VARIANT_PRICE.orderInsertNoExplanation;
     return materials.find((m) => m.id === matId)?.price ?? 0;
   };
 
@@ -303,9 +304,9 @@ ${materialOrder.map((matId, index) => {
   const roundInfo = isVariantProblem(matId) ? ` (${variantRound}회차)` : '';
   const siNote =
     matId === 'variant_order'
-      ? ` (${explanationVariantOrder ? '해설 80원' : '미포함 50원'})`
+      ? ` (${explanationVariantOrder ? `해설 ${VARIANT_PRICE.orderInsertWithExplanation}원` : `미포함 ${VARIANT_PRICE.orderInsertNoExplanation}원`})`
       : matId === 'variant_insertion'
-        ? ` (${explanationVariantInsertion ? '해설 80원' : '미포함 50원'})`
+        ? ` (${explanationVariantInsertion ? `해설 ${VARIANT_PRICE.orderInsertWithExplanation}원` : `미포함 ${VARIANT_PRICE.orderInsertNoExplanation}원`})`
         : '';
   return `   ${index + 1}. ${material.name}${roundInfo}${siNote}
       - ${material.description}
@@ -662,7 +663,7 @@ ${materialOrder.map((matId, index) => {
                               : `${material.price}원`}
                           </div>
                           {ORDER_INSERT_MATERIAL_IDS.has(material.id) && selectedMaterials.includes(material.id) && (
-                            <div className="text-[10px] text-gray-500">50/80 전환</div>
+                            <div className="text-[10px] text-gray-500">{VARIANT_PRICE.orderInsertNoExplanation}/{VARIANT_PRICE.orderInsertWithExplanation} 전환</div>
                           )}
                           {selectedNumbers.length > 0 && (
                             <div className="text-xs text-gray-500">

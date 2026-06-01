@@ -1,0 +1,181 @@
+{
+  "passageId": "69d4eca372a886137cd83f16",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 04번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 04번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 04번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Experiencing the feeling of unreality of the surrounding world may occur due to unusual influences to other sensor systems.",
+      "tokens": ["Experiencing","the","feeling","of","unreality","of","the","surrounding","world","may","occur","due","to","unusual","influences","to","other","sensor","systems."],
+      "korean": "다른 감지 체계에 대한 흔치 않은 영향 때문에 주변 세계에 대한 비현실감을 경험하는 것이 발생할 수 있다."
+    },
+    {
+      "idx": 1,
+      "text": "For example, the Soviet pilots and cosmonauts, describing the action of weightlessness on the organism, note that a certain percentage of people are losing the feeling of events reality when they come to the weightlessness conditions.",
+      "tokens": ["For","example,","the","Soviet","pilots","and","cosmonauts,","describing","the","action","of","weightlessness","on","the","organism,","note","that","a","certain","percentage","of","people","are","losing","the","feeling","of","events","reality","when","they","come","to","the","weightlessness","conditions."],
+      "korean": "예를 들어, (구)소련의 비행기 조종사와 우주 비행사들은, 무중력 상태가 유기체에 미치는 작용을 묘사하면서, 일부 사람들은 무중력 상태에 이르게 될 때 사건의 현실감을 잃어버린다고 말한다."
+    },
+    {
+      "idx": 2,
+      "text": "Some people are experiencing complete disorientation and self-identity loss.",
+      "tokens": ["Some","people","are","experiencing","complete","disorientation","and","self-identity","loss."],
+      "korean": "어떤 사람들은 완전한 방향 감각 상실과 자기 정체성의 상실을 경험하고 있다."
+    },
+    {
+      "idx": 3,
+      "text": "For example, one of the tested persons, observed by the doctor, experienced a motor excitation, cried and his face had an expression of horror.",
+      "tokens": ["For","example,","one","of","the","tested","persons,","observed","by","the","doctor,","experienced","a","motor","excitation,","cried","and","his","face","had","an","expression","of","horror."],
+      "korean": "예를 들어, 의사가 관찰한 시험 대상자 중 한 명은 운동 신경의 흥분 상태를 경험하면서 울었고, 그의 얼굴은 공포의 표정을 띠고 있었다."
+    },
+    {
+      "idx": 4,
+      "text": "Afterwards, he described his condition as follows: ‘I did not realize that the conditions of weightlessness had come. Suddenly, I had a sensation of rapid downward falling and it seemed to me that everything around was breaking down, decomposing and flying to all sides. I was taken by a feeling of horror and I did not understand what was happening around me’.",
+      "tokens": ["Afterwards,","he","described","his","condition","as","follows:","‘I","did","not","realize","that","the","conditions","of","weightlessness","had","come.","Suddenly,","I","had","a","sensation","of","rapid","downward","falling","and","it","seemed","to","me","that","everything","around","was","breaking","down,","decomposing","and","flying","to","all","sides.","I","was","taken","by","a","feeling","of","horror","and","I","did","not","understand","what","was","happening","around","me’."],
+      "korean": "그 후에, 그는 자신의 상태를 다음과 같이 설명했다. ‘나는 무중력 상태가 온 것을 깨닫지 못했습니다. 갑자기, 나는 급격히 하강하는 느낌이 들었고 주변의 모든 것이 부서지고, 분해되고, 사방으로 날아가는 것처럼 보였습니다. 나는 공포감에 사로잡혔고 내 주변에서 무슨 일이 일어나고 있는지 이해할 수 없었습니다.’"
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T0-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Experiencing",
+          "wrongCandidates": ["Experienced"],
+          "grammarType": "분사",
+          "explanation": "문장의 주어 역할을 하는 동명사 'Experiencing'(~을 경험하는 것)이 맞다. 동사 'may occur'와 호응하는 주어가 필요하므로 동명사가 와야 하며, 과거분사 'Experienced'는 주어 역할을 할 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "experience",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T7-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "describing",
+          "wrongCandidates": ["described"],
+          "grammarType": "분사",
+          "explanation": "콤마로 분리된 분사구문으로, 의미상 주어인 'the Soviet pilots and cosmonauts'가 작용을 능동적으로 묘사하므로 현재분사 'describing'이 맞다. 과거분사 'described'를 쓰면 주어가 묘사되는 수동의 의미가 되어 문맥에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "describe",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T2-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Some people'은 복수이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어에만 쓰이므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T7-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "observed",
+          "wrongCandidates": ["observing"],
+          "grammarType": "수동태",
+          "explanation": "콤마로 분리된 분사구로, 의미상 주어 'one of the tested persons'가 의사에 의해 관찰되는 대상(수동)이므로 과거분사 'observed'가 맞다. 현재분사 'observing'은 능동의 의미가 되어 'by the doctor'와 충돌하며 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "observe",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T46-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 46,
+          "endTokenIdx": 46,
+          "correctForm": "taken",
+          "wrongCandidates": ["taking"],
+          "grammarType": "수동태",
+          "explanation": "'I was ___ by a feeling of horror' 구조에서 주어 'I'가 공포감에 사로잡히는 대상(수동)이므로 과거분사 'taken'이 맞다. 현재분사 'taking'을 쓰면 능동·진행의 의미가 되어 'by ~'로 표시된 행위자 표현과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "take",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Experiencing", "baseForm": "experience"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "describing", "baseForm": "describe"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "observed", "baseForm": "observe"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 46, "endTokenIdx": 46, "correctForm": "taken", "baseForm": "take"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Experiencing", "wrongForm": "Experienced", "explanation": "문장의 주어 역할을 하는 동명사 'Experiencing'(~을 경험하는 것)이 맞다. 동사 'may occur'와 호응하는 주어가 필요하므로 동명사가 와야 하며, 과거분사 'Experienced'는 주어 역할을 할 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "describing", "wrongForm": "described", "explanation": "콤마로 분리된 분사구문으로, 의미상 주어인 'the Soviet pilots and cosmonauts'가 작용을 능동적으로 묘사하므로 현재분사 'describing'이 맞다. 과거분사 'described'를 쓰면 주어가 묘사되는 수동의 의미가 되어 문맥에 어긋난다."},
+        {"sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "are", "wrongForm": "is", "explanation": "주어 'Some people'은 복수이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어에만 쓰이므로 부적절하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "observed", "wrongForm": "observing", "explanation": "콤마로 분리된 분사구로, 의미상 주어 'one of the tested persons'가 의사에 의해 관찰되는 대상(수동)이므로 과거분사 'observed'가 맞다. 현재분사 'observing'은 능동의 의미가 되어 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 46, "endTokenIdx": 46, "correctForm": "taken", "wrongForm": "taking", "explanation": "'I was ___ by a feeling of horror' 구조에서 주어 'I'가 공포감에 사로잡히는 대상(수동)이므로 과거분사 'taken'이 맞다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Experienced", "correction": "Experiencing", "explanation": "문장의 주어가 필요한 자리이므로 동명사 'Experiencing'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "described", "correction": "describing", "explanation": "의미상 주어가 능동적으로 묘사하므로 현재분사 'describing'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'Some people'에 맞춰 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "observing", "correction": "observed", "explanation": "주어가 의사에 의해 관찰되는 수동의 대상이므로 과거분사 'observed'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 46, "endTokenIdx": 46, "isError": true, "wrongForm": "taking", "correction": "taken", "explanation": "'was ___ by ~' 수동태 구조이므로 과거분사 'taken'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Experienced the feeling of unreality of the surrounding world may occur due to unusual influences to other sensor systems.",
+          "isCorrect": false,
+          "correction": "Experiencing the feeling of unreality of the surrounding world may occur due to unusual influences to other sensor systems.",
+          "explanation": "문장의 주어가 필요한 자리이므로 동명사 'Experiencing'이 맞다. 과거분사 'Experienced'는 주어 역할을 할 수 없다."
+        },
+        {
+          "text": "For example, the Soviet pilots and cosmonauts, described the action of weightlessness on the organism, note that a certain percentage of people are losing the feeling of events reality when they come to the weightlessness conditions.",
+          "isCorrect": false,
+          "correction": "For example, the Soviet pilots and cosmonauts, describing the action of weightlessness on the organism, note that a certain percentage of people are losing the feeling of events reality when they come to the weightlessness conditions.",
+          "explanation": "의미상 주어가 능동적으로 묘사하므로 현재분사 'describing'이 맞다."
+        },
+        {
+          "text": "Some people is experiencing complete disorientation and self-identity loss.",
+          "isCorrect": false,
+          "correction": "Some people are experiencing complete disorientation and self-identity loss.",
+          "explanation": "복수 주어 'Some people'에는 복수형 'are'가 맞다."
+        },
+        {
+          "text": "For example, one of the tested persons, observing by the doctor, experienced a motor excitation, cried and his face had an expression of horror.",
+          "isCorrect": false,
+          "correction": "For example, one of the tested persons, observed by the doctor, experienced a motor excitation, cried and his face had an expression of horror.",
+          "explanation": "주어가 의사에 의해 관찰되는 수동의 대상이므로 과거분사 'observed'가 맞다."
+        },
+        {
+          "text": "Afterwards, he described his condition as follows: ‘I did not realize that the conditions of weightlessness had come. Suddenly, I had a sensation of rapid downward falling and it seemed to me that everything around was breaking down, decomposing and flying to all sides. I was taking by a feeling of horror and I did not understand what was happening around me’.",
+          "isCorrect": false,
+          "correction": "Afterwards, he described his condition as follows: ‘I did not realize that the conditions of weightlessness had come. Suddenly, I had a sensation of rapid downward falling and it seemed to me that everything around was breaking down, decomposing and flying to all sides. I was taken by a feeling of horror and I did not understand what was happening around me’.",
+          "explanation": "'was ___ by ~' 수동태 구조이므로 과거분사 'taken'이 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,320 @@
+{
+  "passageId": "69d4eca372a886137cd83f22",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 08~09번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 08~09번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 08~09번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "It is tempting to explain the contemporary growth in production by referring to the growth of the human population in each society.",
+      "tokens": ["It","is","tempting","to","explain","the","contemporary","growth","in","production","by","referring","to","the","growth","of","the","human","population","in","each","society."],
+      "korean": "각 사회의 인구 증가를 언급함으로써 동시대의 생산 증가를 설명하는 것은 솔깃한 일이다."
+    },
+    {
+      "idx": 1,
+      "text": "At every level of analysis, however, this inference is misleading.",
+      "tokens": ["At","every","level","of","analysis,","however,","this","inference","is","misleading."],
+      "korean": "그러나 모든 분석 단계에서, 이 추론은 오해의 소지가 있다."
+    },
+    {
+      "idx": 2,
+      "text": "Starting with the world as a whole, those societies with the highest rates of economic growth and the highest rates of ecological withdrawals and additions, are precisely those societies with the lowest rates of population growth in the twentieth century.",
+      "tokens": ["Starting","with","the","world","as","a","whole,","those","societies","with","the","highest","rates","of","economic","growth","and","the","highest","rates","of","ecological","withdrawals","and","additions,","are","precisely","those","societies","with","the","lowest","rates","of","population","growth","in","the","twentieth","century."],
+      "korean": "전 세계적인 수준부터 시작해 보면, 경제 성장률이 가장 높고, 생태학적 회수 및 추가의 비율이 가장 높은 그런 사회는 바로 20세기에 인구 증가율이 가장 낮은 그런 사회다."
+    },
+    {
+      "idx": 3,
+      "text": "Indeed, the proportion of the global population represented by these high-economic growth nations is shrinking rather rapidly.",
+      "tokens": ["Indeed,","the","proportion","of","the","global","population","represented","by","these","high-economic","growth","nations","is","shrinking","rather","rapidly."],
+      "korean": "실제로, 이러한 고도 경제 성장 국가들로 대표되는 세계인구의 비율은 다소 빠르게 감소하고 있다."
+    },
+    {
+      "idx": 4,
+      "text": "As we move from this global perspective down to a nation-state and regional level, this disjuncture between population growth and ecological withdrawals and additions becomes more evident ― but also more complex.",
+      "tokens": ["As","we","move","from","this","global","perspective","down","to","a","nation-state","and","regional","level,","this","disjuncture","between","population","growth","and","ecological","withdrawals","and","additions","becomes","more","evident","―","but","also","more","complex."],
+      "korean": "우리가 이러한 세계적인 관점에서 단일 민족 국가 및 지역적 수준으로 이동해 보면, 인구 증가와 생태학적 회수 및 추가 사이의 이런 괴리는 더욱 분명해지지만 또한 더욱 복잡해진다."
+    },
+    {
+      "idx": 5,
+      "text": "At one extreme, we cannot assume that population growth is irrelevant to both temporary ecological disruption and enduring ecological disorganization.",
+      "tokens": ["At","one","extreme,","we","cannot","assume","that","population","growth","is","irrelevant","to","both","temporary","ecological","disruption","and","enduring","ecological","disorganization."],
+      "korean": "한 극단적인 예로, 우리는 인구 증가가 일시적인 생태계 붕괴와 지속적인 생태계 붕괴 둘 다와 무관하다고 가정할 수 없다."
+    },
+    {
+      "idx": 6,
+      "text": "However, the size of a population appears to be most relevant to ecological disruption where populations are closer to subsistence production rather than industrial production.",
+      "tokens": ["However,","the","size","of","a","population","appears","to","be","most","relevant","to","ecological","disruption","where","populations","are","closer","to","subsistence","production","rather","than","industrial","production."],
+      "korean": "그러나 인구의 규모는, 사람들이 산업 생산보다는 생계를 위한 생산에 더 가까운 생태계 붕괴와 가장 관련이 있는 것으로 보인다."
+    },
+    {
+      "idx": 7,
+      "text": "In recent decades, the world has become more aware of drought, starvation, and their connection to the press of populations on limited ecosystems.",
+      "tokens": ["In","recent","decades,","the","world","has","become","more","aware","of","drought,","starvation,","and","their","connection","to","the","press","of","populations","on","limited","ecosystems."],
+      "korean": "최근 수십 년 사이에, 세계는 가뭄, 기아, 그리고 제한된 생태계의 인구 압박에 대한 그들의 연관성에 대해 더 많이 알게 되었다."
+    },
+    {
+      "idx": 8,
+      "text": "Desertification in sub-Saharan Africa has been increasingly linked to the attempts of regional nomadic peoples to support larger herds of animals by grazing them in areas of marginal moisture and productivity.",
+      "tokens": ["Desertification","in","sub-Saharan","Africa","has","been","increasingly","linked","to","the","attempts","of","regional","nomadic","peoples","to","support","larger","herds","of","animals","by","grazing","them","in","areas","of","marginal","moisture","and","productivity."],
+      "korean": "사하라 사막 이남 아프리카의 사막화는 지역의 유목민들이 더 큰 무리의 동물들을, 습기와 비옥함이 미미한 지역에서 그들을 방목하여 부양하려는 시도와 점점 더 연관되어 왔다."
+    },
+    {
+      "idx": 9,
+      "text": "Here and elsewhere, this process is accelerated by the collection of firewood through cutting down younger and younger trees, which in turn makes soil more vulnerable to sandstorms and loss of topsoil, when moisture is low.",
+      "tokens": ["Here","and","elsewhere,","this","process","is","accelerated","by","the","collection","of","firewood","through","cutting","down","younger","and","younger","trees,","which","in","turn","makes","soil","more","vulnerable","to","sandstorms","and","loss","of","topsoil,","when","moisture","is","low."],
+      "korean": "여기 그리고 다른 곳에서, 이 과정은 점점 더 어린 나무들을 베어내 땔감을 모으는 것에 의해 가속화되고, 그것은 결과적으로 습기가 낮을 때 토양을 모래 폭풍과 표토 상실에 더 취약하게 만든다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T11-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "referring",
+          "wrongCandidates": ["refer"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'referring'이 맞다. 동사원형 'refer'는 전치사 목적어가 될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "refer",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T8-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'this inference'가 단수이므로 단수 동사 'is'가 맞다. 복수형 'are'는 단수 주어와 호응하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T25-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 25,
+          "endTokenIdx": 25,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'those societies'가 복수이므로 복수 동사 'are'가 맞다. 길게 이어지는 수식어구에 이끌려 단수 'is'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T7-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "represented",
+          "wrongCandidates": ["representing"],
+          "grammarType": "분사",
+          "explanation": "명사 'the global population'이 고도 경제 성장 국가들에 의해 '대표되는' 수동의 의미이므로 과거분사 'represented'가 맞다. 현재분사 'representing'은 능동의 의미가 되어 문맥에 맞지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "represent",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T24-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 24,
+          "endTokenIdx": 24,
+          "correctForm": "becomes",
+          "wrongCandidates": ["become"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'this disjuncture'가 단수이므로 단수 동사 'becomes'가 맞다. 'between population growth and ecological withdrawals and additions' 같은 수식어구에 이끌려 복수형 'become'을 쓰면 안 된다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T6-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "접속사",
+          "explanation": "동사 'assume'의 목적어로 완전한 절을 이끄는 명사절 접속사 'that'이 맞다. 뒤따르는 절('population growth is irrelevant ...')이 주어·동사·보어를 모두 갖춘 완전한 절이므로 선행사를 포함하는 관계대명사 'what'은 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T6-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "appears",
+          "wrongCandidates": ["appear"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'the size'가 단수이므로 단수 동사 'appears'가 맞다. 'of a population' 수식어에 이끌려 복수형 'appear'를 쓰면 주어와 동사의 수가 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "appear",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "has",
+          "wrongCandidates": ["have"],
+          "grammarType": "시제",
+          "explanation": "주어 'the world'가 단수이고 'In recent decades'와 호응하는 현재완료 시제이므로 'has become'의 'has'가 맞다. 'have'는 복수 주어에 쓰는 형태로 단수 주어와 호응하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T7-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "linked",
+          "wrongCandidates": ["linking"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Desertification'이 사람들의 시도와 '연관지어지는' 대상이므로 현재완료 수동태 'has been linked'의 과거분사 'linked'가 맞다. 현재분사 'linking'은 능동의 의미가 되어 주어와 부합하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "link",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T19-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 19,
+          "endTokenIdx": 19,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "앞 절 전체(또는 'the collection of firewood ...')를 선행사로 받아 부가 설명을 덧붙이는 계속적 용법의 관계대명사 'which'가 맞다. 'what'은 선행사를 포함하는 관계대명사로 콤마 뒤 계속적 용법에 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "referring", "baseForm": "refer"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "represented", "baseForm": "represent"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "appears", "baseForm": "appear"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "has", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "linked", "baseForm": "link"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "referring", "wrongForm": "refer", "explanation": "전치사 'by' 뒤에는 동명사가 와야 하므로 'referring'이 맞다. 동사원형 'refer'는 전치사 목적어가 될 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'this inference'가 단수이므로 단수 동사 'is'가 맞다. 복수형 'are'는 단수 주어와 호응하지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "are", "wrongForm": "is", "explanation": "주어의 핵 'those societies'가 복수이므로 복수 동사 'are'가 맞다. 수식어구에 이끌려 단수 'is'를 쓰면 안 된다."},
+        {"sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "represented", "wrongForm": "representing", "explanation": "명사 'the global population'이 고도 경제 성장 국가들에 의해 '대표되는' 수동의 의미이므로 과거분사 'represented'가 맞다. 'representing'은 능동의 의미라 부적절."},
+        {"sentenceIdx": 4, "startTokenIdx": 24, "endTokenIdx": 24, "correctForm": "becomes", "wrongForm": "become", "explanation": "주어의 핵 'this disjuncture'가 단수이므로 단수 동사 'becomes'가 맞다. 길게 이어진 수식어에 이끌려 복수형 'become'을 쓰면 안 된다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "that", "wrongForm": "what", "explanation": "동사 'assume'의 목적어로 완전한 절을 이끄는 명사절 접속사 'that'이 맞다. 뒤따르는 절이 완전한 절이라 'what'은 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "appears", "wrongForm": "appear", "explanation": "주어의 핵 'the size'가 단수이므로 단수 동사 'appears'가 맞다. 'of a population' 수식어에 이끌려 복수형 'appear'를 쓰면 안 된다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "has", "wrongForm": "have", "explanation": "주어 'the world'가 단수이고 'In recent decades'와 호응하는 현재완료 시제이므로 'has become'의 'has'가 맞다."},
+        {"sentenceIdx": 8, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "linked", "wrongForm": "linking", "explanation": "주어 'Desertification'이 연관되는 대상이므로 현재완료 수동태 'has been linked'의 과거분사 'linked'가 맞다."},
+        {"sentenceIdx": 9, "startTokenIdx": 19, "endTokenIdx": 19, "correctForm": "which", "wrongForm": "what", "explanation": "앞 절 전체를 선행사로 받아 부가 설명을 덧붙이는 계속적 용법의 관계대명사 'which'가 맞다. 'what'은 선행사 포함이라 쓸 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "refer", "correction": "referring", "explanation": "전치사 'by' 뒤이므로 동명사 'referring'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'this inference'에 맞춰 단수 동사 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 25, "endTokenIdx": 25, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'those societies'에 맞춰 복수 동사 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "representing", "correction": "represented", "explanation": "'the global population'이 대표되는 수동의 의미이므로 과거분사 'represented'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 24, "endTokenIdx": 24, "isError": true, "wrongForm": "become", "correction": "becomes", "explanation": "단수 주어 'this disjuncture'에 맞춰 단수 동사 'becomes'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "뒤따르는 절이 완전한 절이므로 명사절 접속사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "appear", "correction": "appears", "explanation": "단수 주어 'the size'에 맞춰 단수 동사 'appears'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "have", "correction": "has", "explanation": "단수 주어 'the world'에 맞춰 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "linking", "correction": "linked", "explanation": "주어가 연관되는 대상이므로 수동태 과거분사 'linked'로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 19, "endTokenIdx": 19, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "계속적 용법으로 앞 절을 선행사로 받아야 하므로 'which'로 고쳐야 한다. 'what'은 선행사 포함이라 불가."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "It is tempting to explain the contemporary growth in production by refer to the growth of the human population in each society.",
+          "isCorrect": false,
+          "correction": "It is tempting to explain the contemporary growth in production by referring to the growth of the human population in each society.",
+          "explanation": "전치사 'by' 뒤에는 동명사 'referring'이 와야 한다."
+        },
+        {
+          "text": "At every level of analysis, however, this inference are misleading.",
+          "isCorrect": false,
+          "correction": "At every level of analysis, however, this inference is misleading.",
+          "explanation": "단수 주어 'this inference'에 맞춰 단수 동사 'is'가 맞다."
+        },
+        {
+          "text": "Starting with the world as a whole, those societies with the highest rates of economic growth and the highest rates of ecological withdrawals and additions, is precisely those societies with the lowest rates of population growth in the twentieth century.",
+          "isCorrect": false,
+          "correction": "Starting with the world as a whole, those societies with the highest rates of economic growth and the highest rates of ecological withdrawals and additions, are precisely those societies with the lowest rates of population growth in the twentieth century.",
+          "explanation": "복수 주어 'those societies'에 맞춰 복수 동사 'are'가 맞다."
+        },
+        {
+          "text": "Indeed, the proportion of the global population representing by these high-economic growth nations is shrinking rather rapidly.",
+          "isCorrect": false,
+          "correction": "Indeed, the proportion of the global population represented by these high-economic growth nations is shrinking rather rapidly.",
+          "explanation": "'the global population'이 대표되는 수동의 의미이므로 과거분사 'represented'가 맞다."
+        },
+        {
+          "text": "As we move from this global perspective down to a nation-state and regional level, this disjuncture between population growth and ecological withdrawals and additions become more evident ― but also more complex.",
+          "isCorrect": false,
+          "correction": "As we move from this global perspective down to a nation-state and regional level, this disjuncture between population growth and ecological withdrawals and additions becomes more evident ― but also more complex.",
+          "explanation": "단수 주어 'this disjuncture'에 맞춰 단수 동사 'becomes'가 맞다."
+        },
+        {
+          "text": "At one extreme, we cannot assume what population growth is irrelevant to both temporary ecological disruption and enduring ecological disorganization.",
+          "isCorrect": false,
+          "correction": "At one extreme, we cannot assume that population growth is irrelevant to both temporary ecological disruption and enduring ecological disorganization.",
+          "explanation": "뒤따르는 절이 완전한 절이므로 명사절 접속사 'that'이 맞다."
+        },
+        {
+          "text": "However, the size of a population appear to be most relevant to ecological disruption where populations are closer to subsistence production rather than industrial production.",
+          "isCorrect": false,
+          "correction": "However, the size of a population appears to be most relevant to ecological disruption where populations are closer to subsistence production rather than industrial production.",
+          "explanation": "단수 주어 'the size'에 맞춰 단수 동사 'appears'가 맞다."
+        },
+        {
+          "text": "In recent decades, the world have become more aware of drought, starvation, and their connection to the press of populations on limited ecosystems.",
+          "isCorrect": false,
+          "correction": "In recent decades, the world has become more aware of drought, starvation, and their connection to the press of populations on limited ecosystems.",
+          "explanation": "단수 주어 'the world'에 맞춰 'has'가 맞다."
+        },
+        {
+          "text": "Desertification in sub-Saharan Africa has been increasingly linking to the attempts of regional nomadic peoples to support larger herds of animals by grazing them in areas of marginal moisture and productivity.",
+          "isCorrect": false,
+          "correction": "Desertification in sub-Saharan Africa has been increasingly linked to the attempts of regional nomadic peoples to support larger herds of animals by grazing them in areas of marginal moisture and productivity.",
+          "explanation": "주어가 연관되는 대상이므로 현재완료 수동태 'has been linked'의 과거분사 'linked'가 맞다."
+        },
+        {
+          "text": "Here and elsewhere, this process is accelerated by the collection of firewood through cutting down younger and younger trees, what in turn makes soil more vulnerable to sandstorms and loss of topsoil, when moisture is low.",
+          "isCorrect": false,
+          "correction": "Here and elsewhere, this process is accelerated by the collection of firewood through cutting down younger and younger trees, which in turn makes soil more vulnerable to sandstorms and loss of topsoil, when moisture is low.",
+          "explanation": "계속적 용법으로 앞 절을 선행사로 받아야 하므로 'which'가 맞다. 'what'은 선행사 포함이라 불가."
+        }
+      ]
+    }
+  }
+}

@@ -20,6 +20,7 @@
     "cc:essay": "tsx scripts/cc-essay-cli.ts",
     "cc:essay-step": "tsx scripts/cc-essay-step-cli.ts",
     "cc:block-workbook": "tsx scripts/cc-block-workbook-cli.ts",
+    "cc:grammar": "tsx scripts/cc-grammar-cli.ts",
     "cc:syntax": "tsx scripts/cc-syntax-cli.ts",
     "claude": "tsx scripts/cc-variant-cli.ts",
     "passage-analyzer:cli": "tsx scripts/passage-analyzer-cli.ts",

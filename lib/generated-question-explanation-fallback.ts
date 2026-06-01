@@ -49,6 +49,8 @@ function explainSentenceForCategory(cat: string): string {
       return '지문의 정보를 빠짐없이·과장 없이 요약한 문장에 해당합니다.';
     case '어법':
       return '문법·관용에 맞는 표현이며, 지문의 밑줄 위치와 문맥에 맞습니다.';
+    case '어법-고난도':
+      return '표시된 번호들이 모두 어법상 어색하며, 각 자리의 올바른 표기와 대비됩니다.';
     case '순서':
       return '담화 흐름상 앞뒤 문장이 자연스럽게 이어지는 순서입니다.';
     case '삽입':

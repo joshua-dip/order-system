@@ -1,0 +1,264 @@
+{
+  "passageId": "69d4eca372a886137cd83f1b",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 01번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 01번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 01번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Over the previous few years, Australian officials had begun to realize that their crisis was truly grave.",
+      "tokens": ["Over","the","previous","few","years,","Australian","officials","had","begun","to","realize","that","their","crisis","was","truly","grave."],
+      "korean": "이전 몇 년 동안, 호주 공무원들은 그들의 위기가 정말로 심각하다는 것을 깨닫기 시작했다."
+    },
+    {
+      "idx": 1,
+      "text": "Without deep-rooted vegetation to draw out excess groundwater, the water table had risen in some areas, as if in a bathtub, from ninety feet or more below ground level to near the surface.",
+      "tokens": ["Without","deep-rooted","vegetation","to","draw","out","excess","groundwater,","the","water","table","had","risen","in","some","areas,","as","if","in","a","bathtub,","from","ninety","feet","or","more","below","ground","level","to","near","the","surface."],
+      "korean": "넘치는 지하수를 뽑아낼 수 있는 뿌리 깊은 식물이 없어서, 지하수면은 몇몇 지역에서 마치 욕조에 있는 것처럼 지면 90피트 이상 아래에서부터 지표면 가까이까지 상승했었다."
+    },
+    {
+      "idx": 2,
+      "text": "With it came salts that devastated crops and even eroded roads and bridges.",
+      "tokens": ["With","it","came","salts","that","devastated","crops","and","even","eroded","roads","and","bridges."],
+      "korean": "그것과 함께 농작물을 황폐화시키고 심지어 도로와 다리를 침식시킨 소금이 올라왔다."
+    },
+    {
+      "idx": 3,
+      "text": "Australia‘s breadbasket, the Murray-Darling river basin, was at particular risk in what the environment minister had called the most significant environmental issue the country faced.",
+      "tokens": ["Australia‘s","breadbasket,","the","Murray-Darling","river","basin,","was","at","particular","risk","in","what","the","environment","minister","had","called","the","most","significant","environmental","issue","the","country","faced."],
+      "korean": "호주의 곡창 지대인 Murray-Darling 강 유역은 환경부 장관이 그 나라가 직면한 가장 중요한 환경 문제로 발표했던 곳으로 특히 위험했다."
+    },
+    {
+      "idx": 4,
+      "text": "A farmers’ group had estimated it could cost $37 billion to fix the problem.",
+      "tokens": ["A","farmers’","group","had","estimated","it","could","cost","$37","billion","to","fix","the","problem."],
+      "korean": "한 농민 단체는 그 문제를 해결하는 데 370억 달러가 들 것이라고 추정했었다."
+    },
+    {
+      "idx": 5,
+      "text": "A government report in 2001 predicted that crop-killing salt could gobble up more than 65,000 square miles by 2050, the bulk of it some of the country’s most fertile land.",
+      "tokens": ["A","government","report","in","2001","predicted","that","crop-killing","salt","could","gobble","up","more","than","65,000","square","miles","by","2050,","the","bulk","of","it","some","of","the","country’s","most","fertile","land."],
+      "korean": "2001년의 정부 보고서에서는 작물을 죽이는 소금이 2050년까지 65,000평방마일보다 더 많은 면적을 집어삼킬 수 있다고 예측했는데, 그것의 대부분이 이 나라에서 가장 비옥한 땅의 일부이다."
+    },
+    {
+      "idx": 6,
+      "text": "“Basically, we’re exhausted,” was the way a Commonwealth Bank of Australia executive summarized the situation.",
+      "tokens": ["“Basically,","we’re","exhausted,”","was","the","way","a","Commonwealth","Bank","of","Australia","executive","summarized","the","situation."],
+      "korean": "“기본적으로, 우리는 지쳤다.”라고 말한 것이 호주 연방은행 임원이 상황을 요약한 방법이었다."
+    },
+    {
+      "idx": 7,
+      "text": "Yet New South Wales officials hoped they’d found a way out.",
+      "tokens": ["Yet","New","South","Wales","officials","hoped","they’d","found","a","way","out."],
+      "korean": "하지만 New South Wales 주 공무원들은 자신들이 탈출구를 찾게 되기를 희망했다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T8-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "begun",
+          "wrongCandidates": ["began"],
+          "grammarType": "시제",
+          "explanation": "조동사 'had' 뒤에는 과거분사가 와야 하므로 'begun'이 맞다. 과거형 'began'은 'had' 같은 조동사와 함께 쓸 수 없으며, 과거완료 시제(had + p.p.) 구문이 깨진다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "begin",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T0-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Without",
+          "wrongCandidates": ["Unless"],
+          "grammarType": "전치사",
+          "explanation": "뒤에 명사구 'deep-rooted vegetation'이 이어지므로 명사를 목적어로 받는 전치사 'Without'이 맞다. 'Unless'는 접속사로서 뒤에 「주어+동사」 절을 필요로 하므로 명사구만 올 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T4-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'salts'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로, 선행사가 따로 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "was",
+          "wrongCandidates": ["were"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 단수 명사 'breadbasket'(동격으로 the Murray-Darling river basin이 뒤따름)이므로 단수형 be 동사 'was'가 맞다. 'were'는 복수 주어에 쓰이는 형태로 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "fix",
+          "wrongCandidates": ["fixing"],
+          "grammarType": "부정사",
+          "explanation": "가주어 it ~ 진주어 to부정사 구문(it could cost $37 billion to fix ~)에서 진주어 자리이므로 to부정사 'to fix'의 동사원형 'fix'가 맞다. 동명사 'fixing'은 'to' 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "fix",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T7-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "crop-killing",
+          "wrongCandidates": ["crop-killed"],
+          "grammarType": "분사",
+          "explanation": "뒤에 오는 명사 'salt'가 작물을 능동적으로 죽이는 주체이므로 능동의 의미를 갖는 현재분사 'crop-killing'이 맞다. 과거분사 'crop-killed'는 '소금이 작물에 의해 죽임을 당한' 수동 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "kill",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T2-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "exhausted,”",
+          "wrongCandidates": ["exhausting,”"],
+          "grammarType": "수동태",
+          "explanation": "주어 'we'가 지치는 상태로 영향을 받는 대상이므로 「be + 과거분사」 형태의 수동/상태 표현인 'exhausted'가 맞다. 현재분사 'exhausting'은 '남을 지치게 만드는'의 능동 의미가 되어 문맥과 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "exhaust",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T0-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Yet",
+          "wrongCandidates": ["So"],
+          "grammarType": "접속사",
+          "explanation": "앞 문맥은 '지쳤다'는 절망적 상황이고 뒷 문장은 '탈출구를 찾았기를 희망'이라는 대조적 내용이므로 역접 접속사 'Yet'이 맞다. 'So'는 인과관계를 나타내는 접속사라 의미상 정반대 흐름이 되어 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "begun", "baseForm": "begin"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "was", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "fix", "baseForm": "fix"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "crop-killing", "baseForm": "kill"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "exhausted,”", "baseForm": "exhaust"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "begun", "wrongForm": "began", "explanation": "조동사 'had' 뒤에는 과거분사가 와야 하므로 'begun'이 맞다. 과거형 'began'은 'had' 같은 조동사와 함께 쓸 수 없으며, 과거완료 시제(had + p.p.) 구문이 깨진다."},
+        {"sentenceIdx": 1, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Without", "wrongForm": "Unless", "explanation": "뒤에 명사구 'deep-rooted vegetation'이 이어지므로 명사를 목적어로 받는 전치사 'Without'이 맞다. 'Unless'는 접속사로서 뒤에 「주어+동사」 절을 필요로 하므로 명사구만 올 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'salts'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사로, 선행사가 따로 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "was", "wrongForm": "were", "explanation": "주어의 핵은 단수 명사 'breadbasket'(동격으로 the Murray-Darling river basin이 뒤따름)이므로 단수형 be 동사 'was'가 맞다. 'were'는 복수 주어에 쓰이는 형태로 부적절하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "fix", "wrongForm": "fixing", "explanation": "가주어 it ~ 진주어 to부정사 구문(it could cost $37 billion to fix ~)에서 진주어 자리이므로 to부정사 'to fix'의 동사원형 'fix'가 맞다. 동명사 'fixing'은 'to' 뒤에 올 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "crop-killing", "wrongForm": "crop-killed", "explanation": "뒤에 오는 명사 'salt'가 작물을 능동적으로 죽이는 주체이므로 능동의 의미를 갖는 현재분사 'crop-killing'이 맞다. 과거분사 'crop-killed'는 '소금이 작물에 의해 죽임을 당한' 수동 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "exhausted,”", "wrongForm": "exhausting,”", "explanation": "주어 'we'가 지치는 상태로 영향을 받는 대상이므로 「be + 과거분사」 형태의 수동/상태 표현인 'exhausted'가 맞다. 현재분사 'exhausting'은 '남을 지치게 만드는'의 능동 의미가 되어 문맥과 맞지 않다."},
+        {"sentenceIdx": 7, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Yet", "wrongForm": "So", "explanation": "앞 문맥은 '지쳤다'는 절망적 상황이고 뒷 문장은 '탈출구를 찾았기를 희망'이라는 대조적 내용이므로 역접 접속사 'Yet'이 맞다. 'So'는 인과관계를 나타내는 접속사라 의미상 정반대 흐름이 되어 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "began", "correction": "begun", "explanation": "'had' 뒤에는 과거분사가 와야 하므로 과거분사 'begun'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Unless", "correction": "Without", "explanation": "뒤에 명사구가 오므로 전치사 'Without'으로 고쳐야 한다. 'Unless'는 절을 받는 접속사."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'salts'가 있으므로 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "were", "correction": "was", "explanation": "단수 주어 'breadbasket'에 맞춰 'was'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "fixing", "correction": "fix", "explanation": "to부정사 구조이므로 동사원형 'fix'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "crop-killed", "correction": "crop-killing", "explanation": "능동의 의미로 명사 'salt'를 수식하므로 현재분사 'crop-killing'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "exhausting,”", "correction": "exhausted,”", "explanation": "주어가 지친 상태(수동)이므로 과거분사 'exhausted'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "So", "correction": "Yet", "explanation": "앞뒤가 대조 관계이므로 역접 접속사 'Yet'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Over the previous few years, Australian officials had began to realize that their crisis was truly grave.",
+          "isCorrect": false,
+          "correction": "Over the previous few years, Australian officials had begun to realize that their crisis was truly grave.",
+          "explanation": "'had' 뒤에는 과거분사가 와야 하므로 'begun'이 맞다."
+        },
+        {
+          "text": "Unless deep-rooted vegetation to draw out excess groundwater, the water table had risen in some areas, as if in a bathtub, from ninety feet or more below ground level to near the surface.",
+          "isCorrect": false,
+          "correction": "Without deep-rooted vegetation to draw out excess groundwater, the water table had risen in some areas, as if in a bathtub, from ninety feet or more below ground level to near the surface.",
+          "explanation": "뒤에 명사구가 오므로 전치사 'Without'이 맞다. 'Unless'는 절을 받는 접속사."
+        },
+        {
+          "text": "With it came salts what devastated crops and even eroded roads and bridges.",
+          "isCorrect": false,
+          "correction": "With it came salts that devastated crops and even eroded roads and bridges.",
+          "explanation": "선행사 'salts'가 있으므로 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "Australia‘s breadbasket, the Murray-Darling river basin, were at particular risk in what the environment minister had called the most significant environmental issue the country faced.",
+          "isCorrect": false,
+          "correction": "Australia‘s breadbasket, the Murray-Darling river basin, was at particular risk in what the environment minister had called the most significant environmental issue the country faced.",
+          "explanation": "단수 주어 'breadbasket'에 맞춰 'was'가 맞다."
+        },
+        {
+          "text": "A farmers’ group had estimated it could cost $37 billion to fixing the problem.",
+          "isCorrect": false,
+          "correction": "A farmers’ group had estimated it could cost $37 billion to fix the problem.",
+          "explanation": "to부정사 구조이므로 동사원형 'fix'가 맞다."
+        },
+        {
+          "text": "A government report in 2001 predicted that crop-killed salt could gobble up more than 65,000 square miles by 2050, the bulk of it some of the country’s most fertile land.",
+          "isCorrect": false,
+          "correction": "A government report in 2001 predicted that crop-killing salt could gobble up more than 65,000 square miles by 2050, the bulk of it some of the country’s most fertile land.",
+          "explanation": "명사 'salt'가 능동의 주체이므로 현재분사 'crop-killing'이 맞다."
+        },
+        {
+          "text": "“Basically, we’re exhausting,” was the way a Commonwealth Bank of Australia executive summarized the situation.",
+          "isCorrect": false,
+          "correction": "“Basically, we’re exhausted,” was the way a Commonwealth Bank of Australia executive summarized the situation.",
+          "explanation": "주어가 지친 상태(수동)이므로 과거분사 'exhausted'가 맞다."
+        },
+        {
+          "text": "So New South Wales officials hoped they’d found a way out.",
+          "isCorrect": false,
+          "correction": "Yet New South Wales officials hoped they’d found a way out.",
+          "explanation": "앞뒤가 대조 관계이므로 역접 접속사 'Yet'이 맞다."
+        }
+      ]
+    }
+  }
+}

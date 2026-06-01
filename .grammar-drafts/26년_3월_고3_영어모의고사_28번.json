@@ -1,0 +1,258 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd32",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 28번",
+  "title": "26년 3월 고3 영어모의고사 28번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "28번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "<Chopstick Bridge Building Contest>",
+      "tokens": ["<Chopstick","Bridge","Building","Contest>"],
+      "korean": "<젓가락 다리 만들기 대회>"
+    },
+    {
+      "idx": 1,
+      "text": "Registration",
+      "tokens": ["Registration"],
+      "korean": "등록"
+    },
+    {
+      "idx": 2,
+      "text": "∙ All participants must register as a team of up to four members.",
+      "tokens": ["∙","All","participants","must","register","as","a","team","of","up","to","four","members."],
+      "korean": "* 모든 참가자는 최대 4명으로 구성된 팀으로 등록해야 합니다."
+    },
+    {
+      "idx": 3,
+      "text": "∙ Participants should sign up by March 31.",
+      "tokens": ["∙","Participants","should","sign","up","by","March","31."],
+      "korean": "* 참가자는 3월 31일까지 신청해야 합니다."
+    },
+    {
+      "idx": 4,
+      "text": "Event Details",
+      "tokens": ["Event","Details"],
+      "korean": "행사 세부 사항"
+    },
+    {
+      "idx": 5,
+      "text": "∙ Date: April 11, 2026",
+      "tokens": ["∙","Date:","April","11,","2026"],
+      "korean": "* 날짜: 2026년 4월 11일"
+    },
+    {
+      "idx": 6,
+      "text": "∙ Schedule",
+      "tokens": ["∙","Schedule"],
+      "korean": "* 일정"
+    },
+    {
+      "idx": 7,
+      "text": "- 2:00 p.m. Opening Ceremony - 5:00 p.m. Awards Ceremony",
+      "tokens": ["-","2:00","p.m.","Opening","Ceremony","-","5:00","p.m.","Awards","Ceremony"],
+      "korean": "- 오후 2시 개회식 - 오후 5시 시상식"
+    },
+    {
+      "idx": 8,
+      "text": "Judging Criteria",
+      "tokens": ["Judging","Criteria"],
+      "korean": "심사 기준"
+    },
+    {
+      "idx": 9,
+      "text": "∙ Participants will be judged on three categories.",
+      "tokens": ["∙","Participants","will","be","judged","on","three","categories."],
+      "korean": "* 참가자는 세 가지 부문에서 심사받을 것입니다."
+    },
+    {
+      "idx": 10,
+      "text": "- Strength - Design - Audience votes",
+      "tokens": ["-","Strength","-","Design","-","Audience","votes"],
+      "korean": "- 강도 - 디자인 - 관객 투표"
+    },
+    {
+      "idx": 11,
+      "text": "∙ Using additional materials is not allowed. (All basic materials and wooden chopsticks will be provided.)",
+      "tokens": ["∙","Using","additional","materials","is","not","allowed.","(All","basic","materials","and","wooden","chopsticks","will","be","provided.)"],
+      "korean": "* 추가 재료 사용은 허용되지 않습니다. (모든 기본 재료와 나무 젓가락은 제공될 것입니다.)"
+    },
+    {
+      "idx": 12,
+      "text": "Awards",
+      "tokens": ["Awards"],
+      "korean": "상"
+    },
+    {
+      "idx": 13,
+      "text": "∙ The top three teams will receive a prize.",
+      "tokens": ["∙","The","top","three","teams","will","receive","a","prize."],
+      "korean": "* 상위 세 팀은 상품을 받을 것입니다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S2-T4-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "register",
+          "wrongCandidates": ["registering"],
+          "grammarType": "부정사",
+          "explanation": "조동사 'must' 뒤에는 동사원형이 와야 하므로 'register'가 맞다. 동명사 'registering'은 조동사 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "register",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T5-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "by",
+          "wrongCandidates": ["until"],
+          "grammarType": "전치사",
+          "explanation": "'sign up'은 일회성 완료 동작이고 '3월 31일까지 (그 시점 이전에) 완료'를 의미하므로 기한을 나타내는 'by'가 맞다. 'until'은 동작이 그 시점까지 지속됨을 의미하므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T3-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "Opening",
+          "wrongCandidates": ["Opened"],
+          "grammarType": "분사",
+          "explanation": "명사 'Ceremony'를 능동의 의미로 수식하므로 현재분사 'Opening'(개회하는)이 맞다. 과거분사 'Opened'는 '열린/개회된'의 수동·완료가 되어 행사 명칭으로 부자연스럽다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "open",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S9-T4-001",
+          "sentenceIdx": 9,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "judged",
+          "wrongCandidates": ["judging"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Participants'는 심사를 받는 대상이므로 'will be + 과거분사' 형태의 수동태 'judged'가 맞다. 현재분사 'judging'은 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "judge",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S11-T4-001",
+          "sentenceIdx": 11,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어가 동명사구 'Using additional materials'이고 동명사 주어는 단수 취급하므로 단수형 'is'가 맞다. 복수형 'are'는 동명사 주어와 호응하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S13-T6-001",
+          "sentenceIdx": 13,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "receive",
+          "wrongCandidates": ["receives"],
+          "grammarType": "부정사",
+          "explanation": "조동사 'will' 뒤에는 동사원형이 와야 하므로 'receive'가 맞다. 3인칭 단수 현재형 'receives'는 조동사 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "receive",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "register", "baseForm": "register"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "Opening", "baseForm": "open"},
+        {"kind": "word", "sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "judged", "baseForm": "judge"},
+        {"kind": "word", "sentenceIdx": 11, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 13, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "receive", "baseForm": "receive"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "register", "wrongForm": "registering", "explanation": "조동사 'must' 뒤에는 동사원형이 와야 하므로 'register'가 맞다. 동명사 'registering'은 조동사 뒤에 올 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "by", "wrongForm": "until", "explanation": "'sign up'은 일회성 완료 동작이고 '3월 31일까지 (그 시점 이전에) 완료'를 의미하므로 기한을 나타내는 'by'가 맞다. 'until'은 동작이 그 시점까지 지속됨을 의미하므로 부적절하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "Opening", "wrongForm": "Opened", "explanation": "명사 'Ceremony'를 능동의 의미로 수식하므로 현재분사 'Opening'(개회하는)이 맞다. 과거분사 'Opened'는 '열린/개회된'의 수동·완료가 되어 행사 명칭으로 부자연스럽다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "judged", "wrongForm": "judging", "explanation": "주어 'Participants'는 심사를 받는 대상이므로 'will be + 과거분사' 형태의 수동태 'judged'가 맞다. 현재분사 'judging'은 능동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 11, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "wrongForm": "are", "explanation": "주어가 동명사구 'Using additional materials'이고 동명사 주어는 단수 취급하므로 단수형 'is'가 맞다. 복수형 'are'는 동명사 주어와 호응하지 않는다."},
+        {"sentenceIdx": 13, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "receive", "wrongForm": "receives", "explanation": "조동사 'will' 뒤에는 동사원형이 와야 하므로 'receive'가 맞다. 3인칭 단수 현재형 'receives'는 조동사 뒤에 올 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "registering", "correction": "register", "explanation": "조동사 'must' 뒤에는 동사원형이 와야 하므로 'register'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "until", "correction": "by", "explanation": "기한(완료 시점) 'by March 31'이 맞다. 'until'은 지속의 의미라 부적절."},
+        {"sentenceIdx": 7, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "Opened", "correction": "Opening", "explanation": "명사 'Ceremony'를 능동으로 수식하는 현재분사 'Opening'으로 고쳐야 한다."},
+        {"sentenceIdx": 9, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "judging", "correction": "judged", "explanation": "주어가 심사를 받는 대상이므로 'will be + 과거분사' 수동태 'judged'로 고쳐야 한다."},
+        {"sentenceIdx": 11, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "동명사 주어 'Using additional materials'는 단수 취급하므로 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 13, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "receives", "correction": "receive", "explanation": "조동사 'will' 뒤에는 동사원형 'receive'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "∙ All participants must registering as a team of up to four members.",
+          "isCorrect": false,
+          "correction": "∙ All participants must register as a team of up to four members.",
+          "explanation": "조동사 'must' 뒤에는 동사원형 'register'가 와야 한다."
+        },
+        {
+          "text": "∙ Participants should sign up until March 31.",
+          "isCorrect": false,
+          "correction": "∙ Participants should sign up by March 31.",
+          "explanation": "마감 기한(완료 시점)을 나타내므로 'by'가 맞다. 'until'은 지속의 의미라 부적절."
+        },
+        {
+          "text": "- 2:00 p.m. Opened Ceremony - 5:00 p.m. Awards Ceremony",
+          "isCorrect": false,
+          "correction": "- 2:00 p.m. Opening Ceremony - 5:00 p.m. Awards Ceremony",
+          "explanation": "명사 'Ceremony'를 능동으로 수식하는 현재분사 'Opening'이 맞다."
+        },
+        {
+          "text": "∙ Participants will be judging on three categories.",
+          "isCorrect": false,
+          "correction": "∙ Participants will be judged on three categories.",
+          "explanation": "주어가 심사를 받는 대상이므로 수동태 'be judged'가 맞다."
+        },
+        {
+          "text": "∙ Using additional materials are not allowed. (All basic materials and wooden chopsticks will be provided.)",
+          "isCorrect": false,
+          "correction": "∙ Using additional materials is not allowed. (All basic materials and wooden chopsticks will be provided.)",
+          "explanation": "동명사 주어 'Using additional materials'는 단수 취급하므로 'is'가 맞다."
+        },
+        {
+          "text": "∙ The top three teams will receives a prize.",
+          "isCorrect": false,
+          "correction": "∙ The top three teams will receive a prize.",
+          "explanation": "조동사 'will' 뒤에는 동사원형 'receive'가 와야 한다."
+        }
+      ]
+    }
+  }
+}

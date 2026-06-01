@@ -64,6 +64,16 @@ interface PointLedgerItem {
 
 type Tab = 'info' | 'orders' | 'points' | 'dropbox' | 'vocabulary';
 
+interface CouponRow {
+  id: string;
+  discountPct: 10 | 30 | 50;
+  status: 'active' | 'used' | 'revoked';
+  issuedAt: string;
+  issuedBy?: string;
+  note?: string;
+  usedAt?: string;
+}
+
 interface VocabAdminRow {
   id: string;
   user_id: string;
@@ -202,6 +212,12 @@ export default function UserDetailPage() {
   /* 포인트 지급 */
   const [addPointsInput, setAddPointsInput] = useState('');
   const [addingPoints, setAddingPoints] = useState(false);
+
+  /* 포인트 할인 쿠폰 */
+  const [coupons, setCoupons] = useState<CouponRow[]>([]);
+  const [couponPct, setCouponPct] = useState<10 | 30 | 50>(10);
+  const [couponNote, setCouponNote] = useState('');
+  const [grantingCoupon, setGrantingCoupon] = useState(false);
 
   /* Dropbox */
   const [editDropboxPath, setEditDropboxPath] = useState('');
@@ -496,7 +512,11 @@ export default function UserDetailPage() {
   }, [user, tab, loadOrders]);
 
   useEffect(() => {
-    if (user && tab === 'points') loadPoints();
+    if (user && tab === 'points') {
+      loadPoints();
+      loadCoupons();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, tab, loadPoints]);
 
   useEffect(() => {
@@ -553,6 +573,46 @@ export default function UserDetailPage() {
     });
     const d = await r.json();
     alert(r.ok ? '비밀번호가 초기화되었습니다.' : (d.error ?? '실패'));
+  }
+
+  /* ─── 포인트 할인 쿠폰 ─── */
+  async function loadCoupons() {
+    try {
+      const r = await fetch(`/api/admin/coupons?userId=${encodeURIComponent(userId)}`, { credentials: 'include' });
+      const d = await r.json();
+      if (r.ok && Array.isArray(d.coupons)) setCoupons(d.coupons as CouponRow[]);
+    } catch { /* ignore */ }
+  }
+
+  async function handleGrantCoupon() {
+    setGrantingCoupon(true);
+    try {
+      const r = await fetch('/api/admin/coupons', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, discountPct: couponPct, note: couponNote.trim() || undefined }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        setCouponNote('');
+        await loadCoupons();
+      } else {
+        alert(d.error ?? '쿠폰 지급 실패');
+      }
+    } finally {
+      setGrantingCoupon(false);
+    }
+  }
+
+  async function handleRevokeCoupon(id: string) {
+    if (!confirm('이 쿠폰을 회수할까요? (사용 전 활성 쿠폰만 가능)')) return;
+    try {
+      const r = await fetch(`/api/admin/coupons/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
+      const d = await r.json();
+      if (r.ok) await loadCoupons();
+      else alert(d.error ?? '쿠폰 회수 실패');
+    } catch { /* ignore */ }
   }
 
   /* ─── 포인트 지급 ─── */
@@ -1460,6 +1520,84 @@ export default function UserDetailPage() {
                   </button>
                   <p className="text-slate-400 text-sm ml-2">현재 잔액: <span className="text-white font-bold">{user.points.toLocaleString()}P</span></p>
                 </div>
+              </div>
+
+              {/* 포인트 할인 쿠폰 */}
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <SectionTitle>포인트 할인 쿠폰</SectionTitle>
+                <p className="text-slate-400 text-[13px] mb-3 leading-relaxed">
+                  포인트 충전 시 결제 금액을 할인하는 쿠폰입니다. 패키지 기본 할인과 중복되지 않고 <b className="text-slate-200">더 큰 할인율만</b> 적용됩니다.
+                </p>
+                <div className="flex flex-wrap gap-3 items-end">
+                  <Field label="할인율">
+                    <div className="flex gap-1.5">
+                      {([10, 30, 50] as const).map(pct => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => setCouponPct(pct)}
+                          className={`px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                            couponPct === pct
+                              ? 'bg-violet-600 border-violet-600 text-white'
+                              : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                          }`}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="메모 (선택)">
+                    <input
+                      value={couponNote}
+                      onChange={(e) => setCouponNote(e.target.value)}
+                      placeholder="예: 첫 충전 감사"
+                      className="w-48 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
+                    />
+                  </Field>
+                  <button
+                    type="button"
+                    onClick={handleGrantCoupon}
+                    disabled={grantingCoupon}
+                    className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    {grantingCoupon ? '지급 중...' : '쿠폰 지급'}
+                  </button>
+                </div>
+
+                {coupons.length > 0 ? (
+                  <div className="mt-4 space-y-1.5">
+                    {coupons.map(c => {
+                      const statusLabel = c.status === 'active' ? '사용 가능' : c.status === 'used' ? '사용됨' : '회수됨';
+                      const statusCls = c.status === 'active'
+                        ? 'bg-emerald-700/40 text-emerald-200 border-emerald-600/50'
+                        : c.status === 'used'
+                          ? 'bg-slate-600/40 text-slate-300 border-slate-500/50'
+                          : 'bg-rose-700/30 text-rose-200 border-rose-600/40';
+                      return (
+                        <div key={c.id} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-slate-700 bg-slate-900/30 text-sm">
+                          <span className="font-bold text-violet-300 w-14">{c.discountPct}%</span>
+                          <span className={`text-[11px] px-2 py-0.5 rounded border ${statusCls}`}>{statusLabel}</span>
+                          <span className="text-slate-400 text-xs truncate flex-1">
+                            {c.note ? c.note + ' · ' : ''}{c.issuedAt ? new Date(c.issuedAt).toLocaleDateString('ko-KR') : ''}
+                            {c.usedAt ? ` · 사용 ${new Date(c.usedAt).toLocaleDateString('ko-KR')}` : ''}
+                          </span>
+                          {c.status === 'active' && (
+                            <button
+                              type="button"
+                              onClick={() => handleRevokeCoupon(c.id)}
+                              className="text-[11px] text-rose-400 hover:text-rose-300 shrink-0"
+                            >
+                              회수
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-slate-500 text-sm">지급된 쿠폰이 없습니다.</p>
+                )}
               </div>
 
               {/* 내역 테이블 */}

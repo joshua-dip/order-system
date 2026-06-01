@@ -1,0 +1,264 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd36",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 32번",
+  "title": "26년 3월 고3 영어모의고사 32번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "32번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "We cannot make sense of the facts of the past unless they are embedded in stories, and stories, of necessity, are not neutral collections of facts.",
+      "tokens": ["We","cannot","make","sense","of","the","facts","of","the","past","unless","they","are","embedded","in","stories,","and","stories,","of","necessity,","are","not","neutral","collections","of","facts."],
+      "korean": "과거의 사실들이 이야기 속에 파묻혀 있지 않다면 우리는 그 사실들을 이해할 수 없으며, 이야기는 필연적으로 사실들의 중립적인 모음집이 아니다."
+    },
+    {
+      "idx": 1,
+      "text": "Stories are necessarily selective, subjective and attractive.",
+      "tokens": ["Stories","are","necessarily","selective,","subjective","and","attractive."],
+      "korean": "이야기는 필연적으로 선택적이고, 주관적이며, 매혹적이다."
+    },
+    {
+      "idx": 2,
+      "text": "The shortest of stories is the result of choices, conscious and unconscious.",
+      "tokens": ["The","shortest","of","stories","is","the","result","of","choices,","conscious","and","unconscious."],
+      "korean": "가장 짧은 이야기조차 의식적이든 무의식적이든 선택의 결과물이다."
+    },
+    {
+      "idx": 3,
+      "text": "Stories influence subtly, invest power, make hidden moral judgement and always distort by omission, whether intentionally or not.",
+      "tokens": ["Stories","influence","subtly,","invest","power,","make","hidden","moral","judgement","and","always","distort","by","omission,","whether","intentionally","or","not."],
+      "korean": "이야기는 미묘하게 영향을 미치고, 권력을 부여하며, 숨겨진 도덕적 판단을 내리고, '항상' 생략을 통해 왜곡하는데, 의도적으로든 아니든 그러하다."
+    },
+    {
+      "idx": 4,
+      "text": "This is why all educated citizens need not just facts about the past but history as a discipline.",
+      "tokens": ["This","is","why","all","educated","citizens","need","not","just","facts","about","the","past","but","history","as","a","discipline."],
+      "korean": "이것이 모든 학식 있는 시민에게 과거에 대한 사실뿐만 아니라 학문으로서의 역사도 필요한 이유이다."
+    },
+    {
+      "idx": 5,
+      "text": "For we need to understand why history takes the form that it does in scholarly accounts.",
+      "tokens": ["For","we","need","to","understand","why","history","takes","the","form","that","it","does","in","scholarly","accounts."],
+      "korean": "왜냐하면 우리는 학문적 기술에서 역사가 왜 그런 형태를 취하는지 이해해야 하기 때문이다."
+    },
+    {
+      "idx": 6,
+      "text": "Disciplined historical argument is not the same as informal hearing and telling of stories; it requires familiarity with abstract generalizations, familiarity with prior scholarly discourse and an ability to make use of evidence, styles of argument and analytic structures in order to substantiate claims.",
+      "tokens": ["Disciplined","historical","argument","is","not","the","same","as","informal","hearing","and","telling","of","stories;","it","requires","familiarity","with","abstract","generalizations,","familiarity","with","prior","scholarly","discourse","and","an","ability","to","make","use","of","evidence,","styles","of","argument","and","analytic","structures","in","order","to","substantiate","claims."],
+      "korean": "(학문적) 규율에 따른 역사적 논증은 비공식적으로 이야기를 듣고 말하는 것과 같지 않으며, 그것은 추상적 일반화에 대한 익숙함, 이전의 학문적 담론에 대한 익숙함, 그리고 주장을 입증하기 위해 증거와 논증 방식, 분석적 구조를 이용하는 능력을 요구한다."
+    },
+    {
+      "idx": 7,
+      "text": "Such disciplinary knowledge is not the same as 'everyday' knowledge and it is not likely to be picked up informally.",
+      "tokens": ["Such","disciplinary","knowledge","is","not","the","same","as","'everyday'","knowledge","and","it","is","not","likely","to","be","picked","up","informally."],
+      "korean": "그러한 학문적 지식은 '일상적' 지식과 같지 않고, 비공식적으로 습득될 것 같지 않다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "embedded",
+          "wrongCandidates": ["embedding"],
+          "grammarType": "수동태",
+          "explanation": "주어 'they'(=the facts)가 이야기 속에 '파묻히는' 대상이므로 'are' 뒤에는 과거분사 'embedded'(수동태)가 와야 한다. 현재분사 'embedding'을 쓰면 '사실들이 (무엇을) 파묻고 있다'는 능동·진행의 의미가 되어 문맥과 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "embed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T1-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Stories'가 복수이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어에만 쓰므로 복수 주어와 수가 일치하지 않아 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T4-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "is",
+          "wrongCandidates": ["was"],
+          "grammarType": "시제",
+          "explanation": "이야기가 선택의 결과물이라는 일반적·항구적 진술을 나타내므로 현재시제 'is'가 맞다. 과거시제 'was'는 과거의 특정 사실을 나타내어 일반 진리를 기술하는 이 문맥에 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "hidden",
+          "wrongCandidates": ["hiding"],
+          "grammarType": "분사",
+          "explanation": "수식 대상인 명사 'moral judgement'는 '숨겨진' 대상(수동)이므로 과거분사 'hidden'이 맞다. 현재분사 'hiding'은 '숨기고 있는'의 능동·진행 의미가 되어 명사를 수식하는 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "hide",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T2-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "why",
+          "wrongCandidates": ["because"],
+          "grammarType": "접속사",
+          "explanation": "'This is why ~'는 '이것이 ~한 이유이다'라는 의미로, 보어 명사절을 이끄는 관계부사 'why'가 맞다. 'because'는 부사절을 이끄는 접속사여서 be동사의 보어 자리에 올 수 없으므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T10-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the form'이 있으므로 목적격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사여서 앞에 선행사가 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T42-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 42,
+          "endTokenIdx": 42,
+          "correctForm": "substantiate",
+          "wrongCandidates": ["substantiating"],
+          "grammarType": "부정사",
+          "explanation": "'in order to ~'는 '~하기 위해'라는 목적을 나타내는 부정사 구문으로, 'to' 뒤에는 동사원형 'substantiate'가 와야 한다. 동명사형 'substantiating'은 'to부정사'의 형태가 될 수 없어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "substantiate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T7-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "as",
+          "wrongCandidates": ["with"],
+          "grammarType": "전치사",
+          "explanation": "'the same as ~'는 '~와 같은'을 의미하는 고정된 비교 구문으로, 전치사 'as'가 맞다. 'the same with'는 어법에 맞지 않으므로 'with'를 쓰면 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "embedded", "baseForm": "embed"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "hidden", "baseForm": "hide"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 42, "endTokenIdx": 42, "correctForm": "substantiate", "baseForm": "substantiate"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "embedded", "wrongForm": "embedding", "explanation": "주어 'they'(=the facts)가 이야기 속에 '파묻히는' 대상이므로 'are' 뒤에는 과거분사 'embedded'(수동태)가 와야 한다. 현재분사 'embedding'을 쓰면 '사실들이 (무엇을) 파묻고 있다'는 능동·진행의 의미가 되어 문맥과 어긋난다."},
+        {"sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "are", "wrongForm": "is", "explanation": "주어 'Stories'가 복수이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어에만 쓰므로 복수 주어와 수가 일치하지 않아 부적절하다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "is", "wrongForm": "was", "explanation": "이야기가 선택의 결과물이라는 일반적·항구적 진술을 나타내므로 현재시제 'is'가 맞다. 과거시제 'was'는 과거의 특정 사실을 나타내어 일반 진리를 기술하는 이 문맥에 부적절하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "hidden", "wrongForm": "hiding", "explanation": "수식 대상인 명사 'moral judgement'는 '숨겨진' 대상(수동)이므로 과거분사 'hidden'이 맞다. 현재분사 'hiding'은 '숨기고 있는'의 능동·진행 의미가 되어 명사를 수식하는 문맥과 충돌한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "why", "wrongForm": "because", "explanation": "'This is why ~'는 '이것이 ~한 이유이다'라는 의미로, 보어 명사절을 이끄는 관계부사 'why'가 맞다. 'because'는 부사절을 이끄는 접속사여서 be동사의 보어 자리에 올 수 없으므로 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'the form'이 있으므로 목적격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사여서 앞에 선행사가 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 42, "endTokenIdx": 42, "correctForm": "substantiate", "wrongForm": "substantiating", "explanation": "'in order to ~'는 '~하기 위해'라는 목적을 나타내는 부정사 구문으로, 'to' 뒤에는 동사원형 'substantiate'가 와야 한다. 동명사형 'substantiating'은 'to부정사'의 형태가 될 수 없어 부적절하다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "as", "wrongForm": "with", "explanation": "'the same as ~'는 '~와 같은'을 의미하는 고정된 비교 구문으로, 전치사 'as'가 맞다. 'the same with'는 어법에 맞지 않으므로 'with'를 쓰면 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "embedding", "correction": "embedded", "explanation": "주어 'they'(=the facts)가 파묻히는 대상(수동)이므로 과거분사 'embedded'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "주어 'Stories'가 복수이므로 복수형 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "was", "correction": "is", "explanation": "일반적 진리·항구적 사실을 기술하는 문맥이므로 현재시제 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "hiding", "correction": "hidden", "explanation": "수식되는 명사 'judgement'가 '숨겨진' 대상(수동)이므로 과거분사 'hidden'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "because", "correction": "why", "explanation": "be동사의 보어 자리에 명사절을 이끄는 관계부사 'why'로 고쳐야 한다. 'because'는 부사절 접속사라 보어 자리에 올 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'the form'이 있으므로 목적격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 42, "endTokenIdx": 42, "isError": true, "wrongForm": "substantiating", "correction": "substantiate", "explanation": "'in order to'의 to부정사이므로 동사원형 'substantiate'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "with", "correction": "as", "explanation": "'the same as'가 옳은 표현이므로 전치사 'as'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "We cannot make sense of the facts of the past unless they are embedding in stories, and stories, of necessity, are not neutral collections of facts.",
+          "isCorrect": false,
+          "correction": "We cannot make sense of the facts of the past unless they are embedded in stories, and stories, of necessity, are not neutral collections of facts.",
+          "explanation": "주어 'they'(=the facts)가 파묻히는 대상(수동)이므로 과거분사 'embedded'가 맞다."
+        },
+        {
+          "text": "Stories is necessarily selective, subjective and attractive.",
+          "isCorrect": false,
+          "correction": "Stories are necessarily selective, subjective and attractive.",
+          "explanation": "주어 'Stories'가 복수이므로 복수형 'are'가 맞다."
+        },
+        {
+          "text": "The shortest of stories was the result of choices, conscious and unconscious.",
+          "isCorrect": false,
+          "correction": "The shortest of stories is the result of choices, conscious and unconscious.",
+          "explanation": "일반 진리를 기술하는 문맥이므로 현재시제 'is'가 맞다."
+        },
+        {
+          "text": "Stories influence subtly, invest power, make hiding moral judgement and always distort by omission, whether intentionally or not.",
+          "isCorrect": false,
+          "correction": "Stories influence subtly, invest power, make hidden moral judgement and always distort by omission, whether intentionally or not.",
+          "explanation": "명사 'judgement'를 수동으로 수식하므로 과거분사 'hidden'이 맞다."
+        },
+        {
+          "text": "This is because all educated citizens need not just facts about the past but history as a discipline.",
+          "isCorrect": false,
+          "correction": "This is why all educated citizens need not just facts about the past but history as a discipline.",
+          "explanation": "be동사의 보어 자리에는 명사절을 이끄는 관계부사 'why'가 맞다."
+        },
+        {
+          "text": "For we need to understand why history takes the form what it does in scholarly accounts.",
+          "isCorrect": false,
+          "correction": "For we need to understand why history takes the form that it does in scholarly accounts.",
+          "explanation": "선행사 'the form'이 있으므로 목적격 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "Disciplined historical argument is not the same as informal hearing and telling of stories; it requires familiarity with abstract generalizations, familiarity with prior scholarly discourse and an ability to make use of evidence, styles of argument and analytic structures in order to substantiating claims.",
+          "isCorrect": false,
+          "correction": "Disciplined historical argument is not the same as informal hearing and telling of stories; it requires familiarity with abstract generalizations, familiarity with prior scholarly discourse and an ability to make use of evidence, styles of argument and analytic structures in order to substantiate claims.",
+          "explanation": "'in order to' 뒤에는 동사원형 'substantiate'가 와야 한다."
+        },
+        {
+          "text": "Such disciplinary knowledge is not the same with 'everyday' knowledge and it is not likely to be picked up informally.",
+          "isCorrect": false,
+          "correction": "Such disciplinary knowledge is not the same as 'everyday' knowledge and it is not likely to be picked up informally.",
+          "explanation": "'the same as'가 옳은 표현이므로 전치사 'as'가 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -5,6 +5,25 @@
 /** 어법 유형: 보기는 지문 밑줄에만 두고 Options 문자열은 이 값으로 통일 */
 export const GRAMMAR_VARIANT_OPTIONS_FIXED = '①###②###③###④###⑤';
 
+/** 어법-고난도(모두 고르기) 유형: 어법과 동일하게 Options는 번호만 */
+export const GRAMMAR_HARD_VARIANT_OPTIONS_FIXED = '①###②###③###④###⑤';
+
+/**
+ * 어법-고난도 CorrectAnswer 정규식 — 동그라미 번호 2개 이상 연속 (예: `①③`, `②③⑤`).
+ * 공백·쉼표·기타 문자 사이에 끼면 안 됨.
+ */
+export const GRAMMAR_HARD_CORRECT_ANSWER_PATTERN = /^[①②③④⑤]{2,5}$/;
+
+/** 어법-고난도 CorrectAnswer 정규화: 중복 제거 + 순서 정렬(①→⑤). */
+export function normalizeGrammarHardCorrectAnswer(raw: string): string {
+  const order = ['①', '②', '③', '④', '⑤'] as const;
+  const set = new Set<string>();
+  for (const ch of raw) {
+    if (order.includes(ch as (typeof order)[number])) set.add(ch);
+  }
+  return order.filter((c) => set.has(c)).join('');
+}
+
 export const VARIANT_DRAFT_GRAMMAR_RULES = `- 어법: Question은 반드시 "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?"으로 작성.
   (아래 **출제 절차**를 먼저 머릿속으로 밟은 뒤, 최종적으로 JSON만 출력한다.)
   【출제 절차】 (아래 "단계"는 문제 번호 ①~⑤와 무관)
@@ -21,4 +40,9 @@ export const VARIANT_DRAFT_GRAMMAR_RULES = `- 어법: Question은 반드시 "다
   단계 H. **Options(보기)**: **정확히** \`①###②###③###④###⑤\` **한 줄만** 출력한다. 동그라미와 \`###\` 외 공백·영어·\`<u>\` **금지**. 보기 내용은 전부 Paragraph 밑줄(\`<u>…</u>\`)에만 둔다.
   단계 I. CorrectAnswer는 wrongForm이 들어간 번호 하나(①~⑤).
   단계 J. 어법 오류 유형 참고: 관계사/접속사, 준동사·to부정사/동명사·병렬·목적격보어, 시제·조동사, 수 일치, 분사·형용사, 대명사·참조 등.
-  단계 K. Explanation은 반드시 "② 가 정답입니다."처럼 **CorrectAnswer와 같은 번호**로 한 문장 시작 → **correctForm**(원래 맞는 표기)과 **wrongForm**(지문에 넣은 틀린 표기)을 짚어 어법상 왜 틀렸는지 **2~3문장**(전체 450자 이하). 다른 번호를 두고 번복하는 장문 금지.`;
+  단계 K. Explanation은 반드시 "② 가 정답입니다."처럼 **CorrectAnswer와 같은 번호**로 한 문장 시작 → **correctForm**(원래 맞는 표기)과 **wrongForm**(지문에 넣은 틀린 표기)을 짚어 어법상 왜 틀렸는지 **2~3문장**(전체 450자 이하). 다른 번호를 두고 번복하는 장문 금지.
+- 어법-고난도(모두 고르기): Question은 반드시 "다음 글의 밑줄 친 부분 중, 어법상 틀린 것을 **모두** 고르시오."로 작성. 어법 유형의 단계 A~K를 모두 따르되, **차이점**:
+  · 단계 A·F 수정: **틀린 자리(wrongForm)를 2~3개** 만든다(전체 5곳 중 2~3개가 어법상 오류, 나머지 2~3개는 원문 그대로 올바른 표기).
+  · 단계 H 수정: Options는 그대로 \`①###②###③###④###⑤\` (번호만).
+  · 단계 I 수정: **CorrectAnswer는 틀린 번호들을 ①→⑤ 순서로 연속 표기** — 공백·쉼표 없이. 예: ①과 ③이 틀리면 \`①③\`, ②·④·⑤가 틀리면 \`②④⑤\`. 1개만 표기 금지(반드시 2개 이상).
+  · 단계 K 수정: Explanation은 "①③ 이 정답입니다."처럼 **CorrectAnswer 전체로 시작**, 각 틀린 번호별로 correctForm·wrongForm을 1~2문장씩 짚는다(전체 450자 이하).`;

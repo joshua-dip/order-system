@@ -1,0 +1,239 @@
+{
+  "passageId": "69d4eca372a886137cd83ef8",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 2회 06번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 2회 06번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 2회 06번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "The hunting and gathering lifestyle is not conducive to large and densely clustered human populations.",
+      "tokens": ["The","hunting","and","gathering","lifestyle","is","not","conducive","to","large","and","densely","clustered","human","populations."],
+      "korean": "사냥과 채집 생활방식은 크고 밀집하게 무리를 이루는 인간 개체에 도움이 되지 않는다."
+    },
+    {
+      "idx": 1,
+      "text": "In the African savannas where the earliest humans lived, current hunter-gatherers require an average of about one square mile per person to obtain an adequate diet from their local environment.",
+      "tokens": ["In","the","African","savannas","where","the","earliest","humans","lived,","current","hunter-gatherers","require","an","average","of","about","one","square","mile","per","person","to","obtain","an","adequate","diet","from","their","local","environment."],
+      "korean": "최초의 인류가 살았던 아프리카의 대초원에서, 현재의 수렵채집인들은 그들 지역의 주변 환경에서 적절한 음식물을 얻기 위해 1인당 평균 약 1평방마일을 필요로 한다."
+    },
+    {
+      "idx": 2,
+      "text": "Such spacing requires that human beings live in small, widely scattered groups, a principle supported by the archaeological record.",
+      "tokens": ["Such","spacing","requires","that","human","beings","live","in","small,","widely","scattered","groups,","a","principle","supported","by","the","archaeological","record."],
+      "korean": "이러한 간격은 인류가 작고 넓게 흩어진 집단으로 살 것을 요구하는데, 이것은 고고학적 기록에 의해 뒷받침되는 원칙이다."
+    },
+    {
+      "idx": 3,
+      "text": "With the exception of ancient coastal fishing communities, most archaeological discoveries reveal human groupings of no more than thirty to forty people.",
+      "tokens": ["With","the","exception","of","ancient","coastal","fishing","communities,","most","archaeological","discoveries","reveal","human","groupings","of","no","more","than","thirty","to","forty","people."],
+      "korean": "고대 해안 어촌을 제외하고, 대부분의 고고학적 발견들은 인간 집단이 고작 30명에서 40명이라는 것을 알려 준다."
+    },
+    {
+      "idx": 4,
+      "text": "In order to maintain these small groups, ancient foragers must have either maintained zero population growth for very long periods of time, somehow balancing their birth rates with their death rates, or else they must have dealt with increasing population through subsequent group divisions and migration to other territories.",
+      "tokens": ["In","order","to","maintain","these","small","groups,","ancient","foragers","must","have","either","maintained","zero","population","growth","for","very","long","periods","of","time,","somehow","balancing","their","birth","rates","with","their","death","rates,","or","else","they","must","have","dealt","with","increasing","population","through","subsequent","group","divisions","and","migration","to","other","territories."],
+      "korean": "이러한 작은 집단을 유지하기 위해서, 고대의 수렵채집인들은 매우 오랜 기간 동안 인구 증가를 0으로 유지했어야 했는데, 어떻게든 그들의 출생률과 그들의 사망률의 균형을 맞추었거나, 그렇지 않으면, 그들은 이후 집단 분할과 다른 지역으로의 이주를 통해 증가하는 인구를 다루었음에 틀림없다."
+    },
+    {
+      "idx": 5,
+      "text": "We should note, however, that although these strategies may have persisted for a very long period of time, they were not without problems.",
+      "tokens": ["We","should","note,","however,","that","although","these","strategies","may","have","persisted","for","a","very","long","period","of","time,","they","were","not","without","problems."],
+      "korean": "그러나 우리는 이러한 전략들이 매우 오랫동안 지속되어 왔더라도 문제가 없는 것은 아니었다는 점을 주목해야 한다."
+    },
+    {
+      "idx": 6,
+      "text": "Indeed, such problems may have eventually driven humans to systematic agriculture.",
+      "tokens": ["Indeed,","such","problems","may","have","eventually","driven","humans","to","systematic","agriculture."],
+      "korean": "실제로, 그러한 문제들이 결국 인간을 체계적인 농업으로 몰고 갔을지도 모른다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T11-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "densely",
+          "wrongCandidates": ["dense"],
+          "grammarType": "부사",
+          "explanation": "뒤의 과거분사 'clustered'를 수식하므로 부사 'densely'가 맞다. 형용사 'dense'는 분사를 수식할 수 없으며 동등 접속된 형용사 'large'와의 병치 구조에도 맞지 않다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "dense",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T4-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "where",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the African savannas'가 장소이고, 뒤따르는 절 'the earliest humans lived'가 주어·동사 모두 갖춘 완전한 절이므로 관계부사 'where'가 맞다. 관계대명사 'which'는 뒤에 불완전한 절이 와야 하므로 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T6-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "live",
+          "wrongCandidates": ["lives"],
+          "grammarType": "부정사",
+          "explanation": "요구·제안 동사 'requires' 뒤의 that절에서는 (should가 생략된) 동사원형이 와야 하므로 'live'가 맞다. 주어 'human beings'가 복수이지만 단·복수와 무관하게 가정법 현재의 동사원형 형태가 쓰이며, 단수형 'lives'는 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "live",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T14-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "supported",
+          "wrongCandidates": ["supporting"],
+          "grammarType": "수동태",
+          "explanation": "명사 'a principle'을 뒤에서 수식하는 분사로, 원칙이 고고학적 기록에 '의해' 뒷받침되는 수동의 의미이므로 과거분사 'supported'가 맞다. 현재분사 'supporting'은 능동의 의미가 되어 'by ~'와 호응하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "support",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T23-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 23,
+          "endTokenIdx": 23,
+          "correctForm": "balancing",
+          "wrongCandidates": ["balanced"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'ancient foragers'가 출생률과 사망률을 능동적으로 균형 맞추는 것이므로 현재분사 'balancing'이 맞다. 과거분사 'balanced'는 수동의 의미가 되어 의미상 주어가 균형의 대상이 되는 어색한 해석이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "balance",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T10-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "persisted",
+          "wrongCandidates": ["persisting"],
+          "grammarType": "시제",
+          "explanation": "조동사 'may have' 뒤에는 과거분사가 와서 'may have p.p.' (과거 사실에 대한 추측·완료) 형태가 되므로 'persisted'가 맞다. 현재분사 'persisting'은 'may have + -ing' 형태를 만들 수 없어 비문이다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "persist",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T6-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "driven",
+          "wrongCandidates": ["drove"],
+          "grammarType": "시제",
+          "explanation": "'may have' 뒤에는 과거분사가 와야 'may have p.p.' (과거에 대한 추측) 구조를 이루므로 'driven'이 맞다. 과거형 'drove'는 'may have' 뒤에 올 수 없어 비문이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "drive",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "densely", "baseForm": "dense"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "live", "baseForm": "live"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "supported", "baseForm": "support"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "balancing", "baseForm": "balance"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "persisted", "baseForm": "persist"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "driven", "baseForm": "drive"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "densely", "wrongForm": "dense", "explanation": "뒤의 과거분사 'clustered'를 수식하므로 부사 'densely'가 맞다. 형용사 'dense'는 분사를 수식할 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "where", "wrongForm": "which", "explanation": "선행사가 장소이고 뒤가 완전한 절이므로 관계부사 'where'가 맞다. 관계대명사 'which'는 불완전한 절을 이끈다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "live", "wrongForm": "lives", "explanation": "요구 동사 'requires' 뒤 that절은 (should 생략) 동사원형 'live'를 쓴다. 'lives'는 부적절."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "supported", "wrongForm": "supporting", "explanation": "'a principle'이 'by'에 의해 뒷받침되는 수동 관계이므로 과거분사 'supported'가 맞다."},
+        {"sentenceIdx": 4, "startTokenIdx": 23, "endTokenIdx": 23, "correctForm": "balancing", "wrongForm": "balanced", "explanation": "분사구문의 의미상 주어가 균형을 능동으로 맞추므로 현재분사 'balancing'이 맞다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "persisted", "wrongForm": "persisting", "explanation": "'may have' 뒤에는 과거분사가 와서 'may have p.p.' 형태가 되어야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "driven", "wrongForm": "drove", "explanation": "'may have' 뒤에는 과거분사 'driven'이 와야 한다. 과거형 'drove'는 불가."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "dense", "correction": "densely", "explanation": "과거분사 'clustered'를 수식하므로 부사 'densely'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "which", "correction": "where", "explanation": "장소 선행사 + 완전한 절이므로 관계부사 'where'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "lives", "correction": "live", "explanation": "요구 동사 'requires' 뒤 that절에서는 동사원형 'live'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "supporting", "correction": "supported", "explanation": "'a principle'이 'by ~'에 의해 뒷받침되는 수동이므로 과거분사 'supported'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 23, "endTokenIdx": 23, "isError": true, "wrongForm": "balanced", "correction": "balancing", "explanation": "능동 분사구문이므로 현재분사 'balancing'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "persisting", "correction": "persisted", "explanation": "'may have' 뒤이므로 과거분사 'persisted'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "drove", "correction": "driven", "explanation": "'may have' 뒤이므로 과거분사 'driven'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "The hunting and gathering lifestyle is not conducive to large and dense clustered human populations.",
+          "isCorrect": false,
+          "correction": "The hunting and gathering lifestyle is not conducive to large and densely clustered human populations.",
+          "explanation": "과거분사 'clustered'를 수식하므로 부사 'densely'가 맞다."
+        },
+        {
+          "text": "In the African savannas which the earliest humans lived, current hunter-gatherers require an average of about one square mile per person to obtain an adequate diet from their local environment.",
+          "isCorrect": false,
+          "correction": "In the African savannas where the earliest humans lived, current hunter-gatherers require an average of about one square mile per person to obtain an adequate diet from their local environment.",
+          "explanation": "장소 선행사와 완전한 절을 잇는 관계부사 'where'가 맞다."
+        },
+        {
+          "text": "Such spacing requires that human beings lives in small, widely scattered groups, a principle supported by the archaeological record.",
+          "isCorrect": false,
+          "correction": "Such spacing requires that human beings live in small, widely scattered groups, a principle supported by the archaeological record.",
+          "explanation": "요구 동사 'requires' 뒤 that절에서는 동사원형 'live'를 쓴다."
+        },
+        {
+          "text": "Such spacing requires that human beings live in small, widely scattered groups, a principle supporting by the archaeological record.",
+          "isCorrect": false,
+          "correction": "Such spacing requires that human beings live in small, widely scattered groups, a principle supported by the archaeological record.",
+          "explanation": "'a principle'이 'by'에 의해 뒷받침되는 수동이므로 과거분사 'supported'가 맞다."
+        },
+        {
+          "text": "In order to maintain these small groups, ancient foragers must have either maintained zero population growth for very long periods of time, somehow balanced their birth rates with their death rates, or else they must have dealt with increasing population through subsequent group divisions and migration to other territories.",
+          "isCorrect": false,
+          "correction": "In order to maintain these small groups, ancient foragers must have either maintained zero population growth for very long periods of time, somehow balancing their birth rates with their death rates, or else they must have dealt with increasing population through subsequent group divisions and migration to other territories.",
+          "explanation": "분사구문의 의미상 주어가 능동으로 균형을 맞추므로 현재분사 'balancing'이 맞다."
+        },
+        {
+          "text": "We should note, however, that although these strategies may have persisting for a very long period of time, they were not without problems.",
+          "isCorrect": false,
+          "correction": "We should note, however, that although these strategies may have persisted for a very long period of time, they were not without problems.",
+          "explanation": "'may have' 뒤에는 과거분사가 와야 하므로 'persisted'가 맞다."
+        },
+        {
+          "text": "Indeed, such problems may have eventually drove humans to systematic agriculture.",
+          "isCorrect": false,
+          "correction": "Indeed, such problems may have eventually driven humans to systematic agriculture.",
+          "explanation": "'may have' 뒤에는 과거분사 'driven'이 와야 한다."
+        }
+      ]
+    }
+  }
+}

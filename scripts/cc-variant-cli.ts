@@ -81,6 +81,15 @@ function resolveShorthandCommand(
   cmd: string,
   tail: string[]
 ): { cmd: string; tail: string[] } {
+  const pipeline = cmd.match(/^pipeline:(.+)$/i);
+  if (pipeline) {
+    const num = pipeline[1].trim();
+    if (!ORDER_NUMBER_SHORTHAND.test(num)) {
+      die(`pipeline: 뒤 주문번호 형식이 아닙니다: ${num} (예: pipeline:BV-20260529-002)`);
+    }
+    return { cmd: 'pipeline', tail: ['--order-number', num, ...tail] };
+  }
+  // claude:BV-… 는 backward-compat: shortage 로만 라우팅 (변경 없음)
   const claude = cmd.match(/^claude:(.+)$/i);
   if (claude) {
     const num = claude[1].trim();
@@ -89,8 +98,9 @@ function resolveShorthandCommand(
     }
     return { cmd: 'shortage', tail: ['--order-number', num, ...tail] };
   }
+  // 주문번호만 입력하면 pipeline 전체 흐름으로 라우팅 (검수까지 한 번에)
   if (ORDER_NUMBER_SHORTHAND.test(cmd)) {
-    return { cmd: 'shortage', tail: ['--order-number', cmd, ...tail] };
+    return { cmd: 'pipeline', tail: ['--order-number', cmd, ...tail] };
   }
   return { cmd, tail };
 }
@@ -266,52 +276,183 @@ async function cmdRecordReviewBulk(flags: Map<string, string>) {
     .find({ status: '대기', textbook })
     .sort({ created_at: 1 })
     .toArray();
+  const result = await recordReviewLoop(docs, { dryRun, label: textbook });
+  out({ ok: true, textbook, dryRun, ...result });
+}
 
-  const summary = {
-    ok: true,
-    textbook,
-    dryRun,
+type ReviewLoopResult = {
+  total: number;
+  completed: number;
+  forced_mismatch_by_validation: number;
+  skipped_no_correct_answer: number;
+  failed: { id: string; error?: string; is_correct?: boolean | null }[];
+};
+
+async function recordReviewLoop(
+  docs: Record<string, unknown>[],
+  opts: { dryRun: boolean; label: string },
+): Promise<ReviewLoopResult> {
+  const r: ReviewLoopResult = {
     total: docs.length,
-    status_updated_to_complete: 0,
+    completed: 0,
+    forced_mismatch_by_validation: 0,
     skipped_no_correct_answer: 0,
-    failed: [] as { id: string; error?: string; is_correct?: boolean | null }[],
+    failed: [],
   };
-
   for (let i = 0; i < docs.length; i++) {
     const doc = docs[i];
     const id = String(doc._id);
     const { correctAnswer } = getQuestionDataForReview(doc.question_data);
     if (!correctAnswer.trim()) {
-      summary.skipped_no_correct_answer += 1;
+      r.skipped_no_correct_answer += 1;
       continue;
     }
-    if (dryRun) {
-      summary.status_updated_to_complete += 1;
+    if (opts.dryRun) {
+      r.completed += 1;
       continue;
     }
     const result = await recordReviewLogFromClaudeCode({
       generated_question_id: id,
       claude_answer: correctAnswer,
       claude_response:
-        '(일괄) DB 저장 정답으로 record-review — cc-variant-cli record-review-bulk',
-      admin_login_id: 'cc-variant-bulk',
+        '(파이프라인) DB 정답으로 record-review — cc-variant-cli pipeline/record-review-bulk',
+      admin_login_id: 'cc-variant-pipeline',
       attemptNumber: 1,
     });
     if (!result.ok) {
-      summary.failed.push({ id, error: result.error });
+      r.failed.push({ id, error: result.error });
       continue;
     }
-    if (result.status_updated_to_complete) {
-      summary.status_updated_to_complete += 1;
-    } else if (result.is_correct !== true) {
-      summary.failed.push({ id, is_correct: result.is_correct });
+    if (result.forced_mismatch_by_validation) r.forced_mismatch_by_validation += 1;
+    if (result.status_updated_to_complete) r.completed += 1;
+    else if (result.is_correct !== true && !result.forced_mismatch_by_validation) {
+      r.failed.push({ id, is_correct: result.is_correct });
     }
     if ((i + 1) % 50 === 0) {
-      console.error(`  record-review-bulk: ${i + 1}/${docs.length}…`);
+      console.error(`  review[${opts.label}]: ${i + 1}/${docs.length}…`);
     }
   }
+  return r;
+}
 
-  out(summary);
+type QCountUnderfilledLite = {
+  passageId: string;
+  type: string;
+  shortBy: number;
+  label?: string;
+};
+
+type QCountNoQuestionLite = {
+  passageId: string;
+  textbook?: string;
+  label?: string;
+};
+
+async function cmdPipeline(flags: Map<string, string>) {
+  const orderNumberRaw = (flags.get('order-number') ?? '').trim();
+  const orderIdRaw = (flags.get('order-id') ?? '').trim();
+  const textbookParam = (flags.get('textbook') ?? '').trim();
+  if (!orderNumberRaw && !orderIdRaw && !textbookParam) {
+    die('pipeline: --order-number BV-… 또는 --order-id … 또는 --textbook "이름" 중 하나가 필요합니다.');
+  }
+  const requiredPerType = Math.floor(flagNum(flags, 'required', 3));
+  const skipReview = (flags.get('skip-review') ?? '') === 'true';
+  const dryRun = (flags.get('dry-run') ?? '') === 'true';
+  const maxRows = Math.min(2000, Math.max(20, Math.floor(flagNum(flags, 'max-rows', 200))));
+
+  // 1) shortage 조회 (textbook 또는 주문 단위 자동 라우팅)
+  const shortageRes = await runQuestionCountValidation({
+    textbookParam,
+    orderIdRaw,
+    orderNumberRaw: orderNumberRaw || null,
+    requiredPerTypeRaw: String(requiredPerType),
+    questionStatusRaw: null,
+  });
+  if (!shortageRes.ok) {
+    const err =
+      typeof shortageRes.body.error === 'string'
+        ? shortageRes.body.error
+        : JSON.stringify(shortageRes.body);
+    die(`pipeline: shortage 실패 — ${err}`);
+  }
+  const sliced = sliceQuestionCountPayloadForApi(shortageRes, maxRows) as Record<string, unknown>;
+  const textbook = String((sliced.textbook as string) ?? textbookParam);
+  const pendingTotal = Number(sliced.pendingReviewTotal ?? 0);
+  const needCreateGrandTotal = Number(sliced.needCreateGrandTotal ?? 0);
+  const underfilled = (Array.isArray(sliced.underfilled)
+    ? sliced.underfilled
+    : []) as QCountUnderfilledLite[];
+  const noQuestions = (Array.isArray(sliced.noQuestions)
+    ? sliced.noQuestions
+    : []) as QCountNoQuestionLite[];
+
+  // 2) 대기 자동 검수 (Pro-only · per-question 종합 검증 자동 적용)
+  let review: ReviewLoopResult | { skipped: true; reason: string } = {
+    skipped: true,
+    reason: skipReview ? 'skip-review 옵션 지정' : '대기 0건',
+  };
+  if (!skipReview && pendingTotal > 0) {
+    const db = await getDb('gomijoshua');
+    const gqCol = db.collection('generated_questions');
+    let pendingDocs: Record<string, unknown>[];
+    if (textbook) {
+      pendingDocs = await gqCol
+        .find({ status: '대기', textbook })
+        .sort({ created_at: 1 })
+        .toArray();
+    } else {
+      pendingDocs = [];
+    }
+    review = await recordReviewLoop(pendingDocs, { dryRun, label: textbook || 'order' });
+  }
+
+  // 3) 다음 작업 가이드
+  const needCreateBreakdown = new Map<string, { type: string; total: number; passages: string[] }>();
+  for (const u of underfilled) {
+    const cur = needCreateBreakdown.get(u.type) ?? { type: u.type, total: 0, passages: [] };
+    cur.total += Number(u.shortBy ?? 0);
+    if (!cur.passages.includes(u.passageId)) cur.passages.push(u.passageId);
+    needCreateBreakdown.set(u.type, cur);
+  }
+  const needCreateByType = [...needCreateBreakdown.values()].sort(
+    (a, b) => b.total - a.total,
+  );
+
+  out({
+    ok: true,
+    order_number: orderNumberRaw || null,
+    textbook,
+    counts: {
+      pendingReviewTotal: pendingTotal,
+      needCreateGrandTotal,
+      needCreateShortBySum: Number(sliced.needCreateShortBySum ?? 0),
+      needCreateFromEmptyPassagesTotal: Number(
+        sliced.needCreateFromEmptyPassagesTotal ?? 0,
+      ),
+    },
+    review,
+    next_actions: {
+      review_done: !skipReview && pendingTotal > 0,
+      need_chat_generation: needCreateGrandTotal > 0,
+      empty_passages: noQuestions.map((p) => ({
+        passage_id: p.passageId,
+        label: p.label ?? '',
+      })),
+      need_create_by_type: needCreateByType,
+    },
+    next_chat_steps:
+      needCreateGrandTotal > 0
+        ? [
+            '1) 위 need_create_by_type 의 각 항목에 대해 variant_get_passage(passage_id) 로 원문 읽기',
+            '2) variant_draft_grammar_rules 등 유형별 규칙에 맞춰 채팅에서 question_data JSON 작성',
+            '3) variant_save_generated_question 으로 저장 (status=대기)',
+            `4) 모두 저장한 뒤 ${orderNumberRaw ? `pipeline:${orderNumberRaw}` : 'pipeline --textbook …'} 다시 실행 → 신규 대기까지 자동 검수`,
+          ]
+        : [
+            '신규 생성할 항목이 없습니다. pendingReviewTotal 도 0 이면 주문 처리 완료입니다.',
+          ],
+    raw_shortage: { underfilled, noQuestions },
+  });
 }
 
 function argvAfterScript(): string[] {
@@ -329,7 +470,9 @@ function argvAfterScript(): string[] {
 }
 
 async function main() {
-  let [cmd, ...tail] = argvAfterScript();
+  const argv = argvAfterScript();
+  let cmd = argv[0] ?? '';
+  const tail = argv.slice(1);
   if (!cmd || cmd === '-h' || cmd === '--help') {
     console.error(`사용법: npx tsx scripts/cc-variant-cli.ts <명령> [옵션]
 
@@ -339,7 +482,11 @@ async function main() {
   passage --id <ObjectId>
   shortage --textbook "이름" [--required N] [--status all|대기|완료|검수불일치] [--max-rows N]
   shortage --order-id <ObjectId> | shortage --order-number BV-… [동일 옵션]
-  단축: BV-20260331-002  또는  claude:BV-20260331-002  → shortage --order-number … 와 동일
+  pipeline --order-number BV-… [--required N] [--skip-review true] [--dry-run true]   shortage + 대기 자동 검수 + 신규 생성 가이드
+  pipeline --textbook "이름" [...]
+  단축: BV-20260529-002          → pipeline --order-number … (검수까지 한 번에)
+        pipeline:BV-20260529-002 → 동일 (명시적)
+        claude:BV-20260331-002    → shortage 만 (기존 호환)
   save --json <파일|- >
   record-review --id <generated_question_id> --answer "정답 표현" [--response "풀이"] [--attempt 1]
   record-review-bulk --textbook "교재명" [--dry-run true]`);
@@ -371,6 +518,9 @@ async function main() {
       break;
     case 'record-review-bulk':
       await cmdRecordReviewBulk(flags);
+      break;
+    case 'pipeline':
+      await cmdPipeline(flags);
       break;
     default:
       die(`알 수 없는 명령: ${cmd} (--help 참고)`);

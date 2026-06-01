@@ -8,6 +8,10 @@ import {
   type SvocSentenceData,
 } from '@/lib/passage-analyzer-types';
 import { listThreadsByPassage } from '@/lib/qna-store';
+import {
+  alignSvocDataToSentences,
+  normalizeSvocDataToWordIndices,
+} from '@/lib/svoc-index-normalize';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,8 +82,8 @@ export async function GET(
 
     const { sentences, koreanSentences } = deriveSentencesFromPassageContent(doc.content);
 
-    // 분석기에서 SVOC 데이터 가져오기 (있을 때만)
-    let svoc: Record<number, SvocSentenceData> | undefined;
+    // 분석기에서 SVOC 데이터 가져오기 (있을 때만). 응답은 항상 array shape (절별).
+    let svoc: Record<number, SvocSentenceData[]> | undefined;
     try {
       const analysis = (await db
         .collection('passage_analyses')
@@ -87,18 +91,29 @@ export async function GET(
           { fileName: passageAnalysisFileNameForPassageId(String(doc._id)) },
           { projection: { 'passageStates.main.svocData': 1 } },
         )) as
-        | { passageStates?: { main?: { svocData?: Record<string, SvocSentenceData> } } }
+        | {
+            passageStates?: {
+              main?: {
+                svocData?: Record<string, SvocSentenceData | SvocSentenceData[]>;
+              };
+            };
+          }
         | null;
       const raw = analysis?.passageStates?.main?.svocData;
       if (raw && typeof raw === 'object') {
-        const entries = Object.entries(raw).filter(([, v]) => v && typeof v === 'object');
-        if (entries.length > 0) {
-          const normalized: Record<number, SvocSentenceData> = {};
-          for (const [k, v] of entries) {
-            const n = Number(k);
-            if (Number.isFinite(n)) normalized[n] = v;
-          }
-          if (Object.keys(normalized).length > 0) svoc = normalized;
+        const byIndex: Record<number, SvocSentenceData | SvocSentenceData[]> = {};
+        for (const [k, v] of Object.entries(raw)) {
+          const n = Number(k);
+          if (!Number.isFinite(n) || !v) continue;
+          byIndex[n] = v;
+        }
+        if (Object.keys(byIndex).length > 0) {
+          // ① char-offset 데이터는 word index 로 변환 + 단일/array → array 통일.
+          const normalized = normalizeSvocDataToWordIndices(sentences, byIndex);
+          // ② 분석기가 더 잘게 sentence-split 한 경우 인덱스가 어긋남 → subject 텍스트 매칭으로
+          //    잘못 매핑된 절만 drop. 정렬되는 sentence·절에만 SVOC 표시.
+          const aligned = alignSvocDataToSentences(sentences, normalized);
+          if (aligned && Object.keys(aligned).length > 0) svoc = aligned;
         }
       }
     } catch (err) {

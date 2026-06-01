@@ -1,0 +1,237 @@
+{
+  "passageId": "69d4eca372a886137cd83ed8",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "03강 04번",
+  "title": "지금필수 고난도유형(2026) 03강 04번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "03강 04번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Parents are not teaching their children that delayed gratification is an important reality in life.",
+      "tokens": ["Parents","are","not","teaching","their","children","that","delayed","gratification","is","an","important","reality","in","life."],
+      "korean": "부모들은 그들의 자녀들에게 지연된 만족이 삶에서 중요한 현실임을 가르치고 있지 않다."
+    },
+    {
+      "idx": 1,
+      "text": "Take education, for example. So many children today do not believe that a good education will help them in later life, hence the horrendous dropout rate in our schools.",
+      "tokens": ["Take","education,","for","example.","So","many","children","today","do","not","believe","that","a","good","education","will","help","them","in","later","life,","hence","the","horrendous","dropout","rate","in","our","schools."],
+      "korean": "예컨대 교육을 한번 보라. 오늘날 너무나도 많은 아이들이 훌륭한 교육이 이후의 삶에서 자신들에게 도움이 되리라는 것을 믿지 않아서 우리 학교에서 중퇴율이 어마어마하다."
+    },
+    {
+      "idx": 2,
+      "text": "There are just enough success stories out there, such as actors, musicians, athletes, who have made it without that education, that kids believe they will be the “next one’’ to succeed.",
+      "tokens": ["There","are","just","enough","success","stories","out","there,","such","as","actors,","musicians,","athletes,","who","have","made","it","without","that","education,","that","kids","believe","they","will","be","the","“next","one’’","to","succeed."],
+      "korean": "배우, 음악가, 운동선수처럼, 그런 교육 없이도 성공을 이뤄낸 사람들의 성공담들이 충분해서 아이들은 자신이 성공할 다음 사람이 될 거라고 믿는다."
+    },
+    {
+      "idx": 3,
+      "text": "They do not have a realistic view of what it really takes for the average person to succeed.",
+      "tokens": ["They","do","not","have","a","realistic","view","of","what","it","really","takes","for","the","average","person","to","succeed."],
+      "korean": "그들은 보통 사람이 성공하는 데 정말로 무엇이 필요한지에 대한 현실적인 견해를 갖고 있지 않다."
+    },
+    {
+      "idx": 4,
+      "text": "And when reality hits them they become angry, because “success” is “owed” to them.",
+      "tokens": ["And","when","reality","hits","them","they","become","angry,","because","“success”","is","“owed”","to","them."],
+      "korean": "그리고 현실에 부딪쳤을 때, 그들은 분노하게 되는데, 자신은 ‘당연히 성공해야 한다’고 생각하기 때문이다."
+    },
+    {
+      "idx": 5,
+      "text": "Kids come out of high school thinking they are “owed” a good job, one paying $15 per hour when reality says they probably will need to start out at minimum wage, and maybe, through hard work, can work up to that good pay.",
+      "tokens": ["Kids","come","out","of","high","school","thinking","they","are","“owed”","a","good","job,","one","paying","$15","per","hour","when","reality","says","they","probably","will","need","to","start","out","at","minimum","wage,","and","maybe,","through","hard","work,","can","work","up","to","that","good","pay."],
+      "korean": "아이들은 자신들이 ‘당연히’ 좋은 직업, 즉 시급 15달러의 직업을 ‘가져야 한다고’ 생각하며 고등학교를 나오지만, 현실은 그들이 아마도 최소 임금으로 시작할 필요가 있을 것이며, 아마도 성실히 일함으로써 그렇게 좋은 보수로 발전할 수 있을 것이라고 말한다."
+    },
+    {
+      "idx": 6,
+      "text": "So parents, start teaching your children at an early age (say, three or four) that you do not get everything just because you want it now, but often have to wait, or maybe “earn” it.",
+      "tokens": ["So","parents,","start","teaching","your","children","at","an","early","age","(say,","three","or","four)","that","you","do","not","get","everything","just","because","you","want","it","now,","but","often","have","to","wait,","or","maybe","“earn”","it."],
+      "korean": "따라서 부모들이여, 여러분의 자녀들에게 어린 나이 (예컨대 서너 살)때 네가 지금 그것을 원한다고 모든 것을 얻는 것이 아니며, 자주 기다려야 하거나 그것을 ‘벌어야’ 할 수도 있다고 가르치기 시작하라."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T7-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "delayed",
+          "wrongCandidates": ["delaying"],
+          "grammarType": "분사",
+          "explanation": "'delayed gratification(지연된 만족)'은 명사 'gratification'이 '지연되는' 대상이므로 수동의 의미를 나타내는 과거분사 'delayed'가 맞다. 현재분사 'delaying'은 능동·진행의 의미라 '만족이 다른 것을 지연시킨다'는 어색한 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "delay",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T8-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "do",
+          "wrongCandidates": ["does"],
+          "grammarType": "수일치",
+          "explanation": "주어 'so many children today'의 핵은 복수 명사 'children'이므로 복수형 조동사 'do'가 와야 한다. 단수형 'does'는 단수 주어와 호응하므로 복수 주어와 함께 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "do",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T13-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'actors, musicians, athletes'는 모두 사람을 가리키므로 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받는 관계대명사라 사람 선행사에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T17-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "succeed",
+          "wrongCandidates": ["succeeding"],
+          "grammarType": "부정사",
+          "explanation": "'for the average person to succeed'는 to부정사구로, 의미상 주어를 'for + 명사'로 표시하고 to 뒤에는 동사원형이 와야 하므로 'succeed'가 맞다. 동명사 'succeeding'은 to 뒤에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "succeed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T11-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "“owed”",
+          "wrongCandidates": ["“owing”"],
+          "grammarType": "수동태",
+          "explanation": "'success'가 사람들에게 '주어져야 할' 대상이므로 'be + p.p.' 형태의 수동태가 와야 하며, 따라서 과거분사 'owed'가 맞다. 현재분사 'owing'은 능동의 의미로 '성공이 사람들에게 빚지고 있다'는 어색한 뜻이 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "owe",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T14-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "paying",
+          "wrongCandidates": ["paid"],
+          "grammarType": "분사",
+          "explanation": "'one paying $15 per hour'는 명사 'one(=a good job)'을 수식하는 현재분사구로, 직업이 시급 15달러를 '지급하는' 능동의 의미이므로 현재분사 'paying'이 맞다. 과거분사 'paid'는 수동·완료의 의미라 '직업이 지급되어진'이라는 어색한 뜻이 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "pay",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T6-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "at",
+          "wrongCandidates": ["in"],
+          "grammarType": "전치사",
+          "explanation": "특정 시점·나이대를 나타낼 때는 전치사 'at'을 써서 'at an early age(이른 나이에)'로 표현한다. 'in'은 일정 기간(in the morning, in 2026)을 나타낼 때 쓰므로 'an early age'와 같은 한 시점을 가리키는 명사구와 호응하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "delayed", "baseForm": "delay"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "do", "baseForm": "do"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "succeed", "baseForm": "succeed"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "“owed”", "baseForm": "owe"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "paying", "baseForm": "pay"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "delayed", "wrongForm": "delaying", "explanation": "'delayed gratification'은 명사 'gratification'이 '지연되는' 대상이므로 수동의 과거분사 'delayed'가 맞다. 'delaying'은 능동의 의미라 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "do", "wrongForm": "does", "explanation": "주어 'so many children today'의 핵은 복수 명사 'children'이므로 복수형 조동사 'do'가 맞다. 'does'는 단수 주어에 쓴다."},
+        {"sentenceIdx": 2, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "who", "wrongForm": "which", "explanation": "선행사 'actors, musicians, athletes'가 사람이므로 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물 선행사를 받는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "succeed", "wrongForm": "succeeding", "explanation": "to부정사 'to succeed'에서 to 뒤에는 동사원형이 와야 하므로 'succeed'가 맞다. 동명사 'succeeding'은 to 뒤에 올 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "“owed”", "wrongForm": "“owing”", "explanation": "'success'가 주어지는 대상이므로 'be + p.p.' 수동태가 필요해 과거분사 'owed'가 맞다. 'owing'은 능동의 의미라 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "paying", "wrongForm": "paid", "explanation": "'one paying $15 per hour'는 'one(=직업)'을 수식하는 현재분사구로, 직업이 시급을 지급하는 능동의 의미이므로 'paying'이 맞다. 'paid'는 수동의 의미라 부적절하다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "at", "wrongForm": "in", "explanation": "특정 시점·나이를 나타낼 때는 'at an early age'처럼 전치사 'at'을 쓴다. 'in'은 일정 기간을 가리킬 때 쓰므로 'an early age'와 호응하지 않는다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "delaying", "correction": "delayed", "explanation": "명사 'gratification'이 지연되는 대상(수동)이므로 과거분사 'delayed'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "does", "correction": "do", "explanation": "복수 주어 'so many children today'에 맞춰 복수형 'do'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "선행사 'actors, musicians, athletes'가 사람이므로 주격 관계대명사 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "succeeding", "correction": "succeed", "explanation": "to부정사 to 뒤에는 동사원형이 와야 하므로 'succeed'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "“owing”", "correction": "“owed”", "explanation": "주어 'success'가 받는 대상(수동)이므로 과거분사 'owed'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "paid", "correction": "paying", "explanation": "직업이 시급을 지급하는 능동의 의미이므로 현재분사 'paying'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "in", "correction": "at", "explanation": "특정 시점·나이를 나타내는 'an early age'에는 전치사 'at'을 써야 하므로 'at'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Parents are not teaching their children that delaying gratification is an important reality in life.",
+          "isCorrect": false,
+          "correction": "Parents are not teaching their children that delayed gratification is an important reality in life.",
+          "explanation": "명사 'gratification'이 지연되는 대상(수동)이므로 과거분사 'delayed'가 맞다."
+        },
+        {
+          "text": "Take education, for example. So many children today does not believe that a good education will help them in later life, hence the horrendous dropout rate in our schools.",
+          "isCorrect": false,
+          "correction": "Take education, for example. So many children today do not believe that a good education will help them in later life, hence the horrendous dropout rate in our schools.",
+          "explanation": "주어 'so many children today'는 복수이므로 조동사 'do'가 맞다."
+        },
+        {
+          "text": "There are just enough success stories out there, such as actors, musicians, athletes, which have made it without that education, that kids believe they will be the “next one’’ to succeed.",
+          "isCorrect": false,
+          "correction": "There are just enough success stories out there, such as actors, musicians, athletes, who have made it without that education, that kids believe they will be the “next one’’ to succeed.",
+          "explanation": "선행사 'actors, musicians, athletes'가 사람이므로 주격 관계대명사 'who'가 맞다."
+        },
+        {
+          "text": "They do not have a realistic view of what it really takes for the average person to succeeding.",
+          "isCorrect": false,
+          "correction": "They do not have a realistic view of what it really takes for the average person to succeed.",
+          "explanation": "to부정사 to 뒤에는 동사원형이 와야 하므로 'succeed'가 맞다."
+        },
+        {
+          "text": "And when reality hits them they become angry, because “success” is “owing” to them.",
+          "isCorrect": false,
+          "correction": "And when reality hits them they become angry, because “success” is “owed” to them.",
+          "explanation": "주어 'success'가 받는 대상(수동)이므로 과거분사 'owed'가 맞다."
+        },
+        {
+          "text": "Kids come out of high school thinking they are “owed” a good job, one paid $15 per hour when reality says they probably will need to start out at minimum wage, and maybe, through hard work, can work up to that good pay.",
+          "isCorrect": false,
+          "correction": "Kids come out of high school thinking they are “owed” a good job, one paying $15 per hour when reality says they probably will need to start out at minimum wage, and maybe, through hard work, can work up to that good pay.",
+          "explanation": "직업이 시급을 지급하는 능동의 의미이므로 현재분사 'paying'이 맞다."
+        },
+        {
+          "text": "So parents, start teaching your children in an early age (say, three or four) that you do not get everything just because you want it now, but often have to wait, or maybe “earn” it.",
+          "isCorrect": false,
+          "correction": "So parents, start teaching your children at an early age (say, three or four) that you do not get everything just because you want it now, but often have to wait, or maybe “earn” it.",
+          "explanation": "특정 시점·나이를 나타내므로 전치사 'at'이 맞다."
+        }
+      ]
+    }
+  }
+}

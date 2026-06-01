@@ -1,0 +1,237 @@
+{
+  "passageId": "69d4eca372a886137cd83f1c",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 02번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 02번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 02번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In many cooperatively breeding mammals, allomothers schedule assistance so as to reduce costs to their own fitness.",
+      "tokens": ["In","many","cooperatively","breeding","mammals,","allomothers","schedule","assistance","so","as","to","reduce","costs","to","their","own","fitness."],
+      "korean": "협력적으로 양육하는 많은 포유류에서, 친어미가 아님에도 새끼를 돌보는 어미(보모)들은 그들 자신의 건강 상태에 대한 희생을 줄이기 위해 도움의 일정을 계획한다."
+    },
+    {
+      "idx": 1,
+      "text": "They are most likely to help when they are too young, or too old, to breed themselves, or when for social or ecological reasons breeding would not be practical.",
+      "tokens": ["They","are","most","likely","to","help","when","they","are","too","young,","or","too","old,","to","breed","themselves,","or","when","for","social","or","ecological","reasons","breeding","would","not","be","practical."],
+      "korean": "그들은 자신들이 너무 어리거나 너무 늙어서 스스로 새끼를 낳을 수 없을 때나 사회적 또는 생태학적 이유로 양육이 실현 가능하지 않을 때, 도와줄 가능성이 가장 높다."
+    },
+    {
+      "idx": 2,
+      "text": "Allomothers may be most eager to help when in good condition, but when resources are scarce or when helping would interfere with their own reproduction, they may decline.",
+      "tokens": ["Allomothers","may","be","most","eager","to","help","when","in","good","condition,","but","when","resources","are","scarce","or","when","helping","would","interfere","with","their","own","reproduction,","they","may","decline."],
+      "korean": "보모들은 상황이 좋을 때는 가장 많이 도와주고 싶을지도 모르지만, 자원이 부족할 때나 도움을 주는 것이 그들 자신들의 번식을 방해할 때는, 거절할지도 모른다."
+    },
+    {
+      "idx": 3,
+      "text": "Simply pretending to help is also an option.",
+      "tokens": ["Simply","pretending","to","help","is","also","an","option."],
+      "korean": "단순히 돕는 척하는 것 또한 선택 사항이다."
+    },
+    {
+      "idx": 4,
+      "text": "For example, in birds, young helpers may ostentatiously carry food to nestlings only to swallow it themselves when the parents are not watching.",
+      "tokens": ["For","example,","in","birds,","young","helpers","may","ostentatiously","carry","food","to","nestlings","only","to","swallow","it","themselves","when","the","parents","are","not","watching."],
+      "korean": "예를 들어, 새의 경우에, 어린 조력자들은 보란 듯이 먹이를 새끼 새에게 가져가지만 부모가 보고 있지 않을 때 결국 그것을 자신이 삼켜버릴지도 모른다."
+    },
+    {
+      "idx": 5,
+      "text": "There may also be penalties for not helping ― including reduced parental tolerance for shirking allomothers.",
+      "tokens": ["There","may","also","be","penalties","for","not","helping","―","including","reduced","parental","tolerance","for","shirking","allomothers."],
+      "korean": "또한 도움을 주지 않는 것에 대한 처벌이 있을 수도 있는데, 태만히 하는 보모들에게는 부모가 베푸는 아량이 줄어드는 것이 포함된다."
+    },
+    {
+      "idx": 6,
+      "text": "Such generalizations apply in spades to humans, where social sanctions operate in many subtle, and not so subtle, ways, and among whom payoffs for generosity and kindness come in many currencies.",
+      "tokens": ["Such","generalizations","apply","in","spades","to","humans,","where","social","sanctions","operate","in","many","subtle,","and","not","so","subtle,","ways,","and","among","whom","payoffs","for","generosity","and","kindness","come","in","many","currencies."],
+      "korean": "그러한 개념이 인간에게도 확실히 적용되는데, 인간들 사이에 사회적 제재가 많은 미묘한 방법으로 그리고 그다지 미묘하지 않은 방법으로 작용하고, 관용과 친절에 대한 보상은 여러 방법으로 전달된다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T3-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "breeding",
+          "wrongCandidates": ["bred"],
+          "grammarType": "분사",
+          "explanation": "뒤의 명사 'mammals'를 능동적으로 수식하므로 현재분사 'breeding'이 맞다('번식하는/양육하는 포유류'). 과거분사 'bred'는 수동·완료의 의미('사육된 포유류')가 되어 'cooperatively'(협력적으로)와 결합한 자연스러운 능동 행위 수식이 되지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "breed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T15-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "breed",
+          "wrongCandidates": ["breeding"],
+          "grammarType": "부정사",
+          "explanation": "'too ~ to V' 구문은 'too young/old' 뒤에 to부정사가 와야 하므로 동사원형 'breed'가 맞다('너무 어리거나 늙어서 스스로 새끼를 낳을 수 없다'). 동명사 'breeding'은 'too ~ to' 구문의 자리에 올 수 없어 어법상 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "breed",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T14-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "are",
+          "wrongCandidates": ["is"],
+          "grammarType": "수일치",
+          "explanation": "주어 'resources'가 복수명사이므로 복수형 be동사 'are'가 맞다('자원이 부족할 때'). 단수형 'is'는 단수 주어에만 쓰이므로 복수 주어와 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T1-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "pretending",
+          "wrongCandidates": ["pretended"],
+          "grammarType": "동명사",
+          "explanation": "주어 자리에는 명사 역할을 하는 어구가 와야 하므로 동명사 'pretending'이 맞다('돕는 척하는 것'). 과거분사 'pretended'는 명사구의 주어 역할을 할 수 없으며, 부사 'Simply'와 결합해 주어구를 이끌 수 있는 것은 동명사뿐이다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "pretend",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T16-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "themselves",
+          "wrongCandidates": ["them"],
+          "grammarType": "대명사",
+          "explanation": "주어 'young helpers'와 동일 대상을 다시 가리키며 '직접·스스로' 의미를 강조하는 자리이므로 재귀대명사 'themselves'가 맞다('자기 자신이 직접 삼켜버린다'). 목적격 'them'은 주어와 다른 대상을 가리켜 문맥상 의미가 통하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T7-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "helping",
+          "wrongCandidates": ["help"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'for' 뒤에는 명사 또는 동명사가 와야 하므로 'helping'이 맞다('도와주지 않는 것에 대한'). 동사원형 'help'는 전치사의 목적어가 될 수 없다. 부정어 'not'은 동명사 앞에 놓여 동명사를 부정한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "help",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T21-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 21,
+          "endTokenIdx": 21,
+          "correctForm": "whom",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'humans'가 사람이고 전치사 'among' 바로 뒤이므로 사람 목적격 관계대명사 'whom'이 맞다('인간들 사이에서'). 'which'는 사물 선행사에 사용되므로 사람 선행사 'humans'를 받을 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "breeding", "baseForm": "breed"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "breed", "baseForm": "breed"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "are", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "pretending", "baseForm": "pretend"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "helping", "baseForm": "help"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "breeding", "wrongForm": "bred", "explanation": "뒤의 명사 'mammals'를 능동적으로 수식하므로 현재분사 'breeding'이 맞다. 과거분사 'bred'는 수동·완료의 의미가 되어 'cooperatively'와 결합한 능동 수식이 되지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "breed", "wrongForm": "breeding", "explanation": "'too ~ to V' 구문은 to부정사가 와야 하므로 동사원형 'breed'가 맞다. 동명사 'breeding'은 'too ~ to' 자리에 올 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "are", "wrongForm": "is", "explanation": "주어 'resources'가 복수명사이므로 복수형 be동사 'are'가 맞다. 단수형 'is'는 단수 주어에만 쓰인다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "pretending", "wrongForm": "pretended", "explanation": "주어 자리에는 명사 역할의 어구가 와야 하므로 동명사 'pretending'이 맞다. 과거분사 'pretended'는 주어 역할이 불가능하다."},
+        {"sentenceIdx": 4, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "themselves", "wrongForm": "them", "explanation": "주어 'young helpers'와 동일 대상을 가리키며 '직접' 의미를 강조하므로 재귀대명사 'themselves'가 맞다. 'them'은 주어와 다른 대상을 가리켜 의미가 통하지 않는다."},
+        {"sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "helping", "wrongForm": "help", "explanation": "전치사 'for' 뒤에는 명사 또는 동명사가 와야 하므로 'helping'이 맞다. 동사원형 'help'는 전치사의 목적어가 될 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 21, "endTokenIdx": 21, "correctForm": "whom", "wrongForm": "which", "explanation": "선행사 'humans'가 사람이고 전치사 'among' 뒤이므로 사람 목적격 관계대명사 'whom'이 맞다. 'which'는 사물 선행사용이다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "bred", "correction": "breeding", "explanation": "명사 'mammals'를 능동적으로 수식하므로 현재분사 'breeding'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "breeding", "correction": "breed", "explanation": "'too ~ to V' 구문이므로 동사원형 'breed'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "is", "correction": "are", "explanation": "복수 주어 'resources'에 맞춰 'are'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "pretended", "correction": "pretending", "explanation": "주어 자리에는 동명사 'pretending'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "them", "correction": "themselves", "explanation": "주어와 동일 대상을 강조하므로 재귀대명사 'themselves'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "help", "correction": "helping", "explanation": "전치사 'for' 뒤이므로 동명사 'helping'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 21, "endTokenIdx": 21, "isError": true, "wrongForm": "which", "correction": "whom", "explanation": "사람 선행사 'humans'를 받는 목적격 관계대명사 'whom'으로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "In many cooperatively bred mammals, allomothers schedule assistance so as to reduce costs to their own fitness.",
+          "isCorrect": false,
+          "correction": "In many cooperatively breeding mammals, allomothers schedule assistance so as to reduce costs to their own fitness.",
+          "explanation": "명사 'mammals'를 능동적으로 수식하므로 현재분사 'breeding'이 맞다."
+        },
+        {
+          "text": "They are most likely to help when they are too young, or too old, to breeding themselves, or when for social or ecological reasons breeding would not be practical.",
+          "isCorrect": false,
+          "correction": "They are most likely to help when they are too young, or too old, to breed themselves, or when for social or ecological reasons breeding would not be practical.",
+          "explanation": "'too ~ to V' 구문이므로 동사원형 'breed'가 맞다."
+        },
+        {
+          "text": "Allomothers may be most eager to help when in good condition, but when resources is scarce or when helping would interfere with their own reproduction, they may decline.",
+          "isCorrect": false,
+          "correction": "Allomothers may be most eager to help when in good condition, but when resources are scarce or when helping would interfere with their own reproduction, they may decline.",
+          "explanation": "복수 주어 'resources'에 맞춰 'are'가 맞다."
+        },
+        {
+          "text": "Simply pretended to help is also an option.",
+          "isCorrect": false,
+          "correction": "Simply pretending to help is also an option.",
+          "explanation": "주어 자리에는 동명사 'pretending'이 와야 한다."
+        },
+        {
+          "text": "For example, in birds, young helpers may ostentatiously carry food to nestlings only to swallow it them when the parents are not watching.",
+          "isCorrect": false,
+          "correction": "For example, in birds, young helpers may ostentatiously carry food to nestlings only to swallow it themselves when the parents are not watching.",
+          "explanation": "주어와 동일 대상을 강조하므로 재귀대명사 'themselves'가 맞다."
+        },
+        {
+          "text": "There may also be penalties for not help ― including reduced parental tolerance for shirking allomothers.",
+          "isCorrect": false,
+          "correction": "There may also be penalties for not helping ― including reduced parental tolerance for shirking allomothers.",
+          "explanation": "전치사 'for' 뒤이므로 동명사 'helping'이 맞다."
+        },
+        {
+          "text": "Such generalizations apply in spades to humans, where social sanctions operate in many subtle, and not so subtle, ways, and among which payoffs for generosity and kindness come in many currencies.",
+          "isCorrect": false,
+          "correction": "Such generalizations apply in spades to humans, where social sanctions operate in many subtle, and not so subtle, ways, and among whom payoffs for generosity and kindness come in many currencies.",
+          "explanation": "사람 선행사 'humans'를 받는 목적격 관계대명사 'whom'이 맞다."
+        }
+      ]
+    }
+  }
+}

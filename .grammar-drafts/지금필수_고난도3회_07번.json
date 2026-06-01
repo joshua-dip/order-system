@@ -1,0 +1,291 @@
+{
+  "passageId": "69d4eca372a886137cd83f01",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 07번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 07번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 07번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Norway is the westernmost country of the Scandinavian Peninsula and has an elongated shape with the easternmost part on the border with Russia and Finland being as far east as Istanbul.",
+      "tokens": ["Norway","is","the","westernmost","country","of","the","Scandinavian","Peninsula","and","has","an","elongated","shape","with","the","easternmost","part","on","the","border","with","Russia","and","Finland","being","as","far","east","as","Istanbul."],
+      "korean": "노르웨이는 스칸디나비아 반도의 가장 서쪽에 있는 나라이고, 러시아 및 핀란드와의 국경에서 가장 동쪽 지역이 이스탄불만큼 멀리 동쪽에 있는 길쭉한 형태를 띠고 있다."
+    },
+    {
+      "idx": 1,
+      "text": "However, the vast majority of the land border is shared with Sweden and runs through various mountain ranges.",
+      "tokens": ["However,","the","vast","majority","of","the","land","border","is","shared","with","Sweden","and","runs","through","various","mountain","ranges."],
+      "korean": "그러나 육지 경계의 방대한 대부분은 스웨덴과 공유되며 여러 산맥을 관통한다."
+    },
+    {
+      "idx": 2,
+      "text": "Physical geography has played an enormous role in shaping the history of the country.",
+      "tokens": ["Physical","geography","has","played","an","enormous","role","in","shaping","the","history","of","the","country."],
+      "korean": "자연 지리학은 그 나라의 역사를 형성하는 데 엄청난 역할을 해 왔다."
+    },
+    {
+      "idx": 3,
+      "text": "Dominated by heavily glaciated mountainous terrain with substantial valleys and deep fjords, transport linkages between settlements have either been via the sea or along the valleys, with many valleys historically being quite isolated in winter.",
+      "tokens": ["Dominated","by","heavily","glaciated","mountainous","terrain","with","substantial","valleys","and","deep","fjords,","transport","linkages","between","settlements","have","either","been","via","the","sea","or","along","the","valleys,","with","many","valleys","historically","being","quite","isolated","in","winter."],
+      "korean": "상당한 계곡과 깊은 피오르드를 가진 빙하가 심하게 덮인 산악 지형의 지배를 받는, 정착지들 사이의 교통 연결은 바다를 통해서나 계곡을 따라 이루어졌으며, 많은 계곡이 역사적으로 겨울에 고립되어 있다."
+    },
+    {
+      "idx": 4,
+      "text": "However, much of the country is made habitable, as with Iceland, by the presence of the Gulf Stream, which warms the country.",
+      "tokens": ["However,","much","of","the","country","is","made","habitable,","as","with","Iceland,","by","the","presence","of","the","Gulf","Stream,","which","warms","the","country."],
+      "korean": "그러나 아이슬란드와 마찬가지로, 그 나라(노르웨이)의 많은 부분이 그 나라를 따뜻하게 하는 멕시코 만류(灣流)의 존재에 의해 거주가 가능하게 된다."
+    },
+    {
+      "idx": 5,
+      "text": "The coastline is extensive and stretches over 15,500miles (25,000km).",
+      "tokens": ["The","coastline","is","extensive","and","stretches","over","15,500miles","(25,000km)."],
+      "korean": "해안선은 넓고 15,500마일(25,000km) 이상 뻗어 있다."
+    },
+    {
+      "idx": 6,
+      "text": "However, the coast is also an important marine tourism resource and location of second homes, particular in the south.",
+      "tokens": ["However,","the","coast","is","also","an","important","marine","tourism","resource","and","location","of","second","homes,","particular","in","the","south."],
+      "korean": "그러나 해안은 또한 특히 남쪽에, 제2의 집의 중요한 해양 관광자원이자 위치이기도 하다."
+    },
+    {
+      "idx": 7,
+      "text": "Another important influence of the Gulf Stream is its contribution to coastal precipitation and snowfall further inland.",
+      "tokens": ["Another","important","influence","of","the","Gulf","Stream","is","its","contribution","to","coastal","precipitation","and","snowfall","further","inland."],
+      "korean": "멕시코 만류(灣流)의 또 다른 중요한 영향은 해안 강우와 더 깊은 내륙의 강설에 대한 기여다."
+    },
+    {
+      "idx": 8,
+      "text": "Bergen, the country’s second city, has the nickname of Regnbyen, which means city of rain.",
+      "tokens": ["Bergen,","the","country’s","second","city,","has","the","nickname","of","Regnbyen,","which","means","city","of","rain."],
+      "korean": "그 나라의 두 번째 도시인 Bergen은 Regnbyen이라는 별명을 가지고 있는데, 그것은 비의 도시라는 뜻이다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T25-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 25,
+          "endTokenIdx": 25,
+          "correctForm": "being",
+          "wrongCandidates": ["is"],
+          "grammarType": "분사",
+          "explanation": "'with + 명사구 + 분사' 부대상황 구문이다. 의미상 주어 'the easternmost part ... with Russia and Finland'를 능동적으로 묘사하므로 현재분사 'being'이 맞다. 정형동사 'is'는 'with' 구문에 들어갈 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T9-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "shared",
+          "wrongCandidates": ["sharing"],
+          "grammarType": "수동태",
+          "explanation": "주어 'the vast majority of the land border'가 스웨덴과 '공유되는' 대상이므로 'be + p.p.' 수동태가 필요하다. 따라서 과거분사 'shared'가 맞고, 능동의 'sharing'은 주어가 직접 공유하는 행위자가 되어 문맥에 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "share",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T2-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "has",
+          "wrongCandidates": ["had"],
+          "grammarType": "시제",
+          "explanation": "과거부터 현재까지 영향이 이어진 '지금까지 ~해 왔다'의 의미이므로 현재완료 'has played'가 맞다. 단순 과거 'had played'를 쓰면 과거의 어느 시점에 끝난 일로 한정되어 현재와의 연결이 끊긴다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T0-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Dominated",
+          "wrongCandidates": ["Dominating"],
+          "grammarType": "분사",
+          "explanation": "분사구문의 의미상 주어 'transport linkages'가 산악 지형의 '지배를 받는' 대상(수동)이므로 과거분사 'Dominated'가 맞다. 현재분사 'Dominating'은 주어가 지형을 지배하는 능동의 의미가 되어 문맥과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "dominate",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T18-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 18,
+          "endTokenIdx": 18,
+          "correctForm": "which",
+          "wrongCandidates": ["that"],
+          "grammarType": "관계사",
+          "explanation": "콤마(,) 뒤의 계속적 용법 관계대명사 자리이므로 'which'가 맞다. 'that'은 계속적 용법(콤마 뒤)에 쓸 수 없는 관계대명사라서 부적절하다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T5-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "stretches",
+          "wrongCandidates": ["stretch"],
+          "grammarType": "수일치",
+          "explanation": "주어 'The coastline'이 단수이고 'is extensive and stretches ...'처럼 단수 동사 'is'와 and로 병렬 연결되므로, 두 번째 동사도 단수형 'stretches'가 맞다. 복수형 'stretch'는 단수 주어와 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "stretch",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T10-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "and",
+          "wrongCandidates": ["or"],
+          "grammarType": "접속사",
+          "explanation": "두 명사구 'an important marine tourism resource'와 'location of second homes'가 동시에 성립하는 보어로 함께 묶이므로 첨가의 등위접속사 'and'가 맞다. 'or'는 둘 중 하나만 선택하는 의미가 되어 '또한(~이자 ~이기도)' 문맥과 어긋난다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T10-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 10,
+          "endTokenIdx": 10,
+          "correctForm": "to",
+          "wrongCandidates": ["for"],
+          "grammarType": "전치사",
+          "explanation": "명사 'contribution'은 '~에 대한 기여'의 의미에서 전치사 'to'와 결합한다('contribution to N'). 'contribution for'는 영어에서 관용적으로 사용되지 않는 어색한 결합이다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T11-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 11,
+          "endTokenIdx": 11,
+          "correctForm": "means",
+          "wrongCandidates": ["mean"],
+          "grammarType": "수일치",
+          "explanation": "관계대명사 'which'의 선행사는 단수 명사 'Regnbyen'(별명)이므로 관계절 동사는 단수형 'means'가 맞다. 복수형 'mean'은 단수 선행사와 수가 일치하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "mean",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "being", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "shared", "baseForm": "share"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Dominated", "baseForm": "dominate"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "stretches", "baseForm": "stretch"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "means", "baseForm": "mean"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "being", "wrongForm": "is", "explanation": "'with + 명사구 + 분사' 부대상황 구문이다. 의미상 주어 'the easternmost part ... with Russia and Finland'를 능동적으로 묘사하므로 현재분사 'being'이 맞다. 정형동사 'is'는 'with' 구문에 들어갈 수 없다."},
+        {"sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "shared", "wrongForm": "sharing", "explanation": "주어 'the vast majority of the land border'가 스웨덴과 '공유되는' 대상이므로 'be + p.p.' 수동태가 필요하다. 따라서 과거분사 'shared'가 맞고, 능동의 'sharing'은 주어가 직접 공유하는 행위자가 되어 문맥에 어긋난다."},
+        {"sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "has", "wrongForm": "had", "explanation": "과거부터 현재까지 영향이 이어진 '지금까지 ~해 왔다'의 의미이므로 현재완료 'has played'가 맞다. 단순 과거 'had played'를 쓰면 과거의 어느 시점에 끝난 일로 한정되어 현재와의 연결이 끊긴다."},
+        {"sentenceIdx": 3, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Dominated", "wrongForm": "Dominating", "explanation": "분사구문의 의미상 주어 'transport linkages'가 산악 지형의 '지배를 받는' 대상(수동)이므로 과거분사 'Dominated'가 맞다. 현재분사 'Dominating'은 주어가 지형을 지배하는 능동의 의미가 되어 문맥과 충돌한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 18, "endTokenIdx": 18, "correctForm": "which", "wrongForm": "that", "explanation": "콤마(,) 뒤의 계속적 용법 관계대명사 자리이므로 'which'가 맞다. 'that'은 계속적 용법(콤마 뒤)에 쓸 수 없는 관계대명사라서 부적절하다."},
+        {"sentenceIdx": 5, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "stretches", "wrongForm": "stretch", "explanation": "주어 'The coastline'이 단수이고 'is extensive and stretches ...'처럼 단수 동사 'is'와 and로 병렬 연결되므로, 두 번째 동사도 단수형 'stretches'가 맞다. 복수형 'stretch'는 단수 주어와 일치하지 않는다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "and", "wrongForm": "or", "explanation": "두 명사구 'an important marine tourism resource'와 'location of second homes'가 동시에 성립하는 보어로 함께 묶이므로 첨가의 등위접속사 'and'가 맞다. 'or'는 둘 중 하나만 선택하는 의미가 되어 '또한(~이자 ~이기도)' 문맥과 어긋난다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "correctForm": "to", "wrongForm": "for", "explanation": "명사 'contribution'은 '~에 대한 기여'의 의미에서 전치사 'to'와 결합한다('contribution to N'). 'contribution for'는 영어에서 관용적으로 사용되지 않는 어색한 결합이다."},
+        {"sentenceIdx": 8, "startTokenIdx": 11, "endTokenIdx": 11, "correctForm": "means", "wrongForm": "mean", "explanation": "관계대명사 'which'의 선행사는 단수 명사 'Regnbyen'(별명)이므로 관계절 동사는 단수형 'means'가 맞다. 복수형 'mean'은 단수 선행사와 수가 일치하지 않는다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 25, "endTokenIdx": 25, "isError": true, "wrongForm": "is", "correction": "being", "explanation": "'with + 명사구 + 분사' 부대상황이므로 현재분사 'being'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "sharing", "correction": "shared", "explanation": "주어가 공유되는 대상(수동)이므로 'be + p.p.'의 과거분사 'shared'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "had", "correction": "has", "explanation": "과거부터 현재까지 이어지는 의미이므로 현재완료 'has played'가 되도록 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Dominating", "correction": "Dominated", "explanation": "주어가 지배를 받는 대상(수동 분사구문)이므로 과거분사 'Dominated'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 18, "endTokenIdx": 18, "isError": true, "wrongForm": "that", "correction": "which", "explanation": "콤마 뒤 계속적 용법에는 'that'을 쓸 수 없으므로 'which'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "stretch", "correction": "stretches", "explanation": "단수 주어 'The coastline'에 맞춰 단수형 'stretches'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "or", "correction": "and", "explanation": "두 보어가 동시에 성립하는 첨가 관계이므로 'and'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 10, "endTokenIdx": 10, "isError": true, "wrongForm": "for", "correction": "to", "explanation": "'contribution'은 전치사 'to'와 결합('contribution to N')하므로 'to'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 11, "endTokenIdx": 11, "isError": true, "wrongForm": "mean", "correction": "means", "explanation": "단수 선행사 'Regnbyen'에 맞춰 단수형 'means'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Norway is the westernmost country of the Scandinavian Peninsula and has an elongated shape with the easternmost part on the border with Russia and Finland is as far east as Istanbul.",
+          "isCorrect": false,
+          "correction": "Norway is the westernmost country of the Scandinavian Peninsula and has an elongated shape with the easternmost part on the border with Russia and Finland being as far east as Istanbul.",
+          "explanation": "'with + 명사구 + 분사' 부대상황 구문이므로 정형동사 'is'가 아닌 현재분사 'being'이 맞다."
+        },
+        {
+          "text": "However, the vast majority of the land border is sharing with Sweden and runs through various mountain ranges.",
+          "isCorrect": false,
+          "correction": "However, the vast majority of the land border is shared with Sweden and runs through various mountain ranges.",
+          "explanation": "주어가 공유되는 대상(수동)이므로 'be + p.p.' 형태의 'shared'가 맞다."
+        },
+        {
+          "text": "Physical geography had played an enormous role in shaping the history of the country.",
+          "isCorrect": false,
+          "correction": "Physical geography has played an enormous role in shaping the history of the country.",
+          "explanation": "과거부터 현재까지 이어지는 의미이므로 현재완료 'has played'가 맞다."
+        },
+        {
+          "text": "Dominating by heavily glaciated mountainous terrain with substantial valleys and deep fjords, transport linkages between settlements have either been via the sea or along the valleys, with many valleys historically being quite isolated in winter.",
+          "isCorrect": false,
+          "correction": "Dominated by heavily glaciated mountainous terrain with substantial valleys and deep fjords, transport linkages between settlements have either been via the sea or along the valleys, with many valleys historically being quite isolated in winter.",
+          "explanation": "주어가 지배를 받는 대상(수동 분사구문)이므로 과거분사 'Dominated'가 맞다."
+        },
+        {
+          "text": "However, much of the country is made habitable, as with Iceland, by the presence of the Gulf Stream, that warms the country.",
+          "isCorrect": false,
+          "correction": "However, much of the country is made habitable, as with Iceland, by the presence of the Gulf Stream, which warms the country.",
+          "explanation": "콤마 뒤 계속적 용법에는 'that'을 쓸 수 없고 'which'가 맞다."
+        },
+        {
+          "text": "The coastline is extensive and stretch over 15,500miles (25,000km).",
+          "isCorrect": false,
+          "correction": "The coastline is extensive and stretches over 15,500miles (25,000km).",
+          "explanation": "단수 주어 'The coastline'에 맞춰 단수형 'stretches'가 맞다."
+        },
+        {
+          "text": "However, the coast is also an important marine tourism resource or location of second homes, particular in the south.",
+          "isCorrect": false,
+          "correction": "However, the coast is also an important marine tourism resource and location of second homes, particular in the south.",
+          "explanation": "두 보어가 동시에 성립하는 첨가 관계이므로 'and'가 맞다."
+        },
+        {
+          "text": "Another important influence of the Gulf Stream is its contribution for coastal precipitation and snowfall further inland.",
+          "isCorrect": false,
+          "correction": "Another important influence of the Gulf Stream is its contribution to coastal precipitation and snowfall further inland.",
+          "explanation": "명사 'contribution'은 전치사 'to'와 결합하므로 'contribution to'가 맞다."
+        },
+        {
+          "text": "Bergen, the country’s second city, has the nickname of Regnbyen, which mean city of rain.",
+          "isCorrect": false,
+          "correction": "Bergen, the country’s second city, has the nickname of Regnbyen, which means city of rain.",
+          "explanation": "관계대명사 which의 선행사 'Regnbyen'이 단수이므로 단수형 'means'가 맞다."
+        }
+      ]
+    }
+  }
+}

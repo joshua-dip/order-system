@@ -5,6 +5,7 @@ import { getDb } from '@/lib/mongodb';
 import { recordPointLedger } from '@/lib/point-ledger';
 import { tossConfirmPayment } from '@/lib/toss-payments-server';
 import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
+import { consumeCoupon } from '@/lib/coupons';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -93,6 +94,19 @@ export async function POST(request: NextRequest) {
   const pts = typeof rawPts === 'number' ? rawPts : NaN;
   const balanceAfter = Number.isFinite(pts) && pts >= 0 ? pts : points;
 
+  // 결제에 쿠폰이 적용됐으면 소진 (active → used). 결제 성공 후이므로 실패해도 포인트는 지급.
+  const couponId = typeof order.couponId === 'string' ? order.couponId : null;
+  const couponDiscountPct = typeof order.couponDiscountPct === 'number' ? order.couponDiscountPct : 0;
+  if (couponId) {
+    const consumed = await consumeCoupon(db, couponId, userId, orderId).catch((e) => {
+      console.error('coupon consume:', e);
+      return false;
+    });
+    if (!consumed) {
+      console.warn(`[point-charge confirm] coupon ${couponId} 소진 실패(이미 사용/회수) — orderId=${orderId}`);
+    }
+  }
+
   await recordPointLedger(db, {
     userId,
     delta: points,
@@ -103,6 +117,7 @@ export async function POST(request: NextRequest) {
       paymentKey,
       amountWon: amount,
       points,
+      ...(couponId ? { couponId, couponDiscountPct } : {}),
     },
   }).catch((e) => console.error('point_charge ledger:', e));
 

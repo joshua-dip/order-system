@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       }
 
       const naturalSort = (a: string, b: string) => a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' });
-      const TYPE_ORDER = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도'];
+      const TYPE_ORDER = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도'];
       // 모든 표준 유형을 미리 포함 (0개 유형도 컬럼으로 표시)
       const typeSet = new Set<string>(TYPE_ORDER);
       const data: { source: string; type: string; total: number; 완료: number; 대기: number; 검수불일치: number; 기타: number }[] = [];
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
 
     const TYPE_ORDER = [
       '주제', '제목', '주장', '일치', '불일치', '함의',
-      '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도',
+      '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도',
     ];
     // 모든 표준 유형을 미리 포함 (0개 유형도 컬럼으로 표시)
     const typeSet = new Set<string>(TYPE_ORDER);

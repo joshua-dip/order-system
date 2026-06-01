@@ -1,6 +1,11 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
-import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
+import {
+  GRAMMAR_HARD_CORRECT_ANSWER_PATTERN,
+  GRAMMAR_HARD_VARIANT_OPTIONS_FIXED,
+  GRAMMAR_VARIANT_OPTIONS_FIXED,
+  normalizeGrammarHardCorrectAnswer,
+} from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 
@@ -8,6 +13,89 @@ import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-questi
 const INSERTION_OPTIONS_FIXED = '①\n②\n③\n④\n⑤';
 /** 무관한문장 유형: Options 표준값 (### 구분) */
 const IRRELEVANT_OPTIONS_FIXED = '① ### ② ### ③ ### ④ ### ⑤';
+
+/**
+ * 정답 번호 분포가 적용되는 유형.
+ * Paragraph 내 위치·순열에 정답이 묶여 있지 않아 보기 순서를 무작위로 섞어도 의미가 유지되는 유형만 포함.
+ * (어법·삽입·삽입-고난도·무관한문장·순서는 보기 번호가 본문 구조에 묶여 있어 제외)
+ */
+const SHUFFLABLE_TYPES = new Set([
+  '주제',
+  '제목',
+  '주장',
+  '일치',
+  '불일치',
+  '함의',
+  '빈칸',
+  '요약',
+]);
+
+const CIRCLED_NUMS = ['①', '②', '③', '④', '⑤'] as const;
+
+/**
+ * 5개 보기를 무작위 순열로 재배치하고 CorrectAnswer·Explanation의 동그라미 번호 참조를
+ * 새 인덱스로 함께 갱신한다. 보기 텍스트가 5개가 아니거나 CorrectAnswer가 ①~⑤가 아니면 원본 반환.
+ * 동그라미 번호가 한 자리에 치우치는 현상 보정용. 저장 경로(saveGeneratedQuestionToDb)에서만 호출.
+ */
+export function shuffleQuestionDataForDistribution(
+  qd: Record<string, unknown>
+): Record<string, unknown> {
+  const rawOpts = typeof qd.Options === 'string' ? qd.Options : '';
+  const rawCorrect = typeof qd.CorrectAnswer === 'string' ? qd.CorrectAnswer.trim() : '';
+  const rawExplanation = typeof qd.Explanation === 'string' ? qd.Explanation : '';
+
+  if (!rawOpts || !rawCorrect) return qd;
+
+  const parts = rawOpts.split(/\s*###\s*/).map((s) => s.trim());
+  if (parts.length !== 5) return qd;
+
+  const stripped = parts.map((s) => s.replace(/^[①②③④⑤]\s*/, '').trim());
+  if (stripped.some((s) => !s)) return qd;
+
+  const correctIdx = CIRCLED_NUMS.indexOf(rawCorrect as (typeof CIRCLED_NUMS)[number]);
+  if (correctIdx < 0) return qd;
+
+  // Fisher-Yates shuffle
+  const perm = [0, 1, 2, 3, 4];
+  for (let i = perm.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [perm[i], perm[j]] = [perm[j], perm[i]];
+  }
+  // 셔플 결과가 항등 순열이면 한 번 더 굴려 변화 보장
+  if (perm.every((v, i) => v === i)) {
+    [perm[0], perm[Math.floor(Math.random() * 4) + 1]] = [
+      perm[Math.floor(Math.random() * 4) + 1],
+      perm[0],
+    ];
+  }
+
+  const newOpts = perm
+    .map((srcIdx, newIdx) => `${CIRCLED_NUMS[newIdx]} ${stripped[srcIdx]}`)
+    .join(' ### ');
+
+  const oldToNew = new Array<number>(5).fill(0);
+  perm.forEach((srcIdx, newIdx) => {
+    oldToNew[srcIdx] = newIdx;
+  });
+  const newCorrect = CIRCLED_NUMS[oldToNew[correctIdx]];
+
+  // Explanation 내 ①~⑤ 참조를 새 인덱스로 일괄 치환 (충돌 방지용 임시 마커 경유)
+  const placeholders = ['', '', '', '', ''];
+  let newExplanation = rawExplanation;
+  for (let i = 0; i < 5; i++) {
+    newExplanation = newExplanation.split(CIRCLED_NUMS[i]).join(placeholders[i]);
+  }
+  for (let i = 0; i < 5; i++) {
+    newExplanation = newExplanation.split(placeholders[i]).join(CIRCLED_NUMS[oldToNew[i]]);
+  }
+
+  return {
+    ...qd,
+    Options: newOpts,
+    CorrectAnswer: newCorrect,
+    Explanation: newExplanation,
+  };
+}
 
 export type SaveGeneratedQuestionInput = {
   passage_id: string;
@@ -56,6 +144,19 @@ export async function saveGeneratedQuestionToDb(
   if (type === '어법') {
     question_data = { ...question_data, Options: GRAMMAR_VARIANT_OPTIONS_FIXED };
   }
+  if (type === '어법-고난도') {
+    question_data = { ...question_data, Options: GRAMMAR_HARD_VARIANT_OPTIONS_FIXED };
+    const rawCa = typeof question_data.CorrectAnswer === 'string' ? question_data.CorrectAnswer : '';
+    const normalized = normalizeGrammarHardCorrectAnswer(rawCa);
+    if (GRAMMAR_HARD_CORRECT_ANSWER_PATTERN.test(normalized)) {
+      question_data = { ...question_data, CorrectAnswer: normalized };
+    } else {
+      return {
+        ok: false,
+        error: `어법-고난도 CorrectAnswer는 동그라미 번호 2~5개 연속(예: ①③) 형식이어야 합니다. 받은 값: "${rawCa}"`,
+      };
+    }
+  }
   // 삽입·삽입-고난도·무관한문장: Options는 위치 번호만(①~⑤). AI가 "① ①" 식으로 중복 생성하는 버그 방지.
   if (type === '삽입' || type === '삽입-고난도') {
     question_data = { ...question_data, Options: INSERTION_OPTIONS_FIXED };
@@ -75,11 +176,17 @@ export async function saveGeneratedQuestionToDb(
     };
   }
 
+  // 정답 번호 분포: 동그라미 번호가 한 자리에 치우치지 않도록 보기를 무작위 순열로 섞고
+  // CorrectAnswer·Explanation의 번호 참조도 함께 갱신.
+  if (SHUFFLABLE_TYPES.has(type)) {
+    question_data = shuffleQuestionDataForDistribution(question_data);
+  }
+
   const enrichedQd = enrichQuestionDataWithExplanationIfEmpty(question_data, type);
   if (enrichedQd) question_data = enrichedQd;
 
   const now = new Date();
-  const difficulty = type === '삽입-고난도'
+  const difficulty = type === '삽입-고난도' || type === '어법-고난도'
     ? '상'
     : ((input.difficulty ?? input.question_data?.DifficultyLevel as string | undefined ?? '중').trim() || '중');
 

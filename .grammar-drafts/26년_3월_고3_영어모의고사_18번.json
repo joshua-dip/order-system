@@ -1,0 +1,272 @@
+{
+  "passageId": "69c3e6b546f58f933b6dcd28",
+  "textbook": "26년 3월 고3 영어모의고사",
+  "sourceKey": "26년 3월 고3 영어모의고사 18번",
+  "title": "26년 3월 고3 영어모의고사 18번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "18번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Dear Readers,",
+      "tokens": ["Dear", "Readers,"],
+      "korean": "독자 여러분께,"
+    },
+    {
+      "idx": 1,
+      "text": "Thank you for your continued interest in our magazine's column A Better Way to Live.",
+      "tokens": ["Thank", "you", "for", "your", "continued", "interest", "in", "our", "magazine's", "column", "A", "Better", "Way", "to", "Live."],
+      "korean": "저희 잡지의 칼럼 A Better Way to Live에 대한 여러분의 지속적인 관심에 감사드립니다."
+    },
+    {
+      "idx": 2,
+      "text": "Your support has allowed the column to grow steadily, gaining widespread recognition.",
+      "tokens": ["Your", "support", "has", "allowed", "the", "column", "to", "grow", "steadily,", "gaining", "widespread", "recognition."],
+      "korean": "여러분의 성원 덕분에 이 칼럼은 꾸준히 성장하며 폭넓은 인정을 받게 되었습니다."
+    },
+    {
+      "idx": 3,
+      "text": "We appreciate the encouragement you have shown throughout its run.",
+      "tokens": ["We", "appreciate", "the", "encouragement", "you", "have", "shown", "throughout", "its", "run."],
+      "korean": "연재 중 보내 주신 격려에 감사드립니다."
+    },
+    {
+      "idx": 4,
+      "text": "However, we would like to share an important update.",
+      "tokens": ["However,", "we", "would", "like", "to", "share", "an", "important", "update."],
+      "korean": "하지만 중요한 소식을 공유하고자 합니다."
+    },
+    {
+      "idx": 5,
+      "text": "Due to the writer's recent health problems, the column will take a one-month break.",
+      "tokens": ["Due", "to", "the", "writer's", "recent", "health", "problems,", "the", "column", "will", "take", "a", "one-month", "break."],
+      "korean": "작가의 최근 건강 문제로 인해 해당 칼럼은 한 달간 잠시 쉴 예정입니다."
+    },
+    {
+      "idx": 6,
+      "text": "This time has been set aside to allow the writer to recover.",
+      "tokens": ["This", "time", "has", "been", "set", "aside", "to", "allow", "the", "writer", "to", "recover."],
+      "korean": "이 기간은 작가가 회복할 수 있도록 마련되었습니다."
+    },
+    {
+      "idx": 7,
+      "text": "We ask for your understanding during this pause.",
+      "tokens": ["We", "ask", "for", "your", "understanding", "during", "this", "pause."],
+      "korean": "이번 휴재 동안 여러분의 양해를 구합니다."
+    },
+    {
+      "idx": 8,
+      "text": "The column will return next month with renewed energy and fresh perspectives.",
+      "tokens": ["The", "column", "will", "return", "next", "month", "with", "renewed", "energy", "and", "fresh", "perspectives."],
+      "korean": "칼럼은 다음 달에 새로운 에너지와 신선한 관점으로 돌아올 것입니다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S1-T4-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "continued",
+          "wrongCandidates": ["continuing"],
+          "grammarType": "분사",
+          "explanation": "'continued interest'는 '지속되어 온 관심'이라는 의미로, 명사 'interest'를 수식하는 과거분사(완료·결과)로 쓰여 'continued'가 맞다. 현재분사 'continuing'은 '계속 진행 중인'이라는 능동·진행의 어감으로, 독자들이 보내 온 관심을 뜻하는 본문 맥락(이미 누적되어 온 관심)과 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "continue",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T2-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 2,
+          "endTokenIdx": 2,
+          "correctForm": "has",
+          "wrongCandidates": ["have"],
+          "grammarType": "수일치",
+          "explanation": "주어 'Your support'는 추상명사로서 단수이므로 현재완료의 조동사도 단수형 'has'가 와야 한다. 복수형 'have'는 주어가 복수일 때 쓰이며, 단수 주어에 사용하면 주술 일치를 어긴다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T6-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 6,
+          "endTokenIdx": 6,
+          "correctForm": "shown",
+          "wrongCandidates": ["showed"],
+          "grammarType": "시제",
+          "explanation": "앞의 조동사 'have'와 함께 현재완료(have + p.p.)를 이루므로 과거분사 'shown'이 와야 한다. 'showed'는 과거형이며 'have' 뒤에 와서 현재완료를 만들 수 없다(show의 3단변화: show-showed-shown).",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "show",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T5-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "share",
+          "wrongCandidates": ["sharing"],
+          "grammarType": "부정사",
+          "explanation": "'would like + to부정사' 구조이므로 'to' 뒤에는 동사원형 'share'가 와야 한다. 'would like to -ing' 형태는 존재하지 않으며, 동명사 'sharing'은 이 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "share",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T0-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 0,
+          "endTokenIdx": 1,
+          "correctForm": "Due to",
+          "wrongCandidates": ["Because"],
+          "grammarType": "접속사",
+          "explanation": "뒤에 오는 'the writer's recent health problems'는 명사구이므로 명사구를 이끄는 전치사 역할의 'Due to'가 맞다. 접속사 'Because'는 「주어+동사」를 갖춘 절을 이끌어야 하므로 명사구 앞에 단독으로 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 4,
+          "endTokenIdx": 4,
+          "correctForm": "set",
+          "wrongCandidates": ["setting"],
+          "grammarType": "수동태",
+          "explanation": "'has been ___ aside'는 현재완료 수동(have/has + been + p.p.) 구조이므로 과거분사 'set'이 와야 한다(set의 3단변화: set-set-set). 현재분사 'setting'은 수동형을 만들 수 없으며, 'has been setting'은 진행 의미로 변질되어 주어 'This time'이 능동적으로 무언가를 마련한다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "set",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T5-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "during",
+          "wrongCandidates": ["while"],
+          "grammarType": "전치사",
+          "explanation": "뒤에 명사구 'this pause'가 이어지므로 명사를 목적어로 취하는 전치사 'during'이 맞다. 'while'은 접속사로 「주어+동사」절을 이끌어야 하므로 명사구 앞에 단독으로 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T7-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "renewed",
+          "wrongCandidates": ["renewing"],
+          "grammarType": "분사",
+          "explanation": "'renewed energy'는 '새롭게 충전된 에너지'라는 수동·결과의 의미로 명사 'energy'를 수식하므로 과거분사 'renewed'가 맞다. 현재분사 'renewing'은 '갱신하고 있는'이라는 능동·진행 의미가 되어, 칼럼이 가지고 돌아올 결과 상태로서의 에너지를 가리키는 본문 맥락과 어울리지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "renew",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "continued", "baseForm": "continue"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "has", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "shown", "baseForm": "show"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "share", "baseForm": "share"},
+        {"kind": "word", "sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "set", "baseForm": "set"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "renewed", "baseForm": "renew"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "continued", "wrongForm": "continuing", "explanation": "'continued interest'는 '지속되어 온 관심'이라는 의미로, 명사 'interest'를 수식하는 과거분사(완료·결과)로 쓰여 'continued'가 맞다. 현재분사 'continuing'은 '계속 진행 중인'이라는 능동·진행의 어감으로, 독자들이 보내 온 관심을 뜻하는 본문 맥락(이미 누적되어 온 관심)과 어울리지 않는다."},
+        {"sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "correctForm": "has", "wrongForm": "have", "explanation": "주어 'Your support'는 추상명사로서 단수이므로 현재완료의 조동사도 단수형 'has'가 와야 한다. 복수형 'have'는 주어가 복수일 때 쓰이며, 단수 주어에 사용하면 주술 일치를 어긴다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "correctForm": "shown", "wrongForm": "showed", "explanation": "앞의 조동사 'have'와 함께 현재완료(have + p.p.)를 이루므로 과거분사 'shown'이 와야 한다. 'showed'는 과거형이며 'have' 뒤에 와서 현재완료를 만들 수 없다(show의 3단변화: show-showed-shown)."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "share", "wrongForm": "sharing", "explanation": "'would like + to부정사' 구조이므로 'to' 뒤에는 동사원형 'share'가 와야 한다. 'would like to -ing' 형태는 존재하지 않으며, 동명사 'sharing'은 이 자리에 올 수 없다."},
+        {"sentenceIdx": 5, "startTokenIdx": 0, "endTokenIdx": 1, "correctForm": "Due to", "wrongForm": "Because", "explanation": "뒤에 오는 'the writer's recent health problems'는 명사구이므로 명사구를 이끄는 전치사 역할의 'Due to'가 맞다. 접속사 'Because'는 「주어+동사」를 갖춘 절을 이끌어야 하므로 명사구 앞에 단독으로 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "correctForm": "set", "wrongForm": "setting", "explanation": "'has been ___ aside'는 현재완료 수동(have/has + been + p.p.) 구조이므로 과거분사 'set'이 와야 한다. 현재분사 'setting'은 수동형을 만들 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "during", "wrongForm": "while", "explanation": "뒤에 명사구 'this pause'가 이어지므로 명사를 목적어로 취하는 전치사 'during'이 맞다. 'while'은 접속사로 「주어+동사」절을 이끌어야 하므로 명사구 앞에 단독으로 쓸 수 없다."},
+        {"sentenceIdx": 8, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "renewed", "wrongForm": "renewing", "explanation": "'renewed energy'는 '새롭게 충전된 에너지'라는 수동·결과의 의미로 명사 'energy'를 수식하므로 과거분사 'renewed'가 맞다. 현재분사 'renewing'은 '갱신하고 있는'이라는 능동·진행 의미가 되어 본문 맥락과 어울리지 않는다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 1, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "continuing", "correction": "continued", "explanation": "명사 'interest'를 수식하는 과거분사(완료·결과)로 'continued'가 와야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 2, "endTokenIdx": 2, "isError": true, "wrongForm": "have", "correction": "has", "explanation": "단수 주어 'Your support'에 맞춰 현재완료 조동사도 'has'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 6, "endTokenIdx": 6, "isError": true, "wrongForm": "showed", "correction": "shown", "explanation": "현재완료(have + p.p.) 구조이므로 과거분사 'shown'으로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "sharing", "correction": "share", "explanation": "'would like to' 뒤에는 동사원형 'share'가 와야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 0, "endTokenIdx": 1, "isError": true, "wrongForm": "Because", "correction": "Due to", "explanation": "뒤에 명사구가 오므로 전치사구 'Due to'로 고쳐야 한다. 'Because'는 절을 이끄는 접속사라 불가."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 4, "isError": true, "wrongForm": "setting", "correction": "set", "explanation": "현재완료 수동(has been + p.p.) 구조이므로 과거분사 'set'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "while", "correction": "during", "explanation": "명사구 'this pause' 앞이므로 전치사 'during'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "renewing", "correction": "renewed", "explanation": "명사 'energy'를 수식하는 수동·결과의 과거분사 'renewed'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Thank you for your continuing interest in our magazine's column A Better Way to Live.",
+          "isCorrect": false,
+          "correction": "Thank you for your continued interest in our magazine's column A Better Way to Live.",
+          "explanation": "독자들이 누적해 보내 온 관심을 가리키는 완료·결과의 과거분사 'continued'가 맞다."
+        },
+        {
+          "text": "Your support have allowed the column to grow steadily, gaining widespread recognition.",
+          "isCorrect": false,
+          "correction": "Your support has allowed the column to grow steadily, gaining widespread recognition.",
+          "explanation": "단수 주어 'Your support'에는 현재완료 조동사도 단수형 'has'를 써야 한다."
+        },
+        {
+          "text": "We appreciate the encouragement you have showed throughout its run.",
+          "isCorrect": false,
+          "correction": "We appreciate the encouragement you have shown throughout its run.",
+          "explanation": "'have' 뒤에 오는 현재완료의 본동사는 과거분사 'shown'이 와야 한다."
+        },
+        {
+          "text": "However, we would like to sharing an important update.",
+          "isCorrect": false,
+          "correction": "However, we would like to share an important update.",
+          "explanation": "'would like to' 뒤에는 동사원형 'share'가 와야 한다."
+        },
+        {
+          "text": "Because the writer's recent health problems, the column will take a one-month break.",
+          "isCorrect": false,
+          "correction": "Due to the writer's recent health problems, the column will take a one-month break.",
+          "explanation": "뒤에 명사구가 오므로 절을 이끄는 접속사 'Because'가 아니라 전치사구 'Due to'가 와야 한다."
+        },
+        {
+          "text": "This time has been setting aside to allow the writer to recover.",
+          "isCorrect": false,
+          "correction": "This time has been set aside to allow the writer to recover.",
+          "explanation": "현재완료 수동(has been + p.p.) 구조이므로 과거분사 'set'이 와야 한다."
+        },
+        {
+          "text": "We ask for your understanding while this pause.",
+          "isCorrect": false,
+          "correction": "We ask for your understanding during this pause.",
+          "explanation": "명사구 'this pause' 앞에는 전치사 'during'을 써야 한다."
+        },
+        {
+          "text": "The column will return next month with renewing energy and fresh perspectives.",
+          "isCorrect": false,
+          "correction": "The column will return next month with renewed energy and fresh perspectives.",
+          "explanation": "명사 'energy'를 수식하는 수동·결과의 과거분사 'renewed'가 맞다."
+        }
+      ]
+    }
+  }
+}

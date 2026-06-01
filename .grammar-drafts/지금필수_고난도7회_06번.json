@@ -1,0 +1,293 @@
+{
+  "passageId": "69d4eca372a886137cd83f20",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 7회 06번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 7회 06번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 7회 06번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "In a series of studies, Eidelman, Pattershall, and Crandall have put the issue of whether people favor “old” over “new” or the opposite, to the test.",
+      "tokens": ["In","a","series","of","studies,","Eidelman,","Pattershall,","and","Crandall","have","put","the","issue","of","whether","people","favor","“old”","over","“new”","or","the","opposite,","to","the","test."],
+      "korean": "일련의 연구에서, Eidelman, Pattershall, 그리고 Crandall은 사람들이 ‘새로운’ 것보다 ‘오래된’ 것을 선호하는지 아니면 그 반대인지의 문제를 시험해 본 적이 있었다."
+    },
+    {
+      "idx": 1,
+      "text": "Participants in one study were given a piece of chocolate to taste.",
+      "tokens": ["Participants","in","one","study","were","given","a","piece","of","chocolate","to","taste."],
+      "korean": "한 연구의 참가자들은 맛을 보기 위해 초콜릿 한 조각을 받았다."
+    },
+    {
+      "idx": 2,
+      "text": "Before doing so, they were told either that the chocolate was first sold in its region of Europe in 1937 or in 2003.",
+      "tokens": ["Before","doing","so,","they","were","told","either","that","the","chocolate","was","first","sold","in","its","region","of","Europe","in","1937","or","in","2003."],
+      "korean": "그렇게 하기 전에, 그들은 그 초콜릿이 유럽 지역에서 1937년 혹은 2003년에 처음 팔렸다는 이야기를 들었다."
+    },
+    {
+      "idx": 3,
+      "text": "In the former case, the product was said to be on the market for 70 years and in the latter for only 3 years.",
+      "tokens": ["In","the","former","case,","the","product","was","said","to","be","on","the","market","for","70","years","and","in","the","latter","for","only","3","years."],
+      "korean": "전자의 경우에서, 그 제품은 시판된 지 70년 정도 되었고, 후자의 경우에는 단지 3년 정도만 되었다고 했다."
+    },
+    {
+      "idx": 4,
+      "text": "Participants were then asked to rate how much they enjoyed the taste of the chocolate, whether they were impressed by it, and whether they would purchase it.",
+      "tokens": ["Participants","were","then","asked","to","rate","how","much","they","enjoyed","the","taste","of","the","chocolate,","whether","they","were","impressed","by","it,","and","whether","they","would","purchase","it."],
+      "korean": "참가자들은 초콜릿의 맛을 얼마나 즐겼는지, 초콜릿에 감명을 받았는지, 그리고 그들이 그것을 구입할 것인지 여부를 평가하도록 요청 받았다."
+    },
+    {
+      "idx": 5,
+      "text": "They were then asked about the reasons for their evaluation of the chocolate.",
+      "tokens": ["They","were","then","asked","about","the","reasons","for","their","evaluation","of","the","chocolate."],
+      "korean": "그 다음 그들은 초콜릿에 그들이 내린 평가의 이유에 대해 질문을 받았다."
+    },
+    {
+      "idx": 6,
+      "text": "Overwhelmingly, participants rated the chocolate that was said to have been in existence longer as more delicious than the chocolate that represented a new brand.",
+      "tokens": ["Overwhelmingly,","participants","rated","the","chocolate","that","was","said","to","have","been","in","existence","longer","as","more","delicious","than","the","chocolate","that","represented","a","new","brand."],
+      "korean": "압도적으로, 참가자들은 더 오래 존재했던 것으로 일컬어진 초콜릿이 새로운 브랜드를 대표하는 초콜릿보다 더 맛있다고 평가했다."
+    },
+    {
+      "idx": 7,
+      "text": "These participants seemed to be unaware that time on the market had influenced their evaluations of the chocolate ― they uniformly rated that as the least important reason for their evaluation and, instead, rated “its taste” as the most important factor affecting their evaluation.",
+      "tokens": ["These","participants","seemed","to","be","unaware","that","time","on","the","market","had","influenced","their","evaluations","of","the","chocolate","―","they","uniformly","rated","that","as","the","least","important","reason","for","their","evaluation","and,","instead,","rated","“its","taste”","as","the","most","important","factor","affecting","their","evaluation."],
+      "korean": "이 참가자들은 시판된 때가 초콜릿에 대한 그들의 평가에 영향을 미쳤다는 것을 깨닫지 못하는 것 같았는데, 그들은 한결같이 그것(시판된 때)을 그들이 내린 평가의 가장 덜 중요한 이유로 평가했고, 대신에 ‘그것의 맛’을 그들의 평가에 영향을 미치는 가장 중요한 요소로 평가했다."
+    },
+    {
+      "idx": 8,
+      "text": "But, it was exactly the same chocolate and only the supposed length of time on the market differed!",
+      "tokens": ["But,","it","was","exactly","the","same","chocolate","and","only","the","supposed","length","of","time","on","the","market","differed!"],
+      "korean": "하지만, 그것은 정확히 같은 초콜릿이었고 소위 시판되어 있었던 기간만 달랐다!"
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T16-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "favor",
+          "wrongCandidates": ["favors"],
+          "grammarType": "시제",
+          "explanation": "주어 'people'은 복수형이고 일반적 진리·습관을 나타내는 현재 시제이므로 동사원형 'favor'가 맞다. 단수형 'favors'는 단수 주어에만 사용되며, 복수 주어 'people'과 수일치하지 않는다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T5-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "given",
+          "wrongCandidates": ["giving"],
+          "grammarType": "수동태",
+          "explanation": "주어 'Participants'가 초콜릿을 '받는' 대상이므로 수동태 'were given'이 맞다. 현재분사 'giving'을 쓰면 능동의 의미가 되어 참가자가 누군가에게 주는 행위가 되므로 문맥과 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "give",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T1-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "doing",
+          "wrongCandidates": ["do"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'Before' 뒤에는 동명사가 와야 하므로 'doing'이 맞다. 동사원형 'do'는 전치사의 목적어가 될 수 없으며, 'Before' 다음에 절을 쓰려면 접속사로 써서 주어가 필요하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "do",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T9-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 9,
+          "endTokenIdx": 9,
+          "correctForm": "be",
+          "wrongCandidates": ["been"],
+          "grammarType": "부정사",
+          "explanation": "to부정사 'to be'에서 to 뒤에는 동사원형이 와야 하므로 'be'가 맞다. 과거분사 'been'은 to부정사의 동사 자리에 단독으로 올 수 없으며, 완료부정사라면 'to have been' 형태가 되어야 한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T15-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "whether",
+          "wrongCandidates": ["if"],
+          "grammarType": "접속사",
+          "explanation": "'whether ... and whether ...'처럼 등위접속사 and로 명사절을 병렬 연결할 때는 'whether'가 맞다. 'if'도 명사절을 이끌 수 있지만 'and if'처럼 병렬되거나 'or not'과 함께 쓰이는 일이 적고, 본문처럼 'rate ... whether'로 평가의 대상이 되는 명사절에서는 'whether'가 자연스럽다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "asked",
+          "wrongCandidates": ["asking"],
+          "grammarType": "수동태",
+          "explanation": "주어 'They'(참가자들)이 질문을 '받는' 대상이므로 수동태 'were asked'가 맞다. 현재분사 'asking'을 쓰면 능동의 의미가 되어 참가자들이 누군가에게 묻는 것이 되어 문맥과 어긋난다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "ask",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T5-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 5,
+          "endTokenIdx": 5,
+          "correctForm": "that",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the chocolate'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사이므로 선행사가 따로 있을 때는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T41-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 41,
+          "endTokenIdx": 41,
+          "correctForm": "affecting",
+          "wrongCandidates": ["affected"],
+          "grammarType": "분사",
+          "explanation": "'factor'를 능동적으로 수식하여 '평가에 영향을 미치는 요소'라는 의미가 되므로 현재분사 'affecting'이 맞다. 과거분사 'affected'는 '영향을 받은' 식의 수동의 의미가 되어 '요소'가 무엇에 영향을 받는다는 어색한 뜻이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "affect",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T17-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 17,
+          "endTokenIdx": 17,
+          "correctForm": "differed",
+          "wrongCandidates": ["differing"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵 'length'에 대응하는 본동사가 필요하므로 과거형 'differed'가 맞다. 현재분사 'differing'은 동사 자리를 채울 수 없어 문장의 술어가 사라지게 된다(병렬구조 'was ... and ... differed' 의 본동사 자리).",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "differ",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "given", "baseForm": "give"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "doing", "baseForm": "do"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "be", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "asked", "baseForm": "ask"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 41, "endTokenIdx": 41, "correctForm": "affecting", "baseForm": "affect"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "differed", "baseForm": "differ"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "favor", "wrongForm": "favors", "explanation": "주어 'people'은 복수형이고 일반적 진리·습관을 나타내는 현재 시제이므로 동사원형 'favor'가 맞다. 단수형 'favors'는 단수 주어에만 사용되며, 복수 주어 'people'과 수일치하지 않는다."},
+        {"sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "given", "wrongForm": "giving", "explanation": "주어 'Participants'가 초콜릿을 '받는' 대상이므로 수동태 'were given'이 맞다. 현재분사 'giving'을 쓰면 능동의 의미가 되어 참가자가 누군가에게 주는 행위가 되므로 문맥과 어긋난다."},
+        {"sentenceIdx": 2, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "doing", "wrongForm": "do", "explanation": "전치사 'Before' 뒤에는 동명사가 와야 하므로 'doing'이 맞다. 동사원형 'do'는 전치사의 목적어가 될 수 없으며, 'Before' 다음에 절을 쓰려면 접속사로 써서 주어가 필요하다."},
+        {"sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "correctForm": "be", "wrongForm": "been", "explanation": "to부정사 'to be'에서 to 뒤에는 동사원형이 와야 하므로 'be'가 맞다. 과거분사 'been'은 to부정사의 동사 자리에 단독으로 올 수 없으며, 완료부정사라면 'to have been' 형태가 되어야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "whether", "wrongForm": "if", "explanation": "'whether ... and whether ...'처럼 등위접속사 and로 명사절을 병렬 연결할 때는 'whether'가 맞다. 'if'도 명사절을 이끌 수 있지만 'and if'처럼 병렬되거나 'or not'과 함께 쓰이는 일이 적고, 본문처럼 'rate ... whether'로 평가의 대상이 되는 명사절에서는 'whether'가 자연스럽다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "asked", "wrongForm": "asking", "explanation": "주어 'They'(참가자들)이 질문을 '받는' 대상이므로 수동태 'were asked'가 맞다. 현재분사 'asking'을 쓰면 능동의 의미가 되어 참가자들이 누군가에게 묻는 것이 되어 문맥과 어긋난다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "correctForm": "that", "wrongForm": "what", "explanation": "선행사 'the chocolate'가 있으므로 주격 관계대명사 'that'(또는 which)이 맞다. 'what'은 선행사를 포함하는 관계대명사이므로 선행사가 따로 있을 때는 쓸 수 없다."},
+        {"sentenceIdx": 7, "startTokenIdx": 41, "endTokenIdx": 41, "correctForm": "affecting", "wrongForm": "affected", "explanation": "'factor'를 능동적으로 수식하여 '평가에 영향을 미치는 요소'라는 의미가 되므로 현재분사 'affecting'이 맞다. 과거분사 'affected'는 '영향을 받은' 식의 수동의 의미가 되어 '요소'가 무엇에 영향을 받는다는 어색한 뜻이 된다."},
+        {"sentenceIdx": 8, "startTokenIdx": 17, "endTokenIdx": 17, "correctForm": "differed", "wrongForm": "differing", "explanation": "주어의 핵 'length'에 대응하는 본동사가 필요하므로 과거형 'differed'가 맞다. 현재분사 'differing'은 동사 자리를 채울 수 없어 문장의 술어가 사라지게 된다(병렬구조 'was ... and ... differed' 의 본동사 자리)."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "favors", "correction": "favor", "explanation": "복수 주어 'people'에 맞춰 동사원형 'favor'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "giving", "correction": "given", "explanation": "참가자가 초콜릿을 받는 수동의 의미이므로 'given'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "do", "correction": "doing", "explanation": "전치사 'Before' 뒤이므로 동명사 'doing'으로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 9, "endTokenIdx": 9, "isError": true, "wrongForm": "been", "correction": "be", "explanation": "to부정사 to 뒤는 동사원형이 와야 하므로 'be'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "if", "correction": "whether", "explanation": "and로 병렬되는 명사절은 'whether'로 일관되게 이어야 하므로 'whether'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "asking", "correction": "asked", "explanation": "참가자가 질문을 받는 수동의 의미이므로 'asked'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 5, "endTokenIdx": 5, "isError": true, "wrongForm": "what", "correction": "that", "explanation": "선행사 'the chocolate'가 있으므로 주격 관계대명사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 41, "endTokenIdx": 41, "isError": true, "wrongForm": "affected", "correction": "affecting", "explanation": "능동으로 'factor'를 수식하므로 현재분사 'affecting'으로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 17, "endTokenIdx": 17, "isError": true, "wrongForm": "differing", "correction": "differed", "explanation": "주어 'length'의 본동사 자리이므로 과거형 'differed'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "In a series of studies, Eidelman, Pattershall, and Crandall have put the issue of whether people favors “old” over “new” or the opposite, to the test.",
+          "isCorrect": false,
+          "correction": "In a series of studies, Eidelman, Pattershall, and Crandall have put the issue of whether people favor “old” over “new” or the opposite, to the test.",
+          "explanation": "복수 주어 'people'에 맞춰 동사원형 'favor'가 맞다."
+        },
+        {
+          "text": "Participants in one study were giving a piece of chocolate to taste.",
+          "isCorrect": false,
+          "correction": "Participants in one study were given a piece of chocolate to taste.",
+          "explanation": "참가자가 초콜릿을 받는 수동의 의미이므로 'given'이 맞다."
+        },
+        {
+          "text": "Before do so, they were told either that the chocolate was first sold in its region of Europe in 1937 or in 2003.",
+          "isCorrect": false,
+          "correction": "Before doing so, they were told either that the chocolate was first sold in its region of Europe in 1937 or in 2003.",
+          "explanation": "전치사 'Before' 뒤에는 동명사 'doing'이 와야 한다."
+        },
+        {
+          "text": "In the former case, the product was said to been on the market for 70 years and in the latter for only 3 years.",
+          "isCorrect": false,
+          "correction": "In the former case, the product was said to be on the market for 70 years and in the latter for only 3 years.",
+          "explanation": "to부정사 to 뒤에는 동사원형 'be'가 와야 한다."
+        },
+        {
+          "text": "Participants were then asked to rate how much they enjoyed the taste of the chocolate, if they were impressed by it, and whether they would purchase it.",
+          "isCorrect": false,
+          "correction": "Participants were then asked to rate how much they enjoyed the taste of the chocolate, whether they were impressed by it, and whether they would purchase it.",
+          "explanation": "and로 병렬되는 명사절은 'whether'로 일관되게 이어야 자연스럽다."
+        },
+        {
+          "text": "They were then asking about the reasons for their evaluation of the chocolate.",
+          "isCorrect": false,
+          "correction": "They were then asked about the reasons for their evaluation of the chocolate.",
+          "explanation": "참가자가 질문을 받는 수동의 의미이므로 'asked'가 맞다."
+        },
+        {
+          "text": "Overwhelmingly, participants rated the chocolate what was said to have been in existence longer as more delicious than the chocolate that represented a new brand.",
+          "isCorrect": false,
+          "correction": "Overwhelmingly, participants rated the chocolate that was said to have been in existence longer as more delicious than the chocolate that represented a new brand.",
+          "explanation": "선행사 'the chocolate'가 있으므로 주격 관계대명사 'that'이 맞다."
+        },
+        {
+          "text": "These participants seemed to be unaware that time on the market had influenced their evaluations of the chocolate ― they uniformly rated that as the least important reason for their evaluation and, instead, rated “its taste” as the most important factor affected their evaluation.",
+          "isCorrect": false,
+          "correction": "These participants seemed to be unaware that time on the market had influenced their evaluations of the chocolate ― they uniformly rated that as the least important reason for their evaluation and, instead, rated “its taste” as the most important factor affecting their evaluation.",
+          "explanation": "능동으로 'factor'를 수식하므로 현재분사 'affecting'이 맞다."
+        },
+        {
+          "text": "But, it was exactly the same chocolate and only the supposed length of time on the market differing!",
+          "isCorrect": false,
+          "correction": "But, it was exactly the same chocolate and only the supposed length of time on the market differed!",
+          "explanation": "주어 'length'의 본동사 자리이므로 과거형 'differed'가 맞다."
+        }
+      ]
+    }
+  }
+}

@@ -12,7 +12,7 @@
  *  - 3-레벨 링크 복사 (페이지/문장/thread) + #sentence-<n> · #thread-<id> 자동 스크롤·하이라이트
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AppBar from '../../components/AppBar';
 import {
@@ -61,7 +61,8 @@ interface PassageData {
 interface FetchResponse {
   passage: PassageData;
   threads: Thread[];
-  svoc?: Record<number, SvocSentenceData>;
+  /** sentence 당 절(clause) 배열 — 한 sentence 에 등위접속절 등 여러 S+V 셋이 있을 수 있어 array. */
+  svoc?: Record<number, SvocSentenceData[]>;
   error?: string;
 }
 
@@ -100,7 +101,7 @@ export default function QnaPassagePage() {
 
   const [data, setData] = useState<PassageData | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [svoc, setSvoc] = useState<Record<number, SvocSentenceData> | undefined>(undefined);
+  const [svoc, setSvoc] = useState<Record<number, SvocSentenceData[]> | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -116,8 +117,8 @@ export default function QnaPassagePage() {
   const [expandedSentence, setExpandedSentence] = useState<number | null>(null);
   // 폼 상태: 문장 인덱스 → 단어 칩 (선택된 단어 미리보기)
   const [formSelectedText, setFormSelectedText] = useState<Record<number, string>>({});
-  // 단어 클릭 팝오버: { si, wi, x, y } (페이지 좌표)
-  const [wordPop, setWordPop] = useState<{ si: number; raw: string } | null>(null);
+  // 단어 클릭 팝오버: 클릭한 단어 wrapper 의 bounding rect 를 anchor 로 보관 → 팝오버를 그 위/아래에 표시.
+  const [wordPop, setWordPop] = useState<{ si: number; raw: string; anchorRect: DOMRect } | null>(null);
   /** 드래그·long-press 로 선택된 구. floating 「이 부분으로 질문」 버튼 위치·내용. */
   const [phraseSel, setPhraseSel] = useState<
     { si: number; text: string; top: number; left: number } | null
@@ -127,6 +128,23 @@ export default function QnaPassagePage() {
   const printableRef = useRef<HTMLDivElement | null>(null);
   /** PDF 생성 후 미리보기 모달 상태. url = blob URL, filename = 저장 시 파일명. */
   const [pdfPreview, setPdfPreview] = useState<{ url: string; filename: string } | null>(null);
+  /**
+   * SVOC 칩 클릭 활성 상태. sentence 단위로 하나의 칩만 활성.
+   * value 형식: `${clauseIdx}:${roleKey}` — 다절 데이터에서 어느 절의 어느 역할인지 식별.
+   */
+  const [chipHighlight, setChipHighlight] = useState<Record<number, string>>({});
+
+  const handleChipClick = useCallback((si: number, clauseIdx: number, roleKey: string) => {
+    const key = `${clauseIdx}:${roleKey}`;
+    setChipHighlight((prev) => {
+      if (prev[si] === key) {
+        const next = { ...prev };
+        delete next[si];
+        return next;
+      }
+      return { ...prev, [si]: key };
+    });
+  }, []);
 
   const { toast, showToast } = useToast();
 
@@ -163,6 +181,7 @@ export default function QnaPassagePage() {
   }, []);
   const persistShowSvoc = useCallback((next: boolean) => {
     setShowSvoc(next);
+    if (!next) setChipHighlight({}); // 토글 OFF 시 모든 sentence 하이라이트 정리
     try {
       window.localStorage.setItem(SVOC_LS_KEY, next ? '1' : '0');
     } catch {
@@ -381,11 +400,20 @@ export default function QnaPassagePage() {
         backgroundColor: '#ffffff',
         ignoreElements: (el: Element) =>
           (el as HTMLElement).classList?.contains('print:hidden') ?? false,
-        // print:hidden 으로 마킹됐지만 printableRef 밖에 있는 요소(KakaoFab 등 position:fixed
-        // 글로벌 element) 까지 강제로 숨기는 이중 안전망.
         onclone: (clonedDoc: Document) => {
+          // ① print:hidden 으로 마킹됐지만 printableRef 밖에 있는 요소(KakaoFab 등 position:fixed
+          //    글로벌 element) 까지 강제로 숨기는 이중 안전망.
           clonedDoc.querySelectorAll('.print\\:hidden').forEach((el) => {
             (el as HTMLElement).style.display = 'none';
+          });
+          // ② PDF/미리보기는 깨끗한 지문 전용 — SVOC 밑줄 등 학습 모드 표시는 제외.
+          //    SVOC 는 outer span 에 inline text-decoration 으로 적용되므로 모두 reset.
+          clonedDoc.querySelectorAll<HTMLElement>('[style*="text-decoration"]').forEach((el) => {
+            el.style.textDecorationLine = 'none';
+            el.style.textDecorationStyle = '';
+            el.style.textDecorationColor = '';
+            el.style.textDecorationThickness = '';
+            el.style.textUnderlineOffset = '';
           });
         },
       });
@@ -465,7 +493,8 @@ export default function QnaPassagePage() {
       }
 
       const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]/g, '_').trim();
-      const filename = `${sanitize(data.sourceKey || data.textbook || 'qna-passage')}.pdf`;
+      const layoutSuffix = layout === 'side' ? '좌우해석' : '한줄해석';
+      const filename = `${sanitize(data.sourceKey || data.textbook || 'qna-passage')}_${layoutSuffix}.pdf`;
       const blob = pdf.output('blob');
       const url = URL.createObjectURL(blob);
       setPdfPreview((prev) => {
@@ -478,7 +507,7 @@ export default function QnaPassagePage() {
     } finally {
       setDownloadingPdf(false);
     }
-  }, [data, downloadingPdf, showToast]);
+  }, [data, downloadingPdf, layout, showToast]);
 
   /** 미리보기 모달에서 「저장」 클릭 — 임시 anchor 로 다운로드 트리거. */
   const handleSavePdfFromPreview = useCallback(() => {
@@ -704,7 +733,9 @@ export default function QnaPassagePage() {
   );
 
   // SVOC 표시 가능 여부
-  const svocAvailable = !!svoc && Object.keys(svoc).length > 0;
+  const svocAvailable =
+    !!svoc &&
+    Object.values(svoc).some((arr) => Array.isArray(arr) && arr.length > 0);
 
   // ===== 렌더 =====
 
@@ -794,9 +825,17 @@ export default function QnaPassagePage() {
                     onClick={handleGeneratePdfPreview}
                     disabled={downloadingPdf}
                     className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60"
-                    title="PDF 미리보기 후 저장"
+                    title={
+                      layout === 'side'
+                        ? '좌우해석 PDF 미리보기 후 저장'
+                        : '한줄해석 PDF 미리보기 후 저장'
+                    }
                   >
-                    {downloadingPdf ? '⏳ 생성 중…' : '📄 PDF 미리보기'}
+                    {downloadingPdf
+                      ? '⏳ 생성 중…'
+                      : layout === 'side'
+                        ? '📄 좌우해석 PDF'
+                        : '📄 한줄해석 PDF'}
                   </button>
                 </div>
               </header>
@@ -810,7 +849,16 @@ export default function QnaPassagePage() {
                   const sentenceThreads = threadsBySentence.get(si) ?? [];
                   const expanded = expandedSentence === si;
                   const oneBased = si + 1;
-                  const svocSentence = svoc?.[si];
+                  const svocClauses = svoc?.[si] ?? [];
+                  // activeChipKey 형식: "${clauseIdx}:${roleKey}"
+                  const activeChipKey = showSvoc ? chipHighlight[si] : undefined;
+                  const enHighlight = (() => {
+                    if (!activeChipKey || svocClauses.length === 0) return undefined;
+                    const [cIdxStr, roleKey] = activeChipKey.split(':');
+                    const cIdx = Number(cIdxStr);
+                    if (!Number.isInteger(cIdx) || cIdx < 0 || cIdx >= svocClauses.length) return undefined;
+                    return getSvocHighlightRange(svocClauses[cIdx], roleKey);
+                  })();
                   return (
                     <article
                       key={si}
@@ -838,17 +886,17 @@ export default function QnaPassagePage() {
                                 : ''
                             }
                           >
-                            {/* 영문 토큰들 */}
+                            {/* 영문 토큰들 — SVOC 칩 클릭 시 해당 word range 가 파스텔로 강조 */}
                             <p className="leading-relaxed text-slate-900">
                               <WordTokens
                                 tokens={enTokens}
-                                svocSentence={showSvoc ? svocSentence : undefined}
-                                onPickWord={(word) =>
-                                  setWordPop({ si, raw: word })
+                                highlightRange={enHighlight}
+                                onPickWord={(word, anchorRect) =>
+                                  setWordPop({ si, raw: word, anchorRect })
                                 }
                               />
                             </p>
-                            {/* 한글 — 어절 단위 클릭 가능 (SVOC 미적용). 인쇄 시엔 hide 토글 무시하고 항상 보이게. */}
+                            {/* 한글 — 어절 단위 클릭 가능. 인쇄 시엔 hide 토글 무시하고 항상 보이게. */}
                             {ko && (
                               <p
                                 className={
@@ -860,14 +908,23 @@ export default function QnaPassagePage() {
                               >
                                 <WordTokens
                                   tokens={koTokens}
-                                  svocSentence={undefined}
-                                  onPickWord={(word) =>
-                                    setWordPop({ si, raw: word })
+                                  onPickWord={(word, anchorRect) =>
+                                    setWordPop({ si, raw: word, anchorRect })
                                   }
                                 />
                               </p>
                             )}
                           </div>
+
+                          {/* SVOC 분석 칩 — 본문 인라인을 건드리지 않고 별도 영역에서 chunk 시각화.
+                              다절 데이터는 절별 그룹 N개. 칩 클릭 시 본문의 해당 word range 가 파스텔로 강조 (toggle). */}
+                          {showSvoc && svocClauses.length > 0 && (
+                            <SvocChips
+                              clauses={svocClauses}
+                              activeChipKey={activeChipKey}
+                              onChipClick={(clauseIdx, roleKey) => handleChipClick(si, clauseIdx, roleKey)}
+                            />
+                          )}
 
                           {/* 문장 액션 아이콘 (데스크톱 4개, 모바일 1개 + ⋯) — chrome, 선택 대상 아님 */}
                           <div className="select-none print:hidden">
@@ -970,10 +1027,11 @@ export default function QnaPassagePage() {
         </div>
       </main>
 
-      {/* 단어 클릭 팝오버 — phrase 선택이 떠 있으면 숨김 (UX 충돌 방지) */}
+      {/* 단어 클릭 팝오버 — 클릭한 단어 위/아래에 anchored. phrase 선택이 떠 있으면 숨김 (UX 충돌 방지) */}
       {wordPop && !phraseSel && (
         <WordPopover
           word={wordPop.raw}
+          anchorRect={wordPop.anchorRect}
           onPickForQuestion={() => handlePickWordForQuestion(wordPop.si, wordPop.raw)}
           onCopy={() => {
             void handleCopyWord(wordPop.raw);
@@ -1061,18 +1119,20 @@ export default function QnaPassagePage() {
  * - `<button>` 이 아닌 `<span role="button" tabIndex={0}>` 사용 — iOS Safari 에서 long-press 시
  *   button 의 Copy/Share callout 이 native 텍스트 선택을 가로채는 문제를 회피.
  * - 클릭 시 이미 활성 선택이 있으면 popover 를 띄우지 않음 → phrase 선택 흐름 우선.
- * - SVOC 배경색은 svocSentence 가 있을 때만 적용 (KO 문장은 자연스럽게 색칠 안 됨).
+ * - SVOC 표시는 인라인 안 함 → SvocChips 컴포넌트가 sentence 카드 하단에 별도 렌더.
  */
 function WordTokens({
   tokens,
-  svocSentence,
+  highlightRange,
   onPickWord,
 }: {
   tokens: ReturnType<typeof tokenizeSentence>;
-  svocSentence: SvocSentenceData | undefined;
-  onPickWord: (word: string) => void;
+  /** SVOC 칩 클릭 시 강조할 word range. outer wrapper(공백 포함)에 배경을 깔아 연속 단어가 끊김 없이 보임. */
+  highlightRange?: { start: number; end: number; bg: string };
+  /** 클릭한 단어 + 그 단어 element 의 bounding rect (팝오버 anchor 위치 계산용). */
+  onPickWord: (word: string, anchorRect: DOMRect) => void;
 }) {
-  const handleActivate = (word: string) => {
+  const handleActivate = (word: string, anchor: HTMLElement) => {
     if (typeof window !== 'undefined') {
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
@@ -1080,15 +1140,43 @@ function WordTokens({
         return;
       }
     }
-    onPickWord(word);
+    onPickWord(word, anchor.getBoundingClientRect());
   };
   return (
     <>
       {tokens.map((tk, idx) => {
-        const paint = svocSentence ? svocBgFor(tk.wordIndex, svocSentence) : undefined;
         const isClickable = tk.core.length > 0;
+        const isHighlighted =
+          highlightRange &&
+          tk.wordIndex >= highlightRange.start &&
+          tk.wordIndex <= highlightRange.end;
+        // 연속 단어 phrase 가 하나의 둥근 pill 로 보이도록, 양 끝 token 만 해당 쪽 모서리를 둥글게.
+        // 가운데 token 은 직각 → 인접 token 들이 시각적으로 이어짐.
+        let wrapperStyle: React.CSSProperties | undefined;
+        if (isHighlighted) {
+          const isStart = tk.wordIndex === highlightRange.start;
+          const isEnd = tk.wordIndex === highlightRange.end;
+          const R = '6px';
+          const borderRadius =
+            isStart && isEnd
+              ? R
+              : isStart
+                ? `${R} 0 0 ${R}`
+                : isEnd
+                  ? `0 ${R} ${R} 0`
+                  : '0';
+          wrapperStyle = {
+            backgroundColor: highlightRange.bg,
+            borderRadius,
+            paddingLeft: isStart ? '3px' : undefined,
+            paddingRight: isEnd ? '3px' : undefined,
+            // outer span 끼리 줄바꿈 시 배경 wrap 자연스럽게
+            boxDecorationBreak: 'clone',
+            WebkitBoxDecorationBreak: 'clone',
+          };
+        }
         return (
-          <span key={idx} className="inline">
+          <span key={idx} className="inline" style={wrapperStyle}>
             {tk.leading}
             {isClickable ? (
               <span
@@ -1097,17 +1185,15 @@ function WordTokens({
                 data-word-idx={tk.wordIndex}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleActivate(tk.core);
+                  handleActivate(tk.core, e.currentTarget as HTMLElement);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    handleActivate(tk.core);
+                    handleActivate(tk.core, e.currentTarget as HTMLElement);
                   }
                 }}
                 className="cursor-pointer rounded-sm px-0.5 outline-none transition hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-400"
-                style={paint ? { backgroundColor: paint } : undefined}
-                title={paint ? svocLabelFor(tk.wordIndex, svocSentence) : undefined}
               >
                 {tk.core}
               </span>
@@ -1120,6 +1206,170 @@ function WordTokens({
         );
       })}
     </>
+  );
+}
+
+/**
+ * 활성 chip 의 roleKey 로 svocSentence 에서 [start, end] + 색을 추출.
+ * SVOC_COMPONENTS 의 표준 6역할 + 레거시 object/complement 모두 지원.
+ */
+function getSvocHighlightRange(
+  sv: SvocSentenceData,
+  roleKey: string,
+): { start: number; end: number; bg: string } | undefined {
+  for (const comp of SVOC_COMPONENTS) {
+    if (comp.id === roleKey) {
+      const f = SVOC_FIELDS[comp.id];
+      const s = sv[f.start];
+      const e = sv[f.end];
+      if (typeof s === 'number' && s >= 0 && typeof e === 'number' && e >= 0) {
+        return { start: s, end: e, bg: SVOC_WORD_BG[comp.color] };
+      }
+      return undefined;
+    }
+  }
+  if (
+    roleKey === 'object' &&
+    typeof sv.objectStart === 'number' &&
+    sv.objectStart >= 0 &&
+    typeof sv.objectEnd === 'number' &&
+    sv.objectEnd >= 0
+  ) {
+    return { start: sv.objectStart, end: sv.objectEnd, bg: SVOC_WORD_BG.green };
+  }
+  if (
+    roleKey === 'complement' &&
+    typeof sv.complementStart === 'number' &&
+    sv.complementStart >= 0 &&
+    typeof sv.complementEnd === 'number' &&
+    sv.complementEnd >= 0
+  ) {
+    return { start: sv.complementStart, end: sv.complementEnd, bg: SVOC_WORD_BG.purple };
+  }
+  return undefined;
+}
+
+/**
+ * SVOC 분석 결과를 sentence 카드 하단에 칩으로 표시 (인터랙티브, 다절 지원).
+ *
+ * - 본문 인라인을 건드리지 않음 → 영문 읽기 방해 0.
+ * - 색: SVOC_WORD_BG 의 파스텔 RGBA 그대로 재사용.
+ * - 다절 데이터: clauses[N] 각각을 한 줄(row)의 칩 그룹으로. 첫 절 외엔 라벨 「② 절 2」 같이 표시.
+ * - **클릭 시 본문의 해당 word range 강조** — activeChipKey = "${clauseIdx}:${roleKey}".
+ * - print:hidden 으로 PDF 캡처에서 자동 제외.
+ */
+function SvocChips({
+  clauses,
+  activeChipKey,
+  onChipClick,
+}: {
+  clauses: SvocSentenceData[];
+  activeChipKey: string | undefined;
+  onChipClick: (clauseIdx: number, roleKey: string) => void;
+}) {
+  type SvocColor = (typeof SVOC_COMPONENTS)[number]['color'];
+  function buildChipsForClause(sv: SvocSentenceData): Array<{
+    roleKey: string;
+    short: string;
+    label: string;
+    color: SvocColor;
+    text: string;
+  }> {
+    const list: Array<{
+      roleKey: string;
+      short: string;
+      label: string;
+      color: SvocColor;
+      text: string;
+    }> = [];
+    for (const comp of SVOC_COMPONENTS) {
+      const f = SVOC_FIELDS[comp.id];
+      const raw = sv[f.text];
+      if (typeof raw !== 'string') continue;
+      const text = raw.trim();
+      if (!text) continue;
+      list.push({
+        roleKey: comp.id,
+        short: comp.short,
+        label: comp.label,
+        color: comp.color,
+        text,
+      });
+    }
+    if (
+      typeof sv.object === 'string' &&
+      sv.object.trim() &&
+      !list.some((c) => c.roleKey === 'directObject')
+    ) {
+      list.push({
+        roleKey: 'object',
+        short: 'O',
+        label: '목적어',
+        color: 'green',
+        text: sv.object.trim(),
+      });
+    }
+    if (
+      typeof sv.complement === 'string' &&
+      sv.complement.trim() &&
+      !list.some((c) => c.roleKey === 'subjectComplement' || c.roleKey === 'objectComplement')
+    ) {
+      list.push({
+        roleKey: 'complement',
+        short: 'C',
+        label: '보어',
+        color: 'purple',
+        text: sv.complement.trim(),
+      });
+    }
+    return list;
+  }
+
+  // 빈 절 (subject/verb 모두 비어있는 placeholder) 은 표시 안 함
+  const nonEmpty = clauses
+    .map((sv, idx) => ({ idx, chips: buildChipsForClause(sv) }))
+    .filter((g) => g.chips.length > 0);
+  if (nonEmpty.length === 0) return null;
+
+  const CLAUSE_MARKERS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
+
+  return (
+    <div className="mt-2 space-y-1.5 print:hidden">
+      {nonEmpty.map(({ idx: clauseIdx, chips }) => (
+        <div key={clauseIdx} className="flex flex-wrap items-center gap-1.5">
+          {nonEmpty.length > 1 && (
+            <span className="select-none text-[11px] font-semibold text-slate-500">
+              {CLAUSE_MARKERS[clauseIdx] ?? `(${clauseIdx + 1})`}
+            </span>
+          )}
+          {chips.map((chip) => {
+            const key = `${clauseIdx}:${chip.roleKey}`;
+            const active = activeChipKey === key;
+            return (
+              <button
+                key={chip.roleKey}
+                type="button"
+                onClick={() => onChipClick(clauseIdx, chip.roleKey)}
+                title={`${chip.label} — 클릭하면 본문에서 위치 강조`}
+                aria-pressed={active}
+                className={
+                  'inline-flex items-baseline gap-1 rounded-full px-2.5 py-0.5 text-xs transition ' +
+                  (active
+                    ? 'ring-2 ring-slate-700 shadow-sm'
+                    : 'ring-1 ring-transparent hover:ring-slate-300')
+                }
+                style={{ backgroundColor: SVOC_WORD_BG[chip.color] }}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-700/80">
+                  {chip.short}
+                </span>
+                <span className="font-medium text-slate-900">{chip.text}</span>
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1226,20 +1476,59 @@ function MenuItem({ children, onClick }: { children: React.ReactNode; onClick: (
 
 function WordPopover({
   word,
+  anchorRect,
   onPickForQuestion,
   onCopy,
 }: {
   word: string;
+  anchorRect: DOMRect;
   onPickForQuestion: () => void;
   onCopy: () => void;
 }) {
-  // 단순 인라인 — 페이지 자체 onClick 으로 닫힘. 위치는 단어 옆 자연스럽게 따라가도록 fixed top-right 으로 둘 수도 있지만, 우선 모달처럼 보이지 않게 가벼운 floating 카드로.
+  // 클릭한 단어 element 의 bounding rect 를 anchor 로, 팝오버 실제 크기 측정 후 위/아래 배치.
+  // - 우선 위, 공간 부족 시 아래로 fallback
+  // - 좌우는 anchor 중심으로 정렬하되 viewport 8px 마진 보장
+  // - 측정 전까지는 opacity:0 으로 깜빡임 방지
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; ready: boolean }>({
+    top: 0,
+    left: 0,
+    ready: false,
+  });
+
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const GAP = 8;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // Vertical: 우선 위로
+    let top = anchorRect.top - r.height - GAP;
+    if (top < 8) top = Math.min(anchorRect.bottom + GAP, vh - r.height - 8);
+    // Horizontal: anchor 중심
+    const centerX = anchorRect.left + anchorRect.width / 2;
+    let left = centerX - r.width / 2;
+    left = Math.max(8, Math.min(left, vw - r.width - 8));
+    setPos({ top, left, ready: true });
+  }, [anchorRect]);
+
   return (
     <div
+      ref={ref}
       onClick={(e) => e.stopPropagation()}
-      className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-lg bg-white p-2 shadow-lg ring-1 ring-slate-200 print:hidden"
+      style={{
+        position: 'fixed',
+        top: pos.top,
+        left: pos.left,
+        zIndex: 40,
+        opacity: pos.ready ? 1 : 0,
+        transition: pos.ready ? 'opacity 0.12s ease-out' : undefined,
+      }}
+      className="rounded-lg bg-white p-2 shadow-lg ring-1 ring-slate-200 print:hidden"
     >
-      <div className="px-2 pt-1 text-[11px] text-slate-500">선택: <strong className="text-slate-800">{word}</strong></div>
+      <div className="px-2 pt-1 text-[11px] text-slate-500">
+        선택: <strong className="text-slate-800">{word}</strong>
+      </div>
       <div className="mt-1 flex gap-1">
         <button
           type="button"
@@ -1550,33 +1839,5 @@ function formatRelative(iso: string): string {
   return new Date(iso).toLocaleDateString('ko-KR');
 }
 
-/** wordIndex 가 svocSentence 의 어느 역할 range 안에 있는지 → 배경색 반환 (없으면 undefined) */
-function svocBgFor(wi: number, sv: SvocSentenceData): string | undefined {
-  const hit = (s: unknown, e: unknown) =>
-    typeof s === 'number' && s >= 0 && typeof e === 'number' && e >= 0 && wi >= s && wi <= e;
-  for (const comp of SVOC_COMPONENTS) {
-    const f = SVOC_FIELDS[comp.id];
-    const st = sv[f.start] as unknown;
-    const en = sv[f.end] as unknown;
-    if (hit(st, en)) return SVOC_WORD_BG[comp.color];
-  }
-  // legacy object/complement fields
-  if (hit(sv.objectStart, sv.objectEnd)) return SVOC_WORD_BG.green;
-  if (hit(sv.complementStart, sv.complementEnd)) return SVOC_WORD_BG.purple;
-  return undefined;
-}
-
-function svocLabelFor(wi: number, sv: SvocSentenceData | undefined): string | undefined {
-  if (!sv) return undefined;
-  const hit = (s: unknown, e: unknown) =>
-    typeof s === 'number' && s >= 0 && typeof e === 'number' && e >= 0 && wi >= s && wi <= e;
-  for (const comp of SVOC_COMPONENTS) {
-    const f = SVOC_FIELDS[comp.id];
-    const st = sv[f.start] as unknown;
-    const en = sv[f.end] as unknown;
-    if (hit(st, en)) return comp.label;
-  }
-  if (hit(sv.objectStart, sv.objectEnd)) return '목적어';
-  if (hit(sv.complementStart, sv.complementEnd)) return '보어';
-  return undefined;
-}
+// SVOC 인라인 밑줄 (SVOC_ROLE_STYLE / svocStyleFor / svocLabelFor) 은 제거됨.
+// 대신 SvocChips 컴포넌트가 sentence 카드 하단에서 chunk 텍스트를 칩으로 렌더한다.

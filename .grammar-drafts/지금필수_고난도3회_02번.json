@@ -1,0 +1,235 @@
+{
+  "passageId": "69d4eca372a886137cd83efc",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 3회 02번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 3회 02번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 3회 02번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Common sense tells us that the out-of-date and discarded universes of the past, going back hundreds of thousands of years, were all much mistaken in their general and detailed view of things.",
+      "tokens": ["Common","sense","tells","us","that","the","out-of-date","and","discarded","universes","of","the","past,","going","back","hundreds","of","thousands","of","years,","were","all","much","mistaken","in","their","general","and","detailed","view","of","things."],
+      "korean": "상식은 우리에게, 지난 수십만 년 전으로 거슬러 올라가 과거의 오래되고 버려진 우주들이 전반적으로나 세부적인 사물에 대한 그들의 시각이 모두 크게 잘못 판단됐다는 것을 말해 준다."
+    },
+    {
+      "idx": 1,
+      "text": "But it does not take much thought to realize that the people in the past believed in their universes, just as strongly as we now believe in our modern physical universe.",
+      "tokens": ["But","it","does","not","take","much","thought","to","realize","that","the","people","in","the","past","believed","in","their","universes,","just","as","strongly","as","we","now","believe","in","our","modern","physical","universe."],
+      "korean": "하지만 우리가 지금 우리의 현대적인 물리적 우주를 강하게 믿는 것처럼, 과거의 사람들이 자신들의 우주를 믿었다는 것을 깨닫는 데는 많은 생각이 필요하지 않다."
+    },
+    {
+      "idx": 2,
+      "text": "This is a fact we tend not to dwell upon because of the disconcerting implications.",
+      "tokens": ["This","is","a","fact","we","tend","not","to","dwell","upon","because","of","the","disconcerting","implications."],
+      "korean": "이것은 우리가 당황스러운 함축성 때문에 곰곰이 생각하지 않는 경향이 있는 사실이다."
+    },
+    {
+      "idx": 3,
+      "text": "People in the past strongly believed in the truth of their universes, and because they were so greatly mistaken, might not we be a little mistaken also, and if a little, why not a lot?",
+      "tokens": ["People","in","the","past","strongly","believed","in","the","truth","of","their","universes,","and","because","they","were","so","greatly","mistaken,","might","not","we","be","a","little","mistaken","also,","and","if","a","little,","why","not","a","lot?"],
+      "korean": "과거 사람들은 자신들의 우주의 진리를 강하게 믿었고, 그것들이 너무 많이 잘못되었기 때문에, 우리 또한 약간 잘못되지 않았을 수도 있으며, 만약 조금 잘못되었다면, 왜 많이는 아닐까?"
+    },
+    {
+      "idx": 4,
+      "text": "We dismiss the thought on the grounds that our knowledge is greatly superior.",
+      "tokens": ["We","dismiss","the","thought","on","the","grounds","that","our","knowledge","is","greatly","superior."],
+      "korean": "우리는 우리의 지식이 매우 우월하다는 것을 근거로 그 생각을 무시한다."
+    },
+    {
+      "idx": 5,
+      "text": "But knowledge guarantees neither wisdom nor truth, and the thought persists.",
+      "tokens": ["But","knowledge","guarantees","neither","wisdom","nor","truth,","and","the","thought","persists."],
+      "korean": "그러나 지식은 지혜도 진실도 보장하지 않으며, 그 생각은 지속된다."
+    },
+    {
+      "idx": 6,
+      "text": "The early people of a hundred thousand years ago had brains as large as our own, thirty thousand years ago some had brains even larger, suggesting that the universes in which they lived were possibly as richly elaborate as those of more recent societies.",
+      "tokens": ["The","early","people","of","a","hundred","thousand","years","ago","had","brains","as","large","as","our","own,","thirty","thousand","years","ago","some","had","brains","even","larger,","suggesting","that","the","universes","in","which","they","lived","were","possibly","as","richly","elaborate","as","those","of","more","recent","societies."],
+      "korean": "10만 년 전의 초창기 사람들은 우리만큼 큰 뇌를 가지고 있었고, 3만 년 전의 어떤 사람들은 훨씬 더 큰 뇌를 가지고 있었는데, 이는 그들이 살았던 우주는 아마도 최근 사회의 우주만큼이나 풍부하게 정교했을 것임을 나타낸다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T13-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 13,
+          "endTokenIdx": 13,
+          "correctForm": "going",
+          "wrongCandidates": ["gone"],
+          "grammarType": "분사",
+          "explanation": "삽입된 분사구문의 의미상 주어 'the universes'가 능동적으로 '거슬러 올라가는' 동작을 하므로 현재분사 'going'이 맞다. 과거분사 'gone'은 수동/완료의 의미가 되어 능동의 동작을 표현할 수 없어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "go",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T25-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 25,
+          "endTokenIdx": 25,
+          "correctForm": "believe",
+          "wrongCandidates": ["believes"],
+          "grammarType": "수일치",
+          "explanation": "'as ... as' 비교 구문의 종속절 주어가 1인칭 복수 'we'이므로 동사원형 형태의 'believe'가 와야 한다. 3인칭 단수형 'believes'는 'we' 주어와 수가 일치하지 않아 비문이 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "believe",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T8-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 8,
+          "endTokenIdx": 8,
+          "correctForm": "dwell",
+          "wrongCandidates": ["dwelling"],
+          "grammarType": "부정사",
+          "explanation": "앞의 'tend not to'에서 to는 to부정사의 to이므로 뒤에는 동사원형 'dwell'이 와야 한다. 동명사 'dwelling'은 to부정사의 to 뒤에 올 수 없어 문법적으로 성립하지 않는다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "dwell",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T15-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "were",
+          "wrongCandidates": ["are"],
+          "grammarType": "시제",
+          "explanation": "주절의 동사가 'believed'로 과거시제이고 부사절도 과거의 사실(과거 사람들이 잘못 판단했던 상황)을 서술하므로 과거시제 'were'가 와야 한다. 현재시제 'are'는 전체 문장의 과거 시제 흐름과 충돌한다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T7-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 7,
+          "endTokenIdx": 7,
+          "correctForm": "that",
+          "wrongCandidates": ["which"],
+          "grammarType": "접속사",
+          "explanation": "추상명사 'grounds'의 내용을 설명하는 동격절을 이끄는 접속사 'that'이 와야 한다. 'which'는 관계대명사로 뒤에 불완전한 절이 와야 하지만, 여기는 'our knowledge is greatly superior'라는 완전한 절이 이어지므로 적절하지 않다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T3-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "neither",
+          "wrongCandidates": ["either"],
+          "grammarType": "상관접속사",
+          "explanation": "뒤에 'nor truth'가 이어지므로 짝을 이루는 상관접속사 'neither ... nor ...'를 완성하는 'neither'가 와야 한다. 'either'는 'or'와 짝을 이루므로 'nor'와 호응할 수 없어 문법적으로 어긋난다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T30-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 30,
+          "endTokenIdx": 30,
+          "correctForm": "which",
+          "wrongCandidates": ["what"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'the universes'가 있으므로 전치사 'in'의 목적어 역할을 할 관계대명사 'which'가 와야 한다. 'what'은 선행사를 자체에 포함하는 관계대명사이므로 별도 선행사가 있는 이 구조에서는 사용할 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "going", "baseForm": "go"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "believe", "baseForm": "believe"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "dwell", "baseForm": "dwell"},
+        {"kind": "word", "sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "were", "baseForm": "be"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "correctForm": "going", "wrongForm": "gone", "explanation": "삽입된 분사구문의 의미상 주어 'the universes'가 능동적으로 '거슬러 올라가는' 동작을 하므로 현재분사 'going'이 맞다. 과거분사 'gone'은 수동/완료의 의미가 되어 능동의 동작을 표현할 수 없어 부적절하다."},
+        {"sentenceIdx": 1, "startTokenIdx": 25, "endTokenIdx": 25, "correctForm": "believe", "wrongForm": "believes", "explanation": "'as ... as' 비교 구문의 종속절 주어가 1인칭 복수 'we'이므로 동사원형 형태의 'believe'가 와야 한다. 3인칭 단수형 'believes'는 'we' 주어와 수가 일치하지 않아 비문이 된다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "correctForm": "dwell", "wrongForm": "dwelling", "explanation": "앞의 'tend not to'에서 to는 to부정사의 to이므로 뒤에는 동사원형 'dwell'이 와야 한다. 동명사 'dwelling'은 to부정사의 to 뒤에 올 수 없어 문법적으로 성립하지 않는다."},
+        {"sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "were", "wrongForm": "are", "explanation": "주절의 동사가 'believed'로 과거시제이고 부사절도 과거의 사실(과거 사람들이 잘못 판단했던 상황)을 서술하므로 과거시제 'were'가 와야 한다. 현재시제 'are'는 전체 문장의 과거 시제 흐름과 충돌한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 7, "endTokenIdx": 7, "correctForm": "that", "wrongForm": "which", "explanation": "추상명사 'grounds'의 내용을 설명하는 동격절을 이끄는 접속사 'that'이 와야 한다. 'which'는 관계대명사로 뒤에 불완전한 절이 와야 하지만, 여기는 'our knowledge is greatly superior'라는 완전한 절이 이어지므로 적절하지 않다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "neither", "wrongForm": "either", "explanation": "뒤에 'nor truth'가 이어지므로 짝을 이루는 상관접속사 'neither ... nor ...'를 완성하는 'neither'가 와야 한다. 'either'는 'or'와 짝을 이루므로 'nor'와 호응할 수 없어 문법적으로 어긋난다."},
+        {"sentenceIdx": 6, "startTokenIdx": 30, "endTokenIdx": 30, "correctForm": "which", "wrongForm": "what", "explanation": "선행사 'the universes'가 있으므로 전치사 'in'의 목적어 역할을 할 관계대명사 'which'가 와야 한다. 'what'은 선행사를 자체에 포함하는 관계대명사이므로 별도 선행사가 있는 이 구조에서는 사용할 수 없다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 13, "endTokenIdx": 13, "isError": true, "wrongForm": "gone", "correction": "going", "explanation": "삽입된 분사구문의 의미상 주어 'the universes'가 능동적으로 거슬러 올라가는 동작을 하므로 현재분사 'going'으로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 25, "endTokenIdx": 25, "isError": true, "wrongForm": "believes", "correction": "believe", "explanation": "비교 종속절의 주어 'we'에 맞춰 동사원형 'believe'로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 8, "endTokenIdx": 8, "isError": true, "wrongForm": "dwelling", "correction": "dwell", "explanation": "to부정사의 to 뒤이므로 동사원형 'dwell'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "are", "correction": "were", "explanation": "주절이 과거시제 'believed'이므로 부사절도 과거시제 'were'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 7, "endTokenIdx": 7, "isError": true, "wrongForm": "which", "correction": "that", "explanation": "추상명사 'grounds'의 내용을 동격으로 풀이하므로 접속사 'that'으로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "either", "correction": "neither", "explanation": "뒤에 'nor'가 이어지므로 짝을 이루는 'neither'로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 30, "endTokenIdx": 30, "isError": true, "wrongForm": "what", "correction": "which", "explanation": "선행사 'the universes'가 있으므로 관계대명사 'which'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Common sense tells us that the out-of-date and discarded universes of the past, gone back hundreds of thousands of years, were all much mistaken in their general and detailed view of things.",
+          "isCorrect": false,
+          "correction": "Common sense tells us that the out-of-date and discarded universes of the past, going back hundreds of thousands of years, were all much mistaken in their general and detailed view of things.",
+          "explanation": "분사구문의 의미상 주어 'the universes'가 능동적으로 거슬러 올라가는 동작을 하므로 현재분사 'going'이 맞다."
+        },
+        {
+          "text": "But it does not take much thought to realize that the people in the past believed in their universes, just as strongly as we now believes in our modern physical universe.",
+          "isCorrect": false,
+          "correction": "But it does not take much thought to realize that the people in the past believed in their universes, just as strongly as we now believe in our modern physical universe.",
+          "explanation": "비교 종속절의 주어가 1인칭 복수 'we'이므로 'believe'가 와야 한다."
+        },
+        {
+          "text": "This is a fact we tend not to dwelling upon because of the disconcerting implications.",
+          "isCorrect": false,
+          "correction": "This is a fact we tend not to dwell upon because of the disconcerting implications.",
+          "explanation": "to부정사의 to 뒤에는 동사원형 'dwell'이 와야 한다."
+        },
+        {
+          "text": "People in the past strongly believed in the truth of their universes, and because they are so greatly mistaken, might not we be a little mistaken also, and if a little, why not a lot?",
+          "isCorrect": false,
+          "correction": "People in the past strongly believed in the truth of their universes, and because they were so greatly mistaken, might not we be a little mistaken also, and if a little, why not a lot?",
+          "explanation": "주절이 과거시제이므로 부사절도 과거시제 'were'가 맞다."
+        },
+        {
+          "text": "We dismiss the thought on the grounds which our knowledge is greatly superior.",
+          "isCorrect": false,
+          "correction": "We dismiss the thought on the grounds that our knowledge is greatly superior.",
+          "explanation": "추상명사 'grounds'의 내용을 설명하는 동격절이므로 접속사 'that'이 맞다."
+        },
+        {
+          "text": "But knowledge guarantees either wisdom nor truth, and the thought persists.",
+          "isCorrect": false,
+          "correction": "But knowledge guarantees neither wisdom nor truth, and the thought persists.",
+          "explanation": "'nor'와 짝을 이루는 상관접속사는 'neither'이다."
+        },
+        {
+          "text": "The early people of a hundred thousand years ago had brains as large as our own, thirty thousand years ago some had brains even larger, suggesting that the universes in what they lived were possibly as richly elaborate as those of more recent societies.",
+          "isCorrect": false,
+          "correction": "The early people of a hundred thousand years ago had brains as large as our own, thirty thousand years ago some had brains even larger, suggesting that the universes in which they lived were possibly as richly elaborate as those of more recent societies.",
+          "explanation": "선행사 'the universes'가 있으므로 관계대명사 'which'가 맞다."
+        }
+      ]
+    }
+  }
+}

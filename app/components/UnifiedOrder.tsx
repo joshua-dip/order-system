@@ -9,6 +9,7 @@ import { BOOK_VARIANT_QUESTION_TYPES } from '@/lib/book-variant-types';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { mockExamDisplayLabel } from '@/lib/mock-exam-key';
+import { variantUnitPrice, isOrderInsertType, VARIANT_PRICE } from '@/lib/variant-pricing';
 import AppBar from './AppBar';
 
 /* ────────────────────────────────────────────────────────── */
@@ -30,9 +31,8 @@ function mockExamDisplayName(key: string): string {
   return mockExamDisplayLabel(key);
 }
 
-function pricePerQuestion(type: string): number {
-  if (type === '순서' || type === '삽입' || type === '삽입-고난도') return 80;
-  return 50;
+function pricePerQuestion(type: string, withExplanation = true): number {
+  return variantUnitPrice(type, { withExplanation });
 }
 
 /* ────────────────────────────────────────────────────────── */
@@ -620,9 +620,15 @@ export default function UnifiedOrder() {
   /* ── 가격 계산 ── */
   const totalSources = dbEntries.reduce((sum, e) => sum + e.selectedSources.length, 0);
 
+  const unitFor = (t: string): number =>
+    pricePerQuestion(
+      t,
+      isOrderInsertType(t) ? orderInsertExplanation[t as '순서' | '삽입'] : true,
+    );
+
   const totalPrice = selectedTypes.reduce((sum, t) => {
     const cnt = questionsPerTypeMap[t] ?? 3;
-    return sum + pricePerQuestion(t) * cnt * totalSources;
+    return sum + unitFor(t) * cnt * totalSources;
   }, 0);
 
   const effectivePointsDeduction = hasSolbookInOrder ? 0 : pointsToUse;
@@ -1541,7 +1547,7 @@ export default function UnifiedOrder() {
               <div className="space-y-2">
                 {selectedTypes.map((t) => {
                   const cnt = questionsPerTypeMap[t] ?? 3;
-                  const unitPrice = pricePerQuestion(t);
+                  const unitPrice = unitFor(t);
                   return (
                     <div
                       key={t}
@@ -1590,7 +1596,7 @@ export default function UnifiedOrder() {
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
               <h2 className="font-bold text-gray-800 mb-1">순서·삽입 해설 포함 여부</h2>
               <p className="text-xs text-gray-500 mb-4">
-                순서·삽입 유형을 고르신 경우에만 적용됩니다. 체크하면 해설 포함(80원/문항), 해제하면 문제·답만(50원/문항)으로 주문서에 반영됩니다.
+                순서·삽입 유형을 고르신 경우에만 적용됩니다. 체크하면 해설 포함({VARIANT_PRICE.orderInsertWithExplanation}원/문항), 해제하면 문제·답만({VARIANT_PRICE.orderInsertNoExplanation}원/문항)으로 주문서에 반영됩니다.
               </p>
               <div className="space-y-4">
                 {(['순서', '삽입'] as const).map((t) =>
@@ -1612,8 +1618,8 @@ export default function UnifiedOrder() {
                         <span className="text-sm text-gray-700"> 유형 — 해설 포함</span>
                         <span className="mt-1 block text-xs text-gray-500">
                           {orderInsertExplanation[t]
-                            ? '해설 포함으로 제작 · 문항당 80원'
-                            : '문제·답만(해설 제외) · 문항당 50원'}
+                            ? `해설 포함으로 제작 · 문항당 ${VARIANT_PRICE.orderInsertWithExplanation}원`
+                            : `문제·답만(해설 제외) · 문항당 ${VARIANT_PRICE.orderInsertNoExplanation}원`}
                         </span>
                       </span>
                     </label>

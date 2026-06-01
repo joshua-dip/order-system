@@ -155,7 +155,12 @@ export interface PassageStateStored {
   /** 단어장 표 정렬(원본 배열 순서 / 알파벳 / 지문 내 위치) */
   vocabularySortOrder?: 'original' | 'alphabetical' | 'position';
   showVocabulary?: boolean;
-  svocData?: Record<number, SvocSentenceData>;
+  /**
+   * SVOC 분석 데이터 — 한 sentence 안에 여러 절(coordinated clause)이 있을 수 있어 array 지원.
+   * 백워드 호환: 단일 SvocSentenceData 객체로 저장된 옛 데이터도 그대로 둠.
+   * **읽을 때는 항상 `getSvocClauses(svocData, sentIdx)` 헬퍼로 array 받아 처리.**
+   */
+  svocData?: Record<number, SvocSentenceData | SvocSentenceData[]>;
   grammarTags?: GrammarTagStored[];
   /** 문장 인덱스 → 문법 포인트 카드 리스트 (서술형 답지 grammar_points와 동일 모양) */
   grammarPointsBySentence?: Record<number, GrammarPointEntry[]>;
@@ -240,4 +245,36 @@ export function passageAnalysisFileNameForPassageId(passageId: string): string {
 export function parsePassageIdFromFileName(fileName: string): string | null {
   const m = fileName.match(/^passage:([a-f0-9]{24})$/i);
   return m ? m[1] : null;
+}
+
+/**
+ * svocData 의 한 sentence 항목을 「항상 array」 로 반환.
+ *
+ * 백워드 호환: 단일 객체 / array / undefined 모두 받음.
+ * - undefined → []
+ * - 단일 SvocSentenceData → [객체]
+ * - SvocSentenceData[] → 그대로
+ *
+ * 모든 reader 가 이 헬퍼 통해 접근해야 단일·다절 데이터에 동일 코드로 동작.
+ */
+export function getSvocClauses(
+  svocData: PassageStateStored['svocData'] | undefined,
+  sentenceIndex: number,
+): SvocSentenceData[] {
+  if (!svocData) return [];
+  const v = svocData[sentenceIndex];
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  return [v];
+}
+
+/** sentence 안에 SVOC 절이 1개 이상 있는지 (분석 안 된 빈 placeholder 제외) */
+export function hasAnyMeaningfulSvocClause(
+  svocData: PassageStateStored['svocData'] | undefined,
+  sentenceIndex: number,
+): boolean {
+  const clauses = getSvocClauses(svocData, sentenceIndex);
+  return clauses.some(
+    (c) => (c.subject || '').trim().length > 0 || (c.verb || '').trim().length > 0,
+  );
 }

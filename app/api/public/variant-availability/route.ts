@@ -53,9 +53,36 @@ export async function POST(request: NextRequest) {
     const col = db.collection('generated_questions');
 
     const hasHardInsertion = types.includes('삽입-고난도');
-    const dbTypes = hasHardInsertion
-      ? [...types.filter((t) => t !== '삽입-고난도'), ...(!types.includes('삽입') ? ['삽입'] : [])]
-      : types;
+    const hasHardGrammar = types.includes('어법-고난도');
+    const hasHardVariant = hasHardInsertion || hasHardGrammar;
+    const dbTypes = (() => {
+      let next = [...types];
+      if (hasHardInsertion) {
+        next = next.filter((t) => t !== '삽입-고난도');
+        if (!next.includes('삽입')) next.push('삽입');
+      }
+      if (hasHardGrammar) {
+        next = next.filter((t) => t !== '어법-고난도');
+        if (!next.includes('어법')) next.push('어법');
+      }
+      return next;
+    })();
+
+    const effectiveTypeExpr = {
+      $switch: {
+        branches: [
+          {
+            case: { $and: [{ $eq: ['$type', '삽입'] }, { $eq: ['$difficulty', '상'] }] },
+            then: '삽입-고난도',
+          },
+          {
+            case: { $and: [{ $eq: ['$type', '어법'] }, { $eq: ['$difficulty', '상'] }] },
+            then: '어법-고난도',
+          },
+        ],
+        default: '$type',
+      },
+    };
 
     const [combo, byType] = await Promise.all([
       col
@@ -67,19 +94,9 @@ export async function POST(request: NextRequest) {
               type: { $in: dbTypes },
             },
           },
-          ...(hasHardInsertion
+          ...(hasHardVariant
             ? [
-                {
-                  $addFields: {
-                    effectiveType: {
-                      $cond: {
-                        if: { $and: [{ $eq: ['$type', '삽입'] }, { $eq: ['$difficulty', '상'] }] },
-                        then: '삽입-고난도',
-                        else: '$type',
-                      },
-                    },
-                  },
-                },
+                { $addFields: { effectiveType: effectiveTypeExpr } },
                 { $group: { _id: { s: '$source', t: '$effectiveType' } as Record<string, unknown>, n: { $sum: 1 } } },
               ]
             : [{ $group: { _id: { s: '$source', t: '$type' }, n: { $sum: 1 } } }]),
@@ -88,19 +105,9 @@ export async function POST(request: NextRequest) {
       col
         .aggregate<{ _id: string; n: number }>([
           { $match: { textbook, type: { $in: dbTypes } } },
-          ...(hasHardInsertion
+          ...(hasHardVariant
             ? [
-                {
-                  $addFields: {
-                    effectiveType: {
-                      $cond: {
-                        if: { $and: [{ $eq: ['$type', '삽입'] }, { $eq: ['$difficulty', '상'] }] },
-                        then: '삽입-고난도',
-                        else: '$type',
-                      },
-                    },
-                  },
-                },
+                { $addFields: { effectiveType: effectiveTypeExpr } },
                 { $group: { _id: '$effectiveType' as string, n: { $sum: 1 } } },
               ]
             : [{ $group: { _id: '$type', n: { $sum: 1 } } }]),

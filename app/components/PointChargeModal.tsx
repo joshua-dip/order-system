@@ -9,6 +9,7 @@ import {
   type PointChargeTierId,
 } from '@/lib/point-charge-packages';
 import { getTossPaymentsClientKeyPublic, isTossWidgetClientKey } from '@/lib/toss-payments-env';
+import { effectivePointChargeDiscount, type CouponView } from '@/lib/coupons-shared';
 
 type Props = {
   open: boolean;
@@ -30,6 +31,8 @@ export default function PointChargeModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<'select' | 'widget'>('select');
+  const [coupons, setCoupons] = useState<CouponView[]>([]);
+  const [selectedCouponId, setSelectedCouponId] = useState<string>('');
   const [orderInfo, setOrderInfo] = useState<{
     orderId: string;
     amount: number;
@@ -47,9 +50,36 @@ export default function PointChargeModal({
       setPhase('select');
       setError(null);
       setOrderInfo(null);
+      setSelectedCouponId('');
       widgetsRef.current = null;
     }
   }, [open]);
+
+  // 열릴 때 보유 쿠폰(활성) 로드
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch('/api/my/coupons', { credentials: 'include' });
+        const d = await r.json();
+        if (!cancelled && r.ok && Array.isArray(d.coupons)) {
+          setCoupons(d.coupons as CouponView[]);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
+  const selectedCoupon = coupons.find(c => c.id === selectedCouponId) ?? null;
+  const couponPct = selectedCoupon?.discountPct ?? 0;
+  /** 쿠폰 반영 결제액 (패키지 할인과 쿠폰 중 더 큰 할인). */
+  const effAmountWon = (p: PointChargePackage): number => {
+    const pct = effectivePointChargeDiscount(p.discountPct, couponPct);
+    return Math.round((p.points * (100 - pct)) / 100);
+  };
 
   // widget 단계로 전환되면 결제위젯 렌더링
   useEffect(() => {
@@ -95,7 +125,7 @@ export default function PointChargeModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ tier: pkg.id }),
+        body: JSON.stringify({ tier: pkg.id, ...(selectedCouponId ? { couponId: selectedCouponId } : {}) }),
       });
       const prepData = await prep.json();
       if (!prep.ok || !prepData?.ok) {
@@ -206,7 +236,10 @@ export default function PointChargeModal({
             )}
             <div className="grid grid-cols-1 gap-2">
               {POINT_CHARGE_PACKAGES.map((p: PointChargePackage) => {
-                const pay = amountWonForPackage(p);
+                const basePay = amountWonForPackage(p);
+                const pay = effAmountWon(p);
+                const effPct = effectivePointChargeDiscount(p.discountPct, couponPct);
+                const couponWins = couponPct > p.discountPct;
                 const active = selected === p.id;
                 return (
                   <button
@@ -221,8 +254,10 @@ export default function PointChargeModal({
                   >
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="font-bold text-[#0f172a]">{p.points.toLocaleString()} P</span>
-                      {p.discountPct > 0 ? (
-                        <span className="text-[11px] font-semibold text-[#16a34a]">{p.discountPct}% 할인</span>
+                      {effPct > 0 ? (
+                        <span className="text-[11px] font-semibold text-[#16a34a]">
+                          {effPct}% 할인{couponWins && <span className="text-[#7c3aed]"> · 쿠폰</span>}
+                        </span>
                       ) : (
                         <span className="text-[11px] text-[#94a3b8]">정가</span>
                       )}
@@ -230,16 +265,57 @@ export default function PointChargeModal({
                     <div className="mt-1 text-sm text-[#475569]">
                       결제{' '}
                       <strong className="text-[#0f172a]">{pay.toLocaleString()}원</strong>
-                      {p.discountPct > 0 && (
+                      {effPct > 0 && (
                         <span className="text-[11px] text-[#94a3b8] line-through ml-2">
                           {p.points.toLocaleString()}원
                         </span>
+                      )}
+                      {couponWins && basePay !== pay && (
+                        <span className="text-[11px] text-[#7c3aed] ml-2">쿠폰가</span>
                       )}
                     </div>
                   </button>
                 );
               })}
             </div>
+
+            {/* 쿠폰 선택 */}
+            {coupons.length > 0 && (
+              <div className="rounded-xl border border-[#e2e8f0] bg-[#faf5ff] px-4 py-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[13px] font-semibold text-[#6d28d9]">🎟 할인 쿠폰</span>
+                  <span className="text-[11px] text-[#94a3b8]">패키지 할인과 중복 안 됨 — 더 큰 할인 적용</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCouponId('')}
+                    className={`px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors ${
+                      selectedCouponId === ''
+                        ? 'border-[#7c3aed] bg-white text-[#6d28d9] ring-2 ring-[#7c3aed]/20'
+                        : 'border-[#e9d5ff] bg-white text-[#64748b] hover:border-[#c4b5fd]'
+                    }`}
+                  >
+                    사용 안 함
+                  </button>
+                  {coupons.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedCouponId(c.id)}
+                      className={`px-3 py-1.5 rounded-lg text-[13px] font-bold border transition-colors ${
+                        selectedCouponId === c.id
+                          ? 'border-[#7c3aed] bg-[#7c3aed] text-white'
+                          : 'border-[#e9d5ff] bg-white text-[#6d28d9] hover:border-[#c4b5fd]'
+                      }`}
+                      title={c.note || `${c.discountPct}% 할인 쿠폰`}
+                    >
+                      {c.discountPct}% 할인
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {error && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                 {error}

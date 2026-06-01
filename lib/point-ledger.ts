@@ -8,9 +8,9 @@ export type PointLedgerKind =
   | 'admin_grant'
   | 'admin_adjust'
   | 'point_charge'
-  /** 변형문제 만들기 — 삽입-고난도 초안 생성(차감) */
+  /** 변형문제 만들기 — 고난도 초안 생성(삽입-고난도·어법-고난도 등 차감) */
   | 'member_variant_hard'
-  /** 삽입-고난도 초안 생성 실패 등으로 포인트 환급 */
+  /** 고난도 초안 생성 실패 등으로 포인트 환급 */
   | 'member_variant_refund'
   /** 주문 취소(pending 등) 시 주문에 사용한 포인트 환급 */
   | 'order_cancel_refund';

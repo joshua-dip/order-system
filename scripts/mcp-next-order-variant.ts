@@ -519,8 +519,12 @@ async function main() {
     'variant_review_pending_record',
     {
       description:
-        'Claude Code가 푼 결과를 generated_question_claude_reviews에 저장합니다. 서버가 DB 정답과 비교해 is_correct를 계산합니다. ' +
-        '문항이 status「대기」이고 is_correct가 true이면 기본은「완료」로 갱신합니다. attemptNumber가 2 이상이면 재시도 검수로 보아「검수불일치」로 갱신합니다. Anthropic API 없음.',
+        'Claude Code가 푼 결과를 generated_question_claude_reviews에 저장합니다. 서버가 DB 정답과 비교해 is_correct를 계산하고, ' +
+        '동시에 per-question 종합 검증(해설 누락·nan, API 누출, 한 문항 내 보기 중복, CorrectAnswer 형식, 어법 변형 구조·해설 모순, 빈칸 표식 누락 등)을 실행해 ' +
+        'validation_issues 로 함께 기록합니다. ' +
+        '문항이 status「대기」이고 is_correct가 true이며 검증 error가 없으면 기본은「완료」로 갱신합니다. ' +
+        'attemptNumber가 2 이상이면「검수불일치」로 갱신하고, 정답이라도 검증 error가 1건 이상이면 forced_mismatch_by_validation=true 와 함께 「검수불일치」로 보냅니다. ' +
+        '정답 불일치 + 검증 error 동반 시에도 검수불일치로 갱신합니다. Anthropic API 없음.',
       inputSchema: {
         generated_question_id: z.string().describe('24자리 ObjectId'),
         claude_answer: z.string().optional().describe('추출한 정답(번호·기호 등). error 있으면 비워도 됨'),

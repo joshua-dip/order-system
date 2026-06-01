@@ -14,6 +14,7 @@ export const BOOK_VARIANT_QUESTION_TYPES = [
   '삽입',
   '무관한문장',
   '삽입-고난도',
+  '어법-고난도',
 ] as const;
 
 export type BookVariantQuestionType = (typeof BOOK_VARIANT_QUESTION_TYPES)[number];

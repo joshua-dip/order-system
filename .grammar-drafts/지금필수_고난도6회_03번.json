@@ -1,0 +1,293 @@
+{
+  "passageId": "69d4eca372a886137cd83f15",
+  "textbook": "지금필수 고난도유형(2026)",
+  "sourceKey": "고난도 모의고사 6회 03번",
+  "title": "지금필수 고난도유형(2026) 고난도 모의고사 6회 03번 어법공략",
+  "folder": "기본",
+  "examMeta": {
+    "examTitle": "영어 어법공략 평가",
+    "schoolName": "○○고등학교",
+    "grade": "3학년",
+    "questionNumber": "고난도 6회 03번 어법공략"
+  },
+  "sentences": [
+    {
+      "idx": 0,
+      "text": "Continued economic growth is the explicit goal of most economists and policy makers.",
+      "tokens": ["Continued","economic","growth","is","the","explicit","goal","of","most","economists","and","policy","makers."],
+      "korean": "지속적인 경제 성장은 대부분의 경제학자들과 정책 입안자들의 명백한 목표다."
+    },
+    {
+      "idx": 1,
+      "text": "Many economists even argue that economic growth is not only compatible with a clean environment, but also a prerequisite for achieving one.",
+      "tokens": ["Many","economists","even","argue","that","economic","growth","is","not","only","compatible","with","a","clean","environment,","but","also","a","prerequisite","for","achieving","one."],
+      "korean": "많은 경제학자들은 심지어 경제 성장이 깨끗한 환경과 양립할 수 있을 뿐만 아니라, 깨끗한 환경을 달성하기 위한 전제 조건이라고 주장한다."
+    },
+    {
+      "idx": 2,
+      "text": "A clean environment is a luxury good, the story goes.",
+      "tokens": ["A","clean","environment","is","a","luxury","good,","the","story","goes."],
+      "korean": "깨끗한 환경은 사치품이며, 이야기는 계속된다."
+    },
+    {
+      "idx": 3,
+      "text": "People who are struggling simply to feed themselves cannot be concerned with pollution.",
+      "tokens": ["People","who","are","struggling","simply","to","feed","themselves","cannot","be","concerned","with","pollution."],
+      "korean": "단순히 자기 자신을 먹여 살리려고 애쓰는 사람들은 오염에 대해 관심을 가질 수 없다."
+    },
+    {
+      "idx": 4,
+      "text": "The fact that throughout the Third World, poverty forces people to actually live and work in garbage dumps, finding food to eat, clothes to wear, and goods and materials to recycle speaks for itself ― survival takes precedence over environment.",
+      "tokens": ["The","fact","that","throughout","the","Third","World,","poverty","forces","people","to","actually","live","and","work","in","garbage","dumps,","finding","food","to","eat,","clothes","to","wear,","and","goods","and","materials","to","recycle","speaks","for","itself","―","survival","takes","precedence","over","environment."],
+      "korean": "제 3세계 도처에서 빈곤은 사람들로 하여금 실제로 쓰레기 더미에서 생활하고 일하면서, 먹을 음식, 입을 옷, 그리고 재활용할 물건과 재료를 찾도록 강요한다는 사실이 말해 준다. 즉, 생존은 환경에 우선한다."
+    },
+    {
+      "idx": 5,
+      "text": "And work in a factory, no matter how much it pollutes, must be better than life in a dump.",
+      "tokens": ["And","work","in","a","factory,","no","matter","how","much","it","pollutes,","must","be","better","than","life","in","a","dump."],
+      "korean": "그리고 공장에서 일하는 것은, 그것이 얼마나 오염시키든 간에, 쓰레기 더미에서의 삶보다 틀림없이 낫다."
+    },
+    {
+      "idx": 6,
+      "text": "Only in rich nations can we afford the luxury of clean water and clean air.",
+      "tokens": ["Only","in","rich","nations","can","we","afford","the","luxury","of","clean","water","and","clean","air."],
+      "korean": "오직 부유한 나라에서만 우리는 깨끗한 물과 공기의 사치를 누릴 수 있다."
+    },
+    {
+      "idx": 7,
+      "text": "This would explain the fact that water quality and air quality in the United States have improved since the 1970s, and even forest cover is expanding in many areas.",
+      "tokens": ["This","would","explain","the","fact","that","water","quality","and","air","quality","in","the","United","States","have","improved","since","the","1970s,","and","even","forest","cover","is","expanding","in","many","areas."],
+      "korean": "이것은 미국의 수질과 공기의 질이 1970년대 이후로 개선되었고, 평지의 숲도 많은 지역에서 확장되고 있다는 사실을 설명해 줄 것이다."
+    },
+    {
+      "idx": 8,
+      "text": "The best way to clean up the planet and preserve its remaining ecosystems, it is often argued, is through economic growth.",
+      "tokens": ["The","best","way","to","clean","up","the","planet","and","preserve","its","remaining","ecosystems,","it","is","often","argued,","is","through","economic","growth."],
+      "korean": "지구를 깨끗이 하고 지구의 남아 있는 생태계를 보존하는 가장 좋은 방법은 경제 성장을 통해서라고 흔히 주장된다."
+    }
+  ],
+  "modes": ["F", "G", "H", "J"],
+  "modeData": {
+    "P": {
+      "points": [
+        {
+          "id": "S0-T0-001",
+          "sentenceIdx": 0,
+          "startTokenIdx": 0,
+          "endTokenIdx": 0,
+          "correctForm": "Continued",
+          "wrongCandidates": ["Continuing"],
+          "grammarType": "분사",
+          "explanation": "'economic growth(경제 성장)'은 '지속되는' 대상이므로 명사를 수식하는 과거분사 'Continued'가 맞다. 현재분사 'Continuing'은 능동·진행의 의미가 되어 '성장이 계속하다'라는 어색한 의미가 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "continue",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S1-T20-001",
+          "sentenceIdx": 1,
+          "startTokenIdx": 20,
+          "endTokenIdx": 20,
+          "correctForm": "achieving",
+          "wrongCandidates": ["achieve"],
+          "grammarType": "전치사",
+          "explanation": "전치사 'for' 뒤에는 명사 또는 동명사가 와야 하므로 'achieving'이 맞다. 동사원형 'achieve'는 전치사의 목적어 자리에 올 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "achieve",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S2-T3-001",
+          "sentenceIdx": 2,
+          "startTokenIdx": 3,
+          "endTokenIdx": 3,
+          "correctForm": "is",
+          "wrongCandidates": ["are"],
+          "grammarType": "수일치",
+          "explanation": "주어 'A clean environment'는 단수 명사구이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 단수 주어에 사용될 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "be",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S3-T1-001",
+          "sentenceIdx": 3,
+          "startTokenIdx": 1,
+          "endTokenIdx": 1,
+          "correctForm": "who",
+          "wrongCandidates": ["which"],
+          "grammarType": "관계사",
+          "explanation": "선행사 'People'은 사람이므로 사람을 받는 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받기 때문에 사람 선행사에는 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S4-T31-001",
+          "sentenceIdx": 4,
+          "startTokenIdx": 31,
+          "endTokenIdx": 31,
+          "correctForm": "speaks",
+          "wrongCandidates": ["speak"],
+          "grammarType": "수일치",
+          "explanation": "주어의 핵은 단수 명사 'The fact'이므로 단수형 동사 'speaks'가 맞다. 'that ... recycle'은 'The fact'를 수식하는 동격절일 뿐이며, 절 안의 복수 명사에 이끌려 'speak'를 쓰면 안 된다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "speak",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S5-T14-001",
+          "sentenceIdx": 5,
+          "startTokenIdx": 14,
+          "endTokenIdx": 14,
+          "correctForm": "than",
+          "wrongCandidates": ["as"],
+          "grammarType": "접속사",
+          "explanation": "비교급 'better' 뒤에는 비교의 기준을 이끄는 접속사 'than'이 맞다. 동등비교에 쓰이는 'as'는 'as ~ as' 구조에서만 쓰이며, 비교급과 함께 쓸 수 없다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S6-T4-001",
+          "sentenceIdx": 6,
+          "startTokenIdx": 4,
+          "endTokenIdx": 5,
+          "correctForm": "can we",
+          "wrongCandidates": ["we can"],
+          "grammarType": "어순",
+          "explanation": "부정어구 'Only in rich nations'가 문두에 오면 주어와 (조)동사가 도치되어 'can we afford'의 어순이 맞다. 'we can afford'는 도치를 적용하지 않은 평서문 어순이라 틀리다.",
+          "uses": ["G", "H", "J"],
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S7-T15-001",
+          "sentenceIdx": 7,
+          "startTokenIdx": 15,
+          "endTokenIdx": 15,
+          "correctForm": "have",
+          "wrongCandidates": ["has"],
+          "grammarType": "시제",
+          "explanation": "주어가 'water quality and air quality'로 and로 연결된 복수이고 'since the 1970s'라는 현재완료 시제 단서가 있으므로 'have improved'가 맞다. 단수형 'has'는 복수 주어와 함께 쓸 수 없다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "have",
+          "hRole": "error",
+          "jVariant": "wrong"
+        },
+        {
+          "id": "S8-T16-001",
+          "sentenceIdx": 8,
+          "startTokenIdx": 16,
+          "endTokenIdx": 16,
+          "correctForm": "argued,",
+          "wrongCandidates": ["arguing,"],
+          "grammarType": "수동태",
+          "explanation": "삽입절 'it is often argued'에서 주어 'it'은 뒤의 진주어절을 받는 가주어이고, 'argue'의 대상이 되는 수동의 관계이므로 과거분사 'argued'가 맞다. 현재분사 'arguing'은 능동이 되어 'it'이 직접 주장한다는 의미가 되어 부적절하다.",
+          "uses": ["F", "G", "H", "J"],
+          "baseForm": "argue",
+          "hRole": "error",
+          "jVariant": "wrong"
+        }
+      ]
+    },
+    "F": {
+      "blocks": [
+        {"kind": "word", "sentenceIdx": 0, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Continued", "baseForm": "continue"},
+        {"kind": "word", "sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "achieving", "baseForm": "achieve"},
+        {"kind": "word", "sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "is", "baseForm": "be"},
+        {"kind": "word", "sentenceIdx": 4, "startTokenIdx": 31, "endTokenIdx": 31, "correctForm": "speaks", "baseForm": "speak"},
+        {"kind": "word", "sentenceIdx": 7, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "have", "baseForm": "have"},
+        {"kind": "word", "sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "argued,", "baseForm": "argue"}
+      ]
+    },
+    "G": {
+      "points": [
+        {"sentenceIdx": 0, "startTokenIdx": 0, "endTokenIdx": 0, "correctForm": "Continued", "wrongForm": "Continuing", "explanation": "'economic growth(경제 성장)'은 '지속되는' 대상이므로 명사를 수식하는 과거분사 'Continued'가 맞다. 현재분사 'Continuing'은 능동·진행의 의미가 되어 '성장이 계속하다'라는 어색한 의미가 된다."},
+        {"sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "correctForm": "achieving", "wrongForm": "achieve", "explanation": "전치사 'for' 뒤에는 명사 또는 동명사가 와야 하므로 'achieving'이 맞다. 동사원형 'achieve'는 전치사의 목적어 자리에 올 수 없다."},
+        {"sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3, "correctForm": "is", "wrongForm": "are", "explanation": "주어 'A clean environment'는 단수 명사구이므로 단수형 be동사 'is'가 맞다. 복수형 'are'는 단수 주어에 사용될 수 없다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "correctForm": "who", "wrongForm": "which", "explanation": "선행사 'People'은 사람이므로 사람을 받는 주격 관계대명사 'who'가 맞다. 'which'는 사물·동물을 선행사로 받기 때문에 사람 선행사에는 쓸 수 없다."},
+        {"sentenceIdx": 4, "startTokenIdx": 31, "endTokenIdx": 31, "correctForm": "speaks", "wrongForm": "speak", "explanation": "주어의 핵은 단수 명사 'The fact'이므로 단수형 동사 'speaks'가 맞다. 'that ... recycle'은 'The fact'를 수식하는 동격절일 뿐이며, 절 안의 복수 명사에 이끌려 'speak'를 쓰면 안 된다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "correctForm": "than", "wrongForm": "as", "explanation": "비교급 'better' 뒤에는 비교의 기준을 이끄는 접속사 'than'이 맞다. 동등비교에 쓰이는 'as'는 'as ~ as' 구조에서만 쓰이며, 비교급과 함께 쓸 수 없다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 5, "correctForm": "can we", "wrongForm": "we can", "explanation": "부정어구 'Only in rich nations'가 문두에 오면 주어와 (조)동사가 도치되어 'can we afford'의 어순이 맞다. 'we can afford'는 도치를 적용하지 않은 평서문 어순이라 틀리다."},
+        {"sentenceIdx": 7, "startTokenIdx": 15, "endTokenIdx": 15, "correctForm": "have", "wrongForm": "has", "explanation": "주어가 'water quality and air quality'로 and로 연결된 복수이고 'since the 1970s'라는 현재완료 시제 단서가 있으므로 'have improved'가 맞다. 단수형 'has'는 복수 주어와 함께 쓸 수 없다."},
+        {"sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16, "correctForm": "argued,", "wrongForm": "arguing,", "explanation": "삽입절 'it is often argued'에서 주어 'it'은 뒤의 진주어절을 받는 가주어이고, 'argue'의 대상이 되는 수동의 관계이므로 과거분사 'argued'가 맞다. 현재분사 'arguing'은 능동이 되어 'it'이 직접 주장한다는 의미가 되어 부적절하다."}
+      ]
+    },
+    "H": {
+      "spans": [
+        {"sentenceIdx": 0, "startTokenIdx": 0, "endTokenIdx": 0, "isError": true, "wrongForm": "Continuing", "correction": "Continued", "explanation": "명사 'economic growth'를 수식하는 수동의 의미이므로 과거분사 'Continued'로 고쳐야 한다."},
+        {"sentenceIdx": 1, "startTokenIdx": 20, "endTokenIdx": 20, "isError": true, "wrongForm": "achieve", "correction": "achieving", "explanation": "전치사 'for' 뒤이므로 동명사 'achieving'으로 고쳐야 한다."},
+        {"sentenceIdx": 2, "startTokenIdx": 3, "endTokenIdx": 3, "isError": true, "wrongForm": "are", "correction": "is", "explanation": "단수 주어 'A clean environment'에 맞춰 단수형 'is'로 고쳐야 한다."},
+        {"sentenceIdx": 3, "startTokenIdx": 1, "endTokenIdx": 1, "isError": true, "wrongForm": "which", "correction": "who", "explanation": "선행사 'People'이 사람이므로 사람을 받는 관계대명사 'who'로 고쳐야 한다."},
+        {"sentenceIdx": 4, "startTokenIdx": 31, "endTokenIdx": 31, "isError": true, "wrongForm": "speak", "correction": "speaks", "explanation": "주어의 핵 'The fact'가 단수이므로 단수형 'speaks'로 고쳐야 한다."},
+        {"sentenceIdx": 5, "startTokenIdx": 14, "endTokenIdx": 14, "isError": true, "wrongForm": "as", "correction": "than", "explanation": "비교급 'better' 뒤에는 비교 접속사 'than'으로 고쳐야 한다."},
+        {"sentenceIdx": 6, "startTokenIdx": 4, "endTokenIdx": 5, "isError": true, "wrongForm": "we can", "correction": "can we", "explanation": "부정어구 'Only ...' 도치 구조이므로 주어·동사를 도치하여 'can we'로 고쳐야 한다."},
+        {"sentenceIdx": 7, "startTokenIdx": 15, "endTokenIdx": 15, "isError": true, "wrongForm": "has", "correction": "have", "explanation": "and로 연결된 복수 주어이므로 복수형 'have'로 고쳐야 한다."},
+        {"sentenceIdx": 8, "startTokenIdx": 16, "endTokenIdx": 16, "isError": true, "wrongForm": "arguing,", "correction": "argued,", "explanation": "가주어 'it'과의 관계가 수동이므로 과거분사 'argued'로 고쳐야 한다."}
+      ]
+    },
+    "J": {
+      "items": [
+        {
+          "text": "Continuing economic growth is the explicit goal of most economists and policy makers.",
+          "isCorrect": false,
+          "correction": "Continued economic growth is the explicit goal of most economists and policy makers.",
+          "explanation": "명사 'economic growth'를 수식하는 수동의 의미이므로 과거분사 'Continued'가 맞다."
+        },
+        {
+          "text": "Many economists even argue that economic growth is not only compatible with a clean environment, but also a prerequisite for achieve one.",
+          "isCorrect": false,
+          "correction": "Many economists even argue that economic growth is not only compatible with a clean environment, but also a prerequisite for achieving one.",
+          "explanation": "전치사 'for' 뒤이므로 동명사 'achieving'이 맞다."
+        },
+        {
+          "text": "A clean environment are a luxury good, the story goes.",
+          "isCorrect": false,
+          "correction": "A clean environment is a luxury good, the story goes.",
+          "explanation": "단수 주어 'A clean environment'에 맞춰 단수형 'is'가 맞다."
+        },
+        {
+          "text": "People which are struggling simply to feed themselves cannot be concerned with pollution.",
+          "isCorrect": false,
+          "correction": "People who are struggling simply to feed themselves cannot be concerned with pollution.",
+          "explanation": "선행사 'People'이 사람이므로 사람을 받는 관계대명사 'who'가 맞다."
+        },
+        {
+          "text": "The fact that throughout the Third World, poverty forces people to actually live and work in garbage dumps, finding food to eat, clothes to wear, and goods and materials to recycle speak for itself ― survival takes precedence over environment.",
+          "isCorrect": false,
+          "correction": "The fact that throughout the Third World, poverty forces people to actually live and work in garbage dumps, finding food to eat, clothes to wear, and goods and materials to recycle speaks for itself ― survival takes precedence over environment.",
+          "explanation": "주어의 핵 'The fact'가 단수이므로 단수형 'speaks'가 맞다."
+        },
+        {
+          "text": "And work in a factory, no matter how much it pollutes, must be better as life in a dump.",
+          "isCorrect": false,
+          "correction": "And work in a factory, no matter how much it pollutes, must be better than life in a dump.",
+          "explanation": "비교급 'better' 뒤에는 비교 접속사 'than'이 맞다."
+        },
+        {
+          "text": "Only in rich nations we can afford the luxury of clean water and clean air.",
+          "isCorrect": false,
+          "correction": "Only in rich nations can we afford the luxury of clean water and clean air.",
+          "explanation": "부정어구 'Only ...' 도치 구조이므로 주어·동사를 도치한 'can we'가 맞다."
+        },
+        {
+          "text": "This would explain the fact that water quality and air quality in the United States has improved since the 1970s, and even forest cover is expanding in many areas.",
+          "isCorrect": false,
+          "correction": "This would explain the fact that water quality and air quality in the United States have improved since the 1970s, and even forest cover is expanding in many areas.",
+          "explanation": "and로 연결된 복수 주어이므로 복수형 'have'가 맞다."
+        },
+        {
+          "text": "The best way to clean up the planet and preserve its remaining ecosystems, it is often arguing, is through economic growth.",
+          "isCorrect": false,
+          "correction": "The best way to clean up the planet and preserve its remaining ecosystems, it is often argued, is through economic growth.",
+          "explanation": "가주어 'it'과의 관계가 수동이므로 과거분사 'argued'가 맞다."
+        }
+      ]
+    }
+  }
+}
