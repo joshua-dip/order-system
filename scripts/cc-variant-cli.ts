@@ -198,6 +198,132 @@ async function cmdShortage(flags: Map<string, string>) {
   out(sliceQuestionCountPayloadForApi(result, maxRows));
 }
 
+async function cmdNextEmpty(flags: Map<string, string>) {
+  const textbookParam = (flags.get('textbook') ?? '').trim();
+  const orderIdRaw = (flags.get('order-id') ?? '').trim();
+  const orderNumberRaw = (flags.get('order-number') ?? '').trim();
+  if (orderIdRaw && orderNumberRaw) die('next-empty: --order-id 와 --order-number 는 함께 쓸 수 없습니다.');
+  if (!textbookParam && !orderIdRaw && !orderNumberRaw) {
+    die('next-empty: --textbook 또는 --order-id 또는 --order-number 중 하나가 필요합니다.');
+  }
+  const requiredPerType = Math.floor(flagNum(flags, 'required', 3));
+  const onlyType = (flags.get('only-type') ?? '').trim();
+  const seedRaw = (flags.get('seed') ?? '').trim();
+
+  const result = await runQuestionCountValidation({
+    textbookParam,
+    orderIdRaw,
+    orderNumberRaw: orderNumberRaw || null,
+    requiredPerTypeRaw: String(requiredPerType),
+    questionStatusRaw: null,
+  });
+  if (!result.ok) {
+    const err =
+      typeof result.body.error === 'string' ? result.body.error : JSON.stringify(result.body);
+    die(err);
+  }
+  const d = result as unknown as {
+    textbook?: string;
+    typesChecked?: string[];
+    requiredPerType?: number;
+    underfilled?: Array<{ passageId: string; type: string; shortBy: number; label?: string }>;
+    noQuestions?: Array<{
+      passageId: string;
+      label?: string;
+      source_key?: string;
+      chapter?: string;
+      number?: string;
+    }>;
+  };
+  const typesChecked: string[] = Array.isArray(d.typesChecked) ? d.typesChecked : [];
+  const reqPerType = Number(d.requiredPerType) || requiredPerType;
+  const underfilled = Array.isArray(d.underfilled) ? d.underfilled : [];
+  const noQuestions = Array.isArray(d.noQuestions) ? d.noQuestions : [];
+
+  type Slot = {
+    passage_id: string;
+    type: string;
+    shortBy: number;
+    label: string;
+    source_key?: string;
+    chapter?: string;
+    number?: string;
+  };
+  const slots: Slot[] = [];
+  for (const u of underfilled) {
+    if (onlyType && u.type !== onlyType) continue;
+    if (Number(u.shortBy) > 0) {
+      slots.push({
+        passage_id: String(u.passageId),
+        type: String(u.type),
+        shortBy: Number(u.shortBy),
+        label: u.label ?? '',
+      });
+    }
+  }
+  for (const p of noQuestions) {
+    for (const t of typesChecked) {
+      if (onlyType && t !== onlyType) continue;
+      slots.push({
+        passage_id: String(p.passageId),
+        type: t,
+        shortBy: reqPerType,
+        label: p.label ?? p.source_key ?? '',
+        source_key: p.source_key,
+        chapter: p.chapter,
+        number: p.number,
+      });
+    }
+  }
+
+  if (slots.length === 0) {
+    out({ ok: true, done: true, textbook: String(d.textbook ?? '') });
+    return;
+  }
+
+  let pickIdx: number;
+  if (seedRaw) {
+    let h = 0;
+    for (let i = 0; i < seedRaw.length; i++) h = (h * 31 + seedRaw.charCodeAt(i)) >>> 0;
+    pickIdx = h % slots.length;
+  } else {
+    pickIdx = Math.floor(Math.random() * slots.length);
+  }
+  const picked = slots[pickIdx];
+
+  const db = await getDb('gomijoshua');
+  const p = await db.collection('passages').findOne({ _id: new ObjectId(picked.passage_id) });
+  const content =
+    p && p.content && typeof p.content === 'object' && !Array.isArray(p.content)
+      ? (p.content as Record<string, unknown>)
+      : {};
+  out({
+    ok: true,
+    done: false,
+    textbook: String(d.textbook ?? p?.textbook ?? ''),
+    counts: {
+      totalSlotsLeft: slots.length,
+      typesChecked,
+      requiredPerType: reqPerType,
+    },
+    next: {
+      passage_id: picked.passage_id,
+      type: picked.type,
+      shortBy: picked.shortBy,
+      label: picked.label,
+      source_key: picked.source_key ?? String(p?.source_key ?? ''),
+      chapter: picked.chapter ?? String(p?.chapter ?? ''),
+      number: picked.number ?? String(p?.number ?? ''),
+      passage: {
+        textbook: String(p?.textbook ?? ''),
+        source_key: String(p?.source_key ?? ''),
+        passage_source: String(p?.passage_source ?? ''),
+        content,
+      },
+    },
+  });
+}
+
 async function cmdSave(flags: Map<string, string>) {
   const jsonPath = flags.get('json') ?? '';
   if (!jsonPath) die('save: --json <파일경로> 또는 --json - (stdin) 이 필요합니다.');
@@ -484,6 +610,8 @@ async function main() {
   shortage --order-id <ObjectId> | shortage --order-number BV-… [동일 옵션]
   pipeline --order-number BV-… [--required N] [--skip-review true] [--dry-run true]   shortage + 대기 자동 검수 + 신규 생성 가이드
   pipeline --textbook "이름" [...]
+  next-empty --order-number BV-… [--required N] [--only-type 어법] [--seed <문자열>]   다음 작성 슬롯 1개 (passage_id + type + shortBy + 본문) 반환, 다 채웠으면 {done:true}
+  next-empty --textbook "이름" [동일 옵션]
   단축: BV-20260529-002          → pipeline --order-number … (검수까지 한 번에)
         pipeline:BV-20260529-002 → 동일 (명시적)
         claude:BV-20260331-002    → shortage 만 (기존 호환)
@@ -522,12 +650,17 @@ async function main() {
     case 'pipeline':
       await cmdPipeline(flags);
       break;
+    case 'next-empty':
+      await cmdNextEmpty(flags);
+      break;
     default:
       die(`알 수 없는 명령: ${cmd} (--help 참고)`);
   }
 }
 
-main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((e) => {
+    console.error(e instanceof Error ? e.message : e);
+    process.exit(1);
+  });
