@@ -15,7 +15,7 @@
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
+import { loadCliEnv } from './_cli-env';
 import { ObjectId } from 'mongodb';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -36,9 +36,7 @@ import type { WorkbookGrammarPoint } from '@/lib/workbook-grammar-types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-process.env.DOTENV_CONFIG_QUIET = 'true';
-config({ path: path.join(PROJECT_ROOT, '.env') });
-config({ path: path.join(PROJECT_ROOT, '.env.local') });
+loadCliEnv(PROJECT_ROOT);
 
 function textResult(obj: unknown) {
   return {

@@ -25,7 +25,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
+import { loadCliEnv } from './_cli-env';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import {
@@ -40,9 +40,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-process.env.DOTENV_CONFIG_QUIET = 'true';
-config({ path: path.join(PROJECT_ROOT, '.env') });
-config({ path: path.join(PROJECT_ROOT, '.env.local') });
+loadCliEnv(PROJECT_ROOT);
 
 function parseFlags(argv: string[]): { positional: string[]; flags: Map<string, string> } {
   const positional: string[] = [];

@@ -46,7 +46,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
+import { loadCliEnv } from './_cli-env';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { tokenizePassageFromContent } from '@/lib/block-workbook-tokenize';
@@ -70,9 +70,7 @@ import type { SentenceTokenized } from '@/lib/block-workbook-types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-process.env.DOTENV_CONFIG_QUIET = 'true';
-config({ path: path.join(PROJECT_ROOT, '.env') });
-config({ path: path.join(PROJECT_ROOT, '.env.local') });
+loadCliEnv(PROJECT_ROOT);
 
 // ── 공용 유틸 ─────────────────────────────────────────────────────────────────
 

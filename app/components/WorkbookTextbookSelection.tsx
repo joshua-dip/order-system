@@ -10,12 +10,41 @@ import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { parseMockExamKey } from '@/lib/mock-exam-key';
 
+/** 워크북 주문 진입 카테고리. 미지정 시 부교재·교과서·모의고사 3섹션을 모두 노출. */
+export type WorkbookCategory = 'textbook' | 'gyogwaseo' | 'mockexam';
+
 interface WorkbookTextbookSelectionProps {
   onTextbookSelect: (textbook: string) => void;
   onBack: () => void;
+  /** 지정 시 해당 카테고리 한 섹션만 노출 */
+  category?: WorkbookCategory;
 }
 
-const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextbookSelectionProps) => {
+const CATEGORY_HEADINGS: Record<WorkbookCategory, { appBar: string; title: string; subtitle: string }> = {
+  textbook: {
+    appBar: '부교재 워크북 교재 선택',
+    title: '부교재 워크북 교재 선택',
+    subtitle: '워크북을 제작할 부교재를 선택해주세요',
+  },
+  gyogwaseo: {
+    appBar: '교과서 워크북 교재 선택',
+    title: '교과서 워크북 교재 선택',
+    subtitle: '워크북을 제작할 교과서를 선택해주세요',
+  },
+  mockexam: {
+    appBar: '모의고사 워크북 선택',
+    title: '모의고사 워크북 선택',
+    subtitle: '워크북을 제작할 모의고사를 선택해주세요',
+  },
+};
+
+const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: WorkbookTextbookSelectionProps) => {
+  const showTextbook = !category || category === 'textbook';
+  const showGyogwaseo = !category || category === 'gyogwaseo';
+  const showMockExam = !category || category === 'mockexam';
+  const headings = category
+    ? CATEGORY_HEADINGS[category]
+    : { appBar: '워크북 교재 선택', title: '워크북 교재 선택', subtitle: '워크북을 제작할 교재를 선택해주세요' };
   const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const currentUser = useCurrentUser();
   const { links: textbookLinks } = useTextbookLinks();
@@ -155,17 +184,17 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
       <AppBar 
         showBackButton={true} 
         onBackClick={onBack}
-        title="워크북 교재 선택"
+        title={headings.appBar}
       />
       <div className="min-h-screen py-8" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="container mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
-            워크북 교재 선택
+            {headings.title}
           </h1>
           <p className="text-lg" style={{ color: '#888B8D' }}>
-            워크북을 제작할 교재를 선택해주세요
+            {headings.subtitle}
           </p>
         </div>
 
@@ -217,7 +246,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
             <div className="text-center py-16">
               <p className="text-red-600">교재 데이터를 불러올 수 없습니다.</p>
             </div>
-          ) : (
+          ) : showTextbook ? (
             <div>
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-3 mb-2">
@@ -395,11 +424,11 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
                 </>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* 교과서 섹션 — 변형문제 화면과 동일한 「교과서」 풀 (settings.variant-solbook 의 교과서Keys) */}
-          {!dataLoading && !dataError && convertedData && gyogwaseoKeys.length > 0 && (
-            <div className="mt-16">
+          {showGyogwaseo && !dataLoading && !dataError && convertedData && gyogwaseoKeys.length > 0 && (
+            <div className={category ? '' : 'mt-16'}>
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold" style={{ color: '#00A9E0' }}>
@@ -476,8 +505,8 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack }: WorkbookTextboo
           )}
 
           {/* 모의고사 섹션 */}
-          {!dataLoading && !dataError && convertedData && (
-            <div className="mt-16">
+          {showMockExam && !dataLoading && !dataError && convertedData && (
+            <div className={category ? '' : 'mt-16'}>
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold" style={{ color: '#00A9E0' }}>

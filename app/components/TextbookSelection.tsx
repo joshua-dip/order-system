@@ -149,7 +149,7 @@ function useHubSections(
   isMember: boolean,
   isPremiumMember: boolean,
   onFinalGate: () => void
-): { primary: HubEntry[]; more: HubEntry[] } {
+): { primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[] } {
   return useMemo(() => {
     const mock: HubEntry = {
       id: 'mock',
@@ -233,18 +233,41 @@ function useHubSections(
       ),
     };
 
-    const more: HubEntry[] = [
-      finalMock,
+    const workbook: HubEntry[] = [
       {
-        id: 'workbook',
-        title: '워크북 주문',
-        description: (<>빈칸쓰기, 낱말배열 등<br />카테고리별 문제 구성</>),
+        id: 'workbook-mock',
+        title: '모의고사 워크북 주문',
+        description: (<>모의고사 회차·번호 선택<br />빈칸쓰기·낱말배열 등 구성</>),
         icon: <IconWorkbook /> as ReactNode,
         accentColor: '#00A9E0',
         gridClassName: 'lg:col-span-2',
-        href: '/workbook',
+        href: '/workbook/mockexam',
         interactive: true,
       },
+      {
+        id: 'workbook-textbook',
+        title: '부교재 워크북 주문',
+        description: (<>교재·강 선택<br />빈칸쓰기·낱말배열 등 구성</>),
+        icon: <IconWorkbook /> as ReactNode,
+        accentColor: '#00A9E0',
+        gridClassName: 'lg:col-span-2',
+        href: '/workbook/textbook',
+        interactive: true,
+      },
+      {
+        id: 'workbook-gyogwaseo',
+        title: '교과서 워크북 주문',
+        description: (<>교과서·강 선택<br />빈칸쓰기·낱말배열 등 구성</>),
+        icon: <IconWorkbook /> as ReactNode,
+        accentColor: '#00A9E0',
+        gridClassName: 'lg:col-span-2',
+        href: '/workbook/gyogwaseo',
+        interactive: true,
+      },
+    ];
+
+    const more: HubEntry[] = [
+      finalMock,
       {
         id: 'order-num',
         title: '번호별 교재 제작하기',
@@ -318,7 +341,7 @@ function useHubSections(
         ),
       },
     ];
-    return { primary: [mock, textbook, gyogwaseo], more };
+    return { primary: [mock, textbook, gyogwaseo], workbook, more };
   }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
 
@@ -351,7 +374,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const analysisUnlocked = isMember && user.canAccessAnalysis;
   const isPremiumMember = user?.isPremiumMember === true;
   const openFinalGate = () => setFinalGateOpen(true);
-  const { primary: hubPrimary, more: hubMore } = useHubSections(
+  const { primary: hubPrimary, workbook: hubWorkbook, more: hubMore } = useHubSections(
     analysisUnlocked,
     isMember,
     isPremiumMember,
@@ -642,7 +665,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
             <div className="mb-4">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <h2 id="hub-primary-heading" className="text-lg font-bold text-slate-900 tracking-tight">
-                  자료 주문서 작성
+                  변형문제 자료 주문서 작성
                 </h2>
                 <span
                   className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800"
@@ -672,12 +695,32 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
             {renderHubGrid(hubPrimary)}
           </section>
 
+          <section className="mt-12 border-t border-slate-200/90 pt-10" aria-labelledby="hub-workbook-heading">
+            <div className="mb-4">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <h2 id="hub-workbook-heading" className="text-lg font-bold text-slate-900 tracking-tight">
+                  워크북 자료 주문서 작성
+                </h2>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800"
+                  title="제작 후 전달까지 걸리는 시간"
+                >
+                  ⏱ 최대 1일 소요
+                </span>
+              </div>
+              <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+                빈칸쓰기·낱말배열 등 워크북을 <strong className="text-slate-800">모의고사·부교재·교과서</strong>별로 주문 제작합니다.
+              </p>
+            </div>
+            {renderHubGrid(hubWorkbook)}
+          </section>
+
           <section className="mt-12 border-t border-slate-200/90 pt-10" aria-labelledby="hub-more-heading">
             <div className="mb-4">
               <h2 id="hub-more-heading" className="text-base font-bold text-slate-800 tracking-tight">
                 다른 주문 · 서비스
               </h2>
-              <p className="mt-1 text-sm text-slate-500">워크북, 번호별 제작, 분석지, 서술형, 단어장, 통합 주문 등</p>
+              <p className="mt-1 text-sm text-slate-500">번호별 제작, 분석지, 서술형, 단어장, 통합 주문 등</p>
             </div>
             {renderHubGrid(hubMore)}
           </section>

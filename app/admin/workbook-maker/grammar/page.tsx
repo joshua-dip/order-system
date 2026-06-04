@@ -2225,7 +2225,7 @@ export default function GrammarWorkbookPage() {
       {showCoverageModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowCoverageModal(false)}>
           <div
-            className="bg-slate-800 border border-slate-600 rounded-2xl w-[min(1100px,96vw)] h-[min(85vh,800px)] flex flex-col shadow-2xl"
+            className="bg-slate-800 border border-slate-600 rounded-2xl w-[min(1320px,98vw)] h-[min(90vh,860px)] flex flex-col shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 shrink-0">
@@ -2259,7 +2259,7 @@ export default function GrammarWorkbookPage() {
                     className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500"
                   />
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto scrollbar-thin">
                   {coverageLoading ? (
                     <p className="text-slate-400 text-xs py-6 text-center">불러오는 중…</p>
                   ) : coverageItems.length === 0 ? (
@@ -2313,7 +2313,7 @@ export default function GrammarWorkbookPage() {
               </aside>
 
               {/* 우: 강/번호 매트릭스 */}
-              <div className="flex-1 overflow-y-auto min-w-0">
+              <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin">
                 {!coverageSelectedTextbook && (
                   <div className="p-6 text-sm text-slate-400">왼쪽에서 교재를 선택하세요.</div>
                 )}
@@ -2378,8 +2378,8 @@ export default function GrammarWorkbookPage() {
                     )}
 
                     {!coverageGridLoading && filteredCoverageGrid.length > 0 && (
-                      <div className="border border-slate-700/60 rounded-lg overflow-hidden">
-                        <table className="w-full text-xs">
+                      <div className="border border-slate-700/60 rounded-lg overflow-x-auto scrollbar-thin">
+                        <table className="w-full text-xs min-w-[820px]">
                           <thead className="bg-slate-900/60 text-slate-400 uppercase tracking-wide">
                             <tr>
                               <th className="text-left px-2 py-2 font-medium">강/번호</th>
@@ -2424,30 +2424,82 @@ export default function GrammarWorkbookPage() {
                                   <td className="text-center px-2 py-1 text-slate-400 truncate max-w-[80px]" title={r.folder ?? ''}>
                                     {r.folder ?? '—'}
                                   </td>
-                                  <td className="text-center px-2 py-1 whitespace-nowrap">
-                                    <button
-                                      type="button"
-                                      onClick={() => void handleCoverageOpen(r)}
-                                      className="text-[11px] px-2 py-0.5 rounded border border-slate-600 text-slate-300 hover:bg-slate-700 mr-1"
-                                      title={r.doc_id ? '저장된 doc 불러오기' : '지문만 불러오기 (4 모드 비어 있음)'}
-                                    >
-                                      열기
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        // 단일 라인(줄바꿈 없음) — 멀티라인 paste 시 터미널이 [B 등 escape 으로 잘리는 문제 회피.
-                                        // 워크플로우 디테일은 cc-grammar-prompt.md 가 가지고 있음.
-                                        const tb = (coverageSelectedTextbook ?? '').replace(/"/g, '\\"');
-                                        const sk = r.source_key.replace(/"/g, '\\"');
-                                        const prompt = `@scripts/cc-grammar-prompt.md 워크플로우대로 passageId=${r.passage_id} textbook="${tb}" source_key="${sk}" folder="기본" 에 어법 포인트를 ⭐문장당 2~3개(어법 요소 없는 문장만 예외) 추출 — 8 유형 골고루 + md 의 「고빈도 출제 함정」 체크리스트 반드시 스캔 → modeData.P.points 저장 → F·G·H·J 4모드 동기화(문장당 1개씩 서로 다른 포인트로 자동 분배되어 유형마다 다른 문항) → dry-run → errors 0 이면 반드시 실제 save 까지. F: 단일토큰 동사·어형 포인트는 uses 에 'F' + baseForm 채움(관계사·접속사·전치사·멀티토큰은 F 제외). worktree 무관. save 응답(id, created) 보고 전까지 멈추지 마. 모든 포인트에 explanation 필수. --force 금지.`;
-                                        void coverageCopy(prompt, `prompt-${r.passage_id}`);
-                                      }}
-                                      className="text-[11px] px-0.5 py-0.5 rounded border border-amber-600/80 bg-amber-950/30 text-amber-200 hover:bg-amber-900/50 font-semibold"
-                                      title={`이 지문 (${r.source_key}) 의 F·G·H·J 4 모드를 Claude Code 채팅이 끝까-지 자동 작성·저장하도록 시키는 한 줄 prompt. 복사해서 claude 채팅에 paste.`}
-                                    >
-                                      {coverageCopiedHint === `prompt-${r.passage_id}` ? '복사됨 ✓' : coverageCopiedHint === `fail-prompt-${r.passage_id}` ? '실패 ✗' : '🚀 전체작업'}
-                                    </button>
+                                  <td className="px-2 py-1 whitespace-nowrap">
+                                    <div className="inline-flex items-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => void handleCoverageOpen(r)}
+                                        className="text-[11px] px-1.5 py-0.5 rounded border border-slate-600 text-slate-300 hover:bg-slate-700"
+                                        title={r.doc_id ? '저장된 doc 불러오기' : '지문만 불러오기 (4 모드 비어 있음)'}
+                                      >
+                                        열기
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          // 단일 라인(줄바꿈 없음) — 멀티라인 paste 시 터미널이 [B 등 escape 으로 잘리는 문제 회피.
+                                          const tb = (coverageSelectedTextbook ?? '').replace(/"/g, '\\"');
+                                          const sk = r.source_key.replace(/"/g, '\\"');
+                                          const prompt = `@scripts/cc-grammar-prompt.md 워크플로우대로 passageId=${r.passage_id} textbook="${tb}" source_key="${sk}" folder="기본" 에 어법 포인트를 ⭐문장당 2~3개(어법 요소 없는 문장만 예외) 추출 — 8 유형 골고루 + md 의 「고빈도 출제 함정」 체크리스트 반드시 스캔 → modeData.P.points 저장 → F·G·H·J 4모드 동기화(문장당 1개씩 서로 다른 포인트로 자동 분배되어 유형마다 다른 문항) → dry-run → errors 0 이면 반드시 실제 save 까지. F: 단일토큰 동사·어형 포인트는 uses 에 'F' + baseForm 채움(관계사·접속사·전치사·멀티토큰은 F 제외). worktree 무관. save 응답(id, created) 보고 전까지 멈추지 마. 모든 포인트에 explanation 필수. --force 금지.`;
+                                          void coverageCopy(prompt, `prompt-${r.passage_id}`);
+                                        }}
+                                        className="text-[11px] px-1.5 py-0.5 rounded border border-amber-600/80 bg-amber-950/30 text-amber-200 hover:bg-amber-900/50 font-semibold"
+                                        title={`이 지문 (${r.source_key}) 의 F·G·H·J 4 모드를 Claude Code 채팅이 끝까지 자동 작성·저장하도록 시키는 한 줄 prompt. 복사해서 claude 채팅에 paste.`}
+                                      >
+                                        {coverageCopiedHint === `prompt-${r.passage_id}`
+                                          ? '✓'
+                                          : coverageCopiedHint === `fail-prompt-${r.passage_id}`
+                                            ? '✗'
+                                            : '🚀'}
+                                      </button>
+                                      {r.doc_id ? (
+                                        <button
+                                          type="button"
+                                          disabled={bulkActionLoading}
+                                          onClick={async () => {
+                                            const id = r.doc_id;
+                                            if (!id) return;
+                                            if (
+                                              !confirm(
+                                                `「${r.source_key}」 의 저장된 어법공략 워크북을 삭제할까요? (되돌릴 수 없음)`,
+                                              )
+                                            )
+                                              return;
+                                            setBulkActionLoading(true);
+                                            try {
+                                              const res = await fetch(
+                                                `/api/admin/grammar-workbook/${encodeURIComponent(id)}`,
+                                                { method: 'DELETE', credentials: 'include' },
+                                              );
+                                              if (!res.ok) {
+                                                const d = await res.json().catch(() => ({}));
+                                                alert(d.error || '삭제 실패');
+                                                return;
+                                              }
+                                              if (currentDocId === id) setCurrentDocId(null);
+                                              if (coverageSelectedTextbook)
+                                                await loadCoverageGrid(coverageSelectedTextbook);
+                                              await refreshCoverage();
+                                              setSaveMsg(`🗑 「${r.source_key}」 삭제됨`);
+                                              setTimeout(() => setSaveMsg(''), 2000);
+                                            } finally {
+                                              setBulkActionLoading(false);
+                                            }
+                                          }}
+                                          className="text-[11px] px-1.5 py-0.5 rounded border border-rose-700/60 bg-rose-950/30 text-rose-300 hover:bg-rose-900/50 disabled:opacity-50"
+                                          title={`이 지문의 저장된 워크북 삭제 (4 모드 모두 제거)`}
+                                        >
+                                          🗑
+                                        </button>
+                                      ) : (
+                                        <span
+                                          className="text-[11px] px-1 text-slate-700"
+                                          title="저장된 doc 이 없어 삭제할 게 없습니다"
+                                        >
+                                          —
+                                        </span>
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               );

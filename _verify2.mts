@@ -1,0 +1,12 @@
+import path from 'node:path'; import { fileURLToPath } from 'node:url'; import { config } from 'dotenv';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
+process.env.DOTENV_CONFIG_QUIET='true'; config({path:path.join(ROOT,'.env')}); config({path:path.join(ROOT,'.env.local')});
+const { listGrammarWorkbooks, getGrammarShortage } = await import('./lib/grammar-workbooks-store');
+const TB='26년 5월 고3 영어모의고사';
+const wbs = await listGrammarWorkbooks({ textbook: TB, limit: 200 });
+console.log('5월 워크북:', wbs.length, '건 →', wbs.map(w=>w.sourceKey.replace(TB+' ','')).join(', '));
+const sh = await getGrammarShortage({ textbook: TB, requiredModes: ['F','G','H','J'] as any });
+console.log('shortageCount:', sh.shortageCount, '/', sh.passagesTotal);
+for (const r of sh.shortage.filter(r=>/^(21|22|23|24)/.test(r.number))) console.log(`  ${r.number} have=${JSON.stringify(r.have_modes)}`);
+const done = sh.passagesTotal - sh.shortageCount;
+console.log('완료(shortage 제외):', done, '건');
