@@ -167,9 +167,17 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
       }).catch((e) => console.error('point_ledger 기록 실패:', e));
     }
 
-    notifySlackOrder(finalOrderText, orderId).catch((e) =>
-      console.error('Slack 알림 실패:', e)
-    );
+    const orderFlow =
+      orderMeta && typeof orderMeta.flow === 'string' ? (orderMeta.flow as string) : undefined;
+    notifySlackOrder({
+      orderText: finalOrderText,
+      orderId,
+      orderNumber,
+      flow: orderFlow,
+      loginId,
+      userName: loginId ? userName : undefined,
+      pointsUsed: pointsUsed > 0 ? pointsUsed : undefined,
+    }).catch((e) => console.error('Slack 알림 실패:', e));
 
     // 드롭박스: 회원 주문이고 환경 변수 설정된 경우에만 폴더 생성 + 주문서 txt 업로드
     if (loginId && isDropboxConfigured()) {

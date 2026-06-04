@@ -734,7 +734,12 @@ ${examDetails}
                               </button>
                             )}
                           </div>
-                          <p className="text-[10px] text-gray-500 mt-1.5 pl-8">{VARIANT_PRICE.advanced}원/문항 · 새 문장을 생성하여 삽입 위치를 찾는 고난도 문항</p>
+                          <p className="text-[10px] text-gray-500 mt-1.5 pl-8">
+                            {VARIANT_PRICE.advanced}원/문항 ·{' '}
+                            {type === '어법-고난도'
+                              ? '어법상 틀린 것을 모두 고르는 고난도 문항 (정답이 2개 이상)'
+                              : '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항'}
+                          </p>
                         </div>
                       ))}
                     </div>

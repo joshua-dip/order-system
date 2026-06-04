@@ -716,10 +716,17 @@ function ExamBasedPanelSection({
                       className={`rounded-xl border transition-colors ${isExpanded ? 'border-amber-600/70 bg-amber-950/30' : 'border-amber-700/40 bg-amber-950/15'}`}
                     >
                       {/* 헤더 — 클릭 시 소스 목록 펼침/접힘 */}
-                      <button
-                        type="button"
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left"
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left cursor-pointer"
                         onClick={() => setExpandedKey(isExpanded ? null : key)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setExpandedKey(isExpanded ? null : key);
+                          }
+                        }}
                       >
                         <span className="text-slate-400 text-xs shrink-0">{isExpanded ? '▼' : '▶'}</span>
                         <span className="text-sm font-medium text-white flex-1 leading-snug">{key}</span>
@@ -735,7 +742,7 @@ function ExamBasedPanelSection({
                         >
                           {isSavingToggle ? '…' : '기출기반 ✓'}
                         </button>
-                      </button>
+                      </div>
 
                       {/* 소스별 원문출처 편집 (펼쳐진 경우) */}
                       {isExpanded && (
@@ -945,6 +952,7 @@ export default function AdminPassagesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [deletingTextbook, setDeletingTextbook] = useState(false);
   const [advancedJson, setAdvancedJson] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -1574,6 +1582,51 @@ export default function AdminPassagesPage() {
     }
   };
 
+  const handleDeleteByTextbook = async () => {
+    const tb = filterTextbook.trim();
+    if (!tb) return;
+    if (
+      !confirm(
+        `교재 "${tb}" 의 모든 원문을 삭제합니다.\n(강·검색 필터와 무관하게 이 교재 전체)\n되돌릴 수 없습니다. 계속할까요?`
+      )
+    )
+      return;
+    // 2차 확인 — 교재명을 그대로 입력해야 진행
+    const typed = prompt(`정말 삭제하려면 교재명을 그대로 입력하세요:\n${tb}`);
+    if (typed == null) return;
+    if (typed.trim() !== tb) {
+      alert('교재명이 일치하지 않아 취소했습니다.');
+      return;
+    }
+    setDeletingTextbook(true);
+    try {
+      const res = await fetch(`/api/admin/passages/by-textbook?textbook=${encodeURIComponent(tb)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        alert(d.error || '교재 전체 삭제 실패');
+        return;
+      }
+      const extra = [
+        d.deletedLinks ? `링크 ${d.deletedLinks}건` : '',
+        d.deletedFolderAssignments ? `폴더배정 ${d.deletedFolderAssignments}건` : '',
+      ]
+        .filter(Boolean)
+        .join(', ');
+      alert(`교재 "${tb}" 삭제 완료 — 원문 ${d.deletedPassages}건 삭제${extra ? ` (${extra})` : ''}`);
+      setFilterTextbook('');
+      setPage(1);
+      fetchList();
+      fetchTextbooks();
+    } catch {
+      alert('요청 실패');
+    } finally {
+      setDeletingTextbook(false);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   if (loadingAuth || !user) {
@@ -1952,6 +2005,17 @@ export default function AdminPassagesPage() {
           >
             새로고침
           </button>
+          {filterTextbook && (
+            <button
+              type="button"
+              onClick={handleDeleteByTextbook}
+              disabled={deletingTextbook}
+              className="bg-rose-700 hover:bg-rose-600 disabled:opacity-60 px-4 py-2 rounded-lg text-sm font-medium text-white"
+              title={`교재 "${filterTextbook}" 의 모든 원문을 삭제합니다`}
+            >
+              {deletingTextbook ? '삭제 중…' : '🗑 이 교재 전체 삭제'}
+            </button>
+          )}
         </div>
 
         <div className="text-slate-400 text-sm mb-3">

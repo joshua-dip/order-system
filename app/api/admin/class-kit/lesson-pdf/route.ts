@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { kicker?: unknown; title?: unknown; number?: unknown; mode?: unknown; lineHeight?: unknown; splitPct?: unknown; lineLayout?: unknown; enFont?: unknown; koFont?: unknown; fontScale?: unknown; sentences?: unknown };
+  let body: { kicker?: unknown; title?: unknown; number?: unknown; mode?: unknown; lineHeight?: unknown; splitPct?: unknown; lineLayout?: unknown; enFont?: unknown; koFont?: unknown; fontScale?: unknown; enFontScale?: unknown; koFontScale?: unknown; sentences?: unknown };
   try {
     body = (await request.json()) as Record<string, unknown>;
   } catch {
@@ -55,11 +55,14 @@ export async function POST(request: NextRequest) {
   const lineLayout = normalizeLineLayout(body.lineLayout);
   const enFont = normalizeEnFont(body.enFont);
   const koFont = normalizeKoFont(body.koFont);
-  const fontScale = clampFontScale(body.fontScale);
+  // EN/KO 배율 분리 — 둘 다 비면 fontScale(레거시) 폴백
+  const enFontScale = body.enFontScale !== undefined ? clampFontScale(body.enFontScale) : undefined;
+  const koFontScale = body.koFontScale !== undefined ? clampFontScale(body.koFontScale) : undefined;
+  const fontScale = body.fontScale !== undefined ? clampFontScale(body.fontScale) : undefined;
   const mode = normalizeLessonMode(body.mode);
   const landscape = lessonModeIsLandscape(mode);
 
-  const html = buildLessonMaterialHtml({ kicker, title, number, sentences, lineHeight, splitPct, lineLayout, enFont, koFont, fontScale, mode });
+  const html = buildLessonMaterialHtml({ kicker, title, number, sentences, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, fontScale, mode });
 
   const [{ default: chromium }, puppeteer] = await Promise.all([
     import('@sparticuz/chromium'),

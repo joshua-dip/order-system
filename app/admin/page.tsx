@@ -2708,10 +2708,27 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
+          {/* Alert: 신규 가입 신청 (승인 대기) */}
+          {section === 'dashboard' && pendingApplicationCount > 0 && (
+            <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+              <div className="text-emerald-200 flex-1 min-w-0 text-sm leading-relaxed">
+                <p className="font-medium text-emerald-100">
+                  🙋 신규 가입 신청 {pendingApplicationCount}건이 승인을 기다리고 있습니다
+                </p>
+              </div>
+              <Link
+                href="/admin/membership-applications"
+                className="flex-shrink-0 py-2 px-4 rounded-lg bg-emerald-500/30 hover:bg-emerald-500/50 border border-emerald-500/50 text-emerald-100 hover:text-white font-medium text-sm cursor-pointer transition-colors text-center"
+              >
+                신청 관리 →
+              </Link>
+            </div>
+          )}
+
           {(section === 'dashboard' || section === 'orders') && (
             <>
           {/* Summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             <button
               type="button"
               onClick={() => void openSiteVisitsHistoryModal()}
@@ -2787,6 +2804,24 @@ export default function AdminDashboardPage() {
                 <p className="text-slate-600 pt-0.5">취소 제외 · fileUrl 없음 기준</p>
               </div>
             </div>
+            <Link
+              href="/admin/membership-applications"
+              className="bg-slate-800 rounded-xl border border-slate-700 p-5 block transition-colors hover:border-emerald-500/60 hover:bg-slate-700/35"
+            >
+              <p className="text-slate-400 text-sm flex items-center justify-between gap-2">
+                신규 가입 신청
+                <span className="text-[10px] font-medium text-emerald-400/90">관리 →</span>
+              </p>
+              <p className="text-2xl font-bold mt-1 flex items-center gap-2 text-emerald-300">
+                {pendingApplicationCount}건
+                {pendingApplicationCount > 0 && (
+                  <span className="text-emerald-400" title="미처리 가입 신청">●</span>
+                )}
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                {pendingApplicationCount > 0 ? '승인 대기 중인 신청' : '대기 중인 신청 없음'}
+              </p>
+            </Link>
           </div>
 
           {/* 기출문제 새 업로드 알림 */}

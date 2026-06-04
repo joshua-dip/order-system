@@ -130,7 +130,7 @@ function passageHtml(sentences: LectureSentence[], lineHeight: number): string {
   const inner = list
     .map((t, i) => `<span class="n${i === 0 ? ' first' : ''}">${i + 1}</span>${smartQuote(escapeHtml(t))}`)
     .join('');
-  return `<p class="passage" id="passage" style="line-height:${lineHeight}">${inner}</p>`;
+  return `<p class="passage" style="line-height:${lineHeight}">${inner}</p>`;
 }
 
 export function buildLectureMaterialHtml(opts: BuildLectureMaterialOptions): string {
@@ -152,5 +152,122 @@ export function buildLectureMaterialHtml(opts: BuildLectureMaterialOptions): str
   ${passageHtml(opts.sentences, lineHeight)}
 </div>
 <script>${FIT_SCRIPT}</script>
+</body></html>`;
+}
+
+/** 한 교재 묶음 PDF — 지문마다 A4 한 페이지(.page-multi)로 page-break 분리. */
+export interface LectureMultiPageItem {
+  /** 시험정보 라벨 (예: 26년 고3 5월 영어모의고사). */
+  title?: string;
+  /** 헤더 오른쪽 워터마크 (예: 21). */
+  number?: string;
+  sentences: LectureSentence[];
+  /** 본문 line-height. 미지정 시 2.6. */
+  lineHeight?: number;
+}
+
+export interface BuildLectureMaterialMultiPageOptions {
+  /** 모든 페이지 공통 카테고리. 기본 "강의용자료". */
+  kicker?: string;
+  items: LectureMultiPageItem[];
+}
+
+const LECTURE_MULTI_CSS = `
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+:root{
+  --g1:#34D399; --g2:#10B981; --g3:#0D9488;
+  --accent:#059669; --ink:#0F172A; --sub:#64748B;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#FFFFFF;
+  font-family:'Pretendard','Malgun Gothic',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.page-multi{
+  width:210mm;
+  height:297mm;
+  container-type:inline-size;
+  padding:3.4cqw 4.4cqw 4cqw;
+  overflow:hidden;
+  position:relative;
+  page-break-after:always;
+}
+.page-multi:last-of-type{page-break-after:auto;}
+.head{
+  position:relative;
+  overflow:hidden;
+  border-radius:1cqw;
+  padding:1.5cqw 3cqw;
+  background:linear-gradient(135deg,var(--g1) 0%,var(--g2) 52%,var(--g3) 100%);
+  box-shadow:0 0.45cqw 1.4cqw rgba(13,148,136,0.30);
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+.kicker{position:relative;z-index:1;color:rgba(255,255,255,0.88);font-weight:600;font-size:1.55cqw;letter-spacing:0.04em;}
+.title{position:relative;z-index:1;color:#fff;font-weight:700;font-size:2.7cqw;letter-spacing:-0.015em;margin-top:0.3cqw;}
+.wm{position:absolute;right:1.6cqw;top:50%;transform:translateY(-46%);font-size:7cqw;font-weight:800;line-height:1;color:rgba(255,255,255,0.18);z-index:0;user-select:none;}
+.passage{
+  margin-top:3cqw;
+  color:var(--ink);
+  font-family:'Pretendard',sans-serif;
+  font-size:calc(1.6cqw * var(--s,1));
+  font-weight:400;
+  text-align:justify;
+  text-justify:inter-word;
+}
+.n{font-size:0.56em;font-weight:700;color:var(--accent);vertical-align:0.42em;margin-left:0.55em;margin-right:0.18em;letter-spacing:0.02em;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.n.first{margin-left:0;}
+.empty{margin-top:3cqw;color:var(--sub);font-size:1.8cqw;}
+@media print{
+  @page{size:A4;margin:0;}
+}
+`;
+
+/** 페이지마다 오버플로 시 글자 크기를 줄여 A4 한 장에 맞추는 per-page auto-fit. */
+const MULTI_FIT_SCRIPT = `
+(function(){
+  function fitOne(page){
+    var s=1; page.style.setProperty('--s',s);
+    var guard=0;
+    while(page.scrollHeight>page.clientHeight+1 && s>0.5 && guard<120){
+      s-=0.02; guard++;
+      page.style.setProperty('--s',s);
+    }
+  }
+  function fitAll(){
+    document.querySelectorAll('.page-multi').forEach(fitOne);
+  }
+  window.addEventListener('load', fitAll);
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitAll); }
+  fitAll();
+})();
+`;
+
+export function buildLectureMaterialMultiPageHtml(opts: BuildLectureMaterialMultiPageOptions): string {
+  const kicker = (opts.kicker || '강의용자료').trim();
+  const items = Array.isArray(opts.items) ? opts.items : [];
+  const pagesHtml = items
+    .map((it) => {
+      const title = (it.title || '').trim();
+      const number = (it.number || '').trim();
+      const lh = clampLineHeight(it.lineHeight);
+      return `<div class="page-multi">
+  <header class="head">
+    <div class="kicker">${escapeHtml(kicker)}</div>
+    <div class="title">${escapeHtml(title)}</div>
+    <div class="wm">${escapeHtml(number)}</div>
+  </header>
+  ${passageHtml(it.sentences, lh)}
+</div>`;
+    })
+    .join('\n');
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(kicker)}</title>
+<style>${LECTURE_MULTI_CSS}</style></head>
+<body>
+${pagesHtml}
+<script>${MULTI_FIT_SCRIPT}</script>
 </body></html>`;
 }

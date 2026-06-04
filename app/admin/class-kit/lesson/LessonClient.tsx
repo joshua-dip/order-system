@@ -38,7 +38,10 @@ const MODE_KEY = 'class_kit_lesson_mode';
 const LINE_LAYOUT_KEY = 'class_kit_lesson_line_layout';
 const EN_FONT_KEY = 'class_kit_lesson_en_font';
 const KO_FONT_KEY = 'class_kit_lesson_ko_font';
+/** [Deprecated] 영·한 통합 배율 — 신규 키 둘 다 비어 있을 때만 초기값으로 사용. */
 const FONT_SCALE_KEY = 'class_kit_lesson_font_scale';
+const EN_FONT_SCALE_KEY = 'class_kit_lesson_en_font_scale';
+const KO_FONT_SCALE_KEY = 'class_kit_lesson_ko_font_scale';
 const LAST_PASSAGE_KEY = 'class_kit_lesson_last_passage_id';
 const DEFAULT_LINE_HEIGHT = 2.6;
 const DEFAULT_SPLIT = 60;
@@ -70,7 +73,8 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
   const [lineLayout, setLineLayout] = useState<LineLayout>('stack');
   const [enFont, setEnFont] = useState<EnFontKey>('sans');
   const [koFont, setKoFont] = useState<KoFontKey>('pen');
-  const [fontScale, setFontScale] = useState(DEFAULT_FONT_SCALE);
+  const [enFontScale, setEnFontScale] = useState(DEFAULT_FONT_SCALE);
+  const [koFontScale, setKoFontScale] = useState(DEFAULT_FONT_SCALE);
   const [showPicker, setShowPicker] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -124,8 +128,13 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
       if (ef !== null) setEnFont(normalizeEnFont(ef));
       const kf = localStorage.getItem(KO_FONT_KEY);
       if (kf !== null) setKoFont(normalizeKoFont(kf));
-      const fsz = localStorage.getItem(FONT_SCALE_KEY);
-      if (fsz !== null) setFontScale(clampFontScale(parseFloat(fsz)));
+      // EN/KO 분리 배율 — 신규 키 우선, 둘 다 없으면 레거시 단일 키로 초기화.
+      const legacy = localStorage.getItem(FONT_SCALE_KEY);
+      const legacyV = legacy !== null ? clampFontScale(parseFloat(legacy)) : DEFAULT_FONT_SCALE;
+      const enFs = localStorage.getItem(EN_FONT_SCALE_KEY);
+      setEnFontScale(enFs !== null ? clampFontScale(parseFloat(enFs)) : legacyV);
+      const koFs = localStorage.getItem(KO_FONT_SCALE_KEY);
+      setKoFontScale(koFs !== null ? clampFontScale(parseFloat(koFs)) : legacyV);
       // 강제 모드(하위 경로)면 localStorage 모드보다 우선. 카테고리는 유형 라벨을 따름.
       const effMode = forcedMode ?? normalizeLessonMode(localStorage.getItem(MODE_KEY));
       setMode(effMode);
@@ -177,8 +186,8 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
   const isLandscape = lessonModeIsLandscape(mode);
 
   const previewHtml = useMemo(
-    () => buildLessonMaterialHtml({ kicker, title, number, sentences: pairs, lineHeight, splitPct, lineLayout, enFont, koFont, fontScale, mode }),
-    [kicker, title, number, pairs, lineHeight, splitPct, lineLayout, enFont, koFont, fontScale, mode],
+    () => buildLessonMaterialHtml({ kicker, title, number, sentences: pairs, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, mode }),
+    [kicker, title, number, pairs, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, mode],
   );
 
   const filenameBase = useMemo(() => {
@@ -227,7 +236,8 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
   const updLineLayout = (l: LineLayout) => { setLineLayout(l); persist(LINE_LAYOUT_KEY, l); };
   const updEnFont = (f: EnFontKey) => { setEnFont(f); persist(EN_FONT_KEY, f); };
   const updKoFont = (f: KoFontKey) => { setKoFont(f); persist(KO_FONT_KEY, f); };
-  const updFontScale = (v: number) => { const s = clampFontScale(v); setFontScale(s); persist(FONT_SCALE_KEY, String(s)); };
+  const updEnFontScale = (v: number) => { const s = clampFontScale(v); setEnFontScale(s); persist(EN_FONT_SCALE_KEY, String(s)); };
+  const updKoFontScale = (v: number) => { const s = clampFontScale(v); setKoFontScale(s); persist(KO_FONT_SCALE_KEY, String(s)); };
   // 유형 전환 시 카테고리(kicker)도 해당 유형 라벨로 자동 갱신
   const updMode = (m: LessonMode) => { setMode(m); persist(MODE_KEY, m); setKicker(LESSON_MODE_LABELS[m]); };
   const saveLineHeightDefault = () => {
@@ -246,7 +256,7 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ kicker, title, number, mode, lineHeight, splitPct, lineLayout, enFont, koFont, fontScale, sentences: pairs.map(p => ({ en: p.en, ko: p.ko })) }),
+        body: JSON.stringify({ kicker, title, number, mode, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, sentences: pairs.map(p => ({ en: p.en, ko: p.ko })) }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -487,16 +497,16 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-500">글자 크기</span>
-                  <span className="text-xs font-mono text-emerald-300 tabular-nums">{Math.round(fontScale * 100)}%</span>
+                  <span className="text-xs text-slate-500">영어 글자 크기</span>
+                  <span className="text-xs font-mono text-emerald-300 tabular-nums">{Math.round(enFontScale * 100)}%</span>
                 </div>
                 <input
                   type="range"
                   min={0.7}
                   max={1.6}
                   step={0.05}
-                  value={fontScale}
-                  onChange={e => updFontScale(parseFloat(e.target.value))}
+                  value={enFontScale}
+                  onChange={e => updEnFontScale(parseFloat(e.target.value))}
                   className="w-full accent-emerald-500"
                 />
                 <div className="flex justify-between text-[10px] text-slate-500 mt-1">
@@ -504,13 +514,42 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
                   <span>기본 100%</span>
                   <span>크게 160%</span>
                 </div>
-                {fontScale !== DEFAULT_FONT_SCALE && (
+                {enFontScale !== DEFAULT_FONT_SCALE && (
                   <button
                     type="button"
-                    onClick={() => updFontScale(DEFAULT_FONT_SCALE)}
+                    onClick={() => updEnFontScale(DEFAULT_FONT_SCALE)}
                     className="mt-2 w-full px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
                   >
-                    100%로 초기화
+                    영어 100%로 초기화
+                  </button>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-slate-500">한글 글자 크기</span>
+                  <span className="text-xs font-mono text-emerald-300 tabular-nums">{Math.round(koFontScale * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0.7}
+                  max={1.6}
+                  step={0.05}
+                  value={koFontScale}
+                  onChange={e => updKoFontScale(parseFloat(e.target.value))}
+                  className="w-full accent-emerald-500"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                  <span>작게 70%</span>
+                  <span>기본 100%</span>
+                  <span>크게 160%</span>
+                </div>
+                {koFontScale !== DEFAULT_FONT_SCALE && (
+                  <button
+                    type="button"
+                    onClick={() => updKoFontScale(DEFAULT_FONT_SCALE)}
+                    className="mt-2 w-full px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
+                  >
+                    한글 100%로 초기화
                   </button>
                 )}
               </div>

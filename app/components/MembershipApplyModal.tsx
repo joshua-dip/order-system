@@ -133,10 +133,10 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[calc(100dvh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
+        <div className="shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-lg font-bold text-slate-800">가입 신청</h2>
             {step === 'form' && (
@@ -156,7 +156,7 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
         </div>
 
         {step === 'form' && (
-          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
             <div>
               <label htmlFor="membership-apply-name" className="block text-sm font-medium text-slate-700 mb-1.5">
                 이름
@@ -275,7 +275,7 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
         )}
 
         {step === 'done' && (
-          <div className="p-8 flex flex-col items-center text-center gap-6">
+          <div className="p-8 flex flex-col items-center text-center gap-6 overflow-y-auto flex-1 min-h-0">
             <div className="space-y-3">
               <p className="text-lg font-bold text-slate-800 leading-snug">가입 신청이 완료되었습니다</p>
               <p className="text-sm text-slate-600 leading-relaxed">담당 매니저가 확인 후 연락드립니다.</p>

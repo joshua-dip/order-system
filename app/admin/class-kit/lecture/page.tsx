@@ -35,6 +35,7 @@ export default function ClassKitLecturePage() {
   const [lineHeight, setLineHeight] = useState(DEFAULT_LINE_HEIGHT);
   const [showPicker, setShowPicker] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState<'' | 'pdf' | 'zip'>('');
   const [msg, setMsg] = useState('');
   /** 저장된 디폴트 줄 간격 — 새 지문을 불러오면 이 값으로 적용. */
   const [defaultLineHeight, setDefaultLineHeight] = useState(DEFAULT_LINE_HEIGHT);
@@ -188,6 +189,41 @@ export default function ClassKitLecturePage() {
     }
   };
 
+  /** 현재 지문의 교재 전체를 한 번에 다운로드. mode='pdf' = 다 페이지 단일 PDF / 'zip' = 번호별 PDF zip. */
+  const downloadBulk = async (mode: 'pdf' | 'zip') => {
+    const tb = passage?.textbook;
+    if (!tb || bulkBusy) return;
+    setBulkBusy(mode);
+    try {
+      const res = await fetch('/api/admin/class-kit/lecture-pdf-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ textbook: tb, kicker, lineHeight, format: mode }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(`교재 전체 ${mode === 'pdf' ? 'PDF' : 'ZIP'} 생성 실패: ${d?.error || res.status}`);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safe = tb.replace(/[\\/:*?"<>|]/g, '_');
+      const date = new Date().toISOString().slice(0, 10);
+      a.download = `강의용자료_${safe}_${date}.${mode === 'pdf' ? 'pdf' : 'zip'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('교재 전체 다운로드 중 오류가 발생했습니다.');
+    } finally {
+      setBulkBusy('');
+    }
+  };
+
   const openInNewTab = () => {
     if (!sentences.length) return;
     const blob = new Blob([previewHtml], { type: 'text/html;charset=utf-8' });
@@ -277,10 +313,38 @@ export default function ClassKitLecturePage() {
             onClick={downloadPdf}
             disabled={!sentences.length || pdfBusy}
             className="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-700 hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base transition-colors"
-            title={pdfBusy ? 'PDF 생성 중…' : 'PDF 다운로드'}
+            title={pdfBusy ? 'PDF 생성 중…' : 'PDF 다운로드 (현재 지문 1장)'}
             aria-label="PDF 다운로드"
           >
             {pdfBusy ? '⏳' : '📄'}
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadBulk('pdf')}
+            disabled={!passage || !!bulkBusy}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-800 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base transition-colors"
+            title={
+              bulkBusy === 'pdf'
+                ? '교재 전체 PDF 생성 중…'
+                : '교재 전체 PDF (지문마다 1페이지, 다 페이지 단일 파일)'
+            }
+            aria-label="교재 전체 PDF 다운로드"
+          >
+            {bulkBusy === 'pdf' ? '⏳' : '📚'}
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadBulk('zip')}
+            disabled={!passage || !!bulkBusy}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-700 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base transition-colors"
+            title={
+              bulkBusy === 'zip'
+                ? '교재 전체 ZIP 생성 중…'
+                : '교재 전체 ZIP (번호별 개별 PDF 묶음)'
+            }
+            aria-label="교재 전체 ZIP 다운로드"
+          >
+            {bulkBusy === 'zip' ? '⏳' : '🗂️'}
           </button>
           <button
             type="button"
