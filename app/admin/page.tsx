@@ -375,6 +375,13 @@ export default function AdminDashboardPage() {
   const [passageUploadDbTextbooks, setPassageUploadDbTextbooks] = useState<string[]>([]);
   const [passageUploadDbTextbook, setPassageUploadDbTextbook] = useState('');
   const [passageUploadFromDbSaving, setPassageUploadFromDbSaving] = useState(false);
+  /** converted_data 에 이미 반영된 교재 목록(강·원문 수). updatedAt 은 마지막 반영 시각. */
+  const [reflectedTextbooks, setReflectedTextbooks] = useState<
+    { textbook: string; lessonCount: number; passageCount: number }[]
+  >([]);
+  const [reflectedUpdatedAt, setReflectedUpdatedAt] = useState<string | null>(null);
+  const [reflectedListOpen, setReflectedListOpen] = useState(false);
+  const [reflectedFilter, setReflectedFilter] = useState('');
 
   const [essayTypes, setEssayTypes] = useState<EssayTypeItem[]>([]);
   const [essayTypesLoading, setEssayTypesLoading] = useState(false);
@@ -700,6 +707,21 @@ export default function AdminDashboardPage() {
     mainContentScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
   }, [section]);
 
+  /** 이미 반영된 교재 목록을 다시 가져온다. 섹션 진입·반영 직후에 호출. */
+  const reloadReflectedTextbooks = useCallback(() => {
+    fetch('/api/admin/passage-upload/reflected', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setReflectedTextbooks(Array.isArray(d.textbooks) ? d.textbooks : []);
+        setReflectedUpdatedAt(typeof d.updatedAt === 'string' ? d.updatedAt : null);
+      })
+      .catch(() => {
+        setReflectedTextbooks([]);
+        setReflectedUpdatedAt(null);
+      });
+  }, []);
+
   useEffect(() => {
     if (section !== 'passageUpload') return;
     fetch('/api/admin/passages/textbooks', { credentials: 'include' })
@@ -709,7 +731,8 @@ export default function AdminDashboardPage() {
         setPassageUploadDbTextbooks([...list].sort((a: string, b: string) => a.localeCompare(b, 'ko')));
       })
       .catch(() => setPassageUploadDbTextbooks([]));
-  }, [section]);
+    reloadReflectedTextbooks();
+  }, [section, reloadReflectedTextbooks]);
 
   const essayCategoriesForSelect = essayTypes.length > 0
     ? essayTypes.flatMap((t) => ({ value: `${t.대분류} > ${t.소분류}`, 대분류: t.대분류, 소분류: t.소분류 }))
@@ -2319,6 +2342,7 @@ export default function AdminDashboardPage() {
           type: 'success',
           text: `교재 "${data.textbook}"를 MongoDB 원문(passages) 기준으로 converted_data.json에 반영했습니다. (강 ${data.lessonCount}개 · 원문 ${data.passageCount}건)`,
         });
+        reloadReflectedTextbooks();
       } else {
         setPassageUploadMessage({ type: 'error', text: data?.error || '불러오기에 실패했습니다.' });
       }
@@ -3627,7 +3651,17 @@ export default function AdminDashboardPage() {
                   </div>
                 )}
                 <div className="rounded-xl border border-emerald-700/40 bg-emerald-950/20 p-4 space-y-3">
-                  <h3 className="font-semibold text-emerald-200 text-sm">원문 DB에서 불러오기</h3>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <h3 className="font-semibold text-emerald-200 text-sm">원문 DB에서 불러오기</h3>
+                    <button
+                      type="button"
+                      onClick={() => setReflectedListOpen(true)}
+                      className="px-3 py-1.5 rounded-lg border border-emerald-700/60 bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-100 text-xs font-medium"
+                      title="현재 converted_data 에 반영된 교재 전체 목록"
+                    >
+                      📋 반영된 목록 보기 ({reflectedTextbooks.length})
+                    </button>
+                  </div>
                   <p className="text-slate-400 text-xs leading-relaxed">
                     <strong className="text-slate-300">원문 관리</strong>에 등록된 교재·강(chapter)·번호(number)를 그대로 엑셀 변환과 동일한 JSON 구조(Sheet1 → 부교재)로 합칩니다. 해당 교재 키가 이미 있으면 <strong className="text-slate-300">덮어씁니다</strong>.
                     <span className="block mt-1.5 text-slate-500">배포(Vercel 등) 환경에서는 병합 결과가 MongoDB(<code className="text-slate-400">converted_textbook_json</code>)에 저장되며, <code className="text-slate-400">/api/textbooks</code>가 여기를 우선 사용합니다.</span>
@@ -3639,11 +3673,14 @@ export default function AdminDashboardPage() {
                       className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white min-w-[240px]"
                     >
                       <option value="">교재 선택…</option>
-                      {passageUploadDbTextbooks.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
+                      {passageUploadDbTextbooks.map((t) => {
+                        const meta = reflectedTextbooks.find((r) => r.textbook === t);
+                        return (
+                          <option key={t} value={t}>
+                            {meta ? `✓ ${t} — 반영됨 (강 ${meta.lessonCount}·원문 ${meta.passageCount})` : t}
+                          </option>
+                        );
+                      })}
                     </select>
                     <button
                       type="button"
@@ -3651,9 +3688,23 @@ export default function AdminDashboardPage() {
                       disabled={!passageUploadDbTextbook || passageUploadFromDbSaving}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {passageUploadFromDbSaving ? '반영 중…' : 'converted_data.json에 반영'}
+                      {passageUploadFromDbSaving
+                        ? '반영 중…'
+                        : reflectedTextbooks.some((r) => r.textbook === passageUploadDbTextbook)
+                          ? '다시 반영 (덮어쓰기)'
+                          : 'converted_data.json에 반영'}
                     </button>
                   </div>
+                  {(() => {
+                    const meta = reflectedTextbooks.find((r) => r.textbook === passageUploadDbTextbook);
+                    if (!meta) return null;
+                    return (
+                      <div className="rounded-lg border border-amber-600/40 bg-amber-900/15 px-3 py-2 text-[12px] text-amber-100">
+                        ⚠ 「{meta.textbook}」 는 <strong>이미 반영</strong>되어 있습니다 — 강 {meta.lessonCount} · 원문 {meta.passageCount}건.
+                        다시 누르면 원문 관리의 현재 상태로 <strong>덮어쓰기</strong> 됩니다.
+                      </div>
+                    );
+                  })()}
                   <p className="text-slate-500 text-[11px]">교재 목록은 passages 컬렉션의 distinct textbook입니다. 비어 있으면 원문 관리에서 먼저 원문을 등록하세요.</p>
                 </div>
 
@@ -3678,6 +3729,92 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
                 {passageUploadFile && <p className="text-slate-500 text-xs">선택됨: {passageUploadFile.name}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* 반영된 교재 목록 모달 */}
+          {section === 'passageUpload' && reflectedListOpen && (
+            <div
+              className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4"
+              onClick={() => setReflectedListOpen(false)}
+            >
+              <div
+                className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-white font-bold text-base">반영된 교재 목록</h3>
+                    <p className="text-slate-500 text-[11px] mt-0.5">
+                      converted_textbook_json 에 저장된 키 — {reflectedTextbooks.length}개
+                      {reflectedUpdatedAt ? ` · 마지막 반영 ${new Date(reflectedUpdatedAt).toLocaleString('ko-KR')}` : ''}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReflectedListOpen(false)}
+                    className="w-8 h-8 rounded-full text-slate-400 hover:bg-slate-700/60"
+                    aria-label="닫기"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="px-5 py-3 border-b border-slate-700">
+                  <input
+                    type="text"
+                    value={reflectedFilter}
+                    onChange={(e) => setReflectedFilter(e.target.value)}
+                    placeholder="교재명 검색…"
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div className="flex-1 overflow-y-auto px-2 py-2">
+                  {reflectedTextbooks.length === 0 ? (
+                    <p className="text-center text-slate-500 text-sm py-8">반영된 교재가 아직 없습니다.</p>
+                  ) : (
+                    <ul className="divide-y divide-slate-700/60">
+                      {reflectedTextbooks
+                        .filter((r) =>
+                          reflectedFilter.trim()
+                            ? r.textbook.toLowerCase().includes(reflectedFilter.trim().toLowerCase())
+                            : true,
+                        )
+                        .map((r) => (
+                          <li
+                            key={r.textbook}
+                            className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-slate-700/30 rounded-lg"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm text-white truncate">{r.textbook}</p>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                강 {r.lessonCount} · 원문 {r.passageCount}건
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPassageUploadDbTextbook(r.textbook);
+                                setReflectedListOpen(false);
+                              }}
+                              className="shrink-0 px-3 py-1 text-xs rounded border border-slate-600 text-slate-200 hover:bg-slate-700/60"
+                            >
+                              선택
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="px-5 py-3 border-t border-slate-700 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setReflectedListOpen(false)}
+                    className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm"
+                  >
+                    닫기
+                  </button>
+                </div>
               </div>
             </div>
           )}

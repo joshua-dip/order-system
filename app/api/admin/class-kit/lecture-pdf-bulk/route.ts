@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import JSZip from 'jszip';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getDb } from '@/lib/mongodb';
@@ -16,16 +17,17 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /**
- * 강의용자료 — 한 교재 전체를 한 번에 다운로드.
- * body: { textbook, kicker?, lineHeight?, format: 'zip' | 'pdf' }
- *   format=zip → 지문마다 A4 1장 PDF 를 zip 으로 묶음 (개별 관리/재인쇄 용이)
- *   format=pdf → 지문마다 A4 1페이지로 합친 다 페이지 PDF (강의 전 일괄 인쇄 용이)
+ * 강의용자료 — 한 교재의 다수 지문 PDF/ZIP 다운로드.
+ * body: { textbook, passageIds?, kicker?, lineHeight?, format: 'zip' | 'pdf' }
+ *   - passageIds 미지정 시 textbook 전체.
+ *   - format=zip → 지문마다 A4 1장 PDF 를 zip 으로 묶음
+ *   - format=pdf → 지문마다 A4 1페이지로 합친 다 페이지 PDF
  */
 export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { textbook?: unknown; kicker?: unknown; lineHeight?: unknown; format?: unknown };
+  let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;
   } catch {
@@ -40,12 +42,20 @@ export async function POST(request: NextRequest) {
     typeof body.kicker === 'string' && body.kicker.trim() ? body.kicker.trim() : '강의용자료';
   const lineHeight = clampLineHeight(body.lineHeight);
   const format: 'pdf' | 'zip' = body.format === 'pdf' ? 'pdf' : 'zip';
+  const passageIdsRaw = Array.isArray(body.passageIds) ? body.passageIds : null;
+  const passageIds = passageIdsRaw
+    ?.filter((v): v is string => typeof v === 'string' && ObjectId.isValid(v))
+    .slice(0, 500);
 
-  // 1) 교재 전체 지문 — passages 목록 API 와 동일 정렬
+  // 1) 대상 지문 — passageIds 가 있으면 그 ID 만, 없으면 textbook 전체
   const db = await getDb('gomijoshua');
+  const filter: Record<string, unknown> = { textbook };
+  if (passageIds && passageIds.length > 0) {
+    filter._id = { $in: passageIds.map((s) => new ObjectId(s)) };
+  }
   const docs = await db
     .collection('passages')
-    .find({ textbook })
+    .find(filter)
     .sort({ chapter: 1, order: 1, number: 1 })
     .limit(500)
     .toArray();

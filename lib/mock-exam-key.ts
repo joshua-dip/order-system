@@ -96,6 +96,18 @@ export function isFreeVocabularyMockExamTextbook(textbookKey: string): boolean {
   return p.grade === '고1' || p.grade === '고2' || p.grade === '고3';
 }
 
+/** 비회원 단어장 체험 — 노출·담기 허용 교재 (고1·2·3 26년 6월 모의고사만) */
+export const GUEST_VOCABULARY_TRIAL_TEXTBOOKS = [
+  '26년 6월 고1 영어모의고사',
+  '26년 6월 고2 영어모의고사',
+  '26년 6월 고3 영어모의고사',
+] as const;
+
+export function isGuestVocabularyTrialTextbook(textbookKey: string): boolean {
+  const k = (textbookKey ?? '').trim();
+  return (GUEST_VOCABULARY_TRIAL_TEXTBOOKS as readonly string[]).includes(k);
+}
+
 /** 화면 표시용 라벨. 구표기는 신표기 형태로 변환해 보여주고, 신표기/수능은 그대로 */
 export function mockExamDisplayLabel(key: string): string {
   const parsed = parseMockExamKey(key);

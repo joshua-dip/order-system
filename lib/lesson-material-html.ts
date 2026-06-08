@@ -332,6 +332,176 @@ function writeKoBody(pairs: LessonSentencePair[]): string {
   return `<div class="list">${items}</div>`;
 }
 
+/** 다 페이지 PDF (지문×N): parallel 은 페이지마다 A4 landscape per-page autofit,
+ *  나머지 모드(lineByLine·writeEn·writeKo)는 page-break-after 로 지문 사이만 분리하고
+ *  본문은 자연 흐름(긴 지문은 자동으로 2~3쪽). */
+export interface LessonMultiPageItem {
+  /** 시험정보 라벨 (예: 26년 고3 5월 영어모의고사). */
+  title?: string;
+  /** 헤더 오른쪽 워터마크 (예: 18). */
+  number?: string;
+  sentences: LessonSentencePair[];
+}
+
+export interface BuildLessonMaterialMultiPageOptions {
+  /** 모든 페이지 공통 카테고리. 모드 라벨 자동 적용을 원하면 호출자가 결정. */
+  kicker?: string;
+  items: LessonMultiPageItem[];
+  mode?: LessonMode;
+  lineHeight?: number;
+  splitPct?: number;
+  lineLayout?: LineLayout;
+  enFont?: EnFontKey;
+  koFont?: KoFontKey;
+  enFontScale?: number;
+  koFontScale?: number;
+}
+
+/** parallel 모드 다 페이지: 페이지마다 A4 landscape fixed-size + per-page autofit. */
+const MULTI_FIT_SCRIPT_PARALLEL = `
+(function(){
+  function fitOne(page){
+    var s=1; page.style.setProperty('--s',s);
+    var guard=0;
+    while(page.scrollHeight>page.clientHeight+1 && s>0.5 && guard<120){
+      s-=0.02; guard++;
+      page.style.setProperty('--s',s);
+    }
+  }
+  function fitAll(){
+    document.querySelectorAll('.page-multi').forEach(fitOne);
+  }
+  window.addEventListener('load', fitAll);
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitAll); }
+  fitAll();
+})();
+`;
+
+function lessonMultiCss(landscape: boolean, lineHeight: number): string {
+  // parallel(landscape): 페이지마다 297mm × 210mm fixed-size container
+  // 그 외: page-multi 는 width 만 잡고 height auto + page-break-after
+  const pageDims = landscape
+    ? `width:297mm;height:210mm;overflow:hidden;container-type:inline-size;padding:2.6cqw 3.4cqw 3cqw;`
+    : `width:210mm;container-type:inline-size;padding:3.4cqw 4.4cqw 4cqw;`;
+  return `
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Gugi&family=Hi+Melody&family=Jua&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@400;600&family=Poor+Story&display=swap');
+:root{
+  --g1:#34D399; --g2:#10B981; --g3:#0D9488;
+  --accent:#059669; --ink:#0F172A; --ko:#334155; --sub:#64748B;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#FFFFFF;
+  font-family:'Pretendard','Malgun Gothic',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.page-multi{
+  ${pageDims}
+  page-break-after:always;
+}
+.page-multi:last-of-type{page-break-after:auto;}
+/* 헤더 — 강의용자료·단건 수업용자료와 동일한 비율, flex-shrink:0 으로 압축 차단. */
+.head{
+  position:relative;
+  overflow:hidden;
+  border-radius:1cqw;
+  padding:1.5cqw 3cqw;
+  background:linear-gradient(135deg,var(--g1) 0%,var(--g2) 52%,var(--g3) 100%);
+  box-shadow:0 0.45cqw 1.4cqw rgba(13,148,136,0.30);
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+  flex:0 0 auto;
+}
+.kicker{position:relative;z-index:1;color:rgba(255,255,255,0.88);font-weight:600;font-size:1.55cqw;letter-spacing:0.04em;}
+.title{position:relative;z-index:1;color:#fff;font-weight:700;font-size:2.7cqw;letter-spacing:-0.015em;margin-top:0.3cqw;}
+.wm{position:absolute;right:1.6cqw;top:50%;transform:translateY(-46%);font-size:7cqw;font-weight:800;line-height:1;color:rgba(255,255,255,0.18);z-index:0;user-select:none;}
+/* parallel */
+.cols{margin-top:2.2cqw;display:flex;gap:3cqw;align-items:flex-start;}
+.col-en{flex:0 0 var(--split,60%);min-width:0;}
+.col-ko{flex:1 1 0;min-width:0;padding-left:2.6cqw;border-left:0.3cqw solid #A7F3D0;}
+.en{color:var(--ink);font-family:var(--en-font,'Pretendard',sans-serif);font-size:calc(1.5cqw * var(--s,1) * var(--en-fs,1));font-weight:400;line-height:2.6;text-align:justify;text-justify:inter-word;}
+.ko{color:var(--ko);font-family:var(--ko-font,'Nanum Pen Script',sans-serif);font-size:calc(2.0cqw * var(--s,1) * var(--ko-fs,1));line-height:1.6;text-align:justify;word-break:keep-all;}
+.ko-empty{color:#cbd5e1;font-family:'Pretendard',sans-serif;font-size:1.5cqw;}
+/* 세로 (한줄해석/영작/해석쓰기) */
+.list{margin-top:2cqw;}
+.item{display:flex;gap:1.6cqw;padding:1.1cqw 0;border-bottom:0.12cqw dotted #d8dee6;page-break-inside:avoid;}
+.item:last-child{border-bottom:0;}
+.inum{flex:0 0 auto;min-width:3.2cqw;color:var(--accent);font-weight:800;font-size:1.7cqw;font-family:'Pretendard',sans-serif;}
+.ibody{flex:1;min-width:0;}
+.l-en{color:var(--ink);font-family:var(--en-font,'Pretendard',sans-serif);font-size:calc(1.95cqw * var(--en-fs,1));line-height:1.45;text-align:justify;text-justify:inter-word;}
+.l-ko{color:var(--ko);font-family:var(--ko-font,'Nanum Pen Script',sans-serif);font-size:calc(2.25cqw * var(--ko-fs,1));line-height:1.35;margin-top:0.5cqw;word-break:keep-all;}
+.lr{display:flex;gap:2cqw;align-items:flex-start;}
+.lr-en{flex:1 1 50%;min-width:0;color:var(--ink);font-family:var(--en-font,'Pretendard',sans-serif);font-size:calc(1.85cqw * var(--en-fs,1));line-height:1.45;text-align:justify;text-justify:inter-word;}
+.lr-ko{flex:1 1 50%;min-width:0;color:var(--ko);font-family:var(--ko-font,'Nanum Pen Script',sans-serif);font-size:calc(2.15cqw * var(--ko-fs,1));line-height:1.35;word-break:keep-all;border-left:0.2cqw solid #A7F3D0;padding-left:1.6cqw;}
+.lr-ko.ko-miss{color:#cbd5e1;font-family:'Pretendard',sans-serif;font-size:1.6cqw;}
+.p-ko{color:var(--ink);font-family:var(--ko-font,'Nanum Pen Script',sans-serif);font-size:calc(2.3cqw * var(--ko-fs,1));line-height:1.35;word-break:keep-all;}
+.p-en{color:var(--ink);font-family:var(--en-font,'Pretendard',sans-serif);font-size:calc(1.95cqw * var(--en-fs,1));line-height:1.45;text-align:justify;}
+.ko-miss{color:#cbd5e1;font-family:'Pretendard',sans-serif;font-size:1.6cqw;margin-top:0.4cqw;}
+.wlines{margin-top:0.7cqw;}
+.wline{border-bottom:0.13cqw solid #9aa6b2;height:calc(${lineHeight} * 1.3cqw);}
+@media print{
+  @page{size:A4${landscape ? ' landscape' : ''};margin:${landscape ? '0' : '10mm'};}
+}
+`;
+}
+
+export function buildLessonMaterialMultiPageHtml(opts: BuildLessonMaterialMultiPageOptions): string {
+  const kicker = (opts.kicker || '수업용자료').trim();
+  const items = Array.isArray(opts.items) ? opts.items : [];
+  const lineHeight = clampLineHeight(opts.lineHeight);
+  const splitPct = clampSplitPct(opts.splitPct);
+  const lineLayout = normalizeLineLayout(opts.lineLayout);
+  const enFontStack = EN_FONT_STACK[normalizeEnFont(opts.enFont)];
+  const koFontStack = KO_FONT_STACK[normalizeKoFont(opts.koFont)];
+  const legacyScale = 1;
+  const enFontScale =
+    opts.enFontScale !== undefined ? clampFontScale(opts.enFontScale) : legacyScale;
+  const koFontScale =
+    opts.koFontScale !== undefined ? clampFontScale(opts.koFontScale) : legacyScale;
+  const mode = normalizeLessonMode(opts.mode);
+  const landscape = lessonModeIsLandscape(mode);
+
+  const pagesHtml = items
+    .map((it) => {
+      const title = (it.title || '').trim();
+      const number = (it.number || '').trim();
+      const pairs = (it.sentences || []).filter((s) => (s?.en ?? '').trim());
+      let body: string;
+      if (pairs.length === 0) {
+        body = '<p class="empty">지문이 없습니다.</p>';
+      } else if (mode === 'parallel') {
+        body = parallelBody(pairs, lineHeight, splitPct);
+      } else if (mode === 'lineByLine') {
+        body = lineByLineBody(pairs, lineLayout);
+      } else if (mode === 'writeEn') {
+        body = writeEnBody(pairs);
+      } else {
+        body = writeKoBody(pairs);
+      }
+      return `<div class="page-multi" style="--split:${splitPct}%">
+  <header class="head">
+    <div class="kicker">${escapeHtml(kicker)}</div>
+    <div class="title">${escapeHtml(title)}</div>
+    <div class="wm">${escapeHtml(number)}</div>
+  </header>
+  ${body}
+</div>`;
+    })
+    .join('\n');
+
+  const fitScript = landscape ? `<script>${MULTI_FIT_SCRIPT_PARALLEL}</script>` : '';
+
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(kicker)}</title>
+<style>${lessonMultiCss(landscape, lineHeight)}</style></head>
+<body style="--en-font:${enFontStack};--ko-font:${koFontStack};--en-fs:${enFontScale};--ko-fs:${koFontScale}">
+${pagesHtml}
+${fitScript}
+</body></html>`;
+}
+
 export function buildLessonMaterialHtml(opts: BuildLessonMaterialOptions): string {
   const kicker = (opts.kicker || '수업용자료').trim();
   const title = (opts.title || '').trim();

@@ -418,6 +418,8 @@ type Row = {
   type: string;
   option_type?: string;
   status?: string;
+  /** 무료 제공 여부 (generated_questions.isFree) */
+  isFree?: boolean;
   /** variant: 변형문제 generated_questions / narrative: 서술형 narrative_questions */
   record_kind?: 'variant' | 'narrative';
   /** 원문 대비 지문 변형도 0~100 (API 계산) */
@@ -452,6 +454,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [filterType, setFilterType] = useState('');
   const [filterDifficulty, setFilterDifficulty] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  /** '' 전체 / 'only' 무료만 / 'paid' 유료만 */
+  const [filterFree, setFilterFree] = useState<'' | 'only' | 'paid'>('');
   const [filterPassageId, setFilterPassageId] = useState('');
   const [filterQ, setFilterQ] = useState('');
   /** default: 교재·출처·유형 / newest: DB 입력(생성) 최신순 */
@@ -1214,6 +1218,7 @@ export default function AdminGeneratedQuestionsPage() {
     if (filterType) params.set('type', filterType);
     if (filterDifficulty) params.set('difficulty', filterDifficulty);
     if (filterStatus) params.set('status', filterStatus);
+    if (filterFree) params.set('free', filterFree);
     if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
     if (filterQ) params.set('q', filterQ);
     if (filterSortOrder === 'newest') params.set('sort', 'newest');
@@ -1231,7 +1236,7 @@ export default function AdminGeneratedQuestionsPage() {
         setTotal(0);
       })
       .finally(() => setListLoading(false));
-  }, [filterTextbook, filterType, filterDifficulty, filterStatus, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit, examBasedTextbooks]);
+  }, [filterTextbook, filterType, filterDifficulty, filterStatus, filterFree, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit, examBasedTextbooks]);
 
   useEffect(() => {
     if (!user) return;
@@ -1941,6 +1946,25 @@ export default function AdminGeneratedQuestionsPage() {
       }
       fetchList();
       fetchMeta();
+    } catch {
+      alert('요청 실패');
+    }
+  };
+
+  const toggleFree = async (id: string, next: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/generated-questions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isFree: next }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        alert(d.error || '무료 전환에 실패했습니다.');
+        return;
+      }
+      setItems((prev) => prev.map((r) => (r._id === id ? { ...r, isFree: next } : r)));
     } catch {
       alert('요청 실패');
     }
@@ -4001,6 +4025,22 @@ export default function AdminGeneratedQuestionsPage() {
             </select>
           </div>
           <div>
+            <label className="block text-xs text-slate-400 mb-1">무료</label>
+            <select
+              value={filterFree}
+              onChange={(e) => {
+                const v = e.target.value;
+                setFilterFree(v === 'only' ? 'only' : v === 'paid' ? 'paid' : '');
+                setPage(1);
+              }}
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm min-w-[90px] text-white"
+            >
+              <option value="">전체</option>
+              <option value="only">무료만</option>
+              <option value="paid">유료만</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-xs text-slate-400 mb-1">정렬</label>
             <select
               value={filterSortOrder}
@@ -4060,6 +4100,7 @@ export default function AdminGeneratedQuestionsPage() {
                 if (filterType) params.set('type', filterType);
                 if (filterDifficulty) params.set('difficulty', filterDifficulty);
                 if (filterStatus) params.set('status', filterStatus);
+                if (filterFree) params.set('free', filterFree);
                 if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
                 params.set('format', fmt);
                 window.open(`/api/admin/generated-questions/download-pdf?${params}`, '_blank');
@@ -4440,6 +4481,18 @@ export default function AdminGeneratedQuestionsPage() {
                                 className="text-left text-violet-400 hover:text-violet-300 text-xs font-medium"
                               >
                                 수정
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void toggleFree(row._id, !row.isFree)}
+                                className={`text-left text-xs font-medium ${
+                                  row.isFree
+                                    ? 'text-green-400 hover:text-green-300'
+                                    : 'text-slate-400 hover:text-green-300'
+                                }`}
+                                title={row.isFree ? '무료 제공 중 — 클릭 시 유료로 전환' : '이 변형문제를 무료로 전환'}
+                              >
+                                {row.isFree ? '무료 ✓ (해제)' : '무료로 전환'}
                               </button>
                               <button
                                 type="button"

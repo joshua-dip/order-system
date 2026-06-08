@@ -108,6 +108,8 @@ async function aggregateCountsByPassageAndType(
   ids: ObjectId[],
   questionStatus: QuestionStatusScope,
   db?: Db,
+  /** true 일 때 isFree=true 문항은 부족 계수에서 제외(주문 부족분 산정용). */
+  excludeFree = false,
 ) {
   if (ids.length === 0) {
     return new Map<string, Map<string, number>>();
@@ -117,7 +119,11 @@ async function aggregateCountsByPassageAndType(
     $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
   };
   const passageMatch: Document = {
-    $and: [passageIdMatch, matchGeneratedQuestionOptionTypeEnglish()],
+    $and: [
+      passageIdMatch,
+      matchGeneratedQuestionOptionTypeEnglish(),
+      ...(excludeFree ? [{ isFree: { $ne: true } } as Document] : []),
+    ],
   };
   const match: Document =
     questionStatus === 'all'
@@ -224,17 +230,21 @@ async function aggregatePassageAnyDocCount(
   gqCol: Collection<Document>,
   ids: ObjectId[],
   db?: Db,
+  /** true 일 때 isFree=true 문항은 제외 — noQuestions 판단도 무료 샘플 빼고 본다. */
+  excludeFree = false,
 ): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (ids.length === 0) return out;
   const idStrings = ids.map((id) => id.toString());
+  const baseMatch: Document = {
+    $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
+  };
+  const match: Document = excludeFree
+    ? { $and: [baseMatch, { isFree: { $ne: true } }] }
+    : baseMatch;
   const agg = await gqCol
     .aggregate([
-      {
-        $match: {
-          $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }],
-        },
-      },
+      { $match: match },
       {
         $group: {
           _id: { $toString: '$passage_id' },
@@ -622,9 +632,10 @@ export async function runQuestionCountValidation(
         }
         const queryIds = [...queryIdMap.values()];
 
+        // 기출기반 textbook scope 분기 — 주문이 아니므로 isFree 포함(전체 교재 현황).
         const [rawCountMap, rawAnyCount] = await Promise.all([
-          aggregateCountsByPassageAndType(gqCol, queryIds, questionStatusScope, db),
-          aggregatePassageAnyDocCount(gqCol, queryIds, db),
+          aggregateCountsByPassageAndType(gqCol, queryIds, questionStatusScope, db, false),
+          aggregatePassageAnyDocCount(gqCol, queryIds, db, false),
         ]);
 
         // countMap/anyCount 키를 exam passage ID로 리맵
@@ -756,9 +767,10 @@ export async function runQuestionCountValidation(
 
     const ids = passageDocs.map((p) => p._id as ObjectId);
     const idStrings = ids.map((id) => id.toString());
+    const excludeFreeForOrder = scope === 'order';
     const [countMap, passageAnyDocCount] = await Promise.all([
-      aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope, db),
-      aggregatePassageAnyDocCount(gqCol, ids, db),
+      aggregateCountsByPassageAndType(gqCol, ids, questionStatusScope, db, excludeFreeForOrder),
+      aggregatePassageAnyDocCount(gqCol, ids, db, excludeFreeForOrder),
     ]);
 
     const { noQuestionsFull, underfilledFull: underfilledRaw } = buildQuestionCountReport(
@@ -775,6 +787,7 @@ export async function runQuestionCountValidation(
         { $or: [{ passage_id: { $in: ids } }, { passage_id: { $in: idStrings } }] },
         { status: '대기' },
         matchGeneratedQuestionOptionTypeEnglish(),
+        ...(excludeFreeForOrder ? [{ isFree: { $ne: true } } as Document] : []),
       ],
     };
 

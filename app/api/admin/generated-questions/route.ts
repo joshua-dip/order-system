@@ -30,6 +30,7 @@ function buildVariantFilter(opts: {
   difficulty: string;
   passageId: string;
   q: string;
+  free?: 'only' | 'paid' | '';
 }): Record<string, unknown> {
   const filter: Record<string, unknown> = {};
   if (opts.textbook) filter.textbook = opts.textbook;
@@ -40,6 +41,8 @@ function buildVariantFilter(opts: {
   }
   if (opts.status) filter.status = opts.status;
   if (opts.difficulty) filter.difficulty = opts.difficulty;
+  if (opts.free === 'only') filter.isFree = true;
+  else if (opts.free === 'paid') filter.isFree = { $ne: true };
   if (opts.passageId && ObjectId.isValid(opts.passageId)) {
     filter.passage_id = new ObjectId(opts.passageId);
   }
@@ -194,6 +197,8 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status')?.trim() || '';
   const difficulty = searchParams.get('difficulty')?.trim() || '';
   const passageId = searchParams.get('passage_id')?.trim() || '';
+  const freeRaw = searchParams.get('free')?.trim().toLowerCase() || '';
+  const free: 'only' | 'paid' | '' = freeRaw === 'only' ? 'only' : freeRaw === 'paid' ? 'paid' : '';
   const q = searchParams.get('q')?.trim() || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25', 10) || 25));
@@ -221,6 +226,7 @@ export async function GET(request: NextRequest) {
       difficulty,
       passageId,
       q,
+      free,
     });
     const narrFilter = buildNarrativeQuestionsFilter({
       textbook: effectiveTextbook,
@@ -286,6 +292,7 @@ export async function GET(request: NextRequest) {
             option_type: 1,
             difficulty: 1,
             status: 1,
+            isFree: 1,
             created_at: 1,
             record_kind: 1,
             question_data: {
@@ -397,6 +404,8 @@ export async function GET(request: NextRequest) {
           type: 1,
           option_type: 1,
           difficulty: 1,
+          status: 1,
+          isFree: 1,
           created_at: 1,
           'question_data.Question': 1,
           'question_data.Paragraph': 1,

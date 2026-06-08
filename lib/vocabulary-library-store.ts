@@ -11,7 +11,8 @@ import {
 } from './vocabulary-library-types';
 import type { VocabularyEntry } from './passage-analyzer-types';
 import { passageAnalysisFileNameForPassageId } from './passage-analyzer-types';
-import { isFreeVocabularyMockExamTextbook } from './mock-exam-key';
+import { isFreeVocabularyMockExamTextbook, isGuestVocabularyTrialTextbook } from './mock-exam-key';
+import { lessonLabelFromPassageRow } from './vocabulary-lesson-label';
 import type { PassageStateStored } from './passage-analyzer-types';
 import { recordPointLedger } from './point-ledger';
 
@@ -267,6 +268,97 @@ export async function purchaseVocabularies(
   }).catch((e) => console.error('point_ledger 기록 실패:', e));
 
   return { ok: true, first_id: firstId, inserted_count: inserts.length };
+}
+
+/** 비회원 체험용 — DB 저장 없이 단어장 데이터만 생성 (모의고사 무료 교재만) */
+export async function buildTrialVocabularyItems(
+  textbook: string,
+  lessonLabels: string[],
+): Promise<{ ok: boolean; error?: string; items?: UserVocabularySerialized[]; first_id?: string }> {
+  if (!isGuestVocabularyTrialTextbook(textbook)) {
+    return { ok: false, error: '체험 가능한 교재(26년 6월 고1·2·3)만 담을 수 있습니다.' };
+  }
+  const labels = [...new Set(lessonLabels.map((l) => l.trim()).filter(Boolean))];
+  if (labels.length === 0) {
+    return { ok: false, error: '지문(강·번호)을 선택해주세요.' };
+  }
+
+  const db = await getDb('gomijoshua');
+  type PRow = { _id: ObjectId; textbook?: string; chapter?: string; number?: string };
+  const passages = (await db
+    .collection('passages')
+    .find({ textbook })
+    .project({ _id: 1, textbook: 1, chapter: 1, number: 1 })
+    .limit(8000)
+    .toArray()) as PRow[];
+
+  const byLabel = new Map<string, PRow>();
+  for (const p of passages) {
+    const label = lessonLabelFromPassageRow(p);
+    if (label) byLabel.set(label, p);
+  }
+
+  const matched: PRow[] = [];
+  const missing: string[] = [];
+  for (const label of labels) {
+    const p = byLabel.get(label);
+    if (p) matched.push(p);
+    else missing.push(label);
+  }
+  if (matched.length === 0) {
+    return { ok: false, error: '유효한 지문을 찾을 수 없습니다.' };
+  }
+
+  const fileNames = matched.map((p) => passageAnalysisFileNameForPassageId(p._id.toHexString()));
+  const analyses = await db
+    .collection('passage_analyses')
+    .find({ fileName: { $in: fileNames } })
+    .project({ fileName: 1, passageStates: 1 })
+    .toArray();
+
+  const vocabByFile = new Map<string, VocabularyEntry[]>();
+  for (const a of analyses) {
+    const fn = String((a as { fileName?: string }).fileName || '');
+    const main = (a as { passageStates?: { main?: PassageStateStored } }).passageStates?.main;
+    const list = Array.isArray(main?.vocabularyList) ? main!.vocabularyList! : [];
+    vocabByFile.set(fn, list);
+  }
+
+  const now = new Date().toISOString();
+  const items: UserVocabularySerialized[] = [];
+  for (const p of matched) {
+    const fn = passageAnalysisFileNameForPassageId(p._id.toHexString());
+    const vocabList = vocabByFile.get(fn) ?? [];
+    const ch = p.chapter ?? '';
+    const num = p.number ?? '';
+    const displayLabel = ([ch, num].filter(Boolean).join(' ')) || textbook;
+    const passageHex = p._id.toHexString();
+    items.push({
+      _id: `guest-${passageHex}`,
+      login_id: 'guest',
+      passage_id: passageHex,
+      order_id: '',
+      textbook: p.textbook ?? textbook,
+      chapter: p.chapter,
+      number: p.number,
+      display_label: displayLabel,
+      package_type: 'basic',
+      vocabulary_list: vocabList,
+      original_snapshot: vocabList,
+      points_used: 0,
+      order_number: '',
+      purchased_at: now,
+      last_edited_at: now,
+    });
+  }
+
+  if (missing.length > 0 && items.length > 0) {
+    // 일부만 매칭 — 성공으로 처리하되 클라이언트에 알릴 수 있음
+  } else if (missing.length > 0) {
+    return { ok: false, error: `다음 지문을 찾을 수 없습니다: ${missing.slice(0, 3).join(', ')}` };
+  }
+
+  return { ok: true, items, first_id: items[0]?._id };
 }
 
 /** 관리자 목록: 원본 스냅샷 대비 사용자 편집 여부 */

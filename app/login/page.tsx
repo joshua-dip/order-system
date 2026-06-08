@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import MembershipApplyModal from '@/app/components/MembershipApplyModal';
 import { DEFAULT_APP_BAR_TITLE, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 import { getSafeUserLoginRedirect } from '@/lib/post-login-redirect';
 
@@ -17,6 +18,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +156,19 @@ function LoginForm() {
                 학생 로그인 →
               </Link>
             </p>
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setSignupOpen(true)}
+                className="block w-full text-center rounded-xl border-2 border-indigo-500 bg-white px-4 py-3 text-sm font-bold text-indigo-600 transition-colors hover:bg-indigo-50"
+              >
+                회원가입하기
+              </button>
+              <p className="mt-2 text-center text-[11px] text-slate-400">
+                계정이 없으시면 가입신청 후 담당자가 안내해 드립니다.
+              </p>
+            </div>
+            <MembershipApplyModal open={signupOpen} onClose={() => setSignupOpen(false)} />
           </div>
         </div>
         <p className="text-center text-slate-500 text-sm mt-6 leading-relaxed px-1">

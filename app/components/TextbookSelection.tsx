@@ -95,6 +95,18 @@ function IconVocabulary() {
   );
 }
 
+function IconClassKit() {
+  return (
+    <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="14" rx="2" />
+      <path d="M8 20h8" />
+      <path d="M12 18v2" />
+      <path d="M7 9h10" />
+      <path d="M7 13h6" />
+    </svg>
+  );
+}
+
 function IconBundle() {
   return (
     <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -149,8 +161,34 @@ function useHubSections(
   isMember: boolean,
   isPremiumMember: boolean,
   onFinalGate: () => void
-): { primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[] } {
+): { vocabulary: HubEntry; classkit: HubEntry; primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[] } {
   return useMemo(() => {
+    const vocabulary: HubEntry = {
+      id: 'vocabulary',
+      title: '단어장',
+      description: (<>구매 즉시 편집·다운로드<br />첫글자제시·뜻가리기·플래시카드 등</>),
+      icon: <IconVocabulary /> as ReactNode,
+      accentColor: '#0D9488',
+      gridClassName: 'lg:col-span-3',
+      href: '/vocabulary-order',
+      interactive: true,
+    };
+    const classkit: HubEntry = {
+      id: 'classkit',
+      title: '클래스키트',
+      description: (
+        <>
+          강의용자료 · 수업용자료 · 한줄해석 · 영작하기 · 해석쓰기
+          <br />
+          교재 지문을 강의/수업용으로 바로 변환
+        </>
+      ),
+      icon: <IconClassKit /> as ReactNode,
+      accentColor: '#10B981',
+      gridClassName: 'lg:col-span-3',
+      href: '/class-kit/lecture',
+      interactive: true,
+    };
     const mock: HubEntry = {
       id: 'mock',
       title: '모의고사 변형문제 주문',
@@ -311,16 +349,6 @@ function useHubSections(
         interactive: true,
       },
       {
-        id: 'vocabulary',
-        title: '단어장',
-        description: (<>구매 즉시 편집·다운로드<br />첫글자제시·뜻가리기·플래시카드 등</>),
-        icon: <IconVocabulary /> as ReactNode,
-        accentColor: '#0D9488',
-        gridClassName: 'lg:col-span-2',
-        href: '/vocabulary-order',
-        interactive: true,
-      },
-      {
         id: 'bundle',
         title: '통합 주문',
         description: isMember
@@ -341,7 +369,7 @@ function useHubSections(
         ),
       },
     ];
-    return { primary: [mock, textbook, gyogwaseo], workbook, more };
+    return { vocabulary, classkit, primary: [mock, textbook, gyogwaseo], workbook, more };
   }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
 
@@ -374,7 +402,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const analysisUnlocked = isMember && user.canAccessAnalysis;
   const isPremiumMember = user?.isPremiumMember === true;
   const openFinalGate = () => setFinalGateOpen(true);
-  const { primary: hubPrimary, workbook: hubWorkbook, more: hubMore } = useHubSections(
+  const { vocabulary: hubVocabulary, classkit: hubClassKit, primary: hubPrimary, workbook: hubWorkbook, more: hubMore } = useHubSections(
     analysisUnlocked,
     isMember,
     isPremiumMember,
@@ -661,7 +689,41 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
             </div>
           )}
 
-          <section className="mt-8" aria-labelledby="hub-primary-heading">
+          <section className="mt-8" aria-labelledby="hub-quick-heading">
+            <div className="mb-4">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <h2 id="hub-quick-heading" className="text-lg font-bold text-slate-900 tracking-tight">
+                  바로 받기 · 바로 쓰기
+                </h2>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800"
+                  title="주문 제작이 아닌 즉시 사용 가능한 자료"
+                >
+                  ⚡ 즉시 이용
+                </span>
+              </div>
+              <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+                <strong className="text-slate-800">단어장</strong>은 구매 즉시 편집·다운로드되고, <strong className="text-slate-800">클래스키트</strong>는 교재 지문을 강의·수업용 자료로 바로 변환해 PDF 로 받습니다.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2" role="list">
+              {[hubVocabulary, hubClassKit].map((it) => (
+                <div key={it.id} role="listitem">
+                  <OrderHubCard
+                    title={it.title}
+                    description={it.description}
+                    icon={it.icon}
+                    accentColor={it.accentColor}
+                    href={it.href}
+                    interactive={it.interactive}
+                    bottomSlot={it.bottomSlot}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-12 border-t border-slate-200/90 pt-10" aria-labelledby="hub-primary-heading">
             <div className="mb-4">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <h2 id="hub-primary-heading" className="text-lg font-bold text-slate-900 tracking-tight">
@@ -720,7 +782,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               <h2 id="hub-more-heading" className="text-base font-bold text-slate-800 tracking-tight">
                 다른 주문 · 서비스
               </h2>
-              <p className="mt-1 text-sm text-slate-500">번호별 제작, 분석지, 서술형, 단어장, 통합 주문 등</p>
+              <p className="mt-1 text-sm text-slate-500">번호별 제작, 분석지, 서술형, 통합 주문 등</p>
             </div>
             {renderHubGrid(hubMore)}
           </section>

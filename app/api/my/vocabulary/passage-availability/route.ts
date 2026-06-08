@@ -7,19 +7,22 @@ import {
   type PassageStateStored,
 } from '@/lib/passage-analyzer-types';
 import { lessonLabelFromPassageRow } from '@/lib/vocabulary-lesson-label';
+import { isGuestVocabularyTrialTextbook } from '@/lib/mock-exam-key';
 
 /**
  * GET ?textbook=…
  * 해당 교재 지문 중, passage_analyses.main.vocabularyList 가 1개 이상인 지문의
  * lesson_label 목록 (단어장 구매 UI에서 선택 가능 여부 판별)
+ *
+ * 게스트(비로그인)는 26년 6월 고1·2·3 체험 교재만 조회 허용.
  */
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
-  const payload = await verifyToken(token);
-  if (!payload) return NextResponse.json({ error: '인증이 만료되었습니다.' }, { status: 401 });
-
   const textbook = request.nextUrl.searchParams.get('textbook')?.trim() ?? '';
+  const guest = !token || !(await verifyToken(token));
+  if (guest && !isGuestVocabularyTrialTextbook(textbook)) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
   if (!textbook || textbook.length > 300) {
     return NextResponse.json({ error: 'textbook 파라미터가 필요합니다.' }, { status: 400 });
   }

@@ -5,8 +5,13 @@ import { useParams, useRouter } from 'next/navigation';
 import AppBar from '@/app/components/AppBar';
 import { VOCABULARY_POINTS_PER_PASSAGE, type UserVocabularySerialized } from '@/lib/vocabulary-library-types';
 import type { VocabularyEntry } from '@/lib/passage-analyzer-types';
-
-/* ────────── 상수 ────────── */
+import {
+  getGuestVocabulary,
+  isGuestVocabularyId,
+  removeGuestVocabulary,
+  resetGuestVocabulary,
+  updateGuestVocabularyList,
+} from '@/lib/guest-vocabulary';
 
 const CEFR_OPTIONS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const POS_OPTIONS = ['n.', 'v.', 'adj.', 'adv.', 'prep.', 'conj.', 'pron.', 'n. phrase', 'v. phrase', 'adj. phrase', 'adv. phrase'];
@@ -183,7 +188,21 @@ function EntryRow({
 
 /* ────────── 다운로드 패널 ────────── */
 
-function DownloadPanel({ id, title, entryCount, onCollapse }: { id: string; title: string; entryCount: number; onCollapse: () => void }) {
+function DownloadPanel({
+  id,
+  title,
+  entryCount,
+  onCollapse,
+  guestMode,
+  vocabularyList,
+}: {
+  id: string;
+  title: string;
+  entryCount: number;
+  onCollapse: () => void;
+  guestMode?: boolean;
+  vocabularyList?: VocabularyEntry[];
+}) {
   const [format, setFormat] = useState<FormatId>('xlsx');
   const [direction, setDirection] = useState<'word-to-meaning' | 'meaning-to-word'>('word-to-meaning');
   const [layoutColumns, setLayoutColumns] = useState<1 | 2>(1);
@@ -203,16 +222,28 @@ function DownloadPanel({ id, title, entryCount, onCollapse }: { id: string; titl
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const r = await fetch(`/api/my/vocabulary/${id}/download`, {
+      const apiUrl = guestMode ? '/api/public/vocabulary/download' : `/api/my/vocabulary/${id}/download`;
+      const body = guestMode
+        ? {
+            format,
+            direction,
+            layoutColumns,
+            shuffle,
+            cefrLevels: cefrFilter,
+            title,
+            vocabulary_list: vocabularyList ?? [],
+          }
+        : {
+            format,
+            direction,
+            layoutColumns,
+            shuffle,
+            cefrLevels: cefrFilter,
+          };
+      const r = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format,
-          direction,
-          layoutColumns,
-          shuffle,
-          cefrLevels: cefrFilter,
-        }),
+        body: JSON.stringify(body),
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
@@ -360,6 +391,7 @@ function DownloadPanel({ id, title, entryCount, onCollapse }: { id: string; titl
 export default function VocabularyEditPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const guestMode = isGuestVocabularyId(id);
 
   const [doc, setDoc] = useState<UserVocabularySerialized | null>(null);
   const [entries, setEntries] = useState<VocabularyEntry[]>([]);
@@ -422,6 +454,17 @@ export default function VocabularyEditPage() {
   const fetchDoc = useCallback(async () => {
     setLoading(true);
     try {
+      if (guestMode) {
+        const item = getGuestVocabulary(id);
+        if (!item) {
+          router.push('/vocabulary-order');
+          return;
+        }
+        setResetHistory(null);
+        setDoc(item);
+        setEntries(item.vocabulary_list || []);
+        return;
+      }
       const r = await fetch(`/api/my/vocabulary/${id}`);
       if (r.ok) {
         const d = await r.json();
@@ -429,14 +472,14 @@ export default function VocabularyEditPage() {
         setDoc(d.item);
         setEntries(d.item.vocabulary_list || []);
       } else if (r.status === 401 || r.status === 403) {
-        router.push('/login');
+        router.push(isGuestVocabularyId(id) ? '/vocabulary-order' : '/login');
       } else {
         router.push('/vocabulary-order');
       }
     } finally {
       setLoading(false);
     }
-  }, [id, router]);
+  }, [id, router, guestMode]);
 
   useEffect(() => { fetchDoc(); }, [fetchDoc]);
   useEffect(() => {
@@ -449,6 +492,11 @@ export default function VocabularyEditPage() {
   const autoSave = useCallback(async (list: VocabularyEntry[]) => {
     setSaving(true);
     try {
+      if (guestMode) {
+        updateGuestVocabularyList(id, list);
+        setSaveStatus('saved');
+        return;
+      }
       const r = await fetch(`/api/my/vocabulary/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -461,7 +509,7 @@ export default function VocabularyEditPage() {
       setSaving(false);
       setTimeout(() => setSaveStatus('idle'), 2000);
     }
-  }, [id]);
+  }, [id, guestMode]);
 
   const scheduleAutoSave = useCallback((list: VocabularyEntry[]) => {
     dirtyRef.current = true;
@@ -565,6 +613,26 @@ export default function VocabularyEditPage() {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
+    if (guestMode) {
+      const item = resetGuestVocabulary(id);
+      if (item) {
+        const postEntries = item.vocabulary_list || [];
+        const post: EditSnapshot = {
+          entries: JSON.parse(JSON.stringify(postEntries)) as VocabularyEntry[],
+          sortField: 'original',
+        };
+        setResetHistory({
+          pre: cloneSnapshot(pre),
+          post: cloneSnapshot(post),
+          dock: 'post',
+        });
+        setDoc(item);
+        setEntries(postEntries);
+        setSortField('original');
+      }
+      setResetConfirm(false);
+      return;
+    }
     const r = await fetch(`/api/my/vocabulary/${id}/reset`, { method: 'POST' });
     if (r.ok) {
       const d = await r.json();
@@ -587,6 +655,12 @@ export default function VocabularyEditPage() {
 
   /* ── 삭제 ── */
   const handleDelete2 = async () => {
+    if (guestMode) {
+      removeGuestVocabulary(id);
+      router.push('/vocabulary-order');
+      setDeleteConfirm(false);
+      return;
+    }
     const r = await fetch(`/api/my/vocabulary/${id}`, { method: 'DELETE' });
     if (r.ok) router.push('/vocabulary-order');
     setDeleteConfirm(false);
@@ -955,7 +1029,14 @@ export default function VocabularyEditPage() {
                   style={{ width: downloadOpen ? '20rem' : '0', opacity: downloadOpen ? 1 : 0 }}
                 >
                   <div style={{ width: '20rem' }}>
-                    <DownloadPanel id={id} title={doc.display_label || doc.textbook} entryCount={entries.length} onCollapse={() => setDownloadOpen(false)} />
+                    <DownloadPanel
+                      id={id}
+                      title={doc.display_label || doc.textbook}
+                      entryCount={entries.length}
+                      onCollapse={() => setDownloadOpen(false)}
+                      guestMode={guestMode}
+                      vocabularyList={entries}
+                    />
                   </div>
                 </div>
               </>

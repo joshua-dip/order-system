@@ -4,6 +4,37 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '../_components/AdminSidebar';
 
+/** SMS/카톡으로 학생에게 보낼 계정 안내 멘트. */
+function buildAccountNoticeText(opts: {
+  name?: string;
+  loginId?: string;
+  initialPassword?: string;
+  couponGrantedPct?: number | null;
+}): string {
+  const name = (opts.name ?? '').trim() || '회원';
+  const id = (opts.loginId ?? '').trim();
+  const pw = (opts.initialPassword ?? '').trim();
+  const coupon = opts.couponGrantedPct ?? 0;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? '').trim();
+
+  const lines = [
+    `[고미조슈아] ${name}님, 가입을 환영합니다 ✨`,
+    '',
+    '회원 가입이 완료되어 로그인 정보를 안내드립니다.',
+    '',
+    `▣ 로그인 ID : ${id}`,
+    `▣ 초기 비밀번호 : ${pw}`,
+  ];
+  if (coupon > 0) {
+    lines.push('', `🎟 가입 환영 선물로 포인트 구매 ${coupon}% 할인 쿠폰이 함께 지급되었습니다.`);
+  }
+  lines.push('');
+  if (siteUrl) lines.push(`▶ 접속 : ${siteUrl}`);
+  lines.push('▶ 첫 로그인 후 [마이페이지] 에서 비밀번호를 꼭 변경해 주세요.');
+  lines.push('', '문의 사항은 본 메시지에 답장 주시면 됩니다. 감사합니다 :)');
+  return lines.join('\n');
+}
+
 type ApplicantType = 'student' | 'parent' | 'teacher';
 type AppStatus = 'pending' | 'contacted' | 'completed' | 'rejected';
 
@@ -656,12 +687,17 @@ export default function AdminMembershipApplicationsPage() {
                   <button
                     type="button"
                     onClick={() => copyText(
-                      `로그인 ID: ${accountResult.loginId}\n초기 비밀번호: ${accountResult.initialPassword}`,
-                      '계정 정보 전체 복사',
+                      buildAccountNoticeText({
+                        name: accountResult.name,
+                        loginId: accountResult.loginId,
+                        initialPassword: accountResult.initialPassword,
+                        couponGrantedPct: accountResult.couponGrantedPct,
+                      }),
+                      '안내 멘트 복사 완료 (SMS·카톡 그대로 붙여넣기)',
                     )}
                     className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-500"
                   >
-                    📋 계정 정보 전체 복사
+                    📋 안내 멘트 전체 복사 (SMS·카톡용)
                   </button>
                   <button
                     type="button"

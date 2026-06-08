@@ -81,6 +81,8 @@ async function queryDocs(sp: URLSearchParams) {
   const difficulty = sp.get('difficulty')?.trim() || '';
   const status = sp.get('status')?.trim() || '';
   const passageId = sp.get('passage_id')?.trim() || '';
+  const freeRaw = sp.get('free')?.trim().toLowerCase() || '';
+  const free: 'only' | 'paid' | '' = freeRaw === 'only' ? 'only' : freeRaw === 'paid' ? 'paid' : '';
 
   const filter: Record<string, unknown> = {};
   if (textbook) filter.textbook = textbook;
@@ -88,6 +90,8 @@ async function queryDocs(sp: URLSearchParams) {
   if (difficulty) filter.difficulty = difficulty;
   if (status) filter.status = status;
   if (passageId) filter.passage_id = passageId;
+  if (free === 'only') filter.isFree = true;
+  else if (free === 'paid') filter.isFree = { $ne: true };
 
   const db = await getDb('gomijoshua');
   const docs = await db
@@ -102,6 +106,7 @@ async function queryDocs(sp: URLSearchParams) {
     type ? `유형: ${type}` : '',
     difficulty ? `난이도: ${difficulty}` : '',
     status ? `상태: ${status}` : '',
+    free === 'only' ? '무료만' : free === 'paid' ? '유료만' : '',
   ]
     .filter(Boolean)
     .join(' · ');

@@ -40,11 +40,19 @@ export interface PassagePickerModalProps {
   hideZeroCount?: boolean;
   /** false 면 카운트를 아예 조회·표시하지 않음 (강·번호만 보이면 되는 경우). 기본 true. */
   showCounts?: boolean;
+  /**
+   * 교재명 / 지문 목록 API 의 베이스. 기본은 admin (`/api/admin/passages`).
+   * 사용자용 클래스키트에서는 `/api/class-kit/passages` 를 전달 → 모의고사만 조회 가능.
+   */
+  passagesApiBase?: string;
+  /** 비회원 안내 시 회원가입 모달 열기 */
+  onSignupRequest?: () => void;
 }
 
 const DEFAULT_LAST_TB_KEY = 'admin_passage_picker_last_textbook';
 const DEFAULT_COUNTS_API = '/api/admin/essay-generator/passage-exam-counts';
 const DEFAULT_COUNT_LABEL = (n: number) => `문제 ${n}개`;
+const DEFAULT_PASSAGES_API = '/api/admin/passages';
 
 export default function PassagePickerModal({
   onSelect,
@@ -54,8 +62,12 @@ export default function PassagePickerModal({
   countLabel = DEFAULT_COUNT_LABEL,
   hideZeroCount = false,
   showCounts = true,
+  passagesApiBase = DEFAULT_PASSAGES_API,
+  onSignupRequest,
 }: PassagePickerModalProps) {
   const [textbooks, setTextbooks] = useState<string[]>([]);
+  const [accessNotice, setAccessNotice] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   /** SSR·첫 클라이언트 페인트와 동일해야 hydration 오류가 나지 않음 — localStorage는 mount 후 복원 */
   const [selectedTb, setSelectedTb] = useState('');
   const [passages, setPassages] = useState<PassageItem[]>([]);
@@ -83,18 +95,22 @@ export default function PassagePickerModal({
   }, [lastTextbookKey, lastPassageStorageKey]);
 
   useEffect(() => {
-    fetch('/api/admin/passages/textbooks', { credentials: 'include' })
+    fetch(`${passagesApiBase}/textbooks`, { credentials: 'include' })
       .then(r => r.json())
-      .then(d => setTextbooks(d.textbooks ?? []))
+      .then(d => {
+        setTextbooks(d.textbooks ?? []);
+        if (typeof d.notice === 'string' && d.notice.trim()) setAccessNotice(d.notice.trim());
+        setIsGuest(!!d.guest);
+      })
       .finally(() => setTbLoading(false));
-  }, []);
+  }, [passagesApiBase]);
 
   useEffect(() => {
     if (!selectedTb) { setPassages([]); setExamCounts({}); return; }
     localStorage.setItem(lastTextbookKey, selectedTb);
     setLoading(true);
     Promise.all([
-      fetch(`/api/admin/passages?textbook=${encodeURIComponent(selectedTb)}&limit=500`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${passagesApiBase}?textbook=${encodeURIComponent(selectedTb)}&limit=500`, { credentials: 'include' }).then(r => r.json()),
       showCounts
         ? fetch(`${countsApi}?textbook=${encodeURIComponent(selectedTb)}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({ counts: {} }))
         : Promise.resolve({ counts: {} }),
@@ -167,6 +183,21 @@ export default function PassagePickerModal({
           <span className="font-bold text-white">지문 불러오기</span>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-white text-xl leading-none">×</button>
         </div>
+
+        {accessNotice ? (
+          <div className="mx-4 mt-3 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-100">
+            <p>{accessNotice}</p>
+            {isGuest && onSignupRequest ? (
+              <button
+                type="button"
+                onClick={onSignupRequest}
+                className="mt-2 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500"
+              >
+                회원가입하기
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="p-4 flex gap-3 border-b border-slate-700">
           {/* 교재 선택 */}

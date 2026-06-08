@@ -10,6 +10,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import PassagePickerModal, { PassageItem } from '../../_components/PassagePickerModal';
 import { tokenizePassageFromContent } from '@/lib/block-workbook-tokenize';
 import {
+  loadPresetsForTextbook,
+  savePresetForTextbook,
+  deletePresetForTextbook,
+  newPresetId,
+  type ClassKitDownloadPreset,
+} from '@/lib/class-kit-download-presets';
+import {
   buildLessonMaterialHtml,
   clampLineHeight,
   clampSplitPct,
@@ -20,15 +27,43 @@ import {
   normalizeKoFont,
   lessonModeIsLandscape,
   LESSON_MODE_LABELS,
-  EN_FONT_OPTIONS,
-  KO_FONT_OPTIONS,
   type LessonSentencePair,
   type LessonMode,
   type LineLayout,
   type EnFontKey,
   type KoFontKey,
 } from '@/lib/lesson-material-html';
+import {
+  type ClassKitAccessLevel,
+  enFontOptionsForAccess,
+  koFontOptionsForAccess,
+  normalizeEnFontForAccess,
+  normalizeKoFontForAccess,
+  CLASS_KIT_GUEST_FONT_NOTICE,
+} from '@/lib/class-kit-access';
 import ClassKitTabs from '../ClassKitTabs';
+import {
+  ClassKitRoot,
+  ClassKitAccessBanner,
+  ClassKitHeader,
+  ClassKitPassageNav,
+  ClassKitIconButton,
+  ClassKitPreviewPane,
+  ClassKitSettingsAside,
+  ClassKitField,
+  ClassKitDivider,
+  ClassKitSliderSection,
+  ClassKitPrimaryButton,
+  ClassKitSecondaryButton,
+  ckInputClass,
+  ckSelectClass,
+  ckSectionTitleClass,
+  IconMonitor,
+  IconPdf,
+  IconBooks,
+  IconPrint,
+  IconSpinner,
+} from '../_components/ClassKitUI';
 
 const TITLE_KEY = 'class_kit_lesson_title';
 const NUMBER_KEY = 'class_kit_lesson_number';
@@ -60,7 +95,28 @@ function enSentencesOf(item: PassageItem | null): string[] {
   return tokenizePassageFromContent(item.content).map(s => s.text);
 }
 
-export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }) {
+export interface LessonClientProps {
+  forcedMode?: LessonMode;
+  /** API 베이스. 기본 admin (/api/admin/passages + /api/admin/class-kit). 사용자용은 /api/class-kit/passages + /api/class-kit. */
+  passagesApiBase?: string;
+  classKitApiBase?: string;
+  /** 비회원/회원 모드 알림 — 게스트면 다운로드·저장 시도 시 회원가입 모달 표시(부모 콜백). */
+  onGuestGate?: () => void;
+  routeBase?: string;
+  homeHref?: string;
+}
+
+export default function LessonClient({
+  forcedMode,
+  passagesApiBase = '/api/admin/passages',
+  classKitApiBase = '/api/admin/class-kit',
+  onGuestGate,
+  routeBase = '/admin/class-kit',
+  homeHref,
+}: LessonClientProps) {
+  const isUserClassKit = passagesApiBase.includes('/api/class-kit/');
+  const [accessLevel, setAccessLevel] = useState<ClassKitAccessLevel>(isUserClassKit ? 'guest' : 'admin');
+
   const [passage, setPassage] = useState<PassageItem | null>(null);
   const [pairs, setPairs] = useState<LessonSentencePair[]>([]);
   // 카테고리(kicker)는 현재 유형 라벨을 따라감 (한줄해석/영작하기/해석쓰기 …)
@@ -77,6 +133,17 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
   const [koFontScale, setKoFontScale] = useState(DEFAULT_FONT_SCALE);
   const [showPicker, setShowPicker] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  /** 모달 내 선택: 'current'=현재 지문만 / 'all'=교재 전체 / 'range'=번호 범위 / 'manual'=체크박스. */
+  const [bulkScope, setBulkScope] = useState<'current' | 'all' | 'range' | 'manual'>('all');
+  const [bulkRangeFrom, setBulkRangeFrom] = useState('');
+  const [bulkRangeTo, setBulkRangeTo] = useState('');
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkMode, setBulkMode] = useState<LessonMode>('parallel');
+  const [bulkFormat, setBulkFormat] = useState<'pdf' | 'zip'>('pdf');
+  /** 현재 교재 기준 저장된 프리셋 목록. 모달이 열릴 때마다 다시 로드. */
+  const [bulkPresets, setBulkPresets] = useState<ClassKitDownloadPreset[]>([]);
   const [msg, setMsg] = useState('');
   const [defaultLineHeight, setDefaultLineHeight] = useState(DEFAULT_LINE_HEIGHT);
   const [lhSaved, setLhSaved] = useState(false);
@@ -93,7 +160,7 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
     let en = enSentencesOf(item);
     let ko: string[] = [];
     try {
-      const r = await fetch(`/api/admin/passages/${encodeURIComponent(item._id)}/korean`, { credentials: 'include' });
+      const r = await fetch(`${passagesApiBase}/${encodeURIComponent(item._id)}/korean`, { credentials: 'include' });
       if (r.ok) {
         const d = await r.json();
         const rEn = Array.isArray(d.sentences_en) ? (d.sentences_en as string[]) : [];
@@ -141,7 +208,7 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
       setKicker(LESSON_MODE_LABELS[effMode]);
       const pid = localStorage.getItem(LAST_PASSAGE_KEY);
       if (pid) {
-        fetch(`/api/admin/passages/${encodeURIComponent(pid)}`, { credentials: 'include' })
+        fetch(`${passagesApiBase}/${encodeURIComponent(pid)}`, { credentials: 'include' })
           .then(r => (r.ok ? r.json() : null))
           .then(d => {
             if (d?.item) {
@@ -158,12 +225,44 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!isUserClassKit) {
+      setAccessLevel('admin');
+      return;
+    }
+    fetch(`${passagesApiBase}/textbooks`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const level = d.accessLevel as ClassKitAccessLevel | undefined;
+        if (level === 'admin' || level === 'member' || level === 'guest') {
+          setAccessLevel(level);
+        } else {
+          setAccessLevel(d.guest ? 'guest' : 'member');
+        }
+      })
+      .catch(() => {});
+  }, [passagesApiBase, isUserClassKit]);
+
+  useEffect(() => {
+    if (accessLevel !== 'guest') return;
+    setEnFont((prev) => {
+      const next = normalizeEnFontForAccess(prev, 'guest');
+      if (next !== prev) persist(EN_FONT_KEY, next);
+      return next;
+    });
+    setKoFont((prev) => {
+      const next = normalizeKoFontForAccess(prev, 'guest');
+      if (next !== prev) persist(KO_FONT_KEY, next);
+      return next;
+    });
+  }, [accessLevel]);
+
   // 현재 지문의 교재가 바뀌면 그 교재의 지문 목록(좌우 이동용)을 불러옴
   useEffect(() => {
     const tb = passage?.textbook;
     if (!tb || tb === siblingsTextbook) return;
     let cancelled = false;
-    fetch(`/api/admin/passages?textbook=${encodeURIComponent(tb)}&limit=500`, { credentials: 'include' })
+    fetch(`${passagesApiBase}?textbook=${encodeURIComponent(tb)}&limit=500`, { credentials: 'include' })
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         if (cancelled || !d) return;
@@ -182,6 +281,9 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
   const hasNext = curIndex >= 0 && curIndex < siblings.length - 1;
 
   const koCount = useMemo(() => pairs.filter(p => (p.ko ?? '').trim()).length, [pairs]);
+
+  const enFontOptions = useMemo(() => enFontOptionsForAccess(accessLevel), [accessLevel]);
+  const koFontOptions = useMemo(() => koFontOptionsForAccess(accessLevel), [accessLevel]);
 
   const isLandscape = lessonModeIsLandscape(mode);
 
@@ -248,11 +350,174 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
     setTimeout(() => setLhSaved(false), 2000);
   };
 
+  /** 모달 열 때 현재 화면 모드를 디폴트로, 선택 ID 셋을 초기화. */
+  const openBulkDialog = () => {
+    setBulkMode(mode);
+    setBulkScope(siblings.length > 0 ? 'all' : 'current');
+    setBulkRangeFrom('');
+    setBulkRangeTo('');
+    setBulkSelectedIds(new Set());
+    setBulkFormat('pdf');
+    setBulkPresets(passage?.textbook ? loadPresetsForTextbook(passage.textbook) : []);
+    setBulkOpen(true);
+  };
+
+  /** 프리셋을 모달 상태로 복원. lesson 은 mode 도 함께. */
+  const applyPreset = (p: ClassKitDownloadPreset) => {
+    setBulkScope(p.scope);
+    if (p.scope === 'manual' && Array.isArray(p.passageIds)) {
+      setBulkSelectedIds(new Set(p.passageIds));
+    } else {
+      setBulkSelectedIds(new Set());
+    }
+    if (p.scope === 'range') {
+      setBulkRangeFrom(p.rangeFrom ?? '');
+      setBulkRangeTo(p.rangeTo ?? '');
+    } else {
+      setBulkRangeFrom('');
+      setBulkRangeTo('');
+    }
+    if (p.mode === 'parallel' || p.mode === 'lineByLine' || p.mode === 'writeEn' || p.mode === 'writeKo') {
+      setBulkMode(p.mode);
+    }
+    if (p.format === 'pdf' || p.format === 'zip') setBulkFormat(p.format);
+  };
+
+  /** 현재 모달 상태를 프리셋으로 저장. 이름 입력 prompt. */
+  const saveCurrentAsPreset = () => {
+    if (!passage?.textbook) return;
+    const ids = resolveBulkPassageIds();
+    const defaultName =
+      bulkScope === 'manual'
+        ? `선택 ${ids.length}건`
+        : bulkScope === 'range'
+          ? `${bulkRangeFrom}~${bulkRangeTo}`
+          : bulkScope === 'all'
+            ? '교재 전체'
+            : '현재 지문';
+    const raw = window.prompt('프리셋 이름 (최대 30자):', defaultName);
+    if (raw === null) return;
+    const name = raw.trim().slice(0, 30);
+    if (!name) return;
+    savePresetForTextbook(passage.textbook, {
+      id: newPresetId(),
+      name,
+      scope: bulkScope,
+      passageIds: bulkScope === 'manual' ? ids : undefined,
+      rangeFrom: bulkScope === 'range' ? bulkRangeFrom : undefined,
+      rangeTo: bulkScope === 'range' ? bulkRangeTo : undefined,
+      mode: bulkMode,
+      format: bulkFormat,
+    });
+    setBulkPresets(loadPresetsForTextbook(passage.textbook));
+  };
+
+  const removePreset = (id: string) => {
+    if (!passage?.textbook) return;
+    deletePresetForTextbook(passage.textbook, id);
+    setBulkPresets(loadPresetsForTextbook(passage.textbook));
+  };
+
+  /** scope 에 따라 다운로드 대상 passageIds 산출. 'current' 는 빈 배열을 반환하지만
+   *  실제로는 단건 lesson-pdf 라우트로 보내므로 호출자에서 분기. */
+  const resolveBulkPassageIds = (): string[] => {
+    if (bulkScope === 'current') return passage ? [passage._id] : [];
+    if (bulkScope === 'all') return siblings.map((s) => s._id);
+    if (bulkScope === 'manual') return Array.from(bulkSelectedIds);
+    // range: from~to 의 number 가 포함된 sibling 만
+    const from = parseInt(bulkRangeFrom.trim(), 10);
+    const to = parseInt(bulkRangeTo.trim(), 10);
+    if (!Number.isFinite(from) || !Number.isFinite(to)) return [];
+    const [lo, hi] = from <= to ? [from, to] : [to, from];
+    return siblings
+      .filter((s) => {
+        const m = String(s.number ?? '').match(/\d+/);
+        if (!m) return false;
+        const n = parseInt(m[0], 10);
+        return n >= lo && n <= hi;
+      })
+      .map((s) => s._id);
+  };
+
+  const runBulkDownload = async () => {
+    if (!passage?.textbook || bulkBusy) return;
+    const ids = resolveBulkPassageIds();
+    // 'current' 단일 지문은 기존 단건 lesson-pdf 로 처리 — 멀티페이지 빌더로 가지 않음.
+    if (bulkScope === 'current') {
+      setBulkOpen(false);
+      await downloadPdf();
+      return;
+    }
+    if (ids.length === 0) {
+      alert('대상 지문이 없습니다. 범위/선택을 확인해 주세요.');
+      return;
+    }
+    setBulkBusy(true);
+    try {
+      const res = await fetch(`${classKitApiBase}/lesson-pdf-bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          textbook: passage.textbook,
+          passageIds: ids,
+          mode: bulkMode,
+          format: bulkFormat,
+          kicker,
+          lineHeight,
+          splitPct,
+          lineLayout,
+          enFont,
+          koFont,
+          enFontScale,
+          koFontScale,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(`다운로드 실패: ${d?.error || res.status}`);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeTb = passage.textbook.replace(/[\\/:*?"<>|]/g, '_');
+      const safeMode = LESSON_MODE_LABELS[bulkMode].replace(/[\\/:*?"<>|]/g, '_');
+      const date = new Date().toISOString().slice(0, 10);
+      a.download = `수업용자료_${safeMode}_${safeTb}_${date}.${bulkFormat === 'pdf' ? 'pdf' : 'zip'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      // 「최근」 프리셋 자동 저장 — 다음 모달 진입 시 한 번에 복원 가능.
+      try {
+        savePresetForTextbook(passage.textbook, {
+          id: 'recent',
+          name: '최근',
+          scope: bulkScope,
+          passageIds: bulkScope === 'manual' ? ids : undefined,
+          rangeFrom: bulkScope === 'range' ? bulkRangeFrom : undefined,
+          rangeTo: bulkScope === 'range' ? bulkRangeTo : undefined,
+          mode: bulkMode,
+          format: bulkFormat,
+        });
+      } catch {
+        /* ignore */
+      }
+      setBulkOpen(false);
+    } catch {
+      alert('다운로드 중 오류가 발생했습니다.');
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   const downloadPdf = async () => {
     if (!pairs.length || pdfBusy) return;
     setPdfBusy(true);
     try {
-      const res = await fetch('/api/admin/class-kit/lesson-pdf', {
+      const res = await fetch(`${classKitApiBase}/lesson-pdf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -301,130 +566,99 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
     setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 400);
   };
 
+  const resolvedHomeHref = homeHref ?? (routeBase === '/class-kit' ? '/class-kit/lecture' : undefined);
+  const tabCurrent: 'lecture' | LessonMode = forcedMode ?? mode;
+
   return (
-    <div className="flex flex-col h-svh">
-      {/* 상단 바 */}
-      <header className="shrink-0 border-b border-slate-700 px-6 py-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-lg font-bold text-white mr-2">클래스키트</h1>
-          <button
-            type="button"
-            onClick={() => setShowPicker(true)}
-            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
-          >
-            지문 불러오기
-          </button>
-          {passage && (
-            <>
-              {/* 이전/다음 지문 이동 */}
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => goSibling(-1)}
-                  disabled={!hasPrev}
-                  title="이전 지문"
-                  aria-label="이전 지문"
-                  className="w-7 h-7 flex items-center justify-center rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-base leading-none transition-colors"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goSibling(1)}
-                  disabled={!hasNext}
-                  title="다음 지문"
-                  aria-label="다음 지문"
-                  className="w-7 h-7 flex items-center justify-center rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-base leading-none transition-colors"
-                >
-                  ›
-                </button>
-              </div>
-              <span className="text-xs text-slate-400">
-                <span className="font-mono bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{passage.chapter} · {passage.number}</span>
-                {passage.source_key && <span className="text-emerald-400 ml-2">{passage.source_key}</span>}
-                <span className="text-slate-500 ml-2">{pairs.length}문장</span>
-                {pairs.length > 0 && (
-                  <span className={`ml-2 ${koCount === pairs.length ? 'text-emerald-400' : 'text-amber-400'}`}>
+    <ClassKitRoot>
+      {isUserClassKit ? (
+        <ClassKitAccessBanner passagesApiBase={passagesApiBase} onSignup={onGuestGate} />
+      ) : null}
+      <ClassKitHeader
+        homeHref={resolvedHomeHref}
+        onLoadPassage={() => setShowPicker(true)}
+        message={msg || undefined}
+        passageInfo={
+          passage ? (
+            <ClassKitPassageNav
+              onPrev={() => goSibling(-1)}
+              onNext={() => goSibling(1)}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              chapter={passage.chapter}
+              number={passage.number}
+              sourceKey={passage.source_key}
+              sentenceCount={pairs.length}
+              position={curIndex >= 0 && siblings.length > 0 ? `${curIndex + 1}/${siblings.length}` : undefined}
+              extra={
+                pairs.length > 0 ? (
+                  <span className={koCount === pairs.length ? 'text-emerald-400/90' : 'text-amber-400'}>
                     해석 {koCount}/{pairs.length}
                   </span>
-                )}
-                {curIndex >= 0 && siblings.length > 0 && (
-                  <span className="text-slate-600 ml-2 tabular-nums">{curIndex + 1}/{siblings.length}</span>
-                )}
-              </span>
-            </>
-          )}
-          {msg && <span className="text-xs text-emerald-300">{msg}</span>}
+                ) : undefined
+              }
+            />
+          ) : undefined
+        }
+        actions={
+          <>
+            <ClassKitIconButton
+              onClick={openInNewTab}
+              disabled={!pairs.length}
+              title="새 창에서 열기 (프로젝터·전자칠판)"
+              label="새 창에서 열기"
+            >
+              <IconMonitor />
+            </ClassKitIconButton>
+            <ClassKitIconButton
+              onClick={downloadPdf}
+              disabled={!pairs.length || pdfBusy}
+              title={pdfBusy ? 'PDF 생성 중…' : 'PDF 다운로드 (현재 지문)'}
+              label="PDF 다운로드"
+            >
+              {pdfBusy ? <IconSpinner /> : <IconPdf />}
+            </ClassKitIconButton>
+            <ClassKitIconButton
+              onClick={openBulkDialog}
+              disabled={!passage}
+              title="다운로드 옵션 (범위·유형·형식)"
+              label="다운로드 옵션"
+            >
+              <IconBooks />
+            </ClassKitIconButton>
+            <ClassKitIconButton
+              onClick={printPreview}
+              disabled={!pairs.length}
+              title="인쇄"
+              label="인쇄"
+            >
+              <IconPrint />
+            </ClassKitIconButton>
+          </>
+        }
+        tabs={
+          <ClassKitTabs
+            current={tabCurrent}
+            onSelectLessonMode={forcedMode ? undefined : updMode}
+            routeBase={routeBase}
+          />
+        }
+      />
 
-          <div className="flex-1" />
-
-          <button
-            type="button"
-            onClick={openInNewTab}
-            disabled={!pairs.length}
-            className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base transition-colors"
-            title="새 창에서 열기 (프로젝터·전자칠판 전체 화면)"
-            aria-label="새 창에서 열기"
-          >
-            🖥️
-          </button>
-          <button
-            type="button"
-            onClick={downloadPdf}
-            disabled={!pairs.length || pdfBusy}
-            className="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-700 hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base transition-colors"
-            title={pdfBusy ? 'PDF 생성 중…' : 'PDF 다운로드'}
-            aria-label="PDF 다운로드"
-          >
-            {pdfBusy ? '⏳' : '📄'}
-          </button>
-          <button
-            type="button"
-            onClick={printPreview}
-            disabled={!pairs.length}
-            className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base transition-colors"
-            title="인쇄"
-            aria-label="인쇄"
-          >
-            🖨️
-          </button>
-        </div>
-
-        {/* 유형 탭 (강의용자료 포함) */}
-        <div className="mt-3">
-          <ClassKitTabs current={mode} onSelectLessonMode={updMode} />
-        </div>
-      </header>
-
-      {/* 본문: 미리보기 + 오른쪽 설정 바 */}
-      <div className="flex-1 min-h-0 flex">
-        {/* 미리보기 */}
-        <div className="flex-1 min-w-0 overflow-auto bg-slate-900/60 p-6 scrollbar-thin">
-          {pairs.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-500">
-              <p className="text-sm">불러온 지문이 없습니다.</p>
-              <button
-                type="button"
-                onClick={() => setShowPicker(true)}
-                className="mt-3 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
-              >
-                지문 불러오기
-              </button>
-            </div>
-          ) : isLandscape ? (
-            // 영한대조 = A4 가로 비율(297:210) 한 화면
-            <div className="mx-auto w-full max-w-[1100px] bg-white rounded-lg shadow-xl overflow-hidden" style={{ aspectRatio: '297 / 210' }}>
-              <iframe
-                ref={previewIframeRef}
-                srcDoc={previewHtml}
-                title="수업용자료 미리보기"
-                className="w-full h-full bg-white"
-                style={{ border: 'none' }}
-              />
-            </div>
-          ) : (
-            // 세로 워크시트 = A4 세로 폭, 길면 스크롤(다중 페이지)
-            <div className="mx-auto w-full max-w-[820px] bg-white rounded-lg shadow-xl overflow-hidden">
+      <div className="flex min-h-0 flex-1">
+        <ClassKitPreviewPane empty={pairs.length === 0} onLoadPassage={() => setShowPicker(true)}>
+          {pairs.length > 0 ? (
+            isLandscape ? (
+              <div className="w-full overflow-hidden" style={{ aspectRatio: '297 / 210', maxWidth: 1100, margin: '0 auto' }}>
+                <iframe
+                  ref={previewIframeRef}
+                  srcDoc={previewHtml}
+                  title="수업용자료 미리보기"
+                  className="h-full w-full bg-white"
+                  style={{ border: 'none' }}
+                />
+              </div>
+            ) : (
               <iframe
                 ref={previewIframeRef}
                 srcDoc={previewHtml}
@@ -432,233 +666,188 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
                 className="w-full bg-white"
                 style={{ height: '80vh', border: 'none' }}
               />
-            </div>
-          )}
-        </div>
+            )
+          ) : null}
+        </ClassKitPreviewPane>
 
-        {/* 오른쪽 설정 바 (항상 표시 · 바로 편집) */}
-        <aside className="w-72 shrink-0 border-l border-slate-700 bg-slate-800/40 overflow-y-auto scrollbar-thin">
-          <div className="p-4 space-y-5">
-            <h2 className="text-sm font-bold text-white">설정</h2>
-
-            {/* 헤더 입력값 */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">카테고리</label>
-                <input
-                  value={kicker}
-                  onChange={e => updKicker(e.target.value)}
-                  placeholder="수업용자료"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-slate-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">시험정보</label>
-                <input
-                  value={title}
-                  onChange={e => updTitle(e.target.value)}
-                  placeholder="예: 26년 고3 5월 영어모의고사"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-slate-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">문항번호</label>
-                <input
-                  value={number}
-                  onChange={e => updNumber(e.target.value)}
-                  placeholder="18"
-                  className="w-24 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-slate-500"
-                />
-              </div>
-            </div>
-
-            {/* 글씨체 & 글자 크기 */}
-            <div className="border-t border-slate-700 pt-4 space-y-3">
-              <span className="text-sm font-semibold text-white">글씨체</span>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">영어 글씨체</label>
-                <select
-                  value={enFont}
-                  onChange={e => updEnFont(e.target.value as EnFontKey)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-slate-500"
-                >
-                  {EN_FONT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">한글 글씨체</label>
-                <select
-                  value={koFont}
-                  onChange={e => updKoFont(e.target.value as KoFontKey)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-slate-500"
-                >
-                  {KO_FONT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-500">영어 글자 크기</span>
-                  <span className="text-xs font-mono text-emerald-300 tabular-nums">{Math.round(enFontScale * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min={0.7}
-                  max={1.6}
-                  step={0.05}
-                  value={enFontScale}
-                  onChange={e => updEnFontScale(parseFloat(e.target.value))}
-                  className="w-full accent-emerald-500"
-                />
-                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                  <span>작게 70%</span>
-                  <span>기본 100%</span>
-                  <span>크게 160%</span>
-                </div>
-                {enFontScale !== DEFAULT_FONT_SCALE && (
-                  <button
-                    type="button"
-                    onClick={() => updEnFontScale(DEFAULT_FONT_SCALE)}
-                    className="mt-2 w-full px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
-                  >
-                    영어 100%로 초기화
-                  </button>
-                )}
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-500">한글 글자 크기</span>
-                  <span className="text-xs font-mono text-emerald-300 tabular-nums">{Math.round(koFontScale * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min={0.7}
-                  max={1.6}
-                  step={0.05}
-                  value={koFontScale}
-                  onChange={e => updKoFontScale(parseFloat(e.target.value))}
-                  className="w-full accent-emerald-500"
-                />
-                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                  <span>작게 70%</span>
-                  <span>기본 100%</span>
-                  <span>크게 160%</span>
-                </div>
-                {koFontScale !== DEFAULT_FONT_SCALE && (
-                  <button
-                    type="button"
-                    onClick={() => updKoFontScale(DEFAULT_FONT_SCALE)}
-                    className="mt-2 w-full px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
-                  >
-                    한글 100%로 초기화
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* 한줄해석 레이아웃: 위아래 / 좌우 */}
-            {mode === 'lineByLine' && (
-            <div className="border-t border-slate-700 pt-4">
-              <span className="text-sm font-semibold text-white">해석 배치</span>
-              <div className="mt-2 flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-lg p-0.5">
-                <button
-                  type="button"
-                  onClick={() => updLineLayout('stack')}
-                  className={`flex-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${lineLayout === 'stack' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  위아래
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updLineLayout('side')}
-                  className={`flex-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${lineLayout === 'side' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  좌우
-                </button>
-              </div>
-              <p className="mt-1.5 text-[10px] text-slate-500">위아래: 영어 아래에 해석 · 좌우: 영어 왼쪽 / 해석 오른쪽</p>
-            </div>
-            )}
-
-            {/* 줄 간격 — 한줄해석엔 미적용 */}
-            {mode !== 'lineByLine' && (
-            <div className="border-t border-slate-700 pt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-white">줄 간격 <span className="text-xs font-normal text-slate-500">{mode === 'parallel' ? '(영어 · 판서)' : '(작성 줄 높이)'}</span></span>
-                <span className="text-xs font-mono text-emerald-300 tabular-nums">{lineHeight.toFixed(1)}</span>
-              </div>
+        <ClassKitSettingsAside>
+          <div className="space-y-3">
+            <ClassKitField label="카테고리">
+              <input value={kicker} onChange={(e) => updKicker(e.target.value)} placeholder="수업용자료" className={ckInputClass} />
+            </ClassKitField>
+            <ClassKitField label="시험정보">
               <input
-                type="range"
+                value={title}
+                onChange={(e) => updTitle(e.target.value)}
+                placeholder="예: 26년 고3 5월 영어모의고사"
+                className={ckInputClass}
+              />
+            </ClassKitField>
+            <ClassKitField label="문항번호">
+              <input value={number} onChange={(e) => updNumber(e.target.value)} placeholder="18" className={`${ckInputClass} w-28`} />
+            </ClassKitField>
+          </div>
+
+          <ClassKitDivider />
+
+          <div className="space-y-3">
+            <span className={ckSectionTitleClass}>글씨체</span>
+            {accessLevel === 'guest' ? (
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100">
+                {CLASS_KIT_GUEST_FONT_NOTICE}
+                {onGuestGate ? (
+                  <button
+                    type="button"
+                    onClick={onGuestGate}
+                    className="mt-2 block rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-emerald-500"
+                  >
+                    회원가입하기
+                  </button>
+                ) : null}
+              </p>
+            ) : null}
+            <ClassKitField label="영어 글씨체">
+              <select value={enFont} onChange={(e) => updEnFont(e.target.value as EnFontKey)} className={ckSelectClass}>
+                {enFontOptions.map((o) => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </ClassKitField>
+            <ClassKitField label="한글 글씨체">
+              <select value={koFont} onChange={(e) => updKoFont(e.target.value as KoFontKey)} className={ckSelectClass}>
+                {koFontOptions.map((o) => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </ClassKitField>
+            <ClassKitSliderSection
+              title="영어 글자 크기"
+              value={enFontScale}
+              min={0.7}
+              max={1.6}
+              step={0.05}
+              onChange={updEnFontScale}
+              formatValue={(v) => `${Math.round(v * 100)}%`}
+              marks={['작게 70%', '기본 100%', '크게 160%']}
+              footer={
+                enFontScale !== DEFAULT_FONT_SCALE ? (
+                  <ClassKitSecondaryButton onClick={() => updEnFontScale(DEFAULT_FONT_SCALE)}>
+                    영어 100%로 초기화
+                  </ClassKitSecondaryButton>
+                ) : null
+              }
+            />
+            <ClassKitSliderSection
+              title="한글 글자 크기"
+              value={koFontScale}
+              min={0.7}
+              max={1.6}
+              step={0.05}
+              onChange={updKoFontScale}
+              formatValue={(v) => `${Math.round(v * 100)}%`}
+              marks={['작게 70%', '기본 100%', '크게 160%']}
+              footer={
+                koFontScale !== DEFAULT_FONT_SCALE ? (
+                  <ClassKitSecondaryButton onClick={() => updKoFontScale(DEFAULT_FONT_SCALE)}>
+                    한글 100%로 초기화
+                  </ClassKitSecondaryButton>
+                ) : null
+              }
+            />
+          </div>
+
+          {mode === 'lineByLine' && (
+            <>
+              <ClassKitDivider />
+              <div className="space-y-2">
+                <span className={ckSectionTitleClass}>해석 배치</span>
+                <div className="flex items-center gap-1 rounded-lg border border-zinc-700/80 bg-zinc-950/60 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => updLineLayout('stack')}
+                    className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                      lineLayout === 'stack' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    위아래
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updLineLayout('side')}
+                    className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                      lineLayout === 'side' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    좌우
+                  </button>
+                </div>
+                <p className="text-[10px] text-zinc-500">위아래: 영어 아래 해석 · 좌우: 영어 왼쪽 / 해석 오른쪽</p>
+              </div>
+            </>
+          )}
+
+          {mode !== 'lineByLine' && (
+            <>
+              <ClassKitDivider />
+              <ClassKitSliderSection
+                title="줄 간격"
+                hint={mode === 'parallel' ? '영어 · 판서' : '작성 줄 높이'}
+                value={lineHeight}
                 min={1.4}
                 max={3.6}
                 step={0.1}
-                value={lineHeight}
-                onChange={e => updLineHeight(parseFloat(e.target.value))}
-                className="w-full accent-emerald-500"
+                onChange={updLineHeight}
+                marks={['좁게 1.4', '기본 2.6', '넓게 3.6']}
+                footer={
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-zinc-500">
+                        저장된 디폴트{' '}
+                        <span className="font-mono tabular-nums text-zinc-300">{defaultLineHeight.toFixed(1)}</span>
+                      </span>
+                      {lineHeight !== defaultLineHeight ? <span className="text-amber-400">미저장</span> : null}
+                    </div>
+                    <ClassKitPrimaryButton
+                      onClick={saveLineHeightDefault}
+                      disabled={lineHeight === defaultLineHeight}
+                    >
+                      {lhSaved ? '디폴트로 저장됨' : '현재 값을 디폴트로 저장'}
+                    </ClassKitPrimaryButton>
+                    <ClassKitSecondaryButton onClick={() => updLineHeight(DEFAULT_LINE_HEIGHT)}>
+                      2.6으로 초기화
+                    </ClassKitSecondaryButton>
+                  </div>
+                }
               />
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                <span>좁게 1.4</span>
-                <span>기본 2.6</span>
-                <span>넓게 3.6</span>
-              </div>
+            </>
+          )}
 
-              <div className="mt-3 flex items-center justify-between text-[11px]">
-                <span className="text-slate-500">
-                  저장된 디폴트 <span className="font-mono text-slate-300 tabular-nums">{defaultLineHeight.toFixed(1)}</span>
-                </span>
-                {lineHeight !== defaultLineHeight && (
-                  <span className="text-amber-400">미저장</span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={saveLineHeightDefault}
-                disabled={lineHeight === defaultLineHeight}
-                className="mt-2 w-full px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
-                title="현재 줄 간격을 디폴트로 저장 — 다른 지문을 불러오면 이 값으로 적용됩니다"
-              >
-                {lhSaved ? '✓ 디폴트로 저장됨' : '현재 값을 디폴트로 저장'}
-              </button>
-              <button
-                type="button"
-                onClick={() => updLineHeight(DEFAULT_LINE_HEIGHT)}
-                className="mt-2 w-full px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
-              >
-                2.6으로 초기화
-              </button>
-            </div>
-            )}
-
-            {/* 구분선 위치 — 영한대조만 */}
-            {isLandscape && (
-            <div className="border-t border-slate-700 pt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-white">구분선 위치 <span className="text-xs font-normal text-slate-500">(영어 폭)</span></span>
-                <span className="text-xs font-mono text-emerald-300 tabular-nums">{splitPct}%</span>
-              </div>
-              <input
-                type="range"
+          {isLandscape && (
+            <>
+              <ClassKitDivider />
+              <ClassKitSliderSection
+                title="구분선 위치"
+                hint="영어 폭"
+                value={splitPct}
                 min={30}
                 max={75}
                 step={1}
-                value={splitPct}
-                onChange={e => updSplit(parseInt(e.target.value, 10))}
-                className="w-full accent-emerald-500"
+                onChange={(v) => updSplit(Math.round(v))}
+                formatValue={(v) => `${Math.round(v)}%`}
+                marks={['← 한국어 넓게', '기본 60%', '영어 넓게 →']}
+                footer={
+                  <ClassKitSecondaryButton onClick={() => updSplit(DEFAULT_SPLIT)}>
+                    기본(60%)으로
+                  </ClassKitSecondaryButton>
+                }
               />
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                <span>← 한국어 넓게</span>
-                <span>영어 넓게 →</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => updSplit(DEFAULT_SPLIT)}
-                className="mt-2 w-full px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
-              >
-                기본(60%)으로
-              </button>
-            </div>
-            )}
-          </div>
-        </aside>
+            </>
+          )}
+        </ClassKitSettingsAside>
       </div>
 
       {showPicker && (
@@ -667,8 +856,248 @@ export default function LessonClient({ forcedMode }: { forcedMode?: LessonMode }
           onClose={() => setShowPicker(false)}
           lastTextbookKey="class_kit_lesson_last_textbook"
           showCounts={false}
+          passagesApiBase={passagesApiBase}
+          onSignupRequest={onGuestGate}
         />
       )}
-    </div>
+
+      {bulkOpen && passage && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => !bulkBusy && setBulkOpen(false)}
+        >
+          <div
+            className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[calc(100dvh-2rem)] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-white font-bold">다운로드 옵션</h3>
+                <p className="text-slate-500 text-[11px] mt-0.5">{passage.textbook} · 지문 {siblings.length}건</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBulkOpen(false)}
+                disabled={bulkBusy}
+                className="w-8 h-8 rounded-full text-slate-400 hover:bg-slate-700/60 disabled:opacity-40"
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+              {/* 저장된 프리셋 */}
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <h4 className="text-sm font-semibold text-white">저장된 프리셋</h4>
+                  <button
+                    type="button"
+                    onClick={saveCurrentAsPreset}
+                    className="px-2.5 py-1 text-xs rounded border border-emerald-600/60 bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-100"
+                    title="현재 선택을 프리셋으로 저장"
+                  >
+                    💾 현재 선택 저장
+                  </button>
+                </div>
+                {bulkPresets.length === 0 ? (
+                  <p className="text-[11px] text-slate-500">
+                    프리셋이 없습니다. 다운로드 시 「최근」 프리셋이 자동 저장됩니다.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {bulkPresets.map((p) => {
+                      const cnt =
+                        p.scope === 'manual'
+                          ? p.passageIds?.length ?? 0
+                          : p.scope === 'range'
+                            ? `${p.rangeFrom ?? '?'}~${p.rangeTo ?? '?'}`
+                            : p.scope === 'all'
+                              ? '전체'
+                              : '현재';
+                      return (
+                        <span
+                          key={p.id}
+                          className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-lg border border-slate-600 bg-slate-900/60 text-xs text-slate-200"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => applyPreset(p)}
+                            title={`${p.scope} · ${p.mode ?? ''} · ${p.format ?? ''}`}
+                            className="hover:text-white"
+                          >
+                            {p.name} <span className="text-slate-500">({String(cnt)})</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removePreset(p.id)}
+                            className="w-5 h-5 flex items-center justify-center rounded text-slate-500 hover:text-rose-300 hover:bg-rose-900/30"
+                            title="프리셋 삭제"
+                            aria-label="삭제"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* 지문 범위 */}
+              <div>
+                <h4 className="text-sm font-semibold text-white mb-2">지문 범위</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    ['current', '현재 지문만'],
+                    ['all', '교재 전체'],
+                    ['range', '번호 범위'],
+                    ['manual', '개별 선택'],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setBulkScope(k)}
+                      className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                        bulkScope === k
+                          ? 'bg-emerald-600 border-emerald-500 text-white'
+                          : 'bg-slate-900 border-slate-600 text-slate-300 hover:bg-slate-700/40'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {bulkScope === 'range' && (
+                  <div className="mt-3 flex items-center gap-2 text-sm">
+                    <input
+                      type="number"
+                      value={bulkRangeFrom}
+                      onChange={(e) => setBulkRangeFrom(e.target.value)}
+                      placeholder="부터"
+                      className="w-24 bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-white"
+                    />
+                    <span className="text-slate-500">~</span>
+                    <input
+                      type="number"
+                      value={bulkRangeTo}
+                      onChange={(e) => setBulkRangeTo(e.target.value)}
+                      placeholder="까지"
+                      className="w-24 bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-white"
+                    />
+                    <span className="text-[11px] text-slate-500 ml-1">{resolveBulkPassageIds().length}건 선택됨</span>
+                  </div>
+                )}
+                {bulkScope === 'manual' && (
+                  <div className="mt-3 border border-slate-700 rounded-lg max-h-48 overflow-y-auto p-2 space-y-1">
+                    {siblings.length === 0 ? (
+                      <p className="text-slate-500 text-sm text-center py-3">교재 지문 목록을 불러오는 중…</p>
+                    ) : (
+                      siblings.map((s) => {
+                        const checked = bulkSelectedIds.has(s._id);
+                        return (
+                          <label key={s._id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-700/40 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                setBulkSelectedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(s._id);
+                                  else next.delete(s._id);
+                                  return next;
+                                });
+                              }}
+                              className="accent-emerald-500"
+                            />
+                            <span className="text-xs text-slate-300 font-mono">{s.chapter} · {s.number}</span>
+                            {s.source_key && <span className="text-[10px] text-emerald-400 truncate">{s.source_key}</span>}
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 유형 (모드) */}
+              <div>
+                <h4 className="text-sm font-semibold text-white mb-2">유형</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['parallel', 'lineByLine', 'writeEn', 'writeKo'] as LessonMode[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setBulkMode(m)}
+                      className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                        bulkMode === m
+                          ? 'bg-emerald-600 border-emerald-500 text-white'
+                          : 'bg-slate-900 border-slate-600 text-slate-300 hover:bg-slate-700/40'
+                      }`}
+                    >
+                      {LESSON_MODE_LABELS[m]}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  영한대조 = A4 가로 1지문/1장 · 나머지 = A4 세로 (긴 지문은 자동 분할)
+                </p>
+              </div>
+
+              {/* 형식 */}
+              <div>
+                <h4 className="text-sm font-semibold text-white mb-2">출력 형식</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    ['pdf', '단일 PDF (지문 순)'],
+                    ['zip', 'ZIP (번호별 PDF)'],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setBulkFormat(k)}
+                      className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                        bulkFormat === k
+                          ? 'bg-emerald-600 border-emerald-500 text-white'
+                          : 'bg-slate-900 border-slate-600 text-slate-300 hover:bg-slate-700/40'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {bulkScope === 'current' && (
+                  <p className="mt-2 text-[11px] text-amber-300">현재 지문만 = 기존 1건 PDF 라우트로 처리 (형식 무관)</p>
+                )}
+              </div>
+            </div>
+
+            <div className="shrink-0 px-5 py-3 border-t border-slate-700 flex items-center justify-between gap-3">
+              <span className="text-[11px] text-slate-500">
+                현재 설정(라인높이·split·폰트·스케일) 그대로 적용됩니다.
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkOpen(false)}
+                  disabled={bulkBusy}
+                  className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm disabled:opacity-40"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={runBulkDownload}
+                  disabled={bulkBusy}
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm disabled:opacity-40"
+                >
+                  {bulkBusy ? '⏳ 생성 중…' : '다운로드'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </ClassKitRoot>
   );
 }

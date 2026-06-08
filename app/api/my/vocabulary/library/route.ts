@@ -5,9 +5,10 @@ import { listMyVocabularies } from '@/lib/vocabulary-library-store';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  // 게스트(비로그인) — 빈 라이브러리 반환. 게이트 페이지가 게스트 모드로 모의고사 미리보기를 진행.
+  if (!token) return NextResponse.json({ items: [], guest: true });
   const payload = await verifyToken(token);
-  if (!payload) return NextResponse.json({ error: '인증이 만료되었습니다.' }, { status: 401 });
+  if (!payload) return NextResponse.json({ items: [], guest: true });
 
   try {
     const userId = new ObjectId(payload.sub);

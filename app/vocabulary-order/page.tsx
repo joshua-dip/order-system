@@ -5,15 +5,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppBar from '../components/AppBar';
 import PointChargeModal from '../components/PointChargeModal';
+import MembershipApplyModal from '../components/MembershipApplyModal';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import {
   isMockExamTextbookKey,
   isFreeVocabularyMockExamTextbook,
+  isGuestVocabularyTrialTextbook,
   parseMockExamKey,
 } from '@/lib/mock-exam-key';
 import { VOCABULARY_POINTS_PER_PASSAGE } from '@/lib/vocabulary-library-types';
 import type { UserVocabularySerialized } from '@/lib/vocabulary-library-types';
+import {
+  upsertGuestVocabularies,
+  type GuestVocabularySerialized,
+} from '@/lib/guest-vocabulary';
 
 /* ────────── 타입 ────────── */
 
@@ -117,7 +123,6 @@ export default function VocabularyOrderPage() {
   const [activeTab, setActiveTab] = useState<'library' | 'buy'>('library');
 
   const fetchLibrary = useCallback(async () => {
-    if (!authorized) return;
     setLibLoading(true);
     try {
       const r = await fetch('/api/my/vocabulary/library');
@@ -128,19 +133,26 @@ export default function VocabularyOrderPage() {
     } finally {
       setLibLoading(false);
     }
-  }, [authorized]);
+  }, []);
 
   useEffect(() => {
-    fetchLibrary();
-  }, [fetchLibrary]);
+    if (authorized) fetchLibrary();
+    else setActiveTab('buy');
+  }, [authorized, fetchLibrary]);
 
-  /** 단어장 구매: 허용 교재와 무관하게 병합 converted_data 의 전체 교재 키 노출 */
+  /** 단어장 구매: 게스트는 26년 6월 고1·2·3만, 회원은 전체 노출. */
   const textbookList = useMemo(() => {
     if (!textbooksData) return [];
-    return Object.keys(textbooksData).sort((a, b) => a.localeCompare(b, 'ko'));
-  }, [textbooksData]);
+    const keys = Object.keys(textbooksData);
+    const filtered = authorized
+      ? keys
+      : keys.filter((k) => isGuestVocabularyTrialTextbook(k));
+    return filtered.sort((a, b) => a.localeCompare(b, 'ko'));
+  }, [textbooksData, authorized]);
 
   const ownedLabels = useMemo(() => new Set(library.map((l) => l.display_label)), [library]);
+
+  const guestTrialMode = !authorized;
 
   const [selectedTextbook, setSelectedTextbook] = useState('');
   const [textbookQuery, setTextbookQuery] = useState('');
@@ -177,7 +189,13 @@ export default function VocabularyOrderPage() {
   }, [selectedTextbook, textbooksData]);
 
   useEffect(() => {
-    if (!authorized || !selectedTextbook) {
+    // 게스트도 모의고사 교재면 availability 조회 가능 (서버가 mock 만 허용).
+    if (!selectedTextbook) {
+      setLessonLabelsWithVocab(null);
+      setVocabAvailabilityError(false);
+      return;
+    }
+    if (!authorized && !isGuestVocabularyTrialTextbook(selectedTextbook)) {
       setLessonLabelsWithVocab(null);
       setVocabAvailabilityError(false);
       return;
@@ -257,8 +275,20 @@ export default function VocabularyOrderPage() {
         buckets.기타.push(k);
       }
     }
+    // 최신 연도(+달)부터 앞에 오도록 내림차순. year/month 가 없으면 끝으로.
+    const cmpByDateDesc = (a: string, b: string) => {
+      const pa = parseMockExamKey(a);
+      const pb = parseMockExamKey(b);
+      const ya = pa?.year ?? -Infinity;
+      const yb = pb?.year ?? -Infinity;
+      if (ya !== yb) return yb - ya;
+      const ma = pa?.month ?? -Infinity;
+      const mb = pb?.month ?? -Infinity;
+      if (ma !== mb) return mb - ma;
+      return a.localeCompare(b, 'ko');
+    };
     for (const g of ['고1', '고2', '고3', '기타'] as const) {
-      buckets[g].sort((a, b) => a.localeCompare(b, 'ko'));
+      buckets[g].sort(cmpByDateDesc);
     }
     return buckets;
   }, [filteredMockExams]);
@@ -318,14 +348,51 @@ export default function VocabularyOrderPage() {
   const pointsShort = Math.max(0, totalPoints - userPoints);
 
   const [chargeOpen, setChargeOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
+  const [guestOpening, setGuestOpening] = useState<string | null>(null);
+
+  const openGuestLesson = async (lessonLabel: string) => {
+    if (!selectedTextbook || !isGuestVocabularyTrialTextbook(selectedTextbook)) return;
+    setGuestOpening(lessonLabel);
+    setPurchaseError('');
+    try {
+      const r = await fetch('/api/public/vocabulary/trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          textbook: selectedTextbook,
+          items: [{ lesson_label: lessonLabel, package_type: 'basic' }],
+        }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok && d.first_id) {
+        if (Array.isArray(d.items)) {
+          upsertGuestVocabularies(d.items as GuestVocabularySerialized[]);
+        }
+        router.push(`/vocabulary-order/${d.first_id}/edit`);
+      } else {
+        setPurchaseError(d.error || '편집 화면을 열지 못했습니다.');
+      }
+    } catch {
+      setPurchaseError('네트워크 오류가 발생했습니다.');
+    } finally {
+      setGuestOpening(null);
+    }
+  };
 
   const handlePurchase = async () => {
     if (selectedLessonsArr.length === 0) {
       alert('지문(강·번호)을 선택해주세요.');
       return;
     }
+
+    if (!authorized) {
+      setSignupOpen(true);
+      return;
+    }
+
     if (pointsShort > 0) {
       setChargeOpen(true);
       return;
@@ -379,34 +446,13 @@ export default function VocabularyOrderPage() {
     );
   }
 
-  if (!authorized) {
-    return (
-      <>
-        <AppBar title="단어장" showBackButton onBackClick={() => router.push('/')} />
-        <div className="min-h-screen py-16 px-4 bg-slate-50">
-          <div className="max-w-md mx-auto text-center bg-white rounded-2xl shadow-lg p-10">
-            <div className="text-5xl mb-4">📚</div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">단어장</h1>
-            <p className="text-slate-500 mb-6 text-sm leading-relaxed">
-              회원 전용 서비스입니다.
-              <br />
-              로그인 후 교재·지문을 고르고 포인트로 구매·편집·다운로드할 수 있어요.
-            </p>
-            <Link
-              href="/login"
-              className="inline-block px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
-            >
-              로그인
-            </Link>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // 게스트도 페이지 진입 허용 — 모의고사 단어장만 미리보기, 저장·편집은 회원가입 유도.
 
   return (
     <>
       <AppBar title="단어장" showBackButton onBackClick={() => router.push('/')} />
+
+      <MembershipApplyModal open={signupOpen} onClose={() => setSignupOpen(false)} />
 
       <PointChargeModal
         open={chargeOpen}
@@ -424,13 +470,56 @@ export default function VocabularyOrderPage() {
         customerEmail={customerEmail}
       />
 
-      <div className="min-h-screen bg-slate-50 pb-36">
+      <div className={`min-h-screen bg-slate-50 ${authorized && activeTab === 'buy' && selectedLessons.size > 0 ? 'pb-36' : 'pb-8'}`}>
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+          {/* 게스트(비로그인) 안내 — 모의고사 무료 미리보기 + 회원가입 유도 */}
+          {!authorized && (
+            <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🎁</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-emerald-900">
+                    26년 6월 고1·2·3 모의고사 단어장은 가입 없이 체험할 수 있어요.
+                  </p>
+                  <p className="mt-1 text-[12.5px] text-emerald-800/90 leading-relaxed">
+                    교재를 고른 뒤 <strong className="text-emerald-900">지문(번호)을 누르면</strong> 바로 편집·다운로드 체험 화면으로
+                    이동합니다. 내 라이브러리 저장은{' '}
+                    <button
+                      type="button"
+                      onClick={() => setSignupOpen(true)}
+                      className="font-bold underline underline-offset-2 hover:text-emerald-700"
+                    >
+                      회원가입(무료)
+                    </button>
+                    후 이용할 수 있어요.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSignupOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
+                    >
+                      회원가입하기
+                    </button>
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1 rounded-full border border-emerald-600 bg-white px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    >
+                      로그인
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 헤더 */}
           <div className="rounded-2xl bg-gradient-to-br from-teal-600 to-teal-800 p-6 text-white shadow-md">
             <h1 className="text-2xl font-bold mb-1">내 단어장</h1>
             <p className="text-teal-100 text-sm leading-relaxed">
-              교재를 고른 뒤 <strong className="text-white">강·번호(지문)</strong>를 선택하면 해당 지문 단어장을 내 라이브러리에 담을 수 있어요.
+              {guestTrialMode
+                ? '교재를 고른 뒤 지문(번호)을 누르면 바로 편집·다운로드를 체험할 수 있어요.'
+                : '교재를 고른 뒤 강·번호(지문)를 선택하면 해당 지문 단어장을 내 라이브러리에 담을 수 있어요.'}
             </p>
             <p className="text-teal-200/90 text-xs mt-2">
               고1·고2·고3 <strong className="text-white">영어모의고사</strong> 지문은 <strong className="text-white">무료</strong> · 그 외 지문당{' '}
@@ -441,15 +530,16 @@ export default function VocabularyOrderPage() {
               <span className="font-bold text-lg tabular-nums">{userPoints.toLocaleString()}P</span>
               <button
                 type="button"
-                onClick={() => setChargeOpen(true)}
+                onClick={() => (authorized ? setChargeOpen(true) : setSignupOpen(true))}
                 className="ml-1 text-xs bg-white/20 hover:bg-white/30 rounded-lg px-2.5 py-1 font-medium transition-colors"
               >
-                충전
+                {authorized ? '충전' : '회원가입'}
               </button>
             </div>
           </div>
 
-          {/* 탭 */}
+          {/* 탭 — 라이브러리는 회원 전용 */}
+          {authorized ? (
           <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-slate-100">
             <button
               type="button"
@@ -470,8 +560,13 @@ export default function VocabularyOrderPage() {
               새로 구매하기
             </button>
           </div>
+          ) : (
+          <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 shadow-sm">
+            26년 6월 모의고사 단어장 체험 — 지문을 눌러 바로 편집
+          </div>
+          )}
 
-          {activeTab === 'library' && (
+          {authorized && activeTab === 'library' && (
             <div>
               {libLoading ? (
                 <div className="flex justify-center py-12">
@@ -500,7 +595,7 @@ export default function VocabularyOrderPage() {
             </div>
           )}
 
-          {activeTab === 'buy' && (
+          {(authorized ? activeTab === 'buy' : true) && (
             <div className="space-y-5">
               {/* 진행 상황 — 애니메이션 스테퍼 */}
               <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -526,9 +621,9 @@ export default function VocabularyOrderPage() {
                     key={`hint-${buyPhase}-${selectedLessons.size}`}
                     className="text-sm text-slate-600 mb-4 min-h-[2.5rem] leading-snug anim-vocab-order-phase"
                   >
-                    {buyPhase === 1 && '아래 목록에서 구매할 교재를 눌러 선택해 주세요.'}
-                    {buyPhase === 2 && '강을 펼친 뒤, 구매할 지문(번호)을 체크해 주세요.'}
-                    {buyPhase === 3 && (
+                    {buyPhase === 1 && (guestTrialMode ? '아래에서 체험할 교재(26년 6월)를 선택해 주세요.' : '아래 목록에서 구매할 교재를 눌러 선택해 주세요.')}
+                    {buyPhase === 2 && (guestTrialMode ? '강을 펼친 뒤, 체험할 지문(번호)을 누르면 바로 편집 화면으로 이동합니다.' : '강을 펼친 뒤, 구매할 지문(번호)을 체크해 주세요.')}
+                    {buyPhase === 3 && !guestTrialMode && (
                       <>
                         <span className="font-bold text-teal-700">{selectedLessons.size}개</span> 지문이 선택되었습니다.
                         {mockExamFree ? (
@@ -537,6 +632,9 @@ export default function VocabularyOrderPage() {
                           <> 하단에서 포인트를 확인한 뒤 구매를 눌러 주세요.</>
                         )}
                       </>
+                    )}
+                    {buyPhase === 3 && guestTrialMode && (
+                      <>지문을 눌러 바로 편집·다운로드를 체험해 보세요.</>
                     )}
                   </p>
 
@@ -618,7 +716,12 @@ export default function VocabularyOrderPage() {
               {/* 요금 안내 */}
               <div className="rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  {mockExamFree ? (
+                  {guestTrialMode ? (
+                    <>
+                      <p className="text-sm font-bold text-emerald-900">26년 6월 고1·2·3 영어모의고사 — 체험</p>
+                      <p className="text-xs text-emerald-800/90">지문(번호)을 누르면 바로 편집·다운로드 화면으로 이동합니다.</p>
+                    </>
+                  ) : mockExamFree ? (
                     <>
                       <p className="text-sm font-bold text-emerald-900">선택한 교재: 고1·2·3 영어모의고사 — 무료</p>
                       <p className="text-xs text-emerald-800/90">이 교재 지문 단어장은 포인트 없이 라이브러리에 추가됩니다.</p>
@@ -832,8 +935,9 @@ export default function VocabularyOrderPage() {
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-600 text-white text-xs font-bold">
                         2
                       </span>
-                      강·번호 선택 (지문)
+                      강·번호 {guestTrialMode ? '(지문 클릭)' : '선택 (지문)'}
                     </h2>
+                    {!guestTrialMode && (
                     <button
                       type="button"
                       onClick={handleAllToggle}
@@ -849,12 +953,20 @@ export default function VocabularyOrderPage() {
                         return allOn ? '전체 해제' : '전체 선택';
                       })()}
                     </button>
+                    )}
                   </div>
-                  <p className="text-xs text-slate-500 mb-3">
-                    각 강(Lesson)을 펼쳐 번호를 고릅니다.{' '}
-                    <strong className="text-slate-600">관리자 지문분석기에서 단어장이 저장된 지문</strong>만 선택할 수 있고, 이미
-                    라이브러리에 담은 지문은 선택할 수 없습니다.
-                  </p>
+                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 leading-relaxed">
+                    아직 단어장 자동 제작이 준비되지 않은 교재가 많습니다. 원하시는 교재·강·번호가 있으면{' '}
+                    <a
+                      href={process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold underline decoration-amber-400 underline-offset-2 hover:text-amber-700"
+                    >
+                      카톡으로 문의
+                    </a>{' '}
+                    주시면 안내해 드립니다.
+                  </div>
                   {lessonLabelsWithVocab === null && (
                     <p className="text-xs text-teal-700 font-medium mb-2">단어장 준비 여부를 확인하는 중…</p>
                   )}
@@ -863,10 +975,13 @@ export default function VocabularyOrderPage() {
                       준비된 지문 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
                     </p>
                   )}
-                  {selectedLessons.size > 0 && (
+                  {!guestTrialMode && selectedLessons.size > 0 && (
                     <p className="text-sm font-semibold text-teal-700 mb-3">
                       {selectedLessons.size}개 지문 · {totalPoints.toLocaleString()}P
                     </p>
+                  )}
+                  {guestTrialMode && guestOpening && (
+                    <p className="text-sm font-semibold text-teal-700 mb-3">편집 화면을 여는 중…</p>
                   )}
                   <div className="space-y-2 max-h-[min(70vh,28rem)] overflow-y-auto pr-1">
                     {Object.entries(lessonGroups).map(([lk, group]) => {
@@ -879,6 +994,25 @@ export default function VocabularyOrderPage() {
                       return (
                         <div key={lk} className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/30">
                           <div className="flex">
+                            {guestTrialMode ? (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpand(lk)}
+                                className={`flex-1 flex items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                                  expanded ? 'bg-teal-50 text-teal-900' : 'bg-white text-slate-800 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span>{lk}</span>
+                                <span className="text-xs font-bold opacity-90 tabular-nums">
+                                  {lessonLabelsWithVocab === null ? (
+                                    <>확인 중…</>
+                                  ) : (
+                                    <>준비 {nPrepared}/{group.length} · {expanded ? '접기' : '펼치기'}</>
+                                  )}
+                                </span>
+                              </button>
+                            ) : (
+                            <>
                             <button
                               type="button"
                               onClick={() => handleGroupToggle(lk)}
@@ -913,6 +1047,8 @@ export default function VocabularyOrderPage() {
                             >
                               {expanded ? '접기' : '펼치기'}
                             </button>
+                            </>
+                            )}
                           </div>
                           {expanded && (
                             <div className="px-4 pb-4 pt-3 border-t border-slate-100 bg-white grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -924,6 +1060,36 @@ export default function VocabularyOrderPage() {
                                 const disabled = owned || loadingAvail || noData;
                                 const checked = selectedLessons.has(lesson);
                                 const numLabel = lesson.split(' ').slice(1).join(' ') || lesson;
+                                if (guestTrialMode) {
+                                  const opening = guestOpening === lesson;
+                                  return (
+                                    <button
+                                      key={lesson}
+                                      type="button"
+                                      disabled={disabled || (!!guestOpening && !opening)}
+                                      onClick={() => !disabled && openGuestLesson(lesson)}
+                                      className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                                        disabled
+                                          ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+                                          : opening
+                                            ? 'border-teal-500 bg-teal-100 text-teal-900 cursor-wait'
+                                            : 'border-slate-200 hover:border-teal-400 hover:bg-teal-50 text-slate-800'
+                                      }`}
+                                    >
+                                      {opening ? (
+                                        <>
+                                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />
+                                          여는 중…
+                                        </>
+                                      ) : (
+                                        <>
+                                          {numLabel}
+                                          <span className="text-[10px] font-semibold text-teal-700">편집 →</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  );
+                                }
                                 return (
                                   <label
                                     key={lesson}
@@ -986,7 +1152,7 @@ export default function VocabularyOrderPage() {
         </div>
       </div>
 
-      {activeTab === 'buy' && selectedLessons.size > 0 && (
+      {authorized && activeTab === 'buy' && selectedLessons.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
@@ -1012,7 +1178,7 @@ export default function VocabularyOrderPage() {
               {pointsShort > 0 && (
                 <button
                   type="button"
-                  onClick={() => setChargeOpen(true)}
+                  onClick={() => (authorized ? setChargeOpen(true) : setSignupOpen(true))}
                   className="px-4 py-3 border-2 border-teal-600 text-teal-700 rounded-xl text-sm font-bold hover:bg-teal-50 transition-colors"
                 >
                   포인트 충전

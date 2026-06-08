@@ -14,29 +14,34 @@ import type { LessonMode } from '@/lib/lesson-material-html';
 
 export type ClassKitTabKey = 'lecture' | LessonMode;
 
-const TABS: { key: ClassKitTabKey; label: string; href: string }[] = [
-  { key: 'lecture', label: '강의용자료', href: '/admin/class-kit/lecture' },
-  { key: 'parallel', label: '수업용자료', href: '/admin/class-kit/lesson' },
-  { key: 'lineByLine', label: '한줄해석', href: '/admin/class-kit/lesson/line' },
-  { key: 'writeEn', label: '영작하기', href: '/admin/class-kit/lesson/write-en' },
-  { key: 'writeKo', label: '해석쓰기', href: '/admin/class-kit/lesson/write-ko' },
+const TAB_DEFS: { key: ClassKitTabKey; label: string; path: string }[] = [
+  { key: 'lecture', label: '강의용자료', path: '/lecture' },
+  { key: 'parallel', label: '수업용자료', path: '/lesson' },
+  { key: 'lineByLine', label: '한줄해석', path: '/lesson/line' },
+  { key: 'writeEn', label: '영작하기', path: '/lesson/write-en' },
+  { key: 'writeKo', label: '해석쓰기', path: '/lesson/write-ko' },
 ];
 
 export default function ClassKitTabs({
   current,
   onSelectLessonMode,
+  routeBase = '/admin/class-kit',
 }: {
   current: ClassKitTabKey;
   onSelectLessonMode?: (m: LessonMode) => void;
+  /** 사용자용 `/class-kit`, 관리자용 `/admin/class-kit` */
+  routeBase?: string;
 }) {
   return (
-    <div className="flex items-center gap-1 bg-slate-800/70 border border-slate-700 rounded-lg p-0.5 w-fit">
-      {TABS.map(t => {
+    <div className="flex flex-wrap items-center gap-1">
+      {TAB_DEFS.map((t) => {
         const active = t.key === current;
-        const cls = `px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-          active ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700/60'
+        const cls = `relative rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+          active
+            ? 'bg-emerald-600/15 text-emerald-300 ring-1 ring-emerald-500/40'
+            : 'text-zinc-500 hover:bg-zinc-800/80 hover:text-zinc-200'
         }`;
-        // 수업용 모드 탭 + 콜백 → 즉시 전환(버튼), 그 외 → 라우트 이동(Link)
+        const href = `${routeBase}${t.path}`;
         if (t.key !== 'lecture' && onSelectLessonMode) {
           return (
             <button key={t.key} type="button" onClick={() => onSelectLessonMode(t.key as LessonMode)} className={cls}>
@@ -45,7 +50,7 @@ export default function ClassKitTabs({
           );
         }
         return (
-          <Link key={t.key} href={t.href} className={cls}>
+          <Link key={t.key} href={href} className={cls}>
             {t.label}
           </Link>
         );
