@@ -14,6 +14,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // ── 타입 정의 ──────────────────────────────────────────────────────────────────
 
@@ -84,11 +85,37 @@ export interface ExamMetaOverrides {
 
 let cachedCss: string | null = null;
 
+const REL = 'assets/exam_kit/styles.css';
+
+/**
+ * styles.css 경로 해석 — cwd 에 의존하지 않도록 여러 후보를 시도.
+ * (워크트리/하위 디렉터리에서 실행돼도 빈 CSS 로 저장되는 사고 방지.)
+ *  1) 모듈 기준(<root>/lib → <root>/assets) — cwd 무관, 가장 신뢰
+ *  2) process.cwd()
+ *  3) 워크트리면 메인 repo 루트
+ * 모두 실패하면 throw (조용히 빈 CSS 저장 금지).
+ */
+function resolveExamCssPath(): string {
+  const candidates: string[] = [];
+  try {
+    const moduleDir = path.dirname(fileURLToPath(import.meta.url)); // <root>/lib
+    candidates.push(path.resolve(moduleDir, '..', REL));
+  } catch { /* import.meta 불가 환경 무시 */ }
+  const cwd = process.cwd();
+  candidates.push(path.join(cwd, REL));
+  const marker = `${path.sep}.claude${path.sep}worktrees${path.sep}`;
+  const i = cwd.indexOf(marker);
+  if (i >= 0) candidates.push(path.join(cwd.slice(0, i), REL));
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  throw new Error(`exam_kit/styles.css 를 찾을 수 없습니다. 시도: ${candidates.join(' | ')}`);
+}
+
 export function readExamCss(): string {
   // 개발 환경에서는 styles.css 변경이 즉시 반영되도록 매번 새로 읽는다.
   if (process.env.NODE_ENV === 'production' && cachedCss != null) return cachedCss;
-  const cssPath = path.join(process.cwd(), 'assets/exam_kit/styles.css');
-  const content = fs.readFileSync(cssPath, 'utf-8');
+  const content = fs.readFileSync(resolveExamCssPath(), 'utf-8');
   cachedCss = content;
   return content;
 }

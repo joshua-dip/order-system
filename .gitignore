@@ -81,6 +81,10 @@ watch.log
 .essay-audit-logs/
 .variant-drafts/
 .essay-audit-reports/
+.grammar-drafts/
+.syntax-drafts/
+.essay-step-drafts/
+.block-workbook-drafts/
 
 # Audit 작업 중 자동 생성되는 일회성 패치 스크립트
 scripts/patch-essay-*.ts
