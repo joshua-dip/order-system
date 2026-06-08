@@ -70,7 +70,7 @@ export async function PATCH(
     }
 
     if (body?.action === 'setStatus' && isAdmin) {
-      const allowed = ['pending', 'accepted', 'payment_confirmed', 'in_progress', 'completed', 'cancelled'];
+      const allowed = ['pending', 'accepted', 'payment_confirmed', 'in_progress', 'completed', 'cancelled', 'free_share'];
       const newStatus = body?.status;
       if (!newStatus || !allowed.includes(newStatus)) {
         return NextResponse.json({ error: '유효한 상태가 아닙니다.' }, { status: 400 });

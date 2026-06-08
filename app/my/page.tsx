@@ -54,6 +54,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   payment_confirmed: '입금 확인',
   in_progress: '제작 중',
   completed: '완료',
+  free_share: '무료공유',
   cancelled: '취소됨',
 };
 

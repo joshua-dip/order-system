@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
       points: (() => { const p = (u as { points?: number }).points; return typeof p === 'number' && p >= 0 ? p : 0; })(),
       supplementaryNote: (() => { const s = (u as { supplementaryNote?: string }).supplementaryNote; return typeof s === 'string' ? s : ''; })(),
+      memberType: (() => { const m = (u as { memberType?: string }).memberType; return typeof m === 'string' ? m : ''; })(),
       annualMemberSince: (() => {
         const d = (u as { annualMemberSince?: Date }).annualMemberSince;
         if (!d) return null;

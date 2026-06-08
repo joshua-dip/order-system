@@ -2207,6 +2207,7 @@ export default function EssayGeneratorPage() {
 
   /** 미리보기 확대 (1 = 100%) */
   const [previewScale, setPreviewScale] = useState(1);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
   /** 미리보기 ← / → 네비게이션용 saved 목록 (id + folder 만 필요) */
   type SavedNavItem = { _id: string; folder: string };
@@ -2589,10 +2590,29 @@ export default function EssayGeneratorPage() {
     }
   }, []);
 
+  /** 미리보기에 드래그 선택이 있을 때 S/V/O/C/M = 색칠, 0 = 지우기. 선택 없으면 일반 입력 허용. */
+  const applySvocRef = useRef<((k: 'S' | 'V' | 'O' | 'C' | 'M' | 'clear') => void) | null>(null);
+  const handleSvocKey = useCallback((e: KeyboardEvent) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const map: Record<string, 'S' | 'V' | 'O' | 'C' | 'M' | 'clear'> = { s: 'S', v: 'V', o: 'O', c: 'C', m: 'M', '0': 'clear' };
+    const kind = map[e.key.toLowerCase()];
+    if (!kind) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return; // 좌측 입력칸은 제외
+    const sel = iframeRef.current?.contentWindow?.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return; // 미리보기에 선택이 있을 때만 가로챔
+    e.preventDefault();
+    applySvocRef.current?.(kind);
+  }, []);
+
   useEffect(() => {
     window.addEventListener('keydown', handleNavKey);
-    return () => window.removeEventListener('keydown', handleNavKey);
-  }, [handleNavKey]);
+    window.addEventListener('keydown', handleSvocKey);
+    return () => {
+      window.removeEventListener('keydown', handleNavKey);
+      window.removeEventListener('keydown', handleSvocKey);
+    };
+  }, [handleNavKey, handleSvocKey]);
 
   // 폴더 목록 새로고침
   const refreshFolders = useCallback(async () => {
@@ -2605,10 +2625,12 @@ export default function EssayGeneratorPage() {
     const doc = iframeRef.current?.contentDocument;
     if (!doc) return;
     doc.designMode = 'on';
-    /* iframe 안 focus 일 때도 ⌘+← / ⌘+→ 동작하도록 iframe doc 에도 부착 */
+    /* iframe 안 focus 일 때도 ⌘+← / ⌘+→ + SVOC 단축키 동작하도록 iframe doc 에도 부착 */
     doc.removeEventListener('keydown', handleNavKey);
     doc.addEventListener('keydown', handleNavKey);
-  }, [handleNavKey]);
+    doc.removeEventListener('keydown', handleSvocKey);
+    doc.addEventListener('keydown', handleSvocKey);
+  }, [handleNavKey, handleSvocKey]);
 
   /**
    * 미리보기에서 드래그 선택한 텍스트에 SVOC 색상 span 적용 (또는 풀기).
@@ -2670,6 +2692,68 @@ export default function EssayGeneratorPage() {
     setExamHtml('<!DOCTYPE html>' + doc.documentElement.outerHTML);
     setSaveMsg(kind === 'clear' ? '색상 제거됨' : `${kind} 적용`);
     setTimeout(() => setSaveMsg(''), 1200);
+  }, []);
+  // 단축키 핸들러가 최신 applySvocToSelection 을 참조하도록 ref 동기화
+  applySvocRef.current = applySvocToSelection;
+
+  /**
+   * 미리보기에서 드래그 선택한 텍스트에 글자 서식 적용 — 선택 영역을 span 으로 감싼다.
+   * (SVOC 와 동일 방식이라 포커스가 버튼으로 옮겨가도 안정적. execCommand 미사용.)
+   *  - bold/italic/underline/strike : 굵게·기울임·밑줄·취소선
+   *  - sizeUp/sizeDown : 글자 크기 ±(상대 em, 반복 시 누적)
+   *  - clearFmt : 선택 영역 인라인 서식(style·b/i/u 태그) 제거 (SVOC 색은 보존)
+   */
+  const applyFormatToSelection = useCallback((kind: 'bold' | 'italic' | 'underline' | 'strike' | 'sizeUp' | 'sizeDown' | 'clearFmt') => {
+    const win = iframeRef.current?.contentWindow;
+    const doc = iframeRef.current?.contentDocument;
+    if (!win || !doc) return;
+    const sel = win.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+      setSaveMsg('드래그로 텍스트를 선택한 뒤 누르세요');
+      setTimeout(() => setSaveMsg(''), 1500);
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    const fragment = range.extractContents();
+
+    if (kind === 'clearFmt') {
+      const els: HTMLElement[] = [];
+      const walker = doc.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT);
+      let n = walker.currentNode as HTMLElement | null;
+      while (n) { if (n instanceof HTMLElement) els.push(n); n = walker.nextNode() as HTMLElement | null; }
+      for (const el of els) {
+        const tag = el.tagName;
+        const styleTag = tag === 'B' || tag === 'I' || tag === 'U' || tag === 'STRONG' || tag === 'EM' || tag === 'S' || tag === 'STRIKE';
+        if (tag === 'SPAN' || styleTag) {
+          el.removeAttribute('style');
+          const hasClass = (el.className || '').trim().length > 0; // svoc-* 색 span 은 보존
+          if (styleTag || (tag === 'SPAN' && !hasClass)) {
+            const parent = el.parentNode;
+            if (!parent) continue;
+            while (el.firstChild) parent.insertBefore(el.firstChild, el);
+            parent.removeChild(el);
+          }
+        }
+      }
+      range.insertNode(fragment);
+    } else {
+      const span = doc.createElement('span');
+      const s = span.style;
+      if (kind === 'bold') s.fontWeight = '700';
+      else if (kind === 'italic') s.fontStyle = 'italic';
+      else if (kind === 'underline') s.textDecoration = 'underline';
+      else if (kind === 'strike') s.textDecoration = 'line-through';
+      else if (kind === 'sizeUp') s.fontSize = '1.15em';
+      else if (kind === 'sizeDown') s.fontSize = '0.87em';
+      span.appendChild(fragment);
+      range.insertNode(span);
+    }
+
+    sel.removeAllRanges();
+    setExamHtml('<!DOCTYPE html>' + doc.documentElement.outerHTML);
+    const label: Record<typeof kind, string> = { bold: '굵게', italic: '기울임', underline: '밑줄', strike: '취소선', sizeUp: '글자 크게', sizeDown: '글자 작게', clearFmt: '서식 지움' };
+    setSaveMsg(label[kind]);
+    setTimeout(() => setSaveMsg(''), 1000);
   }, []);
 
   const handlePrint = useCallback(() => {
@@ -3668,43 +3752,119 @@ export default function EssayGeneratorPage() {
               </div>
 
               <div className="flex items-center gap-1 pl-3 border-l border-slate-700">
-                <span className="text-[10px] text-slate-500 uppercase tracking-wide" title="미리보기에서 텍스트를 드래그한 뒤 누르면 그 부분에 색칠">SVOC</span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wide" title="미리보기에서 텍스트를 드래그한 뒤 누르면(또는 단축키) 그 부분에 색칠 — 단축키: 선택 후 S·V·O·C·M, 지우기 0">SVOC<span className="ml-1 normal-case text-slate-600">(단축키 S V O C M · 지우기 0)</span></span>
                 <button
                   type="button"
                   onClick={() => applySvocToSelection('S')}
-                  title="주어(S)"
+                  title="주어(S) · 단축키 S"
                   className="w-6 h-6 rounded text-[11px] font-bold border border-sky-500/70 bg-sky-500/15 text-sky-100 hover:bg-sky-500/30 leading-none"
                 >S</button>
                 <button
                   type="button"
                   onClick={() => applySvocToSelection('V')}
-                  title="동사(V)"
+                  title="동사(V) · 단축키 V"
                   className="w-6 h-6 rounded text-[11px] font-bold border border-orange-500/70 bg-orange-500/15 text-orange-100 hover:bg-orange-500/30 leading-none"
                 >V</button>
                 <button
                   type="button"
                   onClick={() => applySvocToSelection('O')}
-                  title="목적어(O)"
+                  title="목적어(O) · 단축키 O"
                   className="w-6 h-6 rounded text-[11px] font-bold border border-emerald-500/70 bg-emerald-500/15 text-emerald-100 hover:bg-emerald-500/30 leading-none"
                 >O</button>
                 <button
                   type="button"
                   onClick={() => applySvocToSelection('C')}
-                  title="보어(C)"
+                  title="보어(C) · 단축키 C"
                   className="w-6 h-6 rounded text-[11px] font-bold border border-violet-500/70 bg-violet-500/15 text-violet-100 hover:bg-violet-500/30 leading-none"
                 >C</button>
                 <button
                   type="button"
                   onClick={() => applySvocToSelection('M')}
-                  title="수식어·구·절(M)"
+                  title="수식어·구·절(M) · 단축키 M"
                   className="w-6 h-6 rounded text-[11px] font-bold border border-slate-500/70 bg-slate-500/15 text-slate-100 hover:bg-slate-500/30 leading-none"
                 >M</button>
                 <button
                   type="button"
                   onClick={() => applySvocToSelection('clear')}
-                  title="선택 영역의 SVOC 색 제거"
+                  title="선택 영역의 SVOC 색 제거 · 단축키 0"
                   className="px-1.5 py-0.5 rounded text-[10px] font-medium border border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700"
                 >지우기</button>
+              </div>
+
+              {/* 글자 편집 — 선택 영역에 서식 적용 (미리보기 편집) */}
+              <div className="flex items-center gap-1 pl-3 border-l border-slate-700">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wide" title="미리보기에서 텍스트를 드래그한 뒤 누르면 그 부분에 서식 적용 (편집 가능)">글자</span>
+                <button type="button" onClick={() => applyFormatToSelection('bold')} title="굵게 (선택 후) · ⌘B"
+                  className="w-6 h-6 rounded text-[12px] font-bold border border-slate-600 text-slate-100 hover:bg-slate-700 leading-none">B</button>
+                <button type="button" onClick={() => applyFormatToSelection('italic')} title="기울임 · ⌘I"
+                  className="w-6 h-6 rounded text-[12px] italic font-serif border border-slate-600 text-slate-100 hover:bg-slate-700 leading-none">I</button>
+                <button type="button" onClick={() => applyFormatToSelection('underline')} title="밑줄 · ⌘U"
+                  className="w-6 h-6 rounded text-[12px] underline border border-slate-600 text-slate-100 hover:bg-slate-700 leading-none">U</button>
+                <button type="button" onClick={() => applyFormatToSelection('strike')} title="취소선"
+                  className="w-6 h-6 rounded text-[12px] line-through border border-slate-600 text-slate-100 hover:bg-slate-700 leading-none">S</button>
+                <button type="button" onClick={() => applyFormatToSelection('sizeUp')} title="글자 크게"
+                  className="px-1.5 h-6 rounded text-[12px] font-bold border border-slate-600 text-slate-100 hover:bg-slate-700 leading-none">A+</button>
+                <button type="button" onClick={() => applyFormatToSelection('sizeDown')} title="글자 작게"
+                  className="px-1.5 h-6 rounded text-[10px] font-bold border border-slate-600 text-slate-300 hover:bg-slate-700 leading-none">A−</button>
+                <button type="button" onClick={() => applyFormatToSelection('clearFmt')} title="선택 영역 서식 지우기 (SVOC 색은 유지)"
+                  className="px-1.5 py-0.5 rounded text-[10px] font-medium border border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700">서식지우기</button>
+              </div>
+
+              {/* 단축키 사용법 도움말 */}
+              <div className="relative flex items-center pl-3 border-l border-slate-700 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setShortcutHelpOpen((v) => !v)}
+                  title="단축키 사용법 보기"
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border transition-colors ${shortcutHelpOpen ? 'border-sky-500/60 bg-sky-950/60 text-sky-200' : 'border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                >
+                  <span className="text-sm leading-none">⌨️</span> 단축키
+                </button>
+                {shortcutHelpOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShortcutHelpOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 z-50 w-[22rem] max-w-[90vw] rounded-xl border border-slate-600 bg-slate-900/98 shadow-2xl shadow-black/50 p-4 text-left">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-bold text-white">단축키 사용법</p>
+                        <button type="button" onClick={() => setShortcutHelpOpen(false)} className="text-slate-500 hover:text-white text-sm leading-none">✕</button>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+                        미리보기에서 <b className="text-slate-200">텍스트를 드래그해 선택</b>한 뒤, 아래 키를 누르거나 버튼을 클릭하면 그 부분에 적용됩니다. (미리보기가 편집 모드일 때)
+                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[11px] font-bold text-sky-300 mb-1.5">SVOC 문장성분 색칠</p>
+                          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">S</kbd><span className="text-slate-300 self-center">주어 (파랑)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">V</kbd><span className="text-slate-300 self-center">동사 (주황)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">O</kbd><span className="text-slate-300 self-center">목적어 (초록)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">C</kbd><span className="text-slate-300 self-center">보어 (보라)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">M</kbd><span className="text-slate-300 self-center">수식어 (회색)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">0</kbd><span className="text-slate-300 self-center">선택 영역 태그 지우기</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-bold text-emerald-300 mb-1.5">글자 서식</p>
+                          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">⌘/Ctrl B</kbd><span className="text-slate-300 self-center">굵게 (버튼 <b>B</b>)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">⌘/Ctrl I</kbd><span className="text-slate-300 self-center">기울임 (버튼 <i>I</i>)</span>
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">⌘/Ctrl U</kbd><span className="text-slate-300 self-center">밑줄 (버튼 <u>U</u>)</span>
+                            <span className="justify-self-start text-slate-500 text-[11px] self-center">버튼</span><span className="text-slate-300 self-center"><b>S</b> 취소선 · <b>A+</b>/<b>A−</b> 크게/작게 · <b>서식지우기</b></span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-bold text-amber-300 mb-1.5">보기 · 이동</p>
+                          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+                            <kbd className="justify-self-start px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-100 font-mono text-[11px]">−／＋</kbd><span className="text-slate-300 self-center">미리보기 축소／확대 (초기화 100%)</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-3 pt-2 border-t border-slate-700 leading-relaxed">
+                        ※ 단축키는 미리보기 안에서 텍스트가 <b className="text-slate-400">선택된 상태</b>일 때만 동작하며, 입력칸(제목 등)에 커서가 있을 땐 무시됩니다.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

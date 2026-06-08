@@ -56,6 +56,7 @@ interface ListUser {
   allowedEssayTypeIds?: string[];
   points?: number;
   supplementaryNote?: string;
+  memberType?: string;
   annualMemberSince?: string | null;
   monthlyMemberSince?: string | null;
   monthlyMemberUntil?: string | null;
@@ -145,12 +146,29 @@ const MESSAGE_PRESETS: { id: string; label: string; getMessage: (u: ListUser) =>
   },
 ];
 
+/** 회원 구분(학생/학부모/선생님) 라벨 */
+const MEMBER_TYPE_LABELS: Record<string, string> = {
+  student: '학생',
+  parent: '학부모',
+  teacher: '선생님',
+};
+function memberTypeLabel(t: string | null | undefined): string {
+  return t ? (MEMBER_TYPE_LABELS[t] ?? '') : '';
+}
+/** 다크 배지용 색 */
+const MEMBER_TYPE_BADGE_CLASS: Record<string, string> = {
+  student: 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/40',
+  parent: 'bg-rose-500/20 text-rose-200 ring-1 ring-rose-400/40',
+  teacher: 'bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40',
+};
+
 const STATUS_LABELS: Record<string, string> = {
   pending: '주문 접수',
   accepted: '제작 수락',
   payment_confirmed: '입금 확인',
   in_progress: '제작 중',
   completed: '완료',
+  free_share: '무료공유',
   cancelled: '취소됨',
 };
 
@@ -162,6 +180,7 @@ type AdminOrderListFilter =
   | 'payment_confirmed'
   | 'in_progress'
   | 'completed'
+  | 'free_share'
   | 'cancelled';
 
 /** orderMeta.flow → 관리자 화면용 짧은 한글 */
@@ -210,6 +229,7 @@ const STATUS_DOT_CLASS: Record<string, string> = {
     'border-2 border-emerald-400 text-emerald-200 bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.22)]',
   in_progress: 'border border-amber-500/70 text-amber-200 bg-amber-950/50',
   completed: 'border border-teal-400/80 text-teal-100 bg-teal-900/45',
+  free_share: 'border border-violet-400/80 text-violet-100 bg-violet-900/45',
   cancelled: 'border border-slate-600 text-slate-500 bg-slate-800/80',
 };
 
@@ -220,6 +240,7 @@ const STATUS_LABEL_TEXT_CLASS: Record<string, string> = {
   payment_confirmed: 'text-emerald-300 font-semibold',
   in_progress: 'text-amber-200',
   completed: 'text-teal-200',
+  free_share: 'text-violet-200',
   cancelled: 'text-slate-500',
 };
 
@@ -230,6 +251,7 @@ const STATUS_BADGE_CLASS: Record<string, string> = {
   payment_confirmed: 'bg-emerald-500/25 text-emerald-100 ring-1 ring-emerald-400/55 font-semibold',
   in_progress: 'bg-amber-500/20 text-amber-100 ring-1 ring-amber-500/45',
   completed: 'bg-teal-500/20 text-teal-50 ring-1 ring-teal-400/50',
+  free_share: 'bg-violet-500/20 text-violet-50 ring-1 ring-violet-400/50',
   cancelled: 'bg-slate-700 text-slate-500 ring-1 ring-slate-600',
 };
 
@@ -2968,7 +2990,7 @@ export default function AdminDashboardPage() {
               <div className="px-5 py-3 border-b border-slate-700 bg-slate-900/50">
                 <p className="text-xs font-semibold text-slate-400 mb-2">목록 기준 요약 (현재 표시 {orderAnalytics.total}건)</p>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {(['pending', 'accepted', 'payment_confirmed', 'in_progress', 'completed', 'cancelled'] as const).map((st) => {
+                  {(['pending', 'accepted', 'payment_confirmed', 'in_progress', 'completed', 'free_share', 'cancelled'] as const).map((st) => {
                     const n = orderAnalytics.byStatus[st] ?? 0;
                     if (n === 0) return null;
                     const lab = STATUS_LABELS[st] || st;
@@ -3078,6 +3100,7 @@ export default function AdminDashboardPage() {
                     {displayOrders.map((o) => {
                       const member = o.loginId ? users.find((u) => u.loginId === o.loginId) : null;
                       const orderCompleted = (o.status || 'pending') === 'completed';
+                      const isFreeShare = (o.status || 'pending') === 'free_share';
                       const pointsUsedOnOrder = o.pointsUsed ?? 0;
                       const payWonForPoints =
                         pointsUsedOnOrder > 0 ? (o.paymentDueWon ?? o.revenueWon) : o.revenueWon;
@@ -3283,8 +3306,10 @@ export default function AdminDashboardPage() {
                             <span className="text-slate-600">—</span>
                           )}
                         </td>
-                        <td className={`py-2.5 px-2 text-slate-300 tabular-nums text-xs align-top ${isCancelledRow ? 'line-through opacity-50' : ''}`} title={amountTitle}>
-                          {orderCompleted ? (
+                        <td className={`py-2.5 px-2 text-slate-300 tabular-nums text-xs align-top ${isCancelledRow ? 'line-through opacity-50' : ''}`} title={isFreeShare ? '무료공유 — 매출 정산 제외' : amountTitle}>
+                          {isFreeShare ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/50">무료공유</span>
+                          ) : orderCompleted ? (
                             o.revenueWon != null && o.revenueWon >= 0 ? (
                               pointsUsedOnOrder > 0 ? (
                                 <div className="space-y-0.5">
@@ -3364,7 +3389,7 @@ export default function AdminDashboardPage() {
                                     className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0 ${STATUS_DOT_CLASS[o.status || 'pending'] || STATUS_DOT_CLASS.pending}`}
                                     title={o.statusLabel}
                                   >
-                                    {o.statusLabel === '완료' ? '✓' : o.statusLabel === '제작 중' ? '◐' : '○'}
+                                    {o.statusLabel === '완료' ? '✓' : o.statusLabel === '무료공유' ? '♥' : o.statusLabel === '제작 중' ? '◐' : '○'}
                                   </span>
                                   <span
                                     className={`ml-1.5 text-xs ${STATUS_LABEL_TEXT_CLASS[o.status || 'pending'] || 'text-slate-300'}`}
@@ -4464,7 +4489,12 @@ export default function AdminDashboardPage() {
                             {(u.name || u.loginId).charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-bold text-white text-[15px] tracking-tight truncate">{u.name || u.loginId}</p>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <p className="font-bold text-white text-[15px] tracking-tight truncate">{u.name || u.loginId}</p>
+                              {memberTypeLabel(u.memberType) && (
+                                <span className={`inline-flex shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold ${MEMBER_TYPE_BADGE_CLASS[u.memberType ?? ''] || 'bg-slate-600/40 text-slate-300'}`}>{memberTypeLabel(u.memberType)}</span>
+                              )}
+                            </div>
                             <p className="text-slate-400 text-xs truncate mt-0.5">{u.email || '—'}</p>
                             <p className="text-slate-500 text-xs mt-0.5">
                               <span className="text-slate-500">아이디</span> <span className="text-slate-300 font-mono">{u.loginId || '—'}</span>
@@ -5075,7 +5105,7 @@ export default function AdminDashboardPage() {
                     )}
                   {users.map((u) => (
                     <option key={u.id} value={u.loginId}>
-                      {u.loginId} ({u.name})
+                      {u.loginId} ({u.name}){memberTypeLabel(u.memberType) ? ` · ${memberTypeLabel(u.memberType)}` : ''}
                     </option>
                   ))}
                 </select>
@@ -5932,7 +5962,7 @@ export default function AdminDashboardPage() {
                 >
                   <option value="">회원 선택</option>
                   {users.map((u) => (
-                    <option key={u.id} value={u.loginId}>{u.loginId} ({u.name})</option>
+                    <option key={u.id} value={u.loginId}>{u.loginId} ({u.name}){memberTypeLabel(u.memberType) ? ` · ${memberTypeLabel(u.memberType)}` : ''}</option>
                   ))}
                 </select>
               </div>

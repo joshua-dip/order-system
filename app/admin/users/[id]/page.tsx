@@ -29,6 +29,7 @@ interface DetailUser {
   allowedEssayTypeIds: string[];
   points: number;
   supplementaryNote: string;
+  memberType?: string;
   annualMemberSince: string | null;
   monthlyMemberSince: string | null;
   monthlyMemberUntil: string | null;
@@ -95,6 +96,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
   processing: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
   completed: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  free_share: 'bg-violet-500/20 text-violet-200 border-violet-500/40',
   cancelled: 'bg-red-500/20 text-red-300 border-red-500/40',
 };
 
@@ -205,6 +207,7 @@ export default function UserDetailPage() {
   const [editMonthlyFrom, setEditMonthlyFrom] = useState('');
   const [editMonthlyUntil, setEditMonthlyUntil] = useState('');
   const [editIsVip, setEditIsVip] = useState(false);
+  const [editMemberType, setEditMemberType] = useState('');
   const [editAnalysis, setEditAnalysis] = useState(false);
   const [editEssay, setEditEssay] = useState(false);
   const [editMyFormat, setEditMyFormat] = useState(false);
@@ -283,6 +286,7 @@ export default function UserDetailPage() {
       setEditMonthlyFrom(u.monthlyMemberSince ?? '');
       setEditMonthlyUntil(u.monthlyMemberUntil ?? '');
       setEditIsVip(u.isVip);
+      setEditMemberType(u.memberType ?? '');
       setEditAnalysis(u.canAccessAnalysis);
       setEditEssay(u.canAccessEssay);
       setEditMyFormat(u.myFormatApproved);
@@ -538,6 +542,7 @@ export default function UserDetailPage() {
         canAccessEssay: editEssay,
         myFormatApproved: editMyFormat,
         isVip: editIsVip,
+        memberType: editMemberType,
         annualMemberSince: editAnnual || null,
         monthlyMemberSince: editMonthlyFrom || null,
         monthlyMemberUntil: editMonthlyUntil || null,
@@ -830,6 +835,9 @@ export default function UserDetailPage() {
   function getMembershipBadges(u: DetailUser) {
     const now = new Date();
     const badges: { text: string; cls: string }[] = [];
+    if (u.memberType === 'student') badges.push({ text: '학생', cls: 'bg-sky-500/20 text-sky-300 border-sky-500/40' });
+    else if (u.memberType === 'parent') badges.push({ text: '학부모', cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' });
+    else if (u.memberType === 'teacher') badges.push({ text: '선생님', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' });
     if (u.isVip) badges.push({ text: 'VIP', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' });
     if (u.annualMemberSince) badges.push({ text: '연회원', cls: 'bg-violet-500/20 text-violet-300 border-violet-500/40' });
     if (u.monthlyMemberUntil) {
@@ -981,6 +989,29 @@ export default function UserDetailPage() {
                   <Field label="월구독 만료일">
                     <EditInput value={editMonthlyUntil} onChange={setEditMonthlyUntil} placeholder="YYYY-MM-DD" />
                   </Field>
+                </div>
+                <div className="mb-3">
+                  <p className="text-slate-400 text-xs font-medium mb-1.5">회원 구분</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      { v: 'student', label: '학생', cls: 'bg-sky-500/25 text-sky-200 border-sky-400/50' },
+                      { v: 'parent', label: '학부모', cls: 'bg-rose-500/25 text-rose-200 border-rose-400/50' },
+                      { v: 'teacher', label: '선생님', cls: 'bg-emerald-500/25 text-emerald-200 border-emerald-400/50' },
+                      { v: '', label: '미지정', cls: 'bg-slate-600/40 text-slate-300 border-slate-500/50' },
+                    ] as const).map((opt) => {
+                      const active = editMemberType === opt.v;
+                      return (
+                        <button
+                          key={opt.v || 'none'}
+                          type="button"
+                          onClick={() => setEditMemberType(opt.v)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active ? opt.cls : 'bg-slate-700/60 text-slate-400 border-slate-600 hover:bg-slate-700'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <Toggle checked={editIsVip} onChange={setEditIsVip} label="VIP 회원" />
                 {user.vipSince && (
@@ -1274,6 +1305,7 @@ export default function UserDetailPage() {
                             <option value="payment_confirmed">입금 확인</option>
                             <option value="in_progress">제작 중</option>
                             <option value="completed">완료</option>
+                            <option value="free_share">무료공유</option>
                             <option value="cancelled">취소됨</option>
                           </select>
                           <button

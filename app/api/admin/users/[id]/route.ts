@@ -51,6 +51,7 @@ function mapUser(u: Record<string, unknown>) {
     allowedEssayTypeIds: Array.isArray(u.allowedEssayTypeIds) ? u.allowedEssayTypeIds : [],
     points: typeof u.points === 'number' && (u.points as number) >= 0 ? (u.points as number) : 0,
     supplementaryNote: typeof u.supplementaryNote === 'string' ? u.supplementaryNote : '',
+    memberType: typeof u.memberType === 'string' ? u.memberType : '',
     annualMemberSince: toDateStr(u.annualMemberSince),
     monthlyMemberSince: toDateStr(u.monthlyMemberSince),
     monthlyMemberUntil: toDateStr(u.monthlyMemberUntil),
@@ -176,6 +177,12 @@ export async function PATCH(
     if (allowedEssayTypeIds !== undefined) updates.allowedEssayTypeIds = allowedEssayTypeIds;
     if (points !== undefined) updates.points = points;
     if (supplementaryNote !== undefined) updates.supplementaryNote = supplementaryNote;
+    // 회원 구분: 학생(student)/학부모(parent)/선생님(teacher). 빈값·기타 → 해제(unset)
+    if ('memberType' in body) {
+      const v = body.memberType;
+      if (typeof v === 'string' && ['student', 'parent', 'teacher'].includes(v)) updates.memberType = v;
+      else unsetDoc.memberType = '';
+    }
     if (hasAnnualMemberSince && annualMemberSinceValue !== undefined) updates.annualMemberSince = annualMemberSinceValue;
 
     const hasMonthlyMemberSince = 'monthlyMemberSince' in body;
