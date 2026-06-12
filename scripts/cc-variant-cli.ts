@@ -369,7 +369,7 @@ async function cmdSave(flags: Map<string, string>) {
     results.push({ index: i, ...saved });
     if (items.length > 1) console.error(`  [${i + 1}/${items.length}] ${source} / ${type} → ${saved.ok ? 'OK' : saved.error}`);
   }
-  if (items.length === 1) { out(results[0]); } else { out({ ok: true, total: items.length, saved: results.filter((r: any) => r.ok).length, results }); }
+  if (items.length === 1) { out(results[0]); } else { out({ ok: true, total: items.length, saved: results.filter((r) => (r as { ok?: boolean }).ok).length, results }); }
 }
 
 async function cmdRecordReview(flags: Map<string, string>) {
@@ -509,6 +509,13 @@ async function cmdPipeline(flags: Map<string, string>) {
   const noQuestions = (Array.isArray(sliced.noQuestions)
     ? sliced.noQuestions
     : []) as QCountNoQuestionLite[];
+  // 주문이 선택했지만 passages 에 원문이 없어 부족 집계에서 아예 빠지는 지문 —
+  // needCreate 카운터에 안 잡히므로 별도로 표면화하지 않으면 「완료」로 오인된다.
+  const lessonsWithoutPassage = (Array.isArray(sliced.lessonsWithoutPassage)
+    ? sliced.lessonsWithoutPassage
+    : []) as string[];
+  const orderLessonsRequested = Number(sliced.orderLessonsRequested ?? 0);
+  const orderLessonsMatched = Number(sliced.orderLessonsMatched ?? 0);
 
   // 2) 대기 자동 검수 (Pro-only · per-question 종합 검증 자동 적용)
   let review: ReviewLoopResult | { skipped: true; reason: string } = {
@@ -542,6 +549,26 @@ async function cmdPipeline(flags: Map<string, string>) {
     (a, b) => b.total - a.total,
   );
 
+  const nextChatSteps: string[] =
+    needCreateGrandTotal > 0
+      ? [
+          '1) 위 need_create_by_type 의 각 항목에 대해 variant_get_passage(passage_id) 로 원문 읽기',
+          '2) variant_draft_grammar_rules 등 유형별 규칙에 맞춰 채팅에서 question_data JSON 작성',
+          '3) variant_save_generated_question 으로 저장 (status=대기)',
+          `4) 모두 저장한 뒤 ${orderNumberRaw ? `pipeline:${orderNumberRaw}` : 'pipeline --textbook …'} 다시 실행 → 신규 대기까지 자동 검수`,
+        ]
+      : lessonsWithoutPassage.length > 0
+        ? ['카운트 기준 신규 생성 항목은 없지만, 아래 원문 미등록 지문이 남아 있어 주문 완료가 아닙니다.']
+        : [
+            '신규 생성할 항목이 없습니다. pendingReviewTotal 도 0 이면 주문 처리 완료입니다.',
+          ];
+  if (lessonsWithoutPassage.length > 0) {
+    nextChatSteps.push(
+      `⚠ 주문 선택 지문 ${lessonsWithoutPassage.length}건이 passages 에 원문 미등록이라 부족 집계에서 제외됨: ${lessonsWithoutPassage.join(' / ')}`,
+      '   → /admin 원문 관리에서 해당 지문 등록(또는 지문 텍스트 확보) 후 pipeline 을 다시 실행해야 합니다.',
+    );
+  }
+
   out({
     ok: true,
     order_number: orderNumberRaw || null,
@@ -554,27 +581,26 @@ async function cmdPipeline(flags: Map<string, string>) {
         sliced.needCreateFromEmptyPassagesTotal ?? 0,
       ),
     },
+    order_lessons:
+      orderNumberRaw || orderIdRaw
+        ? {
+            requested: orderLessonsRequested,
+            matched: orderLessonsMatched,
+            without_passage: lessonsWithoutPassage,
+          }
+        : undefined,
     review,
     next_actions: {
       review_done: !skipReview && pendingTotal > 0,
       need_chat_generation: needCreateGrandTotal > 0,
+      passages_missing_original: lessonsWithoutPassage,
       empty_passages: noQuestions.map((p) => ({
         passage_id: p.passageId,
         label: p.label ?? '',
       })),
       need_create_by_type: needCreateByType,
     },
-    next_chat_steps:
-      needCreateGrandTotal > 0
-        ? [
-            '1) 위 need_create_by_type 의 각 항목에 대해 variant_get_passage(passage_id) 로 원문 읽기',
-            '2) variant_draft_grammar_rules 등 유형별 규칙에 맞춰 채팅에서 question_data JSON 작성',
-            '3) variant_save_generated_question 으로 저장 (status=대기)',
-            `4) 모두 저장한 뒤 ${orderNumberRaw ? `pipeline:${orderNumberRaw}` : 'pipeline --textbook …'} 다시 실행 → 신규 대기까지 자동 검수`,
-          ]
-        : [
-            '신규 생성할 항목이 없습니다. pendingReviewTotal 도 0 이면 주문 처리 완료입니다.',
-          ],
+    next_chat_steps: nextChatSteps,
     raw_shortage: { underfilled, noQuestions },
   });
 }

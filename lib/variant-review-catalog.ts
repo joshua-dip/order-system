@@ -114,4 +114,20 @@ export const VALIDATION_CATALOG: ValidationCatalogEntry[] = [
     description:
       'passages × type 조합별 변형문 수가 기준치를 채웠는지. 미충족 passage 행과 무관문 passage 행 목록.',
   },
+  {
+    scope: 'cross-question',
+    rule: 'options_format (missing|stored_as_array|no_circled_prefix|partial_circled_prefix|bad_segment_count)',
+    title: 'Options 저장 형식',
+    appliesTo: '전 유형 (워크북 계열 제외)',
+    description:
+      'Options 데이터 없음 · 배열(string[]) 저장(회원 내보내기에서 선택지가 통째로 누락됨) · ①~⑤ 접두사 없는 보기 · 보기 수 ≠5. 표준은 「① … ### ② …」 문자열. /admin 「Options 형식 검증」 · CLI cc:audit.',
+  },
+  {
+    scope: 'cross-question',
+    rule: 'content_integrity (explanation_answer_mismatch|hangul_options_in_english_type|imply_paragraph_missing_underline|paragraph_marker_count|grammar_advanced_structure|paragraph_missing|source_textbook_prefix_mismatch 등)',
+    title: '콘텐츠 정합 검증',
+    appliesTo: '전 유형 (워크북 계열 제외)',
+    description:
+      '해설이 선언한 정답 번호 ↔ CorrectAnswer 불일치 · 영어 전용 유형(주제·제목·함의·일치·불일치·빈칸·요약·어휘)의 한글 선택지(주장은 한글 허용) · 함의 밑줄 누락 · 삽입/무관한문장 ①~⑤ 마커 수 · 어법-고난도 구조 · Paragraph/Question 누락·API 누출 · source↔textbook 접두사 · 교재×유형 정답 분포 편중(60%). /admin 「정합 검증」 · CLI cc:audit.',
+  },
 ];

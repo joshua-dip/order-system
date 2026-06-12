@@ -22,6 +22,7 @@
     "cc:block-workbook": "tsx scripts/cc-block-workbook-cli.ts",
     "cc:grammar": "tsx scripts/cc-grammar-cli.ts",
     "cc:syntax": "tsx scripts/cc-syntax-cli.ts",
+    "cc:audit": "tsx scripts/audit-variant-validate-textbook.ts",
     "claude": "tsx scripts/cc-variant-cli.ts",
     "passage-analyzer:cli": "tsx scripts/passage-analyzer-cli.ts",
     "ainca:migrate": "tsx scripts/migrate-ainca-pdf.ts",

@@ -745,6 +745,32 @@ export default function AdminGeneratedQuestionsPage() {
     items: { id: string; textbook: string; source: string; type: string; snippet: string; full: string }[];
     truncated?: boolean;
   } | null>(null);
+  /** Options 형식 검증 — 데이터 없음·배열 저장·①~⑤ 번호 없음·보기 수 ≠5 */
+  const [optionsFormatOpen, setOptionsFormatOpen] = useState(false);
+  const [optionsFormatLoading, setOptionsFormatLoading] = useState(false);
+  const [optionsFormatError, setOptionsFormatError] = useState<string | null>(null);
+  const [optionsFormatData, setOptionsFormatData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalScanned: number;
+    totalMatched: number;
+    breakdown: Record<string, number>;
+    items: { id: string; textbook: string; source: string; type: string; status: string; reason: string; snippet: string; full: string }[];
+    truncated?: boolean;
+    note?: string;
+  } | null>(null);
+  /** 정합 검증 — 해설 선언 정답↔CA·한글 선택지·함의 밑줄·마커 수·source 접두사 등 */
+  const [integrityOpen, setIntegrityOpen] = useState(false);
+  const [integrityLoading, setIntegrityLoading] = useState(false);
+  const [integrityError, setIntegrityError] = useState<string | null>(null);
+  const [integrityData, setIntegrityData] = useState<{
+    filters: { textbook: string | null; type: string | null };
+    totalScanned: number;
+    totalMatched: number;
+    breakdown: Record<string, number>;
+    items: { id: string; textbook: string; source: string; type: string; status: string; severity: string; rule: string; reason: string }[];
+    truncated?: boolean;
+    skewedTypes: { type: string; total: number; distribution: Record<string, number>; skewedAnswer: string | null; skewedPct: number }[];
+  } | null>(null);
   /** 순서 Options 구조 검증 */
   /** 순서 통합 검증 — 단일 모달 + 4 탭 (Options / CorrectAnswer / 원문 대조 / ABC 편중) */
   const [orderUnifiedOpen, setOrderUnifiedOpen] = useState(false);
@@ -853,6 +879,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [reviewCliOpen, setReviewCliOpen] = useState(false);
   const [reviewCliOrderNumber, setReviewCliOrderNumber] = useState('');
   const [reviewCliCopied, setReviewCliCopied] = useState(false);
+  /** 전체검수CLI 모달 — 전체 검증 스캔(cc:audit) 명령 복사 피드백 */
+  const [auditCliCopied, setAuditCliCopied] = useState(false);
 
   /** 어법 해설 모순 검증: 해설이 "모든 어법이 맞다" 단언 → 정답 없는 불량 문항 */
   const [grammarExplAllOpen, setGrammarExplAllOpen] = useState(false);
@@ -2985,6 +3013,76 @@ export default function AdminGeneratedQuestionsPage() {
       .finally(() => setOptionsApiLoading(false));
   };
 
+  const fetchOptionsFormatData = () => {
+    setOptionsFormatLoading(true);
+    setOptionsFormatError(null);
+    setOptionsFormatData(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/options-format?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setOptionsFormatError(d.error || '검증 실패');
+          return;
+        }
+        setOptionsFormatData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          breakdown: d.breakdown ?? {},
+          items: Array.isArray(d.items) ? d.items : [],
+          truncated: !!d.truncated,
+          note: d.note,
+        });
+      })
+      .catch(() => setOptionsFormatError('네트워크 오류'))
+      .finally(() => setOptionsFormatLoading(false));
+  };
+
+  const openOptionsFormatModal = () => {
+    setOptionsFormatOpen(true);
+    fetchOptionsFormatData();
+  };
+
+  const fetchIntegrityData = () => {
+    setIntegrityLoading(true);
+    setIntegrityError(null);
+    setIntegrityData(null);
+    const params = new URLSearchParams();
+    if (filterTextbook) params.set('textbook', filterTextbook);
+    if (filterType) params.set('type', filterType);
+    fetch(`/api/admin/generated-questions/validate/content-integrity?${params}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) {
+          setIntegrityError(d.error || '검증 실패');
+          return;
+        }
+        setIntegrityData({
+          filters: d.filters ?? { textbook: null, type: null },
+          totalScanned: d.totalScanned ?? 0,
+          totalMatched: d.totalMatched ?? 0,
+          breakdown: d.breakdown ?? {},
+          items: Array.isArray(d.items) ? d.items : [],
+          truncated: !!d.truncated,
+          skewedTypes: Array.isArray(d.skewedTypes) ? d.skewedTypes : [],
+        });
+      })
+      .catch(() => setIntegrityError('네트워크 오류'))
+      .finally(() => setIntegrityLoading(false));
+  };
+
+  const openIntegrityModal = () => {
+    setIntegrityOpen(true);
+    fetchIntegrityData();
+  };
+
   const fetchOrderOptionsData = () => {
     setOrderOptionsLoading(true);
     setOrderOptionsError(null);
@@ -4212,6 +4310,15 @@ export default function AdminGeneratedQuestionsPage() {
                 </button>
                 <button
                   type="button"
+                  disabled={optionsFormatLoading}
+                  onClick={openOptionsFormatModal}
+                  className="shrink-0 bg-emerald-900/80 hover:bg-emerald-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-emerald-100 border border-emerald-500/40"
+                  title="Options 데이터 없음·배열 저장(내보내기 누락)·①~⑤ 번호 없는 보기·보기 수 ≠5 검증 (워크북 유형 제외)"
+                >
+                  Options 형식 검증
+                </button>
+                <button
+                  type="button"
                   disabled={orderOptionsLoading || orderCaLoading || orderVerifyLoading || orderAbcLoading}
                   onClick={() => openOrderUnifiedModal('options')}
                   className="shrink-0 bg-gradient-to-r from-violet-900/80 via-sky-900/80 to-rose-900/80 hover:from-violet-800 hover:via-sky-800 hover:to-rose-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white border border-violet-500/40"
@@ -4261,6 +4368,15 @@ export default function AdminGeneratedQuestionsPage() {
                   title="type=어법: 해설이 「모든 어법이 맞다 · 정답이 없다 · 오류 없다」 등으로 5개 보기 전부를 정답 처리해 사실상 정답이 없는 문항 검출. 「나머지는 모두 옳다」 류 정상 해설은 약한 시그널에서 제외."
                 >
                   어법 해설 모순 검증
+                </button>
+                <button
+                  type="button"
+                  disabled={integrityLoading}
+                  onClick={openIntegrityModal}
+                  className="shrink-0 bg-orange-900/80 hover:bg-orange-800 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-orange-100 border border-orange-500/40"
+                  title="해설 선언 정답↔CorrectAnswer 불일치 · 영어 유형 한글 선택지(주장 제외) · 함의 밑줄 누락 · 삽입/무관 ①~⑤ 마커 수 · 어법-고난도 구조 · Paragraph/Question 누락·API · source↔textbook 접두사 · 정답 분포 편중"
+                >
+                  정합 검증
                 </button>
                 <button
                   type="button"
@@ -6384,7 +6500,52 @@ export default function AdminGeneratedQuestionsPage() {
               </section>
 
               <section>
-                <h3 className="text-sm font-bold text-sky-300 mb-2">2. 검수 흐름 (status 전이표)</h3>
+                <h3 className="text-sm font-bold text-emerald-300 mb-2">2. 전체 검증 스캔 — 검증 메뉴 전체를 한 번에 (read-only)</h3>
+                <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 space-y-3">
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    상단 「선택지 검증」+「해설·어법」 버튼 전체와 동일 규칙을 교재 단위로 일괄 실행합니다 —
+                    Options 중복·<strong className="text-emerald-300">형식(데이터 없음·배열·번호 없음)</strong>·빈칸·요약·순서 통합 ·
+                    Explanation API/nan·어법 변형·어법 해설 모순 · CorrectAnswer 형식.
+                    DB 를 변경하지 않는 스캔이며 결과는 JSON 으로 출력됩니다.
+                    (「선택지 데이터 검증」(상호 일치도)은 오류 검출이 아닌 내보내기 추천용이라 제외)
+                  </p>
+                  {(() => {
+                    const arg = reviewCliOrderNumber.trim();
+                    const isOrder = /^[A-Za-z]{2}-\d{8}-\d+$/.test(arg);
+                    const auditCmd = `npm run cc:audit -- --textbook "${arg && !isOrder ? arg : '교재명'}"`;
+                    return (
+                      <>
+                        <pre className="text-xs bg-slate-950/80 border border-slate-700 rounded p-3 text-emerald-200 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                          {auditCmd}
+                        </pre>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(auditCmd);
+                                setAuditCliCopied(true);
+                                setTimeout(() => setAuditCliCopied(false), 1800);
+                              } catch {
+                                /* ignore */
+                              }
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100 font-semibold"
+                          >
+                            {auditCliCopied ? '복사 완료 ✓' : '클립보드 복사'}
+                          </button>
+                          <p className="text-xs text-slate-400">
+                            위 1번 입력란에 교재명을 넣으면 명령에 자동 반영됩니다. 검수(status 전이)와 달리 읽기 전용입니다.
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">3. 검수 흐름 (status 전이표)</h3>
                 <div className="overflow-x-auto rounded-lg border border-slate-600">
                   <table className="w-full text-xs">
                     <thead className="bg-slate-900/80">
@@ -6422,7 +6583,7 @@ export default function AdminGeneratedQuestionsPage() {
               </section>
 
               <section>
-                <h3 className="text-sm font-bold text-sky-300 mb-2">3. per-question 검증 — 검수에서 자동 실행</h3>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">4. per-question 검증 — 검수에서 자동 실행</h3>
                 <p className="text-xs text-slate-400 mb-2">
                   한 문항만으로 판단 가능한 검사. <code className="px-1 rounded bg-slate-700/60">recordReviewLogFromClaudeCode</code> 가 호출될 때마다 자동 실행되어 로그·status 전이에 반영됩니다.
                 </p>
@@ -6448,9 +6609,9 @@ export default function AdminGeneratedQuestionsPage() {
               </section>
 
               <section>
-                <h3 className="text-sm font-bold text-amber-300 mb-2">4. cross-question 검증 — 별도 모달 또는 CLI</h3>
+                <h3 className="text-sm font-bold text-amber-300 mb-2">5. cross-question 검증 — 별도 모달 또는 CLI</h3>
                 <p className="text-xs text-slate-400 mb-2">
-                  한 문항만으로는 판단할 수 없어 그룹·교재·passage 단위로 묶어 검사합니다. 검수에서는 실행되지 않으며, 상단 검증 버튼이나 별도 CLI로 따로 돌려야 합니다.
+                  한 문항만으로는 판단할 수 없어 그룹·교재·passage 단위로 묶어 검사합니다. 검수에서는 실행되지 않으며, 상단 검증 버튼 또는 위 2번 전체 검증 스캔(<code className="px-1 rounded bg-slate-700/60">npm run cc:audit</code>)으로 돌립니다.
                 </p>
                 <div className="space-y-2">
                   {VALIDATION_CATALOG.filter((v) => v.scope === 'cross-question').map((v) => (
@@ -6474,7 +6635,7 @@ export default function AdminGeneratedQuestionsPage() {
               </section>
 
               <section>
-                <h3 className="text-sm font-bold text-sky-300 mb-2">5. 검증 결과 로그 위치</h3>
+                <h3 className="text-sm font-bold text-sky-300 mb-2">6. 검증 결과 로그 위치</h3>
                 <ul className="text-xs text-slate-300 list-disc pl-5 space-y-1">
                   <li>
                     컬렉션: <code className="px-1 rounded bg-slate-700/60">gomijoshua.generated_question_claude_reviews</code>
@@ -7358,6 +7519,265 @@ export default function AdminGeneratedQuestionsPage() {
                       </table>
                     </div>
                   )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {optionsFormatOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-emerald-700/40 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-emerald-200">Options 형식 검증</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  표준 저장 형식은 <strong className="text-emerald-300">「① … ### ② … ### ⑤ …」</strong> 문자열입니다.
+                  데이터 없음 · 배열 저장(내보내기에서 선택지 누락) · ①~⑤ 번호 없는 보기 · 보기 수 ≠5 를 검출합니다.
+                  워크북 유형 제외, 상단 교재·유형 필터 적용.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOptionsFormatOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {optionsFormatLoading && !optionsFormatData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-emerald-300">
+                  <span className="inline-block w-6 h-6 border-2 border-emerald-500/50 border-t-emerald-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {optionsFormatError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {optionsFormatError}
+                </div>
+              )}
+              {optionsFormatData && !optionsFormatLoading && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-emerald-200">형식 문제</strong>:{' '}
+                      <strong className="text-white">{optionsFormatData.totalMatched.toLocaleString()}</strong>건
+                      {' / 검사 '}{optionsFormatData.totalScanned.toLocaleString()}건
+                      {optionsFormatData.filters.textbook && (
+                        <> · 교재: <strong className="text-emerald-200">{optionsFormatData.filters.textbook}</strong></>
+                      )}
+                      {optionsFormatData.filters.type && (
+                        <> · 유형: <strong className="text-emerald-200">{optionsFormatData.filters.type}</strong></>
+                      )}
+                      {optionsFormatData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">(최대 {optionsFormatData.items.length}건만 표시)</span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={fetchOptionsFormatData}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {Object.keys(optionsFormatData.breakdown).length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {Object.entries(optionsFormatData.breakdown).map(([label, count]) => (
+                        <span
+                          key={label}
+                          className="text-xs px-2.5 py-1 rounded-full bg-slate-700/70 border border-slate-500/40 text-slate-200"
+                        >
+                          {label} <strong className="text-emerald-300">{count.toLocaleString()}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {optionsFormatData.totalMatched === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      해당 없음 — 선택한 필터에서 Options 형식 문제가 없습니다.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">교재</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">유형</th>
+                            <th className="py-2 px-2">상태</th>
+                            <th className="py-2 px-2">사유</th>
+                            <th className="py-2 px-2">Options 일부</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {optionsFormatData.items.map((it) => (
+                            <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOptionsFormatOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-emerald-400 hover:text-emerald-300 underline"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.textbook}</td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-violet-300">{it.type}</td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.status}</td>
+                              <td className="py-1.5 px-2 text-amber-300">{it.reason}</td>
+                              <td
+                                className="py-1.5 px-2 text-slate-400 max-w-[300px] truncate cursor-pointer hover:bg-slate-700/60 hover:text-slate-200 rounded transition-colors"
+                                title="클릭하면 전체 내용 보기"
+                                onClick={() => setFullTextView({ title: `Options · ${it.source} ${it.type}`, text: it.full || it.snippet })}
+                              >
+                                {it.snippet || '(비어 있음)'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {integrityOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+          <div className="bg-slate-800 border border-orange-700/40 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-5 py-4 border-b border-slate-600 flex justify-between items-center shrink-0 bg-slate-800/95">
+              <div>
+                <h2 className="text-lg font-bold text-orange-200">콘텐츠 정합 검증</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  해설 선언 정답↔CorrectAnswer · 영어 유형 한글 선택지(주장 제외) · 함의 밑줄 · 삽입/무관 ①~⑤ 마커 ·
+                  어법-고난도 구조 · Paragraph/Question 누락·API · source↔textbook 접두사 · 정답 분포 편중(60%).
+                  상단 교재·유형 필터 적용.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIntegrityOpen(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none px-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-5">
+              {integrityLoading && !integrityData && (
+                <div className="flex items-center justify-center gap-2 py-12 text-orange-300">
+                  <span className="inline-block w-6 h-6 border-2 border-orange-500/50 border-t-orange-300 rounded-full animate-spin" />
+                  검증 중…
+                </div>
+              )}
+              {integrityError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-sm">
+                  {integrityError}
+                </div>
+              )}
+              {integrityData && !integrityLoading && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-300">
+                      <strong className="text-orange-200">정합 문제</strong>:{' '}
+                      <strong className="text-white">{integrityData.totalMatched.toLocaleString()}</strong>건
+                      {' / 검사 '}{integrityData.totalScanned.toLocaleString()}건
+                      {integrityData.filters.textbook && (
+                        <> · 교재: <strong className="text-orange-200">{integrityData.filters.textbook}</strong></>
+                      )}
+                      {integrityData.filters.type && (
+                        <> · 유형: <strong className="text-orange-200">{integrityData.filters.type}</strong></>
+                      )}
+                      {integrityData.truncated && (
+                        <span className="ml-2 text-amber-400 text-xs">(최대 {integrityData.items.length}건만 표시)</span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={fetchIntegrityData}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-orange-800/80 hover:bg-orange-700 text-orange-200"
+                    >
+                      다시 검증
+                    </button>
+                  </div>
+                  {Object.keys(integrityData.breakdown).length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {Object.entries(integrityData.breakdown).map(([rule, count]) => (
+                        <span
+                          key={rule}
+                          className="text-xs px-2.5 py-1 rounded-full bg-slate-700/70 border border-slate-500/40 text-slate-200 font-mono"
+                        >
+                          {rule} <strong className="text-orange-300">{count.toLocaleString()}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {integrityData.skewedTypes.length > 0 && (
+                    <div className="mb-4 p-3 rounded-lg bg-violet-950/30 border border-violet-700/40">
+                      <p className="text-xs font-bold text-violet-200 mb-1.5">정답 분포 편중 (교재×유형 60% 이상)</p>
+                      {integrityData.skewedTypes.map((s) => (
+                        <p key={s.type} className="text-xs text-slate-300">
+                          <strong className="text-violet-300">{s.type}</strong> — {s.skewedAnswer} {s.skewedPct}% (총 {s.total}건) ·{' '}
+                          {Object.entries(s.distribution).map(([a, c]) => `${a} ${c}`).join(' / ')}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {integrityData.totalMatched === 0 && integrityData.skewedTypes.length === 0 ? (
+                    <p className="text-emerald-400/90 text-sm py-4">
+                      해당 없음 — 선택한 필터에서 정합 문제가 없습니다.
+                    </p>
+                  ) : integrityData.items.length > 0 ? (
+                    <div className="overflow-x-auto rounded-lg border border-slate-600 max-h-[50vh] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-slate-900 z-[1]">
+                          <tr className="text-left text-slate-400 border-b border-slate-600">
+                            <th className="py-2 px-2">작업</th>
+                            <th className="py-2 px-2">출처</th>
+                            <th className="py-2 px-2">유형</th>
+                            <th className="py-2 px-2">상태</th>
+                            <th className="py-2 px-2">심각도</th>
+                            <th className="py-2 px-2">사유</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {integrityData.items.map((it, idx) => (
+                            <tr key={`${it.id}-${it.rule}-${idx}`} className="border-b border-slate-700/50 hover:bg-slate-800/40">
+                              <td className="py-1.5 px-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIntegrityOpen(false);
+                                    openEdit(it.id);
+                                  }}
+                                  className="text-orange-400 hover:text-orange-300 underline"
+                                >
+                                  수정
+                                </button>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300 font-mono">{it.source}</td>
+                              <td className="py-1.5 px-2 text-violet-300">{it.type}</td>
+                              <td className="py-1.5 px-2 text-slate-300">{it.status}</td>
+                              <td className={`py-1.5 px-2 font-semibold ${it.severity === 'error' ? 'text-red-300' : 'text-amber-300'}`}>
+                                {it.severity}
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-400 max-w-[380px]">{it.reason}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>

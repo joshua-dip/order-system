@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import {
+  ORDER_CIRCLED,
+  computeReadingOrderKey,
+  correctAnswerFromOwnOptions,
+  findPositionInOriginal,
+  parseOrderParagraph,
+  readingKeyToPerm,
+} from '@/lib/order-variant-validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,67 +20,13 @@ export const dynamic = 'force-dynamic';
  * 1. question_data.Paragraph 에서 (A)(B)(C) 텍스트 추출
  * 2. passage_id 로 원문 가져오기
  * 3. 원문에서 각 (A)(B)(C) 텍스트의 위치를 찾아 읽기 순서 결정
- * 4. 읽기 순서 → 정답 번호(①~⑤) 매핑
+ * 4. 읽기 순서 순열을 문항 자신의 Options 에서 찾아 정답 번호(①~⑤) 결정
+ *    — 보기 배열이 고정 5세트가 아닌 문항도 자기 배열 기준으로 정확히 대조되고,
+ *      보기에 해당 순열이 없으면 unverifiable 로 분류해 자동수정에서 제외
  * 5. 저장된 CorrectAnswer 와 비교 → 불일치 문항 반환
  *
  * GET ?textbook=...
  */
-
-const CIRCLED = ['①', '②', '③', '④', '⑤'] as const;
-const ORDER_MAP: Record<string, string> = {
-  'ACB': '①', 'BAC': '②', 'BCA': '③', 'CAB': '④', 'CBA': '⑤',
-};
-
-function normalize(s: string): string {
-  return s.replace(/\s+/g, ' ').trim().toLowerCase();
-}
-
-interface Parsed {
-  intro: string;
-  A: string;
-  B: string;
-  C: string;
-}
-
-function parseParagraph(raw: string): Parsed | null {
-  const re1 = /^([\s\S]+?)\n###\n\(A\)\s*([\s\S]+?)\n###\n\(B\)\s*([\s\S]+?)\n###\n\(C\)\s*([\s\S]+)$/;
-  const m1 = raw.match(re1);
-  if (m1) return { intro: m1[1].trim(), A: m1[2].trim(), B: m1[3].trim(), C: m1[4].trim() };
-
-  const re2 = /^([\s\S]+?)\n\n\(A\)\s*([\s\S]+?)\n\n\(B\)\s*([\s\S]+?)\n\n\(C\)\s*([\s\S]+)$/;
-  const m2 = raw.match(re2);
-  if (m2) return { intro: m2[1].trim(), A: m2[2].trim(), B: m2[3].trim(), C: m2[4].trim() };
-
-  return null;
-}
-
-/** 원문에서 needle 의 시작 위치를 찾는다. 첫 N글자로 검색. */
-function findPosition(original: string, segment: string): number {
-  const normOrig = normalize(original);
-  // 단계별로 검색 — 긴 것 우선, 점점 줄여서 시도
-  for (const len of [80, 50, 30, 20]) {
-    const needle = normalize(segment).slice(0, len);
-    if (needle.length < 10) continue;
-    const idx = normOrig.indexOf(needle);
-    if (idx >= 0) return idx;
-  }
-  // 최후: 첫 단어 3개로 검색
-  const words = normalize(segment).split(' ').slice(0, 4).join(' ');
-  if (words.length >= 8) {
-    const idx = normOrig.indexOf(words);
-    if (idx >= 0) return idx;
-  }
-  return -1;
-}
-
-function computeSortedKey(positions: { A: number; B: number; C: number }): string | null {
-  if (positions.A < 0 || positions.B < 0 || positions.C < 0) return null;
-  return (['A', 'B', 'C'] as const)
-    .map(k => ({ label: k, pos: positions[k] }))
-    .sort((a, b) => a.pos - b.pos)
-    .map(x => x.label)
-    .join('');
-}
 
 const MAX_ITEMS = 3000;
 
@@ -100,6 +54,7 @@ export async function GET(request: NextRequest) {
         _id: 1, source: 1, textbook: 1, passage_id: 1,
         'question_data.Paragraph': 1,
         'question_data.CorrectAnswer': 1,
+        'question_data.Options': 1,
         'question_data.순서': 1,
       })
       .sort({ textbook: 1, source: 1, 'question_data.순서': 1 })
@@ -144,22 +99,21 @@ export async function GET(request: NextRequest) {
       const currentAnswer = String(qd?.CorrectAnswer ?? '').trim();
       const seq = Number(qd?.순서 ?? 0);
 
-      const parsed = parseParagraph(paragraph);
+      const parsed = parseOrderParagraph(paragraph);
       if (!parsed) { unverifiableNoPush++; continue; }
 
       const original = passageMap.get(String(doc.passage_id));
       if (!original) { unverifiableNoPush++; continue; }
 
       const positions = {
-        A: findPosition(original, parsed.A),
-        B: findPosition(original, parsed.B),
-        C: findPosition(original, parsed.C),
+        A: findPositionInOriginal(original, parsed.A),
+        B: findPositionInOriginal(original, parsed.B),
+        C: findPositionInOriginal(original, parsed.C),
       };
 
-      const sortedKey = computeSortedKey(positions);
-      const correctAnswer = sortedKey ? (ORDER_MAP[sortedKey] ?? null) : null;
+      const sortedKey = computeReadingOrderKey(positions);
 
-      if (!correctAnswer) {
+      if (!sortedKey || sortedKey === 'ABC') {
         const isUnshuffled = sortedKey === 'ABC';
         if (mismatched.length < MAX_ITEMS) {
           mismatched.push({
@@ -177,15 +131,31 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
+      const readingOrder = readingKeyToPerm(sortedKey);
+      const correctAnswer = correctAnswerFromOwnOptions(qd?.Options, readingOrder);
+
+      if (!correctAnswer) {
+        // 읽기 순서 순열이 이 문항의 보기에 없음 — 비표준 세트라 정답을 보기로
+        // 표현할 수 없는 문항. 자동수정하면 안 되므로 unverifiable 로 분류.
+        if (mismatched.length < MAX_ITEMS) {
+          mismatched.push({
+            id: String(doc._id),
+            textbook: String(doc.textbook ?? ''),
+            source: String(doc.source ?? ''),
+            seq,
+            currentAnswer,
+            correctAnswer: '?',
+            positions,
+            readingOrder,
+            status: 'unverifiable',
+          });
+        }
+        continue;
+      }
+
       verified++;
 
       if (correctAnswer !== currentAnswer) {
-        const sorted = (['A', 'B', 'C'] as const)
-          .map(k => ({ label: k, pos: positions[k] }))
-          .sort((a, b) => a.pos - b.pos)
-          .map(x => `(${x.label})`)
-          .join('-');
-
         if (mismatched.length < MAX_ITEMS) {
           mismatched.push({
             id: String(doc._id),
@@ -195,7 +165,7 @@ export async function GET(request: NextRequest) {
             currentAnswer,
             correctAnswer,
             positions,
-            readingOrder: sorted,
+            readingOrder,
             status: 'mismatch',
           });
         }
@@ -236,7 +206,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'fixes 배열이 필요합니다.' }, { status: 400 });
   }
 
-  const validAnswers = new Set(CIRCLED);
+  const validAnswers = new Set(ORDER_CIRCLED);
 
   try {
     const db = await getDb('gomijoshua');
@@ -244,7 +214,7 @@ export async function POST(request: NextRequest) {
 
     let modifiedCount = 0;
     for (const fix of fixes) {
-      if (!ObjectId.isValid(fix.id) || !validAnswers.has(fix.answer as typeof CIRCLED[number])) continue;
+      if (!ObjectId.isValid(fix.id) || !validAnswers.has(fix.answer as typeof ORDER_CIRCLED[number])) continue;
       const res = await col.updateOne(
         { _id: new ObjectId(fix.id) },
         { $set: { 'question_data.CorrectAnswer': fix.answer, updated_at: new Date() } },
