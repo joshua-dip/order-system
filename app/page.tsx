@@ -7,7 +7,7 @@ import LessonSelection from './components/LessonSelection';
 import QuestionSettings from './components/QuestionSettings';
 import MockExamSettings from './components/MockExamSettings';
 import WorkbookTextbookSelection from './components/WorkbookTextbookSelection';
-import WorkbookLessonSelection from './components/WorkbookLessonSelection';
+import WorkbookLessonSelection, { type WorkbookLessonPick } from './components/WorkbookLessonSelection';
 import WorkbookMockExamNumberSelection from './components/WorkbookMockExamNumberSelection';
 import WorkbookTypeSelection from './components/WorkbookTypeSelection';
 import OrderDisplay from './components/OrderDisplay';
@@ -24,6 +24,7 @@ export default function Home() {
   const [orderType, setOrderType] = useState<OrderType>('textbook');
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
+  const [selectedLessonPicks, setSelectedLessonPicks] = useState<WorkbookLessonPick[]>([]);
   const [selectedWorkbookTypes, setSelectedWorkbookTypes] = useState<string[]>([]);
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
 
@@ -63,11 +64,13 @@ export default function Home() {
   const handleWorkbookMockExamNumbersSelect = (numbers: string[]) => {
     // 번호를 "강" 형태로 변환하여 저장
     setSelectedLessons(numbers);
+    setSelectedLessonPicks([]);
     setCurrentStep('workbook_types');
   };
 
-  const handleWorkbookLessonsSelect = (lessons: string[]) => {
+  const handleWorkbookLessonsSelect = (lessons: string[], picks: WorkbookLessonPick[]) => {
     setSelectedLessons(lessons);
+    setSelectedLessonPicks(picks);
     setCurrentStep('workbook_types');
   };
 
@@ -101,6 +104,7 @@ export default function Home() {
     setOrderType('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
     setSelectedWorkbookTypes([]);
   };
 
@@ -122,6 +126,7 @@ export default function Home() {
     setCurrentStep('workbook_textbook');
     setOrderType('workbook');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
     setSelectedWorkbookTypes([]);
   };
 
@@ -142,6 +147,7 @@ export default function Home() {
     setOrderType('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
     setSelectedWorkbookTypes([]);
   };
 
@@ -151,6 +157,7 @@ export default function Home() {
     setOrderType('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
     setSelectedWorkbookTypes([]);
   };
 
@@ -206,6 +213,7 @@ export default function Home() {
         <WorkbookTypeSelection
           selectedTextbook={selectedTextbook}
           selectedLessons={selectedLessons}
+          selectedLessonPicks={selectedLessonPicks}
           onOrderGenerate={handleOrderGenerate}
           onBack={handleBackToSelection}
           onBackToTextbook={handleBackToWorkbookTextbook}

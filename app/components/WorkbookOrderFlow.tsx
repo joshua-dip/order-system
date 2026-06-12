@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import WorkbookTextbookSelection, { type WorkbookCategory } from './WorkbookTextbookSelection';
-import WorkbookLessonSelection from './WorkbookLessonSelection';
+import WorkbookLessonSelection, { type WorkbookLessonPick } from './WorkbookLessonSelection';
 import WorkbookMockExamNumberSelection from './WorkbookMockExamNumberSelection';
 import WorkbookTypeSelection from './WorkbookTypeSelection';
 import OrderDisplay from './OrderDisplay';
@@ -23,6 +23,7 @@ export default function WorkbookOrderFlow({ category }: WorkbookOrderFlowProps) 
   const [currentStep, setCurrentStep] = useState<PageStep>('textbook');
   const [selectedTextbook, setSelectedTextbook] = useState<string>('');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
+  const [selectedLessonPicks, setSelectedLessonPicks] = useState<WorkbookLessonPick[]>([]);
   const [generatedOrder, setGeneratedOrder] = useState<string>('');
 
   const handleTextbookSelect = (textbook: string) => {
@@ -38,13 +39,15 @@ export default function WorkbookOrderFlow({ category }: WorkbookOrderFlowProps) 
     }
   };
 
-  const handleLessonsSelect = (lessons: string[]) => {
+  const handleLessonsSelect = (lessons: string[], picks: WorkbookLessonPick[]) => {
     setSelectedLessons(lessons);
+    setSelectedLessonPicks(picks);
     setCurrentStep('types');
   };
 
   const handleMockExamNumbersSelect = (numbers: string[]) => {
     setSelectedLessons(numbers);
+    setSelectedLessonPicks([]);
     setCurrentStep('types');
   };
 
@@ -70,6 +73,7 @@ export default function WorkbookOrderFlow({ category }: WorkbookOrderFlowProps) 
     setCurrentStep('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
   };
 
   const handleBackToLessons = () => {
@@ -86,6 +90,7 @@ export default function WorkbookOrderFlow({ category }: WorkbookOrderFlowProps) 
     setCurrentStep('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
   };
 
   const handleNewOrder = () => {
@@ -93,6 +98,7 @@ export default function WorkbookOrderFlow({ category }: WorkbookOrderFlowProps) 
     setCurrentStep('textbook');
     setSelectedTextbook('');
     setSelectedLessons([]);
+    setSelectedLessonPicks([]);
   };
 
   // 현재 단계에 따라 컴포넌트 렌더링
@@ -131,6 +137,7 @@ export default function WorkbookOrderFlow({ category }: WorkbookOrderFlowProps) 
         <WorkbookTypeSelection
           selectedTextbook={selectedTextbook}
           selectedLessons={selectedLessons}
+          selectedLessonPicks={selectedLessonPicks}
           onOrderGenerate={handleOrderGenerate}
           onBack={handleBackToHome}
           onBackToTextbook={handleBackToTextbook}

@@ -5,24 +5,28 @@ import Link from 'next/link';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import type { OrderGenerateHandler } from './MockExamSettings';
+import type { WorkbookLessonPick } from './WorkbookLessonSelection';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
   selectedLessons: string[];
+  /** 부교재·교과서: 강별 선택 번호 (없으면 강 전체 선택으로 간주) */
+  selectedLessonPicks?: WorkbookLessonPick[];
   onOrderGenerate: OrderGenerateHandler;
   onBack: () => void;
   onBackToTextbook: () => void;
   onBackToLessons: () => void;
 }
 
-const WorkbookTypeSelection = ({ 
-  selectedTextbook, 
-  selectedLessons, 
-  onOrderGenerate, 
-  onBack, 
-  onBackToTextbook, 
-  onBackToLessons 
+const WorkbookTypeSelection = ({
+  selectedTextbook,
+  selectedLessons,
+  selectedLessonPicks,
+  onOrderGenerate,
+  onBack,
+  onBackToTextbook,
+  onBackToLessons
 }: WorkbookTypeSelectionProps) => {
   const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
@@ -170,6 +174,9 @@ const WorkbookTypeSelection = ({
       try {
         if (isMockExam) {
           setTotalTextCount(selectedLessons.length);
+        } else if (selectedLessonPicks && selectedLessonPicks.length > 0) {
+          // 번호별 선택: 강별 선택 번호 수의 합
+          setTotalTextCount(selectedLessonPicks.reduce((sum, p) => sum + p.numbers.length, 0));
         } else {
           const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
           
@@ -208,7 +215,7 @@ const WorkbookTypeSelection = ({
         calculateTextCount();
       }
     }
-  }, [selectedTextbook, selectedLessons, isMockExam, convertedData]);
+  }, [selectedTextbook, selectedLessons, selectedLessonPicks, isMockExam, convertedData]);
 
   const handlePackageChange = (packageId: string) => {
     setSelectedPackages(prev => {
@@ -319,7 +326,17 @@ const WorkbookTypeSelection = ({
     }
     
     const finalPrice = totalPrice - discountAmount;
-    
+
+    // 부교재·교과서: 강별 선택 번호 내역 (전체 선택 강은 「전체」로 표기)
+    const hasNumberPicks = !isMockExam && Array.isArray(selectedLessonPicks) && selectedLessonPicks.length > 0;
+    const lessonPickLines = hasNumberPicks
+      ? selectedLessonPicks!.map(p =>
+          p.numbers.length === p.totalInLesson
+            ? `   • ${p.lesson}: 전체 (${p.totalInLesson}지문)`
+            : `   • ${p.lesson}: ${p.numbers.join(', ')} (${p.numbers.length}/${p.totalInLesson}지문)`
+        ).join('\n')
+      : '';
+
     const orderText = `워크북 주문서
 
 자료 받으실 이메일 주소: ${email.trim()}
@@ -328,6 +345,10 @@ const WorkbookTypeSelection = ({
 ${isMockExam ? `
 1. 선택된 번호 (${selectedLessons.length}개)
 : ${selectedLessons.join('번, ')}번
+
+` : hasNumberPicks ? `
+1. 선택된 강·번호 (${selectedLessons.length}개 강 · ${totalTextCount}지문)
+${lessonPickLines}
 
 ` : `
 1. 선택된 강 (${selectedLessons.length}개)
@@ -374,6 +395,17 @@ ${useCustomHwp ? `
       email: email.trim(),
       useCustomHwp,
       isMockExam,
+      // 강별 선택 번호 (부교재·교과서 번호별 주문). 강 전체 선택 시 전체 번호 목록.
+      ...(hasNumberPicks
+        ? {
+            selectedLessonNumbers: Object.fromEntries(
+              selectedLessonPicks!.map(p => [p.lesson, p.numbers])
+            ),
+            lessonTotals: Object.fromEntries(
+              selectedLessonPicks!.map(p => [p.lesson, p.totalInLesson])
+            ),
+          }
+        : {}),
     };
     await Promise.resolve(onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW', { orderMeta }));
     } finally {

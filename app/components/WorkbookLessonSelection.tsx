@@ -4,18 +4,30 @@ import { useState, useEffect } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 
+/** 강별 선택 결과 — 강 전체 선택 시 numbers 에 전체 번호가 들어간다. */
+export interface WorkbookLessonPick {
+  lesson: string;
+  /** 선택한 번호 라벨 (지문 데이터의 「번호」 필드, 데이터 순서 유지) */
+  numbers: string[];
+  /** 강의 전체 지문 수 */
+  totalInLesson: number;
+}
+
 interface WorkbookLessonSelectionProps {
   selectedTextbook: string;
-  onLessonsSelect: (lessons: string[]) => void;
+  onLessonsSelect: (lessons: string[], picks: WorkbookLessonPick[]) => void;
   onBack: () => void;
   onBackToTextbook: () => void;
 }
 
 const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onBackToTextbook }: WorkbookLessonSelectionProps) => {
   const { data: convertedData, loading: dataLoading, error: dataError } = useTextbooksData();
-  const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [availableLessons, setAvailableLessons] = useState<string[]>([]);
-  const [lessonTextCounts, setLessonTextCounts] = useState<Record<string, number>>({});
+  /** 강 → 번호 라벨 배열 (지문 데이터 순서) */
+  const [lessonNumbers, setLessonNumbers] = useState<Record<string, string[]>>({});
+  /** 강 → 선택된 번호 인덱스 (키 존재 = 강 선택됨). 동일 라벨 중복 데이터가 있어 인덱스로 식별 */
+  const [selectedByLesson, setSelectedByLesson] = useState<Record<string, number[]>>({});
+  const [expandedLessons, setExpandedLessons] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!convertedData) return;
@@ -54,7 +66,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
         const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
         if (!textbookData || typeof textbookData !== 'object') {
           setAvailableLessons([]);
-          setLessonTextCounts({});
+          setLessonNumbers({});
           return;
         }
         const data = textbookData as Record<string, unknown>;
@@ -62,23 +74,31 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
         const textbookInfo = pickFromBranch(data, '부교재') ?? pickFromBranch(data, '교과서');
         if (!textbookInfo) {
           setAvailableLessons([]);
-          setLessonTextCounts({});
+          setLessonNumbers({});
           return;
         }
         const lessonNames = Object.keys(textbookInfo);
         setAvailableLessons(lessonNames);
-        const textCounts: Record<string, number> = {};
+        const numbersMap: Record<string, string[]> = {};
         lessonNames.forEach((lessonName) => {
           const lessonData = textbookInfo[lessonName];
           if (Array.isArray(lessonData)) {
-            textCounts[lessonName] = lessonData.length;
+            numbersMap[lessonName] = lessonData.map((item, idx) => {
+              if (item && typeof item === 'object') {
+                const num = (item as Record<string, unknown>)['번호'];
+                if (num != null && String(num).trim()) return String(num);
+              }
+              return `${idx + 1}번`;
+            });
+          } else {
+            numbersMap[lessonName] = [];
           }
         });
-        setLessonTextCounts(textCounts);
+        setLessonNumbers(numbersMap);
       } catch (error) {
         console.error('강 데이터 로드 실패:', error);
         setAvailableLessons([]);
-        setLessonTextCounts({});
+        setLessonNumbers({});
       }
     };
 
@@ -87,28 +107,75 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
     }
   }, [selectedTextbook, convertedData]);
 
+  const selectedCount = (lesson: string) => selectedByLesson[lesson]?.length ?? 0;
+  const isLessonSelected = (lesson: string) => lesson in selectedByLesson;
+  const isFullySelected = (lesson: string) =>
+    isLessonSelected(lesson) && selectedCount(lesson) === (lessonNumbers[lesson]?.length ?? 0);
+
+  const selectedLessonsList = availableLessons.filter(isLessonSelected);
+  const totalSelectedTexts = selectedLessonsList.reduce((sum, lesson) => sum + selectedCount(lesson), 0);
+  const allFullySelected = availableLessons.length > 0 && availableLessons.every(isFullySelected);
+
   const handleLessonToggle = (lesson: string) => {
-    setSelectedLessons(prev => 
-      prev.includes(lesson)
-        ? prev.filter(l => l !== lesson)
-        : [...prev, lesson]
-    );
+    setSelectedByLesson(prev => {
+      const next = { ...prev };
+      const all = lessonNumbers[lesson] ?? [];
+      if (lesson in next && next[lesson].length === all.length) {
+        delete next[lesson];
+      } else {
+        next[lesson] = all.map((_, i) => i);
+      }
+      return next;
+    });
+  };
+
+  const handleNumberToggle = (lesson: string, idx: number) => {
+    setSelectedByLesson(prev => {
+      const cur = prev[lesson] ?? [];
+      const nextArr = cur.includes(idx)
+        ? cur.filter(i => i !== idx)
+        : [...cur, idx].sort((a, b) => a - b);
+      const next = { ...prev };
+      if (nextArr.length === 0) {
+        delete next[lesson];
+      } else {
+        next[lesson] = nextArr;
+      }
+      return next;
+    });
+  };
+
+  const handleExpandToggle = (lesson: string) => {
+    setExpandedLessons(prev => ({ ...prev, [lesson]: !prev[lesson] }));
   };
 
   const handleAllToggle = () => {
-    if (selectedLessons.length === availableLessons.length) {
-      setSelectedLessons([]);
+    if (allFullySelected) {
+      setSelectedByLesson({});
     } else {
-      setSelectedLessons([...availableLessons]);
+      const next: Record<string, number[]> = {};
+      availableLessons.forEach(lesson => {
+        next[lesson] = (lessonNumbers[lesson] ?? []).map((_, i) => i);
+      });
+      setSelectedByLesson(next);
     }
   };
 
   const handleContinue = () => {
-    if (selectedLessons.length === 0) {
-      alert('강을 선택해주세요.');
+    if (selectedLessonsList.length === 0) {
+      alert('강 또는 번호를 선택해주세요.');
       return;
     }
-    onLessonsSelect(selectedLessons);
+    const picks: WorkbookLessonPick[] = selectedLessonsList.map(lesson => {
+      const all = lessonNumbers[lesson] ?? [];
+      const idxs = selectedByLesson[lesson] ?? [];
+      return {
+        lesson,
+        numbers: idxs.map(i => all[i]).filter((n): n is string => typeof n === 'string'),
+        totalInLesson: all.length,
+      };
+    });
+    onLessonsSelect(selectedLessonsList, picks);
   };
 
   if (dataLoading) {
@@ -134,8 +201,8 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
 
   return (
     <>
-      <AppBar 
-        showBackButton={true} 
+      <AppBar
+        showBackButton={true}
         onBackClick={onBack}
         title="워크북 강 선택"
       />
@@ -149,6 +216,9 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
           <p className="text-lg mb-2" style={{ color: '#888B8D' }}>
             워크북을 제작할 강을 선택해주세요
           </p>
+          <p className="text-sm mb-2" style={{ color: '#888B8D' }}>
+            강을 누르면 전체 선택, 「번호 선택」을 누르면 원하는 번호만 고를 수 있어요
+          </p>
           <div className="rounded-lg p-3 max-w-md mx-auto border-2" style={{ backgroundColor: '#00A9E0', borderColor: '#00A9E0' }}>
             <p className="text-white text-sm font-medium">
               선택한 교재: {selectedTextbook}
@@ -159,7 +229,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
         {/* 진행 단계 표시 */}
         <div className="max-w-2xl mx-auto mb-6">
           <div className="flex items-center justify-between">
-            <div 
+            <div
               className="flex flex-col items-center cursor-pointer group"
               onClick={onBack}
               title="주문 유형 선택으로 돌아가기"
@@ -170,7 +240,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
               <span className="text-xs mt-1 text-green-600 font-medium group-hover:text-green-700">유형 선택</span>
             </div>
             <div className="flex-1 h-1 bg-green-600 mx-4"></div>
-            <div 
+            <div
               className="flex flex-col items-center cursor-pointer group"
               onClick={onBackToTextbook}
               title="교재 선택으로 돌아가기"
@@ -206,43 +276,98 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
                 <button
                   onClick={handleAllToggle}
                   className="px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 text-white hover:opacity-90"
-                  style={{ 
-                    backgroundColor: selectedLessons.length === availableLessons.length ? '#888B8D' : '#00A9E0',
-                    borderColor: selectedLessons.length === availableLessons.length ? '#888B8D' : '#00A9E0'
+                  style={{
+                    backgroundColor: allFullySelected ? '#888B8D' : '#00A9E0',
+                    borderColor: allFullySelected ? '#888B8D' : '#00A9E0'
                   }}
                 >
-                  {selectedLessons.length === availableLessons.length ? '전체 해제' : '전체 선택'}
+                  {allFullySelected ? '전체 해제' : '전체 선택'}
                 </button>
               </div>
 
-              {/* 부교재 강 선택: 세로 레이아웃 + 지문 수 표시 */}
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {availableLessons.map((lesson) => (
-                  <button
-                    key={lesson}
-                    onClick={() => handleLessonToggle(lesson)}
-                    className={`w-full p-4 rounded-lg border-2 font-medium transition-all hover:shadow-md text-left flex items-center justify-between ${
-                      selectedLessons.includes(lesson)
-                        ? 'text-white'
-                        : 'border-gray-300 hover:border-gray-400 text-black hover:bg-gray-50'
-                    }`}
-                    style={selectedLessons.includes(lesson) ? { backgroundColor: '#00A9E0', borderColor: '#00A9E0' } : {}}
-                  >
-                    <span className="font-medium">{lesson}</span>
-                    {lessonTextCounts[lesson] && (
-                      <span className={`text-sm ${selectedLessons.includes(lesson) ? 'text-white opacity-90' : 'text-gray-500'}`}>
-                        ({lessonTextCounts[lesson]}지문)
-                      </span>
-                    )}
-                  </button>
-                ))}
+              {/* 부교재 강 선택: 강 전체 토글 + 번호별 부분 선택 */}
+              <div className="space-y-2 max-h-[32rem] overflow-y-auto">
+                {availableLessons.map((lesson) => {
+                  const numbers = lessonNumbers[lesson] ?? [];
+                  const selCount = selectedCount(lesson);
+                  const fully = isFullySelected(lesson);
+                  const partial = selCount > 0 && !fully;
+                  const expanded = !!expandedLessons[lesson];
+                  const selectedIdxs = selectedByLesson[lesson] ?? [];
+                  return (
+                    <div
+                      key={lesson}
+                      className={`rounded-lg border-2 transition-all ${
+                        fully ? '' : partial ? 'bg-sky-50' : 'border-gray-300'
+                      }`}
+                      style={fully || partial ? { borderColor: '#00A9E0', backgroundColor: fully ? '#00A9E0' : undefined } : {}}
+                    >
+                      <div className="flex items-stretch">
+                        <button
+                          onClick={() => handleLessonToggle(lesson)}
+                          className={`flex-1 p-4 font-medium text-left flex items-center justify-between rounded-l-lg transition-all ${
+                            fully ? 'text-white' : partial ? 'text-black' : 'text-black hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="font-medium">{lesson}</span>
+                          {numbers.length > 0 && (
+                            <span className={`text-sm ml-2 shrink-0 ${
+                              fully ? 'text-white opacity-90' : partial ? 'font-semibold' : 'text-gray-500'
+                            }`}
+                            style={partial ? { color: '#0284c7' } : {}}
+                            >
+                              {partial ? `(${selCount}/${numbers.length}지문)` : `(${numbers.length}지문)`}
+                            </span>
+                          )}
+                        </button>
+                        {numbers.length > 0 && (
+                          <button
+                            onClick={() => handleExpandToggle(lesson)}
+                            className={`px-3 text-xs font-semibold rounded-r-lg border-l transition-all shrink-0 ${
+                              fully
+                                ? 'text-white border-white/40 hover:bg-white/10'
+                                : partial
+                                  ? 'border-sky-200 hover:bg-sky-100'
+                                  : 'text-gray-500 border-gray-200 hover:bg-gray-100'
+                            }`}
+                            style={partial ? { color: '#0284c7' } : {}}
+                            title="번호별로 선택하기"
+                          >
+                            번호 선택 {expanded ? '▴' : '▾'}
+                          </button>
+                        )}
+                      </div>
+                      {expanded && numbers.length > 0 && (
+                        <div className={`px-3 pb-3 pt-1 flex flex-wrap gap-1.5 rounded-b-lg ${fully ? 'bg-white/95 mx-0.5 mb-0.5' : ''}`}>
+                          {numbers.map((num, idx) => {
+                            const numSelected = selectedIdxs.includes(idx);
+                            return (
+                              <button
+                                key={`${lesson}-${idx}`}
+                                onClick={() => handleNumberToggle(lesson, idx)}
+                                className={`px-2.5 py-1.5 rounded-md text-xs font-medium border transition-all ${
+                                  numSelected
+                                    ? 'text-white'
+                                    : 'border-gray-300 text-black bg-white hover:border-gray-400 hover:bg-gray-50'
+                                }`}
+                                style={numSelected ? { backgroundColor: '#00A9E0', borderColor: '#00A9E0' } : {}}
+                              >
+                                {num}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* 오른쪽: 선택 요약 */}
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-xl font-bold text-black mb-4">선택 요약</h3>
-              
+
               <div className="space-y-4">
                 <div className="p-3 rounded-lg border-2" style={{ backgroundColor: '#00A9E0', borderColor: '#00A9E0' }}>
                   <div className="text-white text-sm">
@@ -255,40 +380,52 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-black">선택된 강:</span>
-                      <span className="font-medium text-black">{selectedLessons.length}개</span>
+                      <span className="font-medium text-black">{selectedLessonsList.length}개</span>
                     </div>
-                    
+
                     {/* 총 지문 수 표시 */}
-                    {selectedLessons.length > 0 && (
+                    {selectedLessonsList.length > 0 && (
                       <div className="flex justify-between">
                         <span className="text-black">총 지문 수:</span>
                         <span className="font-medium text-green-600">
-                          {selectedLessons.reduce((total, lesson) => total + (lessonTextCounts[lesson] || 0), 0)}지문
+                          {totalSelectedTexts}지문
                         </span>
                       </div>
                     )}
-                    
-                    {selectedLessons.length > 0 && (
+
+                    {selectedLessonsList.length > 0 && (
                       <div className="mt-3">
                         <div className="text-black font-medium mb-2">선택한 강:</div>
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {selectedLessons.slice(0, 8).map((lesson) => (
-                            <div 
-                              key={lesson} 
-                              className="flex items-center justify-between px-3 py-2 rounded text-xs text-white"
-                              style={{ backgroundColor: '#00A9E0' }}
-                            >
-                              <span>{lesson}</span>
-                              {lessonTextCounts[lesson] && (
-                                <span className="opacity-90">
-                                  {lessonTextCounts[lesson]}지문
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                          {selectedLessons.length > 8 && (
+                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                          {selectedLessonsList.slice(0, 8).map((lesson) => {
+                            const numbers = lessonNumbers[lesson] ?? [];
+                            const fully = isFullySelected(lesson);
+                            const idxs = selectedByLesson[lesson] ?? [];
+                            const pickedLabels = idxs.map(i => numbers[i]).filter(Boolean);
+                            return (
+                              <div
+                                key={lesson}
+                                className="px-3 py-2 rounded text-xs text-white"
+                                style={{ backgroundColor: '#00A9E0' }}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="truncate">{lesson}</span>
+                                  <span className="opacity-90 shrink-0">
+                                    {fully ? `전체 ${numbers.length}지문` : `${idxs.length}/${numbers.length}지문`}
+                                  </span>
+                                </div>
+                                {!fully && pickedLabels.length > 0 && (
+                                  <div className="mt-1 opacity-90 leading-snug">
+                                    {pickedLabels.slice(0, 6).join(', ')}
+                                    {pickedLabels.length > 6 && ` 외 ${pickedLabels.length - 6}개`}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {selectedLessonsList.length > 8 && (
                             <div className="px-3 py-2 rounded text-xs text-gray-600 bg-gray-200 text-center">
-                              +{selectedLessons.length - 8}개 더
+                              +{selectedLessonsList.length - 8}개 더
                             </div>
                           )}
                         </div>
@@ -299,17 +436,17 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
 
                 <button
                   onClick={handleContinue}
-                  disabled={selectedLessons.length === 0}
+                  disabled={selectedLessonsList.length === 0}
                   className={`w-full py-3 px-4 rounded-lg font-bold text-lg transition-all ${
-                    selectedLessons.length > 0 
-                      ? 'text-white hover:opacity-90 shadow-lg hover:shadow-xl' 
+                    selectedLessonsList.length > 0
+                      ? 'text-white hover:opacity-90 shadow-lg hover:shadow-xl'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
-                  style={selectedLessons.length > 0 ? { backgroundColor: '#00A9E0' } : {}}
+                  style={selectedLessonsList.length > 0 ? { backgroundColor: '#00A9E0' } : {}}
                 >
                   워크북 유형 선택하기
-                  {selectedLessons.length === 0 && (
-                    <div className="text-xs mt-1 opacity-75">강을 선택해주세요</div>
+                  {selectedLessonsList.length === 0 && (
+                    <div className="text-xs mt-1 opacity-75">강 또는 번호를 선택해주세요</div>
                   )}
                 </button>
               </div>
