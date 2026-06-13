@@ -38,7 +38,7 @@ for each item in next_actions.need_create_by_type:
 저장 형식 표준 (memory: feedback_variant_question_data_schema.md):
 - Paragraph · Question · Options · CorrectAnswer · Explanation
 - CorrectAnswer 는 ①②③④⑤ 하나만 (memory: feedback_correct_answer_circled_numbers.md)
-- option_type 은 항상 'English' (memory: feedback_option_type_always_english.md)
+- 정식 변형 option_type 은 'English' (shortage 집계 대상). 영어 전용 유형(주제·제목·일치·불일치·함의·빈칸·요약·어휘)은 선택지를 **영어로** 작성. 주장 등 한글 허용 유형은 한글 보기여도 'English'. 'Korean' 은 의도적 한글 버전 전용 (memory: feedback_option_type_always_english.md)
 - 순서 Options 5세트 고정 (memory: feedback_order_options_fixed_format.md)
 - textbook/source 에 지역명 금지 (memory: feedback_textbook_source_no_region_tag.md)
 - 불일치 Options 영어만 (memory: feedback_disagreement_options_english_only.md)
