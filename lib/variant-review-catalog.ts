@@ -128,6 +128,6 @@ export const VALIDATION_CATALOG: ValidationCatalogEntry[] = [
     title: '콘텐츠 정합 검증',
     appliesTo: '전 유형 (워크북 계열 제외)',
     description:
-      '해설이 선언한 정답 번호 ↔ CorrectAnswer 불일치 · 영어 전용 유형(주제·제목·함의·일치·불일치·빈칸·요약·어휘)의 한글 선택지(주장은 한글 허용) · 함의 밑줄 누락 · 삽입/무관한문장 ①~⑤ 마커 수 · 어법-고난도 구조 · Paragraph/Question 누락·API 누출 · source↔textbook 접두사 · 교재×유형 정답 분포 편중(60%). /admin 「정합 검증」 · CLI cc:audit.',
+      '해설이 선언한 정답 번호 ↔ CorrectAnswer 불일치 · 영어 전용 유형(주제·제목·함의·일치·불일치·빈칸·요약·어휘)의 한글 선택지 — option_type=English 인데 한글인 경우만(option_type=Korean 은 의도적 한글 버전이라 정상, 주장도 한글 허용) · 함의 밑줄 누락 · 삽입/무관한문장 ①~⑤ 마커 수 · 어법-고난도 구조 · Paragraph/Question 누락·API 누출 · source↔textbook 접두사(모의고사·수능·평가원 계열만 — 부교재는 강·번호 source 가 정상이라 제외) · 교재×유형 정답 분포 편중(60%). /admin 「정합 검증」 · CLI cc:audit.',
   },
 ];

@@ -45,6 +45,18 @@ function str(v: unknown): string {
 }
 
 /**
+ * 모의고사·수능·평가원 계열 교재 여부.
+ * 이 계열은 source 가 "26년 6월 고2 영어모의고사 18번"처럼 교재명 접두사를 포함하는 게 표준이라
+ * source↔textbook 접두사 일치 검사를 적용한다. 부교재(예: "해커스 …", "EBS 수능특강 …")는
+ * source 가 "09강 01번" 등 강·번호 단위이고 textbook 과 별개로 저장되는 게 정상 컨벤션이므로 제외한다.
+ */
+export function isMockExamTextbook(textbook: string): boolean {
+  const t = textbook.trim();
+  if (!t) return false;
+  return /모의고사/.test(t) || /평가원/.test(t) || /^수능[_\s]/.test(t);
+}
+
+/**
  * 해설 본문에서 「선언된 정답 번호」를 추출한다. 확실한 앵커 패턴만 사용:
  *   "정답은 ③" / "③번이 정답" / "③이 정답" / 해설이 "③ ..." 으로 시작
  * 없으면 null (비교 생략).
@@ -99,12 +111,14 @@ export function checkContentIntegrity(doc: Record<string, unknown>): ContentInte
     }
   }
 
-  // 영어 전용 유형의 한글 선택지
-  if (ENGLISH_OPTIONS_TYPES.includes(type) && HANGUL_RE.test(options)) {
+  // 영어 전용 유형의 한글 선택지 — option_type=Korean 은 의도적 한글 버전이므로 정상(제외).
+  // option_type=English(또는 미지정·기본 English)인데 한글이면 진짜 결함.
+  const optionType = str(doc.option_type).trim();
+  if (ENGLISH_OPTIONS_TYPES.includes(type) && optionType !== 'Korean' && HANGUL_RE.test(options)) {
     issues.push({
       rule: 'hangul_options_in_english_type',
       severity: 'error',
-      message: `${type} 유형 Options 에 한글이 포함되어 있습니다 (영어 선택지 규칙).`,
+      message: `${type} 유형(option_type=${optionType || 'English'}) Options 에 한글이 포함되어 있습니다 — 영어 선택지여야 합니다.`,
     });
   }
 
@@ -148,14 +162,16 @@ export function checkContentIntegrity(doc: Record<string, unknown>): ContentInte
     }
   }
 
-  // source ↔ textbook 접두사 (주문·집계 매칭이 textbook 정확 일치에 의존)
+  // source ↔ textbook 접두사 — 모의고사·수능·평가원 계열에서만 적용.
+  // (부교재는 source 가 "09강 01번" 등 강·번호 단위이고 textbook 과 별개로 저장되는 게 정상 컨벤션이며,
+  //  주문 매칭도 passages.source_key 로 이뤄지므로 접두사 누락이 문제되지 않는다.)
   const source = str(doc.source).trim();
   const textbook = str(doc.textbook).trim();
-  if (source && textbook && !source.startsWith(textbook)) {
+  if (source && textbook && isMockExamTextbook(textbook) && !source.startsWith(textbook)) {
     issues.push({
       rule: 'source_textbook_prefix_mismatch',
       severity: 'error',
-      message: `source("${source.slice(0, 40)}…")가 textbook("${textbook}")으로 시작하지 않습니다 — 주문 매칭이 깨질 수 있습니다.`,
+      message: `모의고사 계열 source("${source.slice(0, 40)}…")가 textbook("${textbook}")으로 시작하지 않습니다 — 주문 매칭이 깨질 수 있습니다.`,
     });
   }
 
