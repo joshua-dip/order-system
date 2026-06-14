@@ -66,10 +66,51 @@ function renderOptions(raw: string): string {
   return lines.join('\n');
 }
 
+const INSERT_TYPES = new Set(['삽입', '삽입-고난도']);
+
+function latinCount(s: string): number {
+  return (s.match(/[A-Za-z]/g) ?? []).length;
+}
+
+/**
+ * 삽입류 중 일부 문항은 "주어진 문장"이 Question 필드에 잘못 합쳐져 있다
+ * (예: "…가장 적절한 곳은?\n\nThis setback…"). 한국어 지시문과 영어 주어진 문장을 분리해
+ * 지시문만 문제 줄에 두고, 주어진 문장은 본문 박스 맨 앞 블록으로 보낸다.
+ */
+function splitGivenSentence(type: string, question: string): { instruction: string; given: string } {
+  const q = (question ?? '').trim();
+  if (!INSERT_TYPES.has(type)) return { instruction: q, given: '' };
+  const m = q.match(/^([\s\S]*?(?:\?|시오\.))\s*([\s\S]*)$/);
+  if (m && m[2].trim() && latinCount(m[2]) >= 10) {
+    return { instruction: m[1].trim(), given: m[2].trim() };
+  }
+  return { instruction: q, given: '' };
+}
+
+/**
+ * 본문 렌더링 — "###" 구분자를 시각적 블록으로 분리(### 가 그대로 노출되지 않도록).
+ * 순서: 주어진 글 / (A) / (B) / (C), 삽입: 주어진 문장 / 본문 으로 각각 분리된다.
+ * leakedGiven 이 있으면(삽입 Question leak) 맨 앞 블록으로 붙인다.
+ */
+function renderParagraph(leakedGiven: string, paragraph: string): string {
+  const chunks: string[] = [];
+  if (leakedGiven) chunks.push(leakedGiven);
+  for (const part of (paragraph ?? '').split(/\s*###\s*/)) {
+    const t = part.trim();
+    if (t) chunks.push(t);
+  }
+  if (chunks.length === 0) return '';
+  return chunks
+    .map((c) => `<div class="q-para-block">${escKeepUnderline(c).replace(/\n/g, '<br/>')}</div>`)
+    .join('');
+}
+
 function questionBlock(q: FinalExamQuestion): string {
+  const { instruction, given } = splitGivenSentence(q.type, q.question);
   return `<div class="q">
-  <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(q.question)}</div>
-  <div class="q-para">${escKeepUnderline(q.paragraph).replace(/\n/g, '<br/>')}</div>
+  <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(instruction)}</div>
+  <div class="q-src">[${esc(q.type)}] ${esc(q.sourceKey)}</div>
+  <div class="q-para">${renderParagraph(given, q.paragraph)}</div>
   <div class="q-opts">${renderOptions(q.options)}</div>
 </div>`;
 }
@@ -110,12 +151,15 @@ ${COMMON_CSS}
   .qr-label { font-size: 7pt; color: #333; font-weight: 700; white-space: nowrap; }
   .cols { column-count: 2; column-gap: 9mm; column-rule: 1px solid #bbb; }
   .q { break-inside: avoid; margin-bottom: 14px; font-size: 10pt; line-height: 1.5; }
-  .q-head { font-weight: 700; margin-bottom: 5px; }
+  .q-head { font-weight: 700; margin-bottom: 3px; }
   .q-num { font-weight: 800; }
+  .q-src { font-size: 7.5pt; color: #8a8a8a; font-weight: 600; margin-bottom: 5px; }
   .q-para {
     border: 1.2px solid #555; border-radius: 4px; padding: 7px 9px; margin-bottom: 6px;
     font-size: 9.5pt; line-height: 1.55;
   }
+  .q-para-block { margin: 0 0 6px; }
+  .q-para-block:last-child { margin-bottom: 0; }
   .q-opts .opt { margin: 2px 0; font-size: 9.5pt; }
   .opts-inline { font-size: 10pt; letter-spacing: 2px; }
 </style></head>
