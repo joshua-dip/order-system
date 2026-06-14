@@ -62,11 +62,11 @@ export function shuffleQuestionDataForDistribution(
     [perm[i], perm[j]] = [perm[j], perm[i]];
   }
   // 셔플 결과가 항등 순열이면 한 번 더 굴려 변화 보장
+  // (인덱스를 한 번만 계산해야 함 — 좌/우에서 Math.random()을 따로 호출하면
+  //  서로 다른 칸을 가리켜 보기가 중복·누락되는 버그가 생긴다.)
   if (perm.every((v, i) => v === i)) {
-    [perm[0], perm[Math.floor(Math.random() * 4) + 1]] = [
-      perm[Math.floor(Math.random() * 4) + 1],
-      perm[0],
-    ];
+    const j = Math.floor(Math.random() * 4) + 1;
+    [perm[0], perm[j]] = [perm[j], perm[0]];
   }
 
   const newOpts = perm
