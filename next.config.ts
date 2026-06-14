@@ -20,13 +20,28 @@ const nextConfig: NextConfig = {
       "./lib/fonts/**/*",
       "./node_modules/pdfkit/js/data/**/*",
     ],
+    /* puppeteer 서버 PDF — chromium 바이너리 + 한글 임베드 폰트(lib/fonts)를 Lambda 번들에 포함.
+       (한글 PDF 폰트 깨짐 방지: lib/pdf-korean-font.ts 가 lib/fonts/*.ttf 를 fs 로 읽음) */
     "/api/admin/essay-generator/bulk-pdf-zip": [
+      "./lib/fonts/**/*",
+      "./node_modules/@sparticuz/chromium/**/*",
+    ],
+    "/api/admin/grammar-workbook/bulk-pdf-zip": [
+      "./lib/fonts/**/*",
       "./node_modules/@sparticuz/chromium/**/*",
     ],
     "/api/my/final-exams/[id]/download": [
       "./lib/fonts/**/*",
       "./node_modules/@sparticuz/chromium/**/*",
     ],
+    "/api/admin/class-kit/lecture-pdf": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/admin/class-kit/lecture-pdf-bulk": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/admin/class-kit/lesson-pdf": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/admin/class-kit/lesson-pdf-bulk": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/class-kit/lecture-pdf": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/class-kit/lecture-pdf-bulk": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/class-kit/lesson-pdf": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
+    "/api/class-kit/lesson-pdf-bulk": ["./lib/fonts/**/*", "./node_modules/@sparticuz/chromium/**/*"],
   },
 };
 

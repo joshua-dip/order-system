@@ -18,6 +18,7 @@ import {
   LESSON_MODE_LABELS,
   type LessonSentencePair,
 } from '@/lib/lesson-material-html';
+import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
         });
         const page = await browser.newPage();
         try {
-          await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
+          await page.setContent(await prepareKoreanPdfHtml(html, { remapNames: ['Malgun Gothic'] }),{ waitUntil: 'load', timeout: 60_000 });
           await page.evaluate(async () => {
             try {
               await (document as Document & { fonts?: { ready?: Promise<unknown> } }).fonts?.ready;
@@ -224,7 +225,7 @@ export async function POST(request: NextRequest) {
     });
     const page = await browser.newPage();
     try {
-      await page.setContent(html, { waitUntil: 'load', timeout: 120_000 });
+      await page.setContent(await prepareKoreanPdfHtml(html, { remapNames: ['Malgun Gothic'] }),{ waitUntil: 'load', timeout: 120_000 });
       await page.evaluate(async () => {
         try {
           await (document as Document & { fonts?: { ready?: Promise<unknown> } }).fonts?.ready;

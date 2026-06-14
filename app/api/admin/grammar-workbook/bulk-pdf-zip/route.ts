@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getGrammarWorkbook, GRAMMAR_MODES, type GrammarMode } from '@/lib/grammar-workbooks-store';
 import { buildSingleWorkbookHtml } from '@/lib/grammar-workbook-print';
+import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
     for (const w of built) {
       const page = await browser.newPage();
       try {
-        await page.setContent(w.html, { waitUntil: 'load', timeout: 60_000 });
+        await page.setContent(await prepareKoreanPdfHtml(w.html), { waitUntil: 'load', timeout: 60_000 });
         const pdfBuf = await page.pdf({
           format: 'A4',
           printBackground: true,

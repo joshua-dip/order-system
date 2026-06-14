@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getEssayExam } from '@/lib/essay-exams-store';
 import { readExamCss } from '@/lib/essay-exam-html';
+import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
         );
       if (exams.length === 0) continue;
 
-      const html = buildCombinedHtml(exams.map(e => String(e.html)), css);
+      const html = await prepareKoreanPdfHtml(buildCombinedHtml(exams.map(e => String(e.html)), css));
 
       const page = await browser.newPage();
       try {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/user-auth';
 import { buildLectureMaterialHtml, clampLineHeight, type LectureSentence } from '@/lib/lecture-material-html';
+import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
+    await page.setContent(await prepareKoreanPdfHtml(html, { remapNames: ['Malgun Gothic'] }),{ waitUntil: 'load', timeout: 60_000 });
     // 폰트(@import Pretendard) 로드 보장
     await page.evaluate(async () => {
       try { await (document as Document & { fonts?: { ready?: Promise<unknown> } }).fonts?.ready; } catch { /* ignore */ }
