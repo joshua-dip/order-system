@@ -115,6 +115,10 @@ export default function FinalExamDownloadsPage() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
   const [expandedGradings, setExpandedGradings] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -142,6 +146,129 @@ export default function FinalExamDownloadsPage() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  };
+
+  const submitRename = useCallback(async (id: string) => {
+    const title = editTitle.trim();
+    if (!title) return;
+    setBusyId(id);
+    try {
+      const r = await fetch(`/api/my/final-exams/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ title }),
+      });
+      if (r.ok) {
+        setItems((prev) => prev.map((it) => (it.id === id ? { ...it, title } : it)));
+        setEditingId(null);
+      } else {
+        const d = await r.json().catch(() => ({}));
+        alert(typeof d.error === 'string' ? d.error : '이름 변경에 실패했습니다.');
+      }
+    } catch {
+      alert('이름 변경에 실패했습니다.');
+    } finally {
+      setBusyId(null);
+    }
+  }, [editTitle]);
+
+  const doDelete = useCallback(async (id: string) => {
+    setBusyId(id);
+    try {
+      const r = await fetch(`/api/my/final-exams/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (r.ok) {
+        /* 부모 삭제 시 children(오답세트)도 서버에서 사라지므로 함께 제거 */
+        setItems((prev) => prev.filter((it) => it.id !== id && it.parentJobId !== id));
+        setConfirmDeleteId(null);
+      } else {
+        const d = await r.json().catch(() => ({}));
+        alert(typeof d.error === 'string' ? d.error : '삭제에 실패했습니다.');
+      }
+    } catch {
+      alert('삭제에 실패했습니다.');
+    } finally {
+      setBusyId(null);
+    }
+  }, []);
+
+  /* 이름변경/삭제 컨트롤 — 컴포넌트가 아닌 렌더 함수(중첩 컴포넌트는 input 포커스 유실). */
+  const renderRowControls = (job: JobRow, canRename: boolean) => {
+    const busy = busyId === job.id;
+    if (editingId === job.id) return null; // 제목 영역에서 인라인 편집 중
+    if (confirmDeleteId === job.id) {
+      return (
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            disabled={busy}
+            onClick={() => void doDelete(job.id)}
+            className="rounded-md bg-rose-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-rose-700 disabled:opacity-50"
+          >
+            {busy ? '삭제 중…' : '삭제 확인'}
+          </button>
+          <button
+            disabled={busy}
+            onClick={() => setConfirmDeleteId(null)}
+            className="rounded-md bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-500 hover:bg-gray-200"
+          >
+            취소
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex shrink-0 items-center gap-1">
+        {canRename && (
+          <button
+            onClick={() => { setEditingId(job.id); setEditTitle(job.title); setConfirmDeleteId(null); }}
+            className="rounded-md px-2 py-1 text-[11px] font-semibold text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            title="시험지 이름 변경"
+          >
+            ✏️ 이름변경
+          </button>
+        )}
+        <button
+          onClick={() => { setConfirmDeleteId(job.id); setEditingId(null); }}
+          className="rounded-md px-2 py-1 text-[11px] font-semibold text-gray-400 hover:bg-rose-50 hover:text-rose-600"
+          title="삭제"
+        >
+          🗑 삭제
+        </button>
+      </div>
+    );
+  };
+
+  const renderRenameInput = (job: JobRow) => {
+    const busy = busyId === job.id;
+    return (
+      <span className="flex items-center gap-1">
+        <input
+          autoFocus
+          value={editTitle}
+          maxLength={120}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void submitRename(job.id);
+            else if (e.key === 'Escape') setEditingId(null);
+          }}
+          className="min-w-[200px] rounded-md border border-indigo-300 px-2 py-1 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        />
+        <button
+          disabled={busy || !editTitle.trim()}
+          onClick={() => void submitRename(job.id)}
+          className="rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+        >
+          저장
+        </button>
+        <button
+          disabled={busy}
+          onClick={() => setEditingId(null)}
+          className="rounded-md bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-500 hover:bg-gray-200"
+        >
+          취소
+        </button>
+      </span>
+    );
   };
 
   /* 원본(부모) 기준 그룹화 — 오답 세트는 부모 카드 안에 중첩. 부모가 목록에 없으면 단독 표시 */
@@ -208,18 +335,23 @@ export default function FinalExamDownloadsPage() {
             const kids = childrenOf(j.id);
             return (
               <div key={j.id} className="rounded-2xl border bg-white p-5 shadow-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold text-gray-800">{j.title}</span>
-                  {j.status === 'ready' ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">다운로드 가능</span>
-                  ) : (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                      제작 중 · {j.totalShort}문항 대기
-                    </span>
-                  )}
-                  {j.retryIndex != null && (
-                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">무료 오답 세트</span>
-                  )}
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    {editingId === j.id ? renderRenameInput(j) : (
+                      <span className="font-bold text-gray-800">{j.title}</span>
+                    )}
+                    {j.status === 'ready' ? (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">다운로드 가능</span>
+                    ) : (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                        제작 중 · {j.totalShort}문항 대기
+                      </span>
+                    )}
+                    {j.retryIndex != null && (
+                      <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">무료 오답 세트</span>
+                    )}
+                  </div>
+                  {renderRowControls(j, true)}
                 </div>
                 <p className="mt-1 text-xs text-gray-500" title={j.scopeSummary}>
                   {j.scopeSummary} · {j.totalRequested}문항
@@ -250,6 +382,7 @@ export default function FinalExamDownloadsPage() {
                           <span className="ml-auto text-[10px] text-gray-400">
                             {new Date(k.createdAt).toLocaleDateString('ko-KR', { dateStyle: 'short' })}
                           </span>
+                          {renderRowControls(k, false)}
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           <ActionButtons job={k} compact />

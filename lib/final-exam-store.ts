@@ -319,6 +319,56 @@ export async function getFinalExamJob(db: Db, id: string, loginId: string): Prom
     .findOne({ _id: new ObjectId(id), loginId });
 }
 
+/** 시험지 이름(title) 변경 — 소유자(loginId) 한정. */
+export async function renameFinalExamJob(
+  db: Db,
+  id: string,
+  loginId: string,
+  rawTitle: string,
+): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false;
+  const title = rawTitle.trim().slice(0, 120);
+  if (!title) return false;
+  const r = await db
+    .collection(FINAL_EXAM_JOBS_COLLECTION)
+    .updateOne({ _id: new ObjectId(id), loginId }, { $set: { title, updatedAt: new Date() } });
+  return r.matchedCount > 0;
+}
+
+/**
+ * 잡 삭제 — 소유자 한정. 부모(원본) 잡이면 오답 재학습 세트(children)와
+ * 관련 채점 기록(gradings)까지 cascade 삭제. (포인트 환불은 하지 않음 — 이미 발급·사용)
+ */
+export async function deleteFinalExamJob(
+  db: Db,
+  id: string,
+  loginId: string,
+): Promise<{ deleted: boolean; removedJobs: number; removedGradings: number }> {
+  const empty = { deleted: false, removedJobs: 0, removedGradings: 0 };
+  if (!ObjectId.isValid(id)) return empty;
+  const oid = new ObjectId(id);
+  const job = await db
+    .collection<FinalExamJobDoc>(FINAL_EXAM_JOBS_COLLECTION)
+    .findOne({ _id: oid, loginId });
+  if (!job) return empty;
+
+  /* 부모면 children(오답세트) 포함. parentJobId 는 부모 id 문자열로 저장됨. */
+  const children = await db
+    .collection<FinalExamJobDoc>(FINAL_EXAM_JOBS_COLLECTION)
+    .find({ parentJobId: id, loginId })
+    .project<{ _id: ObjectId }>({ _id: 1 })
+    .toArray();
+  const jobIds = [oid, ...children.map((c) => c._id).filter(Boolean)];
+
+  const g = await db
+    .collection(FINAL_EXAM_GRADINGS_COLLECTION)
+    .deleteMany({ jobId: { $in: jobIds }, ownerLoginId: loginId });
+  const j = await db
+    .collection(FINAL_EXAM_JOBS_COLLECTION)
+    .deleteMany({ _id: { $in: jobIds }, loginId });
+  return { deleted: true, removedJobs: j.deletedCount ?? 0, removedGradings: g.deletedCount ?? 0 };
+}
+
 /* ── 부족분 → 관리자 요청(UV 주문 자동 생성) ──────────────────────────── */
 
 /**
