@@ -123,6 +123,9 @@ function SavedListPanel({
   const [movingFolderId, setMovingFolderId] = useState<string | null>(null);
   const [printingFolder, setPrintingFolder] = useState<string | null>(null);
   const [printingGroupKey, setPrintingGroupKey] = useState<string | null>(null);
+  /** 교재(폴더) 다중 선택 — 선택 교재들 한 번에 ZIP 다운로드용 */
+  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
+  const [downloadingFolders, setDownloadingFolders] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [printingSelected, setPrintingSelected] = useState(false);
   /** 접힌 sourceKey 그룹. 명시적으로 접힘으로 표시된 키만 들어있고, 다른 키는 펼침. */
@@ -296,6 +299,73 @@ function SavedListPanel({
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  };
+
+  const toggleFolderSelect = (folder: string) => {
+    setSelectedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folder)) next.delete(folder); else next.add(folder);
+      return next;
+    });
+  };
+
+  /** 선택한 교재(폴더)들을 각각 PDF로 묶어 ZIP 하나로 다운로드.
+     교재마다 그 폴더의 모든 문항 id를 모아 그룹으로 만들고 bulk-pdf-zip 에 보냄. */
+  const handleDownloadSelectedFolders = async () => {
+    const targets = [...selectedFolders];
+    if (targets.length === 0) {
+      alert('다운로드할 교재(폴더)를 먼저 선택하세요.');
+      return;
+    }
+    setDownloadingFolders(true);
+    setError('');
+    try {
+      const diffRank: Record<string, number> = { 기본난도: 0, 중난도: 1, 고난도: 2, 최고난도: 3 };
+      const groups: Array<{ name: string; ids: string[] }> = [];
+      for (const folder of targets) {
+        const res = await fetch(`/api/admin/essay-generator/exams?folder=${encodeURIComponent(folder)}`, { credentials: 'include' });
+        const d = await res.json();
+        const list = (Array.isArray(d.items) ? d.items : []) as SavedExamItem[];
+        const ids = [...list]
+          .sort((a, b) => {
+            const sk = (a.sourceKey ?? '').localeCompare(b.sourceKey ?? '', 'ko', { numeric: true });
+            if (sk !== 0) return sk;
+            return (diffRank[a.difficulty ?? ''] ?? 99) - (diffRank[b.difficulty ?? ''] ?? 99);
+          })
+          .map(i => i._id);
+        if (ids.length > 0) groups.push({ name: folder, ids });
+      }
+      if (groups.length === 0) { alert('선택한 교재에 문항이 없습니다.'); return; }
+
+      const zipName = sanitizeFilename(
+        groups.length === 1 ? groups[0].name : `서술형_${groups.length}개교재`,
+      ) + '.zip';
+
+      const res = await fetch('/api/admin/essay-generator/bulk-pdf-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ groups, zipName }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(typeof d.error === 'string' ? d.error : `ZIP 생성 실패 (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (err) {
+      console.error('[folder-bulk-zip]', err);
+      alert('교재 다운로드 중 오류: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setDownloadingFolders(false);
+    }
   };
 
   /** 체크된 항목 N건의 폴더를 한 번에 이동. */
@@ -781,6 +851,33 @@ function SavedListPanel({
                 ➕ 추가
               </button>
             </div>
+            {(() => {
+              const downloadable = folderList.filter(f => (folderCounts.get(f) ?? 0) > 0);
+              if (downloadable.length === 0) return null;
+              const allSel = downloadable.length > 0 && downloadable.every(f => selectedFolders.has(f));
+              return (
+                <div className="flex items-center gap-1 px-1 mb-1.5">
+                  <label className="flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer select-none" title="다운로드 가능한 교재 전체 선택/해제">
+                    <input
+                      type="checkbox"
+                      checked={allSel}
+                      onChange={() => setSelectedFolders(allSel ? new Set() : new Set(downloadable))}
+                      className="w-3 h-3 accent-emerald-500 cursor-pointer"
+                    />
+                    전체
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadSelectedFolders()}
+                    disabled={selectedFolders.size === 0 || downloadingFolders}
+                    className="ml-auto text-[11px] px-2 py-1 rounded bg-emerald-700 text-white font-medium hover:bg-emerald-600 disabled:opacity-40 disabled:hover:bg-emerald-700"
+                    title="선택한 교재들을 각각 PDF로 묶어 ZIP 하나로 다운로드"
+                  >
+                    {downloadingFolders ? '⏳ 생성 중…' : `⬇ 선택 ${selectedFolders.size}개 ZIP`}
+                  </button>
+                </div>
+              );
+            })()}
             {folderList.length === 0 && (
               <div className="text-[11px] text-slate-500 px-2 py-1">없음</div>
             )}
@@ -789,6 +886,17 @@ function SavedListPanel({
               const printing = printingFolder === f;
               return (
                 <div key={f} className="flex items-start gap-0.5 mb-0.5">
+                  {count > 0 ? (
+                    <input
+                      type="checkbox"
+                      checked={selectedFolders.has(f)}
+                      onChange={() => toggleFolderSelect(f)}
+                      className="mt-1.5 w-3.5 h-3.5 shrink-0 accent-emerald-500 cursor-pointer"
+                      title="이 교재를 선택 다운로드(ZIP)에 포함"
+                    />
+                  ) : (
+                    <span className="w-3.5 shrink-0" aria-hidden />
+                  )}
                   <button
                     type="button"
                     onClick={() => setFolderFilter(f)}
@@ -1294,6 +1402,7 @@ function CoveragePanel({
   const [onlyPriority, setOnlyPriority] = useState(false);
   const [savingPriority, setSavingPriority] = useState<string | null>(null);
   const [copiedHint, setCopiedHint] = useState<string | null>(null);
+  const [manualCopyText, setManualCopyText] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<'percent' | 'name'>('percent');
   /** 회분 수 — 한 지문에 각 난이도 N건씩 채울 목표. 1 = 옛 동작. coverage API 와 자동 채움 명령에 반영 */
   const [rounds, setRounds] = useState<number>(1);
@@ -1443,12 +1552,42 @@ function CoveragePanel({
   }, []);
 
   const copy = async (text: string, label: string) => {
+    /**
+     * 모달/웹뷰 안에서는 navigator.clipboard 가 종종 거부됨 (문서 포커스·권한 정책).
+     * 1) Clipboard API → 2) execCommand 폴백 → 3) 둘 다 실패하면 수동 복사 오버레이로 노출.
+     */
+    let ok = false;
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedHint(label);
-      setTimeout(() => setCopiedHint(null), 1200);
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
     } catch {
-      /* ignore */
+      ok = false;
+    }
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {
+        ok = false;
+      }
+    }
+    if (ok) {
+      setCopiedHint(label);
+      setTimeout(() => setCopiedHint(null), 1500);
+    } else {
+      setManualCopyText(text);
     }
   };
 
@@ -2133,6 +2272,60 @@ function CoveragePanel({
           </div>
         </div>
       )}
+
+      {/* 자동 복사 차단 시 수동 복사 오버레이 */}
+      {manualCopyText && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4"
+          onClick={(e) => { e.stopPropagation(); setManualCopyText(null); }}
+        >
+          <div
+            className="bg-slate-800 border-2 border-emerald-500/60 rounded-2xl w-[min(680px,94vw)] p-5 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-white">⚠ 자동 복사 차단됨</h3>
+              <button type="button" onClick={() => setManualCopyText(null)} className="text-slate-400 hover:text-white text-2xl leading-none">×</button>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              브라우저가 클립보드 API 를 거부했습니다. 아래 내용을 <b className="text-emerald-300">전체 선택 후 Ctrl+C / ⌘+C</b> 로 직접 복사하세요.
+            </p>
+            <textarea
+              readOnly
+              value={manualCopyText}
+              onFocus={(e) => e.currentTarget.select()}
+              ref={(el) => {
+                if (el) setTimeout(() => { el.focus(); el.select(); }, 50);
+              }}
+              className="w-full bg-slate-950 border border-emerald-700 rounded-lg px-3 py-2 text-sm text-emerald-200 font-mono leading-relaxed"
+              rows={Math.min(10, Math.max(2, manualCopyText.split('\n').length))}
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const t = manualCopyText;
+                  if (!t) return;
+                  navigator.clipboard?.writeText(t).then(
+                    () => { setManualCopyText(null); setCopiedHint('manual-retry-ok'); setTimeout(() => setCopiedHint(null), 1500); },
+                    () => { /* 여전히 실패 — 오버레이 유지 */ },
+                  );
+                }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-700 text-white hover:bg-emerald-600 font-semibold"
+              >
+                ↻ 다시 시도
+              </button>
+              <button
+                type="button"
+                onClick={() => setManualCopyText(null)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2166,6 +2359,39 @@ export default function EssayGeneratorPage() {
   /** Claude Code CLI 사용예 모달 */
   const [ccEssayModalOpen, setCcEssayModalOpen] = useState(false);
   const [copiedHint, setCopiedHint] = useState<string | null>(null);
+  const [manualCopyText, setManualCopyText] = useState<string | null>(null);
+  /** 자동 복사 차단 시 수동 복사 (Clipboard API → execCommand → 오버레이) */
+  const robustCopy = useCallback(async (text: string, label?: string) => {
+    let ok = false;
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
+    } catch { ok = false; }
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch { ok = false; }
+    }
+    if (ok) {
+      if (label) { setCopiedHint(label); setTimeout(() => setCopiedHint(null), 1500); }
+    } else {
+      setManualCopyText(text);
+    }
+    return ok;
+  }, []);
   /** cc:essay 모달 — 강별 passageId 목록 */
   const [lessonBatch, setLessonBatch] = useState<{
     lesson: string;
@@ -2873,9 +3099,7 @@ export default function EssayGeneratorPage() {
           },
         }, null, 2);
 
-        const copy = async (text: string, label: string) => {
-          try { await navigator.clipboard.writeText(text); setCopiedHint(label); setTimeout(() => setCopiedHint(null), 1500); } catch { /* ignore */ }
-        };
+        const copy = async (text: string, label: string) => { await robustCopy(text, label); };
 
         const buildFullCmd = () => {
           if (!selectedPassageInfo?.passageId) return '';
@@ -3269,11 +3493,11 @@ export default function EssayGeneratorPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText('claude --dangerously-skip-permissions');
+                  const ok = await robustCopy('claude --dangerously-skip-permissions');
+                  if (ok) {
                     setSaveMsg('💻 claude --dangerously-skip-permissions 복사됨 — 터미널에 붙여넣기');
                     setTimeout(() => setSaveMsg(''), 2000);
-                  } catch {}
+                  }
                 }}
                 className="text-[11px] px-2 py-1 rounded-md border border-amber-600/60 bg-amber-950/30 text-amber-200 hover:bg-amber-900/40 hover:border-amber-500 transition-colors font-mono whitespace-nowrap"
                 title="터미널 첫 진입 — 권한 프롬프트 모두 우회. claude --dangerously-skip-permissions 복사. 헬퍼 스크립트(run-essay-loop.sh 등)는 자동으로 이 플래그를 붙입니다."
@@ -3937,6 +4161,58 @@ export default function EssayGeneratorPage() {
           </div>
         </div>
       </main>
+
+      {/* 자동 복사 차단 시 수동 복사 오버레이 (메인 페이지) */}
+      {manualCopyText && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4"
+          onClick={(e) => { e.stopPropagation(); setManualCopyText(null); }}
+        >
+          <div
+            className="bg-slate-800 border-2 border-emerald-500/60 rounded-2xl w-[min(680px,94vw)] p-5 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-white">⚠ 자동 복사 차단됨</h3>
+              <button type="button" onClick={() => setManualCopyText(null)} className="text-slate-400 hover:text-white text-2xl leading-none">×</button>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              브라우저가 클립보드 API 를 거부했습니다. 아래 내용을 <b className="text-emerald-300">전체 선택 후 Ctrl+C / ⌘+C</b> 로 직접 복사하세요.
+            </p>
+            <textarea
+              readOnly
+              value={manualCopyText}
+              onFocus={(e) => e.currentTarget.select()}
+              ref={(el) => { if (el) setTimeout(() => { el.focus(); el.select(); }, 50); }}
+              className="w-full bg-slate-950 border border-emerald-700 rounded-lg px-3 py-2 text-sm text-emerald-200 font-mono leading-relaxed"
+              rows={Math.min(10, Math.max(2, manualCopyText.split('\n').length))}
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const t = manualCopyText;
+                  if (!t) return;
+                  navigator.clipboard?.writeText(t).then(
+                    () => { setManualCopyText(null); setSaveMsg('복사됨 ✓'); setTimeout(() => setSaveMsg(''), 1500); },
+                    () => { /* 여전히 실패 — 오버레이 유지 */ },
+                  );
+                }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-700 text-white hover:bg-emerald-600 font-semibold"
+              >
+                ↻ 다시 시도
+              </button>
+              <button
+                type="button"
+                onClick={() => setManualCopyText(null)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

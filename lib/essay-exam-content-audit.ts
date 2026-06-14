@@ -62,6 +62,7 @@ const META_COMPOUND_RE = /(to부정사|be동사|-ing형|p\.p\.|S\/V\/O\/C\/M|SVO
 const META_BARE_WHITELIST = new Set([
   'to', 'be', 'ing', 'pp',
   's', 'v', 'o', 'c', 'm',  // 한 글자 SVOC 라벨 (대소문자 모두 허용)
+  'vs',                      // 「A vs B」 비교 표기 (메타)
 ]);
 
 /**
@@ -115,8 +116,12 @@ function classifyToken(token: string, answerTokens: Set<string>): LeakClass {
 }
 
 /* ── 토크나이저 ─────────────────────────────────────────────────────────────── */
+/** 강조용 HTML 태그(<b>…</b> 등, generation_prompt 규정 마크업)는 영어 토큰이 아니므로 제거 */
+function stripMarkupTags(text: string): string {
+  return text.replace(/<[^>]*>/g, ' ');
+}
 function tokenizeEnglish(text: string): string[] {
-  return (text.match(/[A-Za-z][A-Za-z'-]*/g) ?? []);
+  return (stripMarkupTags(text).match(/[A-Za-z][A-Za-z'-]*/g) ?? []);
 }
 
 /**
@@ -124,13 +129,17 @@ function tokenizeEnglish(text: string): string[] {
  * 남은 영어 토큰을 (위치 + 토큰) 으로 반환.
  */
 function extractSuspectEnglishTokens(text: string): Array<{ token: string; index: number }> {
+  /* 강조 HTML 태그(<b>…</b> 등)를 동일 길이 공백으로 마스킹 — 인덱스 보존(2-gram gap 계산용) */
+  const noTags = text.replace(/<[^>]*>/g, m => ' '.repeat(m.length));
   /* 화이트리스트 범위 수집 */
-  const masked = text.replace(META_COMPOUND_RE, m => ' '.repeat(m.length));
+  const masked = noTags.replace(META_COMPOUND_RE, m => ' '.repeat(m.length));
   const out: Array<{ token: string; index: number }> = [];
   const re = /[A-Za-z][A-Za-z'-]*/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(masked)) !== null) {
     const tok = m[0];
+    /* 단일 영문자(A·B·C 플레이스홀더, S·V·O·C·M 라벨)는 내용 누설이 아니므로 제외 */
+    if (tok.length === 1) continue;
     if (META_BARE_WHITELIST.has(tok.toLowerCase())) continue;
     out.push({ token: tok, index: m.index });
   }

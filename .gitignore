@@ -94,3 +94,6 @@ scripts/patch-essay-*.ts
 /public/shared-resources/**
 !/public/shared-resources/.gitkeep
 !/public/shared-resources/*/meta.json
+
+# 일회성 임시 스크립트
+scripts/tmp-*.ts

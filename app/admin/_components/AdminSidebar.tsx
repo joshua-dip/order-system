@@ -124,6 +124,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         >
           비회원 변형 로그
         </Link>
+        <Link href="/admin/exam-type-analysis" className={linkCls('/admin/exam-type-analysis')}>
+          📊 기출 유형 분석
+        </Link>
 
         <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
         <Link href="/admin?section=members" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { isEbsTextbook } from '@/lib/textbookSort';
-import { BOOK_VARIANT_QUESTION_TYPES } from '@/lib/book-variant-types';
+import { BOOK_VARIANT_OBJECTIVE_TYPES } from '@/lib/book-variant-types';
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { mockExamDisplayLabel } from '@/lib/mock-exam-key';
@@ -54,6 +54,18 @@ interface ExamScopePreset {
   name: string;
   dbEntries: Omit<DbEntry, 'id' | 'lessonGroups'>[];
   savedAt: string;
+}
+
+/** 기출 유형 분석 요청/추천 (내 요청 목록 항목) */
+interface ExamTypeAnalysisView {
+  id: string;
+  schoolName: string;
+  grade: string;
+  examLabel: string;
+  status: 'requested' | 'done';
+  recommendedTypes: { type: string; count: number }[];
+  adminNote: string;
+  createdAt: string;
 }
 
 /** 마이페이지 「학교 관리」에서 학년도·학기별로 저장한 범위 */
@@ -312,6 +324,91 @@ export default function UnifiedOrder() {
 
   /* ── 토스트 ── */
   const [toast, setToast] = useState('');
+
+  /* ── 즉시 발급 — 완료 후 /unified/downloads(내 다운로드)로 이동 ── */
+  const [issuing, setIssuing] = useState(false);
+
+  /* ── 기출 유형 분석 요청/추천 ── */
+  const [analysisItems, setAnalysisItems] = useState<ExamTypeAnalysisView[]>([]);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [analysisSubmitting, setAnalysisSubmitting] = useState(false);
+  const [anSchool, setAnSchool] = useState('');
+  const [anGrade, setAnGrade] = useState('고1');
+  const [anYear, setAnYear] = useState(String(new Date().getFullYear()));
+  const [anExamType, setAnExamType] = useState('1학기중간고사');
+  const [anNote, setAnNote] = useState('');
+  const [anFiles, setAnFiles] = useState<File[]>([]);
+
+  const fetchAnalysis = useCallback(async () => {
+    try {
+      const r = await fetch('/api/my/exam-type-analysis', { credentials: 'include' });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (Array.isArray(d.items)) setAnalysisItems(d.items as ExamTypeAnalysisView[]);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (premiumOk) void fetchAnalysis();
+  }, [premiumOk, fetchAnalysis]);
+
+  const handleAnalysisSubmit = async () => {
+    if (!anSchool.trim()) { alert('학교명을 입력해주세요.'); return; }
+    if (anFiles.length === 0) { alert('시험지 파일을 첨부해주세요.'); return; }
+    setAnalysisSubmitting(true);
+    try {
+      /* 1) 기존 기출 업로드 API 재사용 */
+      const fd = new FormData();
+      fd.set('school', anSchool.trim());
+      fd.set('grade', anGrade);
+      fd.set('examYear', anYear);
+      fd.set('examType', anExamType);
+      fd.set('examScope', anNote.trim() || '유형 분석용');
+      for (const f of anFiles) fd.append('files', f);
+      const up = await fetch('/api/my/past-exam-upload', { method: 'POST', credentials: 'include', body: fd });
+      const upD = await up.json().catch(() => ({}));
+      if (!up.ok || !upD.id) {
+        alert(typeof upD.error === 'string' ? upD.error : '시험지 업로드에 실패했습니다.');
+        return;
+      }
+      /* 2) 분석 요청 생성 */
+      const r = await fetch('/api/my/exam-type-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          schoolName: anSchool.trim(),
+          grade: anGrade,
+          examLabel: `${anYear} ${anExamType}`,
+          note: anNote.trim(),
+          pastExamUploadId: upD.id,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        alert(typeof d.error === 'string' ? d.error : '분석 요청에 실패했습니다.');
+        return;
+      }
+      setShowAnalysisModal(false);
+      setAnFiles([]);
+      setAnNote('');
+      await fetchAnalysis();
+      setToast('분석 요청 완료! 관리자 분석이 끝나면 추천 유형이 표시됩니다.');
+    } catch {
+      alert('요청 처리 중 오류가 발생했습니다.');
+    } finally {
+      setAnalysisSubmitting(false);
+    }
+  };
+
+  const applyRecommendation = (rec: ExamTypeAnalysisView) => {
+    if (rec.recommendedTypes.length === 0) return;
+    setSelectedTypes(rec.recommendedTypes.map((r) => r.type));
+    setQuestionsPerTypeMap(Object.fromEntries(rec.recommendedTypes.map((r) => [r.type, r.count])));
+    setToast(`「${rec.schoolName} ${rec.examLabel}」 추천 유형을 적용했습니다.`);
+  };
 
   /* ── 초기 로드 ── */
   useEffect(() => {
@@ -713,6 +810,52 @@ export default function UnifiedOrder() {
     }
   };
 
+  /* ── 즉시 발급 (포인트 차감 → 다운로드 목록 등록) ── */
+  const handleInstantIssue = async () => {
+    if (selectedTypes.length === 0) { alert('유형을 선택해주세요.'); return; }
+    if (totalSources === 0) { alert('지문을 선택해주세요.'); return; }
+    if (issuing) return;
+    if (userPoints < totalPrice) {
+      alert(`포인트가 부족합니다.\n필요한 포인트: ${totalPrice.toLocaleString()}P / 보유: ${userPoints.toLocaleString()}P\n\n마이페이지에서 포인트를 충전한 뒤 다시 시도해 주세요.`);
+      return;
+    }
+    if (!window.confirm(`${totalPrice.toLocaleString()}P를 차감하고 파이널 예비 모의고사를 바로 발급합니다.\n(총 ${totalSources}개 지문 · 발급 후 「내 다운로드」에서 PDF로 받을 수 있습니다)\n\n진행할까요?`)) {
+      return;
+    }
+    setIssuing(true);
+    try {
+      const r = await fetch('/api/my/final-exams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          dbEntries: dbEntries.map(({ displayName, selectedSources, textbookCategory }) => ({
+            displayName,
+            selectedSources,
+            ...(textbookCategory ? { textbookCategory } : {}),
+          })),
+          selectedTypes,
+          questionsPerTypeMap,
+          orderInsertExplanation,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        alert(typeof d.error === 'string' ? d.error : '발급에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      setUserPoints(typeof d.balanceAfter === 'number' ? d.balanceAfter : Math.max(0, userPoints - totalPrice));
+      if (d.status !== 'ready') {
+        alert(`발급이 접수되었습니다.\n\n현재 준비된 문항: ${d.totalAssigned}/${d.totalRequested}\n부족한 ${d.totalShort}문항은 관리자가 제작 중이며, 완성되면 「내 다운로드」에서 자동으로 다운로드 가능 상태로 바뀝니다.`);
+      }
+      router.push('/unified/downloads');
+    } catch {
+      alert('발급 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIssuing(false);
+    }
+  };
+
   /* ──────────────────────────────────────────────────────── */
   /*  렌더: 공통 헤더                                          */
   /* ──────────────────────────────────────────────────────── */
@@ -842,6 +985,20 @@ export default function UnifiedOrder() {
     </div>
   );
 
+  /* ── 내 다운로드 링크 (전용 페이지로 분리) ── */
+  const downloadsPanel = premiumOk ? (
+    <Link
+      href="/unified/downloads"
+      className="flex items-center justify-between rounded-2xl border border-indigo-200 bg-white px-5 py-4 shadow-sm hover:border-indigo-400 hover:shadow transition-all"
+    >
+      <div>
+        <p className="font-bold text-gray-800">📥 내 다운로드</p>
+        <p className="mt-0.5 text-xs text-gray-500">발급한 모의고사·오답 세트 PDF와 학생별 채점 기록 보기</p>
+      </div>
+      <span className="text-indigo-500 font-bold">→</span>
+    </Link>
+  ) : null;
+
   /* ──────────────────────────────────────────────────────── */
   /*  Phase 1: 시험 범위 구성                                  */
   /* ──────────────────────────────────────────────────────── */
@@ -859,6 +1016,8 @@ export default function UnifiedOrder() {
         {header}
         <div className="min-h-screen bg-gray-50">
           <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+
+            {downloadsPanel}
 
             {/* 설명 카드 */}
             <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50 p-5">
@@ -1461,6 +1620,8 @@ export default function UnifiedOrder() {
       <div className="min-h-screen bg-gray-50">
         <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
 
+          {downloadsPanel}
+
           {/* 선택 요약 */}
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <h2 className="font-bold text-gray-800 mb-3">선택된 시험 범위 요약</h2>
@@ -1492,11 +1653,56 @@ export default function UnifiedOrder() {
             <p className="mt-3 text-sm font-medium text-purple-700">총 {totalSources}개 지문</p>
           </div>
 
+          {/* 기출 분석 추천 */}
+          <div className="rounded-2xl border border-sky-200 bg-sky-50/80 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="font-bold text-sky-900">💡 어떤 유형을 골라야 할지 모르겠다면?</h2>
+                <p className="mt-0.5 text-xs text-sky-700">
+                  학교 기출 시험지를 올려 주시면 관리자가 유형 분포를 분석해 추천 세트를 만들어 드립니다.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAnalysisModal(true)}
+                className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white hover:bg-sky-700"
+              >
+                📤 기출 분석 요청하기
+              </button>
+            </div>
+            {analysisItems.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {analysisItems.map((rec) => (
+                  <div key={rec.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs">
+                    <span className="font-semibold text-gray-700">{rec.schoolName} {rec.grade}</span>
+                    <span className="text-gray-500">{rec.examLabel}</span>
+                    {rec.status === 'done' ? (
+                      <>
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">분석 완료</span>
+                        <span className="text-gray-400 truncate max-w-[260px]" title={rec.recommendedTypes.map((r) => `${r.type}${r.count}`).join(' · ')}>
+                          {rec.recommendedTypes.map((r) => `${r.type}${r.count}`).join('·')}
+                        </span>
+                        {rec.adminNote && <span className="text-gray-400 italic truncate max-w-[200px]" title={rec.adminNote}>“{rec.adminNote}”</span>}
+                        <button
+                          onClick={() => applyRecommendation(rec)}
+                          className="ml-auto rounded-lg bg-emerald-600 px-3 py-1 font-bold text-white hover:bg-emerald-700"
+                        >
+                          추천 유형 적용
+                        </button>
+                      </>
+                    ) : (
+                      <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">분석 중</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* 유형 선택 */}
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <h2 className="font-bold text-gray-800 mb-3">문제 유형 선택</h2>
             <div className="grid grid-cols-3 gap-2">
-              {BOOK_VARIANT_QUESTION_TYPES.map((t) => {
+              {BOOK_VARIANT_OBJECTIVE_TYPES.map((t) => {
                 const sel = selectedTypes.includes(t);
                 return (
                   <button
@@ -1629,23 +1835,7 @@ export default function UnifiedOrder() {
             </div>
           )}
 
-          {/* 포인트 — 쏠북 교재가 시험 범위에 있으면 쏠북 가격 정책과 충돌을 피하기 위해 비활성 */}
-          {isMember && userPoints > 0 && !hasSolbookInOrder && (
-            <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-bold text-gray-800">포인트 사용</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">보유: {userPoints.toLocaleString()}P</p>
-                </div>
-                <button
-                  onClick={() => setShowPointModal(true)}
-                  className="rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-bold text-purple-700 hover:bg-purple-100"
-                >
-                  {pointsToUse > 0 ? `${pointsToUse.toLocaleString()}P 사용 중` : '사용하기'}
-                </button>
-              </div>
-            </div>
-          )}
+          {/* 즉시 발급(비쏠북)은 전액 포인트 차감 — 별도 포인트 사용 선택 불필요 */}
           {hasSolbookInOrder && (
             <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-5 shadow-sm text-sm text-amber-950 leading-relaxed">
               <p className="font-bold text-amber-900 mb-1">쏠북 교재가 포함된 주문</p>
@@ -1665,36 +1855,44 @@ export default function UnifiedOrder() {
             </div>
           )}
 
-          {/* 이메일 */}
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-            <h2 className="font-bold text-gray-800 mb-2">결과물 수령 이메일</h2>
-            <input
-              type="email"
-              placeholder="example@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
-            />
-          </div>
+          {/* 이메일 — 쏠북 포함(주문서 흐름)일 때만 필요 */}
+          {hasSolbookInOrder && (
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h2 className="font-bold text-gray-800 mb-2">결과물 수령 이메일</h2>
+              <input
+                type="email"
+                placeholder="example@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+          )}
 
           {/* 가격 및 결제 안내 */}
           <div className="rounded-2xl border-2 border-purple-200 bg-purple-50 p-5">
-            <h2 className="font-bold text-purple-900 mb-3">주문 금액</h2>
+            <h2 className="font-bold text-purple-900 mb-3">{hasSolbookInOrder ? '주문 금액' : '발급 비용'}</h2>
             <div className="space-y-1 text-sm text-purple-800">
               <div className="flex justify-between">
                 <span>소계 (변형 제작)</span>
-                <span>{totalPrice.toLocaleString()}원</span>
+                <span>{hasSolbookInOrder ? `${totalPrice.toLocaleString()}원` : `${totalPrice.toLocaleString()}P`}</span>
               </div>
-              {effectivePointsDeduction > 0 && (
+              {hasSolbookInOrder && effectivePointsDeduction > 0 && (
                 <div className="flex justify-between text-green-700">
                   <span>포인트 할인</span>
                   <span>− {effectivePointsDeduction.toLocaleString()}원</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-base text-purple-900 border-t border-purple-200 pt-2 mt-2">
-                <span>{hasSolbookInOrder ? '입금 대상(제작료)' : '최종 금액'}</span>
-                <span>{finalPrice.toLocaleString()}원</span>
+                <span>{hasSolbookInOrder ? '입금 대상(제작료)' : '차감 포인트'}</span>
+                <span>{hasSolbookInOrder ? `${finalPrice.toLocaleString()}원` : `${totalPrice.toLocaleString()}P`}</span>
               </div>
+              {!hasSolbookInOrder && (
+                <div className="flex justify-between text-xs text-purple-700">
+                  <span>보유 포인트</span>
+                  <span className={userPoints < totalPrice ? 'text-red-600 font-bold' : ''}>{userPoints.toLocaleString()}P</span>
+                </div>
+              )}
             </div>
             {hasSolbookInOrder && (
               <p className="mt-2 text-[11px] leading-relaxed text-purple-900/90">
@@ -1702,7 +1900,7 @@ export default function UnifiedOrder() {
                 구매하시면 됩니다.
               </p>
             )}
-            {finalPrice > 0 && (
+            {hasSolbookInOrder && finalPrice > 0 && (
               <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs text-purple-700">
                 <p className="font-bold mb-0.5">입금 계좌 (제작료)</p>
                 <p className="font-mono">{MEMBER_DEPOSIT_ACCOUNT}</p>
@@ -1710,19 +1908,124 @@ export default function UnifiedOrder() {
             )}
           </div>
 
-          {/* 주문 버튼 */}
-          <button
-            onClick={handleSubmit}
-            disabled={selectedTypes.length === 0 || totalSources === 0 || !email.trim()}
-            className="w-full rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 py-4 text-base font-extrabold text-white shadow-lg hover:from-purple-800 hover:to-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          >
-            파이널 예비 모의고사 주문하기
-          </button>
-          <p className="text-center text-xs text-gray-400">
-            주문 완료 후 카카오톡 오픈채팅으로 입금 확인을 알려주세요
-          </p>
+          {/* 발급/주문 버튼 */}
+          {hasSolbookInOrder ? (
+            <>
+              <button
+                onClick={handleSubmit}
+                disabled={selectedTypes.length === 0 || totalSources === 0 || !email.trim()}
+                className="w-full rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 py-4 text-base font-extrabold text-white shadow-lg hover:from-purple-800 hover:to-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                파이널 예비 모의고사 주문하기
+              </button>
+              <p className="text-center text-xs text-gray-400">
+                쏠북 교재가 포함된 범위는 주문서 접수 후 제작됩니다 · 주문 완료 후 카카오톡 오픈채팅으로 입금 확인을 알려주세요
+              </p>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleInstantIssue}
+                disabled={selectedTypes.length === 0 || totalSources === 0 || issuing}
+                className="w-full rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 py-4 text-base font-extrabold text-white shadow-lg hover:from-purple-800 hover:to-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                {issuing ? '발급 중…' : `⚡ 포인트로 바로 발급받기 (${totalPrice.toLocaleString()}P)`}
+              </button>
+              <p className="text-center text-xs text-gray-400">
+                보유 포인트 {userPoints.toLocaleString()}P · 발급 즉시 「내 다운로드」에서 문제지·정답해설 PDF를 받을 수 있습니다.
+                <br />
+                일부 문항이 준비 전이면 관리자가 제작을 마치는 대로 자동으로 다운로드 가능해집니다.
+              </p>
+            </>
+          )}
         </div>
       </div>
+
+      {/* 기출 분석 요청 모달 */}
+      {showAnalysisModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="font-bold text-gray-800 mb-1">📤 기출 유형 분석 요청</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              학교 기출 시험지(PDF·사진)를 올려 주시면 관리자가 유형 분포를 분석해 추천 유형 세트를 등록해 드립니다.
+            </p>
+            <div className="space-y-3 text-sm">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">학교명 *</label>
+                <input
+                  type="text"
+                  value={anSchool}
+                  onChange={(e) => setAnSchool(e.target.value)}
+                  placeholder="예: 부산진여자고등학교"
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">학년</label>
+                  <select value={anGrade} onChange={(e) => setAnGrade(e.target.value)} className="w-full rounded-xl border border-gray-300 px-2 py-2">
+                    <option>고1</option><option>고2</option><option>고3</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">연도</label>
+                  <select value={anYear} onChange={(e) => setAnYear(e.target.value)} className="w-full rounded-xl border border-gray-300 px-2 py-2">
+                    {[0, 1, 2].map((d) => {
+                      const y = String(new Date().getFullYear() - d);
+                      return <option key={y}>{y}</option>;
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">시험</label>
+                  <select value={anExamType} onChange={(e) => setAnExamType(e.target.value)} className="w-full rounded-xl border border-gray-300 px-2 py-2">
+                    <option>1학기중간고사</option><option>1학기기말고사</option>
+                    <option>2학기중간고사</option><option>2학기기말고사</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">시험지 파일 * (최대 5개, 각 15MB)</label>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,image/*"
+                  onChange={(e) => setAnFiles(Array.from(e.target.files ?? []).slice(0, 5))}
+                  className="w-full text-xs"
+                />
+                {anFiles.length > 0 && (
+                  <p className="mt-1 text-[11px] text-gray-500">{anFiles.map((f) => f.name).join(', ')}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">메모 (선택)</label>
+                <textarea
+                  value={anNote}
+                  onChange={(e) => setAnNote(e.target.value)}
+                  rows={2}
+                  placeholder="시험 범위, 참고사항 등"
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => void handleAnalysisSubmit()}
+                disabled={analysisSubmitting}
+                className="flex-1 rounded-xl bg-sky-600 py-2.5 text-sm font-bold text-white hover:bg-sky-700 disabled:opacity-50"
+              >
+                {analysisSubmitting ? '요청 중…' : '분석 요청하기'}
+              </button>
+              <button
+                onClick={() => setShowAnalysisModal(false)}
+                className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 포인트 모달 */}
       {showPointModal && (
