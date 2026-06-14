@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
     "/api/admin/essay-generator/bulk-pdf-zip": [
       "./node_modules/@sparticuz/chromium/**/*",
     ],
+    "/api/my/final-exams/[id]/download": [
+      "./lib/fonts/**/*",
+      "./node_modules/@sparticuz/chromium/**/*",
+    ],
   },
 };
 

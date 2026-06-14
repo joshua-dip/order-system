@@ -12,6 +12,7 @@ import {
   buildFinalExamAnswerHtml,
 } from '@/lib/final-exam-html';
 import { publicBaseUrl } from '@/lib/public-base-url';
+import { getEmbeddedKoreanFontFaceCss } from '@/lib/pdf-korean-font';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -100,9 +101,11 @@ export async function GET(
     }
 
     const subtitle = `${job.scopeSummary} · 총 ${questions.length}문항`;
+    /* Lambda Chromium 은 한글 시스템 폰트가 없으므로 NanumGothic 을 @font-face 로 임베드 */
+    const fontFaceCss = await getEmbeddedKoreanFontFaceCss();
     let html: string;
     if (kind === 'answer') {
-      html = buildFinalExamAnswerHtml({ title: job.title, subtitle, questions });
+      html = buildFinalExamAnswerHtml({ title: job.title, subtitle, questions, fontFaceCss });
     } else {
       /* QR 채점 — 문제지 헤더에 채점 페이지 QR 인쇄 */
       const token = await ensureGradeToken(db, job);
@@ -119,7 +122,8 @@ export async function GET(
         subtitle,
         questions,
         qrDataUrl,
-        qrLabel: '📱 QR 스캔 → 바로 채점',
+        qrLabel: 'QR 스캔 → 바로 채점',
+        fontFaceCss,
       });
     }
 

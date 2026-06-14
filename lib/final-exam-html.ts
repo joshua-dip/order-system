@@ -24,6 +24,8 @@ export interface FinalExamBuildInput {
   /** QR 채점 — 문제지 헤더에 인쇄할 QR (dataURL) + 안내 라벨 */
   qrDataUrl?: string;
   qrLabel?: string;
+  /** 서버(Lambda) 한글 렌더용 @font-face 임베드 CSS (getEmbeddedKoreanFontFaceCss) */
+  fontFaceCss?: string;
 }
 
 function esc(s: string): string {
@@ -76,7 +78,7 @@ const COMMON_CSS = `
   * { box-sizing: border-box; }
   :root { color-scheme: light; }
   html, body { background: #fff; }
-  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; margin: 0; color: #111; }
+  body { font-family: 'NanumGothicEmbedded', 'CircledFallbackEmbedded', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; margin: 0; color: #111; }
   .sheet { padding: 0; }
   .head {
     border: 2.5px solid #111; border-radius: 6px; padding: 10px 16px; margin-bottom: 14px;
@@ -92,13 +94,14 @@ export function buildFinalExamSheetHtml(input: FinalExamBuildInput): string {
   const qr = input.qrDataUrl
     ? `<div class="qr">
         <img src="${input.qrDataUrl}" alt="QR 채점" />
-        <div class="qr-label">${esc(input.qrLabel ?? '📱 QR 스캔 → 바로 채점')}</div>
+        <div class="qr-label">${esc(input.qrLabel ?? 'QR 스캔 → 바로 채점')}</div>
       </div>`
     : '';
   return `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"/>
 <title>${esc(input.title)}</title>
 <style>
+${input.fontFaceCss ?? ''}
 ${COMMON_CSS}
   .head-wrap { display: flex; align-items: stretch; gap: 8px; margin-bottom: 14px; }
   .head-wrap .head { flex: 1; margin-bottom: 0; }
@@ -148,6 +151,7 @@ export function buildFinalExamAnswerHtml(input: FinalExamBuildInput): string {
 <html lang="ko"><head><meta charset="utf-8"/>
 <title>${esc(input.title)} — 정답 및 해설</title>
 <style>
+${input.fontFaceCss ?? ''}
 ${COMMON_CSS}
   table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 16px; }
   th, td { border: 1px solid #888; padding: 4px 8px; text-align: center; }
