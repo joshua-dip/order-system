@@ -964,6 +964,103 @@ export default function AdminPassagesPage() {
   const [uploadFromDbTextbook, setUploadFromDbTextbook] = useState('');
   const [uploadFromDbSaving, setUploadFromDbSaving] = useState(false);
 
+  /** 엑셀 추출 (선택한 교재·강 → 한줄해석 엑셀) */
+  type ExportTextbookMeta = { textbook: string; total: number; chapters: { chapter: string; count: number }[] };
+  type ExportCartItem = { textbook: string; chapter: string; count: number };
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportMeta, setExportMeta] = useState<ExportTextbookMeta[]>([]);
+  const [exportMetaLoading, setExportMetaLoading] = useState(false);
+  const [exportSelTextbook, setExportSelTextbook] = useState('');
+  const [exportCheckedChapters, setExportCheckedChapters] = useState<Set<string>>(new Set());
+  const [exportCart, setExportCart] = useState<ExportCartItem[]>([]);
+  const [exportDownloading, setExportDownloading] = useState(false);
+  const [exportMsg, setExportMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const exportCurrentMeta = useMemo(
+    () => exportMeta.find((t) => t.textbook === exportSelTextbook),
+    [exportMeta, exportSelTextbook],
+  );
+
+  const openExportModal = useCallback(async () => {
+    setExportModalOpen(true);
+    setExportMsg(null);
+    if (exportMeta.length > 0) return;
+    setExportMetaLoading(true);
+    try {
+      const r = await fetch('/api/admin/passages/export-meta', { credentials: 'include' });
+      const d = await r.json();
+      if (Array.isArray(d.textbooks)) setExportMeta(d.textbooks as ExportTextbookMeta[]);
+    } catch {
+      /* ignore */
+    } finally {
+      setExportMetaLoading(false);
+    }
+  }, [exportMeta.length]);
+
+  const toggleExportChapter = (chapter: string) => {
+    setExportCheckedChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(chapter)) next.delete(chapter); else next.add(chapter);
+      return next;
+    });
+  };
+
+  const addExportSelection = () => {
+    const meta = exportMeta.find((t) => t.textbook === exportSelTextbook);
+    if (!meta) return;
+    const chosen = meta.chapters.filter((c) => exportCheckedChapters.has(c.chapter));
+    if (chosen.length === 0) return;
+    setExportCart((prev) => {
+      const next = [...prev];
+      for (const c of chosen) {
+        if (!next.some((x) => x.textbook === exportSelTextbook && x.chapter === c.chapter)) {
+          next.push({ textbook: exportSelTextbook, chapter: c.chapter, count: c.count });
+        }
+      }
+      return next;
+    });
+    setExportCheckedChapters(new Set());
+  };
+
+  const removeExportItem = (textbook: string, chapter: string) => {
+    setExportCart((prev) => prev.filter((x) => !(x.textbook === textbook && x.chapter === chapter)));
+  };
+
+  const downloadExport = async () => {
+    if (exportCart.length === 0) return;
+    setExportDownloading(true);
+    setExportMsg(null);
+    try {
+      const r = await fetch('/api/admin/passages/export-xlsx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ selections: exportCart.map((c) => ({ textbook: c.textbook, chapter: c.chapter })) }),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setExportMsg({ type: 'err', text: typeof d.error === 'string' ? d.error : '추출에 실패했습니다.' });
+        return;
+      }
+      const blob = await r.blob();
+      const cd = r.headers.get('Content-Disposition') || '';
+      const m = cd.match(/filename\*=UTF-8''([^;]+)/);
+      const fname = m ? decodeURIComponent(m[1]) : '지문추출.xlsx';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setExportMsg({ type: 'ok', text: `다운로드 완료 (${exportCart.reduce((s, c) => s + c.count, 0)}개 지문)` });
+    } catch {
+      setExportMsg({ type: 'err', text: '추출 중 오류가 발생했습니다.' });
+    } finally {
+      setExportDownloading(false);
+    }
+  };
+
   /** MongoDB textbook_links + 출판사 — 교재 메타데이터 종합 관리 */
   const [linksPanelOpen, setLinksPanelOpen] = useState(true);
   type LinkDraftRow = { kyoboUrl: string; description: string; extraUrl: string; extraLabel: string };
@@ -1665,6 +1762,14 @@ export default function AdminPassagesPage() {
               title="엑셀(.xlsx)로 교재 구조(강·번호)를 일괄 업로드하거나, MongoDB 원문 → converted_data.json으로 동기화합니다."
             >
               📁 지문 업로드
+            </button>
+            <button
+              type="button"
+              onClick={openExportModal}
+              className="text-amber-100 hover:text-white text-sm font-semibold px-3 py-2 rounded-lg border border-amber-600/50 hover:border-amber-400/70 bg-amber-950/30"
+              title="선택한 교재·강의 지문을 「한줄해석」 엑셀(.xlsx) 양식으로 추출합니다."
+            >
+              📊 엑셀 추출
             </button>
             <button
               type="button"
@@ -2400,6 +2505,154 @@ export default function AdminPassagesPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {exportModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setExportModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl border border-slate-600 bg-slate-800 p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-bold text-white">📊 지문 엑셀 추출</h2>
+              <button onClick={() => setExportModalOpen(false)} className="text-slate-400 hover:text-white">
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">
+              교재명과 강을 선택해 <strong className="text-slate-200">「추가」</strong> 하면 아래 목록에 쌓이고,{' '}
+              <strong className="text-slate-200">「엑셀 다운로드」</strong> 로 「한줄해석」 양식(.xlsx)으로 받습니다.
+            </p>
+
+            {exportMetaLoading ? (
+              <p className="text-sm text-slate-400 py-6 text-center">교재 목록 불러오는 중…</p>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">교재명</label>
+                    <select
+                      value={exportSelTextbook}
+                      onChange={(e) => {
+                        setExportSelTextbook(e.target.value);
+                        setExportCheckedChapters(new Set());
+                      }}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      <option value="">— 교재 선택 —</option>
+                      {exportMeta.map((t) => (
+                        <option key={t.textbook} value={t.textbook}>
+                          {t.textbook} ({t.total})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {exportCurrentMeta && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-300">강 선택</label>
+                        <button
+                          onClick={() =>
+                            setExportCheckedChapters((prev) =>
+                              prev.size === exportCurrentMeta.chapters.length
+                                ? new Set()
+                                : new Set(exportCurrentMeta.chapters.map((c) => c.chapter)),
+                            )
+                          }
+                          className="text-[11px] text-sky-300 hover:text-sky-200"
+                        >
+                          {exportCheckedChapters.size === exportCurrentMeta.chapters.length ? '전체 해제' : '전체 선택'}
+                        </button>
+                      </div>
+                      <div className="max-h-44 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/50 p-2 space-y-1">
+                        {exportCurrentMeta.chapters.map((c) => (
+                          <label
+                            key={c.chapter}
+                            className="flex items-center gap-2 text-sm text-slate-200 px-1 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={exportCheckedChapters.has(c.chapter)}
+                              onChange={() => toggleExportChapter(c.chapter)}
+                              className="accent-amber-500"
+                            />
+                            <span className="flex-1">{c.chapter || '(강 없음)'}</span>
+                            <span className="text-[11px] text-slate-500">{c.count}개</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex justify-end mt-2">
+                        <button
+                          onClick={addExportSelection}
+                          disabled={exportCheckedChapters.size === 0}
+                          className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold disabled:opacity-50"
+                        >
+                          + 추가
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-slate-300 mb-1.5">선택 목록 ({exportCart.length})</p>
+                  {exportCart.length === 0 ? (
+                    <p className="text-xs text-slate-500 border border-dashed border-slate-700 rounded-lg px-3 py-4 text-center">
+                      교재·강을 선택해 「추가」를 누르세요.
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {exportCart.map((c) => (
+                        <div
+                          key={`${c.textbook}__${c.chapter}`}
+                          className="flex items-center gap-2 bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-1.5 text-sm"
+                        >
+                          <span className="flex-1 text-slate-200 truncate">
+                            {c.textbook} <span className="text-slate-400">· {c.chapter || '(강 없음)'}</span>
+                          </span>
+                          <span className="text-[11px] text-slate-500">{c.count}개</span>
+                          <button
+                            onClick={() => removeExportItem(c.textbook, c.chapter)}
+                            className="text-slate-500 hover:text-rose-400"
+                            title="제거"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {exportMsg && (
+                  <p className={`mt-3 text-xs ${exportMsg.type === 'ok' ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    {exportMsg.text}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between mt-5">
+                  <button
+                    onClick={() => setExportModalOpen(false)}
+                    className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700 text-sm"
+                  >
+                    닫기
+                  </button>
+                  <button
+                    onClick={downloadExport}
+                    disabled={exportCart.length === 0 || exportDownloading}
+                    className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold disabled:opacity-50"
+                  >
+                    {exportDownloading ? '추출 중…' : '⬇ 엑셀 다운로드'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
