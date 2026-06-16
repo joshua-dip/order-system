@@ -975,7 +975,9 @@ export default function AdminPassagesPage() {
   const [exportMetaLoading, setExportMetaLoading] = useState(false);
   const [exportTbFilter, setExportTbFilter] = useState('');
   const [exportSelTextbook, setExportSelTextbook] = useState('');
-  const [exportCheckedChapters, setExportCheckedChapters] = useState<Set<string>>(new Set());
+  const [exportPassages, setExportPassages] = useState<{ id: string; chapter: string; number: string }[]>([]);
+  const [exportPassagesLoading, setExportPassagesLoading] = useState(false);
+  const [exportCheckedPassages, setExportCheckedPassages] = useState<Set<string>>(new Set());
   const [exportCart, setExportCart] = useState<ExportCartItem[]>([]);
   const [exportDownloading, setExportDownloading] = useState(false);
   const [exportMsg, setExportMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -983,10 +985,6 @@ export default function AdminPassagesPage() {
   const [exportSearchResults, setExportSearchResults] = useState<ExportSearchResult[]>([]);
   const [exportSearching, setExportSearching] = useState(false);
   const [exportSearchMsg, setExportSearchMsg] = useState('');
-  const exportCurrentMeta = useMemo(
-    () => exportMeta.find((t) => t.textbook === exportSelTextbook),
-    [exportMeta, exportSelTextbook],
-  );
   const exportFilteredTextbooks = useMemo(() => {
     const q = exportTbFilter.trim().toLowerCase();
     if (!q) return exportMeta;
@@ -1010,22 +1008,54 @@ export default function AdminPassagesPage() {
     }
   }, [exportMeta.length]);
 
-  const toggleExportChapter = (chapter: string) => {
-    setExportCheckedChapters((prev) => {
+  const selectExportTextbook = async (tb: string) => {
+    setExportSelTextbook(tb);
+    setExportCheckedPassages(new Set());
+    setExportPassages([]);
+    setExportPassagesLoading(true);
+    try {
+      const r = await fetch(`/api/admin/passages/export-passages?textbook=${encodeURIComponent(tb)}`, {
+        credentials: 'include',
+      });
+      const d = await r.json();
+      if (Array.isArray(d.passages)) setExportPassages(d.passages);
+    } catch {
+      /* ignore */
+    } finally {
+      setExportPassagesLoading(false);
+    }
+  };
+
+  const toggleExportPassage = (id: string) => {
+    setExportCheckedPassages((prev) => {
       const next = new Set(prev);
-      if (next.has(chapter)) next.delete(chapter); else next.add(chapter);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const addExportSelection = () => {
-    const meta = exportMeta.find((t) => t.textbook === exportSelTextbook);
-    if (!meta) return;
-    const chosen = meta.chapters.filter((c) => exportCheckedChapters.has(c.chapter));
-    if (chosen.length === 0) return;
+  const addCheckedPassages = () => {
+    const toAdd = exportPassages.filter((p) => exportCheckedPassages.has(p.id));
+    if (toAdd.length === 0) return;
     setExportCart((prev) => {
       const next = [...prev];
-      for (const c of chosen) {
+      for (const p of toAdd) {
+        if (!next.some((x) => cartKey(x) === `p:${p.id}`)) {
+          next.push({ kind: 'passage', id: p.id, textbook: exportSelTextbook, chapter: p.chapter, number: p.number });
+        }
+      }
+      return next;
+    });
+    setExportCheckedPassages(new Set());
+  };
+
+  /** 강 단위로 통째 추가 (교재의 모든 강을 chapter-item 으로) */
+  const addWholeChapters = () => {
+    const meta = exportMeta.find((t) => t.textbook === exportSelTextbook);
+    if (!meta) return;
+    setExportCart((prev) => {
+      const next = [...prev];
+      for (const c of meta.chapters) {
         const key = `c:${exportSelTextbook}::${c.chapter}`;
         if (!next.some((x) => cartKey(x) === key)) {
           next.push({ kind: 'chapter', textbook: exportSelTextbook, chapter: c.chapter, count: c.count });
@@ -1033,7 +1063,6 @@ export default function AdminPassagesPage() {
       }
       return next;
     });
-    setExportCheckedChapters(new Set());
   };
 
   const addPassageToCart = (r: ExportSearchResult) => {
@@ -2604,10 +2633,7 @@ export default function AdminPassagesPage() {
                       exportFilteredTextbooks.slice(0, 80).map((t) => (
                         <button
                           key={t.textbook}
-                          onClick={() => {
-                            setExportSelTextbook(t.textbook);
-                            setExportCheckedChapters(new Set());
-                          }}
+                          onClick={() => void selectExportTextbook(t.textbook)}
                           className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-800 flex items-center justify-between gap-2 ${
                             exportSelTextbook === t.textbook ? 'bg-sky-900/40 text-sky-100' : 'text-slate-200'
                           }`}
@@ -2619,47 +2645,64 @@ export default function AdminPassagesPage() {
                     )}
                   </div>
 
-                  {exportCurrentMeta && (
+                  {exportSelTextbook && (
                     <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-2">
                       <div className="flex items-center justify-between mb-1 gap-2">
-                        <span className="text-[11px] font-semibold text-sky-200 truncate">{exportSelTextbook} · 강 선택</span>
-                        <button
-                          onClick={() =>
-                            setExportCheckedChapters((prev) =>
-                              prev.size === exportCurrentMeta.chapters.length
-                                ? new Set()
-                                : new Set(exportCurrentMeta.chapters.map((c) => c.chapter)),
-                            )
-                          }
-                          className="text-[11px] text-sky-300 hover:text-sky-200 shrink-0"
-                        >
-                          {exportCheckedChapters.size === exportCurrentMeta.chapters.length ? '전체 해제' : '전체 선택'}
-                        </button>
-                      </div>
-                      <div className="max-h-32 overflow-y-auto space-y-0.5">
-                        {exportCurrentMeta.chapters.map((c) => (
-                          <label
-                            key={c.chapter}
-                            className="flex items-center gap-2 text-sm text-slate-200 px-1 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
+                        <span className="text-[11px] font-semibold text-sky-200 truncate">
+                          {exportSelTextbook} · 지문(번호) 선택
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() =>
+                              setExportCheckedPassages((prev) =>
+                                prev.size === exportPassages.length && exportPassages.length > 0
+                                  ? new Set()
+                                  : new Set(exportPassages.map((p) => p.id)),
+                              )
+                            }
+                            className="text-[11px] text-sky-300 hover:text-sky-200"
                           >
-                            <input
-                              type="checkbox"
-                              checked={exportCheckedChapters.has(c.chapter)}
-                              onChange={() => toggleExportChapter(c.chapter)}
-                              className="accent-amber-500"
-                            />
-                            <span className="flex-1 truncate">{c.chapter || '(강 없음)'}</span>
-                            <span className="text-[11px] text-slate-500">{c.count}개</span>
-                          </label>
-                        ))}
+                            {exportCheckedPassages.size === exportPassages.length && exportPassages.length > 0 ? '전체 해제' : '전체 선택'}
+                          </button>
+                          <button
+                            onClick={addWholeChapters}
+                            className="text-[11px] text-amber-300 hover:text-amber-200"
+                            title="번호 대신 강 단위로 통째 추가"
+                          >
+                            강 전체 추가
+                          </button>
+                        </div>
                       </div>
+                      {exportPassagesLoading ? (
+                        <p className="text-[11px] text-slate-500 py-2 text-center">불러오는 중…</p>
+                      ) : exportPassages.length === 0 ? (
+                        <p className="text-[11px] text-slate-500 py-2 text-center">지문 없음</p>
+                      ) : (
+                        <div className="max-h-40 overflow-y-auto grid grid-cols-3 gap-x-2 gap-y-0.5">
+                          {exportPassages.map((p) => (
+                            <label
+                              key={p.id}
+                              className="flex items-center gap-1.5 text-[13px] text-slate-200 px-1 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
+                              title={p.chapter}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={exportCheckedPassages.has(p.id)}
+                                onChange={() => toggleExportPassage(p.id)}
+                                className="accent-amber-500"
+                              />
+                              <span className="truncate">{p.number}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex justify-end mt-1.5">
                         <button
-                          onClick={addExportSelection}
-                          disabled={exportCheckedChapters.size === 0}
+                          onClick={addCheckedPassages}
+                          disabled={exportCheckedPassages.size === 0}
                           className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold disabled:opacity-50"
                         >
-                          + 강 추가
+                          + 선택한 지문 추가 ({exportCheckedPassages.size})
                         </button>
                       </div>
                     </div>
