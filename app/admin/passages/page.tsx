@@ -986,6 +986,7 @@ export default function AdminPassagesPage() {
   const [exportSearching, setExportSearching] = useState(false);
   const [exportSearchMsg, setExportSearchMsg] = useState('');
   const [exportFileName, setExportFileName] = useState('');
+  const [exportHoverTip, setExportHoverTip] = useState<{ text: string; x: number; y: number } | null>(null);
   const exportFilteredTextbooks = useMemo(() => {
     const q = exportTbFilter.trim().toLowerCase();
     if (!q) return exportMeta;
@@ -2684,7 +2685,16 @@ export default function AdminPassagesPage() {
                             <label
                               key={p.id}
                               className="flex items-center gap-1.5 text-[13px] text-slate-200 px-1 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
-                              title={p.preview || p.chapter}
+                              onMouseEnter={(e) => {
+                                if (!p.preview) return;
+                                const r = e.currentTarget.getBoundingClientRect();
+                                setExportHoverTip({
+                                  text: p.preview,
+                                  x: Math.min(r.left, window.innerWidth - 380),
+                                  y: Math.min(r.bottom + 6, window.innerHeight - 200),
+                                });
+                              }}
+                              onMouseLeave={() => setExportHoverTip(null)}
                             >
                               <input
                                 type="checkbox"
@@ -2835,6 +2845,15 @@ export default function AdminPassagesPage() {
                   </button>
                 </div>
               </>
+            )}
+
+            {exportHoverTip && (
+              <div
+                className="fixed z-[60] max-w-[360px] rounded-lg border border-slate-500 bg-slate-950/95 px-3 py-2 text-[11px] leading-relaxed text-slate-100 shadow-2xl whitespace-pre-wrap pointer-events-none"
+                style={{ left: exportHoverTip.x, top: exportHoverTip.y }}
+              >
+                {exportHoverTip.text}
+              </div>
             )}
           </div>
         </div>
