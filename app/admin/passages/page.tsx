@@ -975,7 +975,7 @@ export default function AdminPassagesPage() {
   const [exportMetaLoading, setExportMetaLoading] = useState(false);
   const [exportTbFilter, setExportTbFilter] = useState('');
   const [exportSelTextbook, setExportSelTextbook] = useState('');
-  const [exportPassages, setExportPassages] = useState<{ id: string; chapter: string; number: string }[]>([]);
+  const [exportPassages, setExportPassages] = useState<{ id: string; chapter: string; number: string; preview: string }[]>([]);
   const [exportPassagesLoading, setExportPassagesLoading] = useState(false);
   const [exportCheckedPassages, setExportCheckedPassages] = useState<Set<string>>(new Set());
   const [exportCart, setExportCart] = useState<ExportCartItem[]>([]);
@@ -2683,7 +2683,7 @@ export default function AdminPassagesPage() {
                             <label
                               key={p.id}
                               className="flex items-center gap-1.5 text-[13px] text-slate-200 px-1 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
-                              title={p.chapter}
+                              title={p.preview || p.chapter}
                             >
                               <input
                                 type="checkbox"
