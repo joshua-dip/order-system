@@ -968,7 +968,7 @@ export default function AdminPassagesPage() {
   type ExportTextbookMeta = { textbook: string; total: number; chapters: { chapter: string; count: number }[] };
   type ExportCartItem =
     | { kind: 'chapter'; textbook: string; chapter: string; count: number }
-    | { kind: 'passage'; id: string; textbook: string; chapter: string; number: string };
+    | { kind: 'passage'; id: string; textbook: string; chapter: string; number: string; preview?: string };
   type ExportSearchResult = { id: string; textbook: string; chapter: string; number: string; snippet: string };
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportMeta, setExportMeta] = useState<ExportTextbookMeta[]>([]);
@@ -1043,7 +1043,7 @@ export default function AdminPassagesPage() {
       const next = [...prev];
       for (const p of toAdd) {
         if (!next.some((x) => cartKey(x) === `p:${p.id}`)) {
-          next.push({ kind: 'passage', id: p.id, textbook: exportSelTextbook, chapter: p.chapter, number: p.number });
+          next.push({ kind: 'passage', id: p.id, textbook: exportSelTextbook, chapter: p.chapter, number: p.number, preview: p.preview });
         }
       }
       return next;
@@ -1070,7 +1070,7 @@ export default function AdminPassagesPage() {
   const addPassageToCart = (r: ExportSearchResult) => {
     setExportCart((prev) => {
       if (prev.some((x) => cartKey(x) === `p:${r.id}`)) return prev;
-      return [...prev, { kind: 'passage', id: r.id, textbook: r.textbook, chapter: r.chapter, number: r.number }];
+      return [...prev, { kind: 'passage', id: r.id, textbook: r.textbook, chapter: r.chapter, number: r.number, preview: r.snippet }];
     });
   };
 
@@ -2791,7 +2791,19 @@ export default function AdminPassagesPage() {
                               <span className="text-[11px] text-slate-500">({c.count}개)</span>
                             </span>
                           ) : (
-                            <span className="flex-1 text-slate-200 truncate">
+                            <span
+                              className="flex-1 text-slate-200 truncate cursor-default"
+                              onMouseEnter={(e) => {
+                                if (!c.preview) return;
+                                const r = e.currentTarget.getBoundingClientRect();
+                                setExportHoverTip({
+                                  text: c.preview,
+                                  x: Math.min(r.left, window.innerWidth - 380),
+                                  y: Math.min(r.bottom + 6, window.innerHeight - 200),
+                                });
+                              }}
+                              onMouseLeave={() => setExportHoverTip(null)}
+                            >
                               📄 {c.textbook} <span className="text-slate-400">· {c.chapter || '강없음'} · {c.number}</span>
                             </span>
                           )}
