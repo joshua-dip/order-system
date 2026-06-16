@@ -964,21 +964,35 @@ export default function AdminPassagesPage() {
   const [uploadFromDbTextbook, setUploadFromDbTextbook] = useState('');
   const [uploadFromDbSaving, setUploadFromDbSaving] = useState(false);
 
-  /** 엑셀 추출 (선택한 교재·강 → 한줄해석 엑셀) */
+  /** 엑셀 추출 (선택한 교재·강·지문 → 한줄해석 엑셀) */
   type ExportTextbookMeta = { textbook: string; total: number; chapters: { chapter: string; count: number }[] };
-  type ExportCartItem = { textbook: string; chapter: string; count: number };
+  type ExportCartItem =
+    | { kind: 'chapter'; textbook: string; chapter: string; count: number }
+    | { kind: 'passage'; id: string; textbook: string; chapter: string; number: string };
+  type ExportSearchResult = { id: string; textbook: string; chapter: string; number: string; snippet: string };
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportMeta, setExportMeta] = useState<ExportTextbookMeta[]>([]);
   const [exportMetaLoading, setExportMetaLoading] = useState(false);
+  const [exportTbFilter, setExportTbFilter] = useState('');
   const [exportSelTextbook, setExportSelTextbook] = useState('');
   const [exportCheckedChapters, setExportCheckedChapters] = useState<Set<string>>(new Set());
   const [exportCart, setExportCart] = useState<ExportCartItem[]>([]);
   const [exportDownloading, setExportDownloading] = useState(false);
   const [exportMsg, setExportMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [exportSearchQ, setExportSearchQ] = useState('');
+  const [exportSearchResults, setExportSearchResults] = useState<ExportSearchResult[]>([]);
+  const [exportSearching, setExportSearching] = useState(false);
+  const [exportSearchMsg, setExportSearchMsg] = useState('');
   const exportCurrentMeta = useMemo(
     () => exportMeta.find((t) => t.textbook === exportSelTextbook),
     [exportMeta, exportSelTextbook],
   );
+  const exportFilteredTextbooks = useMemo(() => {
+    const q = exportTbFilter.trim().toLowerCase();
+    if (!q) return exportMeta;
+    return exportMeta.filter((t) => t.textbook.toLowerCase().includes(q));
+  }, [exportMeta, exportTbFilter]);
+  const cartKey = (c: ExportCartItem) => (c.kind === 'chapter' ? `c:${c.textbook}::${c.chapter}` : `p:${c.id}`);
 
   const openExportModal = useCallback(async () => {
     setExportModalOpen(true);
@@ -1012,8 +1026,9 @@ export default function AdminPassagesPage() {
     setExportCart((prev) => {
       const next = [...prev];
       for (const c of chosen) {
-        if (!next.some((x) => x.textbook === exportSelTextbook && x.chapter === c.chapter)) {
-          next.push({ textbook: exportSelTextbook, chapter: c.chapter, count: c.count });
+        const key = `c:${exportSelTextbook}::${c.chapter}`;
+        if (!next.some((x) => cartKey(x) === key)) {
+          next.push({ kind: 'chapter', textbook: exportSelTextbook, chapter: c.chapter, count: c.count });
         }
       }
       return next;
@@ -1021,8 +1036,41 @@ export default function AdminPassagesPage() {
     setExportCheckedChapters(new Set());
   };
 
-  const removeExportItem = (textbook: string, chapter: string) => {
-    setExportCart((prev) => prev.filter((x) => !(x.textbook === textbook && x.chapter === chapter)));
+  const addPassageToCart = (r: ExportSearchResult) => {
+    setExportCart((prev) => {
+      if (prev.some((x) => cartKey(x) === `p:${r.id}`)) return prev;
+      return [...prev, { kind: 'passage', id: r.id, textbook: r.textbook, chapter: r.chapter, number: r.number }];
+    });
+  };
+
+  const removeExportItem = (key: string) => {
+    setExportCart((prev) => prev.filter((x) => cartKey(x) !== key));
+  };
+
+  const runExportSearch = async () => {
+    const q = exportSearchQ.trim();
+    if (q.length < 2) {
+      setExportSearchMsg('2글자 이상 입력하세요.');
+      return;
+    }
+    setExportSearching(true);
+    setExportSearchMsg('');
+    try {
+      const r = await fetch('/api/admin/passages/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ q }),
+      });
+      const d = await r.json();
+      const list = Array.isArray(d.results) ? (d.results as ExportSearchResult[]) : [];
+      setExportSearchResults(list);
+      setExportSearchMsg(list.length === 0 ? '일치하는 지문이 없습니다.' : `${list.length}개 지문 검색됨`);
+    } catch {
+      setExportSearchMsg('검색 중 오류가 발생했습니다.');
+    } finally {
+      setExportSearching(false);
+    }
   };
 
   const downloadExport = async () => {
@@ -1030,11 +1078,17 @@ export default function AdminPassagesPage() {
     setExportDownloading(true);
     setExportMsg(null);
     try {
+      const selections = exportCart
+        .filter((c): c is Extract<ExportCartItem, { kind: 'chapter' }> => c.kind === 'chapter')
+        .map((c) => ({ textbook: c.textbook, chapter: c.chapter }));
+      const passageIds = exportCart
+        .filter((c): c is Extract<ExportCartItem, { kind: 'passage' }> => c.kind === 'passage')
+        .map((c) => c.id);
       const r = await fetch('/api/admin/passages/export-xlsx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ selections: exportCart.map((c) => ({ textbook: c.textbook, chapter: c.chapter })) }),
+        body: JSON.stringify({ selections, passageIds }),
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
@@ -1053,7 +1107,7 @@ export default function AdminPassagesPage() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setExportMsg({ type: 'ok', text: `다운로드 완료 (${exportCart.reduce((s, c) => s + c.count, 0)}개 지문)` });
+      setExportMsg({ type: 'ok', text: '다운로드 완료' });
     } catch {
       setExportMsg({ type: 'err', text: '추출 중 오류가 발생했습니다.' });
     } finally {
@@ -2525,7 +2579,8 @@ export default function AdminPassagesPage() {
               </button>
             </div>
             <p className="text-xs text-slate-400 mb-4">
-              교재명과 강을 선택해 <strong className="text-slate-200">「추가」</strong> 하면 아래 목록에 쌓이고,{' '}
+              교재명·강으로 찾거나 <strong className="text-slate-200">본문 내용</strong>으로 검색해{' '}
+              <strong className="text-slate-200">「추가」</strong> 하면 아래 목록에 쌓이고,{' '}
               <strong className="text-slate-200">「엑셀 다운로드」</strong> 로 「한줄해석」 양식(.xlsx)으로 받습니다.
             </p>
 
@@ -2533,30 +2588,41 @@ export default function AdminPassagesPage() {
               <p className="text-sm text-slate-400 py-6 text-center">교재 목록 불러오는 중…</p>
             ) : (
               <>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">교재명</label>
-                    <select
-                      value={exportSelTextbook}
-                      onChange={(e) => {
-                        setExportSelTextbook(e.target.value);
-                        setExportCheckedChapters(new Set());
-                      }}
-                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
-                    >
-                      <option value="">— 교재 선택 —</option>
-                      {exportMeta.map((t) => (
-                        <option key={t.textbook} value={t.textbook}>
-                          {t.textbook} ({t.total})
-                        </option>
-                      ))}
-                    </select>
+                {/* 1) 교재명 검색 → 교재 선택 → 강 선택 */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-300">교재명·강으로 찾기</label>
+                  <input
+                    value={exportTbFilter}
+                    onChange={(e) => setExportTbFilter(e.target.value)}
+                    placeholder="교재명 검색…"
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  />
+                  <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/50 divide-y divide-slate-800">
+                    {exportFilteredTextbooks.length === 0 ? (
+                      <p className="text-xs text-slate-500 px-3 py-3 text-center">교재 없음</p>
+                    ) : (
+                      exportFilteredTextbooks.slice(0, 80).map((t) => (
+                        <button
+                          key={t.textbook}
+                          onClick={() => {
+                            setExportSelTextbook(t.textbook);
+                            setExportCheckedChapters(new Set());
+                          }}
+                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-800 flex items-center justify-between gap-2 ${
+                            exportSelTextbook === t.textbook ? 'bg-sky-900/40 text-sky-100' : 'text-slate-200'
+                          }`}
+                        >
+                          <span className="truncate">{t.textbook}</span>
+                          <span className="text-[11px] text-slate-500 shrink-0">{t.total}개</span>
+                        </button>
+                      ))
+                    )}
                   </div>
 
                   {exportCurrentMeta && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-300">강 선택</label>
+                    <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-2">
+                      <div className="flex items-center justify-between mb-1 gap-2">
+                        <span className="text-[11px] font-semibold text-sky-200 truncate">{exportSelTextbook} · 강 선택</span>
                         <button
                           onClick={() =>
                             setExportCheckedChapters((prev) =>
@@ -2565,12 +2631,12 @@ export default function AdminPassagesPage() {
                                 : new Set(exportCurrentMeta.chapters.map((c) => c.chapter)),
                             )
                           }
-                          className="text-[11px] text-sky-300 hover:text-sky-200"
+                          className="text-[11px] text-sky-300 hover:text-sky-200 shrink-0"
                         >
                           {exportCheckedChapters.size === exportCurrentMeta.chapters.length ? '전체 해제' : '전체 선택'}
                         </button>
                       </div>
-                      <div className="max-h-44 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/50 p-2 space-y-1">
+                      <div className="max-h-32 overflow-y-auto space-y-0.5">
                         {exportCurrentMeta.chapters.map((c) => (
                           <label
                             key={c.chapter}
@@ -2582,43 +2648,101 @@ export default function AdminPassagesPage() {
                               onChange={() => toggleExportChapter(c.chapter)}
                               className="accent-amber-500"
                             />
-                            <span className="flex-1">{c.chapter || '(강 없음)'}</span>
+                            <span className="flex-1 truncate">{c.chapter || '(강 없음)'}</span>
                             <span className="text-[11px] text-slate-500">{c.count}개</span>
                           </label>
                         ))}
                       </div>
-                      <div className="flex justify-end mt-2">
+                      <div className="flex justify-end mt-1.5">
                         <button
                           onClick={addExportSelection}
                           disabled={exportCheckedChapters.size === 0}
-                          className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold disabled:opacity-50"
+                          className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold disabled:opacity-50"
                         >
-                          + 추가
+                          + 강 추가
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
 
+                {/* 2) 본문 내용 검색 → 교재·강·번호 */}
+                <div className="mt-4 space-y-2">
+                  <label className="block text-xs font-semibold text-slate-300">
+                    본문 내용으로 검색{' '}
+                    <span className="text-slate-500 font-normal">(원문·해석 일부 → 교재·강·번호)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      value={exportSearchQ}
+                      onChange={(e) => setExportSearchQ(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') void runExportSearch();
+                      }}
+                      placeholder="예: Riverdale Science Fair / 과학 박람회"
+                      className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    />
+                    <button
+                      onClick={runExportSearch}
+                      disabled={exportSearching}
+                      className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold disabled:opacity-50 shrink-0"
+                    >
+                      {exportSearching ? '검색 중…' : '검색'}
+                    </button>
+                  </div>
+                  {exportSearchMsg && <p className="text-[11px] text-slate-400">{exportSearchMsg}</p>}
+                  {exportSearchResults.length > 0 && (
+                    <div className="max-h-44 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/50 divide-y divide-slate-800">
+                      {exportSearchResults.map((r) => {
+                        const added = exportCart.some((x) => x.kind === 'passage' && x.id === r.id);
+                        return (
+                          <div key={r.id} className="px-3 py-1.5 text-sm flex items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-slate-200 text-[12px] truncate">
+                                {r.textbook} <span className="text-slate-400">· {r.chapter || '강없음'} · {r.number}</span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 truncate">{r.snippet}</div>
+                            </div>
+                            <button
+                              onClick={() => addPassageToCart(r)}
+                              disabled={added}
+                              className="text-[11px] px-2 py-1 rounded bg-violet-700/60 hover:bg-violet-600 text-white disabled:opacity-40 shrink-0"
+                            >
+                              {added ? '추가됨' : '+ 추가'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 선택 목록 */}
                 <div className="mt-4">
                   <p className="text-xs font-semibold text-slate-300 mb-1.5">선택 목록 ({exportCart.length})</p>
                   {exportCart.length === 0 ? (
                     <p className="text-xs text-slate-500 border border-dashed border-slate-700 rounded-lg px-3 py-4 text-center">
-                      교재·강을 선택해 「추가」를 누르세요.
+                      교재·강 또는 본문 검색 결과를 추가하세요.
                     </p>
                   ) : (
-                    <div className="space-y-1">
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
                       {exportCart.map((c) => (
                         <div
-                          key={`${c.textbook}__${c.chapter}`}
+                          key={cartKey(c)}
                           className="flex items-center gap-2 bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-1.5 text-sm"
                         >
-                          <span className="flex-1 text-slate-200 truncate">
-                            {c.textbook} <span className="text-slate-400">· {c.chapter || '(강 없음)'}</span>
-                          </span>
-                          <span className="text-[11px] text-slate-500">{c.count}개</span>
+                          {c.kind === 'chapter' ? (
+                            <span className="flex-1 text-slate-200 truncate">
+                              📚 {c.textbook} <span className="text-slate-400">· {c.chapter || '(강 없음)'}</span>{' '}
+                              <span className="text-[11px] text-slate-500">({c.count}개)</span>
+                            </span>
+                          ) : (
+                            <span className="flex-1 text-slate-200 truncate">
+                              📄 {c.textbook} <span className="text-slate-400">· {c.chapter || '강없음'} · {c.number}</span>
+                            </span>
+                          )}
                           <button
-                            onClick={() => removeExportItem(c.textbook, c.chapter)}
+                            onClick={() => removeExportItem(cartKey(c))}
                             className="text-slate-500 hover:text-rose-400"
                             title="제거"
                           >

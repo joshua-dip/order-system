@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
-import type { Document, Filter } from 'mongodb';
+import { ObjectId, type Document, type Filter } from 'mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getDb } from '@/lib/mongodb';
 import { buildPassagesExportRows, type PassageExportDoc } from '@/lib/passages-excel-export';
@@ -13,16 +13,16 @@ const PASSAGES_LIMIT = 5000;
 type Selection = { textbook?: unknown; chapter?: unknown };
 
 /**
- * 선택한 (교재, 강) 들의 지문을 「한줄해석」 엑셀 양식으로 추출.
- * body: { selections: [{ textbook, chapter }] }  (chapter '' = 강 없음/전체)
+ * 선택한 (교재, 강) 들 + 개별 지문(passageIds)을 「한줄해석」 엑셀 양식으로 추출.
+ * body: { selections: [{ textbook, chapter }], passageIds?: string[] }  (chapter '' = 강 없음/전체)
  */
 export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { selections?: Selection[] };
+  let body: { selections?: Selection[]; passageIds?: unknown };
   try {
-    body = (await request.json()) as { selections?: Selection[] };
+    body = (await request.json()) as { selections?: Selection[]; passageIds?: unknown };
   } catch {
     return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 });
   }
@@ -40,8 +40,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const passageOids = (Array.isArray(body.passageIds) ? body.passageIds : [])
+    .filter((x): x is string => typeof x === 'string' && ObjectId.isValid(x))
+    .map((x) => new ObjectId(x));
+  if (passageOids.length > 0) {
+    ors.push({ _id: { $in: passageOids } });
+  }
+
   if (ors.length === 0) {
-    return NextResponse.json({ error: '추출할 교재·강을 선택하세요.' }, { status: 400 });
+    return NextResponse.json({ error: '추출할 교재·강 또는 지문을 선택하세요.' }, { status: 400 });
   }
 
   const db = await getDb('gomijoshua');
