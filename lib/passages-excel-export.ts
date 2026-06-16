@@ -70,8 +70,11 @@ const sentToString = (v: unknown): string =>
  * 정렬된 지문들을 AoA(헤더 + 데이터 행)로 변환. 순서 컬럼은 (교재,강) 그룹마다 1부터.
  * passage.order 가 숫자면 그 값을, 없으면 그룹 내 순번을 쓴다.
  */
-export function buildPassagesExportRows(passages: PassageExportDoc[]): (string | number)[][] {
-  const sorted = sortPassagesForExport(passages);
+export function buildPassagesExportRows(
+  passages: PassageExportDoc[],
+  opts?: { preserveOrder?: boolean },
+): (string | number)[][] {
+  const sorted = opts?.preserveOrder ? passages : sortPassagesForExport(passages);
   const rows: (string | number)[][] = [[...PASSAGE_EXPORT_HEADERS]];
   let seq = 0;
   let lastTb: string | null = null;

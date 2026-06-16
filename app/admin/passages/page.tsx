@@ -987,6 +987,18 @@ export default function AdminPassagesPage() {
   const [exportSearchMsg, setExportSearchMsg] = useState('');
   const [exportFileName, setExportFileName] = useState('');
   const [exportHoverTip, setExportHoverTip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [exportDragIndex, setExportDragIndex] = useState<number | null>(null);
+
+  const moveExportItem = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0) return;
+    setExportCart((prev) => {
+      if (from >= prev.length || to >= prev.length) return prev;
+      const next = [...prev];
+      const [m] = next.splice(from, 1);
+      next.splice(to, 0, m);
+      return next;
+    });
+  };
   const exportFilteredTextbooks = useMemo(() => {
     const q = exportTbFilter.trim().toLowerCase();
     if (!q) return exportMeta;
@@ -1109,17 +1121,17 @@ export default function AdminPassagesPage() {
     setExportDownloading(true);
     setExportMsg(null);
     try {
-      const selections = exportCart
-        .filter((c): c is Extract<ExportCartItem, { kind: 'chapter' }> => c.kind === 'chapter')
-        .map((c) => ({ textbook: c.textbook, chapter: c.chapter }));
-      const passageIds = exportCart
-        .filter((c): c is Extract<ExportCartItem, { kind: 'passage' }> => c.kind === 'passage')
-        .map((c) => c.id);
+      /* 선택 목록 순서 그대로 엑셀에 반영 */
+      const items = exportCart.map((c) =>
+        c.kind === 'chapter'
+          ? { kind: 'chapter', textbook: c.textbook, chapter: c.chapter }
+          : { kind: 'passage', id: c.id },
+      );
       const r = await fetch('/api/admin/passages/export-xlsx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ selections, passageIds, fileName: exportFileName.trim() }),
+        body: JSON.stringify({ items, fileName: exportFileName.trim() }),
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
@@ -2773,18 +2785,27 @@ export default function AdminPassagesPage() {
 
                 {/* 선택 목록 */}
                 <div className="mt-4">
-                  <p className="text-xs font-semibold text-slate-300 mb-1.5">선택 목록 ({exportCart.length})</p>
+                  <p className="text-xs font-semibold text-slate-300 mb-1.5">
+                    선택 목록 ({exportCart.length}){' '}
+                    <span className="font-normal text-slate-500">· ⠿ 드래그로 순서 변경 (엑셀이 이 순서대로 정렬)</span>
+                  </p>
                   {exportCart.length === 0 ? (
                     <p className="text-xs text-slate-500 border border-dashed border-slate-700 rounded-lg px-3 py-4 text-center">
                       교재·강 또는 본문 검색 결과를 추가하세요.
                     </p>
                   ) : (
                     <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {exportCart.map((c) => (
+                      {exportCart.map((c, i) => (
                         <div
                           key={cartKey(c)}
-                          className="flex items-center gap-2 bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-1.5 text-sm"
+                          draggable
+                          onDragStart={() => { setExportDragIndex(i); setExportHoverTip(null); }}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={() => { if (exportDragIndex !== null) moveExportItem(exportDragIndex, i); setExportDragIndex(null); }}
+                          onDragEnd={() => setExportDragIndex(null)}
+                          className={`flex items-center gap-2 bg-slate-900/60 border rounded-lg px-2 py-1.5 text-sm ${exportDragIndex === i ? 'border-sky-500 opacity-60' : 'border-slate-700'}`}
                         >
+                          <span className="text-slate-500 cursor-grab select-none shrink-0" title="드래그로 순서 변경">⠿</span>
                           {c.kind === 'chapter' ? (
                             <span className="flex-1 text-slate-200 truncate">
                               📚 {c.textbook} <span className="text-slate-400">· {c.chapter || '(강 없음)'}</span>{' '}
