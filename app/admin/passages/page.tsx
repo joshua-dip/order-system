@@ -985,6 +985,7 @@ export default function AdminPassagesPage() {
   const [exportSearchResults, setExportSearchResults] = useState<ExportSearchResult[]>([]);
   const [exportSearching, setExportSearching] = useState(false);
   const [exportSearchMsg, setExportSearchMsg] = useState('');
+  const [exportFileName, setExportFileName] = useState('');
   const exportFilteredTextbooks = useMemo(() => {
     const q = exportTbFilter.trim().toLowerCase();
     if (!q) return exportMeta;
@@ -1117,7 +1118,7 @@ export default function AdminPassagesPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ selections, passageIds }),
+        body: JSON.stringify({ selections, passageIds, fileName: exportFileName.trim() }),
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
@@ -2795,6 +2796,21 @@ export default function AdminPassagesPage() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    저장 파일명 <span className="text-slate-500 font-normal">(비우면 교재명 자동)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      placeholder="예: 19년 9월 고2 발췌"
+                      className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    />
+                    <span className="text-xs text-slate-500 shrink-0">.xlsx</span>
+                  </div>
                 </div>
 
                 {exportMsg && (

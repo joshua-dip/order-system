@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { selections?: Selection[]; passageIds?: unknown };
+  let body: { selections?: Selection[]; passageIds?: unknown; fileName?: unknown };
   try {
-    body = (await request.json()) as { selections?: Selection[]; passageIds?: unknown };
+    body = (await request.json()) as { selections?: Selection[]; passageIds?: unknown; fileName?: unknown };
   } catch {
     return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 });
   }
@@ -72,8 +72,16 @@ export async function POST(request: NextRequest) {
   ];
   const wb = XLSX.utils.book_new();
 
+  /* 사용자 지정 저장명 우선 — 비우면 교재명(단일) 또는 '지문추출' 자동 */
+  const rawName = typeof body.fileName === 'string' ? body.fileName.trim() : '';
+  const cleanName = rawName
+    .replace(/\.xlsx$/i, '')
+    .replace(/[\\/:*?"<>|\n\r]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
   const uniqueTextbooks = Array.from(new Set(passages.map((p) => String(p.textbook ?? '')).filter(Boolean)));
-  const baseName = uniqueTextbooks.length === 1 ? uniqueTextbooks[0] : '지문추출';
+  const baseName = cleanName || (uniqueTextbooks.length === 1 ? uniqueTextbooks[0] : '지문추출');
   const sheetName = baseName.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31) || '지문';
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
