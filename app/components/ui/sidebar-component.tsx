@@ -165,6 +165,20 @@ function getSidebarContent(activeSection: string): SidebarContent {
       ],
     },
 
+    attendance: {
+      title: "출결관리",
+      sections: [
+        {
+          title: "출결",
+          items: [
+            { icon: <CheckmarkOutline size={16} className={iconClass} />, label: "출결 입력", isActive: true, href: "/my/vip/attendance" },
+            { icon: <Group size={16} className={iconClass} />, label: "반 관리", href: "/my/vip/attendance/classes" },
+            { icon: <ChartBar size={16} className={iconClass} />, label: "출결 통계", href: "/my/vip/attendance/history" },
+          ],
+        },
+      ],
+    },
+
     students: {
       title: "학생 관리",
       sections: [
@@ -363,6 +377,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", icon: <Dashboard size={18} />, label: "대시보드", href: "/my/vip", exact: true },
   { id: "students", icon: <UserMultiple size={18} />, label: "학생 관리", href: "/my/vip/students" },
+  { id: "attendance", icon: <CheckmarkOutline size={18} />, label: "출결관리", href: "/my/vip/attendance" },
   { id: "exams", icon: <Task size={18} />, label: "시험 관리", href: "/my/vip/exams" },
   { id: "scores", icon: <ChartBar size={18} />, label: "성적 관리", href: "/my/vip/scores" },
   { id: "generate", icon: <DocumentAdd size={18} />, label: "문제 생성", href: "/my/vip/generate" },
@@ -711,6 +726,7 @@ function MenuSection({
 
 function getActiveSectionFromPath(pathname: string): string {
   if (pathname === "/my/vip") return "dashboard";
+  if (pathname.startsWith("/my/vip/attendance")) return "attendance";
   if (pathname.startsWith("/my/vip/students")) return "students";
   if (pathname.startsWith("/my/vip/exams")) return "exams";
   if (pathname.startsWith("/my/vip/scores")) return "scores";
