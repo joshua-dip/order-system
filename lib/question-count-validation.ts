@@ -90,6 +90,12 @@ export type QuestionCountValidationPayload = {
   needCreateGrandTotal: number;
   /** @deprecated pendingReviewTotal 과 동일. 기존 클라이언트 호환 */
   pendingInScopeTotal?: number;
+  /**
+   * 이 검증 범위에서 generated_questions 를 집계할 때 실제로 사용한 passage_id 집합(문자열).
+   * 주문은 여러 교재에 걸칠 수 있어 textbook 단일 필드로는 검수 범위를 못 잡으므로,
+   * 파이프라인 자동 검수가 이 집합으로 대기 문항을 스코프한다(기출기반은 original_passage_id 매핑 반영).
+   */
+  scopePassageIds?: string[];
   order: QuestionCountOrderInfo;
   orderLessonsRequested?: number;
   orderLessonsMatched?: number;
@@ -718,6 +724,7 @@ export async function runQuestionCountValidation(
           needCreateFromEmptyPassagesTotal,
           needCreateGrandTotal,
           pendingInScopeTotal: pendingReviewTotal,
+          scopePassageIds: queryIdStrings,
           order: null,
         };
       }
@@ -757,6 +764,7 @@ export async function runQuestionCountValidation(
         needCreateFromEmptyPassagesTotal: 0,
         needCreateGrandTotal: 0,
         pendingInScopeTotal: 0,
+        scopePassageIds: [],
         order: orderInfo,
         orderLessonsRequested: scope === 'order' ? orderLessonsRequested : undefined,
         orderLessonsMatched: scope === 'order' ? 0 : undefined,
@@ -840,6 +848,7 @@ export async function runQuestionCountValidation(
       needCreateFromEmptyPassagesTotal,
       needCreateGrandTotal,
       pendingInScopeTotal: pendingReviewTotal,
+      scopePassageIds: idStrings,
       order: orderInfo,
       orderLessonsRequested: scope === 'order' ? orderLessonsRequested : undefined,
       orderLessonsMatched: scope === 'order' ? passageDocs.length : undefined,

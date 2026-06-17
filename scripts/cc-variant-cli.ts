@@ -525,16 +525,38 @@ async function cmdPipeline(flags: Map<string, string>) {
   if (!skipReview && pendingTotal > 0) {
     const db = await getDb('gomijoshua');
     const gqCol = db.collection('generated_questions');
+    // 주문은 여러 교재에 걸칠 수 있으므로(예: MV 한 주문이 26년 6월 + 26년 3월 지문을 섞음),
+    // textbook 단일 필드가 아니라 shortage 가 집계한 지문 집합(scopePassageIds)으로 검수 범위를 잡는다.
+    // 그래야 「대표 교재」가 아닌 lesson 의 대기 문항이 검수에서 누락되지 않는다.
+    const scopePassageIds = Array.isArray(sliced.scopePassageIds)
+      ? (sliced.scopePassageIds as string[]).filter((s) => typeof s === 'string' && s.length > 0)
+      : [];
+    const isOrderScope = Boolean(orderNumberRaw || orderIdRaw);
     let pendingDocs: Record<string, unknown>[];
-    if (textbook) {
+    let reviewLabel: string;
+    if (isOrderScope && scopePassageIds.length > 0) {
+      const scopeOids = scopePassageIds
+        .filter((s) => ObjectId.isValid(s))
+        .map((s) => new ObjectId(s));
+      pendingDocs = await gqCol
+        .find({
+          status: '대기',
+          $or: [{ passage_id: { $in: scopeOids } }, { passage_id: { $in: scopePassageIds } }],
+        })
+        .sort({ created_at: 1 })
+        .toArray();
+      reviewLabel = `${orderNumberRaw || orderIdRaw} (${scopePassageIds.length} passages)`;
+    } else if (textbook) {
       pendingDocs = await gqCol
         .find({ status: '대기', textbook })
         .sort({ created_at: 1 })
         .toArray();
+      reviewLabel = textbook;
     } else {
       pendingDocs = [];
+      reviewLabel = 'order';
     }
-    review = await recordReviewLoop(pendingDocs, { dryRun, label: textbook || 'order' });
+    review = await recordReviewLoop(pendingDocs, { dryRun, label: reviewLabel });
   }
 
   // 3) 다음 작업 가이드
