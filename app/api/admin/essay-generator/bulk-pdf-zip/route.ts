@@ -11,6 +11,10 @@ export const dynamic = 'force-dynamic';
 /* Lambda 30s 기본 — 100건 PDF 생성도 보통 안 넘지만 여유 두기. */
 export const maxDuration = 300;
 
+/* 폴더당 문항이 많을 때 한 PDF 에 담는 최대 문항 수. 초과분은 PDF 를 나눠 ZIP 에 담는다.
+   (단일 거대 PDF 는 puppeteer 렌더가 30s+ 로 길어지고 메모리·Lambda 시간 한계에 걸린다.) */
+const PDF_CHUNK_SIZE = 40;
+
 /**
  * 선택 항목들을 그룹별 PDF로 분할 생성하고 ZIP 으로 묶어 반환.
  *
@@ -82,6 +86,9 @@ export async function POST(request: NextRequest) {
     defaultViewport: { width: 1280, height: 1696, deviceScaleFactor: 1 },
     executablePath,
     headless: true,
+    /* 큰 합본 PDF(폴더 전체 문항)는 CDP printToPDF 가 기본 protocolTimeout(180s)을
+       넘길 수 있어 maxDuration(300s)에 맞춰 여유를 둔다. */
+    protocolTimeout: 280_000,
   });
 
   try {
@@ -97,20 +104,38 @@ export async function POST(request: NextRequest) {
         );
       if (exams.length === 0) continue;
 
-      const html = await prepareKoreanPdfHtml(buildCombinedHtml(exams.map(e => String(e.html)), css));
+      /* 폴더당 문항이 많으면(예: 876건) 단일 합본 PDF 는 렌더 불가/비현실적이라
+         PDF_CHUNK_SIZE 문항씩 나눠 여러 PDF 로 분할해 ZIP 에 담는다.
+         40건 이하 폴더는 chunk 1개 → 기존처럼 단일 PDF. */
+      const chunks: (typeof exams)[] = [];
+      for (let i = 0; i < exams.length; i += PDF_CHUNK_SIZE) {
+        chunks.push(exams.slice(i, i + PDF_CHUNK_SIZE));
+      }
+      const total = chunks.length;
 
-      const page = await browser.newPage();
-      try {
-        await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
-        const pdfBuf = await page.pdf({
-          format: 'A4',
-          printBackground: true,
-          margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
-        });
-        const filename = uniqueFilename(usedNames, sanitizeFilename(group.name) + '.pdf');
-        zip.file(filename, pdfBuf);
-      } finally {
-        await page.close();
+      for (let ci = 0; ci < total; ci++) {
+        const chunk = chunks[ci];
+        const html = await prepareKoreanPdfHtml(buildCombinedHtml(chunk.map(e => String(e.html)), css));
+
+        const page = await browser.newPage();
+        try {
+          await page.setContent(html, { waitUntil: 'load', timeout: 90_000 });
+          const pdfBuf = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
+            /* 기본 30s 타임아웃을 해제 — 한 chunk 합본도 렌더에 30s+ 걸릴 수 있다.
+               상위 가드는 launch.protocolTimeout(280s)과 라우트 maxDuration(300s). */
+            timeout: 0,
+          });
+          /* 파일명: 분할되면 "교재명 (1-22).pdf" … 단일이면 "교재명.pdf" */
+          const base = sanitizeFilename(group.name);
+          const labeled = total > 1 ? `${base} (${ci + 1}-${total})` : base;
+          const filename = uniqueFilename(usedNames, labeled + '.pdf');
+          zip.file(filename, pdfBuf);
+        } finally {
+          await page.close();
+        }
       }
     }
 

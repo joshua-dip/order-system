@@ -113,6 +113,9 @@ export async function POST(request: NextRequest) {
     defaultViewport: { width: 794, height: 1123, deviceScaleFactor: 2 },
     executablePath,
     headless: true,
+    /* 큰/다건 PDF 의 CDP printToPDF 가 기본 protocolTimeout(180s)을 넘기지 않도록
+       maxDuration(300s)에 맞춰 늘린다. */
+    protocolTimeout: 280_000,
   });
 
   try {
@@ -147,6 +150,7 @@ export async function POST(request: NextRequest) {
             printBackground: true,
             margin: { top: '0', right: '0', bottom: '0', left: '0' },
             pageRanges: '1',
+            timeout: 0, // 30s 기본 타임아웃 해제
           });
           const numLabel = sanitizeFilename(w.number || String(idx));
           const filename = uniqueFilename(used, `${numLabel}.pdf`);
@@ -200,6 +204,7 @@ export async function POST(request: NextRequest) {
         format: 'A4',
         printBackground: true,
         margin: { top: '0', right: '0', bottom: '0', left: '0' },
+        timeout: 0, // 30s 기본 타임아웃 해제 (단일 합본 PDF 는 렌더가 길다)
       });
       const fileName = `${baseName}_${dateSlug}.pdf`;
       const encoded = encodeURIComponent(fileName);
