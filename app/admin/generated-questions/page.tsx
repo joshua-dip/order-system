@@ -452,6 +452,34 @@ export default function AdminGeneratedQuestionsPage() {
 
   const [filterTextbook, setFilterTextbook] = useState('');
   const [filterType, setFilterType] = useState('');
+  // 서술형(narrative_questions) 검증 — essay 모드 전용
+  const [narrAuditLoading, setNarrAuditLoading] = useState(false);
+  const [narrAuditError, setNarrAuditError] = useState<string | null>(null);
+  const [narrAuditResult, setNarrAuditResult] = useState<{
+    totalScanned: number;
+    totalFlagged: number;
+    breakdown: Record<string, number>;
+    items: Array<{ id: string; textbook: string; subtype: string; number: string; source: string; severity: string; message: string }>;
+    truncated: boolean;
+  } | null>(null);
+  const runNarrativeAudit = async () => {
+    setNarrAuditLoading(true);
+    setNarrAuditError(null);
+    try {
+      const params = new URLSearchParams();
+      if (filterTextbook) params.set('textbook', filterTextbook);
+      if (filterType) params.set('type', filterType);
+      const res = await fetch(`/api/admin/generated-questions/validate/narrative?${params.toString()}`);
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || '서술형 검증 실패');
+      setNarrAuditResult(d);
+    } catch (e) {
+      setNarrAuditError(e instanceof Error ? e.message : String(e));
+      setNarrAuditResult(null);
+    } finally {
+      setNarrAuditLoading(false);
+    }
+  };
   const [filterDifficulty, setFilterDifficulty] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   /** '' 전체 / 'only' 무료만 / 'paid' 유료만 */
@@ -1209,7 +1237,8 @@ export default function AdminGeneratedQuestionsPage() {
       setListDataScope((prev) => (prev === 'variant' ? prev : 'variant'));
       setFilterType((prev) => (prev && isEssayType(prev) ? '' : prev));
     } else {
-      setListDataScope((prev) => (prev === 'narrative' || prev === 'all' ? prev : 'all'));
+      // 서술형 모드는 narrative_questions 단일 소스로 고정(병합 제거)
+      setListDataScope('narrative');
       setFilterType((prev) => (prev && !isEssayType(prev) ? '' : prev));
     }
     if (typeof window !== 'undefined') {
@@ -3996,10 +4025,9 @@ export default function AdminGeneratedQuestionsPage() {
             <p className="font-semibold text-emerald-200 mb-1">서술형 5유형 관리</p>
             <p className="text-emerald-100/85 text-xs leading-relaxed">
               지원 유형: <strong>요약문본문어휘</strong>, <strong>요약문조건영작배열</strong>, <strong>빈칸재배열형</strong>,{' '}
-              <strong>요약문조건영작형</strong>, <strong>이중요지영작형</strong>. 기본은{' '}
-              <code className="text-emerald-300/90">narrative_questions</code> 컬렉션이며, 데이터 소스를 &quot;병합&quot;으로
-              두면 <code className="text-emerald-300/90">generated_questions</code> 안의 회원 서술형 문항도 함께 조회됩니다.
-              상세는 <strong>읽기 전용</strong>으로 열립니다.
+              <strong>요약문조건영작형</strong>, <strong>이중요지영작형</strong>. 데이터 소스는{' '}
+              <code className="text-emerald-300/90">narrative_questions</code> 컬렉션으로 고정되며, 상세는{' '}
+              <strong>읽기 전용</strong>으로 열립니다.
             </p>
           </div>
         )}
@@ -4019,18 +4047,15 @@ export default function AdminGeneratedQuestionsPage() {
               className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm min-w-[200px] text-white disabled:opacity-60"
               title={
                 pageMode === 'essay'
-                  ? '서술형 모드에서는 narrative_questions 또는 병합만 선택할 수 있습니다.'
+                  ? '서술형 모드는 narrative_questions 단일 소스로 고정됩니다.'
                   : '객관식 모드에서는 generated_questions 만 사용합니다.'
               }
-              disabled={pageMode === 'objective'}
+              disabled
             >
               {pageMode === 'objective' ? (
                 <option value="variant">객관식만 (generated_questions)</option>
               ) : (
-                <>
-                  <option value="narrative">서술형만 (narrative_questions)</option>
-                  <option value="all">서술형 병합 (narrative + generated_questions)</option>
-                </>
+                <option value="narrative">서술형만 (narrative_questions)</option>
               )}
             </select>
           </div>
@@ -4216,6 +4241,8 @@ export default function AdminGeneratedQuestionsPage() {
             총 <span className="text-white font-semibold">{total}</span>건 · {page}/{totalPages}페이지
           </p>
           <div className="rounded-lg border border-slate-700/50 bg-slate-900/35 px-3 py-2.5 space-y-2">
+            {pageMode === 'objective' && (
+            <>
             <div className="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3">
               <span className="text-slate-500 text-[10px] sm:text-[11px] font-bold tracking-wide shrink-0 sm:w-[4.75rem] sm:pt-1.5">
                 분석·통계
@@ -4394,6 +4421,58 @@ export default function AdminGeneratedQuestionsPage() {
                 </button>
               </div>
             </div>
+            </>
+            )}
+            {pageMode === 'essay' && (
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3">
+                  <span className="text-slate-500 text-[10px] sm:text-[11px] font-bold tracking-wide shrink-0 sm:w-[4.75rem] sm:pt-1.5">
+                    서술형 검증
+                  </span>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <button
+                      type="button"
+                      disabled={narrAuditLoading}
+                      onClick={runNarrativeAudit}
+                      className="shrink-0 bg-emerald-800/90 hover:bg-emerald-700 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-emerald-100 border border-emerald-500/40"
+                      title="narrative_questions 검증 · 키워드↔모범답안 멀티셋 / (A)빈칸·<보기> / 답안단어수 / <u>과제</u>수 / 점수 / 문제유형 / 해설·모범답안 API·nan 누출. 교재 필터 적용."
+                    >
+                      {narrAuditLoading ? '검증 중…' : '서술형 검증'}
+                    </button>
+                    {narrAuditError && <span className="text-rose-300 text-xs">{narrAuditError}</span>}
+                    {narrAuditResult && (
+                      <span className="text-xs text-slate-300">
+                        스캔 {narrAuditResult.totalScanned} · 결함{' '}
+                        <b className={narrAuditResult.totalFlagged > 0 ? 'text-amber-300' : 'text-emerald-300'}>
+                          {narrAuditResult.totalFlagged}
+                        </b>
+                        {Object.keys(narrAuditResult.breakdown || {}).length > 0 && (
+                          <span className="text-slate-400">
+                            {' '}
+                            ({Object.entries(narrAuditResult.breakdown).map(([k, v]) => `${k} ${v}`).join(' · ')})
+                          </span>
+                        )}
+                        {narrAuditResult.truncated && <span className="text-slate-500"> · 일부만 표시</span>}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {narrAuditResult && narrAuditResult.items.length > 0 && (
+                  <div className="max-h-64 overflow-auto rounded border border-slate-700 bg-slate-950/40 text-xs divide-y divide-slate-800/60">
+                    {narrAuditResult.items.map((it, i) => (
+                      <div key={i} className="px-2 py-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                        <span className={it.severity === 'error' ? 'text-rose-300 font-semibold' : 'text-amber-300 font-semibold'}>
+                          {it.severity}
+                        </span>
+                        <span className="text-slate-400">{it.subtype}</span>
+                        <span className="text-slate-500">{it.number}</span>
+                        <span className="text-slate-200">{it.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div
             className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${extraMenuExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
