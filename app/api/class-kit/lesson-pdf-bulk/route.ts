@@ -56,12 +56,6 @@ export async function POST(request: NextRequest) {
   }
 
   const textbook = typeof body.textbook === 'string' ? body.textbook.trim() : '';
-  if (!textbook) {
-    return NextResponse.json({ error: '교재명(textbook)이 필요합니다.' }, { status: 400 });
-  }
-  if (!isClassKitTextbookAllowed(textbook, level)) {
-    return NextResponse.json({ error: classKitTextbookDeniedMessage(level) }, { status: 403 });
-  }
   const mode = normalizeLessonMode(body.mode);
   const format: 'pdf' | 'zip' = body.format === 'zip' ? 'zip' : 'pdf';
   const lineHeight = clampLineHeight(body.lineHeight);
@@ -84,23 +78,46 @@ export async function POST(request: NextRequest) {
     ?.filter((v): v is string => typeof v === 'string' && ObjectId.isValid(v))
     .slice(0, MAX_PASSAGES);
 
-  const db = await getDb('gomijoshua');
-  const filter: Record<string, unknown> = { textbook };
-  if (passageIds && passageIds.length > 0) {
-    filter._id = { $in: passageIds.map((s) => new ObjectId(s)) };
+  const hasIds = !!(passageIds && passageIds.length > 0);
+  if (!textbook && !hasIds) {
+    return NextResponse.json({ error: '교재명(textbook) 또는 지문 선택(passageIds)이 필요합니다.' }, { status: 400 });
   }
-  const docs = await db
-    .collection('passages')
-    .find(filter)
-    .sort({ chapter: 1, order: 1, number: 1 })
-    .limit(MAX_PASSAGES)
-    .toArray();
+  // 단일 교재 모드는 조회 전 권한 체크(빠른 거부). 혼합(passageIds) 모드는 조회 후 지문별 교재로 필터.
+  if (!hasIds && !isClassKitTextbookAllowed(textbook, level)) {
+    return NextResponse.json({ error: classKitTextbookDeniedMessage(level) }, { status: 403 });
+  }
+  const db = await getDb('gomijoshua');
+  // passageIds 가 오면 여러 교재를 섞은 묶음일 수 있어 교재 필터 없이 _id 로 조회하고
+  // 입력(선택) 순서를 그대로 유지한다. passageIds 가 없을 때만 textbook 전체(기존 정렬).
+  const col = db.collection('passages');
+  let docs: Record<string, unknown>[];
+  if (hasIds) {
+    const found = await col
+      .find({ _id: { $in: passageIds!.map((s) => new ObjectId(s)) } })
+      .limit(MAX_PASSAGES)
+      .toArray();
+    const byId = new Map(found.map((d) => [String(d._id), d]));
+    docs = passageIds!
+      .map((id) => byId.get(id))
+      .filter((d): d is NonNullable<typeof d> => !!d)
+      // 접근 권한 없는 교재의 지문은 제외(공개 클래스키트 — 등급별 모의고사 접근)
+      .filter((d) => isClassKitTextbookAllowed(String(d.textbook ?? ''), level));
+    if (docs.length === 0) {
+      return NextResponse.json({ error: classKitTextbookDeniedMessage(level) }, { status: 403 });
+    }
+  } else {
+    docs = await col
+      .find({ textbook })
+      .sort({ chapter: 1, order: 1, number: 1 })
+      .limit(MAX_PASSAGES)
+      .toArray();
+  }
 
   if (docs.length === 0) {
     return NextResponse.json({ error: '대상 지문이 없습니다.' }, { status: 404 });
   }
 
-  type Built = { number: string; sentences: LessonSentencePair[] };
+  type Built = { number: string; textbook: string; sentences: LessonSentencePair[] };
   const built: Built[] = [];
   for (const d of docs) {
     const doc = d as Record<string, unknown>;
@@ -115,7 +132,7 @@ export async function POST(request: NextRequest) {
       .filter((s) => s.en);
     if (sentences.length === 0) continue;
     const rawNumber = String(doc.number ?? '');
-    built.push({ number: deriveNumber(rawNumber) || rawNumber, sentences });
+    built.push({ number: deriveNumber(rawNumber) || rawNumber, textbook: String(doc.textbook ?? '').trim(), sentences });
   }
   if (built.length === 0) {
     return NextResponse.json({ error: '본문이 있는 지문이 없습니다.' }, { status: 404 });
@@ -155,7 +172,7 @@ export async function POST(request: NextRequest) {
   try {
     const dateSlug = new Date().toISOString().slice(0, 10);
     const modeLabel = LESSON_MODE_LABELS[mode];
-    const baseName = `수업용자료_${modeLabel}_${sanitizeFilename(textbook)}`;
+    const baseName = `수업용자료_${modeLabel}_${sanitizeFilename(textbook || '여러교재')}`;
 
     if (format === 'zip') {
       const zip = new JSZip();
@@ -165,7 +182,7 @@ export async function POST(request: NextRequest) {
         idx += 1;
         const html = buildLessonMaterialHtml({
           kicker,
-          title: textbook,
+          title: w.textbook || textbook,
           number: w.number,
           sentences: w.sentences,
           mode,
@@ -227,7 +244,7 @@ export async function POST(request: NextRequest) {
     const html = buildLessonMaterialMultiPageHtml({
       kicker,
       mode,
-      items: built.map((b) => ({ title: textbook, number: b.number, sentences: b.sentences })),
+      items: built.map((b) => ({ title: b.textbook || textbook, number: b.number, sentences: b.sentences })),
       lineHeight,
       splitPct,
       lineLayout,

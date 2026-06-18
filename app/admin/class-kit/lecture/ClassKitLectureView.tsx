@@ -84,6 +84,14 @@ export function ClassKitLectureView({
   const [bulkRangeFrom, setBulkRangeFrom] = useState('');
   const [bulkRangeTo, setBulkRangeTo] = useState('');
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set());
+  /** 개별 선택(manual) 다교재 묶음: 담긴 지문 메타(요약·정렬 표시용) — bulkSelectedIds 와 동기. */
+  const [bulkSelectedMeta, setBulkSelectedMeta] = useState<Map<string, { textbook: string; chapter: string; number: string; source_key?: string }>>(new Map());
+  /** manual 패널 — 교재 드롭다운/검색/지문목록(여러 교재를 오가며 누적 선택). */
+  const [manualTextbooks, setManualTextbooks] = useState<string[]>([]);
+  const [manualTextbook, setManualTextbook] = useState('');
+  const [manualPassages, setManualPassages] = useState<PassageItem[]>([]);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualQuery, setManualQuery] = useState('');
   const [bulkFormat, setBulkFormat] = useState<'pdf' | 'zip'>('pdf');
   const [bulkPresets, setBulkPresets] = useState<ClassKitDownloadPreset[]>([]);
   const [msg, setMsg] = useState('');
@@ -138,6 +146,19 @@ export function ClassKitLectureView({
     return () => { cancelled = true; };
   }, [passage?.textbook, siblingsTextbook]);
 
+  // 개별 선택(manual) 패널에서 교재를 고르면 그 교재 지문 목록 로드(다교재 혼합 선택용).
+  useEffect(() => {
+    if (!bulkOpen || !manualTextbook) { setManualPassages([]); return; }
+    let cancelled = false;
+    setManualLoading(true);
+    fetch(`${passagesApiBase}?textbook=${encodeURIComponent(manualTextbook)}&limit=500`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled) setManualPassages(d && Array.isArray(d.items) ? (d.items as PassageItem[]) : []); })
+      .catch(() => { if (!cancelled) setManualPassages([]); })
+      .finally(() => { if (!cancelled) setManualLoading(false); });
+    return () => { cancelled = true; };
+  }, [bulkOpen, manualTextbook, passagesApiBase]);
+
   const sentences = useMemo(() => {
     if (!passage?.content) return [];
     return tokenizePassageFromContent(passage.content).map(s => ({ idx: s.idx, text: s.text }));
@@ -154,6 +175,28 @@ export function ClassKitLectureView({
     () => buildLectureMaterialHtml({ kicker, title, number, sentences, lineHeight }),
     [kicker, title, number, sentences, lineHeight],
   );
+
+  /** manual 묶음에 담긴 지문들의 교재 집합 — 혼합 여부·요약 표시. */
+  const bulkSelectedTextbooks = useMemo(() => {
+    const s = new Set<string>();
+    bulkSelectedMeta.forEach((m) => { if (m.textbook) s.add(m.textbook); });
+    return s;
+  }, [bulkSelectedMeta]);
+  /** manual 선택이 현재 화면 교재가 아닌 지문을 포함하는지(혼합/타교재 묶음) → 프리셋 저장 제외. */
+  const hasForeignTextbook = useMemo(
+    () => bulkScope === 'manual' && Array.from(bulkSelectedTextbooks).some((t) => t !== (passage?.textbook ?? '')),
+    [bulkScope, bulkSelectedTextbooks, passage?.textbook],
+  );
+  const manualFiltered = useMemo(() => {
+    const lq = manualQuery.trim().toLowerCase();
+    if (!lq) return manualPassages;
+    return manualPassages.filter((p) =>
+      (p.source_key ?? '').toLowerCase().includes(lq) ||
+      p.chapter.toLowerCase().includes(lq) ||
+      p.number.toLowerCase().includes(lq) ||
+      (p.content?.original ?? '').toLowerCase().includes(lq),
+    );
+  }, [manualPassages, manualQuery]);
 
   const filenameBase = useMemo(() => {
     const parts = [title.trim(), number.trim()]
@@ -244,10 +287,40 @@ export function ClassKitLectureView({
     setBulkRangeFrom('');
     setBulkRangeTo('');
     setBulkSelectedIds(new Set());
+    setBulkSelectedMeta(new Map());
+    setManualTextbook(passage?.textbook ?? '');
+    setManualQuery('');
+    if (manualTextbooks.length === 0) {
+      fetch(`${passagesApiBase}/textbooks`, { credentials: 'include' })
+        .then((r) => r.json())
+        .then((d) => setManualTextbooks(Array.isArray(d.textbooks) ? d.textbooks : []))
+        .catch(() => {});
+    }
     setBulkFormat('pdf');
     setBulkPresets(passage?.textbook ? loadPresetsForTextbook(passage.textbook) : []);
     setBulkOpen(true);
   };
+
+  /** manual 묶음 토글(체크) — id 와 메타를 함께 갱신. 선택 순서 = 삽입 순서. */
+  const toggleManualPick = (p: PassageItem) => {
+    setBulkSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(p._id)) next.delete(p._id);
+      else next.add(p._id);
+      return next;
+    });
+    setBulkSelectedMeta((prev) => {
+      const next = new Map(prev);
+      if (next.has(p._id)) next.delete(p._id);
+      else next.set(p._id, { textbook: p.textbook, chapter: p.chapter, number: p.number, source_key: p.source_key });
+      return next;
+    });
+  };
+  const removeManualPick = (id: string) => {
+    setBulkSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
+    setBulkSelectedMeta((prev) => { const n = new Map(prev); n.delete(id); return n; });
+  };
+  const clearManualPicks = () => { setBulkSelectedIds(new Set()); setBulkSelectedMeta(new Map()); };
 
   const applyPreset = (p: ClassKitDownloadPreset) => {
     setBulkScope(p.scope);
@@ -265,6 +338,10 @@ export function ClassKitLectureView({
 
   const saveCurrentAsPreset = () => {
     if (!passage?.textbook) return;
+    if (hasForeignTextbook) {
+      alert('여러 교재가 섞인 묶음은 프리셋으로 저장할 수 없습니다(같은 교재 묶음만 저장 가능).');
+      return;
+    }
     const ids = resolveBulkPassageIds();
     const defaultName =
       bulkScope === 'manual'
@@ -350,25 +427,36 @@ export function ClassKitLectureView({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const safe = passage.textbook.replace(/[\\/:*?"<>|]/g, '_');
+      const tbForName =
+        bulkScope === 'manual'
+          ? bulkSelectedTextbooks.size === 1
+            ? Array.from(bulkSelectedTextbooks)[0]
+            : bulkSelectedTextbooks.size > 1
+              ? '여러교재'
+              : passage.textbook
+          : passage.textbook;
+      const safe = tbForName.replace(/[\\/:*?"<>|]/g, '_');
       const date = new Date().toISOString().slice(0, 10);
       a.download = `강의용자료_${safe}_${date}.${bulkFormat === 'pdf' ? 'pdf' : 'zip'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      try {
-        savePresetForTextbook(passage.textbook, {
-          id: 'recent',
-          name: '최근',
-          scope: bulkScope,
-          passageIds: bulkScope === 'manual' ? ids : undefined,
-          rangeFrom: bulkScope === 'range' ? bulkRangeFrom : undefined,
-          rangeTo: bulkScope === 'range' ? bulkRangeTo : undefined,
-          format: bulkFormat,
-        });
-      } catch {
-        /* ignore */
+      // 여러 교재가 섞인 묶음은 단일 교재 키에 담을 수 없어 「최근」 자동 저장에서 제외.
+      if (!hasForeignTextbook) {
+        try {
+          savePresetForTextbook(passage.textbook, {
+            id: 'recent',
+            name: '최근',
+            scope: bulkScope,
+            passageIds: bulkScope === 'manual' ? ids : undefined,
+            rangeFrom: bulkScope === 'range' ? bulkRangeFrom : undefined,
+            rangeTo: bulkScope === 'range' ? bulkRangeTo : undefined,
+            format: bulkFormat,
+          });
+        } catch {
+          /* ignore */
+        }
       }
       setBulkOpen(false);
     } catch {
@@ -680,32 +768,67 @@ export function ClassKitLectureView({
                   </div>
                 )}
                 {bulkScope === 'manual' && (
-                  <div className="mt-3 border border-slate-700 rounded-lg max-h-48 overflow-y-auto p-2 space-y-1">
-                    {siblings.length === 0 ? (
-                      <p className="text-slate-500 text-sm text-center py-3">교재 지문 목록을 불러오는 중…</p>
-                    ) : (
-                      siblings.map((s) => {
-                        const checked = bulkSelectedIds.has(s._id);
-                        return (
-                          <label key={s._id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-700/40 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(e) => {
-                                setBulkSelectedIds((prev) => {
-                                  const next = new Set(prev);
-                                  if (e.target.checked) next.add(s._id);
-                                  else next.delete(s._id);
-                                  return next;
-                                });
-                              }}
-                              className="accent-emerald-500"
-                            />
-                            <span className="text-xs text-slate-300 font-mono">{s.chapter} · {s.number}</span>
-                            {s.source_key && <span className="text-[10px] text-emerald-400 truncate">{s.source_key}</span>}
-                          </label>
-                        );
-                      })
+                  <div className="mt-3 space-y-2">
+                    <p className="text-[11px] text-slate-500">교재를 바꿔가며 여러 회차 지문을 담을 수 있습니다. 담은 순서대로 출력됩니다.</p>
+                    <select
+                      value={manualTextbook}
+                      onChange={(e) => { setManualTextbook(e.target.value); setManualQuery(''); }}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm text-white"
+                    >
+                      <option value="">{manualTextbooks.length ? '교재 선택' : '교재 불러오는 중…'}</option>
+                      {manualTextbooks.map((tb) => (
+                        <option key={tb} value={tb}>{tb}</option>
+                      ))}
+                    </select>
+                    <input
+                      value={manualQuery}
+                      onChange={(e) => setManualQuery(e.target.value)}
+                      placeholder="지문 검색 (소스키, 챕터, 내용)"
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                    />
+                    <div className="border border-slate-700 rounded-lg max-h-40 overflow-y-auto p-2 space-y-1">
+                      {!manualTextbook ? (
+                        <p className="text-slate-500 text-sm text-center py-3">교재를 선택하세요</p>
+                      ) : manualLoading ? (
+                        <p className="text-slate-500 text-sm text-center py-3">불러오는 중…</p>
+                      ) : manualFiltered.length === 0 ? (
+                        <p className="text-slate-500 text-sm text-center py-3">지문이 없습니다</p>
+                      ) : (
+                        manualFiltered.map((p) => {
+                          const checked = bulkSelectedIds.has(p._id);
+                          return (
+                            <label key={p._id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-700/40 cursor-pointer">
+                              <input type="checkbox" checked={checked} onChange={() => toggleManualPick(p)} className="accent-emerald-500" />
+                              <span className="text-xs text-slate-300 font-mono">{p.chapter} · {p.number}</span>
+                              {p.source_key && <span className="text-[10px] text-emerald-400 truncate">{p.source_key}</span>}
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                    {bulkSelectedIds.size > 0 && (
+                      <div className="rounded-lg border border-emerald-700/50 bg-emerald-950/20 p-2">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[11px] font-semibold text-emerald-200">
+                            담긴 {bulkSelectedIds.size}건{bulkSelectedTextbooks.size > 1 ? ` · ${bulkSelectedTextbooks.size}개 교재` : ''}
+                          </span>
+                          <button type="button" onClick={clearManualPicks} className="text-[10px] text-slate-400 hover:text-rose-300">전체 해제</button>
+                        </div>
+                        <div className="max-h-28 overflow-y-auto space-y-1">
+                          {Array.from(bulkSelectedIds).map((id, i) => {
+                            const m = bulkSelectedMeta.get(id);
+                            if (!m) return null;
+                            return (
+                              <div key={id} className="flex items-center gap-1.5 text-[11px] text-slate-300">
+                                <span className="text-slate-500 tabular-nums w-5 text-right">{i + 1}.</span>
+                                <span className="font-mono shrink-0">{m.chapter} · {m.number}</span>
+                                <span className="text-emerald-400/80 truncate flex-1">{m.textbook}</span>
+                                <button type="button" onClick={() => removeManualPick(id)} className="text-slate-500 hover:text-rose-300 shrink-0" aria-label="제거">×</button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
