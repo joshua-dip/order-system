@@ -6,7 +6,7 @@ import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useTextbookLinks } from '@/lib/useTextbookLinks';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
-import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS } from '@/lib/variant-textbooks';
+import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS, isVariantMockExamTextbookKey } from '@/lib/variant-textbooks';
 import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 
 const KAKAO_INQUIRY_URL =
@@ -293,6 +293,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           const 교과서Set = new Set(solbook교과서Keys);
           textbookList = [...merged]
             .filter((k) => !교과서Set.has(k))
+            // 모의고사는 별도 섹션으로 구분 — 부교재 목록에서 제외 (관리자 전체 노출 분기 포함)
+            .filter((k) => !isVariantMockExamTextbookKey(k))
             .sort((a, b) => a.localeCompare(b, 'ko'));
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
