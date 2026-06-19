@@ -2672,6 +2672,12 @@ export default function AdminDashboardPage() {
             회원상세관리
           </Link>
           <Link
+            href="/admin/point-charges"
+            className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+          >
+            💳 포인트 구매내역
+          </Link>
+          <Link
             href="/admin/solbook-lesson-links"
             className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
           >
