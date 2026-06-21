@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
 
 // ── 타입 정의 ──────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,8 @@ export interface ExamData {
   meta: {
     title: string;
     difficulty?: string;
+    /** '글의의미서술형'(ESSAY_MEANING_EXAM_TYPE) 이면 글의의미 전용 분기. 없으면 배열형(기존). */
+    examType?: string;
     subtitle: string;
     answer_subtitle?: string;
     info: MetaInfo[];
@@ -420,7 +423,12 @@ export function buildExamHtml(data: ExamData, css: string): string {
     .join('\n    ');
 
   const isMaxDifficulty = data.meta.difficulty === '최고난도';
-  const bogiLabel = isMaxDifficulty ? '한국어 해석' : '보기';
+  /* 글의의미 기본난도: bogi = 밑줄 친 부분 원문(영어, 참고용), 답은 우리말 서술.
+     → 라벨을 "밑줄 친 부분" 으로. (중·고는 키워드 '보기', 최고는 우리말 의미 '한국어 해석') */
+  const isMeaningBasic =
+    data.meta.examType === ESSAY_MEANING_EXAM_TYPE &&
+    (data.meta.difficulty === '기본난도' || data.meta.difficulty === '난이도하');
+  const bogiLabel = isMeaningBasic ? '밑줄 친 부분' : isMaxDifficulty ? '한국어 해석' : '보기';
   const bogiClass = isMaxDifficulty ? 'bogi bogi-korean' : 'bogi';
 
   const questionsHtml = data.questions

@@ -21,6 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.isLocked !== undefined) $set.isLocked = !!body.isLocked;
   if (body.pdfUrl !== undefined) $set.pdfUrl = body.pdfUrl;
   if (body.pdfName !== undefined) $set.pdfName = body.pdfName;
+  if (body.analyzed !== undefined) { $set.analyzed = !!body.analyzed; $set.analyzedAt = body.analyzed ? new Date() : null; }
 
   const result = await col<VipSchoolExam>(db, 'schoolExams').updateOne(
     { _id: new ObjectId(id), userId: uid },

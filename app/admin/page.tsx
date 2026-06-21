@@ -200,6 +200,82 @@ function orderFlowLabel(flow: string | null | undefined): string {
   return ORDER_FLOW_LABELS[f] ?? f;
 }
 
+/**
+ * 즉시 사용 상품 flow — 구매 즉시 사용 가능하고 드롭박스 폴더·공유링크 같은
+ * fulfillment 가 필요 없는 주문(예: 단어장). 미처리(주문 접수) 집계에서 제외한다.
+ * 매출·주문 건수·주문 목록 자체에는 그대로 남는다.
+ */
+const INSTANT_USE_FLOWS = new Set(['vocabulary']);
+function isInstantUseFlow(flow: string | null | undefined): boolean {
+  return !!flow && INSTANT_USE_FLOWS.has(String(flow).trim());
+}
+
+// ── 신규 가입 신청 (대시보드 인라인 승인) ─────────────────────────────────────
+/** 가입 승인(계정 자동 생성) 시 함께 지급하는 포인트 구매 할인 쿠폰 기본 할인율(%) */
+const SIGNUP_WELCOME_COUPON_PCT = 10;
+interface PendingApplication {
+  id: string;
+  applicantType: string;
+  name: string;
+  phone: string;
+  status: string;
+  appliedAt: string;
+}
+interface SignupAccountResult {
+  ok: boolean;
+  loginId?: string;
+  name?: string;
+  initialPassword?: string;
+  couponGrantedPct?: number | null;
+  error?: string;
+}
+const SIGNUP_TYPE_LABELS: Record<string, string> = { student: '학생', parent: '학부모', teacher: '선생님' };
+const SIGNUP_TYPE_BADGE: Record<string, string> = {
+  student: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+  parent: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+  teacher: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+};
+function fmtSignupRelative(d?: string): string {
+  if (!d) return '-';
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return '-';
+  const diffMin = Math.floor((Date.now() - dt.getTime()) / 60000);
+  if (diffMin < 1) return '방금';
+  if (diffMin < 60) return `${diffMin}분 전`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}시간 전`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}일 전`;
+  return dt.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+/** SMS/카톡으로 보낼 계정 안내 멘트 (가입 신청 관리 페이지와 동일 포맷) */
+function buildSignupAccountNotice(opts: {
+  name?: string;
+  loginId?: string;
+  initialPassword?: string;
+  couponGrantedPct?: number | null;
+}): string {
+  const name = (opts.name ?? '').trim() || '회원';
+  const id = (opts.loginId ?? '').trim();
+  const pw = (opts.initialPassword ?? '').trim();
+  const coupon = opts.couponGrantedPct ?? 0;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? '').trim();
+  const lines = [
+    `[고미조슈아] ${name}님, 가입을 환영합니다 ✨`,
+    '',
+    '회원 가입이 완료되어 로그인 정보를 안내드립니다.',
+    '',
+    `▣ 로그인 ID : ${id}`,
+    `▣ 초기 비밀번호 : ${pw}`,
+  ];
+  if (coupon > 0) lines.push('', `🎟 가입 환영 선물로 포인트 구매 ${coupon}% 할인 쿠폰이 함께 지급되었습니다.`);
+  lines.push('');
+  if (siteUrl) lines.push(`▶ 접속 : ${siteUrl}`);
+  lines.push('▶ 첫 로그인 후 [마이페이지] 에서 비밀번호를 꼭 변경해 주세요.');
+  lines.push('', '문의 사항은 본 메시지에 답장 주시면 됩니다. 감사합니다 :)');
+  return lines.join('\n');
+}
+
 const AVATAR_COLORS = [
   'from-[#00A9E0] to-[#0070b8]',
   'from-[#7c6ff7] to-[#5b52d4]',
@@ -273,6 +349,9 @@ export default function AdminDashboardPage() {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<SectionType>('dashboard');
+  /** 모바일 사이드바 오프캔버스 토글 (lg 이상은 항상 표시) */
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => { setSidebarOpen(false); }, [section]);
 
   const [stats, setStats] = useState<{
     /** 완료(status=completed) 주문만 loginId별 건수 */
@@ -285,6 +364,8 @@ export default function AdminDashboardPage() {
     dropboxConfigured?: boolean;
     revenueTotal?: number;
     revenueThisMonth?: number;
+    pointRevenueTotal?: number;
+    pointRevenueThisMonth?: number;
     siteVisitsTodayPageViews?: number;
     siteVisitsTodayUnique?: number;
     siteVisitsTodayKey?: string;
@@ -326,6 +407,12 @@ export default function AdminDashboardPage() {
   const [memberSegmentFilter, setMemberSegmentFilter] = useState<MemberSegmentFilter>('all');
   const [memberSortOrder, setMemberSortOrder] = useState<MemberSortOrder>('default');
   const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
+  /** 대시보드 최상단 인라인 승인용 — 대기 중 가입 신청 목록 */
+  const [pendingApplications, setPendingApplications] = useState<PendingApplication[]>([]);
+  const [signupApprovingId, setSignupApprovingId] = useState<string | null>(null);
+  const [signupGrantCoupon, setSignupGrantCoupon] = useState(true);
+  const [signupAccountResult, setSignupAccountResult] = useState<SignupAccountResult | null>(null);
+  const [signupCopyMsg, setSignupCopyMsg] = useState('');
   const [editingPathId, setEditingPathId] = useState<string | null>(null);
   const [editingPathValue, setEditingPathValue] = useState('');
   const [pathSavingId, setPathSavingId] = useState<string | null>(null);
@@ -578,10 +665,89 @@ export default function AdminDashboardPage() {
   }, []);
 
   const fetchPendingApplicationCount = useCallback(() => {
-    fetch('/api/admin/membership-applications?status=pending&limit=1', { credentials: 'include' })
+    // 최상단 인라인 승인 패널에서 바로 처리할 수 있게 대기 목록까지 받는다.
+    fetch('/api/admin/membership-applications?status=pending&limit=20', { credentials: 'include' })
       .then((r) => r.json())
-      .then((d) => setPendingApplicationCount(d?.pendingCount ?? 0))
+      .then((d) => {
+        setPendingApplicationCount(d?.pendingCount ?? d?.stats?.pending ?? 0);
+        setPendingApplications(Array.isArray(d?.applications) ? d.applications : []);
+      })
       .catch(() => {});
+  }, []);
+
+  /** 가입 승인 = 전화번호로 사용자 계정 자동 생성(+선택적 환영 쿠폰) → 신청 완료 처리 */
+  const approveSignupApplication = useCallback(
+    async (id: string, name: string) => {
+      const couponMsg = signupGrantCoupon
+        ? `\n포인트 구매 ${SIGNUP_WELCOME_COUPON_PCT}% 할인 쿠폰도 함께 지급됩니다.`
+        : '';
+      if (
+        !window.confirm(
+          `「${name}」 가입을 승인하고 계정을 생성합니다.\n전화번호 = 로그인ID, 초기 비밀번호가 발급됩니다.${couponMsg}\n계속할까요?`
+        )
+      )
+        return;
+      setSignupApprovingId(id);
+      try {
+        const r = await fetch(`/api/admin/membership-applications/${id}/create-account`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grantCouponPct: signupGrantCoupon ? SIGNUP_WELCOME_COUPON_PCT : undefined }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          setSignupAccountResult({ ok: false, error: j?.error || '계정 생성 실패' });
+        } else {
+          setSignupAccountResult({
+            ok: true,
+            loginId: j.loginId,
+            name: j.name,
+            initialPassword: j.initialPassword,
+            couponGrantedPct: j.couponGrantedPct ?? null,
+          });
+          fetchPendingApplicationCount();
+          fetchUsers();
+        }
+      } catch (e) {
+        setSignupAccountResult({ ok: false, error: (e as Error)?.message ?? '오류가 발생했습니다.' });
+      } finally {
+        setSignupApprovingId(null);
+      }
+    },
+    [signupGrantCoupon, fetchPendingApplicationCount, fetchUsers]
+  );
+
+  /** 가입 신청 거절 처리 */
+  const rejectSignupApplication = useCallback(
+    async (id: string, name: string) => {
+      if (!window.confirm(`「${name}」 가입 신청을 거절 처리할까요?`)) return;
+      setSignupApprovingId(id);
+      try {
+        await fetch(`/api/admin/membership-applications/${id}`, {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'markRejected' }),
+        });
+        fetchPendingApplicationCount();
+      } catch {
+        /* ignore */
+      } finally {
+        setSignupApprovingId(null);
+      }
+    },
+    [fetchPendingApplicationCount]
+  );
+
+  const copySignupText = useCallback(async (text: string, label = '복사 완료') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setSignupCopyMsg(`✓ ${label}`);
+    } catch {
+      setSignupCopyMsg('클립보드 복사 실패');
+    }
+    window.setTimeout(() => setSignupCopyMsg(''), 1800);
   }, []);
 
   // fetchStats는 fetchPendingApplicationCount 아래에 정의되어야 deps 참조가 올바름
@@ -606,6 +772,8 @@ export default function AdminDashboardPage() {
             dropboxConfigured: !!d.dropboxConfigured,
             revenueTotal: typeof d.revenueTotal === 'number' ? d.revenueTotal : 0,
             revenueThisMonth: typeof d.revenueThisMonth === 'number' ? d.revenueThisMonth : 0,
+            pointRevenueTotal: typeof d.pointRevenueTotal === 'number' ? d.pointRevenueTotal : 0,
+            pointRevenueThisMonth: typeof d.pointRevenueThisMonth === 'number' ? d.pointRevenueThisMonth : 0,
             siteVisitsTodayPageViews: typeof d.siteVisitsTodayPageViews === 'number' ? d.siteVisitsTodayPageViews : 0,
             siteVisitsTodayUnique: typeof d.siteVisitsTodayUnique === 'number' ? d.siteVisitsTodayUnique : 0,
             siteVisitsTodayKey: typeof d.siteVisitsTodayKey === 'string' ? d.siteVisitsTodayKey : undefined,
@@ -2427,9 +2595,12 @@ export default function AdminDashboardPage() {
 
   const today = new Date().toDateString();
   const todayOrders = recentOrders.filter((o) => new Date(o.createdAt).toDateString() === today);
-  /** 취소 아님 + 드롭박스 공유 링크(fileUrl) 없음 = 대시보드에서 말하는 「미처리」 */
+  /**
+   * 취소 아님 + 드롭박스 공유 링크(fileUrl) 없음 = 대시보드에서 말하는 「미처리」.
+   * 단, 단어장 등 즉시 사용 상품(flow=vocabulary)은 fulfillment 대상이 아니라 제외.
+   */
   const pendingNoLinkOrders = recentOrders.filter(
-    (o) => (o.status || 'pending') !== 'cancelled' && !o.fileUrl
+    (o) => (o.status || 'pending') !== 'cancelled' && !o.fileUrl && !isInstantUseFlow(o.orderMetaFlow)
   );
   /** 폴더는 만들어졌고 공유 링크만 없음 */
   const needShareLinkOrders = pendingNoLinkOrders.filter((o) => o.dropboxFolderCreated);
@@ -2456,6 +2627,8 @@ export default function AdminDashboardPage() {
     if (orderFilter !== 'all') {
       const s = o.status || 'pending';
       if (s !== orderFilter) return false;
+      // 「미처리(주문 접수)」 탭에서는 즉시 사용 상품(단어장 등)을 미처리 집계와 동일하게 제외
+      if (orderFilter === 'pending' && isInstantUseFlow(o.orderMetaFlow)) return false;
     }
     const q = orderSearch.trim().toLowerCase();
     if (!q) return true;
@@ -2514,10 +2687,26 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex text-white">
+      {/* 모바일 사이드바 백드롭 */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />
+      )}
       {/* Sidebar */}
-      <aside className="w-60 bg-slate-800 shrink-0 flex flex-col border-r border-slate-700 h-svh sticky top-0">
-        <div className="p-5 border-b border-slate-700 shrink-0">
+      <aside
+        className={`w-60 bg-slate-800 shrink-0 flex flex-col border-r border-slate-700 h-svh fixed lg:sticky top-0 left-0 z-50 transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="p-5 border-b border-slate-700 shrink-0 flex items-center justify-between gap-2">
           <h1 className="font-bold text-lg text-white">PAYPERIC ADMIN</h1>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden -mr-1 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            aria-label="메뉴 닫기"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         <nav className="p-3 flex-1 text-sm overflow-y-auto min-h-0">
           <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
@@ -2714,7 +2903,21 @@ export default function AdminDashboardPage() {
         </div>
       </aside>
 
-      <main ref={mainContentScrollRef} className="flex-1 overflow-auto p-6">
+      <main ref={mainContentScrollRef} className="flex-1 overflow-auto p-6 min-w-0">
+        {/* 모바일 헤더 — 사이드바 열기 (lg 이상은 숨김) */}
+        <div className="lg:hidden -mx-6 -mt-6 mb-4 px-4 py-3 bg-slate-800/95 backdrop-blur border-b border-slate-700 flex items-center gap-3 sticky top-0 z-30">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 -ml-1 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
+            aria-label="메뉴 열기"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+            </svg>
+          </button>
+          <span className="font-bold text-white">PAYPERIC ADMIN</span>
+        </div>
         <div className="max-w-6xl mx-auto">
           <p className="text-slate-400 text-sm mb-6">{todayStr}</p>
 
@@ -2728,52 +2931,96 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* Red alert: 미처리 주문 (폴더 생성 전 = 자동 대기, 집계 제외) */}
-          {unprocessedCount > 0 && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
-              <div className="text-red-200 flex-1 min-w-0 text-sm leading-relaxed">
-                <p className="font-medium text-red-100">미처리 주문 {unprocessedCount}건 (공유 링크 미등록)</p>
-                <p className="mt-1 text-red-200/95 text-xs sm:text-sm">
-                  · 공유 링크만 필요 (폴더 생성됨){' '}
-                  <span className="tabular-nums font-semibold text-red-100">{needShareLinkCount}</span>건
-                  {needOtherPendingCount > 0 && (
-                    <>
-                      <span className="text-red-300/80 mx-1.5">|</span>· 기타 (비회원·Dropbox 미설정 등){' '}
-                      <span className="tabular-nums font-semibold text-red-100">{needOtherPendingCount}</span>건
-                    </>
-                  )}
-                  {needCreateFolderCount > 0 && (
-                    <span className="block mt-1 text-red-300/70 text-[11px] sm:text-xs">
-                      폴더 생성 전 (회원·연동, 자동 대기){' '}
-                      <span className="tabular-nums font-semibold">{needCreateFolderCount}</span>건은 미처리 집계에서 제외
-                    </span>
-                  )}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setSection('orders'); setOrderFilter('pending'); }}
-                className="flex-shrink-0 py-2 px-4 rounded-lg bg-red-500/30 hover:bg-red-500/50 border border-red-500/50 text-red-100 hover:text-white font-medium text-sm cursor-pointer transition-colors"
-              >
-                바로가기 →
-              </button>
-            </div>
-          )}
-
-          {/* Alert: 신규 가입 신청 (승인 대기) */}
+          {/* 최상단: 신규 가입 신청 — 바로 승인(계정 생성) */}
           {section === 'dashboard' && pendingApplicationCount > 0 && (
-            <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
-              <div className="text-emerald-200 flex-1 min-w-0 text-sm leading-relaxed">
-                <p className="font-medium text-emerald-100">
-                  🙋 신규 가입 신청 {pendingApplicationCount}건이 승인을 기다리고 있습니다
+            <div className="bg-emerald-500/10 border border-emerald-500/40 rounded-xl px-4 py-4 mb-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+                <p className="font-bold text-emerald-100 text-base flex items-center gap-2">
+                  🙋 신규 가입 신청 <span className="tabular-nums">{pendingApplicationCount}</span>건 — 승인 대기
                 </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label
+                    className="inline-flex items-center gap-1.5 text-xs text-emerald-200/90 cursor-pointer select-none px-2 py-1 rounded-lg hover:bg-emerald-500/10"
+                    title="가입 승인(계정 생성) 시 포인트 구매 할인 쿠폰을 함께 지급합니다."
+                  >
+                    <input
+                      type="checkbox"
+                      checked={signupGrantCoupon}
+                      onChange={(e) => setSignupGrantCoupon(e.target.checked)}
+                      className="h-3.5 w-3.5 accent-amber-400"
+                    />
+                    🎟 {SIGNUP_WELCOME_COUPON_PCT}% 쿠폰 함께 지급
+                  </label>
+                  <Link
+                    href="/admin/membership-applications"
+                    className="text-xs text-emerald-300 hover:text-white px-2.5 py-1 rounded-lg border border-emerald-500/40 hover:bg-emerald-500/20 transition-colors"
+                  >
+                    전체 관리 →
+                  </Link>
+                </div>
               </div>
-              <Link
-                href="/admin/membership-applications"
-                className="flex-shrink-0 py-2 px-4 rounded-lg bg-emerald-500/30 hover:bg-emerald-500/50 border border-emerald-500/50 text-emerald-100 hover:text-white font-medium text-sm cursor-pointer transition-colors text-center"
-              >
-                신청 관리 →
-              </Link>
+              <div className="flex flex-col gap-2">
+                {pendingApplications.slice(0, 6).map((app) => (
+                  <div
+                    key={app.id}
+                    className="bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-2.5 flex items-center gap-x-3 gap-y-1.5 flex-wrap"
+                  >
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                        SIGNUP_TYPE_BADGE[app.applicantType] ?? 'bg-slate-600/40 text-slate-300 border-slate-600'
+                      }`}
+                    >
+                      {SIGNUP_TYPE_LABELS[app.applicantType] ?? app.applicantType}
+                    </span>
+                    <span className="font-semibold text-white">{app.name}</span>
+                    <a
+                      href={`tel:${(app.phone || '').replace(/-/g, '')}`}
+                      className="text-sm font-mono text-slate-300 hover:text-white"
+                      title="전화 걸기"
+                    >
+                      {app.phone}
+                    </a>
+                    <span className="text-[11px] text-slate-500" title={new Date(app.appliedAt).toLocaleString('ko-KR')}>
+                      {fmtSignupRelative(app.appliedAt)}
+                    </span>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <button
+                        type="button"
+                        disabled={signupApprovingId === app.id}
+                        onClick={() => approveSignupApplication(app.id, app.name)}
+                        className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold hover:opacity-90 disabled:opacity-60 transition shadow-sm whitespace-nowrap"
+                        title="전화번호로 계정 자동 생성 → 가입 완료 처리"
+                      >
+                        {signupApprovingId === app.id ? '처리 중…' : '✨ 가입 승인 (계정 생성)'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={signupApprovingId === app.id}
+                        onClick={() => rejectSignupApplication(app.id, app.name)}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-600 text-slate-400 text-xs font-medium hover:bg-slate-700/60 disabled:opacity-60 transition"
+                      >
+                        거절
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {pendingApplications.length === 0 && (
+                  <Link
+                    href="/admin/membership-applications"
+                    className="text-xs text-emerald-300/90 hover:text-white text-center py-2"
+                  >
+                    목록을 불러오는 중이거나 표시할 수 없습니다 — 전체 관리에서 보기 →
+                  </Link>
+                )}
+                {pendingApplicationCount > Math.min(6, pendingApplications.length) && pendingApplications.length > 0 && (
+                  <Link
+                    href="/admin/membership-applications"
+                    className="text-xs text-emerald-300 hover:text-white text-center py-1"
+                  >
+                    외 {pendingApplicationCount - Math.min(6, pendingApplications.length)}건 더 — 전체 관리에서 보기 →
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 
@@ -2830,32 +3077,6 @@ export default function AdminDashboardPage() {
                 </span>
               </p>
             </button>
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
-              <p className="text-slate-400 text-sm">미처리 주문</p>
-              <p className="text-2xl font-bold text-amber-400 mt-1 flex items-center gap-2">
-                {unprocessedCount}건
-                {unprocessedCount > 0 && (
-                  <span className="text-amber-400" title="드롭박스 공유 링크 미등록">⚠</span>
-                )}
-              </p>
-              <div className="text-slate-500 text-[11px] mt-2 space-y-1 leading-snug">
-                <p>
-                  링크만 필요 <span className="text-amber-200/90 tabular-nums font-semibold">{needShareLinkCount}</span>
-                  {needOtherPendingCount > 0 && (
-                    <>
-                      <span className="text-slate-600 mx-1">·</span>
-                      기타 <span className="text-slate-300 tabular-nums font-semibold">{needOtherPendingCount}</span>
-                      <span className="text-slate-600"> (비회원·연동 불가)</span>
-                    </>
-                  )}
-                </p>
-                <p className="text-slate-600">
-                  폴더 생성 전 <span className="text-slate-400 tabular-nums font-semibold">{needCreateFolderCount}</span>
-                  <span className="text-slate-600"> (자동 대기 · 집계 제외)</span>
-                </p>
-                <p className="text-slate-600 pt-0.5">취소 제외 · fileUrl 없음 기준</p>
-              </div>
-            </div>
             <Link
               href="/admin/membership-applications"
               className="bg-slate-800 rounded-xl border border-slate-700 p-5 block transition-colors hover:border-emerald-500/60 hover:bg-slate-700/35"
@@ -2872,6 +3093,24 @@ export default function AdminDashboardPage() {
               </p>
               <p className="text-slate-500 text-xs mt-1">
                 {pendingApplicationCount > 0 ? '승인 대기 중인 신청' : '대기 중인 신청 없음'}
+              </p>
+            </Link>
+            <Link
+              href="/admin/point-charges"
+              className="bg-slate-800 rounded-xl border border-slate-700 p-5 block transition-colors hover:border-indigo-500/60 hover:bg-slate-700/35"
+            >
+              <p className="text-slate-400 text-sm flex items-center justify-between gap-2">
+                포인트 매출
+                <span className="text-[10px] font-medium text-indigo-400/90">내역 →</span>
+              </p>
+              <p className="text-2xl font-bold text-indigo-300 mt-1 tabular-nums">
+                {typeof stats?.pointRevenueThisMonth === 'number' ? `${stats.pointRevenueThisMonth.toLocaleString()}원` : '—'}
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                누적(충전) <span className="text-slate-400 tabular-nums">{typeof stats?.pointRevenueTotal === 'number' ? `${stats.pointRevenueTotal.toLocaleString()}원` : '—'}</span>
+                <span className="block text-slate-600 mt-0.5">
+                  토스 결제 포인트 충전 합계 · 이번 달은 충전일(한국) 기준
+                </span>
               </p>
             </Link>
           </div>
@@ -2892,6 +3131,36 @@ export default function AdminDashboardPage() {
               </div>
             );
           })()}
+
+          {/* 미처리 주문 요약 (최근 주문 요청 위) */}
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 mb-6 flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-slate-400 text-sm">미처리 주문</p>
+              <p className="text-2xl font-bold text-amber-400 mt-1 flex items-center gap-2">
+                {unprocessedCount}건
+                {unprocessedCount > 0 && (
+                  <span className="text-amber-400" title="드롭박스 공유 링크 미등록">⚠</span>
+                )}
+              </p>
+            </div>
+            <div className="text-slate-500 text-[11px] space-y-1 leading-snug sm:text-right">
+              <p>
+                링크만 필요 <span className="text-amber-200/90 tabular-nums font-semibold">{needShareLinkCount}</span>
+                {needOtherPendingCount > 0 && (
+                  <>
+                    <span className="text-slate-600 mx-1">·</span>
+                    기타 <span className="text-slate-300 tabular-nums font-semibold">{needOtherPendingCount}</span>
+                    <span className="text-slate-600"> (비회원·연동 불가)</span>
+                  </>
+                )}
+              </p>
+              <p className="text-slate-600">
+                폴더 생성 전 <span className="text-slate-400 tabular-nums font-semibold">{needCreateFolderCount}</span>
+                <span className="text-slate-600"> (자동 대기 · 집계 제외)</span>
+              </p>
+              <p className="text-slate-600 pt-0.5">취소 제외 · fileUrl 없음 기준</p>
+            </div>
+          </div>
 
           {/* Recent orders (dashboard) or full orders (orders section) */}
           <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden mb-8">
@@ -3388,6 +3657,16 @@ export default function AdminDashboardPage() {
                                 </span>
                                 <span className="text-slate-400">취소됨</span>
                               </div>
+                            ) : isInstantUseFlow(o.orderMetaFlow) ? (
+                              <div
+                                className="inline-flex items-center gap-1.5"
+                                title="단어장 등 즉시 사용 상품 — 구매 즉시 사용 가능, 별도 제작·전달 없음"
+                              >
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium bg-teal-500/20 text-teal-300">
+                                  ✓
+                                </span>
+                                <span className="text-xs text-teal-300">구매 완료</span>
+                              </div>
                             ) : (
                               <>
                                 <div className="inline-flex items-center">
@@ -3434,6 +3713,9 @@ export default function AdminDashboardPage() {
                           )}
                         </td>
                         <td className="py-2.5 px-2 align-top">
+                          {isInstantUseFlow(o.orderMetaFlow) ? (
+                            <span className="text-slate-600 text-[11px]" title="즉시 사용 상품 — 드롭박스 폴더·공유 링크 없음">—</span>
+                          ) : (
                           <div className="inline-flex flex-row flex-wrap items-center gap-1">
                             {o.fileUrl ? (
                               <button
@@ -3492,6 +3774,7 @@ export default function AdminDashboardPage() {
                               </button>
                             )}
                           </div>
+                          )}
                         </td>
                       </tr>
                     );})}
@@ -6409,6 +6692,91 @@ export default function AdminDashboardPage() {
               <button type="button" onClick={saveEssayType} disabled={essayTypeSaving} className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-500 disabled:opacity-50">{essayTypeSaving ? '저장 중…' : '저장'}</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 가입 승인 — 계정 생성 결과 */}
+      {signupAccountResult && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setSignupAccountResult(null)}
+        >
+          <div
+            className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {signupAccountResult.ok ? (
+              <>
+                <div className="text-center mb-4">
+                  <div className="text-4xl mb-2">✅</div>
+                  <h3 className="text-lg font-bold text-white">가입 승인 완료</h3>
+                  <p className="text-sm text-slate-400 mt-1">「{signupAccountResult.name}」 님의 계정이 생성됐습니다.</p>
+                </div>
+                <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4 space-y-3">
+                  <div>
+                    <div className="text-xs text-slate-400 mb-1">로그인 ID</div>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded text-sm font-mono text-slate-200">{signupAccountResult.loginId}</code>
+                      <button type="button" onClick={() => copySignupText(signupAccountResult.loginId ?? '', '로그인 ID 복사')} className="px-3 py-2 text-xs rounded border border-slate-600 text-slate-300 hover:bg-slate-700/60">📋</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-400 mb-1">초기 비밀번호</div>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded text-sm font-mono text-slate-200">{signupAccountResult.initialPassword}</code>
+                      <button type="button" onClick={() => copySignupText(signupAccountResult.initialPassword ?? '', '비밀번호 복사')} className="px-3 py-2 text-xs rounded border border-slate-600 text-slate-300 hover:bg-slate-700/60">📋</button>
+                    </div>
+                  </div>
+                </div>
+                {signupAccountResult.couponGrantedPct ? (
+                  <div className="mt-3 rounded-xl border border-amber-500/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-200 flex items-center gap-2">
+                    <span className="text-lg">🎟</span>
+                    포인트 구매 {signupAccountResult.couponGrantedPct}% 할인 쿠폰이 함께 지급되었습니다.
+                  </div>
+                ) : null}
+                <div className="mt-4 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copySignupText(
+                        buildSignupAccountNotice({
+                          name: signupAccountResult.name,
+                          loginId: signupAccountResult.loginId,
+                          initialPassword: signupAccountResult.initialPassword,
+                          couponGrantedPct: signupAccountResult.couponGrantedPct,
+                        }),
+                        '안내 멘트 복사 완료 (SMS·카톡 그대로 붙여넣기)'
+                      )
+                    }
+                    className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-500"
+                  >
+                    📋 안내 멘트 전체 복사 (SMS·카톡용)
+                  </button>
+                  <button type="button" onClick={() => setSignupAccountResult(null)} className="w-full py-2 rounded-lg bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">닫기</button>
+                </div>
+                <p className="text-[11px] text-slate-500 text-center mt-3 leading-relaxed">
+                  신청서 상태가 「가입처리완료」 로 변경됐습니다.<br />
+                  학생에게 SMS/카톡 등으로 위 계정 정보를 전달하세요.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-4">
+                  <div className="text-4xl mb-2">⚠️</div>
+                  <h3 className="text-lg font-bold text-white">가입 승인 실패</h3>
+                </div>
+                <div className="bg-rose-950/40 border border-rose-800/60 rounded-xl p-4 text-sm text-rose-300">{signupAccountResult.error}</div>
+                <button type="button" onClick={() => setSignupAccountResult(null)} className="mt-4 w-full py-2 rounded-lg bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">닫기</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 가입 승인 토스트 */}
+      {signupCopyMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-700 text-white text-sm px-4 py-2 rounded-lg shadow-xl z-[75] border border-slate-600">
+          {signupCopyMsg}
         </div>
       )}
     </div>

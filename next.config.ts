@@ -20,6 +20,12 @@ const nextConfig: NextConfig = {
       "./lib/fonts/**/*",
       "./node_modules/pdfkit/js/data/**/*",
     ],
+    /* VIP 시험지 PDF(pdfkit) — 한글(NanumGothic)·원형숫자(CircledFallback) 폰트 + pdfkit 데이터를
+       Lambda 번들에 포함해야 배포에서 PDF 폰트가 깨지지 않음 (QR 채점본 다운로드 포함). */
+    "/api/my/vip/generate/download": [
+      "./lib/fonts/**/*",
+      "./node_modules/pdfkit/js/data/**/*",
+    ],
     /* puppeteer 서버 PDF — chromium 바이너리 + 한글 임베드 폰트(lib/fonts)를 Lambda 번들에 포함.
        (한글 PDF 폰트 깨짐 방지: lib/pdf-korean-font.ts 가 lib/fonts/*.ttf 를 fs 로 읽음) */
     "/api/admin/essay-generator/bulk-pdf-zip": [

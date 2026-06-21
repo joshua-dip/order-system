@@ -8,6 +8,7 @@ import {
 } from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
+import { nextGeneratedSerial } from '@/lib/generated-question-serial';
 
 /** 삽입·삽입-고난도 유형: Options는 위치 번호만 */
 const INSERTION_OPTIONS_FIXED = '①\n②\n③\n④\n⑤';
@@ -205,7 +206,8 @@ export async function saveGeneratedQuestionToDb(
   };
 
   const db = await getDb('gomijoshua');
-  const r = await db.collection('generated_questions').insertOne(doc);
+  const serialNo = await nextGeneratedSerial(db);
+  const r = await db.collection('generated_questions').insertOne({ ...doc, serialNo });
   return {
     ok: true,
     inserted_id: String(r.insertedId),

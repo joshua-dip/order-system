@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVip } from '@/lib/vip-auth';
-import { getVipDb, col, type VipStudent } from '@/lib/vip-db';
+import { getVipDb, col, type VipStudent, type VipStudentSubject } from '@/lib/vip-db';
+
+/** 학생 수강과목 입력 정규화 — name 필수(trim), tuition 숫자 또는 undefined. */
+function normalizeStudentSubjects(raw: unknown): VipStudentSubject[] {
+  if (!Array.isArray(raw)) return [];
+  const out: VipStudentSubject[] = [];
+  for (const item of raw) {
+    const name = String((item as { name?: unknown })?.name ?? '').trim();
+    if (!name) continue;
+    const tRaw = (item as { tuition?: unknown })?.tuition;
+    const t = tRaw === '' || tRaw === null || tRaw === undefined ? undefined : Number(tRaw);
+    out.push({ name, tuition: t !== undefined && Number.isFinite(t) ? t : undefined });
+  }
+  return out;
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireVip(request);
@@ -26,6 +40,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       academicYear: student.academicYear,
       status: student.status,
       examScope: student.examScope,
+      subjects: student.subjects ?? [],
+      gender: student.gender ?? '',
       memo: student.memo ?? '',
       phone: student.phone ?? '',
       parentPhone: student.parentPhone ?? '',
@@ -49,6 +65,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.academicYear !== undefined) $set.academicYear = Number(body.academicYear);
   if (body.status !== undefined) $set.status = body.status;
   if (body.examScope !== undefined) $set.examScope = body.examScope;
+  if (body.subjects !== undefined) $set.subjects = normalizeStudentSubjects(body.subjects);
+  if (body.gender !== undefined) $set.gender = body.gender === 'male' || body.gender === 'female' ? body.gender : undefined;
   if (body.memo !== undefined) $set.memo = body.memo.trim() || undefined;
   if (body.phone !== undefined) $set.phone = body.phone.trim() || undefined;
   if (body.parentPhone !== undefined) $set.parentPhone = body.parentPhone.trim() || undefined;
@@ -57,6 +75,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (Object.keys($set).length === 0) {
     return NextResponse.json({ error: '수정할 내용이 없습니다.' }, { status: 400 });
   }
+  $set.updatedAt = new Date();
 
   const result = await col<VipStudent>(db, 'students').updateOne(
     { _id: new ObjectId(id), userId: uid },

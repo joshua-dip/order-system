@@ -9,6 +9,16 @@ export type EssayCategoryConfig = {
   pricePerPassage?: number;
 };
 
+/**
+ * ExamData.meta.examType 식별값 — "글의 의미(함의) 서술형".
+ * 이 값이 들어 있으면 검증·HTML·난이도 부록·UI 가 글의의미 전용 분기를 탄다.
+ * 값이 없으면(undefined) 기존 배열형으로 동작(하위호환).
+ *
+ * 이 모듈은 node/브라우저 의존이 전혀 없어 lib(server)·page(client) 양쪽에서
+ * 안전하게 import 할 수 있으므로 단일 소스로 둔다.
+ */
+export const ESSAY_MEANING_EXAM_TYPE = '글의의미서술형';
+
 export const ESSAY_CATEGORIES: EssayCategoryConfig[] = [
   {
     대분류: '빈칸재배열형',
@@ -23,6 +33,11 @@ export const ESSAY_CATEGORIES: EssayCategoryConfig[] = [
     대분류: '요약문조건영작형',
     소분류: ['요약문 조건 영작'],
     pricePerPassage: 200,
+  },
+  {
+    대분류: ESSAY_MEANING_EXAM_TYPE,
+    소분류: ['밑줄 의미 서술·영작'],
+    pricePerPassage: 400,
   },
 ];
 

@@ -11,6 +11,7 @@
  */
 
 import type { ExamData, Question } from './essay-exam-html';
+import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
 
 export interface ValidationResult {
   valid: boolean;
@@ -49,11 +50,16 @@ function validateQuestion(
   errors: string[],
   warnings: string[],
   difficulty?: string,
+  examType?: string,
 ) {
   const qid = `Q${q.id}`;
   const isMaxDifficulty = difficulty === '최고난도';
   const isHardDifficulty = difficulty === '고난도';
   const isMidDifficulty = difficulty === '중난도';
+  /* 글의의미 서술형: 기본=우리말 서술 / 중·고=키워드 영작 / 최고=키워드 없는 영작 */
+  const isMeaningType = (examType ?? '') === ESSAY_MEANING_EXAM_TYPE;
+  const isBasicDifficulty = difficulty === '기본난도' || difficulty === '난이도하';
+  const meaningBasic = isMeaningType && isBasicDifficulty;
 
   if (!q.answer || typeof q.answer !== 'object') {
     errors.push(`${qid}: answer 객체가 없습니다.`);
@@ -75,6 +81,16 @@ function validateQuestion(
   const tokens = tokenizeWords(answerText);
   if (!wc || typeof wc !== 'object') {
     errors.push(`${qid}: answer.word_count 가 없습니다.`);
+  } else if (meaningBasic) {
+    // 글의의미 기본: answer 가 우리말 서술이라 영어 단어수 엄격 일치는 생략.
+    // (HTML "단어 수" 칸 렌더용으로 words 배열·total 내부 정합만 확인)
+    if (!Array.isArray(wc.words)) {
+      errors.push(`${qid}: word_count.words 배열이 없습니다.`);
+    } else if (typeof wc.total === 'number' && wc.words.length !== wc.total) {
+      errors.push(
+        `${qid}: word_count.words 길이(${wc.words.length}) ≠ word_count.total(${wc.total}).`,
+      );
+    }
   } else {
     if (typeof wc.total !== 'number') {
       errors.push(`${qid}: word_count.total 이 숫자가 아닙니다.`);
@@ -92,7 +108,47 @@ function validateQuestion(
     }
   }
 
-  if (isMaxDifficulty) {
+  if (isMeaningType) {
+    // 글의의미: 기본=우리말 서술 / 중·고=키워드 영작 / 최고=키워드 없는 영작
+    if (meaningBasic) {
+      // 답은 우리말 서술, bogi = 밑줄 친 부분 영어 원문(참고용).
+      if (!/[가-힯]/.test(answerText)) {
+        errors.push(`${qid}: 글의의미 기본난도는 answer.text 를 우리말로 서술해야 합니다. text="${answerText}"`);
+      }
+      if (!q.bogi.trim()) {
+        warnings.push(`${qid}: 글의의미 기본난도 bogi(밑줄 친 부분 원문)가 비어 있습니다.`);
+      }
+    } else {
+      // 영작 3종: answer.text 는 영어.
+      if (!/[A-Za-z]{2,}/.test(answerText)) {
+        errors.push(`${qid}: 글의의미 ${difficulty ?? ''} answer.text 는 영어 영작문이어야 합니다. text="${answerText}"`);
+      }
+      if (isMaxDifficulty) {
+        // 키워드 없음 — bogi = 우리말 의미문.
+        if (!/[가-힯]/.test(q.bogi)) {
+          errors.push(`${qid}: 글의의미 최고난도는 bogi 에 우리말 의미문을 넣어야 합니다. bogi="${q.bogi}"`);
+        }
+      } else {
+        // 중·고: 키워드 풀(영어 lemma, 알파벳순). 중=다수, 고=소수.
+        const bogiChunks = splitBogi(q.bogi);
+        const [lo, hi] = isMidDifficulty ? [8, 16] : [4, 9];
+        if (bogiChunks.length === 0) {
+          errors.push(`${qid}: bogi 키워드가 0개입니다.`);
+        } else if (bogiChunks.length < lo || bogiChunks.length > hi) {
+          warnings.push(
+            `${qid}: 글의의미 ${difficulty ?? ''} 키워드 개수(${bogiChunks.length}) 가 권장 범위(${lo}~${hi}) 를 벗어났습니다.`,
+          );
+        }
+        const sortedAsc = [...bogiChunks].map(s => s.toLowerCase()).sort();
+        const givenLc = bogiChunks.map(s => s.toLowerCase());
+        if (bogiChunks.length > 0 && givenLc.join('|') !== sortedAsc.join('|')) {
+          warnings.push(
+            `${qid}: 글의의미 키워드는 알파벳순(어순 노출 방지)이 권장됩니다. 현재="${bogiChunks.join(' / ')}"`,
+          );
+        }
+      }
+    }
+  } else if (isMaxDifficulty) {
     // 최고난도: bogi = 한국어 해석문 한 줄. 슬래시 청크 합 검사·청크 개수 검사 스킵.
     // 한국어 문자가 하나라도 들어있는지만 가볍게 확인.
     if (!/[가-힯]/.test(q.bogi)) {
@@ -185,8 +241,9 @@ function validateQuestion(
     }
   }
 
-  // 3) "N개의 단어" 조건 ↔ word_count.total (모든 난이도 공통)
-  if (Array.isArray(q.conditions) && wc?.total != null) {
+  // 3) "N개의 단어" 조건 ↔ word_count.total
+  //    글의의미 기본은 우리말 자수 기준이라 "N개의 단어" 관례를 적용하지 않는다.
+  if (!meaningBasic && Array.isArray(q.conditions) && wc?.total != null) {
     const wordCountCond = q.conditions.find(c => /\d+\s*개의?\s*단어/.test(c));
     if (wordCountCond) {
       const m = wordCountCond.match(/(\d+)\s*개의?\s*단어/);
@@ -201,11 +258,12 @@ function validateQuestion(
     }
   }
 
-  // 4) conditions 길이 권장 (마스터 프롬프트 기준 7~8개)
+  // 4) conditions 길이 권장 (배열형 7~8 / 글의의미 기본은 3~5 우리말 서술)
   if (Array.isArray(q.conditions)) {
-    if (q.conditions.length < 6 || q.conditions.length > 9) {
+    const [clo, chi] = meaningBasic ? [3, 9] : [6, 9];
+    if (q.conditions.length < clo || q.conditions.length > chi) {
       warnings.push(
-        `${qid}: conditions 개수(${q.conditions.length}) 가 권장 범위(7~8) 를 벗어났습니다.`,
+        `${qid}: conditions 개수(${q.conditions.length}) 가 권장 범위(${meaningBasic ? '3~5' : '7~8'}) 를 벗어났습니다.`,
       );
     }
   }
@@ -221,7 +279,7 @@ function validateQuestion(
  */
 export function validateExamData(
   data: unknown,
-  opts?: { difficulty?: string },
+  opts?: { difficulty?: string; examType?: string },
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -231,8 +289,9 @@ export function validateExamData(
   }
 
   const d = data as Partial<ExamData>;
-  // 호출자가 명시한 difficulty 가 우선, 없으면 ExamData.meta.difficulty 사용.
+  // 호출자가 명시한 difficulty/examType 이 우선, 없으면 ExamData.meta 값 사용.
   const difficulty = opts?.difficulty ?? d.meta?.difficulty;
+  const examType = opts?.examType ?? d.meta?.examType;
 
   if (!d.meta || typeof d.meta !== 'object') {
     errors.push('meta 객체가 없습니다.');
@@ -263,7 +322,7 @@ export function validateExamData(
     errors.push('questions 배열이 비어 있습니다.');
   } else {
     for (const q of d.questions) {
-      validateQuestion(q, errors, warnings, difficulty);
+      validateQuestion(q, errors, warnings, difficulty, examType);
     }
   }
 

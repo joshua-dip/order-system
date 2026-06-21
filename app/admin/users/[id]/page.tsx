@@ -212,9 +212,11 @@ export default function UserDetailPage() {
   const [editEssay, setEditEssay] = useState(false);
   const [editMyFormat, setEditMyFormat] = useState(false);
 
-  /* 포인트 지급 */
+  /* 포인트 지급 / 회수 */
   const [addPointsInput, setAddPointsInput] = useState('');
   const [addingPoints, setAddingPoints] = useState(false);
+  const [deductPointsInput, setDeductPointsInput] = useState('');
+  const [deductingPoints, setDeductingPoints] = useState(false);
 
   /* 포인트 할인 쿠폰 */
   const [coupons, setCoupons] = useState<CouponRow[]>([]);
@@ -642,6 +644,37 @@ export default function UserDetailPage() {
       }
     } finally {
       setAddingPoints(false);
+    }
+  }
+
+  /* ─── 포인트 회수 ─── */
+  async function handleDeductPoints() {
+    const n = parseInt(deductPointsInput, 10);
+    if (!n || n <= 0) { alert('회수할 포인트를 입력하세요.'); return; }
+    const current = user?.points ?? 0;
+    const over = n > current;
+    const msg = over
+      ? `${n.toLocaleString()}P 회수를 시도합니다.\n현재 잔액(${current.toLocaleString()}P)보다 많아 잔액이 0이 됩니다. 진행할까요?`
+      : `${n.toLocaleString()}P를 회수할까요? (회수 후 잔액 ${(current - n).toLocaleString()}P)`;
+    if (!confirm(msg)) return;
+    setDeductingPoints(true);
+    try {
+      const r = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deductPoints: n }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        setDeductPointsInput('');
+        await loadUser();
+        await loadPoints();
+      } else {
+        alert(d.error ?? '포인트 회수 실패');
+      }
+    } finally {
+      setDeductingPoints(false);
     }
   }
 
@@ -1528,10 +1561,13 @@ export default function UserDetailPage() {
           {/* ─── 탭 내용: 포인트 내역 ─── */}
           {tab === 'points' && (
             <div className="space-y-4">
-              {/* 포인트 지급 */}
+              {/* 포인트 지급 / 회수 */}
               <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <SectionTitle>포인트 직접 지급</SectionTitle>
-                <div className="flex gap-3 items-end">
+                <div className="flex items-center justify-between mb-3">
+                  <SectionTitle>포인트 지급 / 회수</SectionTitle>
+                  <p className="text-slate-400 text-sm">현재 잔액: <span className="text-white font-bold">{user.points.toLocaleString()}P</span></p>
+                </div>
+                <div className="flex flex-wrap gap-3 items-end">
                   <Field label="지급 포인트">
                     <input
                       type="number"
@@ -1539,7 +1575,7 @@ export default function UserDetailPage() {
                       onChange={(e) => setAddPointsInput(e.target.value)}
                       placeholder="0"
                       min={1}
-                      className="w-40 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
+                      className="w-36 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
                     />
                   </Field>
                   <button
@@ -1550,8 +1586,27 @@ export default function UserDetailPage() {
                   >
                     {addingPoints ? '처리 중...' : '지급하기'}
                   </button>
-                  <p className="text-slate-400 text-sm ml-2">현재 잔액: <span className="text-white font-bold">{user.points.toLocaleString()}P</span></p>
+                  <div className="w-px self-stretch bg-slate-700 mx-1 hidden sm:block" />
+                  <Field label="회수 포인트">
+                    <input
+                      type="number"
+                      value={deductPointsInput}
+                      onChange={(e) => setDeductPointsInput(e.target.value)}
+                      placeholder="0"
+                      min={1}
+                      className="w-36 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
+                    />
+                  </Field>
+                  <button
+                    type="button"
+                    onClick={handleDeductPoints}
+                    disabled={deductingPoints}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    {deductingPoints ? '처리 중...' : '회수하기'}
+                  </button>
                 </div>
+                <p className="text-slate-500 text-[12px] mt-2">회수 포인트가 현재 잔액을 초과하면 잔액은 0이 됩니다.</p>
               </div>
 
               {/* 포인트 할인 쿠폰 */}

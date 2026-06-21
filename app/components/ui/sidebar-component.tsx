@@ -12,17 +12,10 @@ import {
   DocumentAdd,
   User as UserIcon,
   ChevronDown as ChevronDownIcon,
-  AddLarge,
-  View,
-  Report,
   ChartBar,
-  Flag,
-  Time,
   CheckmarkOutline,
-  InProgress,
-  StarFilled,
-  Group,
   ArrowLeft,
+  Catalog,
 } from "@carbon/icons-react";
 
 /* ----------------------------- Brand / Logo ----------------------------- */
@@ -99,479 +92,185 @@ function SearchContainer({ isCollapsed = false }: { isCollapsed?: boolean }) {
   );
 }
 
-/* --------------------------- Types / Content Map -------------------------- */
+/* --------------------------------- Layout -------------------------------- */
 
-interface MenuItemT {
-  icon?: React.ReactNode;
-  label: string;
-  hasDropdown?: boolean;
-  isActive?: boolean;
-  children?: MenuItemT[];
-  href?: string;
-}
-interface MenuSectionT {
-  title: string;
-  items: MenuItemT[];
-}
-interface SidebarContent {
-  title: string;
-  sections: MenuSectionT[];
+function getActiveSectionFromPath(pathname: string): string {
+  if (pathname === "/my/vip") return "dashboard";
+  if (pathname.startsWith("/my/vip/attendance")) return "attendance";
+  if (pathname.startsWith("/my/vip/students")) return "students";
+  if (pathname.startsWith("/my/vip/exams")) return "exams";
+  if (pathname.startsWith("/my/vip/scores")) return "scores";
+  if (pathname.startsWith("/my/vip/questions")) return "questions";
+  if (pathname.startsWith("/my/vip/generate")) return "generate";
+  if (pathname.startsWith("/my/vip/analysis")) return "analysis";
+  return "dashboard";
 }
 
-const iconClass = "text-zinc-400";
-const iconClassSm = "text-zinc-500";
+/* ----------------------- 통합 사이드바 (단일 패널) ----------------------- */
 
-function getSidebarContent(activeSection: string): SidebarContent {
-  const contentMap: Record<string, SidebarContent> = {
-    dashboard: {
-      title: "대시보드",
-      sections: [
-        {
-          title: "개요",
-          items: [
-            { icon: <View size={16} className={iconClass} />, label: "전체 현황", isActive: true, href: "/my/vip" },
-          ],
-        },
-        {
-          title: "빠른 시작",
-          items: [
-            { icon: <AddLarge size={16} className={iconClass} />, label: "학생 등록", href: "/my/vip/students" },
-            { icon: <Task size={16} className={iconClass} />, label: "기출 입력", href: "/my/vip/exams" },
-            { icon: <DocumentAdd size={16} className={iconClass} />, label: "변형문제 생성", href: "/my/vip/generate" },
-          ],
-        },
-        {
-          title: "최근 활동",
-          items: [
-            {
-              icon: <Time size={16} className={iconClass} />,
-              label: "최근 시험",
-              hasDropdown: true,
-              children: [
-                { label: "시험 관리", href: "/my/vip/exams" },
-                { label: "성적 입력", href: "/my/vip/scores" },
-              ],
-            },
-            {
-              icon: <Report size={16} className={iconClass} />,
-              label: "최근 분석",
-              hasDropdown: true,
-              children: [
-                { label: "시험 분석", href: "/my/vip/analysis" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-
-    attendance: {
-      title: "출결관리",
-      sections: [
-        {
-          title: "출결",
-          items: [
-            { icon: <CheckmarkOutline size={16} className={iconClass} />, label: "출결 입력", isActive: true, href: "/my/vip/attendance" },
-            { icon: <Group size={16} className={iconClass} />, label: "반 관리", href: "/my/vip/attendance/classes" },
-            { icon: <ChartBar size={16} className={iconClass} />, label: "출결 통계", href: "/my/vip/attendance/history" },
-          ],
-        },
-      ],
-    },
-
-    students: {
-      title: "학생 관리",
-      sections: [
-        {
-          title: "학생",
-          items: [
-            { icon: <UserMultiple size={16} className={iconClass} />, label: "전체 학생 목록", isActive: true, href: "/my/vip/students" },
-            { icon: <AddLarge size={16} className={iconClass} />, label: "학생 추가", href: "/my/vip/students" },
-          ],
-        },
-        {
-          title: "학교",
-          items: [
-            {
-              icon: <Group size={16} className={iconClass} />,
-              label: "학교별 학생",
-              hasDropdown: true,
-              children: [
-                { label: "학교 추가/검색", href: "/my/vip/students" },
-                { label: "학교별 필터링", href: "/my/vip/students" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "시험 범위",
-          items: [
-            { icon: <Task size={16} className={iconClass} />, label: "시험 범위 설정", href: "/my/vip/exams" },
-          ],
-        },
-      ],
-    },
-
-    exams: {
-      title: "시험 관리",
-      sections: [
-        {
-          title: "시험 유형",
-          items: [
-            { icon: <Task size={16} className={iconClass} />, label: "시험 목록", isActive: true, href: "/my/vip/exams" },
-            {
-              icon: <Flag size={16} className={iconClass} />,
-              label: "시험 유형별",
-              hasDropdown: true,
-              children: [
-                { label: "1학기 중간고사" },
-                { label: "1학기 기말고사" },
-                { label: "2학기 중간고사" },
-                { label: "2학기 기말고사" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "시험 범위",
-          items: [
-            { icon: <DocumentAdd size={16} className={iconClass} />, label: "교재별 범위 설정", href: "/my/vip/exams" },
-          ],
-        },
-      ],
-    },
-
-    scores: {
-      title: "성적 관리",
-      sections: [
-        {
-          title: "성적 입력",
-          items: [
-            { icon: <ChartBar size={16} className={iconClass} />, label: "시험별 성적 입력", isActive: true, href: "/my/vip/scores" },
-          ],
-        },
-        {
-          title: "통계",
-          items: [
-            {
-              icon: <Analytics size={16} className={iconClass} />,
-              label: "성적 통계",
-              hasDropdown: true,
-              children: [
-                { label: "평균/최고/최저점", href: "/my/vip/analysis" },
-                { label: "문항별 정답률", href: "/my/vip/analysis" },
-              ],
-            },
-            { icon: <StarFilled size={16} className={iconClass} />, label: "학생 순위", href: "/my/vip/analysis" },
-          ],
-        },
-      ],
-    },
-
-    generate: {
-      title: "문제 생성",
-      sections: [
-        {
-          title: "유형별 생성",
-          items: [
-            { icon: <DocumentAdd size={16} className={iconClass} />, label: "변형문제 생성", isActive: true, href: "/my/vip/generate" },
-            {
-              icon: <Flag size={16} className={iconClass} />,
-              label: "유형 선택",
-              hasDropdown: true,
-              children: [
-                { label: "빈칸 추론" },
-                { label: "순서 배열" },
-                { label: "문장 삽입" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "난이도",
-          items: [
-            {
-              icon: <ChartBar size={16} className={iconClass} />,
-              label: "난이도별",
-              hasDropdown: true,
-              children: [
-                { label: "상" },
-                { label: "중" },
-                { label: "하" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "다운로드",
-          items: [
-            {
-              icon: <InProgress size={16} className={iconClass} />,
-              label: "최근 생성 이력",
-              hasDropdown: true,
-              children: [
-                { label: "PDF 다운로드" },
-                { label: "DOCX 다운로드" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-
-    analysis: {
-      title: "시험 분석",
-      sections: [
-        {
-          title: "분석 리포트",
-          items: [
-            { icon: <Analytics size={16} className={iconClass} />, label: "시험 분석", isActive: true, href: "/my/vip/analysis" },
-          ],
-        },
-        {
-          title: "세부 분석",
-          items: [
-            {
-              icon: <ChartBar size={16} className={iconClass} />,
-              label: "유형별 출제 비율",
-              hasDropdown: true,
-              children: [
-                { label: "객관식/서술형 분포" },
-                { label: "교재별 출제 비율" },
-              ],
-            },
-            {
-              icon: <CheckmarkOutline size={16} className={iconClass} />,
-              label: "정답률 분석",
-              hasDropdown: true,
-              children: [
-                { label: "문항별 정답률" },
-                { label: "학생별 정답률" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "리포트",
-          items: [
-            { icon: <Report size={16} className={iconClass} />, label: "종합 리포트", href: "/my/vip/analysis" },
-          ],
-        },
-      ],
-    },
-  };
-
-  return contentMap[activeSection] || contentMap.dashboard;
-}
-
-/* ---------------------------- Left Icon Nav Rail -------------------------- */
-
-interface NavItem {
+interface UnifiedNavItem {
   id: string;
   icon: React.ReactNode;
   label: string;
   href: string;
   exact?: boolean;
+  /** 실제 하위 페이지가 있는 섹션만 — 활성 시 인라인으로 펼침 */
+  children?: { label: string; href: string }[];
 }
 
-const NAV_ITEMS: NavItem[] = [
+const UNIFIED_NAV: UnifiedNavItem[] = [
   { id: "dashboard", icon: <Dashboard size={18} />, label: "대시보드", href: "/my/vip", exact: true },
   { id: "students", icon: <UserMultiple size={18} />, label: "학생 관리", href: "/my/vip/students" },
-  { id: "attendance", icon: <CheckmarkOutline size={18} />, label: "출결관리", href: "/my/vip/attendance" },
-  { id: "exams", icon: <Task size={18} />, label: "시험 관리", href: "/my/vip/exams" },
+  {
+    id: "attendance",
+    icon: <CheckmarkOutline size={18} />,
+    label: "출결관리",
+    href: "/my/vip/attendance",
+    children: [
+      { label: "출결 입력", href: "/my/vip/attendance" },
+      { label: "반 관리", href: "/my/vip/attendance/classes" },
+      { label: "출결 통계", href: "/my/vip/attendance/history" },
+    ],
+  },
+  {
+    id: "exams",
+    icon: <Task size={18} />,
+    label: "시험 관리",
+    href: "/my/vip/exams",
+    children: [
+      { label: "시험 준비", href: "/my/vip/exams" },
+      { label: "기출 분석·예측", href: "/my/vip/exams/analysis" },
+    ],
+  },
   { id: "scores", icon: <ChartBar size={18} />, label: "성적 관리", href: "/my/vip/scores" },
-  { id: "generate", icon: <DocumentAdd size={18} />, label: "문제 생성", href: "/my/vip/generate" },
+  {
+    id: "generate",
+    icon: <DocumentAdd size={18} />,
+    label: "문제 생성",
+    href: "/my/vip/generate",
+    children: [
+      { label: "학생별 시험지 만들기", href: "/my/vip/generate/student" },
+      { label: "학교별 시험지 만들기", href: "/my/vip/generate/school" },
+      { label: "QR 자가채점 결과", href: "/my/vip/generate/grade-results" },
+    ],
+  },
+  { id: "questions", icon: <Catalog size={18} />, label: "문제 관리", href: "/my/vip/questions" },
   { id: "analysis", icon: <Analytics size={18} />, label: "시험 분석", href: "/my/vip/analysis" },
 ];
 
-function IconNavButton({
-  children,
-  isActive = false,
-  onClick,
-  title,
-}: {
-  children: React.ReactNode;
-  isActive?: boolean;
-  onClick?: () => void;
-  title?: string;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      className={`relative flex items-center justify-center rounded-xl w-10 h-10 transition-all duration-200
-        ${isActive
-          ? "bg-zinc-800 text-zinc-100 shadow-sm"
-          : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60"
-        }`}
-      onClick={onClick}
-    >
-      {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[1px] w-[3px] h-4 bg-zinc-100 rounded-r-full" />
-      )}
-      {children}
-    </button>
-  );
-}
-
-function IconNavigation({
-  activeSection,
-  onSectionChange,
-}: {
-  activeSection: string;
-  onSectionChange: (section: string) => void;
-}) {
+function UnifiedSidebar({ userName }: { userName: string }) {
+  const pathname = usePathname();
   const router = useRouter();
-
-  return (
-    <aside className="bg-[#0c0c0f] flex flex-col items-center py-4 px-2 w-[60px] h-screen border-r border-zinc-800/80">
-      {/* Logo */}
-      <div className="mb-4 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-[10px] bg-gradient-to-br from-[#c9a44e] via-[#e8d48b] to-[#c9a44e] flex items-center justify-center shadow-[0_0_16px_rgba(201,164,78,0.15)]">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2L10.5 6.5L15 7.5L11.5 11L12.5 15.5L8 13L3.5 15.5L4.5 11L1 7.5L5.5 6.5L8 2Z" fill="#1a1500" fillOpacity="0.9" />
-          </svg>
-        </div>
-      </div>
-
-      <div className="w-8 h-px bg-zinc-800 mb-3" />
-
-      {/* Navigation Icons */}
-      <div className="flex flex-col gap-1.5 w-full items-center">
-        {NAV_ITEMS.map((item) => (
-          <IconNavButton
-            key={item.id}
-            isActive={activeSection === item.id}
-            title={item.label}
-            onClick={() => {
-              onSectionChange(item.id);
-              router.push(item.href);
-            }}
-          >
-            {item.icon}
-          </IconNavButton>
-        ))}
-      </div>
-
-      <div className="flex-1" />
-
-      {/* Bottom actions */}
-      <div className="flex flex-col gap-1.5 w-full items-center">
-        <button
-          type="button"
-          title="마이페이지"
-          onClick={() => router.push("/my")}
-          className="flex items-center justify-center rounded-xl w-10 h-10 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/60 transition-all duration-200"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <div className="mt-1">
-          <AvatarCircle size={30} />
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-/* ------------------------------ Detail Panel ----------------------------- */
-
-function SectionTitle({
-  title,
-  onToggleCollapse,
-  isCollapsed,
-}: {
-  title: string;
-  onToggleCollapse: () => void;
-  isCollapsed: boolean;
-}) {
-  if (isCollapsed) {
-    return (
-      <div className="w-full flex justify-center">
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="flex items-center justify-center rounded-lg w-9 h-9 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
-          aria-label="사이드바 펼치기"
-        >
-          <ChevronDownIcon size={16} className="rotate-[-90deg]" />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full px-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold text-zinc-100 tracking-[-0.01em]">
-          {title}
-        </h2>
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="flex items-center justify-center rounded-lg w-7 h-7 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
-          aria-label="사이드바 접기"
-        >
-          <ChevronDownIcon size={14} className="-rotate-90" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function DetailSidebar({ activeSection, userName }: { activeSection: string; userName: string }) {
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const content = getSidebarContent(activeSection);
-  const router = useRouter();
-
-  const toggleExpanded = (itemKey: string) => {
-    setExpandedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(itemKey)) next.delete(itemKey);
-      else next.add(itemKey);
-      return next;
-    });
-  };
-
-  const toggleCollapse = () => setIsCollapsed((s) => !s);
-
-  const handleItemClick = (href?: string) => {
-    if (href) router.push(href);
-  };
+  const [collapsed, setCollapsed] = useState(false);
+  const activeId = getActiveSectionFromPath(pathname);
 
   return (
     <aside
-      className={`bg-[#111113] flex flex-col gap-3 items-start py-4 transition-all duration-300 ease-out h-screen border-r border-zinc-800/80 overflow-hidden ${
-        isCollapsed ? "w-[52px] px-1.5" : "w-[260px] px-0"
+      className={`bg-[#111113] flex flex-col h-screen border-r border-zinc-800/80 overflow-hidden transition-all duration-300 ease-out ${
+        collapsed ? "w-[60px] py-4 px-2 items-center" : "w-[244px] py-4"
       }`}
     >
-      {!isCollapsed && <VipLogoBadge userName={userName} />}
+      {/* 헤더: 로고 + 접기 토글 */}
+      {collapsed ? (
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          title="사이드바 펼치기"
+          aria-label="사이드바 펼치기"
+          className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-[#c9a44e] via-[#e8d48b] to-[#c9a44e] flex items-center justify-center shadow-[0_0_12px_rgba(201,164,78,0.2)] mb-3"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2L10.5 6.5L15 7.5L11.5 11L12.5 15.5L8 13L3.5 15.5L4.5 11L1 7.5L5.5 6.5L8 2Z" fill="#1a1500" fillOpacity="0.9" />
+          </svg>
+        </button>
+      ) : (
+        <div className="w-full flex items-center justify-between pr-2">
+          <VipLogoBadge userName={userName} />
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            title="사이드바 접기"
+            aria-label="사이드바 접기"
+            className="shrink-0 flex items-center justify-center rounded-lg w-7 h-7 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            <ChevronDownIcon size={14} className="rotate-90" />
+          </button>
+        </div>
+      )}
 
-      {!isCollapsed && <div className="w-full px-4"><div className="h-px bg-zinc-800/80" /></div>}
+      {!collapsed && (
+        <div className="w-full px-4 mt-2 mb-2">
+          <div className="h-px bg-zinc-800/80" />
+        </div>
+      )}
 
-      <SectionTitle title={content.title} onToggleCollapse={toggleCollapse} isCollapsed={isCollapsed} />
-
-      <SearchContainer isCollapsed={isCollapsed} />
-
-      <div
-        className={`flex flex-col w-full overflow-y-auto flex-1 ${
-          isCollapsed ? "gap-1 items-center" : "gap-1"
-        }`}
-      >
-        {content.sections.map((section, index) => (
-          <MenuSection
-            key={`${activeSection}-${index}`}
-            section={section}
-            expandedItems={expandedItems}
-            onToggleExpanded={toggleExpanded}
-            isCollapsed={isCollapsed}
-            onItemClick={handleItemClick}
-          />
-        ))}
+      <div className={`${collapsed ? "mb-2" : "w-full mb-2"}`}>
+        <SearchContainer isCollapsed={collapsed} />
       </div>
 
-      {!isCollapsed && (
-        <div className="w-full mt-auto px-3">
+      {/* 네비게이션 */}
+      <nav className={`flex-1 overflow-y-auto w-full flex flex-col ${collapsed ? "items-center gap-1" : "gap-0.5 px-2"}`}>
+        {UNIFIED_NAV.map((item) => {
+          const active = item.exact ? pathname === item.href : item.id === activeId;
+          const expanded = !collapsed && item.id === activeId && !!item.children;
+          return (
+            <div key={item.id} className="w-full">
+              <button
+                type="button"
+                onClick={() => router.push(item.href)}
+                title={collapsed ? item.label : undefined}
+                className={`relative flex items-center rounded-lg transition-colors ${
+                  collapsed ? "justify-center w-10 h-10" : "w-full gap-3 px-3 py-2"
+                } ${
+                  active ? "bg-zinc-800 text-zinc-100" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+                }`}
+              >
+                {active && !collapsed && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[#c9a44e] rounded-r-full" />
+                )}
+                <span className="shrink-0">{item.icon}</span>
+                {!collapsed && <span className="text-[13.5px] font-medium flex-1 text-left">{item.label}</span>}
+                {!collapsed && item.children && (
+                  <ChevronDownIcon size={14} className={`text-zinc-600 transition-transform ${expanded ? "" : "-rotate-90"}`} />
+                )}
+              </button>
+              {expanded && (
+                <div className="ml-[2.1rem] mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-zinc-800 pl-2">
+                  {item.children!.map((c) => {
+                    const cActive = pathname === c.href;
+                    return (
+                      <button
+                        key={c.href + c.label}
+                        type="button"
+                        onClick={() => router.push(c.href)}
+                        className={`text-left text-[12.5px] rounded-md px-2.5 py-1.5 transition-colors ${
+                          cActive ? "text-zinc-100 bg-zinc-800/70" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40"
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* 푸터: 마이페이지 */}
+      {collapsed ? (
+        <button
+          type="button"
+          title="마이페이지"
+          aria-label="마이페이지"
+          onClick={() => router.push("/my")}
+          className="mt-2 flex items-center justify-center rounded-xl w-10 h-10 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/60 transition-colors"
+        >
+          <ArrowLeft size={16} />
+        </button>
+      ) : (
+        <div className="w-full mt-2 px-3">
           <div className="h-px bg-zinc-800/80 mb-2" />
           <Link
             href="/my"
@@ -589,166 +288,8 @@ function DetailSidebar({ activeSection, userName }: { activeSection: string; use
   );
 }
 
-/* ------------------------------ Menu Elements ---------------------------- */
-
-function MenuItem({
-  item,
-  isExpanded,
-  onToggle,
-  onItemClick,
-  isCollapsed,
-}: {
-  item: MenuItemT;
-  isExpanded?: boolean;
-  onToggle?: () => void;
-  onItemClick?: (href?: string) => void;
-  isCollapsed?: boolean;
-}) {
-  const handleClick = () => {
-    if (item.hasDropdown && onToggle) onToggle();
-    else onItemClick?.(item.href);
-  };
-
-  if (isCollapsed) {
-    return (
-      <div className="w-full flex justify-center">
-        <div
-          className={`rounded-lg cursor-pointer flex items-center justify-center w-9 h-9 transition-colors ${
-            item.isActive ? "bg-zinc-800 text-zinc-200" : "hover:bg-zinc-800/60 text-zinc-500"
-          }`}
-          onClick={handleClick}
-          title={item.label}
-        >
-          {item.icon}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full px-3">
-      <div
-        className={`rounded-lg cursor-pointer flex items-center h-8 px-2 transition-all duration-150 ${
-          item.isActive
-            ? "bg-zinc-800 text-zinc-100"
-            : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
-        }`}
-        onClick={handleClick}
-      >
-        <div className="flex items-center justify-center shrink-0 w-5">{item.icon}</div>
-        <div className="flex-1 ml-2.5 min-w-0">
-          <span className="text-[13px] leading-tight truncate block">
-            {item.label}
-          </span>
-        </div>
-        {item.hasDropdown && (
-          <ChevronDownIcon
-            size={14}
-            className={`text-zinc-600 transition-transform duration-200 shrink-0 ml-1 ${
-              isExpanded ? "rotate-180" : ""
-            }`}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SubMenuItem({ item, onItemClick }: { item: MenuItemT; onItemClick?: (href?: string) => void }) {
-  return (
-    <div className="w-full px-3">
-      <div
-        className="h-7 w-full rounded-md cursor-pointer transition-colors text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 flex items-center pl-[30px] pr-2"
-        onClick={() => onItemClick?.(item.href)}
-      >
-        <span className="text-[12px] truncate">{item.label}</span>
-      </div>
-    </div>
-  );
-}
-
-function MenuSection({
-  section,
-  expandedItems,
-  onToggleExpanded,
-  isCollapsed,
-  onItemClick,
-}: {
-  section: MenuSectionT;
-  expandedItems: Set<string>;
-  onToggleExpanded: (itemKey: string) => void;
-  isCollapsed?: boolean;
-  onItemClick?: (href?: string) => void;
-}) {
-  return (
-    <div className="flex flex-col w-full">
-      {!isCollapsed && (
-        <div className="px-5 pt-4 pb-1">
-          <span className="text-[11px] font-medium text-zinc-600 uppercase tracking-wider">
-            {section.title}
-          </span>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-0.5">
-        {section.items.map((item, index) => {
-          const itemKey = `${section.title}-${index}`;
-          const isExpanded = expandedItems.has(itemKey);
-          return (
-            <div key={itemKey} className="w-full flex flex-col">
-              <MenuItem
-                item={item}
-                isExpanded={isExpanded}
-                onToggle={() => onToggleExpanded(itemKey)}
-                onItemClick={onItemClick}
-                isCollapsed={isCollapsed}
-              />
-              {isExpanded && item.children && !isCollapsed && (
-                <div className="flex flex-col gap-0.5 mt-0.5 mb-1">
-                  {item.children.map((child, childIndex) => (
-                    <SubMenuItem
-                      key={`${itemKey}-${childIndex}`}
-                      item={child}
-                      onItemClick={onItemClick}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* --------------------------------- Layout -------------------------------- */
-
-function getActiveSectionFromPath(pathname: string): string {
-  if (pathname === "/my/vip") return "dashboard";
-  if (pathname.startsWith("/my/vip/attendance")) return "attendance";
-  if (pathname.startsWith("/my/vip/students")) return "students";
-  if (pathname.startsWith("/my/vip/exams")) return "exams";
-  if (pathname.startsWith("/my/vip/scores")) return "scores";
-  if (pathname.startsWith("/my/vip/generate")) return "generate";
-  if (pathname.startsWith("/my/vip/analysis")) return "analysis";
-  return "dashboard";
-}
-
 export function VipSidebar({ userName }: { userName: string }) {
-  const pathname = usePathname();
-  const [activeSection, setActiveSection] = useState(() => getActiveSectionFromPath(pathname));
-
-  React.useEffect(() => {
-    setActiveSection(getActiveSectionFromPath(pathname));
-  }, [pathname]);
-
-  return (
-    <div className="flex flex-row h-screen">
-      <IconNavigation activeSection={activeSection} onSectionChange={setActiveSection} />
-      <DetailSidebar activeSection={activeSection} userName={userName} />
-    </div>
-  );
+  return <UnifiedSidebar userName={userName} />;
 }
 
 export default VipSidebar;

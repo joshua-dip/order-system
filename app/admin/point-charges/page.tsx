@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AdminSidebar from '../_components/AdminSidebar';
 
 interface ChargeRow {
   id: string;
@@ -26,6 +26,7 @@ const fmtDate = (s: string | null) =>
 export default function AdminPointChargesPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [adminLoginId, setAdminLoginId] = useState('');
   const [items, setItems] = useState<ChargeRow[]>([]);
   const [summary, setSummary] = useState<Summary>({ count: 0, points: 0, amount: 0 });
   const [total, setTotal] = useState(0);
@@ -42,6 +43,7 @@ export default function AdminPointChargesPage() {
       .then((r) => r.json())
       .then((d) => {
         if (!d?.user || d.user.role !== 'admin') { router.replace('/admin/login'); return; }
+        setAdminLoginId(d.user.loginId ?? '');
         setReady(true);
       })
       .catch(() => router.replace('/admin/login'));
@@ -71,113 +73,157 @@ export default function AdminPointChargesPage() {
   useEffect(() => { if (ready) void fetchList(1); }, [ready, fetchList]);
 
   if (!ready) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-400">불러오는 중…</div>;
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+        <span className="text-sm text-slate-400">인증 확인 중…</span>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">💳 회원 포인트 구매내역</h1>
-            <p className="text-xs text-slate-500 mt-0.5">토스 결제로 충전한 포인트(point_charge) 전체 내역</p>
-          </div>
-          <Link href="/admin" className="text-sm text-slate-500 hover:text-slate-800 px-3 py-2 rounded-lg border">← 관리자 홈</Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-900 flex text-white">
+      <AdminSidebar loginId={adminLoginId} />
 
-      <main className="max-w-6xl mx-auto px-6 py-6 space-y-5">
-        {/* 요약 */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl border p-4">
-            <p className="text-xs text-slate-500">구매 건수</p>
-            <p className="text-xl font-bold text-slate-800 mt-1">{summary.count.toLocaleString()}건</p>
+      <main className="flex-1 p-6 overflow-y-auto min-w-0">
+        {/* 헤더 */}
+        <div className="mb-6 flex items-end justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">💳 회원 포인트 구매내역</h1>
+            <p className="text-sm text-slate-400 mt-1">토스 결제로 충전한 포인트(point_charge) 전체 내역</p>
           </div>
-          <div className="bg-white rounded-xl border p-4">
-            <p className="text-xs text-slate-500">총 충전 포인트</p>
-            <p className="text-xl font-bold text-indigo-600 mt-1">{pt(summary.points)}</p>
+          <button
+            type="button"
+            onClick={() => fetchList(page)}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-slate-600 text-sm text-slate-300 hover:bg-slate-700/60 disabled:opacity-50"
+            title="다시 불러오기"
+          >
+            {loading ? '⏳' : '↻ 새로고침'}
+          </button>
+        </div>
+
+        {/* 요약 카드 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+            <p className="text-xs text-slate-400">구매 건수</p>
+            <p className="text-2xl font-bold text-white mt-1 tabular-nums">{summary.count.toLocaleString()}건</p>
           </div>
-          <div className="bg-white rounded-xl border p-4">
-            <p className="text-xs text-slate-500">총 결제금액</p>
-            <p className="text-xl font-bold text-emerald-600 mt-1">{won(summary.amount)}</p>
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+            <p className="text-xs text-slate-400">총 충전 포인트</p>
+            <p className="text-2xl font-bold text-indigo-300 mt-1 tabular-nums">{pt(summary.points)}</p>
+          </div>
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+            <p className="text-xs text-slate-400">총 결제금액</p>
+            <p className="text-2xl font-bold text-emerald-300 mt-1 tabular-nums">{won(summary.amount)}</p>
           </div>
         </div>
 
         {/* 필터 */}
-        <div className="bg-white rounded-xl border p-4 flex flex-wrap items-end gap-3">
+        <div className="bg-slate-800 rounded-xl border border-slate-700 p-4 flex flex-wrap items-end gap-3 mb-6">
           <div>
-            <label className="block text-[11px] text-slate-500 mb-1">회원 검색</label>
-            <input value={q} onChange={(e) => setQ(e.target.value)}
+            <label className="block text-[11px] text-slate-400 mb-1">회원 검색</label>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') fetchList(1); }}
               placeholder="이름 / 아이디"
-              className="px-3 py-2 rounded-lg border border-slate-300 text-sm w-48" />
+              className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-sm text-white placeholder-slate-500 w-48 focus:outline-none focus:border-indigo-500"
+            />
           </div>
           <div>
-            <label className="block text-[11px] text-slate-500 mb-1">시작일</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <label className="block text-[11px] text-slate-400 mb-1">시작일</label>
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-sm text-white focus:outline-none focus:border-indigo-500 [color-scheme:dark]"
+            />
           </div>
           <div>
-            <label className="block text-[11px] text-slate-500 mb-1">종료일</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <label className="block text-[11px] text-slate-400 mb-1">종료일</label>
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-sm text-white focus:outline-none focus:border-indigo-500 [color-scheme:dark]"
+            />
           </div>
-          <button onClick={() => fetchList(1)}
-            className="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-medium hover:bg-slate-700">조회</button>
+          <button
+            onClick={() => fetchList(1)}
+            className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500"
+          >
+            조회
+          </button>
           {(q || from || to) && (
-            <button onClick={() => { setQ(''); setFrom(''); setTo(''); }}
-              className="px-3 py-2 rounded-lg border text-sm text-slate-500 hover:bg-slate-50">초기화</button>
+            <button
+              onClick={() => { setQ(''); setFrom(''); setTo(''); }}
+              className="px-3 py-2 rounded-lg border border-slate-600 text-sm text-slate-400 hover:bg-slate-700/60"
+            >
+              초기화
+            </button>
           )}
         </div>
 
         {/* 표 */}
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
           {loading ? (
-            <div className="p-10 text-center text-slate-400">로딩 중…</div>
+            <div className="p-10 text-center text-slate-500">로딩 중…</div>
           ) : items.length === 0 ? (
-            <div className="p-10 text-center text-slate-400 text-sm">구매내역이 없습니다.</div>
+            <div className="p-12 text-center text-slate-500 text-sm">구매내역이 없습니다.</div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b text-slate-500 text-xs">
-                  <th className="text-left px-4 py-2.5 font-medium">회원</th>
-                  <th className="text-right px-3 py-2.5 font-medium">결제금액</th>
-                  <th className="text-right px-3 py-2.5 font-medium">충전 포인트</th>
-                  <th className="text-right px-3 py-2.5 font-medium">충전 후 잔액</th>
-                  <th className="text-left px-3 py-2.5 font-medium">주문번호</th>
-                  <th className="text-left px-3 py-2.5 font-medium">일시</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((it) => (
-                  <tr key={it.id} className="border-b last:border-0 hover:bg-slate-50/60">
-                    <td className="px-4 py-2.5">
-                      <span className="text-slate-800 font-medium">{it.name || '(이름없음)'}</span>
-                      <span className="text-slate-400 text-xs ml-1.5">{it.loginId}</span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-emerald-700 font-semibold">
-                      {won(it.amountWon)}
-                      {it.couponDiscountPct ? <span className="text-[10px] text-rose-500 ml-1">-{it.couponDiscountPct}%</span> : null}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-indigo-600 font-semibold">{pt(it.points)}</td>
-                    <td className="px-3 py-2.5 text-right text-slate-500">{it.balanceAfter == null ? '–' : pt(it.balanceAfter)}</td>
-                    <td className="px-3 py-2.5 text-slate-400 text-xs font-mono">{it.orderId || '–'}</td>
-                    <td className="px-3 py-2.5 text-slate-500 text-xs">{fmtDate(it.createdAt)}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700 text-slate-400 text-xs">
+                    <th className="text-left px-4 py-3 font-medium">회원</th>
+                    <th className="text-right px-3 py-3 font-medium">결제금액</th>
+                    <th className="text-right px-3 py-3 font-medium">충전 포인트</th>
+                    <th className="text-right px-3 py-3 font-medium">충전 후 잔액</th>
+                    <th className="text-left px-3 py-3 font-medium">주문번호</th>
+                    <th className="text-left px-3 py-3 font-medium">일시</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {items.map((it) => (
+                    <tr key={it.id} className="border-b border-slate-700/50 hover:bg-slate-700/40">
+                      <td className="px-4 py-2.5">
+                        <span className="text-white font-medium">{it.name || '(이름없음)'}</span>
+                        <span className="text-slate-500 text-xs ml-1.5">{it.loginId}</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-emerald-300 font-semibold tabular-nums">
+                        {won(it.amountWon)}
+                        {it.couponDiscountPct ? <span className="text-[10px] text-rose-400 ml-1">-{it.couponDiscountPct}%</span> : null}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-indigo-300 font-semibold tabular-nums">{pt(it.points)}</td>
+                      <td className="px-3 py-2.5 text-right text-slate-400 tabular-nums">{it.balanceAfter == null ? '–' : pt(it.balanceAfter)}</td>
+                      <td className="px-3 py-2.5 text-slate-500 text-xs font-mono">{it.orderId || '–'}</td>
+                      <td className="px-3 py-2.5 text-slate-400 text-xs">{fmtDate(it.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* 페이지 */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <button disabled={page <= 1} onClick={() => fetchList(page - 1)}
-              className="px-3 py-1.5 rounded border disabled:opacity-40 hover:bg-white">이전</button>
-            <span className="text-slate-500">{page} / {totalPages} · 총 {total.toLocaleString()}건</span>
-            <button disabled={page >= totalPages} onClick={() => fetchList(page + 1)}
-              className="px-3 py-1.5 rounded border disabled:opacity-40 hover:bg-white">다음</button>
+          <div className="flex items-center justify-center gap-2 text-sm mt-5">
+            <button
+              disabled={page <= 1}
+              onClick={() => fetchList(page - 1)}
+              className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 disabled:opacity-40 hover:bg-slate-700/60"
+            >
+              이전
+            </button>
+            <span className="text-slate-400">{page} / {totalPages} · 총 {total.toLocaleString()}건</span>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => fetchList(page + 1)}
+              className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 disabled:opacity-40 hover:bg-slate-700/60"
+            >
+              다음
+            </button>
           </div>
         )}
       </main>

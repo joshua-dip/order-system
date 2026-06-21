@@ -9,6 +9,8 @@
  *   최고난도  — 키워드 일체 없음, 한국어 해석만 보고 완전 영작
  */
 
+import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
+
 export type EssayGeneratorDifficulty = '최고난도' | '고난도' | '중난도' | '기본난도';
 
 const 기본난도_추가 = `
@@ -364,11 +366,131 @@ const 공통_강화_추가 = `
 ★ 위 3 종을 검사하지 않고 JSON 을 출력하지 않는다.
 `.trim();
 
+// ════════════════════════════════════════════════════════════════════════════
+// 글의의미 서술형 (ESSAY_MEANING_EXAM_TYPE) 전용 난이도 부록
+//
+// 객관식 변형의 「함의(글의 의미)」를 서술형으로 옮긴 유형.
+//   기본난도 — 밑줄 친 부분의 속뜻을 '우리말로 서술'
+//   중난도   — 그 의미를 '영작' (키워드 다수 제공)
+//   고난도   — 의미를 '영작' (키워드 소수)
+//   최고난도 — 의미를 '영작' (키워드 없음 · 우리말 의미문만 제시)
+//
+// 배열형과 달리 answer.text 는 지문 원문 구절이 아니라 '의미를 풀어 쓴 문장'
+// (기본=우리말 / 중·고·최고=영어)이다.
+// ════════════════════════════════════════════════════════════════════════════
+
+const 글의의미_기본 = `
+[글의 의미 서술형 · 기본난도 — 우리말 서술]
+
+■ 유형 개요
+- 밑줄 친 부분(비유·함축·반어·대명사 지시 등)이 글 전체 맥락에서 '실제로 의미하는 바'를 우리말로 풀어 쓰게 한다.
+- 학생은 영어 표면 직역이 아니라 글 속 함의(속뜻)를 우리말 한 문장으로 서술한다.
+
+■ passage
+- 의미를 묻는 구절 한 곳을 \`<u>...</u>\` 로 감싼다. (배열형의 (A)(B) marker 는 쓰지 않는다.)
+
+■ question_set / prompt
+- question_set.tag 예: \`[글의 의미]\`, instruction: "다음 글을 읽고 물음에 답하시오."
+- prompt: "밑줄 친 부분이 글에서 의미하는 바를 우리말로 서술하시오." (배점 포함)
+
+■ bogi (필드 의미가 다름)
+- bogi = 밑줄 친 부분의 영어 원문 한 줄 (학생 참고용). 슬래시 분리·키워드 나열 금지.
+
+■ answer.text
+- 우리말 의미 서술 한 문장. 비유·함축의 속뜻을 글의 맥락으로 풀어 쓴다.
+- 영어 단어를 섞지 않는다 (고유명사·약어 예외).
+
+■ word_count (우리말 어절 기준)
+- total = answer.text 의 우리말 어절 수, words = 어절 배열. (시험지 "단어 수" 칸은 어절 수로 표시된다.)
+- 영어 단어 수 정합 검사는 적용되지 않는다.
+
+■ conditions (3~5개)
+- "글 전체 맥락을 근거로 속뜻을 풀어 쓸 것"
+- "표면적 직역이 아니라 함의(숨은 뜻)를 서술할 것"
+- 마지막에 "우리말 ○○자 내외로 서술할 것" (자수 기준 — "N개의 단어" 표현은 쓰지 않는다)
+
+■ grammar_points / intent_content
+- grammar_points: 의미 도출의 근거가 된 글의 단서(앞뒤 문장·대조·인과·반복 등)를 항목으로 정리.
+- intent_content: 함의 파악 능력을 평가한다는 의도 + 표면 직역 시 감점이라는 채점 기준을 서술.
+`.trim();
+
+const 글의의미_영작_공통 = `
+■ 핵심 — answer.text 는 '의미를 풀어 쓴 영어 문장'
+- 밑줄 친 부분을 그대로 옮기는 것이 아니라, 그 부분이 의미하는 바(속뜻)를 영어 한 문장으로 풀어 쓴다.
+- 따라서 answer.text 는 지문 원문 구절과 글자까지 같을 필요가 없다 (의미 등가의 새 문장).
+- answer.text 는 반드시 영어로 작성한다 (영작 유형).
+
+■ passage / prompt
+- 의미를 묻는 구절 한 곳을 \`<u>...</u>\` 로 감싼다.
+- prompt: "밑줄 친 부분이 글에서 의미하는 바를 아래 조건에 맞게 영어로 영작하시오." (배점 포함)
+
+■ word_count
+- total = answer.text 의 영어 단어 수(하이픈·숫자·축약형 1단어), words = 토큰 배열. 조건의 "N개의 단어" = total.
+
+■ 조건 누설 방지
+- 키워드·조건이 어순/굴절형/함수어를 흘리지 않도록, 위 고난도·최고난도 부록의 누설 방지 규칙(2-gram 룰·함수어 인용 금지·굴절형 노출 금지·메타용어 화이트리스트)을 동일하게 적용한다.
+`.trim();
+
+const 글의의미_중 = `
+[글의 의미 서술형 · 중난도 — 의미 영작 (키워드 다수)]
+
+${글의의미_영작_공통}
+
+■ bogi (키워드 — 다수)
+- answer.text 의 단어 중 60~75% 를 키워드로 제공해 영작 난도를 낮춘다.
+- 원형(lemma)으로 제공하고, 슬래시(\` / \`)로 구분, 알파벳순으로 정렬(어순 노출 방지).
+- 함수어(관사·be동사·조동사·대명사·단순 전치사·to·not)는 제외 — 학생이 직접 채운다.
+
+■ conditions (5~7개)
+- 문법·구문 가이드 2~4개 (사용할 구조·시제·태 등)
+- "N개의 단어로 답안을 작성할 것"
+- "아래 보기의 단어를 모두 활용하여 영어 문장을 '작성'할 것"
+`.trim();
+
+const 글의의미_고 = `
+[글의 의미 서술형 · 고난도 — 의미 영작 (키워드 소수)]
+
+${글의의미_영작_공통}
+
+■ bogi (키워드 — 소수)
+- answer.text 의 단어 중 30~45% 만 키워드로 제공한다 (핵심 내용어 위주, 최소 4개~최대 9개).
+- 원형(lemma) · 슬래시 구분 · 알파벳순 정렬 · 함수어 제외 (중난도와 동일 규칙, 개수만 적게).
+
+■ conditions (5~7개)
+- 문법·구문 가이드 3~5개 (중난도보다 구조 힌트를 구체화)
+- "N개의 단어로 답안을 작성할 것"
+- "아래 보기의 단어를 모두 활용하여 영어 문장을 '작성'할 것"
+`.trim();
+
+const 글의의미_최고 = `
+[글의 의미 서술형 · 최고난도 — 의미 영작 (키워드 없음)]
+
+${글의의미_영작_공통}
+
+■ bogi (키워드 없음 — 우리말 의미문)
+- 키워드를 일체 제공하지 않는다. bogi 에는 '밑줄 친 부분이 의미하는 바의 우리말 의미문 한 줄' 만 넣는다.
+- bogi 안에 영어 단어를 섞지 않는다 (고유명사·약어 예외). 학생은 이 우리말 의미만 보고 영작한다.
+
+■ conditions (6~8개)
+- 문법·구문 가이드 (구조·시제·태·일치 등)만으로 구성.
+- "N개의 단어로 답안을 작성할 것"
+- "주어진 우리말 의미에 부합하도록 영어 문장을 '작성'할 것"
+- ★ 정답 영어 단어·구를 조건 본문에 그대로 인용하지 않는다 (최고난도 누설 방지 정량 규칙 적용).
+`.trim();
+
+/** 글의의미 전용 난이도별 부록 (영작 3종은 공통 강화 룰을 덧붙임) */
+export const ESSAY_MEANING_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, string> = {
+  기본난도: 글의의미_기본,
+  중난도: `${글의의미_중}\n\n${공통_강화_추가}`,
+  고난도: `${글의의미_고}\n\n${공통_강화_추가}`,
+  최고난도: `${글의의미_최고}\n\n${공통_강화_추가}`,
+};
+
 /**
  * 난이도 부록 마지막 수정 시점 (수동 관리 — 부록 본문 고칠 때 함께 bump).
  * UI 에 「최종 수정」으로 표시되어, localStorage 캐시·번들 캐시로 인한 혼란을 줄인다.
  */
-export const ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED = '2026-05-12 (POS 원자 ≥5 연속 나열 ERROR — 청크 라벨로 묶기)';
+export const ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED = '2026-06-21 (글의의미 서술형 유형 추가 — 기본=우리말 서술 / 중·고·최고=의미 영작)';
 
 /** UI·문서용 — 난이도별 추가 지시 전문 */
 export const ESSAY_DIFFICULTY_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, string> = {
@@ -378,12 +500,28 @@ export const ESSAY_DIFFICULTY_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, st
   최고난도: `${최고난도_추가}\n\n${공통_강화_추가}`,
 };
 
-/** 난이도 문자열에 맞는 user 메시지 덧붙임. 알 수 없는 값이면 빈 문자열. */
-export function essayGeneratorDifficultyAppendix(difficulty: string): string {
+/**
+ * 유형(examType)에 맞는 난이도 부록 테이블. examType 이 글의의미면 글의의미 전용,
+ * 그 외(undefined 포함)는 기존 배열형 테이블. UI·CLI 양쪽에서 공유.
+ */
+export function essayDifficultyAppendixTable(
+  examType?: string,
+): Record<EssayGeneratorDifficulty, string> {
+  return (examType ?? '').trim() === ESSAY_MEANING_EXAM_TYPE
+    ? ESSAY_MEANING_APPENDIX_TEXT
+    : ESSAY_DIFFICULTY_APPENDIX_TEXT;
+}
+
+/**
+ * 난이도 문자열에 맞는 user 메시지 덧붙임. 알 수 없는 값이면 빈 문자열.
+ * examType 을 주면 해당 유형 전용 부록(글의의미 등)을 반환 (하위호환: 미지정 = 배열형).
+ */
+export function essayGeneratorDifficultyAppendix(difficulty: string, examType?: string): string {
   const d = difficulty.trim();
-  if (d === '기본난도' || d === '난이도하') return ESSAY_DIFFICULTY_APPENDIX_TEXT.기본난도;
-  if (d === '중난도') return ESSAY_DIFFICULTY_APPENDIX_TEXT.중난도;
-  if (d === '고난도') return ESSAY_DIFFICULTY_APPENDIX_TEXT.고난도;
-  if (d === '최고난도') return ESSAY_DIFFICULTY_APPENDIX_TEXT.최고난도;
+  const table = essayDifficultyAppendixTable(examType);
+  if (d === '기본난도' || d === '난이도하') return table.기본난도;
+  if (d === '중난도') return table.중난도;
+  if (d === '고난도') return table.고난도;
+  if (d === '최고난도') return table.최고난도;
   return '';
 }

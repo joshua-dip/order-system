@@ -99,3 +99,6 @@ scripts/patch-mv-*.ts
 
 # 일회성 임시 스크립트
 scripts/tmp-*.ts
+
+# 런타임 패치 백업
+scripts/.backups/

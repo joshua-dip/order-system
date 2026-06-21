@@ -8,6 +8,7 @@
  */
 import { ObjectId } from 'mongodb';
 import { getDb } from '../lib/mongodb';
+import { nextGeneratedSerial } from '../lib/generated-question-serial';
 import { buildHardInsertionQuestionData } from '../lib/hard-insertion-generator';
 
 /* ── CLI args ── */
@@ -503,8 +504,9 @@ async function main() {
           updated_at: new Date(),
         };
 
-        const r = await db.collection('generated_questions').insertOne(doc);
-        console.log(`  [SAVED] ${source} ${qType} v${v}: ${r.insertedId}`);
+        const serialNo = await nextGeneratedSerial(db);
+        const r = await db.collection('generated_questions').insertOne({ ...doc, serialNo });
+        console.log(`  [SAVED] ${source} ${qType} v${v}: ${r.insertedId} (V-${String(serialNo).padStart(6, '0')})`);
         totalGenerated++;
       }
     }
