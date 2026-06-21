@@ -130,6 +130,7 @@ export async function PATCH(
     const allowedEssayTypeIds = Array.isArray(body?.allowedEssayTypeIds) ? body.allowedEssayTypeIds.filter((id: unknown) => typeof id === 'string') : undefined;
     const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
     const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
+    const deductPoints = typeof body?.deductPoints === 'number' ? body.deductPoints : undefined;
     const supplementaryNote = typeof body?.supplementaryNote === 'string' ? body.supplementaryNote.trim() : undefined;
     const hasAnnualMemberSince = 'annualMemberSince' in body;
     let annualMemberSinceValue: Date | null | undefined = undefined;
@@ -223,6 +224,10 @@ export async function PATCH(
       const t = target as { points?: number };
       const current = typeof t.points === 'number' && t.points >= 0 ? t.points : 0;
       updates.points = current + addPoints;
+    } else if (deductPoints !== undefined && deductPoints > 0) {
+      const t = target as { points?: number };
+      const current = typeof t.points === 'number' && t.points >= 0 ? t.points : 0;
+      updates.points = Math.max(0, current - deductPoints);
     }
     if (resetPassword) {
       updates.passwordHash = await hashPassword(DEFAULT_MEMBER_INITIAL_PASSWORD);
@@ -244,18 +249,26 @@ export async function PATCH(
     let newPoints = previousPoints;
     if (addPoints !== undefined && addPoints > 0) {
       newPoints = previousPoints + addPoints;
+    } else if (deductPoints !== undefined && deductPoints > 0) {
+      newPoints = Math.max(0, previousPoints - deductPoints);
     } else if (points !== undefined) {
       newPoints = points;
     }
     const pointDelta = newPoints - previousPoints;
     const pointsFieldUpdated =
-      (points !== undefined) || (addPoints !== undefined && addPoints > 0);
+      (points !== undefined) ||
+      (addPoints !== undefined && addPoints > 0) ||
+      (deductPoints !== undefined && deductPoints > 0);
 
     await users.updateOne({ _id: new ObjectId(id) }, mongoOp);
 
     if (pointsFieldUpdated && pointDelta !== 0) {
       const kind =
-        addPoints !== undefined && addPoints > 0 ? 'admin_grant' : 'admin_adjust';
+        addPoints !== undefined && addPoints > 0
+          ? 'admin_grant'
+          : deductPoints !== undefined && deductPoints > 0
+            ? 'admin_recall'
+            : 'admin_adjust';
       await recordPointLedger(db, {
         userId: new ObjectId(id),
         delta: pointDelta,
@@ -264,6 +277,7 @@ export async function PATCH(
         meta: {
           adminUserId: payload?.sub,
           ...(addPoints !== undefined && addPoints > 0 ? { addPoints } : {}),
+          ...(deductPoints !== undefined && deductPoints > 0 ? { deductPoints } : {}),
         },
       }).catch((e) => console.error('point_ledger 기록 실패:', e));
     }

@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVip } from '@/lib/vip-auth';
-import { getVipDb, ensureVipIndexes, col, type VipStudent } from '@/lib/vip-db';
+import { getVipDb, ensureVipIndexes, col, type VipStudent, type VipStudentSubject } from '@/lib/vip-db';
+
+/** 학생 수강과목 입력 정규화 — name 필수(trim), tuition 숫자 또는 undefined. */
+function normalizeStudentSubjects(raw: unknown): VipStudentSubject[] {
+  if (!Array.isArray(raw)) return [];
+  const out: VipStudentSubject[] = [];
+  for (const item of raw) {
+    const name = String((item as { name?: unknown })?.name ?? '').trim();
+    if (!name) continue;
+    const tRaw = (item as { tuition?: unknown })?.tuition;
+    const t = tRaw === '' || tRaw === null || tRaw === undefined ? undefined : Number(tRaw);
+    out.push({ name, tuition: t !== undefined && Number.isFinite(t) ? t : undefined });
+  }
+  return out;
+}
 
 export async function GET(request: NextRequest) {
   const auth = await requireVip(request);
@@ -57,6 +71,8 @@ export async function GET(request: NextRequest) {
       academicYear: s.academicYear,
       status: s.status,
       examScope: s.examScope,
+      subjects: s.subjects ?? [],
+      gender: s.gender ?? '',
       memo: s.memo ?? '',
       phone: s.phone ?? '',
       parentPhone: s.parentPhone ?? '',
@@ -111,6 +127,8 @@ export async function POST(request: NextRequest) {
     academicYear: Number(body.academicYear) || currentYear,
     status: 'active',
     examScope: Array.isArray(body.examScope) ? body.examScope : [],
+    subjects: normalizeStudentSubjects(body.subjects),
+    gender: body.gender === 'male' || body.gender === 'female' ? body.gender : undefined,
     memo: (body.memo ?? '').trim() || undefined,
     phone: (body.phone ?? '').trim() || undefined,
     parentPhone: (body.parentPhone ?? '').trim() || undefined,

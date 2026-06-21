@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVip } from '@/lib/vip-auth';
-import { getVipDb, col, type VipSchool } from '@/lib/vip-db';
+import { getVipDb, col, type VipSchool, VIP_SCHOOL_LEVELS } from '@/lib/vip-db';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireVip(request);
@@ -15,6 +15,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const $set: Record<string, unknown> = {};
   if (body.name) $set.name = body.name.trim();
   if (body.region !== undefined) $set.region = body.region.trim() || undefined;
+  if (body.schoolLevel !== undefined && VIP_SCHOOL_LEVELS.includes(body.schoolLevel)) $set.schoolLevel = body.schoolLevel;
 
   if (Object.keys($set).length === 0) {
     return NextResponse.json({ error: '수정할 내용이 없습니다.' }, { status: 400 });

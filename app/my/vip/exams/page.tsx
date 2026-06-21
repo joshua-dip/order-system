@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import QuestionPhotoGrid from './QuestionPhotoGrid';
 
 interface School { id: string; name: string }
 interface ExamQuestion {
@@ -20,7 +21,9 @@ interface SchoolExam {
   objectiveCount: number; subjectiveCount: number;
   examScope: string[]; examScopePassages?: string[]; isLocked: boolean;
   pdfPath?: string | null; pdfName?: string | null;
+  analyzed?: boolean;
 }
+type TextbookType = '교과서' | '부교재' | '모의고사';
 interface TextbookEntry { textbook: string }
 interface PassageEntry { textbook: string; sourceKey: string; hasVariant: boolean; passageSource?: string }
 
@@ -110,6 +113,8 @@ export default function VipExamsPage() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [exams, setExams] = useState<SchoolExam[]>([]);
   const [textbooks, setTextbooks] = useState<TextbookEntry[]>([]);
+  /** 교재별 분류(교과서/부교재/모의고사) — settings.textbookTypeMeta + 모의고사 패턴. API가 내려줌. */
+  const [textbookTypes, setTextbookTypes] = useState<Record<string, TextbookType>>({});
   const [loading, setLoading] = useState(false);
   // 소스(지문) 선택
   const [passagesCache, setPassagesCache] = useState<Record<string, PassageEntry[]>>({});
@@ -159,6 +164,8 @@ export default function VipExamsPage() {
   const pdfInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const xlsxInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pdfPreview, setPdfPreview] = useState<{ examId: string; url: string; name: string } | null>(null);
+  // 학생 필기 사진 모달
+  const [photoModalExam, setPhotoModalExam] = useState<SchoolExam | null>(null);
 
   const openPdfPreview = async (examId: string, name: string) => {
     try {
@@ -213,6 +220,9 @@ export default function VipExamsPage() {
       .then((d) => {
         if (d.ok && Array.isArray(d.textbooks)) {
           setTextbooks(d.textbooks.map((k: string) => ({ textbook: k })));
+          if (d.types && typeof d.types === 'object') {
+            setTextbookTypes(d.types as Record<string, TextbookType>);
+          }
         }
       })
       .catch(() => {});
@@ -257,15 +267,22 @@ export default function VipExamsPage() {
   const MOCK_EXAM_PATTERN = /^\d{2}년\s+\d{1,2}월\s+고[123]\s+영어모의고사|^\d{2}년\s+고[123]\s+영어모의고사/;
   const isMockExam = (name: string) => MOCK_EXAM_PATTERN.test(name) || /영어모의고사$/.test(name);
 
+  /** 교재 분류 — API의 textbookTypes(settings.textbookTypeMeta 기반) 우선, 없으면 이름 패턴 fallback. */
+  const classifyTextbook = (name: string): TextbookType => {
+    const t = textbookTypes[name];
+    if (t === '교과서' || t === '부교재' || t === '모의고사') return t;
+    return isMockExam(name) ? '모의고사' : '부교재';
+  };
+
   const textbookGroups = useMemo(() => {
-    const mockExams = textbookNames.filter(isMockExam);
-    const supplementary = textbookNames.filter((n) => !isMockExam(n));
-    return [
-      { label: '부교재', textbooks: supplementary },
-      { label: '모의고사', textbooks: mockExams },
-    ].filter((g) => g.textbooks.length > 0);
+    const buckets: Record<TextbookType, string[]> = { 교과서: [], 부교재: [], 모의고사: [] };
+    for (const n of textbookNames) buckets[classifyTextbook(n)].push(n);
+    // 교과서 → 부교재 → 모의고사 순. 비어있는 섹션은 제외.
+    return (['교과서', '부교재', '모의고사'] as TextbookType[])
+      .map((label) => ({ label, textbooks: buckets[label] }))
+      .filter((g) => g.textbooks.length > 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [textbookNames]);
+  }, [textbookNames, textbookTypes]);
 
   const loadPassagesForTextbooks = useCallback(async (examId: string, selectedTextbooks: string[]) => {
     if (selectedTextbooks.length === 0) return;
@@ -319,6 +336,21 @@ export default function VipExamsPage() {
     await fetch(`/api/my/vip/school-exams/${exam.id}`, { method: 'DELETE', credentials: 'include' });
     showToast('삭제되었습니다.');
     await loadExams();
+  };
+
+  /** 분석완료 토글 — 켜면 「기출 분석·예측」 메뉴에 노출됨 */
+  const toggleAnalyzed = async (exam: SchoolExam) => {
+    const cur = localExams[exam.id] || exam;
+    const nextVal = !cur.analyzed;
+    setLocalExams((prev) => ({ ...prev, [exam.id]: { ...cur, analyzed: nextVal } }));
+    const res = await fetch(`/api/my/vip/school-exams/${exam.id}`, {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ analyzed: nextVal }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (d.ok) showToast(nextVal ? '분석완료로 표시했어요. 「기출 분석·예측」에서 볼 수 있어요.' : '분석완료를 해제했어요.');
+    else { showToast('저장 실패'); setLocalExams((prev) => ({ ...prev, [exam.id]: cur })); }
   };
 
   const handlePdfUpload = async (examId: string, file: File) => {
@@ -708,8 +740,8 @@ export default function VipExamsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-zinc-100">시험 관리</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">기출 시험을 등록하고 문항 정보를 입력합니다</p>
+        <h1 className="text-xl font-bold text-zinc-100">시험 준비</h1>
+        <p className="text-sm text-zinc-500 mt-0.5">시험 범위를 파악하고, 시험을 등록·분류해 대비합니다</p>
       </div>
 
       {/* Filters */}
@@ -794,6 +826,30 @@ export default function VipExamsPage() {
                     <div className="flex items-center gap-3 text-xs text-zinc-500 shrink-0">
                       <span>객관 {local.objectiveCount} / 주관 {local.subjectiveCount}</span>
                       {totalScore > 0 && <span className="text-zinc-400">총 <strong className="text-zinc-200">{totalScore}점</strong></span>}
+
+                      {/* 분석완료 토글 — 켜면 「기출 분석·예측」 메뉴에 노출 */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleAnalyzed(exam); }}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors ${local.analyzed ? 'bg-amber-500/25 text-amber-200 hover:bg-amber-500/35' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'}`}
+                        title={local.analyzed ? '분석완료 — 「기출 분석·예측」에 표시됨 (클릭 시 해제)' : '분석완료로 표시하면 「기출 분석·예측」 메뉴에 나타납니다'}
+                      >
+                        {local.analyzed ? (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        )}
+                        분석완료
+                      </button>
+
+                      {/* 학생 필기 사진 */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPhotoModalExam(local); }}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                        title="문항별 학생 필기 사진 업로드·보기"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
+                        사진
+                      </button>
 
                       {/* 문항 데이터 PDF 내보내기 */}
                       <button
@@ -1508,6 +1564,26 @@ export default function VipExamsPage() {
               className="w-full h-full border-0"
               title={pdfPreview.name}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 학생 필기 사진 모달 */}
+      {photoModalExam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setPhotoModalExam(null)}>
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 shrink-0">
+              <div>
+                <div className="text-sm font-semibold text-zinc-100">{photoModalExam.examType} · 학생 필기 사진</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">문항별로 학생 풀이를 사진으로 모아둡니다</div>
+              </div>
+              <button onClick={() => setPhotoModalExam(null)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              <QuestionPhotoGrid examId={photoModalExam.id} questions={(localExams[photoModalExam.id] || photoModalExam).questions} maxHeight="max-h-[64vh]" />
+            </div>
           </div>
         </div>
       )}

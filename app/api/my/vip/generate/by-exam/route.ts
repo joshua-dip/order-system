@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
   const total = Math.min(100, Math.max(1, Number(sp.get('total') || '20')));
   const random = sp.get('random') !== 'false';
   const setsCount = Math.min(5, Math.max(1, Number(sp.get('sets') || '1')));
+  /** 기출 시험지의 문항(지문·유형) 순서대로 생성 */
+  const followOrder = sp.get('followOrder') === 'true';
 
   if (!scopeExamId) {
     return NextResponse.json({ error: 'scopeExamId가 필요합니다.' }, { status: 400 });
@@ -23,6 +25,18 @@ export async function GET(request: NextRequest) {
   const vipDb = await getVipDb();
   const uid = new ObjectId(auth.userId);
   const db = await getDb('gomijoshua');
+
+  // 교재 → 카테고리 분류 (admin/passages 설정 + 모의고사 이름 패턴)
+  // 표지 출처 분포가 "어느 범위 교재에서 뽑았는지"로 집계되도록 문항에 scope 카테고리를 태깅한다.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const typeMetaDoc = await db.collection('settings').findOne({ _id: 'textbookTypeMeta' } as any);
+  const catMap = (typeMetaDoc?.value && typeof typeMetaDoc.value === 'object') ? (typeMetaDoc.value as Record<string, string>) : {};
+  const MOCK = /^\d{2}년\s+\d{1,2}월\s+고[123]\s+영어모의고사|^\d{2}년\s+고[123]\s+영어모의고사/;
+  const classifyScope = (tb: string): string => {
+    const t = catMap[tb];
+    if (t === '교과서' || t === '부교재' || t === '모의고사') return t;
+    return MOCK.test(tb) || /영어모의고사$/.test(tb) ? '모의고사' : '부교재';
+  };
 
   // 1) 시험 범위 로드
   const scopeExam = await col(vipDb, 'schoolExams').findOne({ _id: new ObjectId(scopeExamId), userId: uid });
@@ -182,12 +196,69 @@ export async function GET(request: NextRequest) {
 
   const mapQ = (q: Record<string, unknown>) => {
     const qd = (q.question_data as Record<string, unknown>) ?? {};
-    return { id: (q._id as ObjectId).toString(), textbook: q.textbook, passageId: q.passage_id ? (q.passage_id as ObjectId).toString() : null, type: q.type, difficulty: q.difficulty, paragraph: qd.Paragraph ?? '', options: qd.Options ?? '', answer: qd.Answer ?? '', explanation: qd.Explanation ?? '', source: qd.Source ?? '', pric: q.pric ?? null };
+    // _scopeCat: 어느 범위(scope) 교재 카테고리에서 뽑혔는지(태깅). 없으면 문항 textbook으로 분류.
+    const scopeCategory = (typeof q._scopeCat === 'string' && q._scopeCat) ? q._scopeCat : classifyScope(String(q.textbook ?? ''));
+    return { id: (q._id as ObjectId).toString(), textbook: q.textbook, passageId: q.passage_id ? (q.passage_id as ObjectId).toString() : null, type: q.type, difficulty: q.difficulty, paragraph: qd.Paragraph ?? '', options: qd.Options ?? '', answer: qd.Answer ?? '', explanation: qd.Explanation ?? '', source: qd.Source ?? '', pric: q.pric ?? null, scopeCategory };
   };
 
   // 4) N세트 비중복 생성
   const resultSets: ReturnType<typeof mapQ>[][] = [];
   const globalUsedIds = new Set<string>();
+
+  // ── 기출 순서 따르기: 기출 시험지의 문항(지문·유형) 순서대로 1문항씩 매칭 ──
+  if (followOrder && patternExamId) {
+    const patternExam = await col(vipDb, 'schoolExams').findOne({ _id: new ObjectId(patternExamId), userId: uid });
+    const patternQuestions = (patternExam?.questions ?? {}) as Record<string, { questionType?: string; isSubjective?: boolean; textbook?: string }>;
+    if (Object.keys(patternQuestions).length > 0) {
+      const scopeTbs = [...scopeByTextbook.keys()];
+      const scopeByCat: Record<string, string[]> = {};
+      for (const tb of scopeTbs) (scopeByCat[classifyScope(tb)] ||= []).push(tb);
+
+      // 패턴 문항 순서 (서술형 제외 — 변형 객관식만 생성됨)
+      const orderedPattern = Object.entries(patternQuestions)
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([, q]) => q)
+        .filter((q) => !(q.isSubjective || q.questionType === '서술형'));
+
+      // 후보 교재 + 유형 → 1문항 무작위 샘플 (중복 제외)
+      const sampleOne = async (tbs: string[], typeFilter: string | undefined, used: Set<string>) => {
+        const exOids = [...used].map((h) => new ObjectId(h));
+        const conds = tbs.map((tb) => buildTbFilter(tb, typeFilter, exOids)).filter((f): f is Record<string, unknown> => !!f);
+        if (conds.length === 0) return null;
+        const filter = conds.length === 1 ? conds[0] : { $or: conds };
+        const res = await db.collection('generated_questions')
+          .aggregate([{ $match: filter }, { $sample: { size: 1 } }, { $project: project }]).toArray();
+        return res[0] ?? null;
+      };
+
+      for (let s = 0; s < setsCount; s++) {
+        const setQuestions: Record<string, unknown>[] = [];
+        for (const pq of orderedPattern) {
+          const type = pq.questionType;
+          const refTb = pq.textbook?.trim();
+          const cat = refTb ? classifyScope(refTb) : null;
+          // 후보: 기출과 동일 교재(범위에 있으면) → 같은 카테고리 범위 교재 → 전체 범위
+          let candidates: string[];
+          if (refTb && scopeByTextbook.has(refTb)) candidates = [refTb];
+          else if (cat && scopeByCat[cat]?.length) candidates = scopeByCat[cat];
+          else candidates = scopeTbs;
+          // 같은 후보+유형 → 후보 아무유형 → 전체+유형 → 전체 아무거나
+          let picked = await sampleOne(candidates, type, globalUsedIds);
+          if (!picked) picked = await sampleOne(candidates, undefined, globalUsedIds);
+          if (!picked && type) picked = await sampleOne(scopeTbs, type, globalUsedIds);
+          if (!picked) picked = await sampleOne(scopeTbs, undefined, globalUsedIds);
+          if (picked) {
+            // 어느 카테고리에서 뽑았는지 태깅(올림포스처럼 passage_source로 원본 교재가 모의고사여도 범위 기준으로 집계)
+            picked._scopeCat = cat ?? classifyScope(String(picked.textbook ?? ''));
+            setQuestions.push(picked);
+            globalUsedIds.add((picked._id as ObjectId).toHexString());
+          }
+        }
+        resultSets.push(setQuestions.map(mapQ));
+      }
+      return NextResponse.json({ ok: true, sets: resultSets, typeCounts, followedOrder: true });
+    }
+  }
 
   // 유형 비율을 tbTotal에 맞게 분배
   const distributeTypes = (counts: Record<string, number>, tbTotal: number): Record<string, number> => {
@@ -221,8 +292,8 @@ export async function GET(request: NextRequest) {
             const qs = random
               ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: share } }, { $project: project }]).toArray()
               : await db.collection('generated_questions').find(filter).project(project).limit(share).toArray();
+            for (const q of qs) { (q as Record<string, unknown>)._scopeCat = classifyScope(tb); globalUsedIds.add((q._id as ObjectId).toHexString()); }
             setQuestions.push(...qs);
-            for (const q of qs) globalUsedIds.add((q._id as ObjectId).toHexString());
           }
         } else {
           const filter = buildTbFilter(tb, undefined, excludeOids);
@@ -230,8 +301,8 @@ export async function GET(request: NextRequest) {
           const qs = random
             ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: tbTotal } }, { $project: project }]).toArray()
             : await db.collection('generated_questions').find(filter).project(project).limit(tbTotal).toArray();
+          for (const q of qs) { (q as Record<string, unknown>)._scopeCat = classifyScope(tb); globalUsedIds.add((q._id as ObjectId).toHexString()); }
           setQuestions.push(...qs);
-          for (const q of qs) globalUsedIds.add((q._id as ObjectId).toHexString());
         }
       }
       if (random) shuffle(setQuestions);
@@ -257,8 +328,8 @@ export async function GET(request: NextRequest) {
       for (const q of qs) globalUsedIds.add((q._id as ObjectId).toHexString());
     }
 
-    // 부족분 보충 (perTbMode가 아닐 때만)
-    if (!perTbMode && setQuestions.length < total) {
+    // 부족분 보충 — 특정 교재의 문항이 부족해 목표 수에 못 미치면 범위 전체에서 채움(실제 시험처럼 꽉 채우기).
+    if (setQuestions.length < total) {
       const setUsedIds = new Set(setQuestions.map((q) => (q._id as ObjectId).toHexString()));
       const fallbackExclude = [...new Set([...globalUsedIds, ...setUsedIds])].map((h) => new ObjectId(h));
       const need = total - setQuestions.length;

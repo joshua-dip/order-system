@@ -5,6 +5,7 @@ import { isDropboxConfigured } from '@/lib/dropbox';
 import { effectiveOrderRevenueWon } from '@/lib/order-revenue';
 import { koreaDateKey, koreaYearMonthKey } from '@/lib/korea-date-key';
 import { revenueMonthKeyForOrder } from '@/lib/order-number';
+import { POINT_LEDGER_COLLECTION } from '@/lib/point-ledger';
 
 type SiteStatsDaily = {
   _id: string;
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
       newOrdersThisWeek,
       completedForRevenue,
       siteToday,
+      pointCharges,
     ] = await Promise.all([
       db.collection('orders').aggregate<{ _id: string; lastAt: Date }>([
         { $match: { loginId: { $exists: true, $ne: null } } },
@@ -51,6 +53,11 @@ export async function GET(request: NextRequest) {
         .project({ orderText: 1, revenueWon: 1, orderMeta: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
         .toArray(),
       db.collection<SiteStatsDaily>('site_stats_daily').findOne({ _id: todayKey }),
+      db
+        .collection(POINT_LEDGER_COLLECTION)
+        .find({ kind: 'point_charge' })
+        .project({ createdAt: 1, delta: 1, meta: 1 })
+        .toArray(),
     ]);
 
     const thisYearMonth = koreaYearMonthKey(now);
@@ -70,6 +77,22 @@ export async function GET(request: NextRequest) {
       if (!lid || typeof lid !== 'string') continue;
       orderCountByLoginId[lid] = (orderCountByLoginId[lid] ?? 0) + 1;
       revenueByLoginId[lid] = (revenueByLoginId[lid] ?? 0) + amount;
+    }
+
+    /** 포인트 충전(토스 결제) 매출 — point_ledger kind=point_charge 의 meta.amountWon 합 */
+    let pointRevenueTotal = 0;
+    let pointRevenueThisMonth = 0;
+    for (const p of pointCharges) {
+      const meta = (p as { meta?: { amountWon?: unknown } }).meta;
+      const amountWon = meta && typeof meta.amountWon === 'number' ? meta.amountWon : 0;
+      if (!amountWon) continue;
+      pointRevenueTotal += amountWon;
+      const created = (p as { createdAt?: unknown }).createdAt;
+      const createdDate =
+        created instanceof Date ? created : typeof created === 'string' ? new Date(created) : null;
+      if (createdDate && !Number.isNaN(createdDate.getTime()) && koreaYearMonthKey(createdDate) === thisYearMonth) {
+        pointRevenueThisMonth += amountWon;
+      }
     }
 
     const lastOrderDateByLoginId: Record<string, string> = {};
@@ -98,6 +121,10 @@ export async function GET(request: NextRequest) {
       revenueTotal,
       /** 완료 주문: 주문번호 중간 YYYYMMDD의 연·월이 이번 달(한국 달력과 동일 YYYY-MM 비교)이면 합산. 번호 없으면 completedAt(한국 월) */
       revenueThisMonth,
+      /** 포인트 충전(토스 결제) 누적 매출(원) */
+      pointRevenueTotal,
+      /** 이번 달(한국 createdAt 기준) 포인트 충전 매출(원) */
+      pointRevenueThisMonth,
     });
   } catch (err) {
     console.error('관리자 통계 조회 실패:', err);

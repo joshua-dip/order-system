@@ -360,6 +360,52 @@ export async function uploadVipExamPdf(
 }
 
 /**
+ * VIP 기출 시험 문항별 학생 필기 사진 업로드 (Dropbox). 번호별로 여러 장 가능.
+ */
+export async function uploadVipExamPhoto(
+  examId: string,
+  questionNum: string,
+  fileName: string,
+  fileBuffer: Buffer,
+  stamp: number,
+): Promise<{ path: string; name: string; tempUrl: string }> {
+  const token = await getAccessToken();
+  const root = process.env.DROPBOX_ROOT_FOLDER ?? 'gomijoshua';
+  const safeFileName = fileName.replace(/[/\\:*?"<>|]/g, '_');
+  const safeNum = String(questionNum).replace(/[/\\:*?"<>|]/g, '_') || 'x';
+  const logicalPath = `/${root}/vip-exam-photos/${examId}/q${safeNum}_${stamp}_${safeFileName}`;
+  const apiPath = toApiPath(logicalPath);
+
+  const uploadRes = await fetch(`${DROPBOX_CONTENT_URL}/files/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': dropboxApiArgHeader({ path: apiPath, mode: { '.tag': 'add' }, autorename: true }),
+    },
+    body: fileBuffer as unknown as BodyInit,
+  });
+  if (!uploadRes.ok) {
+    const data = await uploadRes.json().catch(() => ({}));
+    throw new Error(`Dropbox 사진 업로드 실패: ${JSON.stringify(data)}`);
+  }
+  const tempUrl = await getDropboxTempLink(apiPath, token);
+  return { path: apiPath, name: safeFileName, tempUrl };
+}
+
+/** Dropbox 파일 삭제 (best-effort). */
+export async function deleteDropboxFile(apiPath: string): Promise<void> {
+  try {
+    const token = await getAccessToken();
+    await fetch(`${DROPBOX_API_URL}/files/delete_v2`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: apiPath }),
+    });
+  } catch { /* 무시 */ }
+}
+
+/**
  * Dropbox 파일 경로로부터 임시 다운로드 링크를 생성합니다 (4시간 유효).
  */
 export async function getDropboxTempLink(apiPath: string, existingToken?: string): Promise<string> {

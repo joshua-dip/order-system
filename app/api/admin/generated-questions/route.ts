@@ -9,6 +9,7 @@ import { getPassageTextForVariantCompare, passageIdToValidHex } from '@/lib/pass
 import { buildNarrativeQuestionsFilter, mapNarrativeDocToListRow } from '@/lib/admin-narrative-questions-list';
 import { buildVariantQFilter } from '@/lib/admin-generated-questions-q-filter';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
+import { nextGeneratedSerial } from '@/lib/generated-question-serial';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -519,7 +520,8 @@ export async function POST(request: NextRequest) {
     };
 
     const db = await getDb('gomijoshua');
-    const r = await db.collection('generated_questions').insertOne(doc);
+    const serialNo = await nextGeneratedSerial(db);
+    const r = await db.collection('generated_questions').insertOne({ ...doc, serialNo });
     const inserted = await db.collection('generated_questions').findOne({ _id: r.insertedId });
     return NextResponse.json({
       ok: true,

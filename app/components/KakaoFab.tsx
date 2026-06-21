@@ -6,7 +6,8 @@ const KAKAO_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kak
 
 export default function KakaoFab() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin')) return null;
+  // 관리자·VIP 모드·학생 자가채점 페이지에서는 카카오 문의 버튼 숨김
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/my/vip') || pathname?.startsWith('/exam-grade')) return null;
 
   return (
     <a

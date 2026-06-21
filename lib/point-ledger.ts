@@ -6,6 +6,8 @@ export const POINT_LEDGER_COLLECTION = 'point_ledger';
 export type PointLedgerKind =
   | 'order_spend'
   | 'admin_grant'
+  /** 관리자 직접 회수(차감) */
+  | 'admin_recall'
   | 'admin_adjust'
   | 'point_charge'
   /** 변형문제 만들기 — 고난도 초안 생성(삽입-고난도·어법-고난도 등 차감) */

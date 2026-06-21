@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVip } from '@/lib/vip-auth';
-import { getVipDb, ensureVipIndexes, col, type VipSchool } from '@/lib/vip-db';
+import { getVipDb, ensureVipIndexes, col, type VipSchool, type VipSchoolLevel, VIP_SCHOOL_LEVELS } from '@/lib/vip-db';
 
 export async function GET(request: NextRequest) {
   const auth = await requireVip(request);
@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       name: s.name,
       region: s.region ?? '',
       neisCode: s.neisCode ?? '',
+      schoolLevel: s.schoolLevel ?? 'high',
       createdAt: s.createdAt?.toISOString() ?? '',
     })),
   });
@@ -50,11 +51,13 @@ export async function POST(request: NextRequest) {
   }
 
   const neisCode = (body.neisCode ?? '').trim() || undefined;
+  const schoolLevel: VipSchoolLevel = VIP_SCHOOL_LEVELS.includes(body.schoolLevel) ? body.schoolLevel : 'high';
   const doc: VipSchool = {
     userId: uid,
     name,
     region: (body.region ?? '').trim() || undefined,
     neisCode,
+    schoolLevel,
     createdAt: new Date(),
   };
 

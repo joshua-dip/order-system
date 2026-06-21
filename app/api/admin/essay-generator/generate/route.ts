@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
     examSubtitle?: string;
     totalPoints?: number;   // 없으면 Claude 자동 결정 (최대 10)
     targetSentences?: string[];
+    /** 문장 내 특정 구(표현) — 변형 없이 그대로 포함 */
+    targetPhrases?: string[];
     /** 비우면 assets/exam_kit/generation_prompt.md 사용 */
     systemPrompt?: string;
   };
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
     examSubtitle = '',
     totalPoints,          // undefined이면 Claude가 자동 결정
     targetSentences = [],
+    targetPhrases = [],
     systemPrompt: systemPromptOverride,
   } = body;
 
@@ -65,6 +68,9 @@ export async function POST(request: NextRequest) {
   let userMessage = `지문:\n${passage}\n\n난이도: ${difficulty}`;
   if (targetSentences.length > 0) {
     userMessage += `\n반드시 포함할 문장: ${JSON.stringify(targetSentences)}`;
+  }
+  if (targetPhrases.length > 0) {
+    userMessage += `\n반드시 포함할 구(표현, 변형 없이 그대로): ${JSON.stringify(targetPhrases)}`;
   }
   userMessage += `\n문항 번호: ${questionNumber}`;
   if (examSubtitle) userMessage += `\n시험지 부제: ${examSubtitle}`;

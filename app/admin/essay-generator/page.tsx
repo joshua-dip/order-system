@@ -4,7 +4,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '../_components/AdminSidebar';
 import PassagePickerModal, { PassageItem } from '../_components/PassagePickerModal';
-import { ESSAY_DIFFICULTY_APPENDIX_TEXT, ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED } from '@/lib/essay-generator-difficulty-appendix';
+import { essayDifficultyAppendixTable, ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED } from '@/lib/essay-generator-difficulty-appendix';
+import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
 
 // ── 인쇄 보정 CSS (기존 HTML에 오래된 CSS가 있을 때 최신 규칙 덮어쓰기) ──────────
 const PRINT_FIX_CSS = `
@@ -2348,10 +2349,19 @@ export default function EssayGeneratorPage() {
   const [essaySentenceIndices, setEssaySentenceIndices] = useState<number[]>([]);
   const [sentenceListExpanded, setSentenceListExpanded] = useState(false);
   const [difficulty, setDifficulty] = useState<'최고난도' | '고난도' | '중난도' | '기본난도'>('중난도');
+  /** 출제 유형 — '배열형'(기존) | '글의의미서술형'. 명령어·부록 분기에 사용. */
+  const [examType, setExamType] = useState<'배열형' | typeof ESSAY_MEANING_EXAM_TYPE>('배열형');
+  const isMeaningType = examType === ESSAY_MEANING_EXAM_TYPE;
   const [questionNumber, setQuestionNumber] = useState('서·논술형');
   const [examSubtitle, setExamSubtitle] = useState('');
   const [totalPoints, setTotalPoints] = useState<number | ''>('');
   const [targetSentences, setTargetSentences] = useState<Set<string>>(new Set());
+  /** 문장 내 특정 구(단어 범위) 타깃 — 반드시 포함할 표현. */
+  const [targetPhrases, setTargetPhrases] = useState<{ sentenceIdx: number; text: string }[]>([]);
+  /** 현재 단어-범위 선택 중인 문장 idx (null = 비활성). */
+  const [phrasePickIdx, setPhrasePickIdx] = useState<number | null>(null);
+  /** 단어 범위 선택 시작 단어 idx (null = 시작 전). */
+  const [phrasePickStart, setPhrasePickStart] = useState<number | null>(null);
   /** Claude system — 비우면 서버에서 기본 파일 사용 */
   const [systemPrompt, setSystemPrompt] = useState('');
   const [systemPromptMtime, setSystemPromptMtime] = useState<string | null>(null);
@@ -2563,6 +2573,10 @@ export default function EssayGeneratorPage() {
           parts.push(`가능하면 각 지문 출제 시 문장 [${indices.join('], [')}] 을 반영해줘.`);
         }
       }
+      if (targetPhrases.length > 0) {
+        const ph = targetPhrases.map(p => `"${p.text}"`).join(', ');
+        parts.push(`가능하면 다음 표현(구문)을 변형 없이 그대로 반영: ${ph}.`);
+      }
       parts.push('');
       parts.push(bullets);
       parts.push('');
@@ -2593,6 +2607,7 @@ export default function EssayGeneratorPage() {
     questionNumber,
     totalPoints,
     targetSentences,
+    targetPhrases,
     saveFolder,
   ]);
 
@@ -2604,10 +2619,45 @@ export default function EssayGeneratorPage() {
     });
   }, []);
 
+  /** 문장 → 단어 배열(공백 분리). */
+  const splitWords = useCallback((s: string) => s.split(/\s+/).filter(Boolean), []);
+  /** 문장 i 의 단어-범위 선택 모드 토글. */
+  const startPhrasePick = useCallback((i: number) => {
+    setPhrasePickIdx(prev => (prev === i ? null : i));
+    setPhrasePickStart(null);
+  }, []);
+  /** 단어 클릭 — 첫 클릭=시작, 둘째 클릭=끝 → 구문 추가. */
+  const pickWord = useCallback((sentenceIdx: number, words: string[], wi: number) => {
+    setPhrasePickStart(prevStart => {
+      if (prevStart === null) return wi;
+      const a = Math.min(prevStart, wi);
+      const b = Math.max(prevStart, wi);
+      const text = words.slice(a, b + 1).join(' ');
+      setTargetPhrases(prev =>
+        prev.some(p => p.sentenceIdx === sentenceIdx && p.text === text)
+          ? prev
+          : [...prev, { sentenceIdx, text }],
+      );
+      return null;
+    });
+  }, []);
+  const removePhrase = useCallback((sentenceIdx: number, text: string) => {
+    setTargetPhrases(prev => prev.filter(p => !(p.sentenceIdx === sentenceIdx && p.text === text)));
+  }, []);
+  const clearAllTargets = useCallback(() => {
+    setTargetSentences(new Set());
+    setTargetPhrases([]);
+    setPhrasePickIdx(null);
+    setPhrasePickStart(null);
+  }, []);
+
   const handlePickPassage = useCallback(async (p: PassageItem) => {
     const original = p.content?.original ?? '';
     setPassage(original);
     setTargetSentences(new Set());
+    setTargetPhrases([]);
+    setPhrasePickIdx(null);
+    setPhrasePickStart(null);
     setEssaySentenceIndices([]);
     setSentenceListExpanded(false);
     setSelectedPassageInfo({ textbook: p.textbook, sourceKey: p.source_key ?? `${p.chapter} ${p.number}`, passageId: p._id });
@@ -2646,6 +2696,7 @@ export default function EssayGeneratorPage() {
           examSubtitle,
           ...(totalPoints !== '' ? { totalPoints } : {}),
           targetSentences: targetArr,
+          ...(targetPhrases.length ? { targetPhrases: targetPhrases.map(p => `(문장 ${p.sentenceIdx + 1}) ${p.text}`) } : {}),
           ...(systemPrompt.trim() ? { systemPrompt: systemPrompt.trim() } : {}),
         }),
       });
@@ -2661,7 +2712,7 @@ export default function EssayGeneratorPage() {
     } finally {
       setLoading(false);
     }
-  }, [passage, examTitle, schoolName, grade, difficulty, questionNumber, examSubtitle, totalPoints, targetSentences, systemPrompt]);
+  }, [passage, examTitle, schoolName, grade, difficulty, questionNumber, examSubtitle, totalPoints, targetSentences, targetPhrases, systemPrompt]);
 
   const handleJsonApply = useCallback(() => {
     try {
@@ -3054,6 +3105,9 @@ export default function EssayGeneratorPage() {
               const sk = String(item.source_key ?? `${item.chapter ?? ''} ${item.number ?? ''}`).trim();
               setPassage(original);
               setTargetSentences(new Set());
+              setTargetPhrases([]);
+              setPhrasePickIdx(null);
+              setPhrasePickStart(null);
               setEssaySentenceIndices([]);
               setSentenceListExpanded(false);
               setSelectedPassageInfo({ textbook: tb, sourceKey: sk, passageId: pid });
@@ -3103,7 +3157,11 @@ export default function EssayGeneratorPage() {
 
         const buildFullCmd = () => {
           if (!selectedPassageInfo?.passageId) return '';
-          const parts = [`"${tb} ${sk}" 지문을 ${difficulty}로 만들어줘.`];
+          const parts = [
+            isMeaningType
+              ? `"${tb} ${sk}" 지문으로 글의 의미(함의) 서술형을 ${difficulty}로 만들어줘.`
+              : `"${tb} ${sk}" 지문을 ${difficulty}로 만들어줘.`,
+          ];
           if (examTitle && examTitle !== '영어 서·논술형 평가') parts.push(`제목은 "${examTitle}"`);
           if (schoolName) parts.push(`학교는 "${schoolName}"`);
           if (grade) parts.push(`학년은 "${grade}"`);
@@ -3112,11 +3170,22 @@ export default function EssayGeneratorPage() {
           const selected = Array.from(targetSentences);
           if (selected.length > 0) {
             const indices = sentences.map((s, i) => (selected.includes(s) ? i : -1)).filter(i => i >= 0);
-            parts.push(`문장 [${indices.join('], [')}]을 반드시 포함해서 출제해줘.`);
+            parts.push(isMeaningType
+              ? `밑줄 친 의미 구절은 문장 [${indices.join('], [')}] 범위 안에서 잡아줘.`
+              : `문장 [${indices.join('], [')}]을 반드시 포함해서 출제해줘.`);
+          }
+          if (targetPhrases.length > 0) {
+            const ph = targetPhrases.map(p => `(문장 ${p.sentenceIdx + 1}) "${p.text}"`).join(', ');
+            parts.push(isMeaningType
+              ? `다음 표현을 밑줄 친 의미 구절(함의)로 삼아 출제해줘: ${ph}.`
+              : `다음 표현(구문)은 변형 없이 그대로 반드시 포함해서 출제해줘: ${ph}.`);
           }
           if (questionNumber && questionNumber !== '서·논술형') parts.push(`문항번호는 "${questionNumber}".`);
           if (typeof totalPoints === 'number') parts.push(`총배점 ${totalPoints}점.`);
           parts.push(`저장 폴더는 "${fold}".`);
+          if (isMeaningType) {
+            parts.push(`유형은 글의의미서술형 — assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙을 따르고, ExamData 의 meta.examType 을 "${ESSAY_MEANING_EXAM_TYPE}" 로 설정해줘. (기본=우리말 서술 / 중·고·최고=의미 영작)`);
+          }
           parts.push(`완성되면 cc:essay save 로 저장까지 진행해줘 (passageId: ${pid})`);
           return parts.join(' ');
         };
@@ -3275,15 +3344,36 @@ export default function EssayGeneratorPage() {
                       <CmdBlock
                         label="all4-prompt"
                         cmd={[
-                          `"${tb} ${sk}" 지문(passageId: ${pid})을 기본난도·중난도·고난도·최고난도 4 종 모두 만들어줘.`,
+                          isMeaningType
+                            ? `"${tb} ${sk}" 지문(passageId: ${pid})으로 글의 의미(함의) 서술형을 기본난도·중난도·고난도·최고난도 4 종 모두 만들어줘.`
+                            : `"${tb} ${sk}" 지문(passageId: ${pid})을 기본난도·중난도·고난도·최고난도 4 종 모두 만들어줘.`,
                           ...(examTitle && examTitle !== '영어 서·논술형 평가' ? [`시험지 제목: "${examTitle}"`] : []),
                           ...(schoolName ? [`학교: "${schoolName}"`] : []),
                           ...(grade ? [`학년: "${grade}"`] : []),
                           `저장 폴더: "${fold}"`,
+                          ...((): string[] => {
+                            const out: string[] = [];
+                            const sel = Array.from(targetSentences);
+                            if (sel.length > 0) {
+                              const idx = sentences.map((s, i) => (sel.includes(s) ? i : -1)).filter(i => i >= 0);
+                              out.push(isMeaningType
+                                ? `모든 난이도에서 밑줄 친 의미 구절은 문장 [${idx.join('], [')}] 범위에서 잡아줘.`
+                                : `모든 난이도에서 문장 [${idx.join('], [')}]을 반드시 포함해서 출제해줘.`);
+                            }
+                            if (targetPhrases.length > 0) {
+                              const ph = targetPhrases.map(p => `(문장 ${p.sentenceIdx + 1}) "${p.text}"`).join(', ');
+                              out.push(isMeaningType
+                                ? `모든 난이도에서 다음 표현을 밑줄 친 의미 구절(함의)로 삼아줘: ${ph}.`
+                                : `모든 난이도에서 다음 표현(구문)은 변형 없이 그대로 반드시 포함해서 출제해줘: ${ph}.`);
+                            }
+                            return out;
+                          })(),
                           ``,
                           `각 난이도마다 다음 절차로 진행:`,
                           `1. npm run cc:essay -- passage --id ${pid}  로 지문·문장표 확인 (한 번만 받으면 됨)`,
-                          `2. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 ExamData JSON 작성`,
+                          isMeaningType
+                            ? `2. assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙대로 ExamData JSON 작성 (각 JSON 의 meta.examType 을 "${ESSAY_MEANING_EXAM_TYPE}" 로 설정)`
+                            : `2. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 ExamData JSON 작성`,
                           `   - 기본난도 → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json`,
                           `   - 중난도   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_mid.json`,
                           `   - 고난도   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_hard.json`,
@@ -3291,7 +3381,9 @@ export default function EssayGeneratorPage() {
                           `3. 4 개 draft 모두 작성 완료되면 마지막에 한 번 save-all 로 일괄 저장:`,
                           `   npm run cc:essay -- save-all .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_mid.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_hard.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_max.json`,
                           ``,
-                          `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 (완전 영작) / 최고: 키워드 없음 한국어 해석만 (완전 영작).`,
+                          isMeaningType
+                            ? `난이도별 핵심 차이 — 기본: 밑줄 함의를 우리말로 서술 / 중: 의미 영작(키워드 다수) / 고: 의미 영작(키워드 소수) / 최고: 의미 영작(키워드 없음·우리말 의미문만).`
+                            : `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 (완전 영작) / 최고: 키워드 없음 한국어 해석만 (완전 영작).`,
                           `4 개 모두 같은 지문 다른 문장 선택해도 됨 — 난이도 간 문법 포인트 겹침 최소화.`,
                         ].join('\n')}
                       />
@@ -3630,10 +3722,41 @@ export default function EssayGeneratorPage() {
 
               <textarea
                 value={passage}
-                onChange={e => { setPassage(e.target.value); setSelectedPassageInfo(null); setTargetSentences(new Set()); }}
+                onChange={e => { setPassage(e.target.value); setSelectedPassageInfo(null); setTargetSentences(new Set()); setTargetPhrases([]); setPhrasePickIdx(null); setPhrasePickStart(null); }}
                 placeholder="영어 원문 지문을 붙여넣거나 DB에서 불러오세요..."
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 font-mono leading-relaxed resize-none h-44 overflow-y-auto scrollbar-thin"
               />
+            </div>
+
+            {/* 출제 유형 */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">출제 유형</label>
+              <div className="flex gap-2 flex-wrap">
+                {([
+                  { key: '배열형', label: '배열·영작형', desc: '문장 청크 배열 / 조건 영작 (기본 유형)' },
+                  { key: ESSAY_MEANING_EXAM_TYPE, label: '글의 의미 서술형', desc: '밑줄 함의 — 기본 우리말 서술 / 중·고·최고 영작' },
+                ] as const).map(({ key, label, desc }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    title={desc}
+                    onClick={() => setExamType(key)}
+                    className={`flex-1 min-w-[9rem] py-2 rounded-lg text-xs font-semibold transition-colors border ${
+                      examType === key
+                        ? 'bg-sky-700 text-white border-sky-700'
+                        : 'border-slate-600 text-slate-400 hover:bg-slate-700/60 hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {isMeaningType && (
+                <p className="mt-1.5 text-[11px] text-sky-300/90 leading-snug">
+                  밑줄 친 부분의 <b>의미(함의)</b>를 묻는 유형 — 기본난도는 <b>우리말 서술</b>, 중·고·최고난도는 <b>의미 영작</b>(키워드 다수→소수→없음).
+                  명령어가 <code className="text-slate-400">generation_prompt_meaning.md</code> 기준으로 바뀝니다.
+                </p>
+              )}
             </div>
 
             {/* 난이도 */}
@@ -3674,7 +3797,7 @@ export default function EssayGeneratorPage() {
                   </span>
                 </div>
                 <pre className="text-[11px] text-slate-300 font-mono whitespace-pre-wrap leading-relaxed max-h-44 overflow-y-auto scrollbar-thin">
-                  {ESSAY_DIFFICULTY_APPENDIX_TEXT[difficulty]}
+                  {essayDifficultyAppendixTable(isMeaningType ? ESSAY_MEANING_EXAM_TYPE : undefined)[difficulty]}
                 </pre>
               </div>
             </div>
@@ -3799,6 +3922,9 @@ export default function EssayGeneratorPage() {
                       ● 서술형대비 {essaySentenceIndices.length}개
                     </span>
                   )}
+                  {targetPhrases.length > 0 && (
+                    <span className="text-xs text-amber-400 font-medium">✂ 구문 {targetPhrases.length}개</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {sentences.length > 0 && (
@@ -3810,10 +3936,10 @@ export default function EssayGeneratorPage() {
                       {sentenceListExpanded ? '접기 ▲' : '펼치기 ▼'}
                     </button>
                   )}
-                  {targetSentences.size > 0 && (
+                  {(targetSentences.size > 0 || targetPhrases.length > 0) && (
                     <button
                       type="button"
-                      onClick={() => setTargetSentences(new Set())}
+                      onClick={clearAllTargets}
                       className="text-xs text-slate-500 hover:text-white transition-colors"
                     >
                       선택 해제
@@ -3825,31 +3951,93 @@ export default function EssayGeneratorPage() {
               {sentences.length === 0 ? (
                 <p className="text-xs text-slate-600 px-1">지문을 입력하면 문장 목록이 나타납니다</p>
               ) : (
-                <div className={`flex flex-col gap-1 overflow-y-auto pr-1 transition-all scrollbar-thin ${sentenceListExpanded ? 'max-h-[36rem]' : 'max-h-44'}`}>
-                  {sentences.map((s, i) => {
-                    const selected = targetSentences.has(s);
-                    const isEssay = essaySentenceIndices.includes(i);
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => toggleSentence(s)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-xs leading-relaxed transition-colors border font-mono ${
-                          selected
-                            ? 'bg-blue-600/25 border-blue-500/60 text-blue-200'
-                            : isEssay
-                            ? 'bg-emerald-900/30 border-emerald-600/50 text-emerald-200 hover:bg-emerald-800/40 hover:border-emerald-500/70'
-                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
-                        }`}
-                      >
-                        <span className={`inline-block mr-1.5 font-bold ${selected ? 'text-blue-400' : isEssay ? 'text-emerald-400' : 'text-slate-600'}`}>
-                          {selected ? '✓' : isEssay ? '★' : `${i + 1}.`}
-                        </span>
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  <p className="text-[10px] text-slate-500 mb-1 px-0.5">
+                    문장 클릭 = 문장 전체 · <span className="text-amber-400 font-medium">✂구</span> = 문장 안에서 단어 범위(구) 선택
+                  </p>
+                  <div className={`flex flex-col gap-1 overflow-y-auto pr-1 transition-all scrollbar-thin ${sentenceListExpanded ? 'max-h-[36rem]' : 'max-h-44'}`}>
+                    {sentences.map((s, i) => {
+                      const selected = targetSentences.has(s);
+                      const isEssay = essaySentenceIndices.includes(i);
+                      const picking = phrasePickIdx === i;
+                      const words = splitWords(s);
+                      const phrasesHere = targetPhrases.filter(p => p.sentenceIdx === i);
+                      return (
+                        <div
+                          key={i}
+                          className={`rounded-lg border ${
+                            selected
+                              ? 'bg-blue-600/20 border-blue-500/60'
+                              : picking
+                              ? 'bg-amber-900/20 border-amber-500/60'
+                              : isEssay
+                              ? 'bg-emerald-900/30 border-emerald-600/50'
+                              : 'bg-slate-800 border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-start gap-1.5 px-2.5 py-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleSentence(s)}
+                              className={`flex-1 text-left text-xs leading-relaxed font-mono ${
+                                selected ? 'text-blue-200' : isEssay ? 'text-emerald-200' : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                              title="문장 전체 포함 토글"
+                            >
+                              <span className={`inline-block mr-1.5 font-bold ${selected ? 'text-blue-400' : isEssay ? 'text-emerald-400' : 'text-slate-600'}`}>
+                                {selected ? '✓' : isEssay ? '★' : `${i + 1}.`}
+                              </span>
+                              {s}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => startPhrasePick(i)}
+                              className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded border self-start mt-0.5 ${
+                                picking ? 'bg-amber-600 text-white border-amber-400' : 'border-slate-600 text-slate-400 hover:bg-slate-700/50'
+                              }`}
+                              title="문장 안에서 특정 구(단어 범위) 선택"
+                            >
+                              ✂ 구
+                            </button>
+                          </div>
+                          {picking && (
+                            <div className="px-2.5 pb-2 border-t border-amber-700/30 pt-1.5">
+                              <p className="text-[10px] text-amber-300/90 mb-1">
+                                {phrasePickStart === null ? '① 시작 단어를 클릭' : '② 끝 단어를 클릭 (한 단어면 같은 단어 다시 클릭)'}
+                              </p>
+                              <div className="flex flex-wrap gap-0.5">
+                                {words.map((w, wi) => (
+                                  <button
+                                    key={wi}
+                                    type="button"
+                                    onClick={() => pickWord(i, words, wi)}
+                                    className={`text-[11px] px-1 py-0.5 rounded font-mono ${
+                                      phrasePickStart === wi
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-slate-700/70 text-slate-200 hover:bg-amber-700/50'
+                                    }`}
+                                  >
+                                    {w}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {phrasesHere.length > 0 && (
+                            <div className="px-2.5 pb-2 flex flex-wrap gap-1">
+                              {phrasesHere.map((p, pi) => (
+                                <span key={pi} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-600/25 border border-amber-500/50 text-amber-200">
+                                  「{p.text}」
+                                  <button type="button" onClick={() => removePhrase(i, p.text)} className="text-amber-300 hover:text-white leading-none">✕</button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
 

@@ -17,6 +17,7 @@
     "mcp-bridge:dev": "node scripts/mcp-bridge-dev.cjs",
     "mcp:variant": "tsx scripts/mcp-next-order-variant.ts",
     "cc:variant": "tsx scripts/cc-variant-cli.ts",
+    "cc:narrative": "tsx scripts/cc-narrative-cli.ts",
     "cc:essay": "tsx scripts/cc-essay-cli.ts",
     "cc:essay-step": "tsx scripts/cc-essay-step-cli.ts",
     "cc:block-workbook": "tsx scripts/cc-block-workbook-cli.ts",

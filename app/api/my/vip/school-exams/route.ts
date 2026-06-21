@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
       isLocked: !!e.isLocked,
       pdfPath: e.pdfPath ?? null,
       pdfName: e.pdfName ?? null,
+      analyzed: !!(e as { analyzed?: boolean }).analyzed,
     })),
   });
 }

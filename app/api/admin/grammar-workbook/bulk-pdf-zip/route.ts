@@ -99,6 +99,9 @@ export async function POST(request: NextRequest) {
     defaultViewport: { width: 1280, height: 1696, deviceScaleFactor: 1 },
     executablePath,
     headless: true,
+    /* 큰/다건 PDF 의 CDP printToPDF 가 기본 protocolTimeout(180s)을 넘기지 않도록
+       maxDuration(300s)에 맞춰 늘린다. */
+    protocolTimeout: 280_000,
   });
 
   try {
@@ -113,6 +116,7 @@ export async function POST(request: NextRequest) {
           format: 'A4',
           printBackground: true,
           margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
+          timeout: 0, // 30s 기본 타임아웃 해제 (상위: protocolTimeout 280s · maxDuration 300s)
         });
         const filename = uniqueFilename(usedNames, sanitizeFilename(w.title) + '.pdf');
         zip.file(filename, pdfBuf);
