@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import {
   getAttendanceDb,
   VIP_CLASSES_COLLECTION,
@@ -27,7 +27,7 @@ function parseStudentIds(v: unknown): ObjectId[] {
 
 /** PATCH — 반 수정. body: { name?, schoolId?, schoolName?, studentIds?, color?, scheduleNote?, status? } */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
   if (!ObjectId.isValid(id)) return NextResponse.json({ error: '잘못된 요청' }, { status: 400 });
@@ -66,7 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 /** DELETE — 반 + 그 반의 출결·QR세션 cascade 삭제 */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
   if (!ObjectId.isValid(id)) return NextResponse.json({ error: '잘못된 요청' }, { status: 400 });

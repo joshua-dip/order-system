@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { VipSidebar } from '@/app/components/ui/sidebar-component';
+import { pathToMenuId, GATE_EXEMPT_MENU_IDS } from '@/lib/vip-menu-path';
+import { getCurrentSubject, DEFAULT_VIP_SUBJECT, ENGLISH_ONLY_MENU_IDS } from '@/lib/vip-subject';
+import { fetchVipMenus } from '@/lib/vip-menu-client';
 
 interface VipUser {
   loginId: string;
@@ -12,9 +15,12 @@ interface VipUser {
 
 export default function VipLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<VipUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // 메뉴 게이트: null=검사중, true=통과(렌더), false=리다이렉트중
+  const [gateOk, setGateOk] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -28,7 +34,29 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading || !user) {
+  // 잠긴/비해당 메뉴 URL 직접 접근 차단 (경로 바뀔 때마다 재검사)
+  useEffect(() => {
+    if (!user) return;
+    const menuId = pathToMenuId(pathname);
+    if (GATE_EXEMPT_MENU_IDS.has(menuId)) { setGateOk(true); return; }
+    // 영어 전용 메뉴를 비영어 과목에서 열면 대시보드로
+    if (ENGLISH_ONLY_MENU_IDS.has(menuId) && getCurrentSubject() !== DEFAULT_VIP_SUBJECT) {
+      setGateOk(false); router.replace('/my/vip'); return;
+    }
+    let alive = true;
+    setGateOk(null);
+    fetchVipMenus()
+      .then((menus) => {
+        if (!alive) return;
+        const m = menus.find((x) => x.id === menuId);
+        if (m && m.paid && !m.unlocked) { setGateOk(false); router.replace('/my/vip/menu-store'); return; }
+        setGateOk(true); // 미설정/무료/구매함/조회실패([]) → 통과(fail-open)
+      })
+      .catch(() => { if (alive) setGateOk(true); });
+    return () => { alive = false; };
+  }, [pathname, user, router]);
+
+  if (loading || !user || gateOk === null || gateOk === false) {
     return (
       <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />

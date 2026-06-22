@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { getCurrentSubject, setCurrentSubject, DEFAULT_VIP_SUBJECT, ENGLISH_ONLY_MENU_IDS } from "@/lib/vip-subject";
 import {
   Search as SearchIcon,
   Dashboard,
@@ -16,6 +17,7 @@ import {
   CheckmarkOutline,
   ArrowLeft,
   Catalog,
+  Settings as SettingsIcon,
 } from "@carbon/icons-react";
 
 /* ----------------------------- Brand / Logo ----------------------------- */
@@ -163,6 +165,34 @@ function UnifiedSidebar({ userName }: { userName: string }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const activeId = getActiveSectionFromPath(pathname);
+  // 접근 가능한 메뉴(무료 + 언락) — null=로딩중(전체 표시). 로드 후 유료·미언락 메뉴 숨김.
+  const [accessible, setAccessible] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/my/vip/menus', { credentials: 'include' }).then((r) => r.json()).then((d) => {
+      if (!alive || !d.ok) return;
+      const s = new Set<string>(['dashboard']);
+      for (const m of d.menus as { id: string; paid: boolean; unlocked: boolean }[]) {
+        if (!m.paid || m.unlocked) s.add(m.id);
+      }
+      setAccessible(s);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [pathname]);
+  // 전역 과목 컨텍스트
+  const [subject, setSubject] = useState<string>(DEFAULT_VIP_SUBJECT);
+  const [subjects, setSubjects] = useState<string[]>([]);
+  useEffect(() => {
+    setSubject(getCurrentSubject());
+    fetch('/api/my/vip/subjects', { credentials: 'include' }).then((r) => r.json()).then((d) => {
+      if (d.ok && Array.isArray(d.subjects)) setSubjects(d.subjects.map((s: { name: string }) => s.name));
+    }).catch(() => {});
+  }, []);
+  const changeSubject = (s: string) => { if (s === subject) return; setCurrentSubject(s); window.location.reload(); };
+
+  // 메뉴 = 접근가능(엔타이틀먼트) ∩ 과목 적용(영어전용 메뉴는 영어일 때만)
+  const navItems = (accessible ? UNIFIED_NAV.filter((it) => accessible.has(it.id)) : UNIFIED_NAV)
+    .filter((it) => subject === DEFAULT_VIP_SUBJECT || !ENGLISH_ONLY_MENU_IDS.has(it.id));
 
   return (
     <aside
@@ -208,9 +238,27 @@ function UnifiedSidebar({ userName }: { userName: string }) {
         <SearchContainer isCollapsed={collapsed} />
       </div>
 
+      {/* 전역 과목 스위처 */}
+      {subjects.length > 0 && (collapsed ? (
+        <div className="mb-2 w-9 h-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-[12px] font-bold text-[#c9a44e]" title={`과목: ${subject}`}>
+          {subject.slice(0, 1)}
+        </div>
+      ) : (
+        <div className="w-full px-3 mb-2">
+          <label className="block text-[10px] text-zinc-600 mb-1 px-0.5">과목</label>
+          <div className="relative">
+            <select value={subject} onChange={(e) => changeSubject(e.target.value)}
+              className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg bg-zinc-900/70 border border-zinc-700/60 text-sm text-zinc-100 focus:outline-none focus:border-[#c9a44e]/50 [&>option]:bg-zinc-900 cursor-pointer">
+              {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <ChevronDownIcon size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+          </div>
+        </div>
+      ))}
+
       {/* 네비게이션 */}
       <nav className={`flex-1 overflow-y-auto w-full flex flex-col ${collapsed ? "items-center gap-1" : "gap-0.5 px-2"}`}>
-        {UNIFIED_NAV.map((item) => {
+        {navItems.map((item) => {
           const active = item.exact ? pathname === item.href : item.id === activeId;
           const expanded = !collapsed && item.id === activeId && !!item.children;
           return (
@@ -256,6 +304,19 @@ function UnifiedSidebar({ userName }: { userName: string }) {
             </div>
           );
         })}
+
+        {/* 메뉴 설정(상점) — 메뉴 추가/구매 */}
+        <button
+          type="button"
+          onClick={() => router.push("/my/vip/menu-store")}
+          title={collapsed ? "메뉴 설정" : undefined}
+          className={`relative flex items-center rounded-lg transition-colors mt-1 ${
+            collapsed ? "justify-center w-10 h-10" : "w-full gap-3 px-3 py-2"
+          } ${pathname.startsWith("/my/vip/menu-store") ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"}`}
+        >
+          <span className="shrink-0"><SettingsIcon size={18} /></span>
+          {!collapsed && <span className="text-[13.5px] font-medium flex-1 text-left">메뉴 설정</span>}
+        </button>
       </nav>
 
       {/* 푸터: 마이페이지 */}

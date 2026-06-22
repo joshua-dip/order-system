@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import { getDb } from '@/lib/mongodb';
 import { buildVariantQFilter } from '@/lib/admin-generated-questions-q-filter';
 import { QUESTION_BANK_COLLECTION, previewText } from '@/lib/vip-question-bank-store';
@@ -12,7 +12,7 @@ const PAGE_SIZE = 20;
 
 /** 변형문제(generated_questions) 불러오기 검색 — VIP 선생님이 내 문제은행에 담을 후보 조회. */
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'questions');
   if (auth instanceof NextResponse) return auth;
 
   const sp = request.nextUrl.searchParams;

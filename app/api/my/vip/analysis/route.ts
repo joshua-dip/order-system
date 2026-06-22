@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import { getVipDb, ensureVipIndexes, col, type VipSchoolExam, type VipStudentScore } from '@/lib/vip-db';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'analysis');
   if (auth instanceof NextResponse) return auth;
 
   const db = await getVipDb();

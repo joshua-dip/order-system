@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import { getDb } from '@/lib/mongodb';
 import {
   QUESTION_BANK_COLLECTION,
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 /** GET — 내 문제은행 목록 (folder/type/q 필터) + 폴더 목록 */
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'questions');
   if (auth instanceof NextResponse) return auth;
   const db = await getDb('gomijoshua');
   await ensureQuestionBankIndexes(db);
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — 문제 담기 ({ questionIds: string[], folder?: string }) */
 export async function POST(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'questions');
   if (auth instanceof NextResponse) return auth;
   let body: { questionIds?: unknown; folder?: unknown };
   try { body = (await request.json()) as Record<string, unknown>; } catch { return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 }); }
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
 /** DELETE — 내 문제은행에서 제거 (?id= 저장항목 / ?questionId=) */
 export async function DELETE(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'questions');
   if (auth instanceof NextResponse) return auth;
   const db = await getDb('gomijoshua');
   const userId = new ObjectId(auth.userId);
@@ -140,7 +140,7 @@ export async function DELETE(request: NextRequest) {
 
 /** PATCH — 폴더/태그 변경 ({ ids: string[], folder?: string }) */
 export async function PATCH(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'questions');
   if (auth instanceof NextResponse) return auth;
   let body: { ids?: unknown; folder?: unknown };
   try { body = (await request.json()) as Record<string, unknown>; } catch { return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 }); }

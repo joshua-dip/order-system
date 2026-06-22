@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import {
   getAttendanceDb,
   loadClassRoster,
@@ -20,7 +20,7 @@ function emptyCounts(): Record<AttendanceStatus, number> {
 
 /** GET — 반별 학생 출결 집계. query: classId, from?, to? (YYYY-MM-DD) */
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   const sp = request.nextUrl.searchParams;

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import { getVipDb, ensureVipIndexes, col, type VipStudentScore } from '@/lib/vip-db';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'scores');
   if (auth instanceof NextResponse) return auth;
 
   const db = await getVipDb();
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'scores');
   if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();

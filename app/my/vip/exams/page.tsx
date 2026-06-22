@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import QuestionPhotoGrid from './QuestionPhotoGrid';
+import { getCurrentSubject, DEFAULT_VIP_SUBJECT } from '@/lib/vip-subject';
 
 interface School { id: string; name: string }
 interface ExamQuestion {
@@ -109,6 +110,8 @@ async function parseExamExcel(file: File): Promise<ExcelQuestion[]> {
 type GroupQuestion = { qNum: string; title: string; choices: string; score: number; summary: string; showSummary: boolean; glossary: string; questionType: string; };
 
 export default function VipExamsPage() {
+  const [subject, setSubject] = useState(DEFAULT_VIP_SUBJECT);
+  useEffect(() => { setSubject(getCurrentSubject()); }, []);
   const [schools, setSchools] = useState<School[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [exams, setExams] = useState<SchoolExam[]>([]);
@@ -740,8 +743,11 @@ export default function VipExamsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-zinc-100">시험 준비</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">시험 범위를 파악하고, 시험을 등록·분류해 대비합니다</p>
+        <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-md bg-[#c9a44e]/15 text-[#e8d48b] text-sm border border-[#c9a44e]/25">{subject}</span>
+          시험 준비
+        </h1>
+        <p className="text-sm text-zinc-500 mt-0.5">{subject} 시험 범위를 파악하고, 시험을 등록·분류해 대비합니다</p>
       </div>
 
       {/* Filters */}

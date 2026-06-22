@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import {
   getAttendanceDb,
   ensureAttendanceIndexes,
@@ -23,7 +23,7 @@ function normReason(v: unknown): AbsenceReason | null {
 
 /** GET — 반 명단 + 해당 (반,날짜,교시) 기존 출결 병합 */
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   const sp = request.nextUrl.searchParams;
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — 출결 일괄 저장. body: { classId, date, sessionLabel?, records:[{studentId,status,reason?,memo?}] } */
 export async function POST(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   let body: Record<string, unknown>;

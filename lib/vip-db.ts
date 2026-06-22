@@ -88,6 +88,8 @@ export interface VipSchoolExam {
   academicYear: number;
   grade: number;
   examType: string;
+  /** 과목 (영어/수학/…). 미설정 = 영어(레거시). */
+  subject?: string;
   questions: Record<string, ExamQuestion>;
   objectiveCount: number;
   subjectiveCount: number;
@@ -143,12 +145,15 @@ export async function ensureVipIndexes(db: Db): Promise<void> {
   if (_indexesEnsured) return;
   _indexesEnsured = true;
 
+  // 과목 도입 — schoolExams 유니크 키에 subject 포함(영어/수학 동명 시험 공존). 옛 인덱스(subject 미포함) 제거.
+  try { await db.collection(COL.schoolExams).dropIndex('userId_1_schoolId_1_academicYear_1_grade_1_examType_1'); } catch { /* 없으면 무시 */ }
+
   await Promise.all([
     db.collection(COL.schools).createIndex({ userId: 1, name: 1 }, { unique: true }),
     db.collection(COL.students).createIndex({ userId: 1, schoolId: 1 }),
     db.collection(COL.students).createIndex({ userId: 1, status: 1 }),
     db.collection(COL.schoolExams).createIndex(
-      { userId: 1, schoolId: 1, academicYear: 1, grade: 1, examType: 1 },
+      { userId: 1, schoolId: 1, academicYear: 1, grade: 1, examType: 1, subject: 1 },
       { unique: true },
     ),
     db.collection(COL.studentScores).createIndex(
