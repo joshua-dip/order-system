@@ -7,6 +7,8 @@ import { getPublicSiteUrl } from '@/lib/site-branding';
 const PUBLIC_BASE = getPublicSiteUrl() || 'https://gomijoshua.com';
 
 interface ApiKey { id: string; key: string; label: string; createdAt: string; lastUsedAt: string | null }
+interface UsageLog { id: string; keyId: string; keyLabel: string; at: string; endpoint: string; folder: string; type: string; limit: number | null; offset: number | null; count: number; status: number; ip: string; userAgent: string }
+interface UsageSummary { total: number; last7d: number; last24h: number; returned: number; perKey: { keyId: string; keyLabel: string; calls: number; items: number; lastAt: string }[] }
 
 function when(iso: string | null): string {
   if (!iso) return '—';
@@ -25,6 +27,9 @@ export default function QbankApiPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [test, setTest] = useState<{ status: number; total?: number; count?: number; sample?: unknown; error?: string } | null>(null);
   const [testing, setTesting] = useState(false);
+  const [usage, setUsage] = useState<UsageLog[]>([]);
+  const [usageSummary, setUsageSummary] = useState<UsageSummary | null>(null);
+  const [usageLoading, setUsageLoading] = useState(true);
 
   const load = useCallback(async () => {
     const d = await fetch('/api/my/vip/api-keys', { credentials: 'include' }).then((r) => r.json());
@@ -32,6 +37,16 @@ export default function QbankApiPage() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  const loadUsage = useCallback(async () => {
+    setUsageLoading(true);
+    try {
+      const d = await fetch('/api/my/vip/api-keys/usage?limit=200', { credentials: 'include' }).then((r) => r.json());
+      if (d.ok) { setUsage(d.logs); setUsageSummary(d.summary); }
+    } catch { /* ignore */ }
+    setUsageLoading(false);
+  }, []);
+  useEffect(() => { loadUsage(); }, [loadUsage]);
 
   const createKey = async () => {
     setBusy(true);
@@ -64,6 +79,7 @@ export default function QbankApiPage() {
       const res = await fetch(`/api/public/question-bank?limit=3`, { headers: { Authorization: `Bearer ${k.key}` } });
       const d = await res.json();
       setTest({ status: res.status, total: d.total, count: d.count, sample: d.items?.[0] ?? null, error: d.error });
+      setTimeout(loadUsage, 600); // 방금 호출이 사용 내역에 반영되도록
     } catch (e) { setTest({ status: 0, error: String(e) }); }
     setTesting(false);
   };
@@ -140,6 +156,65 @@ export default function QbankApiPage() {
           </div>
         )}
         <p className="text-[11px] text-zinc-600">키는 비밀번호처럼 다뤄 주세요. 노출되면 폐기 후 새로 발급하세요.</p>
+      </section>
+
+      {/* 사용 내역 */}
+      <section className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-5 space-y-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-zinc-200">사용 내역</h2>
+          <button onClick={loadUsage} className="text-[11px] px-2.5 py-1 rounded-md bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors">새로고침</button>
+        </div>
+
+        {/* 요약 */}
+        {usageSummary && (
+          <div className="grid grid-cols-3 gap-2">
+            {[['총 호출', usageSummary.total], ['최근 7일', usageSummary.last7d], ['최근 24시간', usageSummary.last24h]].map(([label, v]) => (
+              <div key={label as string} className="rounded-lg bg-zinc-900/60 border border-zinc-800/70 px-3 py-2.5 text-center">
+                <div className="text-lg font-bold text-zinc-100 tabular-nums">{(v as number).toLocaleString()}</div>
+                <div className="text-[10px] text-zinc-500 mt-0.5">{label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 키별 집계 */}
+        {usageSummary && usageSummary.perKey.length > 0 && (
+          <div className="space-y-1">
+            {usageSummary.perKey.map((p) => (
+              <div key={p.keyId} className="flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-md bg-zinc-900/40 border border-zinc-800/60">
+                <span className="text-zinc-300 font-medium truncate flex-1">{p.keyLabel}</span>
+                <span className="text-zinc-500">{p.calls.toLocaleString()}회</span>
+                <span className="text-zinc-600">· {p.items.toLocaleString()}문항</span>
+                <span className="text-zinc-600">· {when(p.lastAt)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 호출 로그 */}
+        {usageLoading ? (
+          <div className="py-8 text-center"><div className="w-5 h-5 mx-auto border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" /></div>
+        ) : usage.length === 0 ? (
+          <div className="py-8 text-center text-xs text-zinc-600">아직 외부 호출 기록이 없습니다. 키로 API를 호출하면 여기에 시각·건수·IP가 쌓입니다.</div>
+        ) : (
+          <div className="rounded-lg border border-zinc-800/70 overflow-hidden">
+            <div className="grid grid-cols-[1.6fr_1.2fr_1.3fr_0.6fr_0.6fr] gap-2 px-3 py-1.5 bg-zinc-900/70 text-[10px] text-zinc-500 font-medium">
+              <span>시각</span><span>키</span><span>필터</span><span className="text-right">건수</span><span className="text-right">상태</span>
+            </div>
+            <div className="max-h-80 overflow-y-auto divide-y divide-zinc-800/50">
+              {usage.map((u) => (
+                <div key={u.id} className="grid grid-cols-[1.6fr_1.2fr_1.3fr_0.6fr_0.6fr] gap-2 px-3 py-1.5 text-[11px] items-center">
+                  <span className="text-zinc-400" title={u.ip ? `IP ${u.ip}` : ''}>{when(u.at)}</span>
+                  <span className="text-zinc-300 truncate">{u.keyLabel}</span>
+                  <span className="text-zinc-500 truncate">{[u.folder && `folder=${u.folder}`, u.type && `type=${u.type}`].filter(Boolean).join(' ') || '전체'}</span>
+                  <span className="text-right text-zinc-300 tabular-nums">{u.count}</span>
+                  <span className={`text-right tabular-nums ${u.status === 200 ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>{u.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <p className="text-[11px] text-zinc-600">최근 200건까지 표시 · 로그는 1년간 보관됩니다.</p>
       </section>
 
       {/* 사용법 */}

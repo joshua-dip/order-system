@@ -23,8 +23,20 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'review', label: '오답노트' },
   { id: 'report', label: '성적표' },
   { id: 'tuition', label: '수강료 관리' },
-  { id: 'counseling', label: '상담일지' },
+  { id: 'counseling', label: '상담 관리' },
   { id: 'lessons', label: '수업일지' },
+  { id: 'videos', label: '강의영상관리' },
+  { id: 'materials', label: '교재 만들기' },
+  { id: 'words', label: '단어 관리' },
+  { id: 'assessments', label: '수행평가 관리' },
+  { id: 'forms', label: '학원 양식 관리' },
+  { id: 'inventory', label: '재고 관리' },
+  { id: 'expenses', label: '운영비 관리' },
+  { id: 'academy', label: '학원 교습소 정보' },
+  { id: 'school-info', label: '학교 정보 관리' },
+  { id: 'payroll', label: '급여 관리' },
+  { id: 'writing', label: '영작 수업' },
+  { id: 'dictionary', label: '전자사전' },
   { id: 'qbank-api', label: '문제은행 API' },
 ];
 
@@ -47,8 +59,20 @@ export const DEFAULT_MENU_DEPENDENCIES: Record<string, string[]> = {
   review: ['generate'],              // 오답노트 = QR 자가채점(문제 생성) 결과
   report: ['scores'],                // 성적표 = 성적 관리
   tuition: ['students'],             // 수강료 = 학생 명단·과목 수강료
-  counseling: ['students'],          // 상담일지 = 학생 명단
+  counseling: ['students'],          // 상담 관리 = 학생 명단
   lessons: ['attendance'],           // 수업일지 = 반(출결관리)
+  writing: ['students'],             // 영작 수업 = 학생 명단(학생별 첨삭)
+  videos: [],                        // 강의영상관리 = 독립(영상 링크 라이브러리)
+  materials: [],                     // 교재 만들기 = 독립(블록 기반 교재 빌더)
+  words: [],                         // 단어 관리 = 독립(단어장·단어시험지)
+  assessments: [],                   // 수행평가 관리 = 독립(학교 수행평가 일정)
+  forms: [],                         // 학원 양식 관리 = 독립(문서 양식)
+  inventory: [],                     // 재고 관리 = 독립(물품 재고)
+  expenses: [],                      // 운영비 관리 = 독립(지출 내역)
+  academy: [],                       // 학원 교습소 정보 = 독립(단일 정보)
+  'school-info': [],                 // 학교 정보 관리 = 독립(학교 목록)
+  payroll: [],                       // 급여 관리 = 독립(직원 급여)
+  dictionary: [],                    // 전자사전 = 독립(무료 사전 API)
   'qbank-api': ['questions'],        // 문제은행 API = 내 문제은행(문제 관리)
 };
 

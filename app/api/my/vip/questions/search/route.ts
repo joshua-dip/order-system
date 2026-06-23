@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVipMenu } from '@/lib/vip-menu-guard';
 import { getDb } from '@/lib/mongodb';
-import { buildVariantQFilter } from '@/lib/admin-generated-questions-q-filter';
-import { QUESTION_BANK_COLLECTION, previewText } from '@/lib/vip-question-bank-store';
+import { QUESTION_BANK_COLLECTION, previewText, buildBrowseFilter } from '@/lib/vip-question-bank-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,22 +21,7 @@ export async function GET(request: NextRequest) {
   const q = (sp.get('q') || '').trim();
   const page = Math.max(1, Number(sp.get('page')) || 1);
 
-  const filter: Record<string, unknown> = { status: '완료' };
-  if (type) filter.type = type;
-  if (textbook) filter.textbook = textbook;
-  if (difficulty) filter.difficulty = difficulty;
-
-  // q: "V-000123" / "123" → 고유번호 정확검색, 아니면 출처/교재 라벨 검색
-  if (q) {
-    const serialMatch = q.match(/^v?-?\s*0*(\d{1,7})$/i);
-    if (serialMatch) {
-      filter.serialNo = Number(serialMatch[1]);
-    } else {
-      const qf = buildVariantQFilter(q);
-      if (qf) Object.assign(filter, qf);
-      else filter.source = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
-    }
-  }
+  const filter = buildBrowseFilter({ type, textbook, difficulty, q });
 
   const db = await getDb('gomijoshua');
   const col = db.collection('generated_questions');

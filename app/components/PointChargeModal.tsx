@@ -18,6 +18,10 @@ type Props = {
   customerKey: string;
   customerName: string;
   customerEmail: string;
+  /** 'points'(기본) = 포인트 충전, 'vip_subscription' = VIP 월 구독 결제. */
+  purpose?: 'points' | 'vip_subscription';
+  /** 구독 월 금액(원) — purpose='vip_subscription' 일 때 표시·결제. */
+  subscriptionWon?: number;
 };
 
 export default function PointChargeModal({
@@ -26,7 +30,10 @@ export default function PointChargeModal({
   customerKey,
   customerName,
   customerEmail,
+  purpose = 'points',
+  subscriptionWon = 9900,
 }: Props) {
+  const isSub = purpose === 'vip_subscription';
   const [selected, setSelected] = useState<PointChargeTierId>('p10k');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +124,7 @@ export default function PointChargeModal({
       return;
     }
     const pkg = POINT_CHARGE_PACKAGES.find((p) => p.id === selected);
-    if (!pkg) return;
+    if (!isSub && !pkg) return;
 
     setBusy(true);
     try {
@@ -125,7 +132,9 @@ export default function PointChargeModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ tier: pkg.id, ...(selectedCouponId ? { couponId: selectedCouponId } : {}) }),
+        body: JSON.stringify(isSub
+          ? { purpose: 'vip_subscription' }
+          : { tier: pkg!.id, ...(selectedCouponId ? { couponId: selectedCouponId } : {}) }),
       });
       const prepData = await prep.json();
       if (!prep.ok || !prepData?.ok) {
@@ -204,7 +213,7 @@ export default function PointChargeModal({
               </button>
             )}
             <h2 id="point-charge-title" className="text-base font-bold text-[#0f172a]">
-              {phase === 'select' ? '포인트 미리 충전' : '결제 정보 입력'}
+              {phase === 'widget' ? '결제 정보 입력' : isSub ? 'VIP 메뉴 월 구독' : '포인트 미리 충전'}
             </h2>
           </div>
           <button
@@ -220,10 +229,22 @@ export default function PointChargeModal({
         {/* 패키지 선택 단계 */}
         {phase === 'select' && (
           <div className="px-5 py-4 space-y-3">
-            <p className="text-[13px] text-[#64748b] leading-relaxed">
-              1P = 1원 기준. 고액 패키지는 할인 적용됩니다.
-              토스페이먼츠 결제위젯으로 진행됩니다.
-            </p>
+            {isSub ? (
+              <div className="rounded-xl border border-[#c9a44e]/40 bg-[#fffbeb] px-4 py-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-bold text-[#0f172a]">VIP 메뉴 월 구독</span>
+                  <span className="font-bold text-[#b45309]">{subscriptionWon.toLocaleString()}원<span className="text-[12px] font-medium text-[#92400e]"> / 월</span></span>
+                </div>
+                <p className="text-[12px] text-[#92400e] mt-1 leading-relaxed">
+                  결제하면 <b>VIP 메뉴 전체</b>를 한 달간 사용할 수 있어요. 매월 직접 결제로 갱신하는 방식이며 자동결제(카드 자동청구)는 아닙니다.
+                </p>
+              </div>
+            ) : (
+              <p className="text-[13px] text-[#64748b] leading-relaxed">
+                1P = 1원 기준. 고액 패키지는 할인 적용됩니다.
+                토스페이먼츠 결제위젯으로 진행됩니다.
+              </p>
+            )}
             {isTestKey && !isWidgetKey && (
               <p className="text-[12px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                 테스트 API 개별 키 감지 — 결제위젯은 gck_ 키가 필요합니다. 결제위젯 연동 키로 교체하세요.
@@ -234,6 +255,7 @@ export default function PointChargeModal({
                 테스트 키 — 실제 과금 없이 결제 흐름만 확인됩니다.
               </p>
             )}
+            {!isSub && (
             <div className="grid grid-cols-1 gap-2">
               {POINT_CHARGE_PACKAGES.map((p: PointChargePackage) => {
                 const basePay = amountWonForPackage(p);
@@ -278,9 +300,10 @@ export default function PointChargeModal({
                 );
               })}
             </div>
+            )}
 
             {/* 쿠폰 선택 */}
-            {coupons.length > 0 && (
+            {!isSub && coupons.length > 0 && (
               <div className="rounded-xl border border-[#e2e8f0] bg-[#faf5ff] px-4 py-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[13px] font-semibold text-[#6d28d9]">🎟 할인 쿠폰</span>

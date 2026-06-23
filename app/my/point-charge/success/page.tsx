@@ -54,7 +54,12 @@ function SuccessInner() {
             /* ignore */
           }
           setStatus('ok');
-          setMessage(d.already ? '이미 처리된 결제입니다.' : '포인트가 충전되었습니다.');
+          if (d.vipSubscription) {
+            const until = d.vipSubscriptionUntil ? new Date(d.vipSubscriptionUntil).toLocaleDateString('ko-KR') : '';
+            setMessage(d.already ? '이미 처리된 결제입니다.' : `VIP 메뉴 월 구독이 갱신되었습니다.${until ? ` (${until}까지)` : ''}`);
+          } else {
+            setMessage(d.already ? '이미 처리된 결제입니다.' : '포인트가 충전되었습니다.');
+          }
           if (typeof d.balanceAfter === 'number') setBalanceAfter(d.balanceAfter);
           router.refresh();
           return;
@@ -79,7 +84,7 @@ function SuccessInner() {
       {status === 'ok' && (
         <>
           <p className="text-4xl mb-3">✓</p>
-          <h1 className="text-lg font-bold text-[#0f172a] mb-2">충전 완료</h1>
+          <h1 className="text-lg font-bold text-[#0f172a] mb-2">{message.includes('구독') ? '구독 완료' : '충전 완료'}</h1>
           <p className="text-[#475569] text-sm mb-2">{message}</p>
           {balanceAfter != null && (
             <p className="text-sm text-[#0f172a] font-semibold mb-6">현재 보유 {balanceAfter.toLocaleString()} P</p>

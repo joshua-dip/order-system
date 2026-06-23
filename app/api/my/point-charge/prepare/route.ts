@@ -6,6 +6,7 @@ import { getDb } from '@/lib/mongodb';
 import { getPointChargePackage, type PointChargeTierId } from '@/lib/point-charge-packages';
 import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
 import { getActiveCoupon, effectivePointChargeDiscount } from '@/lib/coupons';
+import { VIP_SUBSCRIPTION_MONTHLY_WON, VIP_SUBSCRIPTION_ORDER_NAME } from '@/lib/vip-subscription';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,29 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
+
+  // VIP 월 구독 결제(수동) — 포인트 충전과 같은 토스 위젯을 쓰되 purpose 로 구분.
+  if (body?.purpose === 'vip_subscription') {
+    const orderId = `vsub_${userId.toHexString().slice(-8)}_${Date.now()}_${randomBytes(4).toString('hex')}`;
+    try {
+      const db = await getDb('gomijoshua');
+      await db.collection(POINT_CHARGE_ORDERS_COLLECTION).insertOne({
+        orderId,
+        userId,
+        purpose: 'vip_subscription',
+        points: 0,
+        amountWon: VIP_SUBSCRIPTION_MONTHLY_WON,
+        status: 'pending',
+        createdAt: new Date(),
+      });
+      await db.collection(POINT_CHARGE_ORDERS_COLLECTION).createIndex({ orderId: 1 }, { unique: true }).catch(() => {});
+      return NextResponse.json({ ok: true, orderId, amount: VIP_SUBSCRIPTION_MONTHLY_WON, orderName: VIP_SUBSCRIPTION_ORDER_NAME, purpose: 'vip_subscription' });
+    } catch (e) {
+      console.error('vip-subscription prepare:', e);
+      return NextResponse.json({ error: '주문 준비 중 오류가 발생했습니다.' }, { status: 500 });
+    }
+  }
+
   const tier = typeof body?.tier === 'string' ? body.tier.trim() : '';
   if (!VALID_TIERS.includes(tier as PointChargeTierId)) {
     return NextResponse.json({ error: '유효하지 않은 충전 상품입니다.' }, { status: 400 });

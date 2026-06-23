@@ -23,8 +23,20 @@ const MENU_DESC: Record<string, string> = {
   review: 'QR 채점 오답 → 오답노트·약점 재시험 PDF',
   report: '학생별 성적 추이·석차·출석률 리포트(인쇄·PDF)',
   tuition: '월별 수강료 청구·수납 관리',
-  counseling: '학생·학부모 상담 내용 기록·검색',
+  counseling: '상담 예약(예정)·기록(완료)·다음 계획 관리',
   lessons: '반별 수업 진도·과제 기록',
+  videos: '강의영상 링크(YouTube·Vimeo) 강좌·회차별 정리·재생',
+  materials: '특강·문법·리딩 교재를 블록으로 만들고 인쇄·PDF 출력',
+  words: '단어장 만들고 단어장·영↔한 단어시험지 인쇄·PDF',
+  assessments: '학교 수행평가 일정·유형·마감일·진행상태 관리',
+  forms: '학원 문서 양식(동의서·안내문 등) 작성·보관·인쇄',
+  inventory: '교재·물품 재고 수량 관리, 최소수량 부족 경고',
+  expenses: '학원 운영비 지출 기록·분류, 월별 합계',
+  academy: '학원/교습소 기본 정보(등록번호·주소·연락처 등)',
+  'school-info': '학생들 학교 정보(급·연락처·시험일정) 관리',
+  payroll: '직원·강사 급여(기본급·수당·공제) 월별 관리',
+  writing: '영작 주제 출제 → 학생 영작 제출 → 직접 첨삭·피드백·점수',
+  dictionary: '영단어 뜻·발음·예문 검색 (무료 사전)',
   'qbank-api': '내 문제은행을 외부에서 불러쓰는 API 키 발급',
 };
 
@@ -53,13 +65,16 @@ export default function VipMenuStorePage() {
   const [points, setPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-  // 포인트 충전 모달
+  // 결제 모달 — 포인트 충전 / VIP 월 구독 공용
   const [chargeOpen, setChargeOpen] = useState(false);
+  const [chargePurpose, setChargePurpose] = useState<'points' | 'vip_subscription'>('points');
   const [me, setMe] = useState<{ loginId: string; name: string; email: string } | null>(null);
+  // 월 구독 상태
+  const [sub, setSub] = useState<{ active: boolean; until: string | null; monthlyWon: number }>({ active: false, until: null, monthlyWon: 9900 });
 
   const load = useCallback(async () => {
     const d = await fetch('/api/my/vip/menus', { credentials: 'include' }).then((r) => r.json());
-    if (d.ok) { setMenus(d.menus); setPoints(d.points); }
+    if (d.ok) { setMenus(d.menus); setPoints(d.points); if (d.subscription) setSub(d.subscription); }
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -107,7 +122,7 @@ export default function VipMenuStorePage() {
         </div>
         <button
           type="button"
-          onClick={() => setChargeOpen(true)}
+          onClick={() => { setChargePurpose('points'); setChargeOpen(true); }}
           title="포인트 충전하기"
           className="group px-4 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-[#c9a44e]/50 hover:bg-zinc-900 text-sm transition-colors flex items-center gap-2"
         >
@@ -118,6 +133,30 @@ export default function VipMenuStorePage() {
           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#c9a44e]/15 text-[#e8d48b] text-[11px] font-medium group-hover:bg-[#c9a44e]/25 transition-colors">
             <span className="text-sm leading-none">＋</span>충전
           </span>
+        </button>
+      </div>
+
+      {/* VIP 월 구독 (수동 갱신) */}
+      <div className={`rounded-xl border p-4 flex items-center justify-between gap-3 flex-wrap ${sub.active ? 'bg-emerald-950/20 border-emerald-800/50' : 'bg-[#c9a44e]/10 border-[#c9a44e]/30'}`}>
+        <div>
+          <div className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            VIP 월 구독
+            {sub.active
+              ? <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">이용 중</span>
+              : <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#c9a44e]/20 text-[#e8d48b]">미구독</span>}
+          </div>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {sub.active && sub.until
+              ? `${new Date(sub.until).toLocaleDateString('ko-KR')} 까지 전 메뉴 사용 중 · 매월 직접 결제로 갱신`
+              : `월 ${sub.monthlyWon.toLocaleString()}원으로 VIP 메뉴 전체 사용 (자동결제 아님 · 매월 직접 결제)`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setChargePurpose('vip_subscription'); setChargeOpen(true); }}
+          className="px-4 py-2 rounded-xl bg-[#c9a44e]/20 text-[#e8d48b] text-sm font-medium hover:bg-[#c9a44e]/30 transition-colors shrink-0"
+        >
+          {sub.active ? '한 달 연장' : `구독하기 · 월 ${sub.monthlyWon.toLocaleString()}원`}
         </button>
       </div>
 
@@ -207,6 +246,8 @@ export default function VipMenuStorePage() {
           customerKey={tossCustomerKeyFromLoginId(me.loginId)}
           customerName={me.name}
           customerEmail={me.email}
+          purpose={chargePurpose}
+          subscriptionWon={sub.monthlyWon}
         />
       )}
     </div>

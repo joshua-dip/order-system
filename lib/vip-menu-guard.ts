@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { requireVip, type VipUser } from './vip-auth';
 import { getDb } from './mongodb';
 import { VIP_MENU_STORE_SETTINGS_ID, isMenuAccessible, type VipMenuStoreConfig } from './vip-menu-catalog';
+import { isVipSubscriptionActive } from './vip-subscription';
 
 /**
  * 메뉴 단위 접근 권한 서버 검사 (paywall 하드 게이트).
@@ -20,8 +21,10 @@ export async function requireVipMenu(
     const userId = new ObjectId(auth.userId);
     const [doc, user] = await Promise.all([
       db.collection('settings').findOne({ _id: VIP_MENU_STORE_SETTINGS_ID } as unknown as Record<string, unknown>),
-      db.collection('users').findOne({ _id: userId }, { projection: { vipMenus: 1 } }),
+      db.collection('users').findOne({ _id: userId }, { projection: { vipMenus: 1, vipSubscriptionUntil: 1 } }),
     ]);
+    // 활성 월 구독 중이면 모든 메뉴 통과.
+    if (isVipSubscriptionActive((user as { vipSubscriptionUntil?: Date } | null)?.vipSubscriptionUntil)) return auth;
     const config: VipMenuStoreConfig = (doc?.value && typeof doc.value === 'object') ? (doc.value as VipMenuStoreConfig) : {};
     const userMenus: string[] = Array.isArray(user?.vipMenus) ? (user!.vipMenus as string[]) : [];
     if (isMenuAccessible(menuId, config, userMenus)) return auth;

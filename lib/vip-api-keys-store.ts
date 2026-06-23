@@ -19,6 +19,29 @@ export interface VipApiKeyDoc {
 /** 사용자당 최대 키 수. */
 export const MAX_API_KEYS_PER_USER = 5;
 
+/** API 키 호출(사용) 로그 — 외부에서 키로 호출할 때마다 1건 기록. */
+export const VIP_API_KEY_USAGE_COLLECTION = 'vip_api_key_usage';
+
+export interface VipApiKeyUsageDoc {
+  _id?: ObjectId;
+  userId: ObjectId;
+  keyId: ObjectId;
+  keyLabel: string; // 표시용 스냅샷
+  at: Date;
+  endpoint: string; // 'question-bank'
+  folder?: string;
+  type?: string;
+  limit?: number;
+  offset?: number;
+  count: number; // 반환 문항 수
+  status: number; // HTTP status
+  ip?: string;
+  userAgent?: string;
+}
+
+/** 로그 보존 기간(초) — 1년 후 자동 만료. */
+const USAGE_TTL_SECONDS = 365 * 24 * 60 * 60;
+
 let _indexed = false;
 export async function ensureApiKeyIndexes(db: Db): Promise<void> {
   if (_indexed) return;
@@ -26,7 +49,19 @@ export async function ensureApiKeyIndexes(db: Db): Promise<void> {
   await Promise.all([
     db.collection(VIP_API_KEYS_COLLECTION).createIndex({ key: 1 }, { unique: true }),
     db.collection(VIP_API_KEYS_COLLECTION).createIndex({ userId: 1, createdAt: -1 }),
+    db.collection(VIP_API_KEY_USAGE_COLLECTION).createIndex({ userId: 1, at: -1 }),
+    db.collection(VIP_API_KEY_USAGE_COLLECTION).createIndex({ keyId: 1, at: -1 }),
+    db.collection(VIP_API_KEY_USAGE_COLLECTION).createIndex({ at: 1 }, { expireAfterSeconds: USAGE_TTL_SECONDS }),
   ]);
+}
+
+/** 한 번의 외부 API 호출을 사용 로그에 기록 (best-effort — 실패해도 응답엔 영향 없음). */
+export async function recordApiKeyUsage(db: Db, doc: Omit<VipApiKeyUsageDoc, '_id'>): Promise<void> {
+  try {
+    await db.collection(VIP_API_KEY_USAGE_COLLECTION).insertOne(doc);
+  } catch {
+    /* 로그 기록 실패는 무시 */
+  }
 }
 
 /** 새 키 — `qbk_` + 48 hex. */
