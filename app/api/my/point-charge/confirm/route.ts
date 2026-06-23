@@ -6,6 +6,7 @@ import { recordPointLedger } from '@/lib/point-ledger';
 import { tossConfirmPayment } from '@/lib/toss-payments-server';
 import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
 import { consumeCoupon } from '@/lib/coupons';
+import { extendOneMonth } from '@/lib/vip-subscription';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,6 +62,24 @@ export async function POST(request: NextRequest) {
     }
     await col.updateOne({ orderId }, { $set: { status: 'failed', failMessage: toss.message, updatedAt: new Date() } });
     return NextResponse.json({ error: toss.message }, { status: toss.status });
+  }
+
+  // VIP 월 구독 결제 — 포인트 대신 vipSubscriptionUntil 한 달 연장.
+  if (order.purpose === 'vip_subscription') {
+    const markPaid = await col.updateOne(
+      { orderId, userId, status: 'pending' },
+      { $set: { status: 'paid', paymentKey, paidAt: new Date(), updatedAt: new Date() } },
+    );
+    if (markPaid.matchedCount === 0) {
+      const cur = await col.findOne({ orderId, userId });
+      if (cur?.status === 'paid') return NextResponse.json({ ok: true, already: true, vipSubscription: true });
+      return NextResponse.json({ error: '주문 상태를 갱신할 수 없습니다.' }, { status: 409 });
+    }
+    const usersCol = db.collection('users');
+    const cur = await usersCol.findOne({ _id: userId }, { projection: { vipSubscriptionUntil: 1 } });
+    const until = extendOneMonth((cur as { vipSubscriptionUntil?: Date } | null)?.vipSubscriptionUntil);
+    await usersCol.updateOne({ _id: userId }, { $set: { vipSubscriptionUntil: until } });
+    return NextResponse.json({ ok: true, vipSubscription: true, vipSubscriptionUntil: until });
   }
 
   const points = typeof order.points === 'number' && order.points > 0 ? order.points : 0;

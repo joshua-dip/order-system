@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
-import { VIP_API_KEYS_COLLECTION, type VipApiKeyDoc } from '@/lib/vip-api-keys-store';
+import { VIP_API_KEYS_COLLECTION, ensureApiKeyIndexes, recordApiKeyUsage, type VipApiKeyDoc } from '@/lib/vip-api-keys-store';
 import { QUESTION_BANK_COLLECTION, type SavedQuestionDoc } from '@/lib/vip-question-bank-store';
+import { sanitizeQuestionDataForExport } from '@/lib/question-options-segments';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -44,7 +45,8 @@ export async function GET(request: NextRequest) {
   if (!keyDoc) return json({ ok: false, error: '유효하지 않은 API 키입니다.' }, 403);
 
   const userId = keyDoc.userId;
-  // 사용 기록 (best-effort)
+  await ensureApiKeyIndexes(db);
+  // 마지막 사용 시각 (best-effort)
   db.collection(VIP_API_KEYS_COLLECTION).updateOne({ _id: keyDoc._id }, { $set: { lastUsedAt: new Date() } }).catch(() => {});
 
   const sp = request.nextUrl.searchParams;
@@ -83,10 +85,27 @@ export async function GET(request: NextRequest) {
       tags: s.tags ?? [],
       savedAt: s.savedAt,
       questionId: String(s.questionId),
-      // 원본이 삭제됐으면 null — 미리보기 필드는 항상 제공
-      questionData: o ? (o.question_data ?? null) : null,
+      // 원본이 삭제됐으면 null. `###` 구분자는 외부 노출용으로 정규화(Options→배열·줄바꿈, Paragraph 블록→빈 줄).
+      questionData: o ? sanitizeQuestionDataForExport(o.question_data ?? null) : null,
     };
   });
+
+  // 호출 사용 로그 기록 (best-effort)
+  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || request.headers.get('x-real-ip') || '';
+  recordApiKeyUsage(db, {
+    userId,
+    keyId: keyDoc._id as ObjectId,
+    keyLabel: keyDoc.label,
+    at: new Date(),
+    endpoint: 'question-bank',
+    ...(folder && folder !== '__all__' ? { folder } : {}),
+    ...(type ? { type } : {}),
+    limit, offset,
+    count: items.length,
+    status: 200,
+    ...(ip ? { ip } : {}),
+    ...(request.headers.get('user-agent') ? { userAgent: String(request.headers.get('user-agent')).slice(0, 200) } : {}),
+  }).catch(() => {});
 
   return json({ ok: true, total, count: items.length, limit, offset, items });
 }

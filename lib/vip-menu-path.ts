@@ -9,6 +9,18 @@ export function pathToMenuId(pathname: string): string {
   if (pathname.startsWith('/my/vip/tuition')) return 'tuition';
   if (pathname.startsWith('/my/vip/counseling')) return 'counseling';
   if (pathname.startsWith('/my/vip/lessons')) return 'lessons';
+  if (pathname.startsWith('/my/vip/videos')) return 'videos';
+  if (pathname.startsWith('/my/vip/materials')) return 'materials';
+  if (pathname.startsWith('/my/vip/words')) return 'words';
+  if (pathname.startsWith('/my/vip/assessments')) return 'assessments';
+  if (pathname.startsWith('/my/vip/forms')) return 'forms';
+  if (pathname.startsWith('/my/vip/inventory')) return 'inventory';
+  if (pathname.startsWith('/my/vip/expenses')) return 'expenses';
+  if (pathname.startsWith('/my/vip/academy')) return 'academy';
+  if (pathname.startsWith('/my/vip/school-info')) return 'school-info';
+  if (pathname.startsWith('/my/vip/payroll')) return 'payroll';
+  if (pathname.startsWith('/my/vip/writing')) return 'writing';
+  if (pathname.startsWith('/my/vip/dictionary')) return 'dictionary';
   if (pathname.startsWith('/my/vip/questions')) return 'questions';
   if (pathname.startsWith('/my/vip/generate')) return 'generate';
   if (pathname.startsWith('/my/vip/attendance')) return 'attendance';

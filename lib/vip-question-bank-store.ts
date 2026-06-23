@@ -1,4 +1,5 @@
 import { ObjectId, type Db } from 'mongodb';
+import { buildVariantQFilter } from './admin-generated-questions-q-filter';
 
 /**
  * VIP 선생님 개인 문제은행 (즐겨찾기·참조 방식).
@@ -45,11 +46,41 @@ export async function ensureQuestionBankIndexes(db: Db): Promise<void> {
   ]);
 }
 
-/** 발문/지문 미리보기 텍스트 추출 (HTML·마크업 제거 후 잘라냄). */
+/**
+ * 불러오기(browse) 검색 필터 — 검색(search route)과 「검색결과 전체 담기」(POST all)에서 동일하게 사용.
+ * type/textbook/difficulty 정확일치 + q(고유번호 V-… / 출처·교재 라벨) 검색.
+ */
+export function buildBrowseFilter(params: { type?: string; textbook?: string; difficulty?: string; q?: string }): Record<string, unknown> {
+  const filter: Record<string, unknown> = { status: '완료' };
+  const type = (params.type || '').trim();
+  const textbook = (params.textbook || '').trim();
+  const difficulty = (params.difficulty || '').trim();
+  const q = (params.q || '').trim();
+  if (type) filter.type = type;
+  if (textbook) filter.textbook = textbook;
+  if (difficulty) filter.difficulty = difficulty;
+  if (q) {
+    const serialMatch = q.match(/^v?-?\s*0*(\d{1,7})$/i);
+    if (serialMatch) {
+      filter.serialNo = Number(serialMatch[1]);
+    } else {
+      const qf = buildVariantQFilter(q);
+      if (qf) Object.assign(filter, qf);
+      else filter.source = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+    }
+  }
+  return filter;
+}
+
+/** 「검색결과 전체 담기」 1회 최대 담기 수 (대량 쓰기 방지). */
+export const BROWSE_BULK_MAX = 2000;
+
+/** 발문/지문 미리보기 텍스트 추출 (HTML·마크업·`###` 구분자 제거 후 잘라냄). */
 export function previewText(raw: unknown, max = 90): string {
   return String(raw ?? '')
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
+    .replace(/\s*###\s*/g, ' ') // 보기/블록 구분자 `###` 는 미리보기에 노출하지 않음
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, max);

@@ -55,6 +55,7 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [saveFolder, setSaveFolder] = useState('');
   const [searched, setSearched] = useState(false);
+  const [bulking, setBulking] = useState(false);
 
   const search = useCallback(async (p = 1) => {
     setLoading(true);
@@ -77,6 +78,31 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
     if (res.ok && d.ok) { alert(`${d.added}문항을 담았어요${d.alreadySaved ? ` (이미 담긴 ${d.alreadySaved}개 제외)` : ''}.`); search(page); }
     else alert(d.error || '담기에 실패했습니다.');
   };
+
+  // 검색결과 전체 담기 — 페이지 넘기지 않고 조건에 맞는 전체를 서버에서 일괄 담기.
+  const saveAll = async () => {
+    if (total <= 0 || bulking) return;
+    if (!confirm(`검색결과 ${total.toLocaleString()}개를 모두 「내 문제」로 담을까요?${saveFolder.trim() ? `\n폴더: ${saveFolder.trim()}` : ''}`)) return;
+    setBulking(true);
+    const res = await fetch('/api/my/vip/question-bank', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ all: true, filter: { type, textbook, difficulty, q: q.trim() }, folder: saveFolder.trim() }) });
+    const d = await res.json().catch(() => ({}));
+    setBulking(false);
+    if (res.ok && d.ok) {
+      const cappedMsg = d.capped ? `\n조건에 ${total.toLocaleString()}개가 있어 한 번에 최대 ${Number(d.bulkMax).toLocaleString()}개까지만 담았습니다. 필터를 좁혀 남은 문제를 마저 담아주세요.` : '';
+      alert(`${d.added}문항을 담았어요${d.alreadySaved ? ` (이미 담긴 ${d.alreadySaved}개 제외)` : ''}.${cappedMsg}`);
+      search(page);
+    } else alert(d.error || '전체 담기에 실패했습니다.');
+  };
+
+  // 이 페이지 미담김 항목 일괄 선택/해제
+  const unsavedOnPage = items.filter((it) => !it.saved);
+  const allPageSelected = unsavedOnPage.length > 0 && unsavedOnPage.every((it) => sel.has(it.questionId));
+  const togglePageAll = () => setSel((prev) => {
+    const n = new Set(prev);
+    if (allPageSelected) unsavedOnPage.forEach((it) => n.delete(it.questionId));
+    else unsavedOnPage.forEach((it) => n.add(it.questionId));
+    return n;
+  });
 
   return (
     <div className="space-y-4">
@@ -101,11 +127,20 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
         </div>
       </div>
 
-      {sel.size > 0 && (
-        <div className="flex items-center gap-2 flex-wrap rounded-xl bg-indigo-900/20 border border-indigo-700/40 px-4 py-2.5">
-          <span className="text-sm text-indigo-200">{sel.size}개 선택</span>
-          <input value={saveFolder} onChange={(e) => setSaveFolder(e.target.value)} placeholder="폴더(선택)" className="px-2.5 py-1 rounded-lg bg-zinc-900/60 border border-zinc-700/60 text-xs text-zinc-100 placeholder-zinc-600 w-32" />
-          <button onClick={() => saveIds([...sel])} className="px-3 py-1.5 rounded-lg bg-indigo-600/80 text-zinc-100 text-sm hover:bg-indigo-500">내 문제로 담기</button>
+      {searched && total > 0 && (
+        <div className="flex items-center gap-2 flex-wrap rounded-xl bg-zinc-900/50 border border-zinc-800/80 px-4 py-2.5">
+          <span className="text-xs text-zinc-500">총 {total.toLocaleString()}개{sel.size > 0 && <span className="text-indigo-300"> · {sel.size}개 선택</span>}</span>
+          <button onClick={togglePageAll} disabled={unsavedOnPage.length === 0} className="px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-200 text-xs hover:bg-zinc-700 disabled:opacity-40">
+            {allPageSelected ? '이 페이지 해제' : `이 페이지 전체 선택 (${unsavedOnPage.length})`}
+          </button>
+          <div className="flex-1 min-w-2" />
+          <input value={saveFolder} onChange={(e) => setSaveFolder(e.target.value)} placeholder="폴더(선택)" className="px-2.5 py-1 rounded-lg bg-zinc-900/60 border border-zinc-700/60 text-xs text-zinc-100 placeholder-zinc-600 w-28" />
+          {sel.size > 0 && (
+            <button onClick={() => saveIds([...sel])} className="px-3 py-1.5 rounded-lg bg-indigo-600/80 text-zinc-100 text-sm hover:bg-indigo-500">선택 {sel.size}개 담기</button>
+          )}
+          <button onClick={saveAll} disabled={bulking} title="검색 조건에 맞는 전체를 한 번에 담기" className="px-3 py-1.5 rounded-lg bg-emerald-600/80 text-zinc-100 text-sm font-medium hover:bg-emerald-500 disabled:opacity-50">
+            {bulking ? '담는 중…' : `검색결과 전체 담기 (${total.toLocaleString()})`}
+          </button>
         </div>
       )}
 

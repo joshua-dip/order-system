@@ -12,6 +12,7 @@ import {
   effectiveRequires,
   type VipMenuStoreConfig,
 } from '@/lib/vip-menu-catalog';
+import { isVipSubscriptionActive, VIP_SUBSCRIPTION_MONTHLY_WON } from '@/lib/vip-subscription';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,19 +30,23 @@ export async function GET(request: NextRequest) {
   const userId = new ObjectId(auth.userId);
   const [config, user] = await Promise.all([
     loadConfig(db),
-    db.collection('users').findOne({ _id: userId }, { projection: { points: 1, vipMenus: 1 } }),
+    db.collection('users').findOne({ _id: userId }, { projection: { points: 1, vipMenus: 1, vipSubscriptionUntil: 1 } }),
   ]);
   const points = typeof user?.points === 'number' && user.points >= 0 ? user.points : 0;
   const unlocked: string[] = Array.isArray(user?.vipMenus) ? (user!.vipMenus as string[]) : [];
+  // 활성 월 구독 중이면 모든 유료 메뉴를 사용 가능(언락 취급).
+  const subUntil = (user as { vipSubscriptionUntil?: Date } | null)?.vipSubscriptionUntil ?? null;
+  const subscribed = isVipSubscriptionActive(subUntil);
   return NextResponse.json({
     ok: true,
     points,
+    subscription: { active: subscribed, until: subUntil, monthlyWon: VIP_SUBSCRIPTION_MONTHLY_WON },
     menus: VIP_MENU_CATALOG.map((m) => ({
       id: m.id,
       label: m.label,
       paid: isMenuPaid(config, m.id),
       price: menuPrice(config, m.id),
-      unlocked: unlocked.includes(m.id),
+      unlocked: subscribed || unlocked.includes(m.id),
       requires: effectiveRequires(config, m.id),
     })),
   });

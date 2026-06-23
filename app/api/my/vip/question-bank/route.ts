@@ -6,6 +6,8 @@ import {
   QUESTION_BANK_COLLECTION,
   ensureQuestionBankIndexes,
   previewText,
+  buildBrowseFilter,
+  BROWSE_BULK_MAX,
   type SavedQuestionDoc,
 } from '@/lib/vip-question-bank-store';
 
@@ -61,28 +63,45 @@ export async function GET(request: NextRequest) {
   });
 }
 
-/** POST — 문제 담기 ({ questionIds: string[], folder?: string }) */
+/**
+ * POST — 문제 담기.
+ *  · 선택 담기: { questionIds: string[], folder? }
+ *  · 검색결과 전체 담기: { all: true, filter: {type,textbook,difficulty,q}, folder? } — 조건에 맞는 전체(최대 BROWSE_BULK_MAX) 일괄
+ */
 export async function POST(request: NextRequest) {
   const auth = await requireVipMenu(request, 'questions');
   if (auth instanceof NextResponse) return auth;
-  let body: { questionIds?: unknown; folder?: unknown };
+  let body: { questionIds?: unknown; folder?: unknown; all?: unknown; filter?: unknown };
   try { body = (await request.json()) as Record<string, unknown>; } catch { return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 }); }
 
-  const ids = Array.isArray(body.questionIds)
-    ? body.questionIds.map((x) => String(x)).filter((x) => ObjectId.isValid(x))
-    : [];
-  if (ids.length === 0) return NextResponse.json({ error: '담을 문제가 없습니다.' }, { status: 400 });
   const folder = typeof body.folder === 'string' ? body.folder.slice(0, 40) : '';
-
   const db = await getDb('gomijoshua');
   await ensureQuestionBankIndexes(db);
   const userId = new ObjectId(auth.userId);
+  const proj = { serialNo: 1, type: 1, textbook: 1, source: 1, difficulty: 1, 'question_data.Question': 1, 'question_data.Paragraph': 1, 'question_data.Source': 1 } as const;
+  const gen = db.collection('generated_questions');
 
-  const oids = ids.map((id) => new ObjectId(id));
-  const docs = await db.collection('generated_questions')
-    .find({ _id: { $in: oids }, status: '완료' })
-    .project({ serialNo: 1, type: 1, textbook: 1, source: 1, difficulty: 1, 'question_data.Question': 1, 'question_data.Paragraph': 1, 'question_data.Source': 1 })
-    .toArray();
+  // 담을 대상 docs 수집 — all 모드면 검색 필터로, 아니면 questionIds 로.
+  let docs: Record<string, unknown>[];
+  let requested: number;
+  let capped = false;
+  if (body.all === true) {
+    const f = (body.filter ?? {}) as { type?: string; textbook?: string; difficulty?: string; q?: string };
+    const filter = buildBrowseFilter({ type: f.type, textbook: f.textbook, difficulty: f.difficulty, q: f.q });
+    const matchTotal = await gen.countDocuments(filter);
+    if (matchTotal === 0) return NextResponse.json({ error: '조건에 맞는 문제가 없습니다.' }, { status: 400 });
+    capped = matchTotal > BROWSE_BULK_MAX;
+    docs = await gen.find(filter).project(proj).sort({ serialNo: -1 }).limit(BROWSE_BULK_MAX).toArray();
+    requested = docs.length;
+  } else {
+    const ids = Array.isArray(body.questionIds)
+      ? body.questionIds.map((x) => String(x)).filter((x) => ObjectId.isValid(x))
+      : [];
+    if (ids.length === 0) return NextResponse.json({ error: '담을 문제가 없습니다.' }, { status: 400 });
+    const oids = ids.map((id) => new ObjectId(id));
+    docs = await gen.find({ _id: { $in: oids }, status: '완료' }).project(proj).toArray();
+    requested = ids.length;
+  }
 
   const now = new Date();
   const ops = docs.map((d) => {
@@ -116,7 +135,7 @@ export async function POST(request: NextRequest) {
     const r = await db.collection(QUESTION_BANK_COLLECTION).bulkWrite(ops, { ordered: false });
     added = r.upsertedCount;
   }
-  return NextResponse.json({ ok: true, added, requested: ids.length, alreadySaved: ids.length - added });
+  return NextResponse.json({ ok: true, added, requested, alreadySaved: requested - added, capped, bulkMax: BROWSE_BULK_MAX });
 }
 
 /** DELETE — 내 문제은행에서 제거 (?id= 저장항목 / ?questionId=) */
