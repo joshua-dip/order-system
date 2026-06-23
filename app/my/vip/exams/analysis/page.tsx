@@ -1,15 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import QuestionPhotoGrid from '../QuestionPhotoGrid';
+import PassagePhotoGrid from '../PassagePhotoGrid';
+import { getCurrentSubject, DEFAULT_VIP_SUBJECT } from '@/lib/vip-subject';
 
 interface ExamQuestion { questionType?: string; score?: number; questionText?: string; textbook?: string; source?: string; isSubjective?: boolean }
-interface SchoolExam { id: string; academicYear: number; grade: number; examType: string; questions: Record<string, ExamQuestion>; examScope: string[]; analyzed?: boolean }
+interface SchoolExam { id: string; academicYear: number; grade: number; examType: string; questions: Record<string, ExamQuestion>; examScope: string[]; examScopePassages?: string[]; analyzed?: boolean }
 interface School { id: string; name: string }
 
 const GRADES = [1, 2, 3];
 
 export default function VipExamAnalysisPage() {
+  const [subject, setSubject] = useState(DEFAULT_VIP_SUBJECT);
+  useEffect(() => { setSubject(getCurrentSubject()); }, []);
   const [schools, setSchools] = useState<School[]>([]);
   const [schoolId, setSchoolId] = useState('');
   const [grade, setGrade] = useState(1);
@@ -31,8 +34,11 @@ export default function VipExamAnalysisPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-zinc-100">기출 분석·예측</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">기출 시험을 분석하고, 문항별 학생 필기를 사진으로 모아 다가올 시험을 대비합니다</p>
+        <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-md bg-[#c9a44e]/15 text-[#e8d48b] text-sm border border-[#c9a44e]/25">{subject}</span>
+          기출 분석·예측
+        </h1>
+        <p className="text-sm text-zinc-500 mt-0.5">{subject} 기출 시험을 분석하고, 문항별 학생 필기를 사진으로 모아 다가올 시험을 대비합니다</p>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -89,7 +95,7 @@ function ExamDetail({ exam, onBack }: { exam: SchoolExam; onBack: () => void }) 
         </div>
       </div>
 
-      <QuestionPhotoGrid examId={exam.id} questions={exam.questions} />
+      <PassagePhotoGrid examId={exam.id} passages={exam.examScopePassages ?? []} />
     </div>
   );
 }

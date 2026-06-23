@@ -201,3 +201,16 @@ body,
     --tw-ring-shadow: 0 0 #0000 !important;
   }
 }
+
+/* VIP 라이트 모드 — 다크 UI를 흑백 반전(invert)으로 라이트화.
+   사진·QR·canvas 등 미디어는 한 번 더 반전해 원래 색으로 되돌린다. */
+.vip-light-root {
+  filter: invert(1) hue-rotate(180deg);
+}
+.vip-light-root img,
+.vip-light-root video,
+.vip-light-root canvas,
+.vip-light-root svg image,
+.vip-light-root [data-noinvert] {
+  filter: invert(1) hue-rotate(180deg);
+}

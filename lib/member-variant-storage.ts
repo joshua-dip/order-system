@@ -8,6 +8,7 @@ import {
   normalizeGrammarHardCorrectAnswer,
 } from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
+import { isAdvancedVariantType } from '@/lib/variant-pricing';
 
 export const MEMBER_PASSAGES_COLLECTION = 'member_passages';
 export const MEMBER_GENERATED_QUESTIONS_COLLECTION = 'member_generated_questions';
@@ -130,10 +131,23 @@ export async function insertMemberGeneratedQuestion(
       };
     }
   }
+  if (type === '어휘-고난도') {
+    // 어휘(문맥) "모두 고르기" — Options 는 단어 유지, CorrectAnswer 만 복수 동그라미로 정규화·검증.
+    const rawCa = typeof question_data.CorrectAnswer === 'string' ? question_data.CorrectAnswer : '';
+    const normalized = normalizeGrammarHardCorrectAnswer(rawCa);
+    if (GRAMMAR_HARD_CORRECT_ANSWER_PATTERN.test(normalized)) {
+      question_data = { ...question_data, CorrectAnswer: normalized };
+    } else {
+      return {
+        ok: false,
+        error: `어휘-고난도 CorrectAnswer는 동그라미 번호 2~5개 연속(예: ②④) 형식이어야 합니다. 받은 값: "${rawCa}"`,
+      };
+    }
+  }
   if (type === '삽입' || type === '삽입-고난도') {
     question_data = { ...question_data, Options: INSERTION_OPTIONS_FIXED };
   }
-  if (type === '무관한문장') {
+  if (type === '무관한문장' || type === '무관한문장-고난도') {
     const rawOpts = typeof question_data.Options === 'string' ? question_data.Options : '';
     if (!rawOpts.trim() || /[①②③④⑤]\s+[①②③④⑤]/.test(rawOpts)) {
       question_data = { ...question_data, Options: IRRELEVANT_OPTIONS_FIXED };
@@ -147,10 +161,9 @@ export async function insertMemberGeneratedQuestion(
   }
 
   const now = new Date();
-  const difficulty =
-    type === '삽입-고난도' || type === '어법-고난도'
-      ? '상'
-      : ((input.difficulty ?? (question_data.DifficultyLevel as string | undefined) ?? '중').trim() || '중');
+  const difficulty = isAdvancedVariantType(type)
+    ? '상'
+    : ((input.difficulty ?? (question_data.DifficultyLevel as string | undefined) ?? '중').trim() || '중');
 
   const doc = {
     textbook,

@@ -542,6 +542,17 @@ export async function runQuestionCountValidation(
           }
         }
 
+        // 파이널 예비 모의고사 부족분 자동주문(autoCreated:'final_exam_shortage')은
+        // dbEntries 대신 shortageItems[{sourceKey,type,shortBy}] 로 지문을 담는다.
+        if (allSelectedSources.length === 0 && Array.isArray(m.shortageItems)) {
+          const fromShortage = new Set<string>();
+          for (const it of m.shortageItems) {
+            const sk = it && typeof it === 'object' ? (it as Record<string, unknown>).sourceKey : null;
+            if (typeof sk === 'string' && sk.trim()) fromShortage.add(sk.trim());
+          }
+          allSelectedSources.push(...fromShortage);
+        }
+
         if (allSelectedSources.length === 0) {
           return {
             ok: false,

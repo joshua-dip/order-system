@@ -100,6 +100,10 @@ interface AdminOrder {
   orderGrossWon?: number | null;
   /** 포인트 사용 시 실입금액(추정). API 전용 */
   paymentDueWon?: number | null;
+  /** 미완료(입금 대기·확인) 주문의 입금할 금액(주문서 파싱). 통장 매칭용. API 전용 */
+  expectedAmountWon?: number | null;
+  /** 같은 고객의 다른 주문과 (지문×유형)이 겹치는 경우 그 주문번호들. 중복 의심 표시용 */
+  duplicateOf?: string[] | null;
   /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
   solbookAccountingSplit?: boolean;
   completedAt?: string | null;
@@ -181,7 +185,9 @@ type AdminOrderListFilter =
   | 'in_progress'
   | 'completed'
   | 'free_share'
-  | 'cancelled';
+  | 'cancelled'
+  /** 상태가 아니라 flow=vocabulary(단어장) 전용 뷰. 다른 탭에서는 단어장을 숨기고 이 탭에서만 보여준다. */
+  | 'vocabulary';
 
 /** orderMeta.flow → 관리자 화면용 짧은 한글 */
 const ORDER_FLOW_LABELS: Record<string, string> = {
@@ -2624,11 +2630,17 @@ export default function AdminDashboardPage() {
   const unprocessedCount = needShareLinkCount + needOtherPendingCount;
 
   const filteredOrders = recentOrders.filter((o) => {
-    if (orderFilter !== 'all') {
-      const s = o.status || 'pending';
-      if (s !== orderFilter) return false;
-      // 「미처리(주문 접수)」 탭에서는 즉시 사용 상품(단어장 등)을 미처리 집계와 동일하게 제외
-      if (orderFilter === 'pending' && isInstantUseFlow(o.orderMetaFlow)) return false;
+    const isVocab = isInstantUseFlow(o.orderMetaFlow);
+    if (orderFilter === 'vocabulary') {
+      // 「단어장」 탭: flow=vocabulary(즉시 사용) 주문만 모아서 본다.
+      if (!isVocab) return false;
+    } else {
+      // 그 외 모든 탭(전체·미처리·완료·상태별)에서는 단어장을 숨겨 처리 대상 주문과 섞이지 않게 한다.
+      if (isVocab) return false;
+      if (orderFilter !== 'all') {
+        const s = o.status || 'pending';
+        if (s !== orderFilter) return false;
+      }
     }
     const q = orderSearch.trim().toLowerCase();
     if (!q) return true;
@@ -2638,7 +2650,10 @@ export default function AdminDashboardPage() {
     return num.includes(q) || lid.includes(q) || text.includes(q);
   });
 
-  const displayOrders = section === 'dashboard' ? recentOrders.slice(0, 8) : filteredOrders;
+  const displayOrders =
+    section === 'dashboard'
+      ? recentOrders.filter((o) => !isInstantUseFlow(o.orderMetaFlow)).slice(0, 8)
+      : filteredOrders;
   const displayOrderIdsKey = displayOrders.map((o) => o.id).join('|');
 
   useEffect(() => {
@@ -3228,18 +3243,18 @@ export default function AdminDashboardPage() {
             {section === 'orders' && recentOrders.length > 0 && (
               <div className="px-5 py-3 border-b border-slate-700 flex flex-wrap items-center gap-3 bg-slate-800/80">
                 <div className="flex rounded-lg overflow-hidden bg-slate-700">
-                  {(['all', 'pending', 'completed'] as const).map((f) => (
+                  {(['all', 'pending', 'completed', 'vocabulary'] as const).map((f) => (
                     <button
                       key={f}
                       type="button"
                       onClick={() => setOrderFilter(f)}
                       className={`px-4 py-2 text-sm font-medium ${orderFilter === f ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}
                     >
-                      {f === 'all' ? '전체' : f === 'pending' ? '미처리' : '완료'}
+                      {f === 'all' ? '전체' : f === 'pending' ? '미처리' : f === 'completed' ? '완료' : '단어장'}
                     </button>
                   ))}
                 </div>
-                {orderFilter !== 'all' && orderFilter !== 'pending' && orderFilter !== 'completed' ? (
+                {orderFilter !== 'all' && orderFilter !== 'pending' && orderFilter !== 'completed' && orderFilter !== 'vocabulary' ? (
                   <span className="text-[11px] text-slate-500">
                     상태 필터:{' '}
                     <strong className="text-cyan-300/90">{STATUS_LABELS[orderFilter] ?? orderFilter}</strong>
@@ -3531,6 +3546,14 @@ export default function AdminDashboardPage() {
                             >
                               {o.orderNumber || '—'}
                             </a>
+                            {o.duplicateOf && o.duplicateOf.length > 0 && (
+                              <span
+                                className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/40"
+                                title={`같은 고객의 다른 주문과 지문·유형이 겹칩니다: ${o.duplicateOf.join(', ')}`}
+                              >
+                                중복?
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="py-2.5 px-3 text-slate-300 align-top">
@@ -3642,6 +3665,18 @@ export default function AdminDashboardPage() {
                             ) : (
                               <span className="text-amber-400/90">미인식</span>
                             )
+                          ) : o.expectedAmountWon != null && o.expectedAmountWon >= 0 ? (
+                            (() => {
+                              const paid = o.status === 'payment_confirmed' || o.status === 'in_progress';
+                              return (
+                                <span
+                                  className={`tabular-nums font-bold ${paid ? 'text-emerald-400' : 'text-amber-400'}`}
+                                  title={paid ? '입금 확인됨' : '입금 대기 — 통장 입금 내역과 매칭하세요 (포인트 아님)'}
+                                >
+                                  {o.expectedAmountWon.toLocaleString()}원
+                                </span>
+                              );
+                            })()
                           ) : (
                             <span className="text-slate-600">—</span>
                           )}
@@ -4770,7 +4805,7 @@ export default function AdminDashboardPage() {
                             router.push(`/admin/users/${u.id}`);
                           }
                         }}
-                        className={`scroll-mt-6 rounded-2xl overflow-hidden border transition-colors cursor-pointer hover:border-cyan-500/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500/50 ${isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}
+                        className={`scroll-mt-6 rounded-2xl overflow-hidden border transition-colors cursor-pointer hover:border-cyan-500/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500/50 ${u.isVip ? 'border-amber-400/60 bg-gradient-to-br from-amber-500/[0.07] to-[#1a1d27] animate-[vipGlow_2.4s_ease-in-out_infinite]' : isUnset ? 'border-amber-500/30 bg-[#1a1d27]' : 'border-[#2e3248] bg-[#1a1d27]'}`}
                         title="클릭하면 회원 상세 페이지로 이동합니다"
                       >
                         <div className="p-4 flex items-start gap-3">
@@ -4818,7 +4853,7 @@ export default function AdminDashboardPage() {
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#22263a] text-slate-500">일반</span>
                               ) : null}
                               {u.isVip && (
-                                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">VIP</span>
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30"><span className="animate-[vipSpin_3s_ease-in-out_infinite]">👑</span>VIP</span>
                               )}
                               <span
                                 className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
@@ -5973,6 +6008,14 @@ export default function AdminDashboardPage() {
                             >
                               {o.orderNumber || '—'}
                             </a>
+                            {o.duplicateOf && o.duplicateOf.length > 0 && (
+                              <span
+                                className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/40"
+                                title={`같은 고객의 다른 주문과 지문·유형이 겹칩니다: ${o.duplicateOf.join(', ')}`}
+                              >
+                                중복?
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="py-2 px-3 text-slate-400">{formatDateTime(o.createdAt)}</td>

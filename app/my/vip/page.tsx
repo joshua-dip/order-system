@@ -7,6 +7,10 @@ interface DashboardStats {
   studentCount: number;
   schoolCount: number;
   examCount: number;
+  homeworkActive?: number;
+  qrGradedPapers?: number;
+  unpaidCount?: number;
+  month?: string;
   recentExams: { id: string; schoolName: string; examType: string; grade: number; academicYear: number }[];
 }
 
@@ -16,6 +20,14 @@ const QUICK_ACTIONS = [
   { href: '/my/vip/generate', label: '변형문제 생성', desc: '시험 범위에 맞는 문제를 자동 생성합니다', icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z', color: '#c9a44e' },
   { href: '/my/vip/scores', label: '성적 입력', desc: '학생들의 시험 성적을 기록하고 관리합니다', icon: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z', color: '#34d399' },
   { href: '/my/vip/analysis', label: '시험 분석', desc: '출제 유형, 배점 분포, 학생 성적을 분석합니다', icon: 'M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z', color: '#f472b6' },
+  { href: '/my/vip/report', label: '성적표', desc: '학생별 성적 추이·석차·출석률 리포트를 인쇄/PDF로', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z', color: '#22d3ee' },
+];
+
+/** 학원 운영 요약 — 새 메뉴(숙제·오답·수강료)로 바로 가는 라이브 카드. */
+const OPS = [
+  { key: 'homeworkActive' as const, href: '/my/vip/homework', label: '진행 중 숙제', unit: '건', color: '#818cf8' },
+  { key: 'qrGradedPapers' as const, href: '/my/vip/review', label: 'QR 채점 시험지', unit: '개', color: '#34d399' },
+  { key: 'unpaidCount' as const, href: '/my/vip/tuition', label: '이번 달 미납', unit: '명', color: '#fbbf24' },
 ];
 
 export default function VipDashboard() {
@@ -70,6 +82,30 @@ export default function VipDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* 학원 운영 요약 */}
+      <div>
+        <h2 className="text-[15px] font-semibold text-zinc-200 mb-4">학원 운영</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {OPS.map((o) => {
+            const v = (stats[o.key] ?? 0) as number;
+            return (
+              <Link key={o.key} href={o.href} className="group rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-5 hover:border-zinc-700/80 hover:bg-zinc-900/80 transition-all">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[12px] text-zinc-500 font-medium">{o.label}</p>
+                    <p className="text-[28px] font-semibold mt-1 tracking-tight" style={{ color: v > 0 ? o.color : undefined }}>
+                      {loading ? <span className="inline-block w-8 h-7 bg-zinc-800 rounded animate-pulse" /> : <span className={v > 0 ? '' : 'text-zinc-100'}>{v}</span>}
+                      {!loading && <span className="text-[14px] text-zinc-600 ml-1 font-normal">{o.unit}</span>}
+                    </p>
+                  </div>
+                  <span className="text-zinc-600 group-hover:text-zinc-400 transition-colors text-lg">→</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Quick Actions */}

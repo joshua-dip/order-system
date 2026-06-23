@@ -9,7 +9,7 @@ export const ORDER_FOOTER_MESSAGE =
 입금 시 주문자명 기입 부탁드립니다.
 문의: 카카오톡 오픈채팅 (페이퍼릭)`;
 
-export type SaveOrderResult = { ok: boolean; id?: string; error?: string };
+export type SaveOrderResult = { ok: boolean; id?: string; error?: string; cancelled?: boolean };
 
 function fnv1a32(input: string): string {
   let h = 0x811c9dc5;
@@ -66,20 +66,46 @@ export async function saveOrderToDb(
         orderPrefix?: string;
         pointsUsed?: number;
         orderMeta?: Record<string, unknown>;
+        confirmDuplicate?: boolean;
       } = { orderText };
       if (orderPrefix) payload.orderPrefix = orderPrefix;
       if (typeof pointsUsed === 'number' && pointsUsed > 0) payload.pointsUsed = pointsUsed;
       if (orderMeta && typeof orderMeta === 'object') payload.orderMeta = orderMeta;
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        return { ok: false, error: data?.error || res.statusText };
+
+      const postOnce = async () => {
+        const r = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json().catch(() => ({} as Record<string, unknown>));
+        return { r, d: d as Record<string, unknown> };
+      };
+
+      let { r: res, d: data } = await postOnce();
+
+      // 중복 주문 경고(409): 새 주문의 모든 (지문×유형)을 이미 주문한 "완전 중복".
+      // 고객 확인 후 confirmDuplicate 로 재전송 — 진행 시 같은 지문도 새 문제로 재배정.
+      if (res.status === 409 && data?.duplicate) {
+        const samples = Array.isArray(data.sharedSamples) ? (data.sharedSamples as string[]) : [];
+        const sampleLines = samples.length ? `\n\n항목 예시:\n· ${samples.join('\n· ')}` : '';
+        const existing = typeof data.existingOrderNumber === 'string' ? ` (${data.existingOrderNumber})` : '';
+        const proceed =
+          typeof window !== 'undefined' &&
+          window.confirm(
+            `이미 동일한 주문이 있습니다${existing}.\n` +
+              `이 주문의 모든 지문·유형(${data.sharedCount ?? ''}건)을 이전에 주문하셨습니다.${sampleLines}\n\n` +
+              `그대로 진행하면 같은 지문도 '새로운 문제'로 다시 배정됩니다.\n계속 주문할까요?`,
+          );
+        if (!proceed) return { ok: false, cancelled: true, error: '중복 확인에서 취소했습니다.' };
+        payload.confirmDuplicate = true;
+        ({ r: res, d: data } = await postOnce());
       }
-      return { ok: true, id: data?.id };
+
+      if (!res.ok) {
+        return { ok: false, error: (data?.error as string) || res.statusText };
+      }
+      return { ok: true, id: data?.id as string | undefined };
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unknown error';
       return { ok: false, error: message };

@@ -11,7 +11,10 @@ export interface ExamQuestionPhotoDoc {
   _id?: ObjectId;
   userId: ObjectId; // 선생님(VIP)
   examId: ObjectId; // vip_school_exams._id
+  /** 슬롯 키 — slotType='question'이면 문항 번호, 'passage'이면 지문 키(`교재::sourceKey`). */
   questionNum: string;
+  /** 그룹 기준. 미설정(레거시) = 'question'. */
+  slotType?: 'question' | 'passage';
   dropboxPath: string;
   name: string;
   uploadedAt: Date;

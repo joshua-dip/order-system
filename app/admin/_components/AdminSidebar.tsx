@@ -138,6 +138,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <Link href="/admin/point-charges" className={linkCls('/admin/point-charges')}>
           💳 포인트 구매내역
         </Link>
+        <Link href="/admin/vip-menu-store" className={linkCls('/admin/vip-menu-store')}>
+          🧩 VIP 메뉴 판매 설정
+        </Link>
         <Link href="/admin/vocabulary-library" className={linkCls('/admin/vocabulary-library')}>
           단어장 구매·편집 분석
         </Link>

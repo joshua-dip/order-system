@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import { publicBaseUrl } from '@/lib/public-base-url';
 import {
   getAttendanceDb,
@@ -36,7 +36,7 @@ function parseKey(
 
 /** GET — 해당 (반,날짜,교시)의 체크인 세션 상태 복원 */
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
   const sp = request.nextUrl.searchParams;
   const key = parseKey(auth, sp.get('classId'), sp.get('date'), sp.get('sessionLabel'));
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — QR 체크인 세션 열기(없으면 생성). 토큰 반환 */
 export async function POST(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   let body: Record<string, unknown>;
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
 /** PATCH — 체크인 세션 닫기 */
 export async function PATCH(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   let body: Record<string, unknown>;

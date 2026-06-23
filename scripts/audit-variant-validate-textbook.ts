@@ -206,7 +206,7 @@ async function main() {
   // ── 3) 요약 검증 (Paragraph (A)/(B) 구조)
   const summaryIssues: { id: string; source: string; status: string; reason: string }[] = [];
   for (const d of docs) {
-    if (String(d.type ?? '') !== '요약') continue;
+    if (!['요약', '요약-고난도'].includes(String(d.type ?? ''))) continue;
     const qd = (d.question_data ?? {}) as Record<string, unknown>;
     const para = typeof qd.Paragraph === 'string' ? qd.Paragraph : '';
     const question = typeof qd.Question === 'string' ? qd.Question : '';
@@ -230,7 +230,7 @@ async function main() {
   }
 
   // ── 4) 순서 통합 검증 (lib/order-variant-validation 공용 로직)
-  const orderDocs = docs.filter((d) => String(d.type ?? '') === '순서');
+  const orderDocs = docs.filter((d) => ['순서', '순서-고난도'].includes(String(d.type ?? '')));
   const orderBadOptions: { id: string; source: string; optionCount: number; layout: string[] }[] = [];
   const orderBadAnswer: { id: string; source: string; currentAnswer: string }[] = [];
   const distribution: Record<string, number> = Object.fromEntries(ORDER_CIRCLED.map((c) => [c, 0]));

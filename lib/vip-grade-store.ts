@@ -86,6 +86,40 @@ export function generateGradeToken(): string {
   return randomBytes(12).toString('hex');
 }
 
+/**
+ * (paperId, studentId) 당 중복 채점 결과 정리 — 가장 먼저 제출(createdAt 최소)만 남기고 삭제.
+ * '첫 제출 확정' 정책. 유니크 인덱스 생성 전·후 자가 치유용.
+ */
+export async function dedupeGradeResults(db: Db): Promise<number> {
+  const groups = await db.collection(GRADE_RESULTS_COLLECTION).aggregate([
+    { $match: { paperId: { $exists: true }, studentId: { $exists: true } } },
+    { $sort: { createdAt: 1 } },
+    { $group: { _id: { paperId: '$paperId', studentId: '$studentId' }, ids: { $push: '$_id' }, count: { $sum: 1 } } },
+    { $match: { count: { $gt: 1 } } },
+  ]).toArray();
+  const toDelete: ObjectId[] = [];
+  for (const g of groups) toDelete.push(...(g.ids as ObjectId[]).slice(1)); // 첫 건 제외 나머지
+  if (toDelete.length === 0) return 0;
+  const r = await db.collection(GRADE_RESULTS_COLLECTION).deleteMany({ _id: { $in: toDelete } });
+  return r.deletedCount ?? 0;
+}
+
+let _gradeIndexed = false;
+/**
+ * 채점 결과 유니크 인덱스 (paperId, studentId) — 동시/재제출 중복 방지.
+ * 기존 중복으로 생성 실패하면 dedupe 후 1회 재시도. (런타임 첫 호출에서 자가 치유)
+ */
+export async function ensureGradeIndexes(db: Db): Promise<void> {
+  if (_gradeIndexed) return;
+  _gradeIndexed = true;
+  const create = () => db.collection(GRADE_RESULTS_COLLECTION).createIndex({ paperId: 1, studentId: 1 }, { unique: true });
+  try {
+    await create();
+  } catch {
+    try { await dedupeGradeResults(db); await create(); } catch { /* 인덱스 없이도 $setOnInsert 가 대부분 막아줌 */ }
+  }
+}
+
 /** 답안 정규화 — 동그라미 번호만 추려 정렬 (복수정답 "①③" 비교용). 1~5 아라비아도 허용. */
 export function normalizeCircledAnswer(raw: string): string {
   const s = String(raw ?? '');

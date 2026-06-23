@@ -15,7 +15,9 @@ export type PointLedgerKind =
   /** 고난도 초안 생성 실패 등으로 포인트 환급 */
   | 'member_variant_refund'
   /** 주문 취소(pending 등) 시 주문에 사용한 포인트 환급 */
-  | 'order_cancel_refund';
+  | 'order_cancel_refund'
+  /** VIP 사이드바 메뉴 개별 언락(à la carte) 구매 차감 */
+  | 'vip_menu_unlock';
 
 export type PointLedgerInsert = {
   userId: ObjectId;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { downloadBlob } from '@/lib/download-blob';
 
-const VARIANT_TYPES = ['빈칸', '순서', '삽입', '삽입-고난도', '어법', '어법-고난도', '어휘', '함의', '주제', '주장', '제목', '요약', '요지', '일치', '불일치', '무관한문장'];
+const VARIANT_TYPES = ['빈칸', '순서', '삽입', '삽입-고난도', '어법', '어법-고난도', '빈칸-고난도', '어휘', '어휘-고난도', '함의', '주제', '주장', '제목', '요약', '요지', '일치', '불일치', '무관한문장', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도', '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도'];
 const DIFFICULTIES = ['하', '중', '상'];
 
 interface BrowseItem { questionId: string; serialNo: number | null; type: string; textbook: string; source: string; difficulty: string; question: string; preview: string; saved: boolean }

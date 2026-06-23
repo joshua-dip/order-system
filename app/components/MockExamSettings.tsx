@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import AppBar from './AppBar';
+import SampleDrawer from './SampleDrawer';
 import {
   variantUnitPrice,
   variantVolumeDiscountRate,
@@ -137,7 +138,22 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   }, []);
 
   const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장'];
-  const advancedTypes = ['삽입-고난도', '어법-고난도'];
+  const advancedTypes = ['삽입-고난도', '어법-고난도', '빈칸-고난도', '어휘-고난도', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도', '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도'];
+  const advancedTypeDesc: Record<string, string> = {
+    '삽입-고난도': '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항',
+    '어법-고난도': '어법상 틀린 것을 모두 고르는 고난도 문항 (정답이 2개 이상)',
+    '빈칸-고난도': '글 전체 논리로 추론하는 빈칸 문항 (긴 구·절 선택지)',
+    '어휘-고난도': '문맥상 부적절한 낱말을 모두 고르는 고난도 문항 (정답이 2개 이상)',
+    '순서-고난도': '연결어·지시어 단서가 약한 글의 순서 배열 고난도 문항',
+    '요약-고난도': '요약문 (A)·(B)를 상위어로 추론하는 고난도 문항',
+    '무관한문장-고난도': '주제어를 공유해 위장한 무관한 문장을 찾는 고난도 문항',
+    '함의-고난도': '비유·반어가 강한 밑줄의 함의를 추론하는 고난도 문항',
+    '주제-고난도': 'C2~C3 고난도 어휘 선택지의 주제 추론 (해설에 어휘 뜻·유의어 포함)',
+    '제목-고난도': 'C2~C3 고난도 어휘 선택지의 제목 추론 (해설 어휘 풀이 포함)',
+    '주장-고난도': 'C2~C3 고난도 영어 선택지의 주장 파악 (해설 어휘 풀이 포함)',
+    '일치-고난도': 'C2~C3 고난도 어휘 진술의 내용 일치 (해설 어휘 풀이 포함)',
+    '불일치-고난도': 'C2~C3 고난도 어휘 진술의 내용 불일치 (해설 어휘 풀이 포함)',
+  };
   const questionTypes = [...standardTypes, ...advancedTypes];
   const ORDER_INSERT_TYPES = new Set(['순서', '삽입']);
 
@@ -296,11 +312,10 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         `삽입: ${orderInsertExplanation.삽입 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
       );
     }
-    if (selectedTypes.includes('삽입-고난도')) {
-      orderInsertLines.push(`삽입-고난도: ${VARIANT_PRICE.advanced}원/문항`);
-    }
-    if (selectedTypes.includes('어법-고난도')) {
-      orderInsertLines.push(`어법-고난도: ${VARIANT_PRICE.advanced}원/문항`);
+    for (const advType of advancedTypes) {
+      if (selectedTypes.includes(advType)) {
+        orderInsertLines.push(`${advType}: ${VARIANT_PRICE.advanced}원/문항`);
+      }
     }
     const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
 
@@ -673,18 +688,17 @@ ${examDetails}
                               </button>
                             </div>
                           )}
-                          {questionSamples[type] && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(questionSamples[type].blogUrl, '_blank');
-                              }}
-                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
-                              title={`${questionSamples[type].sampleTitle} - 블로그에서 샘플 확인`}
-                            >
-                              📝
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.dispatchEvent(new CustomEvent('open-sample', { detail: type }));
+                            }}
+                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
+                            title={`${type} 유형 샘플·설명·공부방향 보기`}
+                          >
+                            📝
+                          </button>
                         </div>
                         {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
                           <p className="text-[10px] text-gray-500 mt-1.5 pl-8">
@@ -721,24 +735,21 @@ ${examDetails}
                               />
                               <span className="font-medium text-black">{type}</span>
                             </label>
-                            {questionSamples[type] && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(questionSamples[type].blogUrl, '_blank');
-                                }}
-                                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
-                                title={`${questionSamples[type].sampleTitle} - 블로그에서 샘플 확인`}
-                              >
-                                📝
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.dispatchEvent(new CustomEvent('open-sample', { detail: type }));
+                              }}
+                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
+                              title={`${type} 유형 샘플·설명·공부방향 보기`}
+                            >
+                              📝
+                            </button>
                           </div>
                           <p className="text-[10px] text-gray-500 mt-1.5 pl-8">
                             {VARIANT_PRICE.advanced}원/문항 ·{' '}
-                            {type === '어법-고난도'
-                              ? '어법상 틀린 것을 모두 고르는 고난도 문항 (정답이 2개 이상)'
-                              : '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항'}
+                            {advancedTypeDesc[type] ?? '높은 변별력의 고난도 문항'}
                           </p>
                         </div>
                       ))}
@@ -1002,6 +1013,7 @@ ${examDetails}
 
       </div>
     </div>
+    <SampleDrawer />
     </>
   );
 };

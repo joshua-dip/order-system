@@ -15,6 +15,17 @@ export const BOOK_VARIANT_QUESTION_TYPES = [
   '무관한문장',
   '삽입-고난도',
   '어법-고난도',
+  '빈칸-고난도',
+  '어휘-고난도',
+  '순서-고난도',
+  '요약-고난도',
+  '무관한문장-고난도',
+  '함의-고난도',
+  '주제-고난도',
+  '제목-고난도',
+  '주장-고난도',
+  '일치-고난도',
+  '불일치-고난도',
 ] as const;
 
 export type BookVariantQuestionType = (typeof BOOK_VARIANT_QUESTION_TYPES)[number];

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { requireVip } from '@/lib/vip-auth';
+import { requireVipMenu } from '@/lib/vip-menu-guard';
 import {
   getAttendanceDb,
   ensureAttendanceIndexes,
@@ -26,7 +26,7 @@ function parseStudentIds(v: unknown): ObjectId[] {
 
 /** GET — 반 목록(학생 수 포함) */
 export async function GET(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   const db = await getAttendanceDb();
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — 반 생성. body: { name, schoolId?, schoolName?, studentIds?, color?, scheduleNote? } */
 export async function POST(request: NextRequest) {
-  const auth = await requireVip(request);
+  const auth = await requireVipMenu(request, 'attendance');
   if (auth instanceof NextResponse) return auth;
 
   let body: Record<string, unknown>;

@@ -88,6 +88,8 @@ cat draft.json | npm run cc:essay -- save --json -               # stdin (코드
 
 **save JSON 스키마 핵심 키** — `passageId` / `textbook` / `sourceKey` / `difficulty` / `folder` / `examTitle` / `schoolName` / `grade` / `examSubtitle` / `data` (= ExamData). `passageId` 가 있으면 `textbook`/`sourceKey` 자동 보강.
 
+**선택 문장 가드 (`requireSentences`)** — 사용자가 "이 문장을 중심으로 / 변형 없이 그대로 포함" 하라고 특정 문장을 지정하면, 초안 최상위에 **`requireSentences: ["<원문 그대로>"]`** 를 넣어라 (CLI 단발은 `--require-sentence "..."`). `save`/`--dry-run` 이 ① 선택 문장이 정답에 그대로 들어갔는지(누락) + ② 선택 안 한 다른 문장이 문항이 됐는지(외래) 검사해, 어긋나면 **저장 거부** (`reason: required_sentence_guard`, `--force` 로만 우회). 통과 시 응답에 `required_sentences_checked: N`. **다른 문장을 끼워 넣는 실수는 "외래" 검사로만 잡히므로 지정 문장이 있으면 반드시 `requireSentences` 를 채울 것.**
+
 **저장 폴더 자동 생성** — `save` / `save-all` 은 입력 JSON 의 `folder` 가 `essay_exams` 에 한 번도 등장한 적 없으면 placeholder 문서를 1 개 사전 insert 한다 (`/admin/essay-generator` 「📁 새 폴더」 와 동일). 단독 호출도 가능: `npm run cc:essay -- ensure-folder --folder "이름"`.
 
 **한 줄 호출용 워크플로우 프롬프트** (`claude agents` 의 task description 같은 single-line 입력에서도 안전) — `claude agents`/`claude` 채팅에서 매번 멀티라인 프롬프트를 paste 하면 truncate 위험이 있으니 다음을 첨부:

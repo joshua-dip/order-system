@@ -22,6 +22,8 @@ interface GradeResult {
   maxObjectiveScore: number;
   weakTypes: string[];
   wrongNums: number[];
+  /** 이미 한 번 제출한 학생의 재제출 — 첫 제출 결과를 보여줌(점수 변경 없음). */
+  alreadySubmitted?: boolean;
 }
 
 export default function ExamGradePage({ params }: { params: Promise<{ token: string }> }) {
@@ -105,6 +107,12 @@ export default function ExamGradePage({ params }: { params: Promise<{ token: str
             <div className="text-sm text-slate-500">{result.studentName} 학생</div>
             <h1 className="text-lg font-bold text-slate-800 mt-1">채점 결과</h1>
           </div>
+
+          {result.alreadySubmitted && (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-[13px] text-amber-800 text-center">
+              이미 제출한 시험이에요. <b>처음 제출한 결과</b>를 보여드립니다. (재제출로 점수는 바뀌지 않습니다)
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
             <div className="text-5xl font-bold text-indigo-600">{result.earnedScore}<span className="text-2xl text-slate-400">/{result.maxObjectiveScore}</span></div>
