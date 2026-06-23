@@ -6,6 +6,7 @@ import {
   resolvePointOrderDisplayAmounts,
   getBookVariantSolbookAccounting,
 } from '@/lib/order-revenue';
+import { extractOrderItemKeys, orderCustomerEmail } from '@/lib/order-overlap';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '주문 접수',
@@ -88,6 +89,25 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // 입금 대기·확인 단계에서도 「입금할 금액」을 표에 노출 (통장 입금 내역 매칭용).
+      // 완료/취소/무료공유는 기존 revenueWon 표기를 쓰므로 제외.
+      let expectedAmountWon: number | null = null;
+      if (status !== 'completed' && status !== 'cancelled' && status !== 'free_share') {
+        const parsedDue = parseOrderRevenueFromOrderText(orderTextStr, meta ?? undefined);
+        if (parsedDue != null && parsedDue >= 0) {
+          if (pointsUsed > 0) {
+            const disp = resolvePointOrderDisplayAmounts({
+              orderText: orderTextStr,
+              revenueWon: parsedDue,
+              pointsUsed,
+            });
+            expectedAmountWon = disp.paymentDueWon ?? Math.max(0, parsedDue - pointsUsed);
+          } else {
+            expectedAmountWon = parsedDue;
+          }
+        }
+      }
+
       return {
         id: o._id.toString(),
         orderText: o.orderText,
@@ -106,6 +126,8 @@ export async function GET(request: NextRequest) {
         orderGrossWon,
         /** 포인트 사용 시 실제 입금할 금액(추정). 쏠북 BV 분리 시에는 미사용 */
         paymentDueWon,
+        /** 미완료(입금 대기·확인) 주문의 입금할 금액(주문서 파싱). 통장 매칭용 */
+        expectedAmountWon,
         /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
         solbookAccountingSplit,
         completedAt:
@@ -117,7 +139,40 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ orders });
+    // 중복 의심: 같은 고객(이메일 우선, 없으면 loginId)의 다른 주문과 (지문×유형)이 겹치면 표시
+    const keyList = list.map((o) =>
+      extractOrderItemKeys((o as { orderMeta?: unknown }).orderMeta as Record<string, unknown>),
+    );
+    const custList = list.map((o) => {
+      const email = orderCustomerEmail((o as { orderMeta?: Record<string, unknown> }).orderMeta);
+      return email || (typeof o.loginId === 'string' && o.loginId ? `id:${o.loginId}` : '');
+    });
+    const ordersWithDup = orders.map((ord, i) => {
+      if (keyList[i].size === 0 || !custList[i]) return { ...ord, duplicateOf: null as string[] | null };
+      // 같은 고객의 다른 주문들 (지문×유형) 합집합 + 겹치는 주문번호 수집
+      const otherUnion = new Set<string>();
+      const contributors: string[] = [];
+      for (let j = 0; j < list.length; j++) {
+        if (j === i || custList[j] !== custList[i] || keyList[j].size === 0) continue;
+        let shares = false;
+        for (const k of keyList[i]) {
+          if (keyList[j].has(k)) { shares = true; break; }
+        }
+        for (const k of keyList[j]) otherUnion.add(k);
+        if (shares) {
+          const on = (list[j] as { orderNumber?: string }).orderNumber;
+          if (on) contributors.push(on);
+        }
+      }
+      // 완전 중복: 이 주문의 모든 (지문×유형)이 같은 고객의 다른 주문들에 이미 존재할 때만 표시
+      let allCovered = true;
+      for (const k of keyList[i]) {
+        if (!otherUnion.has(k)) { allCovered = false; break; }
+      }
+      return { ...ord, duplicateOf: allCovered && contributors.length ? contributors : null };
+    });
+
+    return NextResponse.json({ orders: ordersWithDup });
   } catch (err) {
     console.error('관리자 주문 목록 조회 실패:', err);
     return NextResponse.json(

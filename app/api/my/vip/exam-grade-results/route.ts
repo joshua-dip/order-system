@@ -5,6 +5,7 @@ import { getDb } from '@/lib/mongodb';
 import {
   GRADE_PAPERS_COLLECTION,
   GRADE_RESULTS_COLLECTION,
+  ensureGradeIndexes,
   type GradePaperDoc,
   type GradeResultDoc,
 } from '@/lib/vip-grade-store';
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const db = await getDb('gomijoshua');
+  await ensureGradeIndexes(db); // 중복 정리(첫 제출만) + 유니크 인덱스 자가 치유
   const userId = new ObjectId(auth.userId);
 
   const papers = await db

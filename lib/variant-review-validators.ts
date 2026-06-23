@@ -14,6 +14,7 @@ import {
   passageIdToValidHex,
 } from '@/lib/passage-variant-text';
 import { splitQuestionOptionSegments } from '@/lib/question-options-segments';
+import { CEFR_ADVANCED_VARIANT_TYPES } from '@/lib/variant-pricing';
 
 export type ReviewValidationIssue = {
   /** 검증 규칙 식별자 — UI/로그 필터용 */
@@ -228,7 +229,7 @@ function checkBlankParagraphMissingUnderline(
   type: string,
   v: QuestionDataView,
 ): ReviewValidationIssue[] {
-  if (type !== '빈칸') return [];
+  if (type !== '빈칸' && type !== '빈칸-고난도') return [];
   if (!v.paragraph.trim()) return [];
   // 빈칸 표식: 일반적으로 ____ (3자 이상 연속 underscore), 또는 <u>…</u>가 들어가는 케이스
   const hasUnderscoreBlank = /_{3,}/.test(v.paragraph);
@@ -273,6 +274,24 @@ function checkCorrectAnswerCircled(
 /**
  * 한 문항에 대한 모든 per-question 검증을 실행해 issue 배열을 돌려준다.
  */
+/** CEFR 고난도(대의·일치 계열): 해설에 어휘 글로싱(유의어)이 있는지 — 경고. */
+const CEFR_ADVANCED_SET = new Set<string>(CEFR_ADVANCED_VARIANT_TYPES);
+function checkCefrAdvancedGloss(type: string, v: QuestionDataView): ReviewValidationIssue[] {
+  if (!CEFR_ADVANCED_SET.has(type)) return [];
+  const exp = v.explanation ?? '';
+  if (!/유의어/.test(exp)) {
+    return [
+      {
+        rule: 'cefr_advanced_missing_gloss',
+        severity: 'warning',
+        message:
+          'CEFR 고난도 유형인데 해설에 어휘 풀이(유의어)가 없습니다. C2~C3 단어를 썼다면 「[고난도 어휘] 단어: 뜻 (유의어: …)」 형식으로 기재하세요.',
+      },
+    ];
+  }
+  return [];
+}
+
 export async function runPerQuestionValidations(
   db: Db,
   doc: Record<string, unknown>,
@@ -299,6 +318,7 @@ export async function runPerQuestionValidations(
   issues.push(...checkDuplicateChoicesWithinQuestion(v));
   issues.push(...checkCorrectAnswerCircled(v));
   issues.push(...checkGrammarAllCorrectClaim(type, v));
+  issues.push(...checkCefrAdvancedGloss(type, v));
   issues.push(...checkBlankParagraphMissingUnderline(type, v));
   issues.push(...(await checkGrammarVariantStructure(db, type, qd, doc.passage_id)));
 

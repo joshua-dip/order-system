@@ -42,7 +42,7 @@ function pricePerQuestion(type: string, withExplanation = true): number {
 interface DbEntry {
   id: string;
   type: 'textbook' | 'mockexam';
-  textbookCategory?: 'ebs' | 'solbook-textbook' | 'solbook-suppl';
+  textbookCategory?: 'ebs' | 'solbook-textbook' | 'solbook-suppl' | 'school-textbook' | 'supplement';
   textbookKey: string;
   displayName: string;
   lessonGroups: Record<string, string[]>;
@@ -278,7 +278,15 @@ export default function UnifiedOrder() {
   /* ── Phase1: 교재/모의고사 추가 UI ── */
   const [mockExamsData, setMockExamsData] = useState<Record<string, string[]>>({});
   const [showAddEbs, setShowAddEbs] = useState(false);
+  const [showAddSchool, setShowAddSchool] = useState(false);
   const [showAddMock, setShowAddMock] = useState(false);
+  /** 교과서 주문 허용 계정 여부 (/api/auth/me) — 교과서 카테고리 노출 게이트 */
+  const [canSchool, setCanSchool] = useState(false);
+  /** 교과서 교재 트리 ({ 교재명: { Sheet1: 부교재 ... } }) — 권한 계정만 /api/textbooks/school 로 로드 */
+  const [schoolData, setSchoolData] = useState<Record<string, unknown>>({});
+  /** 회원별 허용 부교재 목록 (/api/auth/me allowedTextbooksVariant) — '부교재' 카테고리 노출 게이트 */
+  const [supplementAllowed, setSupplementAllowed] = useState<string[]>([]);
+  const [showAddSupplement, setShowAddSupplement] = useState(false);
   const [showExternalNotice, setShowExternalNotice] = useState(false);
   const [tbSearch, setTbSearch] = useState('');
 
@@ -420,6 +428,12 @@ export default function UnifiedOrder() {
         setPremiumOk(!!u && u.isPremiumMember === true);
         setIsMember(!!u && u.role !== 'admin');
         setUserPoints(typeof u?.points === 'number' && u.points >= 0 ? u.points : 0);
+        setCanSchool(!!u && u.canOrderSchoolTextbook === true);
+        setSupplementAllowed(
+          Array.isArray(u?.allowedTextbooksVariant)
+            ? u.allowedTextbooksVariant.filter((x: unknown): x is string => typeof x === 'string')
+            : [],
+        );
         if (u?.email) setEmail(u.email);
       })
       .catch(() => {
@@ -428,6 +442,17 @@ export default function UnifiedOrder() {
       })
       .finally(() => setAuthChecked(true));
   }, []);
+
+  /* ── 교과서 교재 로드 (권한 계정만) ── */
+  useEffect(() => {
+    if (!canSchool) { setSchoolData({}); return; }
+    let alive = true;
+    fetch('/api/textbooks/school', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => { if (alive) setSchoolData(d?.data && typeof d.data === 'object' ? d.data : {}); })
+      .catch(() => { if (alive) setSchoolData({}); });
+    return () => { alive = false; };
+  }, [canSchool]);
 
   useEffect(() => {
     if (!premiumOk) return;
@@ -500,13 +525,13 @@ export default function UnifiedOrder() {
   }, [phase, loadSchoolSlots]);
 
   /* ── DB 추가 핸들러 ── */
-  const handleAddTextbook = (key: string, category: 'ebs' | 'solbook-textbook' | 'solbook-suppl') => {
+  const handleAddTextbook = (key: string, category: 'ebs' | 'solbook-textbook' | 'solbook-suppl' | 'school-textbook' | 'supplement') => {
     if (!textbooksData) return;
     if (dbEntries.some((e) => e.textbookKey === key && e.type === 'textbook')) {
       setToast('이미 추가된 교재입니다.');
       return;
     }
-    const groups = extractLessonGroups(textbooksData, key);
+    const groups = extractLessonGroups({ ...textbooksData, ...schoolData }, key);
     const entry: DbEntry = {
       id: `tb-${Date.now()}-${Math.random()}`,
       type: 'textbook',
@@ -518,6 +543,7 @@ export default function UnifiedOrder() {
     };
     setDbEntries((prev) => [...prev, entry]);
     setShowAddEbs(false);
+    setShowAddSchool(false);
     setTbSearch('');
   };
 
@@ -545,36 +571,19 @@ export default function UnifiedOrder() {
 
   /* ── Source 선택 ── */
   /**
-   * 같은 강(group) 안에서: 일반 클릭은 그 강에서는 해당 지문만 선택(단일),
-   * ⌘(Mac)·Ctrl(Windows) 누른 채 클릭이면 토글로 여러 지문을 겹쳐 선택.
+   * 번호(지문)를 클릭할 때마다 선택·해제(토글)한다.
+   * 부교재·모의고사 모두 동일 — ⌘/Ctrl 없이 여러 번호를 자유롭게 고를 수 있다.
    */
-  const pickSourceWithModifier = (dbId: string, groupKey: string, source: string, multi: boolean) => {
+  const toggleSource = (dbId: string, source: string) => {
     setDbEntries((prev) =>
       prev.map((e) => {
         if (e.id !== dbId) return e;
-        const groupSources = e.lessonGroups[groupKey] ?? [];
-        /* 모의고사는 그룹이 시험 전체 1개라, 부교재처럼 "강당 1개만" 로직을 쓰면 번호별 선택이 불가능함 → 항상 토글 */
-        if (e.type === 'mockexam' || multi) {
-          const has = e.selectedSources.includes(source);
-          return {
-            ...e,
-            selectedSources: has
-              ? e.selectedSources.filter((s) => s !== source)
-              : [...e.selectedSources, source],
-          };
-        }
-        const selectedInGroup = groupSources.filter((s) => e.selectedSources.includes(s));
-        const onlyThisSelected = selectedInGroup.length === 1 && selectedInGroup[0] === source;
-        if (onlyThisSelected) {
-          return {
-            ...e,
-            selectedSources: e.selectedSources.filter((s) => s !== source),
-          };
-        }
-        const outsideGroup = e.selectedSources.filter((s) => !groupSources.includes(s));
+        const has = e.selectedSources.includes(source);
         return {
           ...e,
-          selectedSources: [...outsideGroup, source],
+          selectedSources: has
+            ? e.selectedSources.filter((s) => s !== source)
+            : [...e.selectedSources, source],
         };
       })
     );
@@ -671,7 +680,7 @@ export default function UnifiedOrder() {
         textbookCategory: e.type === 'textbook' ? e.textbookCategory : undefined,
         lessonGroups:
           e.type === 'textbook'
-            ? extractLessonGroups(textbooksData, e.textbookKey)
+            ? extractLessonGroups({ ...textbooksData, ...schoolData }, e.textbookKey)
             : buildMockLessonGroups(e.displayName),
         selectedSources: e.selectedSources,
       };
@@ -1008,6 +1017,17 @@ export default function UnifiedOrder() {
   const filteredEbsKeys = tbSearch
     ? ebsKeys.filter((k) => k.toLowerCase().includes(tbSearch.toLowerCase()))
     : ebsKeys;
+  const schoolKeys = Object.keys(schoolData);
+  const filteredSchoolKeys = tbSearch
+    ? schoolKeys.filter((k) => k.toLowerCase().includes(tbSearch.toLowerCase()))
+    : schoolKeys;
+  // 부교재: 회원별 허용목록 중 교재 트리가 있는 것(EBS·교과서는 각자 버튼에 있으니 제외)
+  const supplementKeys = [...new Set(supplementAllowed)].filter(
+    (k) => tbKeys.includes(k) && !isEbsTextbook(k) && !schoolKeys.includes(k),
+  );
+  const filteredSupplementKeys = tbSearch
+    ? supplementKeys.filter((k) => k.toLowerCase().includes(tbSearch.toLowerCase()))
+    : supplementKeys;
 
   if (phase === 1) {
     return (
@@ -1130,6 +1150,10 @@ export default function UnifiedOrder() {
                         ? 'border-amber-100 bg-amber-50'
                         : e.textbookCategory === 'solbook-suppl'
                         ? 'border-orange-100 bg-orange-50'
+                        : e.textbookCategory === 'school-textbook'
+                        ? 'border-purple-100 bg-purple-50'
+                        : e.textbookCategory === 'supplement'
+                        ? 'border-teal-100 bg-teal-50'
                         : 'border-emerald-100 bg-emerald-50';
                     const badgeBg =
                       e.type === 'mockexam'
@@ -1138,6 +1162,10 @@ export default function UnifiedOrder() {
                         ? 'bg-amber-500'
                         : e.textbookCategory === 'solbook-suppl'
                         ? 'bg-orange-600'
+                        : e.textbookCategory === 'school-textbook'
+                        ? 'bg-purple-600'
+                        : e.textbookCategory === 'supplement'
+                        ? 'bg-teal-600'
                         : 'bg-emerald-600';
                     const badgeLabel =
                       e.type === 'mockexam'
@@ -1146,6 +1174,10 @@ export default function UnifiedOrder() {
                         ? '쏠북 교과서'
                         : e.textbookCategory === 'solbook-suppl'
                         ? '쏠북 부교재'
+                        : e.textbookCategory === 'school-textbook'
+                        ? '교과서'
+                        : e.textbookCategory === 'supplement'
+                        ? '부교재'
                         : 'EBS';
                     return (
                     <div
@@ -1178,6 +1210,8 @@ export default function UnifiedOrder() {
                 <button
                   onClick={() => {
                     setShowAddEbs((v) => !v);
+                    setShowAddSchool(false);
+                    setShowAddSupplement(false);
                     setShowAddMock(false);
                     setShowExternalNotice(false);
                     setTbSearch('');
@@ -1188,10 +1222,46 @@ export default function UnifiedOrder() {
                 >
                   <span className="text-base">+</span> EBS 교재
                 </button>
+                {supplementKeys.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setShowAddSupplement((v) => !v);
+                      setShowAddEbs(false);
+                      setShowAddSchool(false);
+                      setShowAddMock(false);
+                      setShowExternalNotice(false);
+                      setTbSearch('');
+                    }}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors ${
+                      showAddSupplement ? 'bg-teal-700' : 'bg-teal-600 hover:bg-teal-700'
+                    }`}
+                  >
+                    <span className="text-base">+</span> 부교재
+                  </button>
+                )}
+                {canSchool && (
+                  <button
+                    onClick={() => {
+                      setShowAddSchool((v) => !v);
+                      setShowAddEbs(false);
+                      setShowAddSupplement(false);
+                      setShowAddMock(false);
+                      setShowExternalNotice(false);
+                      setTbSearch('');
+                    }}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors ${
+                      showAddSchool ? 'bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
+                  >
+                    <span className="text-base">+</span> 교과서
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowAddMock((v) => !v);
                     setShowAddEbs(false);
+                    setShowAddSupplement(false);
+                    setShowAddSchool(false);
                     setShowExternalNotice(false);
                   }}
                   className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors ${
@@ -1204,6 +1274,8 @@ export default function UnifiedOrder() {
                   onClick={() => {
                     setShowExternalNotice((v) => !v);
                     setShowAddEbs(false);
+                    setShowAddSupplement(false);
+                    setShowAddSchool(false);
                     setShowAddMock(false);
                   }}
                   className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
@@ -1238,6 +1310,68 @@ export default function UnifiedOrder() {
                           key={key}
                           onClick={() => handleAddTextbook(key, 'ebs')}
                           className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-emerald-100 hover:text-emerald-800 transition-colors"
+                        >
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 교과서 드롭다운 (교과서 주문 허용 계정만) */}
+              {showAddSchool && canSchool && (
+                <div className="mt-4">
+                  <input
+                    type="text"
+                    placeholder="교과서명 검색..."
+                    value={tbSearch}
+                    onChange={(e) => setTbSearch(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none mb-2"
+                  />
+                  {tbLoading ? (
+                    <p className="text-sm text-gray-500 py-2">교재 목록 로딩 중...</p>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto space-y-1 rounded-xl border border-purple-100 bg-purple-50 p-2">
+                      {filteredSchoolKeys.length === 0 && (
+                        <p className="text-sm text-gray-400 px-2 py-3 text-center">등록된 교과서 교재가 없습니다.</p>
+                      )}
+                      {filteredSchoolKeys.map((key) => (
+                        <button
+                          key={key}
+                          onClick={() => handleAddTextbook(key, 'school-textbook')}
+                          className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-purple-100 hover:text-purple-800 transition-colors"
+                        >
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 부교재 드롭다운 (회원별 허용 부교재만) */}
+              {showAddSupplement && supplementKeys.length > 0 && (
+                <div className="mt-4">
+                  <input
+                    type="text"
+                    placeholder="부교재명 검색..."
+                    value={tbSearch}
+                    onChange={(e) => setTbSearch(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none mb-2"
+                  />
+                  {tbLoading ? (
+                    <p className="text-sm text-gray-500 py-2">교재 목록 로딩 중...</p>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto space-y-1 rounded-xl border border-teal-100 bg-teal-50 p-2">
+                      {filteredSupplementKeys.length === 0 && (
+                        <p className="text-sm text-gray-400 px-2 py-3 text-center">검색 결과 없음</p>
+                      )}
+                      {filteredSupplementKeys.map((key) => (
+                        <button
+                          key={key}
+                          onClick={() => handleAddTextbook(key, 'supplement')}
+                          className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-teal-100 hover:text-teal-800 transition-colors"
                         >
                           {key}
                         </button>
@@ -1331,10 +1465,8 @@ export default function UnifiedOrder() {
                   개 지문 선택됨
                 </span>
                 <p className="mt-0.5 text-[11px] text-gray-500 leading-snug">
-                  <span className="text-gray-600">모의고사 번호는 클릭할 때마다 선택·해제됩니다.</span>{' '}
-                  부교재는 같은 강 안에서 여러 번호를 고르려면{' '}
-                  <kbd className="rounded border border-gray-300 bg-gray-100 px-1 font-mono text-[10px]">⌘</kbd> 또는{' '}
-                  <kbd className="rounded border border-gray-300 bg-gray-100 px-1 font-mono text-[10px]">Ctrl</kbd> 을 누른 채 클릭하세요.
+                  <span className="text-gray-600">번호를 클릭할 때마다 선택·해제됩니다.</span>{' '}
+                  여러 번호를 자유롭게 선택할 수 있어요. 강 제목을 누르면 그 강 전체가 선택·해제됩니다.
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2 pt-0.5">
@@ -1384,6 +1516,10 @@ export default function UnifiedOrder() {
                           ? 'bg-gradient-to-r from-amber-500 to-amber-600'
                           : entry.textbookCategory === 'solbook-suppl'
                           ? 'bg-gradient-to-r from-orange-600 to-orange-700'
+                          : entry.textbookCategory === 'school-textbook'
+                          ? 'bg-gradient-to-r from-purple-600 to-purple-700'
+                          : entry.textbookCategory === 'supplement'
+                          ? 'bg-gradient-to-r from-teal-600 to-teal-700'
                           : 'bg-gradient-to-r from-emerald-600 to-emerald-700'
                       }`}
                     >
@@ -1396,6 +1532,10 @@ export default function UnifiedOrder() {
                               ? 'text-amber-100'
                               : entry.textbookCategory === 'solbook-suppl'
                               ? 'text-orange-100'
+                              : entry.textbookCategory === 'school-textbook'
+                              ? 'text-purple-200'
+                              : entry.textbookCategory === 'supplement'
+                              ? 'text-teal-200'
                               : 'text-emerald-200'
                           }`}>
                             {entry.type === 'mockexam'
@@ -1404,6 +1544,10 @@ export default function UnifiedOrder() {
                               ? '쏠북 교과서'
                               : entry.textbookCategory === 'solbook-suppl'
                               ? '쏠북 부교재'
+                              : entry.textbookCategory === 'school-textbook'
+                              ? '교과서'
+                              : entry.textbookCategory === 'supplement'
+                              ? '부교재'
                               : 'EBS 교재'}
                           </span>
                           <p className="text-sm font-bold text-white leading-tight mt-0.5">
@@ -1459,6 +1603,10 @@ export default function UnifiedOrder() {
                                       ? 'bg-amber-500 text-white'
                                       : entry.textbookCategory === 'solbook-suppl'
                                       ? 'bg-orange-600 text-white'
+                                      : entry.textbookCategory === 'school-textbook'
+                                      ? 'bg-purple-600 text-white'
+                                      : entry.textbookCategory === 'supplement'
+                                      ? 'bg-teal-600 text-white'
                                       : 'bg-emerald-600 text-white'
                                     : someSel
                                     ? entry.type === 'mockexam'
@@ -1467,6 +1615,10 @@ export default function UnifiedOrder() {
                                       ? 'bg-amber-100 text-amber-800'
                                       : entry.textbookCategory === 'solbook-suppl'
                                       ? 'bg-orange-100 text-orange-800'
+                                      : entry.textbookCategory === 'school-textbook'
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : entry.textbookCategory === 'supplement'
+                                      ? 'bg-teal-100 text-teal-800'
                                       : 'bg-emerald-100 text-emerald-800'
                                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                                 }`}
@@ -1507,11 +1659,7 @@ export default function UnifiedOrder() {
                                         key={src}
                                         htmlFor={passCbId}
                                         className="flex items-center gap-1 cursor-pointer group select-none"
-                                        title={
-                                          entry.type === 'mockexam'
-                                            ? '클릭할 때마다 선택·해제'
-                                            : '일반 클릭: 이 강에서는 이 지문만 선택 · ⌘ 또는 Ctrl+클릭: 여러 지문 추가·해제'
-                                        }
+                                        title="클릭할 때마다 선택·해제"
                                       >
                                         {/*
                                           네이티브 checkbox + readOnly + preventDefault 조합은
@@ -1524,9 +1672,7 @@ export default function UnifiedOrder() {
                                           role="checkbox"
                                           aria-checked={checked}
                                           aria-label={`${label} ${checked ? '선택됨' : '선택 안 됨'}`}
-                                          onClick={(e) => {
-                                            pickSourceWithModifier(entry.id, groupKey, src, e.metaKey || e.ctrlKey);
-                                          }}
+                                          onClick={() => toggleSource(entry.id, src)}
                                           className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[8px] font-bold leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-0 ${
                                             checked
                                               ? 'border-purple-600 bg-purple-600 text-white'
@@ -1635,6 +1781,10 @@ export default function UnifiedOrder() {
                       ? 'bg-amber-500'
                       : e.textbookCategory === 'solbook-suppl'
                       ? 'bg-orange-600'
+                      : e.textbookCategory === 'school-textbook'
+                      ? 'bg-purple-600'
+                      : e.textbookCategory === 'supplement'
+                      ? 'bg-teal-600'
                       : 'bg-emerald-600'
                   }`}>
                     {e.type === 'mockexam'
@@ -1643,6 +1793,10 @@ export default function UnifiedOrder() {
                       ? '쏠북교과'
                       : e.textbookCategory === 'solbook-suppl'
                       ? '쏠북부교'
+                      : e.textbookCategory === 'school-textbook'
+                      ? '교과서'
+                      : e.textbookCategory === 'supplement'
+                      ? '부교재'
                       : 'EBS'}
                   </span>
                   <span className="text-gray-700 font-medium">{e.displayName}</span>

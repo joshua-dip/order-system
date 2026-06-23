@@ -78,6 +78,8 @@ export async function GET(request: NextRequest) {
     const TYPE_ORDER = [
       '주제', '제목', '주장', '일치', '불일치', '함의',
       '빈칸', '요약', '어법', '순서', '삽입', '무관한문장', '삽입-고난도', '어법-고난도',
+      '빈칸-고난도', '어휘-고난도', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도',
+      '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도',
     ];
     const sortedTypes = [...typeSet].sort(
       (a, b) => (TYPE_ORDER.indexOf(a) === -1 ? 999 : TYPE_ORDER.indexOf(a))

@@ -9,7 +9,13 @@ import {
   Dashboard,
   Task,
   UserMultiple,
-  Analytics,
+  Api,
+  Notebook,
+  Report,
+  Money,
+  Education,
+  Chat,
+  Book,
   DocumentAdd,
   User as UserIcon,
   ChevronDown as ChevronDownIcon,
@@ -98,13 +104,20 @@ function SearchContainer({ isCollapsed = false }: { isCollapsed?: boolean }) {
 
 function getActiveSectionFromPath(pathname: string): string {
   if (pathname === "/my/vip") return "dashboard";
+  if (pathname.startsWith("/my/vip/qbank-api")) return "qbank-api";
+  if (pathname.startsWith("/my/vip/review")) return "review";
+  if (pathname.startsWith("/my/vip/homework")) return "homework";
+  if (pathname.startsWith("/my/vip/report")) return "report";
+  if (pathname.startsWith("/my/vip/tuition")) return "tuition";
+  if (pathname.startsWith("/my/vip/counseling")) return "counseling";
+  if (pathname.startsWith("/my/vip/lessons")) return "lessons";
   if (pathname.startsWith("/my/vip/attendance")) return "attendance";
   if (pathname.startsWith("/my/vip/students")) return "students";
   if (pathname.startsWith("/my/vip/exams")) return "exams";
+  if (pathname.startsWith("/my/vip/analysis")) return "exams"; // 시험 분석은 「시험 관리」 하위
   if (pathname.startsWith("/my/vip/scores")) return "scores";
   if (pathname.startsWith("/my/vip/questions")) return "questions";
   if (pathname.startsWith("/my/vip/generate")) return "generate";
-  if (pathname.startsWith("/my/vip/analysis")) return "analysis";
   return "dashboard";
 }
 
@@ -117,50 +130,82 @@ interface UnifiedNavItem {
   href: string;
   exact?: boolean;
   /** 실제 하위 페이지가 있는 섹션만 — 활성 시 인라인으로 펼침 */
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; id?: string }[];
 }
 
-const UNIFIED_NAV: UnifiedNavItem[] = [
-  { id: "dashboard", icon: <Dashboard size={18} />, label: "대시보드", href: "/my/vip", exact: true },
-  { id: "students", icon: <UserMultiple size={18} />, label: "학생 관리", href: "/my/vip/students" },
+/** 사이드바 섹션 — 메뉴가 늘어나 학습/운영/도구로 그룹화. */
+interface NavSection {
+  title?: string;
+  items: UnifiedNavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
   {
-    id: "attendance",
-    icon: <CheckmarkOutline size={18} />,
-    label: "출결관리",
-    href: "/my/vip/attendance",
-    children: [
-      { label: "출결 입력", href: "/my/vip/attendance" },
-      { label: "반 관리", href: "/my/vip/attendance/classes" },
-      { label: "출결 통계", href: "/my/vip/attendance/history" },
+    items: [
+      { id: "dashboard", icon: <Dashboard size={18} />, label: "대시보드", href: "/my/vip", exact: true },
     ],
   },
   {
-    id: "exams",
-    icon: <Task size={18} />,
-    label: "시험 관리",
-    href: "/my/vip/exams",
-    children: [
-      { label: "시험 준비", href: "/my/vip/exams" },
-      { label: "기출 분석·예측", href: "/my/vip/exams/analysis" },
+    title: "학습",
+    items: [
+      {
+        id: "exams",
+        icon: <Task size={18} />,
+        label: "시험 관리",
+        href: "/my/vip/exams",
+        children: [
+          { label: "시험 준비", href: "/my/vip/exams" },
+          { label: "기출 분석·예측", href: "/my/vip/exams/analysis" },
+          { label: "시험 분석", href: "/my/vip/analysis", id: "analysis" },
+        ],
+      },
+      { id: "scores", icon: <ChartBar size={18} />, label: "성적 관리", href: "/my/vip/scores" },
+      { id: "report", icon: <Report size={18} />, label: "성적표", href: "/my/vip/report" },
+      { id: "review", icon: <Notebook size={18} />, label: "오답노트", href: "/my/vip/review" },
+      { id: "homework", icon: <Education size={18} />, label: "숙제 관리", href: "/my/vip/homework" },
     ],
   },
-  { id: "scores", icon: <ChartBar size={18} />, label: "성적 관리", href: "/my/vip/scores" },
   {
-    id: "generate",
-    icon: <DocumentAdd size={18} />,
-    label: "문제 생성",
-    href: "/my/vip/generate",
-    children: [
-      { label: "학생별 시험지 만들기", href: "/my/vip/generate/student" },
-      { label: "학교별 시험지 만들기", href: "/my/vip/generate/school" },
-      { label: "QR 자가채점 결과", href: "/my/vip/generate/grade-results" },
+    title: "운영",
+    items: [
+      { id: "students", icon: <UserMultiple size={18} />, label: "학생 관리", href: "/my/vip/students" },
+      {
+        id: "attendance",
+        icon: <CheckmarkOutline size={18} />,
+        label: "출결관리",
+        href: "/my/vip/attendance",
+        children: [
+          { label: "출결 입력", href: "/my/vip/attendance" },
+          { label: "반 관리", href: "/my/vip/attendance/classes" },
+          { label: "출결 통계", href: "/my/vip/attendance/history" },
+        ],
+      },
+      { id: "tuition", icon: <Money size={18} />, label: "수강료 관리", href: "/my/vip/tuition" },
+      { id: "counseling", icon: <Chat size={18} />, label: "상담일지", href: "/my/vip/counseling" },
+      { id: "lessons", icon: <Book size={18} />, label: "수업일지", href: "/my/vip/lessons" },
     ],
   },
-  { id: "questions", icon: <Catalog size={18} />, label: "문제 관리", href: "/my/vip/questions" },
-  { id: "analysis", icon: <Analytics size={18} />, label: "시험 분석", href: "/my/vip/analysis" },
+  {
+    title: "도구",
+    items: [
+      {
+        id: "generate",
+        icon: <DocumentAdd size={18} />,
+        label: "문제 생성",
+        href: "/my/vip/generate",
+        children: [
+          { label: "학생별 시험지 만들기", href: "/my/vip/generate/student" },
+          { label: "학교별 시험지 만들기", href: "/my/vip/generate/school" },
+          { label: "QR 자가채점 결과", href: "/my/vip/generate/grade-results" },
+        ],
+      },
+      { id: "questions", icon: <Catalog size={18} />, label: "문제 관리", href: "/my/vip/questions" },
+      { id: "qbank-api", icon: <Api size={18} />, label: "문제은행 API", href: "/my/vip/qbank-api" },
+    ],
+  },
 ];
 
-function UnifiedSidebar({ userName }: { userName: string }) {
+function UnifiedSidebar({ userName, theme = 'dark', onToggleTheme }: { userName: string; theme?: 'dark' | 'light'; onToggleTheme?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -190,9 +235,15 @@ function UnifiedSidebar({ userName }: { userName: string }) {
   }, []);
   const changeSubject = (s: string) => { if (s === subject) return; setCurrentSubject(s); window.location.reload(); };
 
-  // 메뉴 = 접근가능(엔타이틀먼트) ∩ 과목 적용(영어전용 메뉴는 영어일 때만)
-  const navItems = (accessible ? UNIFIED_NAV.filter((it) => accessible.has(it.id)) : UNIFIED_NAV)
-    .filter((it) => subject === DEFAULT_VIP_SUBJECT || !ENGLISH_ONLY_MENU_IDS.has(it.id));
+  // 섹션별 메뉴 = 접근가능(엔타이틀먼트) ∩ 과목 적용(영어전용 메뉴는 영어일 때만). 빈 섹션은 숨김.
+  const visibleSections = NAV_SECTIONS
+    .map((sec) => ({
+      title: sec.title,
+      items: sec.items
+        .filter((it) => !accessible || accessible.has(it.id))
+        .filter((it) => subject === DEFAULT_VIP_SUBJECT || !ENGLISH_ONLY_MENU_IDS.has(it.id)),
+    }))
+    .filter((sec) => sec.items.length > 0);
 
   return (
     <aside
@@ -258,7 +309,15 @@ function UnifiedSidebar({ userName }: { userName: string }) {
 
       {/* 네비게이션 */}
       <nav className={`flex-1 overflow-y-auto w-full flex flex-col ${collapsed ? "items-center gap-1" : "gap-0.5 px-2"}`}>
-        {navItems.map((item) => {
+        {visibleSections.map((sec, si) => (
+          <div key={sec.title ?? `__top-${si}`} className="w-full flex flex-col gap-0.5">
+            {sec.title && !collapsed && (
+              <div className="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-zinc-600 select-none">{sec.title}</div>
+            )}
+            {sec.title && collapsed && si > 0 && (
+              <div className="my-2 w-5 h-px bg-zinc-800/80 mx-auto" />
+            )}
+            {sec.items.map((item) => {
           const active = item.exact ? pathname === item.href : item.id === activeId;
           const expanded = !collapsed && item.id === activeId && !!item.children;
           return (
@@ -284,7 +343,10 @@ function UnifiedSidebar({ userName }: { userName: string }) {
               </button>
               {expanded && (
                 <div className="ml-[2.1rem] mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-zinc-800 pl-2">
-                  {item.children!.map((c) => {
+                  {item.children!
+                    .filter((c) => !c.id || (accessible ? accessible.has(c.id) : true))
+                    .filter((c) => !c.id || subject === DEFAULT_VIP_SUBJECT || !ENGLISH_ONLY_MENU_IDS.has(c.id))
+                    .map((c) => {
                     const cActive = pathname === c.href;
                     return (
                       <button
@@ -303,7 +365,9 @@ function UnifiedSidebar({ userName }: { userName: string }) {
               )}
             </div>
           );
-        })}
+            })}
+          </div>
+        ))}
 
         {/* 메뉴 설정(상점) — 메뉴 추가/구매 */}
         <button
@@ -318,6 +382,30 @@ function UnifiedSidebar({ userName }: { userName: string }) {
           {!collapsed && <span className="text-[13.5px] font-medium flex-1 text-left">메뉴 설정</span>}
         </button>
       </nav>
+
+      {/* 테마 토글 (다크/라이트) */}
+      {onToggleTheme && (collapsed ? (
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          title={theme === 'light' ? '다크 모드로' : '라이트 모드로'}
+          aria-label="테마 전환"
+          className="mt-2 w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition-colors"
+        >
+          <span className="text-base leading-none">{theme === 'light' ? '🌙' : '☀️'}</span>
+        </button>
+      ) : (
+        <div className="w-full px-3 mt-1">
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
+          >
+            <span className="text-base leading-none">{theme === 'light' ? '🌙' : '☀️'}</span>
+            <span className="font-medium">{theme === 'light' ? '다크 모드' : '라이트 모드'}</span>
+          </button>
+        </div>
+      ))}
 
       {/* 푸터: 마이페이지 */}
       {collapsed ? (
@@ -349,8 +437,8 @@ function UnifiedSidebar({ userName }: { userName: string }) {
   );
 }
 
-export function VipSidebar({ userName }: { userName: string }) {
-  return <UnifiedSidebar userName={userName} />;
+export function VipSidebar({ userName, theme, onToggleTheme }: { userName: string; theme?: 'dark' | 'light'; onToggleTheme?: () => void }) {
+  return <UnifiedSidebar userName={userName} theme={theme} onToggleTheme={onToggleTheme} />;
 }
 
 export default VipSidebar;

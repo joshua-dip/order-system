@@ -6,6 +6,7 @@ import { VipSidebar } from '@/app/components/ui/sidebar-component';
 import { pathToMenuId, GATE_EXEMPT_MENU_IDS } from '@/lib/vip-menu-path';
 import { getCurrentSubject, DEFAULT_VIP_SUBJECT, ENGLISH_ONLY_MENU_IDS } from '@/lib/vip-subject';
 import { fetchVipMenus } from '@/lib/vip-menu-client';
+import { getVipTheme, setVipTheme, type VipTheme } from '@/lib/vip-theme';
 
 interface VipUser {
   loginId: string;
@@ -21,6 +22,10 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // 메뉴 게이트: null=검사중, true=통과(렌더), false=리다이렉트중
   const [gateOk, setGateOk] = useState<boolean | null>(null);
+  // 테마(다크/라이트) — 라이트는 흑백 반전(.vip-light-root)
+  const [theme, setTheme] = useState<VipTheme>('dark');
+  useEffect(() => { setTheme(getVipTheme()); }, []);
+  const toggleTheme = () => { const n: VipTheme = theme === 'light' ? 'dark' : 'light'; setVipTheme(n); setTheme(n); };
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -65,7 +70,7 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100">
+    <div className={`min-h-screen bg-[#09090b] text-zinc-100 ${theme === 'light' ? 'vip-light-root' : ''}`}>
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0c0c0f] border-b border-zinc-800/80">
         <button
@@ -92,7 +97,7 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
       <div className="flex">
         {/* Desktop: 2-level sidebar */}
         <div className="hidden lg:flex sticky top-0 h-screen z-40">
-          <VipSidebar userName={user.name || user.loginId} />
+          <VipSidebar userName={user.name || user.loginId} theme={theme} onToggleTheme={toggleTheme} />
         </div>
 
         {/* Mobile: overlay sidebar */}
@@ -103,7 +108,7 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setSidebarOpen(false)}
             />
             <div className="fixed top-0 left-0 z-40 h-screen lg:hidden shadow-2xl shadow-black/50">
-              <VipSidebar userName={user.name || user.loginId} />
+              <VipSidebar userName={user.name || user.loginId} theme={theme} onToggleTheme={toggleTheme} />
             </div>
           </>
         )}

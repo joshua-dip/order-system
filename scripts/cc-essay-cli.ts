@@ -28,8 +28,14 @@
  *     "schoolName": "○○고등학교",            // data.meta.info 앞에 삽입
  *     "grade":      "2학년",
  *     "examSubtitle": "26년 3월 고1 영어모의고사",  // data.meta.subtitle 덮어쓰기
+ *     "requireSentences": ["it seemed to me that ..."], // 선택. 가드: 이 문장(들)만 정확히 제작됐는지 검사
  *     "data":       { "meta": {...}, "question_set": {...}, "passage": "...", "questions": [...] }
  *   }
+ *
+ * requireSentences 가 있으면 (또는 CLI --require-sentence) save/dry-run 이:
+ *   1) 선택 문장이 어떤 문항 answer.text 에 그대로 포함됐는지 (누락 금지)
+ *   2) 선택하지 않은 다른 문장이 문항으로 제작되지 않았는지 (외래 문장 금지)
+ * 둘 다 통과해야 저장. 어긋나면 거부 (--force 우회). 문서에는 저장되지 않는 가드 전용 필드.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -599,10 +605,17 @@ interface SaveInput {
   schoolName?: string;
   grade?: string;
   examSubtitle?: string;
+  /**
+   * 사용자가 "이 문장을 중심으로" 선택한 원문 문장(들). 지정하면 저장 가드가:
+   *  1) 선택 문장이 어떤 문항의 정답(answer.text)에 그대로 들어갔는지 (누락 금지)
+   *  2) 선택하지 않은 다른 문장이 문항으로 제작되지 않았는지 (외래 문장 금지)
+   * 둘 다 통과해야 저장. (어긋나면 --force 없이는 거부) HTML/문서에는 저장되지 않는 가드 전용 필드.
+   */
+  requireSentences?: string[];
   data?: ExamData;
 }
 
-interface PerformSaveOpts { dryRun: boolean; force: boolean }
+interface PerformSaveOpts { dryRun: boolean; force: boolean; requireSentences?: string[] }
 interface PerformSaveResult {
   ok: boolean;
   reason?: string;
@@ -618,7 +631,51 @@ interface PerformSaveResult {
   title?: string;
   generated_html_bytes?: number;
   questions_count?: number;
+  required_sentences_checked?: number;
+  missing_sentences?: string[];
+  foreign_sentences?: Array<{ id: string; text: string }>;
   error?: string;
+}
+
+/* ── 선택 문장 가드 ───────────────────────────────────────────────────────────
+   "선택한 문장만 정확히 제작" 을 저장 시점에 강제. requireSentences 가 있을 때만 동작.
+   비교는 가드 전용 정규화(태그·구두점·대소문자 무시, 공백 단일화)로 오탐을 줄인다. */
+function normForRequire(s: string): string {
+  return String(s ?? '')
+    .replace(/<[^>]*>/g, ' ')                 // HTML 태그 제거
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣\s]/gi, ' ')        // 구두점·따옴표 제거 (글자/숫자/한글만)
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+interface RequireCheck {
+  ok: boolean;
+  missing: string[];                              // 선택했지만 정답에 없는 문장
+  foreign: Array<{ id: string; text: string }>;   // 선택 안 했는데 문항이 된 정답
+}
+
+function checkRequiredSentences(data: ExamData, required: string[]): RequireCheck {
+  const reqNorm = required
+    .map(r => ({ raw: r, norm: normForRequire(r) }))
+    .filter(r => r.norm.length > 0);
+  const questions = Array.isArray(data.questions) ? data.questions : [];
+  const answers = questions.map(q => ({
+    id: String(q.id ?? ''),
+    raw: String(q.answer?.text ?? ''),
+    norm: normForRequire(String(q.answer?.text ?? '')),
+  }));
+  const joined = answers.map(a => a.norm).join(' ');
+
+  /* 1) 커버리지: 선택 문장이 정답(들)에 그대로 등장해야 함 */
+  const missing = reqNorm.filter(r => !joined.includes(r.norm)).map(r => r.raw);
+
+  /* 2) 외래 문장: 어떤 선택 문장과도 겹치지 않는 정답 = 끼어든 다른 문장 */
+  const foreign = answers
+    .filter(a => a.norm.length > 0 && !reqNorm.some(r => a.norm.includes(r.norm) || r.norm.includes(a.norm)))
+    .map(a => ({ id: a.id, text: a.raw }));
+
+  return { ok: missing.length === 0 && foreign.length === 0, missing, foreign };
 }
 
 async function performSave(input: SaveInput, opts: PerformSaveOpts): Promise<PerformSaveResult> {
@@ -638,6 +695,34 @@ async function performSave(input: SaveInput, opts: PerformSaveOpts): Promise<Per
       hint: '오류를 고치거나 --force 로 우회하세요.',
       validation,
     };
+  }
+
+  /* 1.5) 선택 문장 가드 — "선택한 문장만 정확히 제작" 강제 (requireSentences 있을 때만) */
+  const requireSentences = [
+    ...(Array.isArray(input.requireSentences) ? input.requireSentences : []),
+    ...(opts.requireSentences ?? []),
+  ].map(s => String(s)).filter(s => s.trim().length > 0);
+  if (requireSentences.length > 0) {
+    const chk = checkRequiredSentences(input.data, requireSentences);
+    if (!chk.ok && !opts.force) {
+      const parts: string[] = [];
+      if (chk.missing.length > 0) {
+        parts.push(`선택 문장이 정답에 그대로 없음(${chk.missing.length}): ${chk.missing.map(s => `"${s}"`).join(' / ')}`);
+      }
+      if (chk.foreign.length > 0) {
+        parts.push(`선택하지 않은 문장이 문항으로 제작됨(${chk.foreign.length}): ${chk.foreign.map(f => `[${f.id}] "${f.text}"`).join(' / ')}`);
+      }
+      return {
+        ok: false,
+        reason: 'required_sentence_guard',
+        hint: '선택한 문장만 정확히 제작되도록 초안을 고치세요 (의도적이면 --force 로 우회).',
+        validation,
+        required_sentences_checked: requireSentences.length,
+        missing_sentences: chk.missing,
+        foreign_sentences: chk.foreign,
+        error: parts.join(' | '),
+      };
+    }
   }
 
   /* 2) passageId 로 textbook/sourceKey 자동 보강 (입력값 우선). */
@@ -687,6 +772,7 @@ async function performSave(input: SaveInput, opts: PerformSaveOpts): Promise<Per
       title: finalData.meta.title,
       generated_html_bytes: Buffer.byteLength(html, 'utf8'),
       questions_count: Array.isArray(finalData.questions) ? finalData.questions.length : 0,
+      required_sentences_checked: requireSentences.length,
     };
   }
 
@@ -710,6 +796,7 @@ async function performSave(input: SaveInput, opts: PerformSaveOpts): Promise<Per
     difficulty,
     title: finalData.meta.title,
     validation,
+    required_sentences_checked: requireSentences.length,
   };
 }
 
@@ -734,6 +821,8 @@ async function cmdSave(flags: Map<string, string>) {
   if (!jsonPath) die('save: --json <파일경로> 또는 --json - (stdin) 이 필요합니다.');
   const dryRun = flagBool(flags, 'dry-run');
   const force = flagBool(flags, 'force');
+  const reqFlag = flags.get('require-sentence');
+  const requireSentences = reqFlag && reqFlag !== 'true' ? [reqFlag] : [];
 
   const input = readSaveInputFromPath(jsonPath);
 
@@ -747,7 +836,7 @@ async function cmdSave(flags: Map<string, string>) {
     }
   }
 
-  const result = await performSave(input, { dryRun, force });
+  const result = await performSave(input, { dryRun, force, requireSentences });
   out({ ...result, folder_ensured: folderEnsured });
   if (!result.ok) process.exit(2);
 }
@@ -755,6 +844,8 @@ async function cmdSave(flags: Map<string, string>) {
 async function cmdSaveAll(flags: Map<string, string>, positional: string[]) {
   const dryRun = flagBool(flags, 'dry-run');
   const force = flagBool(flags, 'force');
+  const reqFlag = flags.get('require-sentence');
+  const requireSentences = reqFlag && reqFlag !== 'true' ? [reqFlag] : [];
 
   /* JSON 파일 경로는 positional 인자 또는 --json (단수) */
   const files: string[] = positional.length > 0
@@ -799,7 +890,7 @@ async function cmdSaveAll(flags: Map<string, string>, positional: string[]) {
       continue;
     }
     try {
-      const r = await performSave(p.input, { dryRun, force });
+      const r = await performSave(p.input, { dryRun, force, requireSentences });
       results.push({ file: p.file, ...r });
     } catch (e) {
       results.push({
@@ -1034,8 +1125,11 @@ async function main() {
   ensure-folder --folder "이름"
            — essay_exams 에 같은 folder 가 1 건도 없으면 placeholder 문서를 1 개 삽입.
              /admin/essay-generator 의 「📁 새 폴더」 와 동일 동작. 이미 있으면 no-op.
-  save     --json <파일|->  [--dry-run] [--force]
+  save     --json <파일|->  [--dry-run] [--force] [--require-sentence "원문 문장"]
            — 저장 전에 입력 JSON 의 folder 필드를 자동으로 ensure (placeholder 생성)
+             --require-sentence (또는 JSON 의 requireSentences: ["..."]) 지정 시
+             선택 문장이 정답에 그대로 들어갔고 + 다른 문장이 끼어들지 않았는지 가드.
+             어긋나면 저장 거부 (--force 로만 우회). --dry-run 에서도 동일 검사.
   save-all <file1> <file2> [<file3> ...]  [--dry-run] [--force]
            — 여러 draft JSON 을 순차 저장. 사용된 folder 들을 사전에 한 번씩 ensure
              (예: 한 지문의 4 난이도 동시 저장)

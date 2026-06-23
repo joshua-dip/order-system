@@ -9,7 +9,7 @@ export const VIP_SUBJECT_COOKIE = 'vip_subject';
 export const DEFAULT_VIP_SUBJECT = '영어';
 
 /** 변형문제(영어 독해) 전용 메뉴 — 타 과목 선택 시 숨김. */
-export const ENGLISH_ONLY_MENU_IDS = new Set(['generate', 'questions']);
+export const ENGLISH_ONLY_MENU_IDS = new Set(['generate', 'questions', 'qbank-api', 'review', 'homework']);
 
 export function getCurrentSubject(): string {
   if (typeof window === 'undefined') return DEFAULT_VIP_SUBJECT;

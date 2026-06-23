@@ -34,6 +34,7 @@ function mapUser(u: Record<string, unknown>) {
     dropboxSharedLink: (u.dropboxSharedLink as string | undefined) ?? '',
     canAccessAnalysis: !!(u.canAccessAnalysis),
     canAccessEssay: !!(u.canAccessEssay),
+    canOrderSchoolTextbook: !!(u.canOrderSchoolTextbook),
     myFormatApproved: !!(u.myFormatApproved),
     allowedTextbooks: Array.isArray(u.allowedTextbooks) ? u.allowedTextbooks : [],
     allowedTextbooksAnalysis: Array.isArray(u.allowedTextbooksAnalysis)
@@ -119,6 +120,7 @@ export async function PATCH(
     const resetPassword = body?.resetPassword === true;
     const canAccessAnalysis = body?.canAccessAnalysis === true || body?.canAccessAnalysis === false ? body.canAccessAnalysis : undefined;
     const canAccessEssay = body?.canAccessEssay === true || body?.canAccessEssay === false ? body.canAccessEssay : undefined;
+    const canOrderSchoolTextbook = body?.canOrderSchoolTextbook === true || body?.canOrderSchoolTextbook === false ? body.canOrderSchoolTextbook : undefined;
     const myFormatApproved = body?.myFormatApproved === true || body?.myFormatApproved === false ? body.myFormatApproved : undefined;
     const allowedTextbooks = Array.isArray(body?.allowedTextbooks) ? body.allowedTextbooks : undefined;
     const allowedTextbooksAnalysis = Array.isArray(body?.allowedTextbooksAnalysis) ? body.allowedTextbooksAnalysis : undefined;
@@ -153,6 +155,7 @@ export async function PATCH(
     if (dropboxSharedLink !== undefined) updates.dropboxSharedLink = dropboxSharedLink;
     if (canAccessAnalysis !== undefined) updates.canAccessAnalysis = canAccessAnalysis;
     if (canAccessEssay !== undefined) updates.canAccessEssay = canAccessEssay;
+    if (canOrderSchoolTextbook !== undefined) updates.canOrderSchoolTextbook = canOrderSchoolTextbook;
     if (myFormatApproved !== undefined) updates.myFormatApproved = myFormatApproved;
     if (allowedTextbooks !== undefined) updates.allowedTextbooks = allowedTextbooks;
     if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;

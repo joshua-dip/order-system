@@ -1,7 +1,20 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
 
 const COL = 'essay_exams';
+
+/**
+ * 유형(examType) 필터 — examType 은 data.meta.examType 에만 저장된다(별도 top-level 없음).
+ * - '글의의미서술형': 글의의미만.
+ * - 그 외(배열형 등): 글의의미 제외 ($ne 는 examType 누락 레거시 문서도 포함).
+ * - 미지정: 전체.
+ */
+function examTypeMatch(examType?: string): Record<string, unknown> {
+  if (!examType) return {};
+  if (examType === ESSAY_MEANING_EXAM_TYPE) return { 'data.meta.examType': ESSAY_MEANING_EXAM_TYPE };
+  return { 'data.meta.examType': { $ne: ESSAY_MEANING_EXAM_TYPE } };
+}
 
 export interface EssayExamDoc {
   _id?: ObjectId;
@@ -42,11 +55,12 @@ export interface EssayExamListItem {
  * - folder 인자 없음: 전체 (안전상 limit 5000 적용 — 그 이상은 폴더로 필터 후 봐야).
  * - folder 인자 있음: 그 폴더만 — limit 없이 모두 반환. (폴더당 보통 100건 단위)
  */
-export async function listEssayExams(options?: { folder?: string }): Promise<EssayExamListItem[]> {
+export async function listEssayExams(options?: { folder?: string; examType?: string }): Promise<EssayExamListItem[]> {
   const db = await getDb('gomijoshua');
   const baseFilter: Record<string, unknown> = {
     isPlaceholder: { $ne: true },
     $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],
+    ...examTypeMatch(options?.examType),
   };
   const filter = options?.folder ? { ...baseFilter, folder: options.folder } : baseFilter;
 
@@ -71,22 +85,50 @@ export async function listEssayExams(options?: { folder?: string }): Promise<Ess
   }));
 }
 
-export async function listFolders(): Promise<string[]> {
+/** 한 교재(모의고사) 의 모든 실문항. payperic 상품 적재용 그룹핑에 쓴다. */
+export async function listEssayExamsByTextbook(textbook: string): Promise<EssayExamListItem[]> {
   const db = await getDb('gomijoshua');
-  const folders = await db.collection(COL).distinct('folder');
+  const docs = await db
+    .collection(COL)
+    .find({
+      textbook,
+      isPlaceholder: { $ne: true },
+      $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],
+    })
+    .project({ title: 1, textbook: 1, sourceKey: 1, difficulty: 1, folder: 1, order: 1, createdAt: 1, updatedAt: 1 })
+    .sort({ order: 1, createdAt: 1 })
+    .toArray();
+
+  return docs.map(d => ({
+    _id: String(d._id),
+    title: String(d.title ?? ''),
+    textbook: String(d.textbook ?? ''),
+    sourceKey: String(d.sourceKey ?? ''),
+    difficulty: String(d.difficulty ?? ''),
+    folder: String(d.folder ?? '기본'),
+    order: Number(d.order ?? 0),
+    createdAt: d.createdAt ? new Date(d.createdAt as Date).toISOString() : '',
+    updatedAt: d.updatedAt ? new Date(d.updatedAt as Date).toISOString() : '',
+  }));
+}
+
+export async function listFolders(examType?: string): Promise<string[]> {
+  const db = await getDb('gomijoshua');
+  const folders = await db.collection(COL).distinct('folder', examTypeMatch(examType));
   const result = (folders as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
   if (!result.includes('기본')) result.unshift('기본');
   return result;
 }
 
 /** 폴더별 도큐먼트 수 — 사이드바 카운트용. limit 영향 없이 정확. */
-export async function listFolderCounts(): Promise<Record<string, number>> {
+export async function listFolderCounts(examType?: string): Promise<Record<string, number>> {
   const db = await getDb('gomijoshua');
   const pipeline: object[] = [
     {
       $match: {
         isPlaceholder: { $ne: true },
         $nor: [{ textbook: '', sourceKey: '', title: /^\[.*\] 폴더$/ }],
+        ...examTypeMatch(examType),
       },
     },
     { $group: { _id: { $ifNull: ['$folder', '기본'] }, count: { $sum: 1 } } },

@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import {
   GRADE_RESULTS_COLLECTION,
+  ensureGradeIndexes,
   getGradePaperByToken,
   gradePaper,
   normalizeCircledAnswer,
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (Number.isInteger(num)) chosenByNum.set(num, chosen);
     }
 
+    await ensureGradeIndexes(db);
     const graded = gradePaper(paper, chosenByNum);
 
     const doc: GradeResultDoc = {
@@ -87,24 +89,41 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ...graded,
       createdAt: new Date(),
     };
-    // 같은 학생이 같은 시험지 재제출 → 최신으로 갱신
-    await db.collection(GRADE_RESULTS_COLLECTION).updateOne(
-      { paperId: paper._id, studentId: student._id },
-      { $set: doc },
-      { upsert: true },
-    );
+
+    // 첫 제출만 기록 — 재제출/동시제출은 무시하고 '첫 제출' 결과를 그대로 반환.
+    // $setOnInsert: 신규일 때만 기록. 유니크 인덱스(paperId,studentId) 로 동시 제출 경합도 차단(E11000).
+    let isFirst = false;
+    try {
+      const upd = await db.collection(GRADE_RESULTS_COLLECTION).updateOne(
+        { paperId: paper._id, studentId: student._id },
+        { $setOnInsert: doc },
+        { upsert: true },
+      );
+      isFirst = !!upd.upsertedId;
+    } catch (e) {
+      if ((e as { code?: number }).code !== 11000) throw e; // 동시 제출 경합 → 이미 기록됨
+    }
+
+    // 응답 = 첫 제출이면 방금 채점, 재제출이면 기존(첫) 기록 기준
+    let src: Pick<GradeResultDoc, 'byType' | 'answers' | 'correctCount' | 'objectiveCount' | 'earnedScore' | 'maxObjectiveScore'> = graded;
+    if (!isFirst) {
+      const existing = await db.collection<GradeResultDoc>(GRADE_RESULTS_COLLECTION)
+        .findOne({ paperId: paper._id, studentId: student._id });
+      if (existing) src = existing;
+    }
 
     // 학생에게 보여줄 복습 추천 (정답 자체는 노출 X)
-    const weakTypes = graded.byType.filter((t) => t.correct < t.total).sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) => t.type);
-    const wrongNums = graded.answers.filter((a) => !a.isCorrect).map((a) => a.num);
+    const weakTypes = src.byType.filter((t) => t.correct < t.total).sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) => t.type);
+    const wrongNums = src.answers.filter((a) => !a.isCorrect).map((a) => a.num);
 
     return NextResponse.json({
       ok: true,
+      alreadySubmitted: !isFirst,
       studentName: doc.studentName,
-      correctCount: graded.correctCount,
-      objectiveCount: graded.objectiveCount,
-      earnedScore: graded.earnedScore,
-      maxObjectiveScore: graded.maxObjectiveScore,
+      correctCount: src.correctCount,
+      objectiveCount: src.objectiveCount,
+      earnedScore: src.earnedScore,
+      maxObjectiveScore: src.maxObjectiveScore,
       weakTypes,
       wrongNums,
     });

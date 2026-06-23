@@ -36,9 +36,20 @@ export const ENGLISH_OPTIONS_TYPES = [
   '빈칸',
   '요약',
   '어휘',
+  // 고난도 변형도 영어 선택지 유형
+  '빈칸-고난도',
+  '요약-고난도',
+  '함의-고난도',
+  '어휘-고난도',
+  // CEFR 고난도(대의·일치 계열) — 주장-고난도 포함 영어 선택지
+  '주제-고난도',
+  '제목-고난도',
+  '주장-고난도',
+  '일치-고난도',
+  '불일치-고난도',
 ];
 
-const MARKER_TYPES_5 = ['삽입', '삽입-고난도', '무관한문장'];
+const MARKER_TYPES_5 = ['삽입', '삽입-고난도', '무관한문장', '무관한문장-고난도'];
 
 function str(v: unknown): string {
   return typeof v === 'string' ? v : '';
@@ -125,7 +136,7 @@ export function checkContentIntegrity(doc: Record<string, unknown>): ContentInte
   // 함의: 밑줄 누락 — 발문이 「밑줄 친 …」 형태일 때만.
   // (함의 슬롯에 심경 변화 등 밑줄 없는 발문이 저장된 케이스는 오탐이므로 제외)
   if (
-    type === '함의' &&
+    (type === '함의' || type === '함의-고난도') &&
     paragraph.trim() &&
     question.includes('밑줄') &&
     !/<u\b/i.test(paragraph)

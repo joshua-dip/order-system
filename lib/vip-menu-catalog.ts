@@ -18,7 +18,14 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'scores', label: '성적 관리' },
   { id: 'generate', label: '문제 생성' },
   { id: 'questions', label: '문제 관리' },
+  { id: 'homework', label: '숙제 관리' },
   { id: 'analysis', label: '시험 분석' },
+  { id: 'review', label: '오답노트' },
+  { id: 'report', label: '성적표' },
+  { id: 'tuition', label: '수강료 관리' },
+  { id: 'counseling', label: '상담일지' },
+  { id: 'lessons', label: '수업일지' },
+  { id: 'qbank-api', label: '문제은행 API' },
 ];
 
 export const VIP_MENU_IDS = new Set(VIP_MENU_CATALOG.map((m) => m.id));
@@ -36,6 +43,13 @@ export const DEFAULT_MENU_DEPENDENCIES: Record<string, string[]> = {
   questions: [],
   exams: [],
   students: [],
+  homework: ['questions'],           // 숙제 = 내 문제은행(문제 관리)
+  review: ['generate'],              // 오답노트 = QR 자가채점(문제 생성) 결과
+  report: ['scores'],                // 성적표 = 성적 관리
+  tuition: ['students'],             // 수강료 = 학생 명단·과목 수강료
+  counseling: ['students'],          // 상담일지 = 학생 명단
+  lessons: ['attendance'],           // 수업일지 = 반(출결관리)
+  'qbank-api': ['questions'],        // 문제은행 API = 내 문제은행(문제 관리)
 };
 
 /** 메뉴의 실효 의존 목록 (admin config 의 requires 우선, 없으면 기본값). 카탈로그 내 id 로만 한정. */

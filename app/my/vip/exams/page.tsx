@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import QuestionPhotoGrid from './QuestionPhotoGrid';
+import PassagePhotoGrid from './PassagePhotoGrid';
 import { getCurrentSubject, DEFAULT_VIP_SUBJECT } from '@/lib/vip-subject';
 
 interface School { id: string; name: string }
@@ -847,14 +847,14 @@ export default function VipExamsPage() {
                         분석완료
                       </button>
 
-                      {/* 학생 필기 사진 */}
+                      {/* 학생 필기 사진 업로드 (지문별) */}
                       <button
                         onClick={(e) => { e.stopPropagation(); setPhotoModalExam(local); }}
                         className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
-                        title="문항별 학생 필기 사진 업로드·보기"
+                        title="시험범위 지문별 학생 필기 사진 업로드·보기"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
-                        사진
+                        필기 사진 업로드
                       </button>
 
                       {/* 문항 데이터 PDF 내보내기 */}
@@ -1580,15 +1580,15 @@ export default function VipExamsPage() {
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 shrink-0">
               <div>
-                <div className="text-sm font-semibold text-zinc-100">{photoModalExam.examType} · 학생 필기 사진</div>
-                <div className="text-[11px] text-zinc-500 mt-0.5">문항별로 학생 풀이를 사진으로 모아둡니다</div>
+                <div className="text-sm font-semibold text-zinc-100">{photoModalExam.examType} · 필기 사진 업로드</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">시험범위로 설정한 지문 번호별로 학생 필기를 사진으로 모아둡니다</div>
               </div>
               <button onClick={() => setPhotoModalExam(null)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="p-4 overflow-y-auto">
-              <QuestionPhotoGrid examId={photoModalExam.id} questions={(localExams[photoModalExam.id] || photoModalExam).questions} maxHeight="max-h-[64vh]" />
+              <PassagePhotoGrid examId={photoModalExam.id} passages={(localExams[photoModalExam.id] || photoModalExam).examScopePassages ?? []} maxHeight="max-h-[64vh]" />
             </div>
           </div>
         </div>

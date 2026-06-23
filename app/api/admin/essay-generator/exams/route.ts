@@ -15,12 +15,13 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const folder = request.nextUrl.searchParams.get('folder')?.trim();
+  const examType = request.nextUrl.searchParams.get('examType')?.trim() || undefined;
 
   try {
     const [items, folders, folderCounts] = await Promise.all([
-      listEssayExams(folder ? { folder } : undefined),
-      listFolders(),
-      listFolderCounts(),
+      listEssayExams({ ...(folder ? { folder } : {}), examType }),
+      listFolders(examType),
+      listFolderCounts(examType),
     ]);
     return NextResponse.json({ items, folders, folderCounts });
   } catch (e) {

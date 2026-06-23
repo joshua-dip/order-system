@@ -1,8 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import PointChargeModal from '@/app/components/PointChargeModal';
 
 interface MenuRow { id: string; label: string; paid: boolean; price: number; unlocked: boolean; requires: string[] }
+
+/** 토스 customerKey (회원당 고유, 2~50자) — app/my/page.tsx 와 동일 규칙. */
+function tossCustomerKeyFromLoginId(loginId: string): string {
+  const raw = (loginId || 'member').replace(/[^a-zA-Z0-9._@-]/g, '_').slice(0, 44);
+  return `u_${raw}`;
+}
 
 const MENU_DESC: Record<string, string> = {
   students: '학생·학교 명단 관리',
@@ -12,17 +19,26 @@ const MENU_DESC: Record<string, string> = {
   generate: '변형문제 시험지 자동 생성 (학생별·학교별·QR 채점)',
   questions: '변형문제 검색·내 문제은행',
   analysis: '시험별 유형·성적 분석',
+  homework: '문제은행 문항을 학생에게 숙제로 배정·진행관리',
+  review: 'QR 채점 오답 → 오답노트·약점 재시험 PDF',
+  report: '학생별 성적 추이·석차·출석률 리포트(인쇄·PDF)',
+  tuition: '월별 수강료 청구·수납 관리',
+  counseling: '학생·학부모 상담 내용 기록·검색',
+  lessons: '반별 수업 진도·과제 기록',
+  'qbank-api': '내 문제은행을 외부에서 불러쓰는 API 키 발급',
 };
 
-/** 관계도 노드 위치 (viewBox 0 0 760 250) */
+/** 관계도 노드 위치 (viewBox 0 0 760 300) */
 const NODE_POS: Record<string, { x: number; y: number }> = {
-  questions: { x: 372, y: 26 },
+  questions: { x: 320, y: 26 },
+  'qbank-api': { x: 560, y: 26 },
   students: { x: 205, y: 96 },
   exams: { x: 540, y: 96 },
-  attendance: { x: 78, y: 210 },
-  scores: { x: 300, y: 214 },
-  generate: { x: 470, y: 214 },
-  analysis: { x: 662, y: 210 },
+  attendance: { x: 78, y: 200 },
+  scores: { x: 300, y: 200 },
+  generate: { x: 470, y: 200 },
+  analysis: { x: 662, y: 200 },
+  review: { x: 470, y: 272 },
 };
 const NODE_W = 108, NODE_H = 36;
 
@@ -37,6 +53,9 @@ export default function VipMenuStorePage() {
   const [points, setPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  // 포인트 충전 모달
+  const [chargeOpen, setChargeOpen] = useState(false);
+  const [me, setMe] = useState<{ loginId: string; name: string; email: string } | null>(null);
 
   const load = useCallback(async () => {
     const d = await fetch('/api/my/vip/menus', { credentials: 'include' }).then((r) => r.json());
@@ -44,6 +63,11 @@ export default function VipMenuStorePage() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' }).then((r) => r.json()).then((d) => {
+      if (d.user) setMe({ loginId: d.user.loginId, name: d.user.name || d.user.loginId, email: d.user.email || '' });
+    }).catch(() => {});
+  }, []);
 
   const byId = useMemo(() => Object.fromEntries(menus.map((m) => [m.id, m])), [menus]);
   const labelOf = (id: string) => byId[id]?.label ?? id;
@@ -81,10 +105,20 @@ export default function VipMenuStorePage() {
           <h1 className="text-xl font-bold text-zinc-100">메뉴 설정</h1>
           <p className="text-sm text-zinc-500 mt-0.5">필요한 메뉴를 구매하면 사이드바에 추가됩니다. 무료 메뉴는 항상 사용할 수 있어요.</p>
         </div>
-        <div className="px-4 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm">
-          <span className="text-zinc-500">보유 포인트 </span>
-          <span className="text-zinc-100 font-semibold">{points.toLocaleString()}P</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setChargeOpen(true)}
+          title="포인트 충전하기"
+          className="group px-4 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-[#c9a44e]/50 hover:bg-zinc-900 text-sm transition-colors flex items-center gap-2"
+        >
+          <span>
+            <span className="text-zinc-500">보유 포인트 </span>
+            <span className="text-zinc-100 font-semibold">{points.toLocaleString()}P</span>
+          </span>
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#c9a44e]/15 text-[#e8d48b] text-[11px] font-medium group-hover:bg-[#c9a44e]/25 transition-colors">
+            <span className="text-sm leading-none">＋</span>충전
+          </span>
+        </button>
       </div>
 
       {/* 메뉴 관계도 */}
@@ -99,7 +133,7 @@ export default function VipMenuStorePage() {
             </div>
           </div>
           <p className="text-[11px] text-zinc-600 mb-2">화살표는 「함께 필요」 방향 — A → B 는 A를 쓰려면 B가 필요함을 뜻합니다.</p>
-          <svg viewBox="0 0 760 250" className="w-full" style={{ maxHeight: 320 }}>
+          <svg viewBox="0 0 760 300" className="w-full" style={{ maxHeight: 380 }}>
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M0 0L10 5L0 10z" fill="#71717a" />
@@ -162,7 +196,19 @@ export default function VipMenuStorePage() {
         </div>
       )}
 
-      <p className="text-xs text-zinc-600">포인트는 마이페이지에서 충전할 수 있어요. 구매한 메뉴는 영구적으로 사용할 수 있습니다.</p>
+      <p className="text-xs text-zinc-600">
+        포인트가 부족하면 위 <span className="text-[#e8d48b]">보유 포인트</span>를 눌러 충전할 수 있어요. 구매한 메뉴는 영구적으로 사용할 수 있습니다.
+      </p>
+
+      {me && (
+        <PointChargeModal
+          open={chargeOpen}
+          onClose={() => { setChargeOpen(false); load(); }}
+          customerKey={tossCustomerKeyFromLoginId(me.loginId)}
+          customerName={me.name}
+          customerEmail={me.email}
+        />
+      )}
     </div>
   );
 }

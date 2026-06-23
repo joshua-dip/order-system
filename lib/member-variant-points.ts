@@ -1,7 +1,9 @@
-/** 변형문제 만들기 — 고난도 1문항 생성 시 차감 포인트 (삽입-고난도·어법-고난도) */
+import { ADVANCED_VARIANT_TYPES } from '@/lib/variant-pricing';
+
+/** 변형문제 만들기 — 고난도 1문항 생성 시 차감 포인트 (삽입·어법·빈칸·어휘 고난도) */
 export const VARIANT_HARD_INSERTION_POINT_COST = 5;
 
-const HARD_VARIANT_TYPES = new Set(['삽입-고난도', '어법-고난도']);
+const HARD_VARIANT_TYPES = new Set<string>(ADVANCED_VARIANT_TYPES);
 
 export function variantTypeRequiresHardInsertionPoints(type: string): boolean {
   return HARD_VARIANT_TYPES.has(type.trim());

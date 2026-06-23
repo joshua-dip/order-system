@@ -6,6 +6,7 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { createOrderFolder, uploadOrderTxt, isDropboxConfigured } from '@/lib/dropbox';
 import { ORDER_FOOTER_MESSAGE } from '@/lib/orders';
 import { recordPointLedger } from '@/lib/point-ledger';
+import { extractOrderItemKeys, describeOverlapKey } from '@/lib/order-overlap';
 
 const COLLECTION = 'orders';
 
@@ -43,6 +44,60 @@ export async function POST(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const collection = db.collection(COLLECTION);
     const usersColl = db.collection('users');
+
+    // ── 중복 주문 경고 (채번·포인트 차감 이전) ─────────────────────────────
+    // 같은 고객(회원 또는 동일 이메일)의 최근 변형 주문과 (지문×유형)이 겹치면,
+    // confirmDuplicate 플래그가 없을 때 409 로 안내해 고객이 확인 후 진행하게 한다.
+    // 같은 지문·유형도 새 문제로 재배정되므로 '차단'이 아니라 '확인' 용도.
+    const confirmDuplicate = body?.confirmDuplicate === true;
+    if (!confirmDuplicate) {
+      const rawMetaForCheck =
+        body?.orderMeta && typeof body.orderMeta === 'object' && !Array.isArray(body.orderMeta)
+          ? (body.orderMeta as Record<string, unknown>)
+          : null;
+      const newKeys = rawMetaForCheck ? extractOrderItemKeys(rawMetaForCheck) : new Set<string>();
+      if (newKeys.size > 0) {
+        const emailRaw = typeof rawMetaForCheck?.email === 'string' ? rawMetaForCheck.email.trim() : '';
+        const or: Record<string, unknown>[] = [];
+        if (loginId) or.push({ loginId });
+        if (emailRaw) or.push({ 'orderMeta.email': emailRaw });
+        if (or.length > 0) {
+          const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+          const prior = await collection
+            .find({ $or: or, status: { $ne: 'cancelled' }, createdAt: { $gte: since } })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .toArray();
+          // 같은 고객의 기존 주문 전체에서 (지문×유형) 합집합을 만들고,
+          // 새 주문의 모든 항목이 그 안에 이미 있으면(=신규 0건) "완전 중복"으로 본다.
+          const priorUnion = new Set<string>();
+          let bestCount = 0;
+          let bestOrder: Record<string, unknown> | null = null;
+          for (const p of prior) {
+            const pk = extractOrderItemKeys((p as { orderMeta?: unknown }).orderMeta as Record<string, unknown>);
+            let c = 0;
+            for (const k of newKeys) if (pk.has(k)) c += 1;
+            for (const k of pk) priorUnion.add(k);
+            if (c > bestCount) { bestCount = c; bestOrder = p; }
+          }
+          let newItemCount = 0;
+          for (const k of newKeys) if (!priorUnion.has(k)) newItemCount += 1;
+          // 완전 중복(신규 0건)일 때만 경고. 새로 추가되는 항목이 하나라도 있으면 통과.
+          if (newItemCount === 0 && bestOrder) {
+            return NextResponse.json(
+              {
+                duplicate: true,
+                complete: true,
+                sharedCount: newKeys.size,
+                existingOrderNumber: (bestOrder as { orderNumber?: string }).orderNumber ?? null,
+                sharedSamples: [...newKeys].slice(0, 5).map(describeOverlapKey),
+              },
+              { status: 409 },
+            );
+          }
+        }
+      }
+    }
 
     // 회원이면 이름·드롭박스 경로·전화번호·포인트 조회
     let userDropboxFolderPath: string | undefined;

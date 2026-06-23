@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import QuestionPhotoGrid from '../QuestionPhotoGrid';
+import PassagePhotoGrid from '../PassagePhotoGrid';
 import { getCurrentSubject, DEFAULT_VIP_SUBJECT } from '@/lib/vip-subject';
 
 interface ExamQuestion { questionType?: string; score?: number; questionText?: string; textbook?: string; source?: string; isSubjective?: boolean }
-interface SchoolExam { id: string; academicYear: number; grade: number; examType: string; questions: Record<string, ExamQuestion>; examScope: string[]; analyzed?: boolean }
+interface SchoolExam { id: string; academicYear: number; grade: number; examType: string; questions: Record<string, ExamQuestion>; examScope: string[]; examScopePassages?: string[]; analyzed?: boolean }
 interface School { id: string; name: string }
 
 const GRADES = [1, 2, 3];
@@ -95,7 +95,7 @@ function ExamDetail({ exam, onBack }: { exam: SchoolExam; onBack: () => void }) 
         </div>
       </div>
 
-      <QuestionPhotoGrid examId={exam.id} questions={exam.questions} />
+      <PassagePhotoGrid examId={exam.id} passages={exam.examScopePassages ?? []} />
     </div>
   );
 }

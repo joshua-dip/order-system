@@ -12,6 +12,9 @@ const EBS_TEXTBOOKS = new Set([
   'EBS 수능특강 Light 고등 영어(2026)',
   '올림포스 영어독해 기본1(2024)',
   '올림포스 영어독해 기본2(2024)',
+  // 교재 데이터에는 있으나 EBS 목록에서 누락돼 있던 올림포스 EBS 교재
+  '2026 올림포스 전국연합학력평가 기출문제집 영어독해 고1',
+  '올림포스 영어독해 9대 변별유형(2026)',
 ]);
 
 function isEbs(name: string): boolean {
@@ -22,6 +25,11 @@ function isEbs(name: string): boolean {
 export function isEbsTextbook(name: string): boolean {
   return EBS_TEXTBOOKS.has(name);
 }
+
+/*
+ * 교과서(학교 교과서) 분류는 하드코딩 셋이 아니라 admin "교과서" 교재 링크 폴더
+ * (textbook_link_folders) 배정을 기준으로 한다 — lib/school-textbooks.ts 참고.
+ */
 
 function isRevisedEdition(name: string): boolean {
   if (name.includes('개정판')) return true;

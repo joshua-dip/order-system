@@ -6,6 +6,7 @@ import {
   GRAMMAR_VARIANT_OPTIONS_FIXED,
   normalizeGrammarHardCorrectAnswer,
 } from '@/lib/variant-draft-grammar-rules';
+import { isAdvancedVariantType } from '@/lib/variant-pricing';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 import { nextGeneratedSerial } from '@/lib/generated-question-serial';
@@ -27,8 +28,16 @@ const SHUFFLABLE_TYPES = new Set([
   '일치',
   '불일치',
   '함의',
+  '함의-고난도',
   '빈칸',
+  '빈칸-고난도',
   '요약',
+  '요약-고난도',
+  '주제-고난도',
+  '제목-고난도',
+  '주장-고난도',
+  '일치-고난도',
+  '불일치-고난도',
 ]);
 
 const CIRCLED_NUMS = ['①', '②', '③', '④', '⑤'] as const;
@@ -158,11 +167,25 @@ export async function saveGeneratedQuestionToDb(
       };
     }
   }
+  if (type === '어휘-고난도') {
+    // 어휘(문맥) "모두 고르기" — Options 는 어휘 base 와 동일하게 단어를 유지하고,
+    // CorrectAnswer 만 복수 동그라미(예: ②④)로 정규화·검증한다(어법-고난도와 동일 규칙).
+    const rawCa = typeof question_data.CorrectAnswer === 'string' ? question_data.CorrectAnswer : '';
+    const normalized = normalizeGrammarHardCorrectAnswer(rawCa);
+    if (GRAMMAR_HARD_CORRECT_ANSWER_PATTERN.test(normalized)) {
+      question_data = { ...question_data, CorrectAnswer: normalized };
+    } else {
+      return {
+        ok: false,
+        error: `어휘-고난도 CorrectAnswer는 동그라미 번호 2~5개 연속(예: ②④) 형식이어야 합니다. 받은 값: "${rawCa}"`,
+      };
+    }
+  }
   // 삽입·삽입-고난도·무관한문장: Options는 위치 번호만(①~⑤). AI가 "① ①" 식으로 중복 생성하는 버그 방지.
   if (type === '삽입' || type === '삽입-고난도') {
     question_data = { ...question_data, Options: INSERTION_OPTIONS_FIXED };
   }
-  if (type === '무관한문장') {
+  if (type === '무관한문장' || type === '무관한문장-고난도') {
     const rawOpts = typeof question_data.Options === 'string' ? question_data.Options : '';
     // 중복 번호 패턴(예: "① ①") 또는 비어 있으면 표준값으로 교체
     if (!rawOpts.trim() || /[①②③④⑤]\s+[①②③④⑤]/.test(rawOpts)) {
@@ -187,7 +210,7 @@ export async function saveGeneratedQuestionToDb(
   if (enrichedQd) question_data = enrichedQd;
 
   const now = new Date();
-  const difficulty = type === '삽입-고난도' || type === '어법-고난도'
+  const difficulty = isAdvancedVariantType(type)
     ? '상'
     : ((input.difficulty ?? input.question_data?.DifficultyLevel as string | undefined ?? '중').trim() || '중');
 

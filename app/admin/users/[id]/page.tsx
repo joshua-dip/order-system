@@ -20,6 +20,7 @@ interface DetailUser {
   dropboxSharedLink: string;
   canAccessAnalysis: boolean;
   canAccessEssay: boolean;
+  canOrderSchoolTextbook: boolean;
   myFormatApproved: boolean;
   allowedTextbooks: string[];
   allowedTextbooksAnalysis?: string[];
@@ -210,6 +211,7 @@ export default function UserDetailPage() {
   const [editMemberType, setEditMemberType] = useState('');
   const [editAnalysis, setEditAnalysis] = useState(false);
   const [editEssay, setEditEssay] = useState(false);
+  const [editSchoolTextbook, setEditSchoolTextbook] = useState(false);
   const [editMyFormat, setEditMyFormat] = useState(false);
 
   /* 포인트 지급 / 회수 */
@@ -291,6 +293,7 @@ export default function UserDetailPage() {
       setEditMemberType(u.memberType ?? '');
       setEditAnalysis(u.canAccessAnalysis);
       setEditEssay(u.canAccessEssay);
+      setEditSchoolTextbook(u.canOrderSchoolTextbook);
       setEditMyFormat(u.myFormatApproved);
       setEditDropboxPath(u.dropboxFolderPath);
     } catch {
@@ -542,6 +545,7 @@ export default function UserDetailPage() {
         supplementaryNote: editNote,
         canAccessAnalysis: editAnalysis,
         canAccessEssay: editEssay,
+        canOrderSchoolTextbook: editSchoolTextbook,
         myFormatApproved: editMyFormat,
         isVip: editIsVip,
         memberType: editMemberType,
@@ -1058,6 +1062,7 @@ export default function UserDetailPage() {
                 <div className="flex flex-col gap-3">
                   <Toggle checked={editAnalysis} onChange={setEditAnalysis} label="분석지 메뉴 허용" />
                   <Toggle checked={editEssay} onChange={setEditEssay} label="서술형 메뉴 허용" />
+                  <Toggle checked={editSchoolTextbook} onChange={setEditSchoolTextbook} label="교과서 주문 허용" />
                   <Toggle checked={editMyFormat} onChange={setEditMyFormat} label="나만의 양식 승인" />
                 </div>
               </div>
