@@ -58,11 +58,25 @@ interface PassageData {
   koreanSentences: string[];
 }
 
+interface QnaVocabItem { word: string; meaning: string; partOfSpeech?: string; wordType?: string; cefr?: string; synonym?: string }
+interface QnaSyntaxPhrase { text: string; label: string; type?: string }
+interface QnaGrammarPoint { title: string; content: string }
+interface QnaGrammarTag { sentenceIndex: number; selectedText: string; tagName?: string; explanation?: string; category?: string }
+interface AnalysisData {
+  vocabulary?: QnaVocabItem[];
+  syntaxPhrases?: Record<string, QnaSyntaxPhrase[]>;
+  grammarTags?: QnaGrammarTag[];
+  grammarPoints?: Record<string, QnaGrammarPoint[]>;
+  results?: Record<string, unknown>;
+}
+
 interface FetchResponse {
   passage: PassageData;
   threads: Thread[];
   /** sentence 당 절(clause) 배열 — 한 sentence 에 등위접속절 등 여러 S+V 셋이 있을 수 있어 array. */
   svoc?: Record<number, SvocSentenceData[]>;
+  /** 지문분석기 분석 (단어장·구문·어법·종합) — 있을 때만. */
+  analysis?: AnalysisData;
   error?: string;
 }
 
@@ -94,6 +108,86 @@ function useToast(): {
   return { toast, showToast };
 }
 
+/** 지문 분석 패널 — 지문분석기 데이터(구문·끊어읽기·어법·단어장)가 있을 때만 렌더. */
+function AnalysisPanel({ analysis }: { analysis: AnalysisData }) {
+  const vocab = analysis.vocabulary ?? [];
+  const syntax = analysis.syntaxPhrases ?? {};
+  const grammarPoints = analysis.grammarPoints ?? {};
+  const grammarTags = analysis.grammarTags ?? [];
+  const syntaxKeys = Object.keys(syntax).map(Number).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  const gpKeys = Object.keys(grammarPoints).map(Number).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  const hasGrammar = gpKeys.length > 0 || grammarTags.length > 0;
+  if (vocab.length === 0 && syntaxKeys.length === 0 && !hasGrammar) return null;
+
+  return (
+    <section className="mt-6 space-y-4 print:hidden">
+      <h2 className="text-base font-bold text-slate-800">지문 분석</h2>
+
+      {/* 구문 · 끊어읽기 */}
+      {syntaxKeys.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-2 text-sm font-semibold text-emerald-700">구문 · 끊어읽기</h3>
+          <div className="space-y-2.5">
+            {syntaxKeys.map((si) => (
+              <div key={si} className="text-[13px] leading-relaxed">
+                <span className="mr-1 text-slate-400">{si + 1}.</span>
+                {(syntax[String(si)] ?? []).map((p, i) => (
+                  <span key={i} className="mb-1 mr-1 inline-flex items-center gap-0.5">
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-800">{p.text}</span>
+                    {p.label && <span className="text-[11px] font-medium text-emerald-600">[{p.label}]</span>}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 어법 포인트 */}
+      {hasGrammar && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-2 text-sm font-semibold text-blue-700">어법 포인트</h3>
+          <div className="space-y-2">
+            {gpKeys.map((si) => (grammarPoints[String(si)] ?? []).map((g, i) => (
+              <div key={`gp-${si}-${i}`} className="text-[13px]">
+                <span className="mr-1 rounded bg-blue-50 px-1.5 py-0.5 text-[11px] text-blue-700">{si + 1}번 문장</span>
+                <span className="font-semibold text-slate-800">{g.title}</span>
+                {g.content && <span className="text-slate-600"> — {g.content}</span>}
+              </div>
+            )))}
+            {grammarTags.map((t, i) => (
+              <div key={`gt-${i}`} className="text-[13px]">
+                <span className="rounded bg-blue-50 px-1.5 py-0.5 font-medium text-blue-700">{t.selectedText}</span>
+                {t.category && <span className="ml-1.5 text-[11px] text-slate-500">{t.category}</span>}
+                {t.explanation && <span className="text-slate-600"> — {t.explanation}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 단어장 */}
+      {vocab.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-2 text-sm font-semibold text-amber-700">단어장 <span className="text-xs font-normal text-slate-400">{vocab.length}개</span></h3>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
+            {vocab.map((v, i) => (
+              <div key={i} className="flex items-baseline justify-between gap-2 border-b border-dotted border-slate-200 py-0.5 text-[13px]">
+                <span className="font-medium text-slate-800">
+                  {v.word}
+                  {(v.partOfSpeech || v.wordType) && <span className="ml-1 text-[11px] text-slate-400">{v.partOfSpeech || v.wordType}</span>}
+                  {v.cefr && <span className="ml-1 rounded bg-slate-100 px-1 text-[10px] text-slate-500">{v.cefr}</span>}
+                </span>
+                <span className="text-right text-slate-600">{v.meaning}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function QnaPassagePage() {
   const router = useRouter();
   const params = useParams<{ passageId: string }>();
@@ -102,6 +196,7 @@ export default function QnaPassagePage() {
   const [data, setData] = useState<PassageData | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [svoc, setSvoc] = useState<Record<number, SvocSentenceData[]> | undefined>(undefined);
+  const [analysis, setAnalysis] = useState<AnalysisData | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -216,6 +311,7 @@ export default function QnaPassagePage() {
       setData(json.passage);
       setThreads(Array.isArray(json.threads) ? json.threads : []);
       setSvoc(json.svoc);
+      setAnalysis(json.analysis);
       setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err));
@@ -532,7 +628,7 @@ export default function QnaPassagePage() {
   const handleCopyPageLink = useCallback(async () => {
     if (!passageId) return;
     const url = `${window.location.origin}/qna/${passageId}`;
-    const outcome = await copyShareUrl(url, { title: 'Q&A 분석지', preferShare: true });
+    const outcome = await copyShareUrl(url, { title: '모고 Q&A 분석지', preferShare: true });
     if (outcome === 'copied') showToast('링크 복사됨');
     else if (outcome === 'failed') showToast('복사 실패 — 브라우저 권한 확인');
     // 'shared' 는 OS 시트가 피드백
@@ -742,7 +838,7 @@ export default function QnaPassagePage() {
   if (!passageId) {
     return (
       <>
-        <AppBar title="Q&A 분석지" showBackButton onBackClick={() => router.push('/qna')} />
+        <AppBar title="모고 Q&A 분석지" showBackButton onBackClick={() => router.push('/qna')} />
         <div className="p-8 text-center text-slate-600">잘못된 경로입니다.</div>
       </>
     );
@@ -751,7 +847,7 @@ export default function QnaPassagePage() {
   return (
     <>
       <div className="print:hidden">
-        <AppBar title="Q&A 분석지" showBackButton onBackClick={() => router.push('/qna')} />
+        <AppBar title="모고 Q&A 분석지" showBackButton onBackClick={() => router.push('/qna')} />
       </div>
       <main
         className="min-h-screen bg-slate-50 py-6 print:bg-white print:py-0"
@@ -987,6 +1083,9 @@ export default function QnaPassagePage() {
                   );
                 })}
               </section>
+
+              {/* 지문 분석 (단어장·구문·어법) — 분석기 데이터 있을 때만 */}
+              {analysis && <AnalysisPanel analysis={analysis} />}
 
               {/* 「지문 전체에 대한 질문」 별도 영역 (sentenceIndex = -1) — 인쇄 숨김 */}
               <section className="mt-6 print:hidden">

@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
+import { parseGraphImageInput } from '@/lib/passage-graph-image';
 
 const ASSIGN_COL = 'passage_analyzer_file_folders';
 const LINK_LINK_ASSIGN = 'textbook_link_folder_assignments';
@@ -274,6 +275,11 @@ export async function POST(request: NextRequest) {
       updated_at: now,
     };
     if (publisher) doc.publisher = publisher;
+    if (body.graphImage !== undefined) {
+      const parsed = parseGraphImageInput(body.graphImage);
+      if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+      if (parsed.value) doc.graphImage = parsed.value;
+    }
 
     const db = await getDb('gomijoshua');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

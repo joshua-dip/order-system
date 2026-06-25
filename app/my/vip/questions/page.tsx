@@ -46,6 +46,9 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
   const [type, setType] = useState('');
   const [textbook, setTextbook] = useState('');
   const [difficulty, setDifficulty] = useState('');
+  const [advanced, setAdvanced] = useState(''); // ''=전체 / only=고난도 / base=기본
+  const [unsaved, setUnsaved] = useState(false); // 미담김만
+  const [sort, setSort] = useState('new'); // new=최신순 / old=오래된순
   const [q, setQ] = useState('');
   const [items, setItems] = useState<BrowseItem[]>([]);
   const [page, setPage] = useState(1);
@@ -63,11 +66,14 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
     if (type) params.set('type', type);
     if (textbook) params.set('textbook', textbook);
     if (difficulty) params.set('difficulty', difficulty);
+    if (advanced) params.set('advanced', advanced);
+    if (unsaved) params.set('unsaved', '1');
+    if (sort !== 'new') params.set('sort', sort);
     if (q.trim()) params.set('q', q.trim());
     const d = await fetch(`/api/my/vip/questions/search?${params}`, { credentials: 'include' }).then((r) => r.json());
     if (d.ok) { setItems(d.items); setPage(d.page); setTotalPages(d.totalPages); setTotal(d.total); }
     setSearched(true); setSel(new Set()); setLoading(false);
-  }, [type, textbook, difficulty, q]);
+  }, [type, textbook, difficulty, advanced, unsaved, sort, q]);
 
   const toggle = (id: string) => setSel((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
@@ -84,7 +90,7 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
     if (total <= 0 || bulking) return;
     if (!confirm(`검색결과 ${total.toLocaleString()}개를 모두 「내 문제」로 담을까요?${saveFolder.trim() ? `\n폴더: ${saveFolder.trim()}` : ''}`)) return;
     setBulking(true);
-    const res = await fetch('/api/my/vip/question-bank', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ all: true, filter: { type, textbook, difficulty, q: q.trim() }, folder: saveFolder.trim() }) });
+    const res = await fetch('/api/my/vip/question-bank', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ all: true, filter: { type, textbook, difficulty, q: q.trim(), advanced, unsaved }, folder: saveFolder.trim() }) });
     const d = await res.json().catch(() => ({}));
     setBulking(false);
     if (res.ok && d.ok) {
@@ -121,6 +127,22 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
             {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && search(1)} placeholder="고유번호(V-…) · 출처 검색" className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 placeholder-zinc-600" />
+        </div>
+        {/* 상세 필터 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+          <select value={advanced} onChange={(e) => setAdvanced(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 [&>option]:bg-zinc-900">
+            <option value="">고난도·기본 전체</option>
+            <option value="only">고난도만</option>
+            <option value="base">기본만</option>
+          </select>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 [&>option]:bg-zinc-900">
+            <option value="new">최신 번호순</option>
+            <option value="old">오래된 번호순</option>
+          </select>
+          <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-300 cursor-pointer select-none">
+            <input type="checkbox" checked={unsaved} onChange={(e) => setUnsaved(e.target.checked)} className="rounded accent-indigo-500" />
+            안 담은 문제만
+          </label>
         </div>
         <div className="flex justify-end mt-3">
           <button onClick={() => search(1)} disabled={loading} className="px-4 py-2 rounded-xl bg-zinc-100 text-zinc-900 text-sm font-medium hover:bg-white disabled:opacity-40">{loading ? '검색 중…' : '검색'}</button>
@@ -188,8 +210,12 @@ function BrowseTab({ textbooks }: { textbooks: string[] }) {
 function BankTab({ textbooks: _textbooks }: { textbooks: string[] }) {
   const [items, setItems] = useState<BankItem[]>([]);
   const [folders, setFolders] = useState<FolderInfo[]>([]);
+  const [bankTextbooks, setBankTextbooks] = useState<string[]>([]); // 내 문제은행에 담긴 교재만
   const [folder, setFolder] = useState<string>('__all__');
   const [type, setType] = useState('');
+  const [textbook, setTextbook] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [sort, setSort] = useState('recent'); // recent / serial / serial-asc
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [sel, setSel] = useState<Set<string>>(new Set());
@@ -200,11 +226,14 @@ function BankTab({ textbooks: _textbooks }: { textbooks: string[] }) {
     const params = new URLSearchParams();
     if (folder !== '__all__') params.set('folder', folder);
     if (type) params.set('type', type);
+    if (textbook) params.set('textbook', textbook);
+    if (difficulty) params.set('difficulty', difficulty);
+    if (sort !== 'recent') params.set('sort', sort);
     if (q.trim()) params.set('q', q.trim());
     const d = await fetch(`/api/my/vip/question-bank?${params}`, { credentials: 'include' }).then((r) => r.json());
-    if (d.ok) { setItems(d.items); setFolders(d.folders); }
+    if (d.ok) { setItems(d.items); setFolders(d.folders); setBankTextbooks(d.textbooks ?? []); }
     setSel(new Set()); setLoading(false);
-  }, [folder, type, q]);
+  }, [folder, type, textbook, difficulty, sort, q]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -262,7 +291,20 @@ function BankTab({ textbooks: _textbooks }: { textbooks: string[] }) {
           <option value="">유형 전체</option>
           {VARIANT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="고유번호 · 출처 검색" className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 placeholder-zinc-600 flex-1 min-w-[180px]" />
+        <select value={textbook} onChange={(e) => setTextbook(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 [&>option]:bg-zinc-900 max-w-[200px]">
+          <option value="">교재 전체</option>
+          {bankTextbooks.map((t) => <option key={t} value={t}>{t.length > 22 ? t.slice(0, 22) + '…' : t}</option>)}
+        </select>
+        <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 [&>option]:bg-zinc-900">
+          <option value="">난이도 전체</option>
+          {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 [&>option]:bg-zinc-900">
+          <option value="recent">담은 최신순</option>
+          <option value="serial">고유번호 ↓</option>
+          <option value="serial-asc">고유번호 ↑</option>
+        </select>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="고유번호 · 출처 검색" className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 placeholder-zinc-600 flex-1 min-w-[160px]" />
       </div>
 
       {/* 선택 액션 바 */}

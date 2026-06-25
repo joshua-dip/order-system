@@ -158,6 +158,9 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
   const includeCover = sp.get('cover') !== 'false';
   /** 답안지 페이지 포함 여부 — 기본 포함, answerSheet=false면 제외 */
   const includeAnswerSheet = sp.get('answerSheet') !== 'false';
+  /** 정답 전용 시트 — 'answers'(번호/정답 표) | 'quick'(빠른정답 조밀 그리드). 문제·표지 없이 정답만. */
+  const sheetRaw = sp.get('sheet');
+  const sheet: 'answers' | 'quick' | null = sheetRaw === 'answers' ? 'answers' : sheetRaw === 'quick' ? 'quick' : null;
   /** 표지 QR 주소 (학생 자가채점 /exam-grade/{token}). 있으면 표지에 QR 렌더 */
   const qrUrl = (sp.get('qr') || '').trim();
   /** 표지 부제용 학교/학년 */
@@ -213,6 +216,26 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
     });
 
   if (docs.length === 0) return NextResponse.json({ error: '문제를 찾을 수 없습니다.' }, { status: 404 });
+
+  /* ── 정답및해설(answers) / 빠른정답(quick) — 표지·문제 없이 정답(+해설)만 ── */
+  if (format === 'pdf' && sheet) {
+    const ansList: { num: number; answer: string }[] = docs.map((d, i) => ({
+      num: i + 1,
+      answer: clean(d.question_data.CorrectAnswer || d.question_data.Answer || ''),
+    }));
+    subjectives.forEach((_sj, j) => ansList.push({ num: docs.length + j + 1, answer: '서술형' }));
+    // answers = 정답 및 해설 → 문항별 해설(Explanation) 동봉
+    const details = sheet === 'answers'
+      ? docs.map((d, i) => ({
+          num: i + 1,
+          answer: clean(d.question_data.CorrectAnswer || d.question_data.Answer || ''),
+          src: sourceLabel(d.textbook, d.question_data.Source),
+          serial: formatGeneratedSerial(d.serialNo),
+          explanation: clean(d.question_data.Explanation || ''),
+        }))
+      : undefined;
+    return buildAnswerOnlyPdf({ sheet, title, school: coverSchool, grade: coverGrade, answers: ansList, details });
+  }
 
   /* ─────────────────── DOCX ─────────────────── */
   if (format === 'docx') {
@@ -796,6 +819,131 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${encodeURIComponent(title)}.pdf"`,
+    },
+  });
+}
+
+/**
+ * 정답 전용 PDF — 표지·문제 없이.
+ *  - sheet='answers' : 번호/정답 5열 표 + 문항별 해설 (= 정답 및 해설)
+ *  - sheet='quick'   : 10열 조밀 그리드 (빠른 채점용)
+ */
+async function buildAnswerOnlyPdf(opts: {
+  sheet: 'answers' | 'quick';
+  title: string;
+  school: string;
+  grade: number | null;
+  answers: { num: number; answer: string }[];
+  details?: { num: number; answer: string; src: string; serial: string; explanation: string }[];
+}): Promise<NextResponse> {
+  const { sheet, title, school, grade, answers, details } = opts;
+  const [regularFont, boldFont] = await Promise.all([loadFont('Regular'), loadFont('Bold')]);
+  const circledFont = loadCircledFont();
+  const hasCircled = !!circledFont;
+
+  const PAGE_W = 595.28, PAGE_H = 841.89, ML = 40, MR = 40, MT = 50, MB = 50;
+  const FULL_W = PAGE_W - ML - MR;
+  const doc = new PDFDocument({ size: 'A4', margins: { top: MT, bottom: MB, left: ML, right: MR }, autoFirstPage: true });
+  doc.registerFont('R', regularFont);
+  doc.registerFont('B', boldFont);
+  if (circledFont) doc.registerFont('C', circledFont);
+  const chunks: Buffer[] = [];
+  doc.on('data', (c: Buffer) => chunks.push(c));
+
+  // 헤더
+  const heading = sheet === 'quick' ? '빠른 정답' : '정답 및 해설';
+  doc.font('B').fontSize(16).fillColor('#111827').text(`${title} — ${heading}`, ML, MT, { width: FULL_W, align: 'center' });
+  const sub = [school, grade ? `${grade}학년` : '', `총 ${answers.length}문항`].filter(Boolean).join('  ·  ');
+  doc.font('R').fontSize(9).fillColor('#6B7280').text(sub, ML, doc.y + 4, { width: FULL_W, align: 'center' });
+  let y = doc.y + 14;
+  doc.moveTo(ML, y).lineTo(ML + FULL_W, y).strokeColor('#374151').lineWidth(1).stroke();
+  y += 12;
+
+  const drawAns = (x: number, yy: number, num: number, ans: string, numW: number) => {
+    doc.font('B').fontSize(sheet === 'quick' ? 9 : 10).fillColor('#111827').text(`${num}.`, x, yy, { width: numW, lineBreak: false });
+    const isCirc = hasCircled && /^[①②③④⑤⑥⑦⑧⑨⑩]+$/.test(ans);
+    doc.font(isCirc ? 'C' : 'R').fontSize(sheet === 'quick' ? 9 : 10).fillColor('#1D4ED8').text(ans || '·', x + numW, yy, { lineBreak: false });
+  };
+
+  // ── 정답 요약 표 ──
+  const COLS = sheet === 'quick' ? 10 : 5;
+  const cellW = FULL_W / COLS;
+  const rowH = sheet === 'quick' ? 19 : 24;
+  const rows = Math.ceil(answers.length / COLS);
+  for (let r = 0; r < rows; r++) {
+    if (y + rowH > PAGE_H - MB) { doc.addPage(); y = MT; }
+    for (let c = 0; c < COLS; c++) {
+      const a = answers[r * COLS + c];
+      if (!a) continue;
+      const x = ML + c * cellW;
+      if (sheet === 'answers') {
+        doc.rect(x, y, cellW, rowH).strokeColor('#D1D5DB').lineWidth(0.5).stroke();
+        drawAns(x + 8, y + 7, a.num, a.answer, 22);
+      } else {
+        drawAns(x + 2, y + 5, a.num, a.answer, 17);
+      }
+    }
+    y += rowH;
+  }
+
+  // ── 해설 (정답 및 해설) — 문항별 출처·정답·해설 ──
+  if (sheet === 'answers' && details && details.length) {
+    const CIRCLED_G = /[①②③④⑤⑥⑦⑧⑨⑩]/g;
+    const CIRCLED_ONE = /[①②③④⑤⑥⑦⑧⑨⑩]/;
+    /** 해설 본문 — 원형숫자(①②③)는 폴백 폰트(C)로, 줄바꿈 보존. */
+    const drawExpText = (txt: string, x: number, width: number, fontSize: number) => {
+      if (!txt) return;
+      for (const line of txt.split('\n')) {
+        if (!line.trim()) { y += fontSize * 0.7; continue; }
+        const h = doc.font('R').fontSize(fontSize).heightOfString(line.replace(CIRCLED_G, 'O'), { width, lineGap: 1.5 });
+        if (y + h > PAGE_H - MB) { doc.addPage(); y = MT; }
+        const segs: { t: string; c: boolean }[] = [];
+        let buf = '';
+        for (const ch of line) {
+          if (CIRCLED_ONE.test(ch)) { if (buf) { segs.push({ t: buf, c: false }); buf = ''; } segs.push({ t: ch, c: true }); }
+          else buf += ch;
+        }
+        if (buf) segs.push({ t: buf, c: false });
+        for (let i = 0; i < segs.length; i++) {
+          const s = segs[i]; const last = i === segs.length - 1;
+          doc.font((s.c && hasCircled) ? 'C' : 'R').fontSize(fontSize).fillColor('#374151');
+          if (i === 0) doc.text(s.t, x, y, { width, lineGap: 1.5, continued: !last });
+          else doc.text(s.t, { continued: !last });
+        }
+        y = doc.y + 2;
+      }
+    };
+
+    if (y + 30 > PAGE_H - MB) { doc.addPage(); y = MT; }
+    y += 12;
+    doc.font('B').fontSize(12).fillColor('#111827').text('■ 해설', ML, y);
+    y = doc.y + 5;
+    doc.moveTo(ML, y).lineTo(ML + FULL_W, y).strokeColor('#D1D5DB').lineWidth(0.6).stroke();
+    y += 9;
+
+    for (const d of details) {
+      if (y + 44 > PAGE_H - MB) { doc.addPage(); y = MT; }
+      const metaRight = [d.src ? `출처) ${d.src}` : '', d.serial].filter(Boolean).join('   ·   ');
+      const isCirc = hasCircled && /^[①②③④⑤⑥⑦⑧⑨⑩]+$/.test(d.answer);
+      const startY = y;
+      doc.font('B').fontSize(10.5).fillColor('#111827').text(`${d.num}.`, ML, startY, { width: 22, lineBreak: false });
+      if (metaRight) doc.font('R').fontSize(7.5).fillColor('#9CA3AF').text(metaRight, ML + 150, startY + 2, { width: FULL_W - 150, align: 'right', lineBreak: false });
+      doc.font('B').fontSize(10.5).fillColor('#1D4ED8').text('정답 ', ML + 22, startY, { continued: true });
+      doc.font(isCirc ? 'C' : 'B').fontSize(10.5).fillColor('#1D4ED8').text(d.answer || '·', { continued: false });
+      y = doc.y + 4;
+      if (d.explanation) drawExpText(d.explanation, ML + 4, FULL_W - 4, 9.5);
+      else { doc.font('R').fontSize(9).fillColor('#9CA3AF').text('— 해설 없음 —', ML + 4, y); y = doc.y + 2; }
+      y += 9;
+    }
+  }
+
+  doc.end();
+  const buf = await new Promise<Buffer>((resolve) => doc.on('end', () => resolve(Buffer.concat(chunks))));
+  const fname = `${title} ${heading}.pdf`;
+  return new NextResponse(new Uint8Array(buf), {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(fname)}"`,
     },
   });
 }

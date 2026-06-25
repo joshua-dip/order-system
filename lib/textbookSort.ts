@@ -15,6 +15,11 @@ const EBS_TEXTBOOKS = new Set([
   // 교재 데이터에는 있으나 EBS 목록에서 누락돼 있던 올림포스 EBS 교재
   '2026 올림포스 전국연합학력평가 기출문제집 영어독해 고1',
   '올림포스 영어독해 9대 변별유형(2026)',
+  // 교재 데이터에 있으나 EBS 목록에서 누락돼 있던 EBS 교재 (리딩파워·수능특강 Light·미니모의고사)
+  'ReadingPower 유형편기본',
+  '수능특강 Light 영어독해연습',
+  '수능특강 Q 미니모의고사 영어 Jump',
+  '수능특강 Q 미니모의고사 영어 Start',
 ]);
 
 function isEbs(name: string): boolean {

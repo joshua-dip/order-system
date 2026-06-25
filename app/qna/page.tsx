@@ -97,13 +97,13 @@ export default function QnaListPage() {
 
   return (
     <>
-      <AppBar title="Q&A 분석지" showBackButton onBackClick={() => router.push('/')} />
+      <AppBar title="모고 Q&A 분석지" showBackButton onBackClick={() => router.push('/')} />
       <main className="min-h-screen bg-slate-50 py-8">
         <div className="container mx-auto px-4 max-w-5xl">
           <header className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-900">Q&A 분석지</h1>
+            <h1 className="text-2xl font-bold text-slate-900">모고 Q&A 분석지</h1>
             <p className="mt-1 text-sm text-slate-600">
-              모의고사 지문을 골라 문장별로 질문을 남겨보세요. 비로그인도 가능합니다.
+              모의고사 회차·번호를 골라 지문 분석(문장별 해석·SVOC)을 보고, 문장별로 질문도 남겨보세요. 비로그인도 가능합니다.
             </p>
           </header>
 

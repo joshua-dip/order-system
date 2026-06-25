@@ -10,7 +10,7 @@ const COL = 'essay_exams';
  * - 그 외(배열형 등): 글의의미 제외 ($ne 는 examType 누락 레거시 문서도 포함).
  * - 미지정: 전체.
  */
-function examTypeMatch(examType?: string): Record<string, unknown> {
+export function examTypeMatch(examType?: string): Record<string, unknown> {
   if (!examType) return {};
   if (examType === ESSAY_MEANING_EXAM_TYPE) return { 'data.meta.examType': ESSAY_MEANING_EXAM_TYPE };
   return { 'data.meta.examType': { $ne: ESSAY_MEANING_EXAM_TYPE } };

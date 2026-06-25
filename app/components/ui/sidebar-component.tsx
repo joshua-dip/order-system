@@ -14,6 +14,8 @@ import {
   Report,
   Money,
   Education,
+  Course,
+  Microscope,
   Chat,
   Book,
   Translate,
@@ -28,6 +30,9 @@ import {
   Building,
   Location,
   Wallet,
+  Certificate,
+  Calendar,
+  StringText,
   DocumentAdd,
   User as UserIcon,
   ChevronDown as ChevronDownIcon,
@@ -129,6 +134,8 @@ function getActiveSectionFromPath(pathname: string): string {
   if (pathname.startsWith("/my/vip/analysis")) return "exams"; // 시험 분석은 「시험 관리」 하위
   if (pathname.startsWith("/my/vip/scores")) return "scores";
   if (pathname.startsWith("/my/vip/questions")) return "questions";
+  if (pathname.startsWith("/my/vip/class-kit")) return "class-kit";
+  if (pathname.startsWith("/my/vip/passage-analysis")) return "passage-analysis";
   if (pathname.startsWith("/my/vip/generate")) return "generate";
   return "dashboard";
 }
@@ -197,6 +204,8 @@ const NAV_SECTIONS: NavSection[] = [
       { id: "counseling", icon: <Chat size={18} />, label: "상담 관리", href: "/my/vip/counseling" },
       { id: "lessons", icon: <Book size={18} />, label: "수업일지", href: "/my/vip/lessons" },
       { id: "videos", icon: <Video size={18} />, label: "강의영상관리", href: "/my/vip/videos" },
+      { id: "admissions", icon: <Certificate size={18} />, label: "입시관리", href: "/my/vip/admissions" },
+      { id: "schedule", icon: <Calendar size={18} />, label: "일정관리", href: "/my/vip/schedule" },
     ],
   },
   {
@@ -229,6 +238,21 @@ const NAV_SECTIONS: NavSection[] = [
       { id: "materials", icon: <Document size={18} />, label: "교재 만들기", href: "/my/vip/materials" },
       { id: "words", icon: <ListChecked size={18} />, label: "단어 관리", href: "/my/vip/words" },
       { id: "dictionary", icon: <Translate size={18} />, label: "전자사전", href: "/my/vip/dictionary" },
+      {
+        id: "class-kit",
+        icon: <Course size={18} />,
+        label: "클래스키트",
+        href: "/my/vip/class-kit/lecture",
+        children: [
+          { label: "강의용자료", href: "/my/vip/class-kit/lecture" },
+          { label: "수업용자료", href: "/my/vip/class-kit/lesson" },
+          { label: "한줄해석", href: "/my/vip/class-kit/lesson/line" },
+          { label: "영작하기", href: "/my/vip/class-kit/lesson/write-en" },
+          { label: "해석쓰기", href: "/my/vip/class-kit/lesson/write-ko" },
+        ],
+      },
+      { id: "passage-analysis", icon: <Microscope size={18} />, label: "출제 포인트", href: "/my/vip/passage-analysis" },
+      { id: "memo", icon: <StringText size={18} />, label: "메모장", href: "/my/vip/memo" },
       { id: "qbank-api", icon: <Api size={18} />, label: "문제은행 API", href: "/my/vip/qbank-api" },
     ],
   },

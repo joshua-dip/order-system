@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getDb } from '@/lib/mongodb';
+import { examTypeMatch } from '@/lib/essay-exams-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
 
   const textbook = request.nextUrl.searchParams.get('textbook')?.trim();
   if (!textbook) return NextResponse.json({ counts: {}, passages: [], difficulties: DIFFICULTIES });
+  const examType = request.nextUrl.searchParams.get('examType')?.trim() || undefined;
 
   try {
     const db = await getDb('gomijoshua');
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
     const exams = await db
       .collection('essay_exams')
       .aggregate([
-        { $match: { textbook, isPlaceholder: { $ne: true } } },
+        { $match: { textbook, isPlaceholder: { $ne: true }, ...examTypeMatch(examType) } },
         {
           $group: {
             _id: { passageId: '$passageId', sourceKey: '$sourceKey', difficulty: '$difficulty' },

@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { downloadBlob } from '@/lib/download-blob';
+import { studentOptionLabel } from '@/lib/student-label';
 
-interface Student { id: string; name: string; grade: number; examScope: string[]; schoolName: string }
+interface Student { id: string; name: string; grade: number; examScope: string[]; schoolName: string; phone?: string }
 interface School { id: string; name: string; region: string }
 interface SchoolExam {
   id: string; schoolId: string; academicYear: number; grade: number; examType: string;
@@ -507,7 +508,7 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
               <label className="block text-xs text-zinc-500 mb-1">학생 선택</label>
               <select value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 focus:outline-none [&>option]:bg-zinc-900">
                 <option value="">전체 (범위 미지정)</option>
-                {students.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.schoolName} {s.grade}학년)</option>)}
+                {students.map((s) => <option key={s.id} value={s.id}>{studentOptionLabel(s, { school: true })}</option>)}
               </select>
               {selectedStudentObj?.examScope?.length ? (
                 <div className="flex flex-wrap gap-1 mt-1.5">

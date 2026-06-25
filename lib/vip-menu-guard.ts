@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVip, type VipUser } from './vip-auth';
 import { getDb } from './mongodb';
-import { VIP_MENU_STORE_SETTINGS_ID, isMenuAccessible, type VipMenuStoreConfig } from './vip-menu-catalog';
+import { VIP_MENU_STORE_SETTINGS_ID, isMenuAccessible, isVipAllAccess, type VipMenuStoreConfig } from './vip-menu-catalog';
 import { isVipSubscriptionActive } from './vip-subscription';
 
 /**
@@ -16,6 +16,8 @@ export async function requireVipMenu(
 ): Promise<VipUser | NextResponse> {
   const auth = await requireVip(request);
   if (auth instanceof NextResponse) return auth;
+  // 테스트 계정(조슈아)은 모든 메뉴 통과.
+  if (isVipAllAccess(auth.loginId)) return auth;
   try {
     const db = await getDb('gomijoshua');
     const userId = new ObjectId(auth.userId);

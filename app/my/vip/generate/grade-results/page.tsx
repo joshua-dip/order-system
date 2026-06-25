@@ -4,12 +4,15 @@ import { useCallback, useEffect, useState } from 'react';
 
 /* ── QR 자가채점 결과 (시험지별 응시 현황 + 유형·지문별 복습 분석) ── */
 interface QrAggItem { type?: string; sourceKey?: string; correct: number; total: number; pct: number }
-interface QrStudent { resultId: string; studentName: string; correctCount: number; objectiveCount: number; earnedScore: number; maxObjectiveScore: number; weakTypes: string[]; createdAt: string }
+interface QrWrong { num: number; sourceKey?: string; type?: string }
+interface QrRetake { attemptCount: number; correctCount: number; objectiveCount: number; earnedScore: number; maxObjectiveScore: number; wrongNums: number[]; createdAt: string }
+interface QrStudent { resultId: string; studentName: string; correctCount: number; objectiveCount: number; earnedScore: number; maxObjectiveScore: number; weakTypes: string[]; wrong?: QrWrong[]; retake?: QrRetake | null; createdAt: string }
+interface QrDownload { ids: string[]; scores: number[]; categories: string[]; title: string; schoolName: string; grade: number | null; qr: string; hasSubjective: boolean }
 interface QrPaper {
   paperId: string; title: string; schoolName: string; grade: number | null;
   objectiveCount: number; subjectiveCount: number; maxObjectiveScore: number; totalScore: number;
   token: string; createdAt: string; studentCount: number; avgPct: number;
-  byType: QrAggItem[]; bySource: QrAggItem[]; students: QrStudent[];
+  download?: QrDownload; byType: QrAggItem[]; bySource: QrAggItem[]; students: QrStudent[];
 }
 
 export default function QrGradeResultsPage() {
@@ -17,6 +20,40 @@ export default function QrGradeResultsPage() {
   const [loading, setLoading] = useState(true);
   const [sel, setSel] = useState<QrPaper | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dlBusy, setDlBusy] = useState<'exam' | 'answers' | 'quick' | null>(null);
+
+  /** 문제지·정답표·빠른정답 재다운로드 — 저장된 시험지 문항으로 재구성해 PDF 생성. */
+  const downloadSheet = async (p: QrPaper, kind: 'exam' | 'answers' | 'quick') => {
+    const dl = p.download;
+    if (!dl || dl.ids.length === 0) { alert('재구성할 객관식 문항 정보가 없습니다.'); return; }
+    setDlBusy(kind);
+    try {
+      const body: Record<string, string> = {
+        format: 'pdf',
+        ids: dl.ids.join(','),
+        scores: dl.scores.join(','),
+        categories: dl.categories.join(','),
+        title: dl.title,
+      };
+      if (dl.schoolName) body.schoolName = dl.schoolName;
+      if (dl.grade) body.grade = String(dl.grade);
+      if (kind === 'exam') { body.qr = dl.qr; body.answerSheet = 'false'; } // 문제지(표지 QR 포함, 정답면 제외)
+      else { body.sheet = kind; }                                            // answers=정답표 / quick=빠른정답
+      const res = await fetch('/api/my/vip/generate/download', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error();
+      const label = kind === 'exam' ? '문제지' : kind === 'answers' ? '정답및해설' : '빠른정답';
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${dl.title} ${label}.pdf`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch { alert('다운로드에 실패했습니다.'); }
+    setDlBusy(null);
+  };
 
   const load = useCallback(async (keepPaperId?: string) => {
     const d = await fetch('/api/my/vip/exam-grade-results', { credentials: 'include' }).then((r) => r.json());
@@ -95,6 +132,21 @@ export default function QrGradeResultsPage() {
             </button>
           </div>
 
+          {/* 시험지 재다운로드 — 문제지 / 정답표 / 빠른정답 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-zinc-500">다시 받기:</span>
+            <button onClick={() => downloadSheet(sel, 'exam')} disabled={!!dlBusy || !sel.download?.ids.length} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-zinc-200 bg-zinc-800/70 border border-zinc-700 hover:bg-zinc-700/70 transition-colors disabled:opacity-40">
+              📄 {dlBusy === 'exam' ? '생성 중…' : '문제지'}
+            </button>
+            <button onClick={() => downloadSheet(sel, 'answers')} disabled={!!dlBusy || !sel.download?.ids.length} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-zinc-200 bg-zinc-800/70 border border-zinc-700 hover:bg-zinc-700/70 transition-colors disabled:opacity-40">
+              ✅ {dlBusy === 'answers' ? '생성 중…' : '정답및해설'}
+            </button>
+            <button onClick={() => downloadSheet(sel, 'quick')} disabled={!!dlBusy || !sel.download?.ids.length} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-zinc-200 bg-zinc-800/70 border border-zinc-700 hover:bg-zinc-700/70 transition-colors disabled:opacity-40">
+              ⚡ {dlBusy === 'quick' ? '생성 중…' : '빠른정답'}
+            </button>
+            {sel.download?.hasSubjective && <span className="text-[11px] text-zinc-600">※ 재다운로드는 객관식만 포함</span>}
+          </div>
+
           {sel.studentCount === 0 ? (
             <div className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-10 text-center text-sm text-zinc-600">아직 응시한 학생이 없습니다. 시험지 표지의 QR 로 학생이 채점하면 결과가 표시됩니다.</div>
           ) : (
@@ -142,23 +194,46 @@ export default function QrGradeResultsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...sel.students].sort((a, b) => b.earnedScore - a.earnedScore).map((st, i) => (
-                      <tr key={st.resultId || st.studentName + i} className="border-b border-zinc-800/50 hover:bg-zinc-800/20">
-                        <td className="px-5 py-2 text-zinc-300 font-medium">{st.studentName}</td>
-                        <td className="px-5 py-2 text-right text-zinc-400">{st.correctCount}/{st.objectiveCount}</td>
-                        <td className="px-5 py-2 text-right text-zinc-100 font-semibold">{st.earnedScore}<span className="text-xs text-zinc-600">/{st.maxObjectiveScore}</span></td>
-                        <td className="px-5 py-2">
-                          <div className="flex flex-wrap gap-1">
-                            {st.weakTypes.length === 0 ? <span className="text-emerald-400/80 text-xs">완벽</span> : st.weakTypes.slice(0, 4).map((t) => <span key={t} className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400/90 text-[11px] border border-rose-500/20">{t}</span>)}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <button onClick={() => deleteResult(sel, st)} disabled={busy} title="응시 기록 삭제" className="p-1 rounded text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-40">
-                            <TrashIcon />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {[...sel.students].sort((a, b) => b.earnedScore - a.earnedScore).map((st, i) => {
+                      const wrongList = st.wrong ?? [];
+                      const wrongSources = [...new Set(wrongList.map((w) => w.sourceKey).filter(Boolean) as string[])];
+                      const wrongTip = wrongList.length
+                        ? `틀린 번호 — ${wrongList.map((w) => `${w.num}${w.sourceKey ? ` (${w.sourceKey})` : ''}`).join(', ')}`
+                        : '모두 정답';
+                      const rt = st.retake;
+                      const rtImproved = rt ? rt.correctCount > st.correctCount : false;
+                      return (
+                        <tr key={st.resultId || st.studentName + i} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 align-top">
+                          <td className="px-5 py-2.5">
+                            <div className="text-zinc-300 font-medium">{st.studentName}</div>
+                            {rt && (
+                              <div className={`text-[11px] mt-0.5 ${rtImproved ? 'text-emerald-400/90' : 'text-sky-400/80'}`} title={`재응시 ${rt.attemptCount}회 · 최신 ${new Date(rt.createdAt).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' })}`}>
+                                ↻ 재응시 {rt.attemptCount}회 · {rt.correctCount}/{rt.objectiveCount} ({rt.earnedScore}점){rtImproved ? ' ↑' : ''}
+                              </div>
+                            )}
+                            {wrongSources.length > 0 && (
+                              <div className="text-[11px] text-zinc-500 mt-0.5">틀린 지문: <span className="text-zinc-400">{wrongSources.join(' · ')}</span></div>
+                            )}
+                          </td>
+                          <td className="px-5 py-2.5 text-right">
+                            <span title={wrongTip} className={`text-zinc-400 ${wrongList.length ? 'underline decoration-dotted decoration-zinc-600 underline-offset-4 cursor-help' : ''}`}>
+                              {st.correctCount}/{st.objectiveCount}
+                            </span>
+                          </td>
+                          <td className="px-5 py-2.5 text-right text-zinc-100 font-semibold">{st.earnedScore}<span className="text-xs text-zinc-600">/{st.maxObjectiveScore}</span></td>
+                          <td className="px-5 py-2.5">
+                            <div className="flex flex-wrap gap-1">
+                              {st.weakTypes.length === 0 ? <span className="text-emerald-400/80 text-xs">완벽</span> : st.weakTypes.slice(0, 4).map((t) => <span key={t} className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400/90 text-[11px] border border-rose-500/20">{t}</span>)}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            <button onClick={() => deleteResult(sel, st)} disabled={busy} title="응시 기록 삭제" className="p-1 rounded text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-40">
+                              <TrashIcon />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

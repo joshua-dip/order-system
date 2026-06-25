@@ -104,28 +104,51 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if ((e as { code?: number }).code !== 11000) throw e; // 동시 제출 경합 → 이미 기록됨
     }
 
-    // 응답 = 첫 제출이면 방금 채점, 재제출이면 기존(첫) 기록 기준
-    let src: Pick<GradeResultDoc, 'byType' | 'answers' | 'correctCount' | 'objectiveCount' | 'earnedScore' | 'maxObjectiveScore'> = graded;
+    // 학생에게 보여줄 결과는 항상 "방금 제출한" 채점(graded) — 재응시면 고친 점수를 바로 확인.
+    // 단, 공식(첫 제출) 점수는 doc 최상위 필드로 불변 유지하고, 재응시는 retake 필드에만 누적.
+    const weakTypes = graded.byType.filter((t) => t.correct < t.total).sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) => t.type);
+    const wrongNums = graded.answers.filter((a) => !a.isCorrect).map((a) => a.num);
+
+    let official: { correctCount: number; objectiveCount: number; earnedScore: number; maxObjectiveScore: number } | undefined;
     if (!isFirst) {
       const existing = await db.collection<GradeResultDoc>(GRADE_RESULTS_COLLECTION)
         .findOne({ paperId: paper._id, studentId: student._id });
-      if (existing) src = existing;
+      if (existing) {
+        official = {
+          correctCount: existing.correctCount,
+          objectiveCount: existing.objectiveCount,
+          earnedScore: existing.earnedScore,
+          maxObjectiveScore: existing.maxObjectiveScore,
+        };
+        // 재응시 최신 결과 저장 (공식 점수는 건드리지 않음)
+        const retake = {
+          attemptCount: (existing.retake?.attemptCount ?? 0) + 1,
+          correctCount: graded.correctCount,
+          objectiveCount: graded.objectiveCount,
+          earnedScore: graded.earnedScore,
+          maxObjectiveScore: graded.maxObjectiveScore,
+          wrongNums,
+          byType: graded.byType,
+          createdAt: new Date(),
+        };
+        await db.collection(GRADE_RESULTS_COLLECTION).updateOne(
+          { paperId: paper._id, studentId: student._id },
+          { $set: { retake } },
+        );
+      }
     }
-
-    // 학생에게 보여줄 복습 추천 (정답 자체는 노출 X)
-    const weakTypes = src.byType.filter((t) => t.correct < t.total).sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) => t.type);
-    const wrongNums = src.answers.filter((a) => !a.isCorrect).map((a) => a.num);
 
     return NextResponse.json({
       ok: true,
-      alreadySubmitted: !isFirst,
+      isRetake: !isFirst,
       studentName: doc.studentName,
-      correctCount: src.correctCount,
-      objectiveCount: src.objectiveCount,
-      earnedScore: src.earnedScore,
-      maxObjectiveScore: src.maxObjectiveScore,
+      correctCount: graded.correctCount,
+      objectiveCount: graded.objectiveCount,
+      earnedScore: graded.earnedScore,
+      maxObjectiveScore: graded.maxObjectiveScore,
       weakTypes,
       wrongNums,
+      ...(official ? { official } : {}),
     });
   } catch (e) {
     console.error('[exam-grade POST]', e);

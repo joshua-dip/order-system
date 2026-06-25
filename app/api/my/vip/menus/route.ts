@@ -8,6 +8,9 @@ import {
   VIP_MENU_IDS,
   VIP_MENU_STORE_SETTINGS_ID,
   isMenuPaid,
+  isMenuPublished,
+  isMenuPurchasable,
+  isVipAllAccess,
   menuPrice,
   effectiveRequires,
   type VipMenuStoreConfig,
@@ -37,16 +40,21 @@ export async function GET(request: NextRequest) {
   // 활성 월 구독 중이면 모든 유료 메뉴를 사용 가능(언락 취급).
   const subUntil = (user as { vipSubscriptionUntil?: Date } | null)?.vipSubscriptionUntil ?? null;
   const subscribed = isVipSubscriptionActive(subUntil);
+  // 테스트 계정(조슈아)은 전 메뉴 접근.
+  const allAccess = isVipAllAccess(auth.loginId);
   return NextResponse.json({
     ok: true,
     points,
+    allAccess,
     subscription: { active: subscribed, until: subUntil, monthlyWon: VIP_SUBSCRIPTION_MONTHLY_WON },
     menus: VIP_MENU_CATALOG.map((m) => ({
       id: m.id,
       label: m.label,
       paid: isMenuPaid(config, m.id),
       price: menuPrice(config, m.id),
-      unlocked: subscribed || unlocked.includes(m.id),
+      published: isMenuPublished(config, m.id),
+      purchasable: isMenuPurchasable(config, m.id),
+      unlocked: allAccess || subscribed || unlocked.includes(m.id),
       requires: effectiveRequires(config, m.id),
     })),
   });
@@ -71,8 +79,11 @@ export async function POST(request: NextRequest) {
   const unlocked: string[] = Array.isArray(user?.vipMenus) ? (user!.vipMenus as string[]) : [];
   const points = typeof user?.points === 'number' && user.points >= 0 ? user.points : 0;
 
-  // 유료·미보유 메뉴만 실제 구매 대상
-  const toBuy = valid.filter((id) => isMenuPaid(config, id) && !unlocked.includes(id));
+  // 비공개(미공개) 유료 메뉴는 구매 불가
+  const blocked = valid.filter((id) => isMenuPaid(config, id) && !unlocked.includes(id) && !isMenuPublished(config, id));
+  if (blocked.length > 0) return NextResponse.json({ error: '아직 공개되지 않은 메뉴는 구매할 수 없습니다.', code: 'menu_unpublished', menuIds: blocked }, { status: 403 });
+  // 구매 가능(유료+공개)·미보유 메뉴만 실제 구매 대상
+  const toBuy = valid.filter((id) => isMenuPurchasable(config, id) && !unlocked.includes(id));
   if (toBuy.length === 0) return NextResponse.json({ ok: true, already: true, points });
   const total = toBuy.reduce((s, id) => s + menuPrice(config, id), 0);
   if (points < total) return NextResponse.json({ error: '포인트가 부족합니다.', need: total, have: points }, { status: 402 });

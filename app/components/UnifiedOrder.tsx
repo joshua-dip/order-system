@@ -11,6 +11,7 @@ import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { mockExamDisplayLabel } from '@/lib/mock-exam-key';
 import { variantUnitPrice, isOrderInsertType, VARIANT_PRICE } from '@/lib/variant-pricing';
 import AppBar from './AppBar';
+import SampleDrawer from './SampleDrawer';
 
 /* ────────────────────────────────────────────────────────── */
 /*  상수 / 유틸                                               */
@@ -300,6 +301,9 @@ export default function UnifiedOrder() {
   const [showPresets, setShowPresets] = useState(true);
   const [savingScope, setSavingScope] = useState(false);
   const [scopeName, setScopeName] = useState('');
+  /** 주문번호로 시험범위 불러오기 (admin 주문내역의 UV·MV·BV 주문) */
+  const [orderNumberInput, setOrderNumberInput] = useState('');
+  const [loadingOrder, setLoadingOrder] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [schoolSlots, setSchoolSlots] = useState<SchoolExamSlot[]>([]);
 
@@ -314,6 +318,9 @@ export default function UnifiedOrder() {
     순서: boolean;
     삽입: boolean;
   }>({ 순서: true, 삽입: true });
+  // 학교명 + 이전(같은 학교) 출제분과 겹치지 않기
+  const [school, setSchool] = useState('');
+  const [avoidDuplicates, setAvoidDuplicates] = useState(false);
   const [email, setEmail] = useState('');
   const [userPoints, setUserPoints] = useState(0);
   const [pointsToUse, setPointsToUse] = useState(0);
@@ -654,22 +661,24 @@ export default function UnifiedOrder() {
     setScopeName('');
   };
 
-  /* ── 시험범위 불러오기 적용 ── */
-  const applyPreset = (preset: ExamScopePreset) => {
-    if (!textbooksData) return;
-    const withoutSolbook = preset.dbEntries.filter((e) => {
+  /* ── 시험범위 dbEntries 복원 (저장된 프리셋·주문번호 공용) ── */
+  const applyScopeEntries = (
+    entries: Omit<DbEntry, 'id' | 'lessonGroups'>[],
+    opts?: {
+      selectedTypes?: string[];
+      questionsPerTypeMap?: Record<string, number>;
+      orderInsertExplanation?: { 순서: boolean; 삽입: boolean };
+    },
+  ): { restoredCount: number; droppedSolbook: boolean } | null => {
+    if (!textbooksData) return null;
+    const withoutSolbook = entries.filter((e) => {
       if (e.type !== 'textbook') return true;
       const c = e.textbookCategory;
       return c !== 'solbook-textbook' && c !== 'solbook-suppl';
     });
     if (withoutSolbook.length === 0) {
       setToast('불러올 항목이 없습니다. 파이널 예비 모의고사에서는 쏠북 교재를 제외합니다.');
-      return;
-    }
-    if (withoutSolbook.length < preset.dbEntries.length) {
-      setToast(`"${preset.name}" 불러오기: 쏠북 교재 항목은 제외했습니다.`);
-    } else {
-      setToast(`"${preset.name}" 불러오기 완료`);
+      return null;
     }
     const restored: DbEntry[] = withoutSolbook.map((e) => {
       const base: DbEntry = {
@@ -687,8 +696,43 @@ export default function UnifiedOrder() {
       return e.type === 'mockexam' ? sanitizeMockExamEntry(base) : base;
     });
     setDbEntries(restored);
+    if (opts?.selectedTypes?.length) setSelectedTypes(opts.selectedTypes);
+    if (opts?.questionsPerTypeMap && Object.keys(opts.questionsPerTypeMap).length) setQuestionsPerTypeMap(opts.questionsPerTypeMap);
+    if (opts?.orderInsertExplanation) setOrderInsertExplanation(opts.orderInsertExplanation);
     setShowPresets(false);
     setPhase(2);
+    return { restoredCount: restored.length, droppedSolbook: withoutSolbook.length < entries.length };
+  };
+
+  /* ── 시험범위 불러오기 적용 (저장된 프리셋) ── */
+  const applyPreset = (preset: ExamScopePreset) => {
+    const r = applyScopeEntries(preset.dbEntries);
+    if (r) setToast(r.droppedSolbook ? `"${preset.name}" 불러오기: 쏠북 교재 항목은 제외했습니다.` : `"${preset.name}" 불러오기 완료`);
+  };
+
+  /* ── 주문번호로 시험범위 불러오기 (admin 주문내역의 UV·MV·BV 주문) ── */
+  const loadFromOrderNumber = async () => {
+    const num = orderNumberInput.trim();
+    if (!num) return;
+    setLoadingOrder(true);
+    try {
+      const res = await fetch(`/api/orders/lookup?n=${encodeURIComponent(num)}`, { credentials: 'include' });
+      const d = await res.json();
+      if (!res.ok || !d.ok) { setToast(typeof d.error === 'string' ? d.error : '주문을 불러오지 못했습니다.'); return; }
+      const r = applyScopeEntries(d.scope.dbEntries, {
+        selectedTypes: d.scope.selectedTypes,
+        questionsPerTypeMap: d.scope.questionsPerTypeMap,
+        orderInsertExplanation: d.scope.orderInsertExplanation,
+      });
+      if (r) {
+        const typeNote = Array.isArray(d.scope.selectedTypes) && d.scope.selectedTypes.length ? ` · 유형 ${d.scope.selectedTypes.length}종` : '';
+        setToast(`${d.orderNumber} 불러오기 완료 (지문 범위 ${r.restoredCount}개${typeNote})${r.droppedSolbook ? ' · 쏠북 제외' : ''}`);
+      }
+    } catch {
+      setToast('주문 조회 중 오류가 발생했습니다.');
+    } finally {
+      setLoadingOrder(false);
+    }
   };
 
   /* ── 시험범위 삭제 ── */
@@ -823,6 +867,7 @@ export default function UnifiedOrder() {
   const handleInstantIssue = async () => {
     if (selectedTypes.length === 0) { alert('유형을 선택해주세요.'); return; }
     if (totalSources === 0) { alert('지문을 선택해주세요.'); return; }
+    if (avoidDuplicates && !school.trim()) { alert('이전 문제와 겹치지 않기를 켜려면 학교명을 입력해주세요.'); return; }
     if (issuing) return;
     if (userPoints < totalPrice) {
       alert(`포인트가 부족합니다.\n필요한 포인트: ${totalPrice.toLocaleString()}P / 보유: ${userPoints.toLocaleString()}P\n\n마이페이지에서 포인트를 충전한 뒤 다시 시도해 주세요.`);
@@ -846,6 +891,8 @@ export default function UnifiedOrder() {
           selectedTypes,
           questionsPerTypeMap,
           orderInsertExplanation,
+          school: school.trim(),
+          avoidDuplicates,
         }),
       });
       const d = await r.json().catch(() => ({}));
@@ -1047,6 +1094,30 @@ export default function UnifiedOrder() {
                 <li>다음 단계에서 강·번호별로 출제할 지문을 선택합니다</li>
                 <li>원하는 유형과 유형별 문항 수를 설정하고 주문합니다</li>
               </ol>
+            </div>
+
+            {/* 주문번호로 불러오기 */}
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h2 className="font-bold text-gray-800 mb-1">📋 주문번호로 시험 범위 불러오기</h2>
+              <p className="text-xs text-gray-500 mb-3">
+                주문내역의 주문번호(UV·MV·BV)를 입력하면 교재·지문번호·유형·문항수가 자동으로 채워집니다.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  value={orderNumberInput}
+                  onChange={(e) => setOrderNumberInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !loadingOrder) void loadFromOrderNumber(); }}
+                  placeholder="예: UV-20260401-003 / MV-… / BV-…"
+                  className="flex-1 min-w-[220px] rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                />
+                <button
+                  onClick={() => void loadFromOrderNumber()}
+                  disabled={loadingOrder || !orderNumberInput.trim()}
+                  className="rounded-xl bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800 disabled:opacity-50"
+                >
+                  {loadingOrder ? '불러오는 중…' : '불러오기'}
+                </button>
+              </div>
             </div>
 
             {/* 시험범위 불러오기 */}
@@ -1859,20 +1930,35 @@ export default function UnifiedOrder() {
               {BOOK_VARIANT_OBJECTIVE_TYPES.map((t) => {
                 const sel = selectedTypes.includes(t);
                 return (
-                  <button
+                  <div
                     key={t}
-                    onClick={() => toggleType(t)}
-                    className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
-                      sel
-                        ? 'border-purple-600 bg-purple-600 text-white shadow-md'
-                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50'
+                    className={`flex items-stretch overflow-hidden rounded-xl border-2 transition-all ${
+                      sel ? 'border-purple-600 shadow-md' : 'border-gray-200 hover:border-purple-300'
                     }`}
                   >
-                    {t}
-                  </button>
+                    <button
+                      onClick={() => toggleType(t)}
+                      className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                        sel ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-purple-50'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-sample', { detail: t })); }}
+                      title={`${t} 유형 샘플·설명·공부방향 보기`}
+                      className={`px-2 text-xs border-l transition-colors ${
+                        sel ? 'bg-purple-700 text-white border-purple-400 hover:bg-purple-800' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
+                      }`}
+                    >
+                      📝
+                    </button>
+                  </div>
                 );
               })}
             </div>
+            <p className="mt-2 text-[11px] text-gray-400">📝 를 누르면 해당 유형의 샘플·설명·공부방향을 볼 수 있어요.</p>
           </div>
 
           {/* 유형별 문항수 */}
@@ -2020,6 +2106,30 @@ export default function UnifiedOrder() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
               />
+            </div>
+          )}
+
+          {/* 학교명 + 이전 출제분과 겹치지 않기 */}
+          {!hasSolbookInOrder && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <h2 className="font-bold text-gray-900 mb-3">시험지 대상 학교 <span className="text-xs font-normal text-gray-400">(선택)</span></h2>
+              <input
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                placeholder="예: 고미고등학교"
+                maxLength={80}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:border-purple-400"
+              />
+              <label className="mt-3 flex items-start gap-2.5 cursor-pointer select-none">
+                <input type="checkbox" checked={avoidDuplicates} onChange={(e) => setAvoidDuplicates(e.target.checked)} className="mt-0.5 w-4 h-4 accent-purple-600" />
+                <span className="text-sm text-gray-700">
+                  <strong className="text-gray-900">이전 문제와 겹치지 않기</strong>
+                  <span className="block text-xs text-gray-500 mt-0.5">이 학교에 이미 발급했던 문항은 빼고 새 문항으로만 출제합니다. (재고가 부족하면 부족분을 자동 제작 요청)</span>
+                </span>
+              </label>
+              {avoidDuplicates && !school.trim() && (
+                <p className="mt-2 text-xs text-rose-500">학교명을 입력해야 겹치지 않기를 적용할 수 있어요.</p>
+              )}
             </div>
           )}
 
@@ -2221,6 +2331,7 @@ export default function UnifiedOrder() {
       )}
 
       {toast && <Toast msg={toast} onDone={() => setToast('')} />}
+      <SampleDrawer />
     </>
   );
 }

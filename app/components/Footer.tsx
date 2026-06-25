@@ -76,7 +76,7 @@ const Footer = () => {
                   </a>
                 </p>
               )}
-              <p className="text-slate-400">© {new Date().getFullYear()} {copyrightHolder}. All rights reserved.</p>
+              <p className="text-slate-400"><span suppressHydrationWarning>© {new Date().getFullYear()}</span> {copyrightHolder}. All rights reserved.</p>
             </div>
           </div>
         </div>

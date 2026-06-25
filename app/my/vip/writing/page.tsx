@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { studentOptionLabel } from '@/lib/student-label';
 
 const LEVELS = ['기초', '중급', '심화'] as const;
 type Level = (typeof LEVELS)[number];
@@ -10,7 +11,7 @@ const LEVEL_CLS: Record<Level, string> = {
   심화: 'bg-violet-500/15 text-violet-300',
 };
 
-interface Student { id: string; name: string; grade: number; schoolName: string }
+interface Student { id: string; name: string; grade: number; schoolName: string; phone?: string }
 interface Topic { id: string; title: string; prompt: string; targetWords: number | null; level: Level; reference: string; submissionCount: number; createdAt: string }
 interface Submission { id: string; topicId: string | null; topicTitle: string; studentId: string; studentName: string; date: string; original: string; corrected: string; feedback: string; score: number | null; status: '제출' | '첨삭완료'; wordCount: number }
 
@@ -213,7 +214,7 @@ function SubmissionsTab({ students, topics, presetTopic, reloadTopics }: { stude
           <div className="flex flex-wrap gap-2">
             <select value={nStudent} onChange={(e) => setNStudent(e.target.value)} className="flex-1 min-w-[150px] px-3 py-2 rounded-lg bg-zinc-900/70 border border-zinc-700/60 text-sm text-zinc-100 [&>option]:bg-zinc-900 focus:outline-none focus:border-[#c9a44e]/50">
               <option value="">학생 선택</option>
-              {students.map((s) => <option key={s.id} value={s.id}>{s.name}{s.grade ? ` (${s.grade}학년)` : ''}</option>)}
+              {students.map((s) => <option key={s.id} value={s.id}>{studentOptionLabel(s)}</option>)}
             </select>
             <select value={nTopic} onChange={(e) => setNTopic(e.target.value)} className="flex-1 min-w-[150px] px-3 py-2 rounded-lg bg-zinc-900/70 border border-zinc-700/60 text-sm text-zinc-100 [&>option]:bg-zinc-900 focus:outline-none focus:border-[#c9a44e]/50">
               <option value="">자유 주제</option>

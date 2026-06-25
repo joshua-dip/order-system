@@ -21,8 +21,11 @@ interface GradingRow {
 interface JobRow {
   id: string;
   title: string;
+  folder?: string;
   scopeSummary: string;
   status: 'ready' | 'awaiting_admin';
+  orderMode?: 'default' | 'interleave' | 'shuffle';
+  sources?: { sourceKey: string; count: number }[];
   totalRequested: number;
   totalAssigned: number;
   totalShort: number;
@@ -78,8 +81,38 @@ function GradingChips({ job, expanded, onToggle }: { job: JobRow; expanded: bool
   );
 }
 
-function ActionButtons({ job, compact }: { job: JobRow; compact?: boolean }) {
+function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: boolean; onReload?: () => void }) {
   const pad = compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2';
+  const [order, setOrder] = useState<'default' | 'interleave' | 'shuffle'>(job.orderMode ?? 'default');
+  const [similarBusy, setSimilarBusy] = useState(false);
+  const [zipBusy, setZipBusy] = useState(false);
+
+  /* 유사문항 — 같은 범위로 겹치지 않는 새 문항 발급(포인트 차감 + 주문번호 생성) */
+  const makeSimilar = async () => {
+    if (!confirm('같은 범위(교재·지문·유형·문항수)로 기존 문제와 겹치지 않는 새 문항을 발급합니다.\n포인트가 차감되고 주문번호가 생성됩니다. 진행할까요?')) return;
+    setSimilarBusy(true);
+    try {
+      const res = await fetch(`/api/my/final-exams/${job.id}/similar`, { method: 'POST', credentials: 'include' });
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        alert(typeof d.error === 'string' ? d.error : '유사문항 발급에 실패했습니다.');
+        return;
+      }
+      const lines = [
+        '유사문항 발급 완료 ✓',
+        `주문번호: ${d.orderNumber ?? '-'}`,
+        `${d.totalRequested}문항${d.totalShort > 0 ? ` (부족 ${d.totalShort}문항은 제작 후 자동으로 채워집니다)` : ''}`,
+        `차감 ${Number(d.pointsCharged ?? 0).toLocaleString()}P · 잔액 ${Number(d.balanceAfter ?? 0).toLocaleString()}P`,
+      ];
+      alert(lines.join('\n'));
+      onReload?.();
+    } catch {
+      alert('유사문항 발급 중 오류가 발생했습니다.');
+    } finally {
+      setSimilarBusy(false);
+    }
+  };
+
   if (job.status !== 'ready') {
     return (
       <span className="text-[11px] text-gray-400">
@@ -87,14 +120,85 @@ function ActionButtons({ job, compact }: { job: JobRow; compact?: boolean }) {
       </span>
     );
   }
+  const base = `/api/my/final-exams/${job.id}/download`;
+  const oq = `&order=${order}`;
+
+  /* 프로그램틱 다운로드 — 문제지+정답을 한 번에. 전부 랜덤은 시드가 고정이라 둘이 항상 같은 순서. */
+  const trigger = (url: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.rel = 'noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+  const downloadBoth = (reshuffle?: boolean) => {
+    trigger(`${base}?kind=exam${oq}${reshuffle ? '&reshuffle=1' : ''}`);
+    /* reshuffle 시 새 시드가 먼저 저장되도록 약간 지연 후 정답지 요청(같은 시드를 읽음) */
+    window.setTimeout(() => trigger(`${base}?kind=answer${oq}`), 900);
+  };
+
+  /* 문제+정답 한번에 — 전체(기본순·회차별·전부랜덤) + 지문별 × 문제·정답 모두를 ZIP 한 개로. 시간이 걸림(로딩 표시). */
+  const downloadAllZip = async () => {
+    setZipBusy(true);
+    try {
+      const res = await fetch(`${base}-zip?scope=full`, { credentials: 'include' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(typeof d.error === 'string' ? d.error : '묶음 ZIP 생성에 실패했습니다.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.title} 전체묶음.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('묶음 ZIP 생성에 실패했습니다.');
+    } finally {
+      setZipBusy(false);
+    }
+  };
+
   return (
     <>
-      <a href={`/api/my/final-exams/${job.id}/download?kind=exam`} className={`rounded-lg bg-indigo-600 ${pad} text-xs font-bold text-white hover:bg-indigo-700`}>
+      <select
+        value={order}
+        onChange={(e) => setOrder(e.target.value as typeof order)}
+        title="문제 출력 순서 — 채점도 이 순서를 따릅니다. 전부 랜덤은 고정 순서(다시 섞기로만 변경)"
+        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:border-indigo-400"
+      >
+        <option value="default">기본순(유형별)</option>
+        <option value="interleave">회차별로</option>
+        <option value="shuffle">전부 랜덤</option>
+      </select>
+      <button
+        onClick={() => void downloadAllZip()}
+        disabled={zipBusy}
+        title="기본순·회차별·전부랜덤·지문별의 문제지+정답해설을 ZIP 한 개로 (만드는 데 시간이 걸립니다)"
+        className={`rounded-lg bg-indigo-600 ${pad} text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-60`}
+      >
+        {zipBusy ? '📦 만드는 중…' : '📦 문제+정답 한번에 (ZIP)'}
+      </button>
+      <a href={`${base}?kind=exam${oq}`} className={`rounded-lg border border-indigo-300 ${pad} text-xs font-bold text-indigo-700 hover:bg-indigo-50`}>
         📄 문제지
       </a>
-      <a href={`/api/my/final-exams/${job.id}/download?kind=answer`} className={`rounded-lg border border-indigo-300 ${pad} text-xs font-bold text-indigo-700 hover:bg-indigo-50`}>
+      <a href={`${base}?kind=answer${oq}`} className={`rounded-lg border border-indigo-300 ${pad} text-xs font-bold text-indigo-700 hover:bg-indigo-50`}>
         ✅ 정답·해설
       </a>
+      {order === 'shuffle' && (
+        <button
+          onClick={() => downloadBoth(true)}
+          title="새로 섞어서 문제+정답을 다시 받기 (이전 순서는 사라짐)"
+          className={`rounded-lg border border-amber-300 ${pad} text-xs font-bold text-amber-700 hover:bg-amber-50`}
+        >
+          🔀 다시 섞기
+        </button>
+      )}
       {job.gradeToken && (
         <a
           href={`/grade/${job.gradeToken}`}
@@ -106,7 +210,93 @@ function ActionButtons({ job, compact }: { job: JobRow; compact?: boolean }) {
           📱 채점
         </a>
       )}
+      {job.retryIndex == null && (
+        <button
+          onClick={() => void makeSimilar()}
+          disabled={similarBusy}
+          title="같은 범위(교재·지문·유형·문항수)로 기존 문제와 겹치지 않는 새 문항을 발급합니다. 포인트 차감 + 주문번호 생성."
+          className={`rounded-lg border border-purple-300 ${pad} text-xs font-bold text-purple-700 hover:bg-purple-50 disabled:opacity-50`}
+        >
+          {similarBusy ? '🧬 발급 중…' : '🧬 유사문항'}
+        </button>
+      )}
     </>
+  );
+}
+
+/** 지문(출처)별 문제·정답 다운로드 — 5지문이면 지문마다 따로 받기. 번호는 지문 내 1번부터. */
+function SourceDownloads({ job }: { job: JobRow }) {
+  const [open, setOpen] = useState(false);
+  const [zipBusy, setZipBusy] = useState(false);
+  const sources = job.sources ?? [];
+  if (job.status !== 'ready' || sources.length === 0) return null;
+  const base = `/api/my/final-exams/${job.id}/download`;
+
+  /* 지문별 문제지+정답해설 전부를 ZIP 한 개로 — 지문 수만큼 PDF 를 만들어 시간이 걸림(로딩 표시) */
+  const downloadZip = async () => {
+    setZipBusy(true);
+    try {
+      const res = await fetch(`${base}-zip`, { credentials: 'include' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(typeof d.error === 'string' ? d.error : 'ZIP 생성에 실패했습니다.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.title} 지문별.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('ZIP 생성에 실패했습니다.');
+    } finally {
+      setZipBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-2.5 border-t border-gray-100 pt-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="text-[11px] font-bold text-gray-400 hover:text-gray-600"
+        >
+          📚 지문별로 받기 ({sources.length}지문) {open ? '▲' : '▼'}
+        </button>
+        <button
+          onClick={() => void downloadZip()}
+          disabled={zipBusy}
+          title="지문별 문제지+정답해설 전부를 ZIP 한 개로 (지문 수만큼 만들어 시간이 걸립니다)"
+          className="rounded-md bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-amber-600 disabled:opacity-50"
+        >
+          {zipBusy ? '📦 압축 중… (잠시만요)' : '📦 한번에 ZIP'}
+        </button>
+      </div>
+      {open && (
+        <div className="mt-2 space-y-1.5">
+          {sources.map((s, i) => {
+            const sq = `?source=${encodeURIComponent(s.sourceKey)}&order=default`;
+            return (
+              <div key={s.sourceKey} className="flex flex-wrap items-center gap-1.5 rounded-lg bg-gray-50 px-2.5 py-1.5">
+                <span className="mr-auto max-w-[280px] truncate text-[11px] font-semibold text-gray-600" title={s.sourceKey}>
+                  {i + 1}. {s.sourceKey} <span className="text-gray-400">· {s.count}문항</span>
+                </span>
+                <a href={`${base}${sq}&kind=exam`} className="rounded-md border border-indigo-200 px-2 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-50">
+                  📄 문제지
+                </a>
+                <a href={`${base}${sq}&kind=answer`} className="rounded-md border border-indigo-200 px-2 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-50">
+                  ✅ 정답·해설
+                </a>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -119,6 +309,11 @@ export default function FinalExamDownloadsPage() {
   const [editTitle, setEditTitle] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** 폴더 필터 — null=전체, ''=미분류, 그 외=폴더명 */
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  /** 폴더 이동 인라인 편집 중인 잡 id */
+  const [folderEditId, setFolderEditId] = useState<string | null>(null);
+  const [folderInput, setFolderInput] = useState('');
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -173,6 +368,31 @@ export default function FinalExamDownloadsPage() {
     }
   }, [editTitle]);
 
+  const moveToFolder = useCallback(async (id: string, folder: string) => {
+    const f = folder.trim().slice(0, 40);
+    setBusyId(id);
+    try {
+      const r = await fetch(`/api/my/final-exams/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ folder: f }),
+      });
+      if (r.ok) {
+        setItems((prev) => prev.map((it) => (it.id === id ? { ...it, folder: f } : it)));
+        setFolderEditId(null);
+        setFolderInput('');
+      } else {
+        const d = await r.json().catch(() => ({}));
+        alert(typeof d.error === 'string' ? d.error : '폴더 이동에 실패했습니다.');
+      }
+    } catch {
+      alert('폴더 이동에 실패했습니다.');
+    } finally {
+      setBusyId(null);
+    }
+  }, []);
+
   const doDelete = useCallback(async (id: string) => {
     setBusyId(id);
     try {
@@ -218,6 +438,15 @@ export default function FinalExamDownloadsPage() {
     }
     return (
       <div className="flex shrink-0 items-center gap-1">
+        {canRename && (
+          <button
+            onClick={() => { setFolderEditId(job.id); setFolderInput(job.folder || ''); setEditingId(null); setConfirmDeleteId(null); }}
+            className={`rounded-md px-2 py-1 text-[11px] font-semibold hover:bg-amber-50 hover:text-amber-700 ${job.folder ? 'text-amber-600' : 'text-gray-400'}`}
+            title="폴더 분류"
+          >
+            📁 {job.folder || '폴더'}
+          </button>
+        )}
         {canRename && (
           <button
             onClick={() => { setEditingId(job.id); setEditTitle(job.title); setConfirmDeleteId(null); }}
@@ -271,9 +500,78 @@ export default function FinalExamDownloadsPage() {
     );
   };
 
+  /* 폴더 이동 인라인 피커 */
+  const renderFolderPicker = (job: JobRow) => {
+    const busy = busyId === job.id;
+    const existing = [...new Set(items.map((i) => (i.folder || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+    return (
+      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+        <p className="mb-2 text-[11px] font-bold text-amber-700">📁 폴더로 이동</p>
+        {existing.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {existing.map((f) => (
+              <button
+                key={f}
+                disabled={busy}
+                onClick={() => void moveToFolder(job.id, f)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 disabled:opacity-50 ${
+                  (job.folder || '') === f ? 'bg-amber-500 text-white ring-amber-500' : 'bg-white text-amber-700 ring-amber-200 hover:bg-amber-100'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <input
+            value={folderInput}
+            maxLength={40}
+            placeholder="새 폴더 이름"
+            onChange={(e) => setFolderInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && folderInput.trim()) void moveToFolder(job.id, folderInput);
+              else if (e.key === 'Escape') setFolderEditId(null);
+            }}
+            className="min-w-[140px] flex-1 rounded-md border border-amber-300 px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-200"
+          />
+          <button
+            disabled={busy || !folderInput.trim()}
+            onClick={() => void moveToFolder(job.id, folderInput)}
+            className="rounded-md bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-amber-600 disabled:opacity-50"
+          >
+            이동
+          </button>
+          {job.folder ? (
+            <button
+              disabled={busy}
+              onClick={() => void moveToFolder(job.id, '')}
+              className="rounded-md bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-500 ring-1 ring-gray-200 hover:bg-gray-50"
+            >
+              미분류로 빼기
+            </button>
+          ) : null}
+          <button
+            disabled={busy}
+            onClick={() => setFolderEditId(null)}
+            className="rounded-md bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-500 hover:bg-gray-200"
+          >
+            취소
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   /* 원본(부모) 기준 그룹화 — 오답 세트는 부모 카드 안에 중첩. 부모가 목록에 없으면 단독 표시 */
   const ids = new Set(items.map((i) => i.id));
-  const parents = items.filter((i) => !i.parentJobId || !ids.has(i.parentJobId));
+  const allParents = items.filter((i) => !i.parentJobId || !ids.has(i.parentJobId));
+  /* 폴더 집계 (부모 기준) + 필터 */
+  const folderCount = new Map<string, number>();
+  for (const p of allParents) { const f = (p.folder || '').trim(); folderCount.set(f, (folderCount.get(f) || 0) + 1); }
+  const folderNames = [...folderCount.keys()].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
+  const unfiledCount = folderCount.get('') || 0;
+  const parents = activeFolder === null ? allParents : allParents.filter((p) => (p.folder || '') === activeFolder);
   const childrenOf = (id: string) =>
     items
       .filter((i) => i.parentJobId === id)
@@ -312,6 +610,41 @@ export default function FinalExamDownloadsPage() {
             </button>
           </div>
 
+          {/* 폴더 필터 — 폴더가 하나라도 있으면 표시 */}
+          {folderNames.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                onClick={() => setActiveFolder(null)}
+                className={`rounded-full px-3 py-1 text-xs font-bold ring-1 transition-colors ${
+                  activeFolder === null ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-white text-gray-600 ring-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                📂 전체 ({allParents.length})
+              </button>
+              {folderNames.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFolder(f)}
+                  className={`rounded-full px-3 py-1 text-xs font-bold ring-1 transition-colors ${
+                    activeFolder === f ? 'bg-amber-500 text-white ring-amber-500' : 'bg-white text-amber-700 ring-amber-200 hover:bg-amber-50'
+                  }`}
+                >
+                  📁 {f} ({folderCount.get(f)})
+                </button>
+              ))}
+              {unfiledCount > 0 && (
+                <button
+                  onClick={() => setActiveFolder('')}
+                  className={`rounded-full px-3 py-1 text-xs font-bold ring-1 transition-colors ${
+                    activeFolder === '' ? 'bg-gray-600 text-white ring-gray-600' : 'bg-white text-gray-500 ring-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  미분류 ({unfiledCount})
+                </button>
+              )}
+            </div>
+          )}
+
           {authError && (
             <div className="rounded-2xl border bg-white p-8 text-center shadow-sm">
               <p className="text-sm text-gray-600">{authError}</p>
@@ -328,6 +661,13 @@ export default function FinalExamDownloadsPage() {
               <Link href="/unified" className="mt-4 inline-block rounded-xl bg-purple-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-purple-800">
                 파이널 예비 모의고사 만들러 가기 →
               </Link>
+            </div>
+          )}
+
+          {!authError && !loading && items.length > 0 && parents.length === 0 && (
+            <div className="rounded-2xl border bg-white p-8 text-center shadow-sm">
+              <p className="text-sm text-gray-500">이 폴더에 시험지가 없습니다.</p>
+              <button onClick={() => setActiveFolder(null)} className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800">전체 보기</button>
             </div>
           )}
 
@@ -353,6 +693,7 @@ export default function FinalExamDownloadsPage() {
                   </div>
                   {renderRowControls(j, true)}
                 </div>
+                {folderEditId === j.id && renderFolderPicker(j)}
                 <p className="mt-1 text-xs text-gray-500" title={j.scopeSummary}>
                   {j.scopeSummary} · {j.totalRequested}문항
                   {j.pointsCharged > 0 ? ` · ${j.pointsCharged.toLocaleString()}P` : ''}
@@ -360,8 +701,10 @@ export default function FinalExamDownloadsPage() {
                   {' · '}{new Date(j.createdAt).toLocaleDateString('ko-KR', { dateStyle: 'medium' })}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <ActionButtons job={j} />
+                  <ActionButtons job={j} onReload={fetchList} />
                 </div>
+
+                <SourceDownloads job={j} />
 
                 <GradingChips job={j} expanded={expandedGradings.has(j.id)} onToggle={() => toggleGradings(j.id)} />
 
@@ -385,8 +728,9 @@ export default function FinalExamDownloadsPage() {
                           {renderRowControls(k, false)}
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          <ActionButtons job={k} compact />
+                          <ActionButtons job={k} compact onReload={fetchList} />
                         </div>
+                        <SourceDownloads job={k} />
                         <GradingChips job={k} expanded={expandedGradings.has(k.id)} onToggle={() => toggleGradings(k.id)} />
                       </div>
                     ))}

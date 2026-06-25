@@ -29,6 +29,7 @@ type PassageListItem = {
 
 type PassageFull = PassageListItem & {
   publisher?: SolbookPublisher | null;
+  graphImage?: string | null;
   content?: {
     original?: string;
     translation?: string;
@@ -51,6 +52,7 @@ const emptyForm = {
   publisher: '' as SolbookPublisher | '',
   original: '',
   translation: '',
+  graphImage: '',
 };
 
 /* ── 교재 JSON 데이터 구조 패널 ────────────────────────────────────── */
@@ -1651,6 +1653,7 @@ export default function AdminPassagesPage() {
         publisher: (SOLBOOK_PUBLISHERS as readonly string[]).includes(it.publisher ?? '') ? (it.publisher as SolbookPublisher) : '',
         original: c.original || '',
         translation: c.translation || '',
+        graphImage: it.graphImage || '',
       });
       setAdvancedJson(
         JSON.stringify(
@@ -1669,6 +1672,24 @@ export default function AdminPassagesPage() {
     } catch {
       alert('요청 실패');
     }
+  };
+
+  const onGraphImagePick = (file: File | null) => {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|gif|webp)$/i.test(file.type)) {
+      alert('PNG·JPG·GIF·WEBP 이미지만 업로드할 수 있습니다.');
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      alert('이미지가 너무 큽니다(최대 3MB). 캡처를 잘라내거나 압축해 다시 올려 주세요.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUri = typeof reader.result === 'string' ? reader.result : '';
+      if (dataUri.startsWith('data:image/')) setForm((f) => ({ ...f, graphImage: dataUri }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
@@ -1700,6 +1721,7 @@ export default function AdminPassagesPage() {
         publisher: form.publisher || null,
         original: form.original,
         translation: form.translation,
+        graphImage: form.graphImage ? form.graphImage : null,
       };
 
       if (showAdvanced && Object.keys(extra).length > 0) {
@@ -2452,6 +2474,36 @@ export default function AdminPassagesPage() {
                   rows={8}
                   className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white font-mono"
                 />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-400 block mb-1">도표 이미지 (그래프 문항용 · 선택)</label>
+                <p className="text-xs text-slate-500 mb-2">
+                  25번 도표처럼 그래프가 있어야 풀 수 있는 지문에 이미지를 올리면, 이 지문으로 만든 문항의 <b>문제지 PDF</b> 본문 위에 함께 인쇄됩니다. (PNG·JPG, 최대 3MB)
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    onChange={(e) => { onGraphImagePick(e.target.files?.[0] ?? null); e.target.value = ''; }}
+                    className="text-xs text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-slate-100 file:cursor-pointer"
+                  />
+                  {form.graphImage && (
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, graphImage: '' }))}
+                      className="px-2.5 py-1 rounded border border-rose-500/60 text-rose-300 text-xs hover:bg-rose-500/10"
+                    >
+                      이미지 제거
+                    </button>
+                  )}
+                </div>
+                {form.graphImage && (
+                  <div className="mt-2 inline-block rounded-lg border border-slate-600 bg-white p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.graphImage} alt="도표 미리보기" className="max-h-48 max-w-full object-contain" />
+                  </div>
+                )}
               </div>
 
               <div className="border border-slate-600 rounded-lg overflow-hidden">

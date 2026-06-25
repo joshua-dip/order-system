@@ -31,7 +31,7 @@ export default function PointChargeModal({
   customerName,
   customerEmail,
   purpose = 'points',
-  subscriptionWon = 9900,
+  subscriptionWon = 175000,
 }: Props) {
   const isSub = purpose === 'vip_subscription';
   const [selected, setSelected] = useState<PointChargeTierId>('p10k');

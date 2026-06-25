@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
       label: m.label,
       paid: !!config[m.id]?.paid,
       price: Number.isFinite(config[m.id]?.price) ? Number(config[m.id]?.price) : 0,
+      published: !!config[m.id]?.published,
     })),
   });
 }
@@ -30,7 +31,7 @@ export async function PUT(request: NextRequest) {
   if (error) return error;
   let body: { menus?: unknown };
   try { body = (await request.json()) as Record<string, unknown>; } catch { return NextResponse.json({ error: '요청 형식 오류' }, { status: 400 }); }
-  const input = (body.menus && typeof body.menus === 'object') ? (body.menus as Record<string, { paid?: unknown; price?: unknown }>) : {};
+  const input = (body.menus && typeof body.menus === 'object') ? (body.menus as Record<string, { paid?: unknown; price?: unknown; published?: unknown }>) : {};
 
   const config: VipMenuStoreConfig = {};
   for (const m of VIP_MENU_CATALOG) {
@@ -38,7 +39,8 @@ export async function PUT(request: NextRequest) {
     if (!row) continue;
     const paid = !!row.paid;
     const price = Math.max(0, Math.floor(Number(row.price) || 0));
-    if (paid && price > 0) config[m.id] = { paid: true, price };
+    // 유료(가격>0)인 메뉴만 저장. published 도 함께 보존(공개 여부).
+    if (paid && price > 0) config[m.id] = { paid: true, price, published: !!row.published };
   }
   // 카탈로그 외 키 무시 (VIP_MENU_IDS 로 한정)
   for (const k of Object.keys(config)) if (!VIP_MENU_IDS.has(k)) delete config[k];

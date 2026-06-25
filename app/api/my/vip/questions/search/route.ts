@@ -19,18 +19,28 @@ export async function GET(request: NextRequest) {
   const textbook = (sp.get('textbook') || '').trim();
   const difficulty = (sp.get('difficulty') || '').trim();
   const q = (sp.get('q') || '').trim();
+  const advanced = (sp.get('advanced') || '').trim();
+  const unsaved = sp.get('unsaved') === '1';
+  const sortDir = sp.get('sort') === 'old' ? 1 : -1;
   const page = Math.max(1, Number(sp.get('page')) || 1);
 
-  const filter = buildBrowseFilter({ type, textbook, difficulty, q });
+  const filter = buildBrowseFilter({ type, textbook, difficulty, q, advanced });
 
   const db = await getDb('gomijoshua');
   const col = db.collection('generated_questions');
+
+  // 미담김만 — 내 문제은행에 이미 담은 questionId 제외
+  if (unsaved) {
+    const savedDocs = await db.collection(QUESTION_BANK_COLLECTION)
+      .find({ userId: new ObjectId(auth.userId) }).project({ questionId: 1 }).limit(50000).toArray();
+    if (savedDocs.length > 0) filter._id = { $nin: savedDocs.map((s) => s.questionId as ObjectId) };
+  }
 
   const total = await col.countDocuments(filter);
   const rawDocs = await col
     .find(filter)
     .project({ serialNo: 1, type: 1, textbook: 1, source: 1, difficulty: 1, 'question_data.Question': 1, 'question_data.Paragraph': 1, 'question_data.Source': 1 })
-    .sort({ serialNo: -1 })
+    .sort({ serialNo: sortDir })
     .skip((page - 1) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .toArray();

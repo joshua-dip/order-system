@@ -33,6 +33,14 @@ export interface FinalExamJobDoc {
   loginId: string;
   userId: ObjectId;
   title: string;
+  /** 학교명 (시험지 대상 학교). '이전 문제와 겹치지 않기'는 같은 학교 출제분 기준. */
+  school?: string;
+  /** 주문 시 '이전 출제분과 겹치지 않기'를 켰는지 */
+  avoidDuplicates?: boolean;
+  /** 다운로드 출력 순서 — default(유형→출처) / interleave(회차별) / shuffle(전부 랜덤). 채점도 이 순서를 따름. */
+  orderMode?: 'default' | 'interleave' | 'shuffle';
+  /** shuffle 모드 재현용 시드 (문제지·채점 동일 순서 보장) */
+  shuffleSeed?: number;
   scopeSummary: string;
   selectedTypes: string[];
   questionsPerTypeMap: Record<string, number>;
@@ -49,6 +57,10 @@ export interface FinalExamJobDoc {
   /** 오답 재학습 세트 — 원본(구매) 잡 id + 회차(1·2) */
   parentJobId?: string;
   retryIndex?: number;
+  /** 유사문항(같은 범위·겹치지 않는 새 문항)으로 만든 경우 원본 잡 id */
+  similarOfJobId?: string;
+  /** 사용자 정리용 폴더명 (빈값=미분류). 목록이 많을 때 분류. */
+  folder?: string;
   createdAt: Date;
   updatedAt: Date;
   readyAt?: Date;
@@ -110,22 +122,74 @@ export function normalizeCircledAnswer(raw: string): string {
   return [...new Set(chars)].sort().join('');
 }
 
+/** 시드 기반 셔플(재현 가능) — mulberry32 + Fisher-Yates. 문제지·채점이 같은 순서를 보장. */
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  let s = (seed >>> 0) || 1;
+  const rng = () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 /**
- * 잡의 문항을 시험지 인쇄와 동일한 순서(유형 순 → 출처 순)로 로드.
+ * 잡의 문항을 출력 순서대로 로드. orderMode 에 따라:
+ *  - default: 유형 순 → 출처 순
+ *  - interleave(회차별): 각 유형의 i번째 지문을 i회차로 묶음 (round 부여)
+ *  - shuffle: 전부 랜덤(시드 고정 — 채점과 동일)
  * 문항 번호가 인쇄본과 반드시 일치해야 하므로 PDF·채점 양쪽이 이 함수만 사용한다.
  */
 export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<FinalExamQuestion[]> {
-  const ordered = [...job.items].sort((a, b) => {
-    const t = finalExamTypeRank(a.type) - finalExamTypeRank(b.type);
-    if (t !== 0) return t;
-    return a.sourceKey.localeCompare(b.sourceKey, 'ko', { numeric: true });
-  });
-  const allIds: ObjectId[] = ordered.flatMap((it) => it.questionIds);
+  type Cell = { it: FinalExamJobItem; qid: ObjectId; round?: number };
+  // job.items 순서(범위/지문 순) 그대로 평탄화 — 회차(interleave)의 지문 순서 기준이 됨.
+  const itemsFlat: Cell[] = [];
+  for (const it of job.items) for (const qid of it.questionIds) itemsFlat.push({ it, qid });
+
+  const mode = job.orderMode ?? 'default';
+  let flat: Cell[];
+  if (mode === 'interleave') {
+    // 회차 = 지문(source) 한 바퀴씩. 각 지문에서 한 문제씩 순회하면 1회차, 반복하면 2회차…
+    const bySource = new Map<string, Cell[]>();
+    const sourceOrder: string[] = [];
+    for (const c of itemsFlat) {
+      const sk = c.it.sourceKey;
+      if (!bySource.has(sk)) { bySource.set(sk, []); sourceOrder.push(sk); }
+      bySource.get(sk)!.push(c);
+    }
+    const maxLen = Math.max(0, ...[...bySource.values()].map((a) => a.length));
+    flat = [];
+    for (let r = 0; r < maxLen; r++) {
+      for (const sk of sourceOrder) {
+        const cell = bySource.get(sk)![r];
+        if (cell) { cell.round = r + 1; flat.push(cell); }
+      }
+    }
+  } else if (mode === 'shuffle') {
+    flat = seededShuffle(itemsFlat, typeof job.shuffleSeed === 'number' ? job.shuffleSeed : 1);
+  } else {
+    // default: 유형 순 → 출처 순
+    flat = [...itemsFlat].sort((a, b) => {
+      const t = finalExamTypeRank(a.it.type) - finalExamTypeRank(b.it.type);
+      if (t !== 0) return t;
+      return a.it.sourceKey.localeCompare(b.it.sourceKey, 'ko', { numeric: true });
+    });
+  }
+
+  const allIds: ObjectId[] = flat.map((c) => c.qid);
   const docs = await db
     .collection('generated_questions')
     .find({ _id: { $in: allIds } })
     .project<{
       _id: ObjectId;
+      serialNo?: number;
+      passage_id?: ObjectId | string;
       question_data?: {
         Question?: unknown;
         Paragraph?: unknown;
@@ -133,30 +197,48 @@ export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<F
         CorrectAnswer?: unknown;
         Explanation?: unknown;
       };
-    }>({ question_data: 1 })
+    }>({ serialNo: 1, question_data: 1, passage_id: 1 })
     .toArray();
   const byId = new Map(docs.map((d) => [String(d._id), d]));
 
+  // 도표 지문 그래프 이미지 — passage_id → passages.graphImage (있으면 문제지 본문 위에 인쇄)
+  const graphByPassage = new Map<string, string>();
+  const passageObjIds = Array.from(
+    new Set(docs.map((d) => (d.passage_id ? String(d.passage_id) : '')).filter((s) => ObjectId.isValid(s))),
+  ).map((s) => new ObjectId(s));
+  if (passageObjIds.length > 0) {
+    const passages = await db
+      .collection('passages')
+      .find({ _id: { $in: passageObjIds }, graphImage: { $type: 'string' } })
+      .project<{ _id: ObjectId; graphImage?: string }>({ graphImage: 1 })
+      .toArray();
+    for (const p of passages) {
+      if (typeof p.graphImage === 'string' && p.graphImage) graphByPassage.set(String(p._id), p.graphImage);
+    }
+  }
+
   const out: FinalExamQuestion[] = [];
   let num = 0;
-  for (const it of ordered) {
-    for (const qid of it.questionIds) {
-      const d = byId.get(String(qid));
-      if (!d) continue;
-      const qd = d.question_data ?? {};
-      num += 1;
-      out.push({
-        num,
-        type: it.type,
-        sourceKey: it.sourceKey,
-        question: String(qd.Question ?? ''),
-        paragraph: String(qd.Paragraph ?? ''),
-        options: String(qd.Options ?? ''),
-        correctAnswer: String(qd.CorrectAnswer ?? ''),
-        explanation: String(qd.Explanation ?? ''),
-        questionId: String(qid),
-      });
-    }
+  for (const c of flat) {
+    const d = byId.get(String(c.qid));
+    if (!d) continue;
+    const qd = d.question_data ?? {};
+    const graphImage = d.passage_id ? graphByPassage.get(String(d.passage_id)) ?? null : null;
+    num += 1;
+    out.push({
+      num,
+      type: c.it.type,
+      sourceKey: c.it.sourceKey,
+      question: String(qd.Question ?? ''),
+      paragraph: String(qd.Paragraph ?? ''),
+      options: String(qd.Options ?? ''),
+      correctAnswer: String(qd.CorrectAnswer ?? ''),
+      explanation: String(qd.Explanation ?? ''),
+      questionId: String(c.qid),
+      serialNo: typeof d.serialNo === 'number' && d.serialNo > 0 ? d.serialNo : null,
+      ...(typeof c.round === 'number' ? { round: c.round } : {}),
+      ...(graphImage ? { graphImage } : {}),
+    });
   }
   return out;
 }
@@ -194,6 +276,10 @@ export interface SelectScopeInput {
   questionsPerTypeMap: Record<string, number>;
   /** 이 회원에게 이미 나간 문항을 우선 제외 */
   loginId: string;
+  /** 학교명 — avoidDuplicates 시 이 학교 출제분 기준으로 중복 제외 */
+  school?: string;
+  /** true면 이전 출제분과 절대 겹치지 않게(재사용 안 함). 모자라면 부족분으로 남겨 제작 요청. */
+  avoidDuplicates?: boolean;
 }
 
 export interface SelectScopeResult {
@@ -205,11 +291,14 @@ export interface SelectScopeResult {
   missingSources: string[];
 }
 
-/** 이 회원의 기존 잡들에 배정된 문항 id 집합 (재출제 방지용) */
-async function previouslyDeliveredIds(db: Db, loginId: string): Promise<Set<string>> {
+/**
+ * 기존 잡들에 배정된 문항 id 집합 (재출제 방지용).
+ * filter 로 범위 지정 — 보통 { loginId } (회원 전체), 학교별 중복방지 시 { loginId, school }.
+ */
+async function previouslyDeliveredIds(db: Db, filter: Record<string, unknown>): Promise<Set<string>> {
   const prior = await db
     .collection(FINAL_EXAM_JOBS_COLLECTION)
-    .find({ loginId })
+    .find(filter)
     .project<{ items?: { questionIds?: ObjectId[] }[] }>({ 'items.questionIds': 1 })
     .toArray();
   const used = new Set<string>();
@@ -243,7 +332,11 @@ export async function selectQuestionsForScope(
   }
   const missingSources = sourceKeys.filter((sk) => !bySource.has(sk));
 
-  const usedBefore = await previouslyDeliveredIds(db, input.loginId);
+  // 중복방지 범위: avoidDuplicates+학교명이면 그 학교 출제분만, 아니면 회원 전체(기존 소프트 동작).
+  const school = (input.school ?? '').trim();
+  const hardAvoid = !!input.avoidDuplicates;
+  const dedupFilter: Record<string, unknown> = hardAvoid && school ? { loginId: input.loginId, school } : { loginId: input.loginId };
+  const usedBefore = await previouslyDeliveredIds(db, dedupFilter);
   const gq = db.collection('generated_questions');
   const englishMatch = matchGeneratedQuestionOptionTypeEnglish();
 
@@ -274,7 +367,8 @@ export async function selectQuestionsForScope(
       for (const c of candidates) {
         (usedBefore.has(String(c._id)) ? reused : fresh).push(c._id);
       }
-      const picked = [...fresh, ...reused].slice(0, requested);
+      // hardAvoid(겹치지 않기 ON): 미사용분만 — 모자라면 shortBy(제작 요청). 아니면 기존 소프트(재사용 폴백).
+      const picked = (hardAvoid ? fresh : [...fresh, ...reused]).slice(0, requested);
       totalAssigned += picked.length;
       items.push({
         sourceKey: sk,
@@ -335,6 +429,21 @@ export async function renameFinalExamJob(
   return r.matchedCount > 0;
 }
 
+/** 시험지 폴더(분류) 변경 — 빈 문자열이면 미분류로 빼기. */
+export async function setFinalExamJobFolder(
+  db: Db,
+  id: string,
+  loginId: string,
+  rawFolder: string,
+): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false;
+  const folder = rawFolder.trim().slice(0, 40);
+  const r = await db
+    .collection(FINAL_EXAM_JOBS_COLLECTION)
+    .updateOne({ _id: new ObjectId(id), loginId }, { $set: { folder, updatedAt: new Date() } });
+  return r.matchedCount > 0;
+}
+
 /**
  * 잡 삭제 — 소유자 한정. 부모(원본) 잡이면 오답 재학습 세트(children)와
  * 관련 채점 기록(gradings)까지 cascade 삭제. (포인트 환불은 하지 않음 — 이미 발급·사용)
@@ -386,24 +495,35 @@ export async function createFinalExamShortageOrder(
     contextLabel?: string;
     selectedTypes?: string[];
     questionsPerTypeMap?: Record<string, number>;
+    /** 부족분이 없어도 주문번호를 발급(유사문항 등 — 주문내역에 항상 기록). */
+    force?: boolean;
+    /** orderMeta.autoCreated 마커 (기본 final_exam_shortage). */
+    autoCreated?: string;
   },
 ): Promise<string | null> {
   const shortItems = input.items.filter((it) => it.shortBy > 0);
-  if (shortItems.length === 0) return null;
+  if (shortItems.length === 0 && !input.force) return null;
   const now = new Date();
   const label = input.contextLabel ?? '파이널 예비 모의고사';
 
   const orderText = [
-    `=== ${label} 부족분 제작 요청 (자동 생성) ===`,
+    `=== ${label}${shortItems.length ? ' 부족분' : ''} 제작 요청 (자동 생성) ===`,
     '',
     `회원: ${input.loginId}${input.userName ? ` (${input.userName})` : ''}`,
     `즉시발급 잡 ID: ${input.jobId}`,
     '결제: 포인트로 이미 처리됨 — 별도 입금 불필요',
     '',
-    '[ 부족 문항 ]',
-    ...shortItems.map((it) => `· ${it.sourceKey} / ${it.type} — ${it.shortBy}문항 부족`),
-    '',
-    '※ 위 지문×유형의 변형문제를 제작·검수 완료 처리하면, 회원 다운로드 목록에서 자동으로 채워져 다운로드 가능해집니다.',
+    ...(shortItems.length
+      ? [
+          '[ 부족 문항 ]',
+          ...shortItems.map((it) => `· ${it.sourceKey} / ${it.type} — ${it.shortBy}문항 부족`),
+          '',
+          '※ 위 지문×유형의 변형문제를 제작·검수 완료 처리하면, 회원 다운로드 목록에서 자동으로 채워져 다운로드 가능해집니다.',
+        ]
+      : [
+          '[ 안내 ]',
+          '· 기존 문제와 겹치지 않는 새 문항으로 전량 즉시발급되었습니다. 추가 제작 없이 다운로드 가능합니다.',
+        ]),
   ].join('\n');
 
   const counterColl = db.collection<{ _id: string; n: number }>('orderNumberCounters');
@@ -438,7 +558,7 @@ export async function createFinalExamShortageOrder(
       flow: 'unifiedVariant',
       version: 1,
       finalExamJobId: input.jobId,
-      autoCreated: 'final_exam_shortage',
+      autoCreated: input.autoCreated ?? 'final_exam_shortage',
       shortageItems: shortItems.map((it) => ({ sourceKey: it.sourceKey, type: it.type, shortBy: it.shortBy })),
       ...(input.selectedTypes ? { selectedTypes: input.selectedTypes } : {}),
       ...(input.questionsPerTypeMap ? { questionsPerTypeMap: input.questionsPerTypeMap } : {}),
@@ -484,7 +604,7 @@ export async function selectRetryQuestions(
 ): Promise<SelectScopeResult> {
   const gq = db.collection('generated_questions');
   const englishMatch = matchGeneratedQuestionOptionTypeEnglish();
-  const usedBefore = await previouslyDeliveredIds(db, parentJob.loginId);
+  const usedBefore = await previouslyDeliveredIds(db, { loginId: parentJob.loginId });
 
   /* 원본 범위의 지문 매핑 (sourceKey → passageId) */
   const scopePassages = new Map<string, ObjectId>();

@@ -15,6 +15,17 @@ export interface FinalExamQuestion {
   explanation: string;
   /** generated_questions._id (채점용) */
   questionId?: string;
+  /** 고유번호 (V-NNNNNN) — 출처 옆에 표기, 이전 출제분 추적용 */
+  serialNo?: number | null;
+  /** 회차(interleave 모드) — 값이 바뀌면 시험지에 "N회차" 구분선 */
+  round?: number;
+  /** 지문(도표) 그래프 이미지 — base64 data URI. 있으면 본문 위에 인쇄(25번 도표 등). */
+  graphImage?: string | null;
+}
+
+/** 고유번호 표시 문자열 (V-NNNNNN). 없으면 ''. */
+export function fmtFinalSerial(n: number | null | undefined): string {
+  return typeof n === 'number' && n > 0 ? `V-${String(n).padStart(6, '0')}` : '';
 }
 
 export interface FinalExamBuildInput {
@@ -107,10 +118,14 @@ function renderParagraph(leakedGiven: string, paragraph: string): string {
 
 function questionBlock(q: FinalExamQuestion): string {
   const { instruction, given } = splitGivenSentence(q.type, q.question);
+  const graph =
+    typeof q.graphImage === 'string' && q.graphImage.startsWith('data:image/')
+      ? `<div class="q-graph"><img src="${q.graphImage}" alt="도표"/></div>`
+      : '';
   return `<div class="q">
   <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(instruction)}</div>
-  <div class="q-src">[${esc(q.type)}] ${esc(q.sourceKey)}</div>
-  <div class="q-para">${renderParagraph(given, q.paragraph)}</div>
+  <div class="q-src">[${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` <span class="q-serial">${esc(fmtFinalSerial(q.serialNo))}</span>` : ''}</div>
+  ${graph}<div class="q-para">${renderParagraph(given, q.paragraph)}</div>
   <div class="q-opts">${renderOptions(q.options)}</div>
 </div>`;
 }
@@ -131,7 +146,17 @@ const COMMON_CSS = `
 `;
 
 export function buildFinalExamSheetHtml(input: FinalExamBuildInput): string {
-  const body = input.questions.map(questionBlock).join('\n');
+  let prevRound: number | undefined;
+  const body = input.questions
+    .map((q) => {
+      let prefix = '';
+      if (typeof q.round === 'number' && q.round !== prevRound) {
+        prefix = `<div class="round-divider">${q.round}회차</div>`;
+        prevRound = q.round;
+      }
+      return prefix + questionBlock(q);
+    })
+    .join('\n');
   const qr = input.qrDataUrl
     ? `<div class="qr">
         <img src="${input.qrDataUrl}" alt="QR 채점" />
@@ -149,11 +174,15 @@ ${COMMON_CSS}
   .qr { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
   .qr img { width: 21mm; height: 21mm; }
   .qr-label { font-size: 7pt; color: #333; font-weight: 700; white-space: nowrap; }
+  .round-divider { column-span: all; margin: 4px 0 10px; padding: 3px 0; border-top: 2px solid #7c3aed; border-bottom: 2px solid #7c3aed; text-align: center; font-weight: 800; font-size: 10.5pt; color: #7c3aed; letter-spacing: 1px; }
   .cols { column-count: 2; column-gap: 9mm; column-rule: 1px solid #bbb; }
   .q { break-inside: avoid; margin-bottom: 14px; font-size: 10pt; line-height: 1.5; }
   .q-head { font-weight: 700; margin-bottom: 3px; }
   .q-num { font-weight: 800; }
   .q-src { font-size: 7.5pt; color: #8a8a8a; font-weight: 600; margin-bottom: 5px; }
+  .q-serial { color: #b06a00; font-weight: 700; letter-spacing: 0.3px; }
+  .q-graph { margin: 0 0 6px; text-align: center; break-inside: avoid; }
+  .q-graph img { max-width: 100%; max-height: 62mm; height: auto; border: 1px solid #999; border-radius: 4px; }
   .q-para {
     border: 1.2px solid #555; border-radius: 4px; padding: 7px 9px; margin-bottom: 6px;
     font-size: 9.5pt; line-height: 1.55;
@@ -177,16 +206,20 @@ ${body}
 }
 
 export function buildFinalExamAnswerHtml(input: FinalExamBuildInput): string {
+  // 빠른 정답표 — 번호+답만 (최상단)
+  const quick = input.questions
+    .map((q) => `<div class="qa"><span class="qn">${q.num}</span><span class="qv">${esc(q.correctAnswer)}</span></div>`)
+    .join('');
   const rows = input.questions
     .map(
       (q) =>
-        `<tr><td>${q.num}</td><td>${esc(q.type)}</td><td class="src">${esc(q.sourceKey)}</td><td class="ans">${esc(q.correctAnswer)}</td></tr>`,
+        `<tr><td>${q.num}</td><td>${esc(q.type)}</td><td class="src">${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</td><td class="ans">${esc(q.correctAnswer)}</td></tr>`,
     )
     .join('\n');
   const expls = input.questions
     .map(
       (q) => `<div class="ex">
-  <div class="ex-head">${q.num}. <span class="ex-ans">정답 ${esc(q.correctAnswer)}</span> <span class="ex-type">[${esc(q.type)}] ${esc(q.sourceKey)}</span></div>
+  <div class="ex-head">${q.num}. <span class="ex-ans">정답 ${esc(q.correctAnswer)}</span> <span class="ex-type">[${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</span></div>
   <div class="ex-body">${escKeepUnderline(q.explanation || '해설이 제공되지 않은 문항입니다.')}</div>
 </div>`,
     )
@@ -207,10 +240,17 @@ ${COMMON_CSS}
   .ex-ans { color: #b91c1c; }
   .ex-type { color: #555; font-weight: 400; font-size: 8.5pt; }
   .ex-body { color: #222; }
+  .quick-title { font-weight: 800; font-size: 10pt; margin: 0 0 5px; }
+  .quick { display: grid; grid-template-columns: repeat(10, 1fr); border-top: 1.5px solid #555; border-left: 1.5px solid #555; margin-bottom: 16px; }
+  .qa { display: flex; align-items: center; justify-content: center; gap: 3px; padding: 3px 2px; font-size: 9pt; border-right: 1px solid #bbb; border-bottom: 1px solid #bbb; }
+  .qa .qn { color: #555; font-weight: 700; }
+  .qa .qv { font-weight: 800; }
 </style></head>
 <body>
 <div class="sheet">
   <div class="head"><span class="t">${esc(input.title)} — 정답 및 해설</span><span class="s">${esc(input.subtitle ?? '')}</span></div>
+  <div class="quick-title">■ 빠른 정답</div>
+  <div class="quick">${quick}</div>
   <table>
     <thead><tr><th>문항</th><th>유형</th><th>출처</th><th>정답</th></tr></thead>
     <tbody>

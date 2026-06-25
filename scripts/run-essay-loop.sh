@@ -35,6 +35,7 @@ EOF
 fi
 
 TEXTBOOK="$1"
+EXAMTYPE="${2:-}"   # 선택: "글의의미서술형" 이면 기본난도 1 종만 채우는 워크플로우 사용
 
 # 프로젝트 루트로 이동 — claude 가 CLAUDE.md / .claude/settings.local.json / .env.local 을 자연스럽게 찾도록.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,7 +50,12 @@ if ! command -v claude >/dev/null 2>&1; then
 fi
 
 ROUNDS="${ESSAY_TARGET_PER_DIFFICULTY:-1}"
-INITIAL_PROMPT="@scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 \"${TEXTBOOK}\" 1 cycle 돌려줘 (target_per_difficulty=${ROUNDS})."
+if [ "$EXAMTYPE" = "글의의미서술형" ]; then
+  # 글의의미서술형 = 기본난도 1 종 전용 (배열형 4난도 워크플로우 미사용)
+  INITIAL_PROMPT="교재 \"${TEXTBOOK}\" 의 글의의미서술형(기본난도)을 자동으로 채워줘. 매 cycle: 1) npm run cc:essay -- next-empty --textbook \"${TEXTBOOK}\" --examType \"글의의미서술형\" 로 다음 지문 받기. 2) {done:true} 면 \"완료\" 알리고 ScheduleWakeup 호출하지 말고 종료. 3) next.passage_id 있으면 passage --id 로 문장표 → assets/exam_kit/generation_prompt_meaning.md 규칙대로 기본난도 ExamData 1 개 작성(meta.examType=\"글의의미서술형\", meta.difficulty=\"기본난도\") → npm run cc:essay -- save --json .essay-drafts/<sourceKey_slug>_basic.json 로 저장. 검증 실패면 멈추고 알림(--force 금지). 4) 정상 저장 후 ScheduleWakeup 600초로 다음 cycle 예약."
+else
+  INITIAL_PROMPT="@scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 \"${TEXTBOOK}\" 1 cycle 돌려줘 (target_per_difficulty=${ROUNDS})."
+fi
 
 # ── 로그 디렉터리 ─────────────────────────────────────────
 LOG_DIR="$PROJECT_ROOT/.essay-audit-logs"

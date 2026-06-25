@@ -30,16 +30,30 @@ type CreateBody = {
   selectedTypes?: unknown;
   questionsPerTypeMap?: Record<string, unknown>;
   orderInsertExplanation?: { 순서?: unknown; 삽입?: unknown };
+  /** 시험지 대상 학교명 */
+  school?: unknown;
+  /** 이전(같은 학교) 출제분과 겹치지 않게 */
+  avoidDuplicates?: unknown;
 };
 
 const MAX_PER_TYPE = 10;
 const MAX_TOTAL_QUESTIONS = 600;
 
 function jobSummary(job: FinalExamJobDoc & { _id?: ObjectId }) {
+  // 지문(출처)별 다운로드용 — 출처별 문항 수 (items 등장 순서 유지)
+  const sourceCount = new Map<string, number>();
+  for (const it of job.items ?? []) {
+    sourceCount.set(it.sourceKey, (sourceCount.get(it.sourceKey) ?? 0) + (it.questionIds?.length ?? 0));
+  }
   return {
     id: String(job._id ?? ''),
     title: job.title,
+    folder: job.folder ?? '',
+    school: job.school ?? '',
+    avoidDuplicates: !!job.avoidDuplicates,
+    orderMode: job.orderMode ?? 'default',
     scopeSummary: job.scopeSummary,
+    sources: [...sourceCount.entries()].map(([sourceKey, count]) => ({ sourceKey, count })),
     status: job.status,
     totalRequested: job.totalRequested,
     totalAssigned: job.totalAssigned,
@@ -173,6 +187,11 @@ export async function POST(request: NextRequest) {
     순서: body.orderInsertExplanation?.순서 !== false,
     삽입: body.orderInsertExplanation?.삽입 !== false,
   };
+  const school = typeof body.school === 'string' ? body.school.trim().slice(0, 80) : '';
+  const avoidDuplicates = body.avoidDuplicates === true;
+  if (avoidDuplicates && !school) {
+    return NextResponse.json({ error: '이전 문제와 겹치지 않기를 켜려면 학교명을 입력해주세요.' }, { status: 400 });
+  }
 
   const uniqueSources = [...new Set(sourceKeys)];
   const perSourceCount = selectedTypes.reduce((s, t) => s + countsMap[t], 0);
@@ -208,6 +227,8 @@ export async function POST(request: NextRequest) {
       selectedTypes,
       questionsPerTypeMap: countsMap,
       loginId,
+      school,
+      avoidDuplicates,
     });
     if (sel.missingSources.length === uniqueSources.length) {
       return NextResponse.json(
@@ -234,11 +255,14 @@ export async function POST(request: NextRequest) {
     /* ── 잡 생성 ── */
     const now = new Date();
     const status = sel.totalShort > 0 ? ('awaiting_admin' as const) : ('ready' as const);
-    const title = `파이널 예비 모의고사 (${now.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\s/g, '')} · ${totalRequested}문항)`;
+    const dateStamp = now.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\s/g, '');
+    const title = `파이널 예비 모의고사 (${school ? `${school} · ` : ''}${dateStamp} · ${totalRequested}문항)`;
     const jobDoc: Omit<FinalExamJobDoc, '_id'> = {
       loginId,
       userId: auth.userId,
       title,
+      ...(school ? { school } : {}),
+      ...(avoidDuplicates ? { avoidDuplicates: true } : {}),
       scopeSummary: scopeParts.join(' / '),
       selectedTypes,
       questionsPerTypeMap: countsMap,

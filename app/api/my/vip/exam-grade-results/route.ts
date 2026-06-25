@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requireVip } from '@/lib/vip-auth';
 import { getDb } from '@/lib/mongodb';
+import { publicBaseUrl } from '@/lib/public-base-url';
 import {
   GRADE_PAPERS_COLLECTION,
   GRADE_RESULTS_COLLECTION,
@@ -67,6 +68,19 @@ export async function GET(request: NextRequest) {
         .map(([key, v]) => ({ key, correct: v.correct, total: v.total, pct: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0 }))
         .sort((a, b) => a.pct - b.pct); // 낮은 정답률(복습 우선) 먼저
 
+    // 문제지·정답표 재다운로드용 — 저장된 객관식 문항(번호순)으로 시험지를 그대로 재구성.
+    const orderedQ = [...(p.questions ?? [])].sort((a, b) => a.num - b.num);
+    const download = {
+      ids: orderedQ.map((q) => q.questionId),
+      scores: orderedQ.map((q) => q.score),
+      categories: orderedQ.map((q) => q.category),
+      title: p.title,
+      schoolName: p.schoolName ?? '',
+      grade: p.grade ?? null,
+      qr: `${publicBaseUrl(request)}/exam-grade/${p.token}`,
+      hasSubjective: (p.subjectiveCount ?? 0) > 0, // 서술형은 본문 미저장 → 재다운로드는 객관식만
+    };
+
     return {
       paperId: String(p._id),
       title: p.title,
@@ -80,6 +94,7 @@ export async function GET(request: NextRequest) {
       createdAt: p.createdAt,
       studentCount: rs.length,
       avgPct: rs.length > 0 ? Math.round(pctSum / rs.length) : 0,
+      download,
       byType: toArr(aggType).map((x) => ({ type: x.key, correct: x.correct, total: x.total, pct: x.pct })),
       bySource: toArr(aggSrc).map((x) => ({ sourceKey: x.key, correct: x.correct, total: x.total, pct: x.pct })),
       students: rs.map((r) => ({
@@ -90,6 +105,20 @@ export async function GET(request: NextRequest) {
         earnedScore: r.earnedScore,
         maxObjectiveScore: r.maxObjectiveScore,
         weakTypes: r.byType.filter((t) => t.correct < t.total).sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) => t.type),
+        // 틀린 문항(번호·지문·유형) — 정답 열 툴팁 + 어떤 지문을 틀렸는지 표시
+        wrong: (r.answers ?? []).filter((a) => !a.isCorrect).map((a) => ({ num: a.num, sourceKey: a.sourceKey, type: a.type })),
+        // 재응시(최신) 결과 — 있으면 이름 아래 표시
+        retake: r.retake
+          ? {
+              attemptCount: r.retake.attemptCount,
+              correctCount: r.retake.correctCount,
+              objectiveCount: r.retake.objectiveCount,
+              earnedScore: r.retake.earnedScore,
+              maxObjectiveScore: r.retake.maxObjectiveScore,
+              wrongNums: r.retake.wrongNums,
+              createdAt: r.retake.createdAt,
+            }
+          : null,
         createdAt: r.createdAt,
       })),
     };

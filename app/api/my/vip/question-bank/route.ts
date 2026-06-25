@@ -25,22 +25,30 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const folder = sp.get('folder');
   const type = (sp.get('type') || '').trim();
+  const textbook = (sp.get('textbook') || '').trim();
+  const difficulty = (sp.get('difficulty') || '').trim();
   const q = (sp.get('q') || '').trim();
+  const sort = sp.get('sort') || 'recent'; // recent(담은 최신) / serial(번호↓) / serial-asc(번호↑)
 
   const filter: Record<string, unknown> = { userId };
   if (folder !== null && folder !== '__all__') filter.folder = folder; // '' = 미분류
   if (type) filter.type = type;
+  if (textbook) filter.textbook = textbook;
+  if (difficulty) filter.difficulty = difficulty;
   if (q) {
     const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const serialMatch = q.match(/^v?-?\s*0*(\d{1,7})$/i);
     if (serialMatch) filter.serialNo = Number(serialMatch[1]);
     else filter.$or = [{ source: { $regex: esc, $options: 'i' } }, { textbook: { $regex: esc, $options: 'i' } }, { question: { $regex: esc, $options: 'i' } }];
   }
+  const sortSpec: Record<string, 1 | -1> = sort === 'serial' ? { serialNo: -1 } : sort === 'serial-asc' ? { serialNo: 1 } : { savedAt: -1 };
 
   const col = db.collection<SavedQuestionDoc>(QUESTION_BANK_COLLECTION);
-  const [items, folders] = await Promise.all([
-    col.find(filter).sort({ savedAt: -1 }).limit(500).toArray(),
+  const [items, folders, bankTextbooks] = await Promise.all([
+    col.find(filter).sort(sortSpec).limit(500).toArray(),
     col.aggregate([{ $match: { userId } }, { $group: { _id: '$folder', count: { $sum: 1 } } }, { $sort: { _id: 1 } }]).toArray(),
+    // 내 문제은행에 실제로 담긴 교재만 (필터용 목록)
+    col.distinct('textbook', { userId }),
   ]);
 
   return NextResponse.json({
@@ -60,6 +68,7 @@ export async function GET(request: NextRequest) {
       savedAt: s.savedAt,
     })),
     folders: folders.map((f) => ({ name: String(f._id ?? ''), count: f.count as number })),
+    textbooks: (bankTextbooks as unknown[]).map((t) => String(t ?? '')).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko')),
   });
 }
 
@@ -86,8 +95,13 @@ export async function POST(request: NextRequest) {
   let requested: number;
   let capped = false;
   if (body.all === true) {
-    const f = (body.filter ?? {}) as { type?: string; textbook?: string; difficulty?: string; q?: string };
-    const filter = buildBrowseFilter({ type: f.type, textbook: f.textbook, difficulty: f.difficulty, q: f.q });
+    const f = (body.filter ?? {}) as { type?: string; textbook?: string; difficulty?: string; q?: string; advanced?: string; unsaved?: boolean };
+    const filter = buildBrowseFilter({ type: f.type, textbook: f.textbook, difficulty: f.difficulty, q: f.q, advanced: f.advanced });
+    // 미담김만 — 이미 담은 questionId 제외 (브라우즈 뷰와 동일)
+    if (f.unsaved) {
+      const savedDocs = await db.collection(QUESTION_BANK_COLLECTION).find({ userId }).project({ questionId: 1 }).limit(50000).toArray();
+      if (savedDocs.length > 0) filter._id = { $nin: savedDocs.map((s) => s.questionId as ObjectId) };
+    }
     const matchTotal = await gen.countDocuments(filter);
     if (matchTotal === 0) return NextResponse.json({ error: '조건에 맞는 문제가 없습니다.' }, { status: 400 });
     capped = matchTotal > BROWSE_BULK_MAX;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { parseGraphImageInput } from '@/lib/passage-graph-image';
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, ...rest } = doc;
@@ -81,6 +82,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             ? parseInt(body.order, 10)
             : 0;
       $set.order = Number.isNaN(o) ? 0 : o;
+    }
+
+    // 도표 그래프 이미지(base64 data URI). 빈 값/널이면 제거. undefined 면 변경 없음.
+    if (body.graphImage !== undefined) {
+      const parsed = parseGraphImageInput(body.graphImage);
+      if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+      $set.graphImage = parsed.value;
     }
 
     const prev = (existing.content as Record<string, unknown>) || {};

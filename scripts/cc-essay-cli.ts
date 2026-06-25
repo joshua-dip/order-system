@@ -49,8 +49,9 @@ import {
   readExamCss,
 } from '@/lib/essay-exam-html';
 import { validateExamData, ValidationResult } from '@/lib/essay-exam-validator';
-import { saveEssayExam, updateEssayExam, EssayExamDoc } from '@/lib/essay-exams-store';
+import { saveEssayExam, updateEssayExam, EssayExamDoc, examTypeMatch } from '@/lib/essay-exams-store';
 import { auditExam, applyFixes } from '@/lib/essay-exam-audit';
+import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
 import { auditContent, buildAuditReportMarkdown, ReportEntry } from '@/lib/essay-exam-content-audit';
 import { passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-types';
 
@@ -375,6 +376,10 @@ async function cmdNextEmpty(flags: Map<string, string>) {
   const textbook = (flags.get('textbook') ?? '').trim();
   if (!textbook) die('next-empty: --textbook "교재명" 이 필요합니다.');
   const targetPerDifficulty = Math.max(1, Math.floor(flagNum(flags, 'target-per-difficulty', 1)));
+  // examType: 지정 시 해당 유형 essay_exams 만 카운트. 글의의미서술형은 기본난도만 존재 → 난이도 universe 를 기본난도로 한정.
+  const examType = (flags.get('examType') ?? '').trim() || undefined;
+  const isMeaning = examType === ESSAY_MEANING_EXAM_TYPE;
+  const diffUniverse: readonly EssayDifficultyLabel[] = isMeaning ? ['기본난도'] : ESSAY_DIFFICULTY_LABELS;
 
   const db = await getDb('gomijoshua');
   const passages = await db
@@ -398,7 +403,7 @@ async function cmdNextEmpty(flags: Map<string, string>) {
 
   const exams = await db
     .collection('essay_exams')
-    .find({ textbook, isPlaceholder: { $ne: true } })
+    .find({ textbook, isPlaceholder: { $ne: true }, ...examTypeMatch(examType) })
     .project({ passageId: 1, sourceKey: 1, difficulty: 1 })
     .toArray();
 
@@ -441,7 +446,7 @@ async function cmdNextEmpty(flags: Map<string, string>) {
   /* 회분 수 미만인 난이도가 한 개라도 있는 지문만 추리고 priority desc → chapter → source_key 순 정렬 */
   const under = passages
     .map(p => ({ p, counts: getCounts(p as { _id: unknown; source_key?: unknown }) }))
-    .filter(({ counts }) => ESSAY_DIFFICULTY_LABELS.some(d => counts[d] < targetPerDifficulty))
+    .filter(({ counts }) => diffUniverse.some(d => counts[d] < targetPerDifficulty))
     .sort((a, b) => {
       const pa = Number((a.p as { essayPriority?: number }).essayPriority ?? 0);
       const pb = Number((b.p as { essayPriority?: number }).essayPriority ?? 0);
@@ -478,13 +483,15 @@ async function cmdNextEmpty(flags: Map<string, string>) {
     고난도: Math.max(0, targetPerDifficulty - counts.고난도),
     최고난도: Math.max(0, targetPerDifficulty - counts.최고난도),
   };
-  const shortLabels = ESSAY_DIFFICULTY_LABELS.filter(d => shortByDifficulty[d] > 0);
+  const shortLabels = diffUniverse.filter(d => shortByDifficulty[d] > 0);
   const totalToMake = shortLabels.reduce((sum, d) => sum + shortByDifficulty[d], 0);
 
   out({
     ok: true,
     done: false,
     textbook,
+    examType: examType ?? null,
+    difficulties: diffUniverse,
     target_per_difficulty: targetPerDifficulty,
     total_passages: passages.length,
     under_target_passages: under.length,
@@ -501,7 +508,9 @@ async function cmdNextEmpty(flags: Map<string, string>) {
       totalToMake,
     },
     hint:
-      targetPerDifficulty === 1
+      isMeaning
+        ? `다음 지문 「${String(nextEntry.p.source_key ?? '')}」 (passageId: ${String(nextEntry.p._id)}) — 글의의미서술형은 기본난도 1 건만 만들어 save 로 저장 후 종료. 다음 tick (10 분 후) 에 다음 지문이 자동으로 큐에 올라옴.`
+        : targetPerDifficulty === 1
         ? `다음 지문 「${String(nextEntry.p.source_key ?? '')}」 (passageId: ${String(nextEntry.p._id)}) — 이 1 건의 4 난도를 만들어 save-all 로 저장 후 종료. 다음 tick (10 분 후) 에 다음 지문이 자동으로 큐에 올라옴.`
         : `다음 지문 「${String(nextEntry.p.source_key ?? '')}」 — 부족한 ${totalToMake} 건만 만들기: ${shortLabels
             .map(d => `${d} ×${shortByDifficulty[d]}`)
@@ -517,6 +526,8 @@ async function cmdShortage(flags: Map<string, string>) {
   const required = Math.max(1, Math.floor(flagNum(flags, 'required', 1)));
   const difficultyRaw = (flags.get('difficulty') ?? 'all').trim();
   const folderRaw = (flags.get('folder') ?? 'all').trim();
+  // examType: 지정 시 해당 유형 essay_exams 만 카운트 (글의의미 vs 배열형 분리).
+  const examType = (flags.get('examType') ?? '').trim() || undefined;
 
   const db = await getDb('gomijoshua');
 
@@ -533,7 +544,7 @@ async function cmdShortage(flags: Map<string, string>) {
   }
 
   /* 2) 해당 교재의 essay_exams 를 difficulty/folder 필터로 가져와 passageId/sourceKey 별 카운트 */
-  const examFilter: Record<string, unknown> = { textbook };
+  const examFilter: Record<string, unknown> = { textbook, ...examTypeMatch(examType) };
   if (difficultyRaw && difficultyRaw !== 'all') examFilter.difficulty = difficultyRaw;
   if (folderRaw && folderRaw !== 'all') examFilter.folder = folderRaw;
 
@@ -583,6 +594,7 @@ async function cmdShortage(flags: Map<string, string>) {
   out({
     ok: true,
     textbook,
+    examType: examType ?? null,
     required,
     difficulty: difficultyRaw,
     folder: folderRaw,
@@ -1116,10 +1128,11 @@ async function main() {
   textbooks [--limit N]
   passages --textbook "이름" [--limit N]
   passage  --id <ObjectId>
-  shortage --textbook "이름" [--required N] [--difficulty 최고난도|고난도|중난도|기본난도|all] [--folder "..."|all]
-  next-empty --textbook "이름" [--target-per-difficulty 1]
+  shortage --textbook "이름" [--required N] [--difficulty 최고난도|고난도|중난도|기본난도|all] [--folder "..."|all] [--examType "글의의미서술형"]
+  next-empty --textbook "이름" [--target-per-difficulty 1] [--examType "글의의미서술형"]
            — 각 난이도 카운트 < N 인 지문 1 개 반환 (priority desc 순). 다 채워지면 {done: true}.
              기본 N=1 (옛 동작과 동일). N=4 면 한 지문에 각 난이도 4 건씩 채울 때까지 반환.
+             --examType "글의의미서술형" 지정 시 그 유형만 카운트 + 기본난도 1 종만 대상(글의의미는 기본난도 전용).
              응답의 next.shortByDifficulty 가 부족 난이도와 부족분을 알려줌.
              /loop 스케줄러용 — Claude Code 채팅에서 10 분 간격 자동 채움.
   ensure-folder --folder "이름"

@@ -82,24 +82,53 @@ export async function GET(
 
     const { sentences, koreanSentences } = deriveSentencesFromPassageContent(doc.content);
 
-    // 분석기에서 SVOC 데이터 가져오기 (있을 때만). 응답은 항상 array shape (절별).
+    // 분석기에서 SVOC + 단어장·구문·어법·종합분석 가져오기 (있을 때만).
     let svoc: Record<number, SvocSentenceData[]> | undefined;
+    let analysisExtra: Record<string, unknown> | undefined;
     try {
       const analysis = (await db
         .collection('passage_analyses')
         .findOne(
           { fileName: passageAnalysisFileNameForPassageId(String(doc._id)) },
-          { projection: { 'passageStates.main.svocData': 1 } },
+          {
+            projection: {
+              'passageStates.main.svocData': 1,
+              'passageStates.main.vocabularyList': 1,
+              'passageStates.main.syntaxPhrases': 1,
+              'passageStates.main.grammarTags': 1,
+              'passageStates.main.grammarPointsBySentence': 1,
+              'passageStates.main.sentenceBreaks': 1,
+              'passageStates.main.analysisResults': 1,
+            },
+          },
         )) as
         | {
             passageStates?: {
               main?: {
                 svocData?: Record<string, SvocSentenceData | SvocSentenceData[]>;
+                vocabularyList?: unknown[];
+                syntaxPhrases?: Record<string, unknown[]>;
+                grammarTags?: unknown[];
+                grammarPointsBySentence?: Record<string, unknown[]>;
+                sentenceBreaks?: Record<string, number[]>;
+                analysisResults?: Record<string, unknown>;
               };
             };
           }
         | null;
-      const raw = analysis?.passageStates?.main?.svocData;
+      const main = analysis?.passageStates?.main;
+      // 비어있지 않은 분석 필드만 추려서 전달 (페이지가 있는 것만 렌더)
+      if (main) {
+        const extra: Record<string, unknown> = {};
+        if (Array.isArray(main.vocabularyList) && main.vocabularyList.length > 0) extra.vocabulary = main.vocabularyList;
+        if (main.syntaxPhrases && Object.keys(main.syntaxPhrases).length > 0) extra.syntaxPhrases = main.syntaxPhrases;
+        if (Array.isArray(main.grammarTags) && main.grammarTags.length > 0) extra.grammarTags = main.grammarTags;
+        if (main.grammarPointsBySentence && Object.keys(main.grammarPointsBySentence).length > 0) extra.grammarPoints = main.grammarPointsBySentence;
+        if (main.sentenceBreaks && Object.keys(main.sentenceBreaks).length > 0) extra.sentenceBreaks = main.sentenceBreaks;
+        if (main.analysisResults && Object.keys(main.analysisResults).length > 0) extra.results = main.analysisResults;
+        if (Object.keys(extra).length > 0) analysisExtra = extra;
+      }
+      const raw = main?.svocData;
       if (raw && typeof raw === 'object') {
         const byIndex: Record<number, SvocSentenceData | SvocSentenceData[]> = {};
         for (const [k, v] of Object.entries(raw)) {
@@ -135,6 +164,7 @@ export async function GET(
       },
       threads,
       ...(svoc ? { svoc } : {}),
+      ...(analysisExtra ? { analysis: analysisExtra } : {}),
     });
   } catch (e) {
     console.error('qna passage GET:', e);
