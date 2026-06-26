@@ -225,14 +225,23 @@ function GradePageInner() {
               <h2 className="text-sm font-bold text-gray-800 mb-3">오답 노트 ({report.wrongDetails.length}문항)</h2>
               <div className="space-y-3">
                 {report.wrongDetails.map((w) => (
-                  <details key={w.num} className="rounded-xl border border-rose-100 bg-rose-50/50 p-3">
-                    <summary className="cursor-pointer text-xs font-semibold text-gray-700">
-                      <span className="font-extrabold">{w.num}.</span> [{w.type}] 내 답 <span className="text-rose-600 font-bold">{w.chosen}</span> → 정답 <span className="text-emerald-700 font-bold">{w.correct}</span>
+                  <details key={w.num} className="group rounded-xl border border-rose-100 bg-rose-50/50 p-3">
+                    <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-gray-700">
+                      <span className="font-extrabold">{w.num}.</span>
+                      <span className="text-gray-400">[{w.type}]</span>
+                      <span>내 답 <span className="font-bold text-rose-600">{w.chosen}</span> → 정답 <span className="font-bold text-emerald-700">{w.correct}</span></span>
+                      <span className="ml-auto shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-600 group-open:bg-gray-100 group-open:text-gray-500">
+                        <span className="group-open:hidden">💡 해설 ▾</span>
+                        <span className="hidden group-open:inline">접기 ▴</span>
+                      </span>
                     </summary>
-                    <div className="mt-2 text-xs text-gray-600 space-y-1.5">
+                    <div className="mt-2 space-y-1.5 text-xs text-gray-600">
                       <p className="font-medium text-gray-700">{w.question}</p>
                       <p className="text-[11px] text-gray-400">{w.sourceKey}</p>
-                      {w.explanation && <p className="rounded-lg bg-white p-2 leading-relaxed">{w.explanation}</p>}
+                      <div className="rounded-lg bg-white p-2.5 leading-relaxed text-gray-700">
+                        <span className="mb-1 block text-[11px] font-extrabold text-indigo-600">💡 해설</span>
+                        {w.explanation || '이 문항은 해설이 제공되지 않았습니다.'}
+                      </div>
                     </div>
                   </details>
                 ))}

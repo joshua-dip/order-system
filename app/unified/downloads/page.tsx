@@ -88,6 +88,7 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
   const [similarBusy, setSimilarBusy] = useState(false);
   const [zipBusy, setZipBusy] = useState(false);
   const [studentZipBusy, setStudentZipBusy] = useState(false);
+  const [studentMergeBusy, setStudentMergeBusy] = useState(false);
 
   /* 유사문항 — 같은 범위로 겹치지 않는 새 문항 발급(포인트 차감 + 주문번호 생성) */
   const makeSimilar = async () => {
@@ -166,11 +167,12 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
     }
   };
 
-  /* 학생별 개별 문제지 — 학생 이름이 박힌 문제지 N부를 ZIP 으로 */
-  const downloadStudentZip = async () => {
-    setStudentZipBusy(true);
+  /* 학생별 다운로드 — mode '1': 학생별 ZIP(문제지+정답해설), 'combined': 모든 학생 합본 PDF 1장 */
+  const downloadStudents = async (mode: '1' | 'combined') => {
+    const busy = mode === 'combined' ? setStudentMergeBusy : setStudentZipBusy;
+    busy(true);
     try {
-      const res = await fetch(`${base}-zip?students=1`, { credentials: 'include' });
+      const res = await fetch(`${base}-zip?students=${mode}`, { credentials: 'include' });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         alert(typeof d.error === 'string' ? d.error : '학생별 문제지 생성에 실패했습니다.');
@@ -180,7 +182,7 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${job.title} 학생별.zip`;
+      a.download = mode === 'combined' ? `${job.title} 학생합본.pdf` : `${job.title} 학생별.zip`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -188,7 +190,7 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
     } catch {
       alert('학생별 문제지 생성에 실패했습니다.');
     } finally {
-      setStudentZipBusy(false);
+      busy(false);
     }
   };
 
@@ -219,14 +221,24 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
         ✅ 정답·해설
       </a>
       {(job.students?.length ?? 0) > 0 && (
-        <button
-          onClick={() => void downloadStudentZip()}
-          disabled={studentZipBusy}
-          title={`학생 ${job.students!.length}명 이름이 박힌 개별 문제지 ZIP`}
-          className={`rounded-lg border border-teal-300 ${pad} text-xs font-bold text-teal-700 hover:bg-teal-50 disabled:opacity-50`}
-        >
-          {studentZipBusy ? '👥 만드는 중…' : `👥 학생별(${job.students!.length})`}
-        </button>
+        <>
+          <button
+            onClick={() => void downloadStudents('1')}
+            disabled={studentZipBusy}
+            title={`학생 ${job.students!.length}명 이름이 박힌 개별 문제지 + 정답해설 ZIP`}
+            className={`rounded-lg border border-teal-300 ${pad} text-xs font-bold text-teal-700 hover:bg-teal-50 disabled:opacity-50`}
+          >
+            {studentZipBusy ? '👥 만드는 중…' : `👥 학생별 ZIP(${job.students!.length})`}
+          </button>
+          <button
+            onClick={() => void downloadStudents('combined')}
+            disabled={studentMergeBusy}
+            title="모든 학생 문제지를 한 PDF 로 — 각 학생이 새 용지(홀수페이지)에서 시작(양면 인쇄용 빈 페이지 자동 삽입)"
+            className={`rounded-lg border border-teal-300 ${pad} text-xs font-bold text-teal-700 hover:bg-teal-50 disabled:opacity-50`}
+          >
+            {studentMergeBusy ? '👥 합치는 중…' : '👥 학생 합본 PDF'}
+          </button>
+        </>
       )}
       {order === 'shuffle' && (
         <button

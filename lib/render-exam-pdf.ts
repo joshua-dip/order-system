@@ -1,4 +1,17 @@
 /**
+ * PDF 버퍼의 페이지 수 — 페이지 객체(`/Type /Page`, `/Pages` 제외) 개수.
+ * 합본 시 학생별 페이지 수로 홀수페이지 정렬(빈 페이지 삽입)을 계산하는 데 쓴다.
+ */
+export function countPdfPages(pdf: Buffer): number {
+  const s = pdf.toString('latin1');
+  const pages = s.match(/\/Type\s*\/Page(?!s)/g);
+  if (pages && pages.length > 0) return pages.length;
+  // 폴백: 페이지 트리 루트의 /Count
+  const counts = [...s.matchAll(/\/Count\s+(\d+)/g)].map((m) => parseInt(m[1], 10)).filter((n) => n > 0);
+  return counts.length ? Math.max(...counts) : 1;
+}
+
+/**
  * 여러 HTML → PDF 일괄 렌더 (puppeteer 브라우저 1개 재사용).
  * 지문별 ZIP 다운로드처럼 한 요청에서 여러 PDF 를 만들 때 사용.
  */

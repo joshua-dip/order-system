@@ -147,9 +147,10 @@ const COMMON_CSS = `
   @page { size: A4 portrait; margin: 12mm 11mm; }
 `;
 
-export function buildFinalExamSheetHtml(input: FinalExamBuildInput): string {
+/** 회차 구분선 포함 문항 본문 (cols 안에 들어갈 내용) */
+function renderQuestionBody(questions: FinalExamQuestion[]): string {
   let prevRound: number | undefined;
-  const body = input.questions
+  return questions
     .map((q) => {
       let prefix = '';
       if (typeof q.round === 'number' && q.round !== prevRound) {
@@ -159,18 +160,31 @@ export function buildFinalExamSheetHtml(input: FinalExamBuildInput): string {
       return prefix + questionBlock(q);
     })
     .join('\n');
+}
+
+/** 문제지 한 장(.sheet) — 합본/단일 공용. breakBefore 면 홀수(우)페이지에서 시작. */
+function sheetInnerHtml(input: FinalExamBuildInput, breakBefore = false): string {
+  const body = renderQuestionBody(input.questions);
   const qr = input.qrDataUrl
     ? `<div class="qr">
         <img src="${input.qrDataUrl}" alt="QR 채점" />
         <div class="qr-label">${esc(input.qrLabel ?? 'QR 스캔 → 바로 채점')}</div>
       </div>`
     : '';
-  return `<!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"/>
-<title>${esc(input.title)}</title>
-<style>
-${input.fontFaceCss ?? ''}
-${COMMON_CSS}
+  return `<div class="sheet${breakBefore ? ' sheet-break' : ''}">
+  <div class="head-wrap">
+    <div class="head"><span class="t">${esc(input.title)}</span><span class="s">${esc(input.subtitle ?? '')}</span></div>
+    ${qr}
+  </div>
+  <div class="namebar"><span class="nm-label">이름</span><span class="nm-val">${input.studentName ? esc(input.studentName) : ''}</span></div>
+  <div class="cols">
+${body}
+  </div>
+</div>`;
+}
+
+/** 문제지 시트 전용 스타일 (단일·합본 공용) */
+const SHEET_CSS = `
   .head-wrap { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
   .head-wrap .head { flex: 1; margin-bottom: 0; }
   .namebar { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 5px 10px; border: 1px solid #999; border-radius: 4px; }
@@ -196,18 +210,52 @@ ${COMMON_CSS}
   .q-para-block:last-child { margin-bottom: 0; }
   .q-opts .opt { margin: 2px 0; font-size: 9.5pt; }
   .opts-inline { font-size: 10pt; letter-spacing: 2px; }
+  /* 합본: 학생마다 새 페이지에서 시작 + 홀수페이지 정렬용 빈 페이지(짝수로 끝난 학생 뒤) */
+  .sheet-break { break-before: page; page-break-before: page; }
+  .blank-page { break-before: page; page-break-before: page; break-after: page; page-break-after: page; }
+`;
+
+export function buildFinalExamSheetHtml(input: FinalExamBuildInput): string {
+  return `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/>
+<title>${esc(input.title)}</title>
+<style>
+${input.fontFaceCss ?? ''}
+${COMMON_CSS}
+${SHEET_CSS}
 </style></head>
 <body>
-<div class="sheet">
-  <div class="head-wrap">
-    <div class="head"><span class="t">${esc(input.title)}</span><span class="s">${esc(input.subtitle ?? '')}</span></div>
-    ${qr}
-  </div>
-  <div class="namebar"><span class="nm-label">이름</span><span class="nm-val">${input.studentName ? esc(input.studentName) : ''}</span></div>
-  <div class="cols">
+${sheetInnerHtml(input)}
+</body></html>`;
+}
+
+/**
+ * 여러 학생 문제지를 한 PDF 로 합본 — 각 학생이 새 페이지에서 시작하고, 양면 인쇄 시
+ * 학생마다 새 용지 앞면(홀수페이지)에서 시작하도록 `blankBefore[i]` 가 true 인 학생 앞에
+ * 빈 페이지를 한 장 끼운다. blankBefore 는 호출부에서 각 학생의 실제 페이지 수로 계산한다
+ * (Chrome 헤드리스 print 는 `break-before: right` 로 빈 페이지를 만들지 못하므로 직접 삽입).
+ */
+export function buildFinalExamSheetMultiHtml(
+  sheets: FinalExamBuildInput[],
+  opts?: { fontFaceCss?: string; docTitle?: string; blankBefore?: boolean[] },
+): string {
+  const body = sheets
+    .map((s, i) => {
+      const blank = opts?.blankBefore?.[i] ? '<div class="blank-page">&nbsp;</div>' : '';
+      return blank + sheetInnerHtml(s, i > 0);
+    })
+    .join('\n');
+  const docTitle = opts?.docTitle ?? sheets[0]?.title ?? '파이널 예비 모의고사';
+  return `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/>
+<title>${esc(docTitle)}</title>
+<style>
+${opts?.fontFaceCss ?? ''}
+${COMMON_CSS}
+${SHEET_CSS}
+</style></head>
+<body>
 ${body}
-  </div>
-</div>
 </body></html>`;
 }
 
