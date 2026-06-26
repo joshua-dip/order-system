@@ -59,6 +59,9 @@ function GradePageInner() {
   const search = useSearchParams();
   const token = typeof params.token === 'string' ? params.token : '';
   const initialGradingId = search.get('g') ?? '';
+  /** 학생별 개별 문제지 QR 은 ?seed= 를 달고 옴 → 그 학생 배치 그대로 채점/보고서 */
+  const seed = search.get('seed') ?? '';
+  const seedQ = seed ? `&seed=${encodeURIComponent(seed)}` : '';
 
   const [info, setInfo] = useState<SheetInfo | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -71,11 +74,11 @@ function GradePageInner() {
   const [issuing, setIssuing] = useState(false);
 
   const fetchReport = useCallback(async (gid: string) => {
-    const r = await fetch(`/api/grade/${token}/result?g=${gid}`, { credentials: 'include' });
+    const r = await fetch(`/api/grade/${token}/result?g=${gid}${seedQ}`, { credentials: 'include' });
     const d = await r.json();
     if (r.ok) setReport(d as ReportData);
     else setLoadError(typeof d.error === 'string' ? d.error : '보고서를 불러오지 못했습니다.');
-  }, [token]);
+  }, [token, seedQ]);
 
   useEffect(() => {
     if (!token) { setLoadError('잘못된 주소입니다.'); return; }
@@ -83,14 +86,14 @@ function GradePageInner() {
       void fetchReport(initialGradingId);
       return;
     }
-    fetch(`/api/grade/${token}`, { credentials: 'include' })
+    fetch(`/api/grade/${token}?_=1${seedQ}`, { credentials: 'include' })
       .then((r) => r.json().then((d) => ({ ok: r.ok, d })))
       .then(({ ok, d }) => {
         if (!ok) { setLoadError(typeof d.error === 'string' ? d.error : '시험 정보를 불러오지 못했습니다.'); return; }
         setInfo(d as SheetInfo);
       })
       .catch(() => setLoadError('네트워크 오류가 발생했습니다.'));
-  }, [token, initialGradingId, fetchReport]);
+  }, [token, initialGradingId, fetchReport, seedQ]);
 
   const toggleMark = (num: number, circle: string, multi: boolean) => {
     setMarks((prev) => {
@@ -115,7 +118,7 @@ function GradePageInner() {
     if (unanswered > 0 && !window.confirm(`${unanswered}문항이 무응답입니다. 그대로 제출할까요? (무응답은 오답 처리)`)) return;
     setSubmitting(true);
     try {
-      const r = await fetch(`/api/grade/${token}`, {
+      const r = await fetch(`/api/grade/${token}?_=1${seedQ}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,8 +128,8 @@ function GradePageInner() {
       });
       const d = await r.json();
       if (!r.ok) { alert(typeof d.error === 'string' ? d.error : '채점에 실패했습니다.'); return; }
-      /* URL 에 g= 를 남겨 보고서 재방문 가능하게 */
-      window.history.replaceState(null, '', `/grade/${token}?g=${d.gradingId}`);
+      /* URL 에 g= (+seed) 를 남겨 보고서 재방문 가능하게 */
+      window.history.replaceState(null, '', `/grade/${token}?g=${d.gradingId}${seed ? `&seed=${encodeURIComponent(seed)}` : ''}`);
       await fetchReport(d.gradingId);
       window.scrollTo({ top: 0 });
     } catch {
@@ -274,7 +277,7 @@ function GradePageInner() {
               </p>
             ) : null}
             <button
-              onClick={() => { setReport(null); setMarks({}); window.history.replaceState(null, '', `/grade/${token}`); window.location.reload(); }}
+              onClick={() => { setReport(null); setMarks({}); window.history.replaceState(null, '', `/grade/${token}${seed ? `?seed=${encodeURIComponent(seed)}` : ''}`); window.location.reload(); }}
               className="w-full rounded-xl border border-gray-200 py-2.5 text-xs font-semibold text-gray-500 hover:bg-gray-50"
             >
               다른 학생 채점하기

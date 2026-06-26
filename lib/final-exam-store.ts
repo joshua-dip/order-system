@@ -61,6 +61,8 @@ export interface FinalExamJobDoc {
   similarOfJobId?: string;
   /** 사용자 정리용 폴더명 (빈값=미분류). 목록이 많을 때 분류. */
   folder?: string;
+  /** 학생 이름 목록 — 다운로드 시 학생별 이름 박힌 개별 문제지 생성용. */
+  students?: string[];
   createdAt: Date;
   updatedAt: Date;
   readyAt?: Date;
@@ -280,6 +282,36 @@ export interface SelectScopeInput {
   school?: string;
   /** true면 이전 출제분과 절대 겹치지 않게(재사용 안 함). 모자라면 부족분으로 남겨 제작 요청. */
   avoidDuplicates?: boolean;
+  /** 시험형(총 문항수) 모드 — 설정 시 유형별 균등 분배 + 범위 전체 지문에서 랜덤 샘플. questionsPerTypeMap 무시. */
+  examTotal?: number;
+}
+
+/** 문자열 → 안정적 셔플 시드 (학생별 고유 배치 재현용 — 같은 입력=같은 순서). */
+export function stableExamSeed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  return (h >>> 0) || 1;
+}
+
+/** 총 N개를 유형 수로 균등 분배 (나머지는 앞 유형부터 +1). 예: 30,4 → [8,8,7,7]. */
+export function distributeEvenly(total: number, types: string[]): Map<string, number> {
+  const n = types.length;
+  const out = new Map<string, number>();
+  if (n === 0 || total <= 0) { for (const t of types) out.set(t, 0); return out; }
+  const base = Math.floor(total / n);
+  const rem = total % n;
+  types.forEach((t, i) => out.set(t, base + (i < rem ? 1 : 0)));
+  return out;
+}
+
+/** Fisher-Yates 랜덤 셔플 (비결정적 — 매번 다른 표본). */
+function randomShuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 export interface SelectScopeResult {
@@ -339,6 +371,50 @@ export async function selectQuestionsForScope(
   const usedBefore = await previouslyDeliveredIds(db, dedupFilter);
   const gq = db.collection('generated_questions');
   const englishMatch = matchGeneratedQuestionOptionTypeEnglish();
+  const ZERO_OID = new ObjectId('0'.repeat(24));
+
+  /* ── 시험형(총 문항수): 유형별 균등 분배 + 범위 전체 지문에서 랜덤 샘플 ── */
+  if (input.examTotal && input.examTotal > 0 && input.selectedTypes.length > 0) {
+    const perType = distributeEvenly(Math.floor(input.examTotal), input.selectedTypes);
+    const items: FinalExamJobItem[] = [];
+    let totalRequested = 0;
+    let totalAssigned = 0;
+    const itemFor = (sk: string, type: string): FinalExamJobItem => {
+      let it = items.find((x) => x.sourceKey === sk && x.type === type);
+      if (!it) { it = { sourceKey: sk, passageId: bySource.get(sk) ?? ZERO_OID, type, requested: 0, questionIds: [], shortBy: 0 }; items.push(it); }
+      return it;
+    };
+    for (const type of input.selectedTypes) {
+      const target = perType.get(type) ?? 0;
+      if (target <= 0) continue;
+      totalRequested += target;
+      // 범위 전체 지문에서 (유형) 후보 모으기 → fresh/reused 분리
+      const fresh: { sk: string; id: ObjectId }[] = [];
+      const reused: { sk: string; id: ObjectId }[] = [];
+      for (const sk of sourceKeys) {
+        const passageId = bySource.get(sk);
+        if (!passageId) continue;
+        const candidates = await gq
+          .find({ passage_id: passageId, type, status: '완료', ...englishMatch })
+          .project<{ _id: ObjectId }>({ _id: 1 })
+          .toArray();
+        for (const c of candidates) (usedBefore.has(String(c._id)) ? reused : fresh).push({ sk, id: c._id });
+      }
+      // hardAvoid면 미사용만, 아니면 미사용 우선 후 재사용. 각 풀은 랜덤 셔플(지문 랜덤).
+      const ordered = hardAvoid ? randomShuffle(fresh) : [...randomShuffle(fresh), ...randomShuffle(reused)];
+      const picked = ordered.slice(0, target);
+      totalAssigned += picked.length;
+      for (const p of picked) { const it = itemFor(p.sk, type); it.questionIds.push(p.id); it.requested += 1; }
+      // 부족분 → 범위 내 지문에 라운드로빈 배분(제작 요청)
+      const short = target - picked.length;
+      if (short > 0) {
+        const avail = sourceKeys.filter((sk) => bySource.has(sk));
+        const pool = avail.length ? avail : sourceKeys;
+        for (let i = 0; i < short; i++) { const it = itemFor(pool[i % pool.length], type); it.requested += 1; it.shortBy += 1; }
+      }
+    }
+    return { items, totalRequested, totalAssigned, totalShort: totalRequested - totalAssigned, missingSources };
+  }
 
   const items: FinalExamJobItem[] = [];
   let totalRequested = 0;

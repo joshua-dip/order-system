@@ -6,6 +6,8 @@ import {
   getFinalExamJob,
   loadExamQuestions,
   refillJobShortages,
+  ensureGradeToken,
+  stableExamSeed,
 } from '@/lib/final-exam-store';
 import {
   buildFinalExamSheetHtml,
@@ -14,6 +16,7 @@ import {
 } from '@/lib/final-exam-html';
 import { renderExamPdfs } from '@/lib/render-exam-pdf';
 import { getEmbeddedKoreanFontFaceCss } from '@/lib/pdf-korean-font';
+import { publicBaseUrl } from '@/lib/public-base-url';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,6 +66,54 @@ export async function GET(
     if (job.status !== 'ready') {
       const short = job.totalRequested - job.totalAssigned;
       return NextResponse.json({ error: `아직 제작 중입니다. 부족 문항 ${short}개가 완성되면 다운로드할 수 있습니다.`, status: job.status }, { status: 409 });
+    }
+
+    // ── 학생별 개별 문제지 — 학생마다 다른 랜덤 배치 + 그 배치에 맞는 QR 채점 ──
+    if (sp.get('students') === '1') {
+      const names = Array.isArray(job.students) ? job.students : [];
+      if (names.length === 0) {
+        return NextResponse.json({ error: '학생 이름이 없습니다. 발급할 때 학생 이름을 입력하세요.' }, { status: 400 });
+      }
+      const fontCss = await getEmbeddedKoreanFontFaceCss();
+      const token = await ensureGradeToken(db, job);
+      const baseUrl = publicBaseUrl(request);
+      const jobId = String(job._id);
+      let QRCode: typeof import('qrcode') | null = null;
+      try { QRCode = (await import('qrcode')).default as unknown as typeof import('qrcode'); } catch { QRCode = null; }
+
+      const studentEntries: { name: string; html: string }[] = [];
+      for (let i = 0; i < names.length; i++) {
+        const nm = names[i];
+        // 학생마다 고유 시드 → 서로 다른 문제 배치(재다운로드해도 동일). 빈 지문이 있으면 시드 무관.
+        const seed = stableExamSeed(`${jobId}:${nm}:${i}`);
+        const qs = await loadExamQuestions(db, { ...job, orderMode: 'shuffle', shuffleSeed: seed });
+        if (qs.length === 0) return NextResponse.json({ error: '문항을 불러오지 못했습니다.' }, { status: 500 });
+        const subtitle = `${job.scopeSummary} · 총 ${qs.length}문항`;
+        // QR 은 같은 시드(seed)를 실어 채점 페이지가 이 학생 배치 그대로 채점.
+        let qrDataUrl: string | undefined;
+        if (QRCode) {
+          try { qrDataUrl = await QRCode.toDataURL(`${baseUrl}/grade/${token}?seed=${seed}`, { margin: 0, width: 240 }); } catch { /* QR 없이 진행 */ }
+        }
+        studentEntries.push({
+          name: `${String(i + 1).padStart(2, '0')}_${safe(nm)}_문제지`,
+          html: buildFinalExamSheetHtml({ title: job!.title, subtitle, questions: qs, studentName: nm, qrDataUrl, qrLabel: 'QR 스캔 → 바로 채점', fontFaceCss: fontCss }),
+        });
+      }
+      const pdfs = await renderExamPdfs(studentEntries.map((e) => e.html));
+      const zip = new JSZip();
+      studentEntries.forEach((e, i) => zip.file(`${e.name}.pdf`, pdfs[i]));
+      const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+      const st = (job.createdAt instanceof Date ? job.createdAt : new Date()).toISOString().slice(0, 10).replace(/-/g, '');
+      const fn = safe(`파이널예비모의고사_${st}_학생별`) + '.zip';
+      return new NextResponse(new Uint8Array(buf), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Length': String(buf.byteLength),
+          'Content-Disposition': `attachment; filename="final-exam-${st}-students.zip"; filename*=UTF-8''${encodeURIComponent(fn)}`,
+          'Cache-Control': 'no-store',
+        },
+      });
     }
 
     const fontFaceCss = await getEmbeddedKoreanFontFaceCss();

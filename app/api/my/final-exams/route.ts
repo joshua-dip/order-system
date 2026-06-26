@@ -7,6 +7,7 @@ import { variantUnitPrice, isOrderInsertType } from '@/lib/variant-pricing';
 import { BOOK_VARIANT_OBJECTIVE_TYPES } from '@/lib/book-variant-types';
 import {
   createFinalExamShortageOrder,
+  distributeEvenly,
   ensureGradeToken,
   generateGradeToken,
   insertFinalExamJob,
@@ -34,6 +35,12 @@ type CreateBody = {
   school?: unknown;
   /** 이전(같은 학교) 출제분과 겹치지 않게 */
   avoidDuplicates?: unknown;
+  /** 시험형 — 총 문항수(설정 시 유형별 균등 분배·지문 랜덤) */
+  examTotal?: unknown;
+  /** 학생 이름 목록 — 학생별 이름 박힌 개별 문제지용 */
+  students?: unknown;
+  /** 제목에 덧붙일 라벨 (유형별 세트 분리 시 유형명 등) */
+  setLabel?: unknown;
 };
 
 const MAX_PER_TYPE = 10;
@@ -49,6 +56,7 @@ function jobSummary(job: FinalExamJobDoc & { _id?: ObjectId }) {
     id: String(job._id ?? ''),
     title: job.title,
     folder: job.folder ?? '',
+    students: Array.isArray(job.students) ? job.students : [],
     school: job.school ?? '',
     avoidDuplicates: !!job.avoidDuplicates,
     orderMode: job.orderMode ?? 'default',
@@ -177,12 +185,6 @@ export async function POST(request: NextRequest) {
   if (selectedTypes.length === 0) {
     return NextResponse.json({ error: '유효한 문제 유형을 선택해주세요. (워크북 유형은 파이널 시험지에 포함할 수 없습니다)' }, { status: 400 });
   }
-  const countsMap: Record<string, number> = {};
-  for (const t of selectedTypes) {
-    const raw = body.questionsPerTypeMap?.[t];
-    const n = typeof raw === 'number' ? Math.floor(raw) : 3;
-    countsMap[t] = Math.min(MAX_PER_TYPE, Math.max(1, n));
-  }
   const explain = {
     순서: body.orderInsertExplanation?.순서 !== false,
     삽입: body.orderInsertExplanation?.삽입 !== false,
@@ -192,10 +194,28 @@ export async function POST(request: NextRequest) {
   if (avoidDuplicates && !school) {
     return NextResponse.json({ error: '이전 문제와 겹치지 않기를 켜려면 학교명을 입력해주세요.' }, { status: 400 });
   }
-
   const uniqueSources = [...new Set(sourceKeys)];
-  const perSourceCount = selectedTypes.reduce((s, t) => s + countsMap[t], 0);
-  const totalRequested = perSourceCount * uniqueSources.length;
+
+  // 시험형(총 문항수) 모드 — 유형별 균등 분배가 곧 유형별 개수. 아니면 기존 유형별 지정.
+  const examTotalRaw = Number(body.examTotal);
+  const examTotal = Number.isFinite(examTotalRaw) && examTotalRaw > 0 ? Math.floor(examTotalRaw) : 0;
+
+  const countsMap: Record<string, number> = {};
+  if (examTotal > 0) {
+    const per = distributeEvenly(examTotal, selectedTypes);
+    for (const t of selectedTypes) countsMap[t] = per.get(t) ?? 0;
+  } else {
+    for (const t of selectedTypes) {
+      const raw = body.questionsPerTypeMap?.[t];
+      const n = typeof raw === 'number' ? Math.floor(raw) : 3;
+      countsMap[t] = Math.min(MAX_PER_TYPE, Math.max(1, n));
+    }
+  }
+
+  // 총 요청 문항수 — 시험형이면 examTotal, 아니면 (유형별 합 × 지문수)
+  const totalRequested = examTotal > 0
+    ? examTotal
+    : selectedTypes.reduce((s, t) => s + countsMap[t], 0) * uniqueSources.length;
   if (totalRequested > MAX_TOTAL_QUESTIONS) {
     return NextResponse.json(
       { error: `한 번에 최대 ${MAX_TOTAL_QUESTIONS}문항까지 발급할 수 있습니다. (현재 ${totalRequested}문항)` },
@@ -203,12 +223,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  /* ── 가격 (서버 재계산) ── */
+  /* ── 가격 (서버 재계산) — 시험형은 유형별 분배수, 아니면 유형별 개수×지문수 ── */
   const price = selectedTypes.reduce((sum, t) => {
     const withExplanation = isOrderInsertType(t)
       ? (t === '순서' ? explain.순서 : explain.삽입)
       : true;
-    return sum + variantUnitPrice(t, { withExplanation }) * countsMap[t] * uniqueSources.length;
+    const qty = examTotal > 0 ? countsMap[t] : countsMap[t] * uniqueSources.length;
+    return sum + variantUnitPrice(t, { withExplanation }) * qty;
   }, 0);
 
   try {
@@ -229,6 +250,7 @@ export async function POST(request: NextRequest) {
       loginId,
       school,
       avoidDuplicates,
+      ...(examTotal > 0 ? { examTotal } : {}),
     });
     if (sel.missingSources.length === uniqueSources.length) {
       return NextResponse.json(
@@ -256,13 +278,19 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const status = sel.totalShort > 0 ? ('awaiting_admin' as const) : ('ready' as const);
     const dateStamp = now.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\s/g, '');
-    const title = `파이널 예비 모의고사 (${school ? `${school} · ` : ''}${dateStamp} · ${totalRequested}문항)`;
+    // 학생 이름 목록 (학생별 개별 문제지용) + 세트 라벨(유형별 분리 시)
+    const students = Array.isArray(body.students)
+      ? [...new Set(body.students.map((s) => String(s ?? '').trim()).filter(Boolean))].slice(0, 200)
+      : [];
+    const setLabel = typeof body.setLabel === 'string' ? body.setLabel.trim().slice(0, 30) : '';
+    const title = `파이널 예비 모의고사${setLabel ? ` · ${setLabel}` : ''} (${school ? `${school} · ` : ''}${dateStamp} · ${totalRequested}문항)`;
     const jobDoc: Omit<FinalExamJobDoc, '_id'> = {
       loginId,
       userId: auth.userId,
       title,
       ...(school ? { school } : {}),
       ...(avoidDuplicates ? { avoidDuplicates: true } : {}),
+      ...(students.length ? { students } : {}),
       scopeSummary: scopeParts.join(' / '),
       selectedTypes,
       questionsPerTypeMap: countsMap,

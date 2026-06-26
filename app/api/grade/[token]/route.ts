@@ -23,6 +23,15 @@ async function viewerLoginId(request: NextRequest): Promise<string | null> {
   return payload?.loginId ?? null;
 }
 
+/** ?seed= 가 있으면 그 시드로 셔플(학생별 배치) — 없으면 잡 기본 순서 그대로. */
+function jobWithSeed<T extends object>(job: T, request: NextRequest): T {
+  const seed = Number(request.nextUrl.searchParams.get('seed'));
+  if (Number.isFinite(seed) && seed > 0) {
+    return { ...job, orderMode: 'shuffle' as const, shuffleSeed: seed };
+  }
+  return job;
+}
+
 /** 시험 메타 + OMR 입력에 필요한 문항 목록 (정답 미포함) */
 export async function GET(
   request: NextRequest,
@@ -38,7 +47,8 @@ export async function GET(
       return NextResponse.json({ error: '아직 제작 중인 시험지입니다. 완성 후 채점할 수 있습니다.' }, { status: 409 });
     }
 
-    const questions = await loadExamQuestions(db, job);
+    // 학생별 개별 문제지 QR 은 ?seed= 를 실어 보낸다 → 그 학생 배치 그대로 채점.
+    const questions = await loadExamQuestions(db, jobWithSeed(job, request));
     const viewer = await viewerLoginId(request);
     return NextResponse.json({
       title: job.title,
@@ -82,7 +92,7 @@ export async function POST(
       return NextResponse.json({ error: '아직 제작 중인 시험지입니다.' }, { status: 409 });
     }
 
-    const questions = await loadExamQuestions(db, job);
+    const questions = await loadExamQuestions(db, jobWithSeed(job, request));
     const chosenByNum = new Map<number, string>();
     for (const a of rawAnswers) {
       const num = typeof (a as { num?: unknown })?.num === 'number' ? (a as { num: number }).num : NaN;

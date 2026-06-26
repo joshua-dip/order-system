@@ -34,8 +34,12 @@ export async function GET(
       .findOne({ _id: new ObjectId(gradingId), jobId: job._id });
     if (!grading) return NextResponse.json({ error: '채점 기록을 찾을 수 없습니다.' }, { status: 404 });
 
-    /* 오답 상세 — 문항 본문·해설 (시험지와 동일 순서 로더 재사용) */
-    const questions = await loadExamQuestions(db, job);
+    /* 오답 상세 — 문항 본문·해설 (학생별 배치면 같은 seed 로 순서 재현해 num 매핑) */
+    const seedRaw = Number(request.nextUrl.searchParams.get('seed'));
+    const jobForOrder = Number.isFinite(seedRaw) && seedRaw > 0
+      ? { ...job, orderMode: 'shuffle' as const, shuffleSeed: seedRaw }
+      : job;
+    const questions = await loadExamQuestions(db, jobForOrder);
     const byNum = new Map(questions.map((q) => [q.num, q]));
     const answers = Array.isArray(grading.answers) ? grading.answers : [];
     const wrongDetails = answers

@@ -26,6 +26,7 @@ interface JobRow {
   status: 'ready' | 'awaiting_admin';
   orderMode?: 'default' | 'interleave' | 'shuffle';
   sources?: { sourceKey: string; count: number }[];
+  students?: string[];
   totalRequested: number;
   totalAssigned: number;
   totalShort: number;
@@ -86,6 +87,7 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
   const [order, setOrder] = useState<'default' | 'interleave' | 'shuffle'>(job.orderMode ?? 'default');
   const [similarBusy, setSimilarBusy] = useState(false);
   const [zipBusy, setZipBusy] = useState(false);
+  const [studentZipBusy, setStudentZipBusy] = useState(false);
 
   /* 유사문항 — 같은 범위로 겹치지 않는 새 문항 발급(포인트 차감 + 주문번호 생성) */
   const makeSimilar = async () => {
@@ -164,6 +166,32 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
     }
   };
 
+  /* 학생별 개별 문제지 — 학생 이름이 박힌 문제지 N부를 ZIP 으로 */
+  const downloadStudentZip = async () => {
+    setStudentZipBusy(true);
+    try {
+      const res = await fetch(`${base}-zip?students=1`, { credentials: 'include' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(typeof d.error === 'string' ? d.error : '학생별 문제지 생성에 실패했습니다.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.title} 학생별.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('학생별 문제지 생성에 실패했습니다.');
+    } finally {
+      setStudentZipBusy(false);
+    }
+  };
+
   return (
     <>
       <select
@@ -190,6 +218,16 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
       <a href={`${base}?kind=answer${oq}`} className={`rounded-lg border border-indigo-300 ${pad} text-xs font-bold text-indigo-700 hover:bg-indigo-50`}>
         ✅ 정답·해설
       </a>
+      {(job.students?.length ?? 0) > 0 && (
+        <button
+          onClick={() => void downloadStudentZip()}
+          disabled={studentZipBusy}
+          title={`학생 ${job.students!.length}명 이름이 박힌 개별 문제지 ZIP`}
+          className={`rounded-lg border border-teal-300 ${pad} text-xs font-bold text-teal-700 hover:bg-teal-50 disabled:opacity-50`}
+        >
+          {studentZipBusy ? '👥 만드는 중…' : `👥 학생별(${job.students!.length})`}
+        </button>
+      )}
       {order === 'shuffle' && (
         <button
           onClick={() => downloadBoth(true)}

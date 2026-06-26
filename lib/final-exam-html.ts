@@ -35,6 +35,8 @@ export interface FinalExamBuildInput {
   /** QR 채점 — 문제지 헤더에 인쇄할 QR (dataURL) + 안내 라벨 */
   qrDataUrl?: string;
   qrLabel?: string;
+  /** 학생 이름 — 있으면 헤더에 "이름: …" 표기(학생별 개별 문제지). 없으면 빈 이름란. */
+  studentName?: string;
   /** 서버(Lambda) 한글 렌더용 @font-face 임베드 CSS (getEmbeddedKoreanFontFaceCss) */
   fontFaceCss?: string;
 }
@@ -169,8 +171,11 @@ export function buildFinalExamSheetHtml(input: FinalExamBuildInput): string {
 <style>
 ${input.fontFaceCss ?? ''}
 ${COMMON_CSS}
-  .head-wrap { display: flex; align-items: stretch; gap: 8px; margin-bottom: 14px; }
+  .head-wrap { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
   .head-wrap .head { flex: 1; margin-bottom: 0; }
+  .namebar { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 5px 10px; border: 1px solid #999; border-radius: 4px; }
+  .namebar .nm-label { font-size: 10pt; font-weight: 800; color: #333; flex: none; }
+  .namebar .nm-val { flex: 1; font-size: 12pt; font-weight: 700; color: #111; border-bottom: 1px solid #ccc; min-height: 16px; padding-bottom: 1px; }
   .qr { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
   .qr img { width: 21mm; height: 21mm; }
   .qr-label { font-size: 7pt; color: #333; font-weight: 700; white-space: nowrap; }
@@ -198,6 +203,7 @@ ${COMMON_CSS}
     <div class="head"><span class="t">${esc(input.title)}</span><span class="s">${esc(input.subtitle ?? '')}</span></div>
     ${qr}
   </div>
+  <div class="namebar"><span class="nm-label">이름</span><span class="nm-val">${input.studentName ? esc(input.studentName) : ''}</span></div>
   <div class="cols">
 ${body}
   </div>
