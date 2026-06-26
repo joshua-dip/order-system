@@ -328,14 +328,14 @@ export function PassageAnalyzerEditor({ passageId }: { passageId?: string | null
   const [showStopWordsModal, setShowStopWordsModal] = useState(false);
   const [essayDraftOpen, setEssayDraftOpen] = useState(false);
   const [showVocabViewPanel, setShowVocabViewPanel] = useState(false);
-  const [vocabViewOpts, setVocabViewOpts] = useState<VocabViewOpts>(() => {
+  // ⚠️ SSR/첫 페인트와 동일해야 hydration 오류가 안 남 — localStorage 복원은 mount 후(아래 useEffect)
+  const [vocabViewOpts, setVocabViewOpts] = useState<VocabViewOpts>({ hiddenCols: [], rowSize: 'normal' });
+  useEffect(() => {
     try {
-      const v = typeof window !== 'undefined' ? localStorage.getItem(VOCAB_VIEW_LS_KEY) : null;
-      return v ? (JSON.parse(v) as VocabViewOpts) : { hiddenCols: [], rowSize: 'normal' };
-    } catch {
-      return { hiddenCols: [], rowSize: 'normal' };
-    }
-  });
+      const v = localStorage.getItem(VOCAB_VIEW_LS_KEY);
+      if (v) setVocabViewOpts(JSON.parse(v) as VocabViewOpts);
+    } catch { /* ignore */ }
+  }, []);
   const updateVocabViewOpts = useCallback((next: VocabViewOpts) => {
     setVocabViewOpts(next);
     try { localStorage.setItem(VOCAB_VIEW_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }

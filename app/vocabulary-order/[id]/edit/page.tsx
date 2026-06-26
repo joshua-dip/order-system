@@ -405,12 +405,14 @@ export default function VocabularyEditPage() {
   const [showViewPanel, setShowViewPanel] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(true);
-  const [viewOpts, setViewOpts] = useState<ViewOpts>(() => {
+  // ⚠️ SSR/첫 페인트와 동일해야 hydration 오류가 안 남 — localStorage 복원은 mount 후(아래 useEffect)
+  const [viewOpts, setViewOpts] = useState<ViewOpts>(DEFAULT_VIEW_OPTS);
+  useEffect(() => {
     try {
-      const v = typeof window !== 'undefined' ? localStorage.getItem(VIEW_LS_KEY) : null;
-      return v ? { ...DEFAULT_VIEW_OPTS, ...(JSON.parse(v) as ViewOpts) } : DEFAULT_VIEW_OPTS;
-    } catch { return DEFAULT_VIEW_OPTS; }
-  });
+      const v = localStorage.getItem(VIEW_LS_KEY);
+      if (v) setViewOpts({ ...DEFAULT_VIEW_OPTS, ...(JSON.parse(v) as ViewOpts) });
+    } catch { /* ignore */ }
+  }, []);
   const updateViewOpts = (next: ViewOpts) => {
     setViewOpts(next);
     try { localStorage.setItem(VIEW_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }

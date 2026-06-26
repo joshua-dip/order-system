@@ -123,19 +123,18 @@ export default function VipExamsPage() {
   const [passagesCache, setPassagesCache] = useState<Record<string, PassageEntry[]>>({});
   const [passagesLoading, setPassagesLoading] = useState<Record<string, boolean>>({});
 
-  const [filterYear, setFilterYear] = useState<number>(() => {
-    if (typeof window === 'undefined') return CURRENT_YEAR;
-    return Number(localStorage.getItem('vipExams_year') || CURRENT_YEAR);
-  });
-  const [filterGrade, setFilterGrade] = useState<number>(() => {
-    if (typeof window === 'undefined') return 1;
-    return Number(localStorage.getItem('vipExams_grade') || 1);
-  });
-
-  const [expandedExam, setExpandedExam] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('vipExams_expandedExam') || null;
-  });
+  // ⚠️ SSR/첫 페인트와 동일해야 hydration 오류가 안 남 — localStorage 복원은 mount 후(아래 useEffect)
+  const [filterYear, setFilterYear] = useState<number>(CURRENT_YEAR);
+  const [filterGrade, setFilterGrade] = useState<number>(1);
+  const [expandedExam, setExpandedExam] = useState<string | null>(null);
+  useEffect(() => {
+    const y = Number(localStorage.getItem('vipExams_year'));
+    if (y) setFilterYear(y);
+    const g = Number(localStorage.getItem('vipExams_grade'));
+    if (g) setFilterGrade(g);
+    const ex = localStorage.getItem('vipExams_expandedExam');
+    if (ex) setExpandedExam(ex);
+  }, []);
   const [localExams, setLocalExams] = useState<Record<string, SchoolExam>>({});
 
   // 문항 유형 입력 모드: 'dropdown' | 'text'

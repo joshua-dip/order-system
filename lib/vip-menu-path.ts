@@ -19,8 +19,13 @@ export function pathToMenuId(pathname: string): string {
   if (pathname.startsWith('/my/vip/academy')) return 'academy';
   if (pathname.startsWith('/my/vip/school-info')) return 'school-info';
   if (pathname.startsWith('/my/vip/payroll')) return 'payroll';
+  if (pathname.startsWith('/my/vip/admissions')) return 'admissions';
+  if (pathname.startsWith('/my/vip/schedule')) return 'schedule';
+  if (pathname.startsWith('/my/vip/memo')) return 'memo';
   if (pathname.startsWith('/my/vip/writing')) return 'writing';
   if (pathname.startsWith('/my/vip/dictionary')) return 'dictionary';
+  if (pathname.startsWith('/my/vip/class-kit')) return 'class-kit';
+  if (pathname.startsWith('/my/vip/passage-analysis')) return 'passage-analysis';
   if (pathname.startsWith('/my/vip/questions')) return 'questions';
   if (pathname.startsWith('/my/vip/generate')) return 'generate';
   if (pathname.startsWith('/my/vip/attendance')) return 'attendance';

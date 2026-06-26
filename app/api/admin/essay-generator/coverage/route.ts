@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getDb } from '@/lib/mongodb';
 import { auditContent } from '@/lib/essay-exam-content-audit';
+import { examTypeMatch } from '@/lib/essay-exams-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,9 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url);
   const rounds = Math.max(1, Math.min(20, Math.floor(Number(url.searchParams.get('rounds') ?? '1') || 1)));
+  // 유형별 분리: 글의의미서술형 vs 그 외(배열형 등). passages(분모)는 유형 무관이라 그대로 둔다.
+  const examType = url.searchParams.get('examType')?.trim() || undefined;
+  const examMatch = examTypeMatch(examType);
 
   try {
     const db = await getDb('gomijoshua');
@@ -64,7 +68,7 @@ export async function GET(request: NextRequest) {
     const examAgg = await db
       .collection('essay_exams')
       .aggregate([
-        { $match: { isPlaceholder: { $ne: true }, textbook: { $ne: '' } } },
+        { $match: { isPlaceholder: { $ne: true }, textbook: { $ne: '' }, ...examMatch } },
         {
           $group: {
             _id: { textbook: '$textbook', difficulty: '$difficulty' },
@@ -152,7 +156,7 @@ export async function GET(request: NextRequest) {
     const targetAgg = await db
       .collection('essay_exams')
       .aggregate([
-        { $match: { isPlaceholder: { $ne: true }, textbook: { $ne: '' } } },
+        { $match: { isPlaceholder: { $ne: true }, textbook: { $ne: '' }, ...examMatch } },
         {
           $group: {
             _id: {
@@ -203,7 +207,7 @@ export async function GET(request: NextRequest) {
     const lightDocs = await db
       .collection('essay_exams')
       .find(
-        { isPlaceholder: { $ne: true }, textbook: { $ne: '' } },
+        { isPlaceholder: { $ne: true }, textbook: { $ne: '' }, ...examMatch },
         { projection: { _id: 1, updatedAt: 1, textbook: 1 } },
       )
       .toArray();

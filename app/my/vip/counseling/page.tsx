@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { studentOptionLabel } from '@/lib/student-label';
 
 const TYPES = ['전화', '대면', '문자', '기타'] as const;
 type CType = (typeof TYPES)[number];
@@ -11,7 +12,7 @@ const TYPE_CLS: Record<CType, string> = {
   기타: 'bg-zinc-700/50 text-zinc-400',
 };
 
-interface Student { id: string; name: string; grade: number; schoolName: string }
+interface Student { id: string; name: string; grade: number; schoolName: string; phone?: string }
 interface CounselRecord { id: string; studentId: string; studentName: string; date: string; time: string; status: '예정' | '완료'; type: CType; content: string; nextPlan: string; createdAt: string }
 interface Summary { upcoming: number; thisMonthDone: number; today: string }
 
@@ -135,7 +136,7 @@ export default function CounselingPage() {
             <select value={fStudent} onChange={(e) => setFStudent(e.target.value)}
               className="flex-1 min-w-[150px] px-3 py-2 rounded-lg bg-zinc-900/70 border border-zinc-700/60 text-sm text-zinc-100 [&>option]:bg-zinc-900 focus:outline-none focus:border-[#c9a44e]/50">
               <option value="">학생 선택</option>
-              {students.map((s) => <option key={s.id} value={s.id}>{s.name}{s.grade ? ` (${s.grade}학년)` : ''}</option>)}
+              {students.map((s) => <option key={s.id} value={s.id}>{studentOptionLabel(s)}</option>)}
             </select>
             <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)}
               className="px-3 py-2 rounded-lg bg-zinc-900/70 border border-zinc-700/60 text-sm text-zinc-100 [color-scheme:dark] focus:outline-none focus:border-[#c9a44e]/50" />

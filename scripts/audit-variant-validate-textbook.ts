@@ -60,9 +60,11 @@ config({ path: path.join(PROJECT_ROOT, '.env.local') });
 
 const DUP_EXCLUDE_TYPES = [
   '순서',
+  '순서-고난도',
   '삽입',
   '삽입-고난도',
   '무관한문장',
+  '무관한문장-고난도',
   '어법',
   '어법-고난도',
   '워크북어법',

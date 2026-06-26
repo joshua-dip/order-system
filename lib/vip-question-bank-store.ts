@@ -48,15 +48,18 @@ export async function ensureQuestionBankIndexes(db: Db): Promise<void> {
 
 /**
  * 불러오기(browse) 검색 필터 — 검색(search route)과 「검색결과 전체 담기」(POST all)에서 동일하게 사용.
- * type/textbook/difficulty 정확일치 + q(고유번호 V-… / 출처·교재 라벨) 검색.
+ * type/textbook/difficulty 정확일치 + q(고유번호 V-… / 출처·교재 라벨) 검색 + advanced(고난도/기본).
  */
-export function buildBrowseFilter(params: { type?: string; textbook?: string; difficulty?: string; q?: string }): Record<string, unknown> {
+export function buildBrowseFilter(params: { type?: string; textbook?: string; difficulty?: string; q?: string; advanced?: string }): Record<string, unknown> {
   const filter: Record<string, unknown> = { status: '완료' };
   const type = (params.type || '').trim();
   const textbook = (params.textbook || '').trim();
   const difficulty = (params.difficulty || '').trim();
   const q = (params.q || '').trim();
+  const advanced = (params.advanced || '').trim(); // 'only'=고난도만 / 'base'=기본만
   if (type) filter.type = type;
+  else if (advanced === 'only') filter.type = { $regex: '고난도$' };
+  else if (advanced === 'base') filter.type = { $not: /고난도$/ };
   if (textbook) filter.textbook = textbook;
   if (difficulty) filter.difficulty = difficulty;
   if (q) {

@@ -3,7 +3,7 @@
  * users.vipSubscriptionUntil 을 한 달 연장한다. 활성 구독 중에는 모든 VIP 메뉴 사용.
  * (자동결제/빌링키 아님 — 매월 사용자가 직접 결제)
  */
-export const VIP_SUBSCRIPTION_MONTHLY_WON = 9900;
+export const VIP_SUBSCRIPTION_MONTHLY_WON = 175000;
 export const VIP_SUBSCRIPTION_ORDER_NAME = 'VIP 메뉴 월 구독';
 
 /** 활성 구독 여부 (만료일이 미래면 활성). */

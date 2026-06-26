@@ -11,6 +11,7 @@ import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { mockExamDisplayLabel } from '@/lib/mock-exam-key';
 import { variantUnitPrice, isOrderInsertType, VARIANT_PRICE } from '@/lib/variant-pricing';
 import AppBar from './AppBar';
+import SampleDrawer from './SampleDrawer';
 
 /* ────────────────────────────────────────────────────────── */
 /*  상수 / 유틸                                               */
@@ -300,6 +301,9 @@ export default function UnifiedOrder() {
   const [showPresets, setShowPresets] = useState(true);
   const [savingScope, setSavingScope] = useState(false);
   const [scopeName, setScopeName] = useState('');
+  /** 주문번호로 시험범위 불러오기 (admin 주문내역의 UV·MV·BV 주문) */
+  const [orderNumberInput, setOrderNumberInput] = useState('');
+  const [loadingOrder, setLoadingOrder] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [schoolSlots, setSchoolSlots] = useState<SchoolExamSlot[]>([]);
 
@@ -310,10 +314,24 @@ export default function UnifiedOrder() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerTypeMap, setQuestionsPerTypeMap] = useState<Record<string, number>>({});
   const [bulkCount, setBulkCount] = useState(3);
+  /** 시험형(총 문항수) 모드 — 총 N문항을 유형별 균등 분배 + 지문 랜덤 */
+  const [examMode, setExamMode] = useState(false);
+  const [examTotal, setExamTotal] = useState(30);
+  /** 유형별로 따로 세트 만들기 (시험형 + 유형 2개 이상) */
+  const [splitByType, setSplitByType] = useState(false);
+  /** 학생 이름 (줄바꿈/쉼표 구분) — 학생별 이름 박힌 개별 문제지용 */
+  const [studentNames, setStudentNames] = useState('');
+  /** 저장된 학생 명단(반) 목록 + 불러오기 패널 */
+  const [rosters, setRosters] = useState<{ id: string; name: string; names: string[] }[]>([]);
+  const [showRosters, setShowRosters] = useState(false);
+  const [rosterBusy, setRosterBusy] = useState(false);
   const [orderInsertExplanation, setOrderInsertExplanation] = useState<{
     순서: boolean;
     삽입: boolean;
   }>({ 순서: true, 삽입: true });
+  // 학교명 + 이전(같은 학교) 출제분과 겹치지 않기
+  const [school, setSchool] = useState('');
+  const [avoidDuplicates, setAvoidDuplicates] = useState(false);
   const [email, setEmail] = useState('');
   const [userPoints, setUserPoints] = useState(0);
   const [pointsToUse, setPointsToUse] = useState(0);
@@ -496,6 +514,37 @@ export default function UnifiedOrder() {
     loadPresets();
   }, [loadPresets]);
 
+  /* ── 학생 명단 저장/불러오기 ── */
+  const loadRosters = useCallback(async () => {
+    try {
+      const res = await fetch('/api/my/student-rosters', { credentials: 'include' });
+      if (res.ok) { const d = await res.json(); if (Array.isArray(d.rosters)) setRosters(d.rosters); }
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => { loadRosters(); }, [loadRosters]);
+
+  const saveRoster = async () => {
+    if (studentList.length === 0) { setToast('저장할 학생 이름이 없습니다.'); return; }
+    const name = window.prompt('명단 이름을 입력하세요 (예: 고3 A반)');
+    if (!name || !name.trim()) return;
+    setRosterBusy(true);
+    try {
+      const res = await fetch('/api/my/student-rosters', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ name: name.trim(), names: studentList }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) { setToast(`"${name.trim()}" 저장 완료 (${studentList.length}명)`); await loadRosters(); }
+      else setToast(typeof d.error === 'string' ? d.error : '저장에 실패했습니다.');
+    } catch { setToast('저장에 실패했습니다.'); } finally { setRosterBusy(false); }
+  };
+  const applyRoster = (names: string[]) => { setStudentNames(names.join('\n')); setShowRosters(false); };
+  const deleteRoster = async (id: string) => {
+    setRosterBusy(true);
+    try { await fetch(`/api/my/student-rosters?id=${id}`, { method: 'DELETE', credentials: 'include' }); await loadRosters(); }
+    catch { /* ignore */ } finally { setRosterBusy(false); }
+  };
+
   const loadSchoolSlots = useCallback(async () => {
     try {
       const res = await fetch('/api/my/school-exam-scopes', { credentials: 'include' });
@@ -654,22 +703,24 @@ export default function UnifiedOrder() {
     setScopeName('');
   };
 
-  /* ── 시험범위 불러오기 적용 ── */
-  const applyPreset = (preset: ExamScopePreset) => {
-    if (!textbooksData) return;
-    const withoutSolbook = preset.dbEntries.filter((e) => {
+  /* ── 시험범위 dbEntries 복원 (저장된 프리셋·주문번호 공용) ── */
+  const applyScopeEntries = (
+    entries: Omit<DbEntry, 'id' | 'lessonGroups'>[],
+    opts?: {
+      selectedTypes?: string[];
+      questionsPerTypeMap?: Record<string, number>;
+      orderInsertExplanation?: { 순서: boolean; 삽입: boolean };
+    },
+  ): { restoredCount: number; droppedSolbook: boolean } | null => {
+    if (!textbooksData) return null;
+    const withoutSolbook = entries.filter((e) => {
       if (e.type !== 'textbook') return true;
       const c = e.textbookCategory;
       return c !== 'solbook-textbook' && c !== 'solbook-suppl';
     });
     if (withoutSolbook.length === 0) {
       setToast('불러올 항목이 없습니다. 파이널 예비 모의고사에서는 쏠북 교재를 제외합니다.');
-      return;
-    }
-    if (withoutSolbook.length < preset.dbEntries.length) {
-      setToast(`"${preset.name}" 불러오기: 쏠북 교재 항목은 제외했습니다.`);
-    } else {
-      setToast(`"${preset.name}" 불러오기 완료`);
+      return null;
     }
     const restored: DbEntry[] = withoutSolbook.map((e) => {
       const base: DbEntry = {
@@ -687,8 +738,43 @@ export default function UnifiedOrder() {
       return e.type === 'mockexam' ? sanitizeMockExamEntry(base) : base;
     });
     setDbEntries(restored);
+    if (opts?.selectedTypes?.length) setSelectedTypes(opts.selectedTypes);
+    if (opts?.questionsPerTypeMap && Object.keys(opts.questionsPerTypeMap).length) setQuestionsPerTypeMap(opts.questionsPerTypeMap);
+    if (opts?.orderInsertExplanation) setOrderInsertExplanation(opts.orderInsertExplanation);
     setShowPresets(false);
     setPhase(2);
+    return { restoredCount: restored.length, droppedSolbook: withoutSolbook.length < entries.length };
+  };
+
+  /* ── 시험범위 불러오기 적용 (저장된 프리셋) ── */
+  const applyPreset = (preset: ExamScopePreset) => {
+    const r = applyScopeEntries(preset.dbEntries);
+    if (r) setToast(r.droppedSolbook ? `"${preset.name}" 불러오기: 쏠북 교재 항목은 제외했습니다.` : `"${preset.name}" 불러오기 완료`);
+  };
+
+  /* ── 주문번호로 시험범위 불러오기 (admin 주문내역의 UV·MV·BV 주문) ── */
+  const loadFromOrderNumber = async () => {
+    const num = orderNumberInput.trim();
+    if (!num) return;
+    setLoadingOrder(true);
+    try {
+      const res = await fetch(`/api/orders/lookup?n=${encodeURIComponent(num)}`, { credentials: 'include' });
+      const d = await res.json();
+      if (!res.ok || !d.ok) { setToast(typeof d.error === 'string' ? d.error : '주문을 불러오지 못했습니다.'); return; }
+      const r = applyScopeEntries(d.scope.dbEntries, {
+        selectedTypes: d.scope.selectedTypes,
+        questionsPerTypeMap: d.scope.questionsPerTypeMap,
+        orderInsertExplanation: d.scope.orderInsertExplanation,
+      });
+      if (r) {
+        const typeNote = Array.isArray(d.scope.selectedTypes) && d.scope.selectedTypes.length ? ` · 유형 ${d.scope.selectedTypes.length}종` : '';
+        setToast(`${d.orderNumber} 불러오기 완료 (지문 범위 ${r.restoredCount}개${typeNote})${r.droppedSolbook ? ' · 쏠북 제외' : ''}`);
+      }
+    } catch {
+      setToast('주문 조회 중 오류가 발생했습니다.');
+    } finally {
+      setLoadingOrder(false);
+    }
   };
 
   /* ── 시험범위 삭제 ── */
@@ -732,10 +818,33 @@ export default function UnifiedOrder() {
       isOrderInsertType(t) ? orderInsertExplanation[t as '순서' | '삽입'] : true,
     );
 
-  const totalPrice = selectedTypes.reduce((sum, t) => {
-    const cnt = questionsPerTypeMap[t] ?? 3;
-    return sum + unitFor(t) * cnt * totalSources;
-  }, 0);
+  /* 시험형(총 문항수): 유형별 균등 분배가 곧 유형별 개수(지문수와 무관). */
+  const examPerType = useMemo(() => {
+    const n = selectedTypes.length;
+    const out: Record<string, number> = {};
+    if (n === 0 || examTotal <= 0) { selectedTypes.forEach((t) => (out[t] = 0)); return out; }
+    const base = Math.floor(examTotal / n), rem = examTotal % n;
+    selectedTypes.forEach((t, i) => (out[t] = base + (i < rem ? 1 : 0)));
+    return out;
+  }, [examTotal, selectedTypes]);
+
+  /** 학생 이름 파싱 (줄바꿈·쉼표 구분, 중복 제거) */
+  const studentList = useMemo(
+    () => [...new Set(studentNames.split(/[\n,]/).map((s) => s.trim()).filter(Boolean))].slice(0, 200),
+    [studentNames],
+  );
+  /** 유형별 세트 분리 여부 (시험형 + 유형 2개 이상일 때만 의미) */
+  const splitActive = examMode && splitByType && selectedTypes.length > 1;
+
+  const totalPrice = examMode
+    ? (splitActive
+        ? selectedTypes.reduce((sum, t) => sum + unitFor(t) * examTotal, 0)      // 유형마다 examTotal 한 세트
+        : selectedTypes.reduce((sum, t) => sum + unitFor(t) * (examPerType[t] ?? 0), 0))
+    : selectedTypes.reduce((sum, t) => sum + unitFor(t) * (questionsPerTypeMap[t] ?? 3) * totalSources, 0);
+  /** 발급될 총 문항수 — 시험형(분리)은 examTotal×유형수, 시험형(혼합)은 examTotal, 아니면 유형별합×지문수 */
+  const totalQuestions = examMode
+    ? (splitActive ? examTotal * selectedTypes.length : examTotal)
+    : selectedTypes.reduce((s, t) => s + (questionsPerTypeMap[t] ?? 3), 0) * totalSources;
 
   const effectivePointsDeduction = hasSolbookInOrder ? 0 : pointsToUse;
   const finalPrice = Math.max(0, totalPrice - effectivePointsDeduction);
@@ -751,9 +860,9 @@ export default function UnifiedOrder() {
       .map((e) => `[${e.displayName}] ${e.selectedSources.join(', ')}`)
       .join('\n');
 
-    const typesSummary = selectedTypes
-      .map((t) => `${t} ${questionsPerTypeMap[t] ?? 3}문항`)
-      .join(', ');
+    const typesSummary = examMode
+      ? `시험형 총 ${examTotal}문항(유형별 균등·지문 랜덤) — ${selectedTypes.map((t) => `${t} ${examPerType[t] ?? 0}`).join(', ')}`
+      : selectedTypes.map((t) => `${t} ${questionsPerTypeMap[t] ?? 3}문항`).join(', ');
 
     const orderText = [
       '=== 파이널 예비 모의고사 주문 (UV) ===',
@@ -792,8 +901,9 @@ export default function UnifiedOrder() {
         ...(textbookCategory ? { textbookCategory } : {}),
       })),
       selectedTypes,
-      questionsPerTypeMap,
+      questionsPerTypeMap: examMode ? examPerType : questionsPerTypeMap,
       orderInsertExplanation,
+      ...(examMode ? { examTotal } : {}),
       email: email.trim(),
       ...(hasSolbookInOrder
         ? {
@@ -823,40 +933,50 @@ export default function UnifiedOrder() {
   const handleInstantIssue = async () => {
     if (selectedTypes.length === 0) { alert('유형을 선택해주세요.'); return; }
     if (totalSources === 0) { alert('지문을 선택해주세요.'); return; }
+    if (avoidDuplicates && !school.trim()) { alert('이전 문제와 겹치지 않기를 켜려면 학교명을 입력해주세요.'); return; }
     if (issuing) return;
     if (userPoints < totalPrice) {
       alert(`포인트가 부족합니다.\n필요한 포인트: ${totalPrice.toLocaleString()}P / 보유: ${userPoints.toLocaleString()}P\n\n마이페이지에서 포인트를 충전한 뒤 다시 시도해 주세요.`);
       return;
     }
-    if (!window.confirm(`${totalPrice.toLocaleString()}P를 차감하고 파이널 예비 모의고사를 바로 발급합니다.\n(총 ${totalSources}개 지문 · 발급 후 「내 다운로드」에서 PDF로 받을 수 있습니다)\n\n진행할까요?`)) {
-      return;
-    }
+    // 유형별 세트 분리(시험형 + 유형 2개 이상) → 유형마다 examTotal문항 한 세트씩
+    const setsMode = examMode && splitByType && selectedTypes.length > 1;
+    const sets = setsMode ? selectedTypes.map((t) => ({ types: [t], label: t })) : [{ types: selectedTypes, label: '' }];
+    const confirmMsg = setsMode
+      ? `${totalPrice.toLocaleString()}P를 차감하고 유형별 ${sets.length}개 세트(각 ${examTotal}문항)를 발급합니다.${studentList.length ? `\n학생 ${studentList.length}명 이름이 박힌 개별 문제지도 받을 수 있어요.` : ''}\n진행할까요?`
+      : `${totalPrice.toLocaleString()}P를 차감하고 파이널 예비 모의고사를 바로 발급합니다.\n(${examMode ? `시험형 총 ${examTotal}문항 · ${totalSources}개 지문에서 랜덤` : `총 ${totalSources}개 지문`}${studentList.length ? ` · 학생 ${studentList.length}명 개별 문제지` : ''})\n진행할까요?`;
+    if (!window.confirm(confirmMsg)) return;
     setIssuing(true);
+    const dbEntriesPayload = dbEntries.map(({ displayName, selectedSources, textbookCategory }) => ({
+      displayName, selectedSources, ...(textbookCategory ? { textbookCategory } : {}),
+    }));
+    let okCount = 0; let lastErr = ''; let balance = userPoints; let anyShort = false;
     try {
-      const r = await fetch('/api/my/final-exams', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          dbEntries: dbEntries.map(({ displayName, selectedSources, textbookCategory }) => ({
-            displayName,
-            selectedSources,
-            ...(textbookCategory ? { textbookCategory } : {}),
-          })),
-          selectedTypes,
-          questionsPerTypeMap,
-          orderInsertExplanation,
-        }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        alert(typeof d.error === 'string' ? d.error : '발급에 실패했습니다. 잠시 후 다시 시도해주세요.');
-        return;
+      for (const s of sets) {
+        const r = await fetch('/api/my/final-exams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            dbEntries: dbEntriesPayload,
+            selectedTypes: s.types,
+            questionsPerTypeMap,
+            orderInsertExplanation,
+            school: school.trim(),
+            avoidDuplicates,
+            ...(examMode ? { examTotal } : {}),
+            ...(studentList.length ? { students: studentList } : {}),
+            ...(s.label ? { setLabel: s.label } : {}),
+          }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) { okCount++; if (typeof d.balanceAfter === 'number') balance = d.balanceAfter; if (d.status !== 'ready') anyShort = true; }
+        else { lastErr = typeof d.error === 'string' ? d.error : '발급 실패'; break; }
       }
-      setUserPoints(typeof d.balanceAfter === 'number' ? d.balanceAfter : Math.max(0, userPoints - totalPrice));
-      if (d.status !== 'ready') {
-        alert(`발급이 접수되었습니다.\n\n현재 준비된 문항: ${d.totalAssigned}/${d.totalRequested}\n부족한 ${d.totalShort}문항은 관리자가 제작 중이며, 완성되면 「내 다운로드」에서 자동으로 다운로드 가능 상태로 바뀝니다.`);
-      }
+      setUserPoints(balance);
+      if (okCount === 0) { alert(lastErr || '발급에 실패했습니다. 잠시 후 다시 시도해주세요.'); return; }
+      if (lastErr) alert(`일부만 발급됐습니다 (${okCount}/${sets.length} 세트).\n${lastErr}`);
+      else if (anyShort) alert('발급이 접수되었습니다. 부족한 문항은 관리자가 제작 중이며, 완성되면 「내 다운로드」에서 자동으로 다운로드 가능해집니다.');
       router.push('/unified/downloads');
     } catch {
       alert('발급 처리 중 오류가 발생했습니다.');
@@ -1047,6 +1167,30 @@ export default function UnifiedOrder() {
                 <li>다음 단계에서 강·번호별로 출제할 지문을 선택합니다</li>
                 <li>원하는 유형과 유형별 문항 수를 설정하고 주문합니다</li>
               </ol>
+            </div>
+
+            {/* 주문번호로 불러오기 */}
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h2 className="font-bold text-gray-800 mb-1">📋 주문번호로 시험 범위 불러오기</h2>
+              <p className="text-xs text-gray-500 mb-3">
+                주문내역의 주문번호(UV·MV·BV)를 입력하면 교재·지문번호·유형·문항수가 자동으로 채워집니다.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  value={orderNumberInput}
+                  onChange={(e) => setOrderNumberInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !loadingOrder) void loadFromOrderNumber(); }}
+                  placeholder="예: UV-20260401-003 / MV-… / BV-…"
+                  className="flex-1 min-w-[220px] rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                />
+                <button
+                  onClick={() => void loadFromOrderNumber()}
+                  disabled={loadingOrder || !orderNumberInput.trim()}
+                  className="rounded-xl bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800 disabled:opacity-50"
+                >
+                  {loadingOrder ? '불러오는 중…' : '불러오기'}
+                </button>
+              </div>
             </div>
 
             {/* 시험범위 불러오기 */}
@@ -1859,97 +2003,164 @@ export default function UnifiedOrder() {
               {BOOK_VARIANT_OBJECTIVE_TYPES.map((t) => {
                 const sel = selectedTypes.includes(t);
                 return (
-                  <button
+                  <div
                     key={t}
-                    onClick={() => toggleType(t)}
-                    className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
-                      sel
-                        ? 'border-purple-600 bg-purple-600 text-white shadow-md'
-                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50'
+                    className={`flex items-stretch overflow-hidden rounded-xl border-2 transition-all ${
+                      sel ? 'border-purple-600 shadow-md' : 'border-gray-200 hover:border-purple-300'
                     }`}
                   >
-                    {t}
-                  </button>
+                    <button
+                      onClick={() => toggleType(t)}
+                      className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                        sel ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-purple-50'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-sample', { detail: t })); }}
+                      title={`${t} 유형 샘플·설명·공부방향 보기`}
+                      className={`px-2 text-xs border-l transition-colors ${
+                        sel ? 'bg-purple-700 text-white border-purple-400 hover:bg-purple-800' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
+                      }`}
+                    >
+                      📝
+                    </button>
+                  </div>
                 );
               })}
             </div>
+            <p className="mt-2 text-[11px] text-gray-400">📝 를 누르면 해당 유형의 샘플·설명·공부방향을 볼 수 있어요.</p>
           </div>
 
           {/* 유형별 문항수 */}
           {selectedTypes.length > 0 && (
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-gray-800">유형별 문항수 설정</h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">일괄:</span>
-                  <button
-                    onClick={() => setBulkCount((v) => Math.max(1, v - 1))}
-                    className="h-7 w-7 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold"
-                  >
-                    −
-                  </button>
-                  <span className="w-6 text-center text-sm font-bold">{bulkCount}</span>
-                  <button
-                    onClick={() => setBulkCount((v) => Math.min(10, v + 1))}
-                    className="h-7 w-7 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold"
-                  >
-                    +
-                  </button>
-                  <button
-                    onClick={applyBulk}
-                    className="rounded-lg bg-gray-800 px-3 py-1 text-xs font-bold text-white hover:bg-gray-900"
-                  >
-                    일괄 적용
-                  </button>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h2 className="font-bold text-gray-800">문항수 설정</h2>
+                <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs font-bold">
+                  <button type="button" onClick={() => setExamMode(false)} className={`rounded-md px-3 py-1 transition-colors ${!examMode ? 'bg-purple-700 text-white' : 'text-gray-500'}`}>유형별 지정</button>
+                  <button type="button" onClick={() => setExamMode(true)} className={`rounded-md px-3 py-1 transition-colors ${examMode ? 'bg-purple-700 text-white' : 'text-gray-500'}`}>총 문항수(시험형)</button>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                {selectedTypes.map((t) => {
-                  const cnt = questionsPerTypeMap[t] ?? 3;
-                  const unitPrice = unitFor(t);
-                  return (
-                    <div
-                      key={t}
-                      className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5"
-                    >
-                      <div>
-                        <span className="font-medium text-gray-800 text-sm">{t}</span>
-                        <span className="ml-2 text-xs text-gray-400">
-                          {unitPrice}원/문항
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setTypeCount(t, cnt - 1)}
-                          className="h-7 w-7 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold text-sm"
-                        >
-                          −
-                        </button>
-                        <span className="w-6 text-center text-sm font-bold text-purple-700">{cnt}</span>
-                        <button
-                          onClick={() => setTypeCount(t, cnt + 1)}
-                          className="h-7 w-7 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold text-sm"
-                        >
-                          +
-                        </button>
-                        <span className="w-20 text-right text-xs text-gray-500">
-                          = {(unitPrice * cnt * totalSources).toLocaleString()}원
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-3 flex justify-end">
-                <span className="text-sm text-gray-500">
-                  소계:{' '}
-                  <span className="font-bold text-gray-800">{totalPrice.toLocaleString()}원</span>
-                </span>
-              </div>
+              {examMode ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-500">총 문항수를 정하면 선택한 유형에 <b className="text-gray-700">고르게 분배</b>하고 범위 내 지문에서 <b className="text-gray-700">랜덤</b>으로 출제합니다 (실제 시험처럼).</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">총 문항수</span>
+                    <button type="button" onClick={() => setExamTotal((v) => Math.max(1, v - 1))} className="h-8 w-8 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-100">−</button>
+                    <input type="number" value={examTotal} min={1} max={300} onChange={(e) => setExamTotal(Math.max(1, Math.min(300, Math.floor(Number(e.target.value) || 0))))} className="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-center text-sm font-bold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200" />
+                    <button type="button" onClick={() => setExamTotal((v) => Math.min(300, v + 1))} className="h-8 w-8 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-100">+</button>
+                    <span className="ml-1 text-xs text-gray-400">문항</span>
+                  </div>
+                  {selectedTypes.length > 1 && (
+                    <label className="flex items-start gap-2 rounded-lg bg-purple-50/60 px-3 py-2 cursor-pointer">
+                      <input type="checkbox" checked={splitByType} onChange={(e) => setSplitByType(e.target.checked)} className="mt-0.5 h-4 w-4 accent-purple-700" />
+                      <span className="text-xs text-gray-700">
+                        <b>유형별로 따로 만들기</b> — 선택한 유형마다 <b className="text-purple-700">각 {examTotal}문항</b> 세트로 분리 발급 (예: 주제 {examTotal} + 제목 {examTotal} = {selectedTypes.length}세트)
+                      </span>
+                    </label>
+                  )}
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedTypes.map((t) => (
+                      <span key={t} className="rounded-full bg-purple-50 px-2.5 py-1 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-100">
+                        {t} {splitActive ? `${examTotal}문항 세트` : `${examPerType[t] ?? 0}문항`}
+                      </span>
+                    ))}
+                  </div>
+                  {examTotal < selectedTypes.length && (
+                    <p className="text-[11px] text-rose-500">총 문항수가 유형 수({selectedTypes.length})보다 적으면 일부 유형은 0문항이 됩니다.</p>
+                  )}
+                  <div className="flex justify-end pt-1">
+                    <span className="text-sm text-gray-500">소계: <span className="font-bold text-gray-800">{totalPrice.toLocaleString()}원</span> <span className="text-xs text-gray-400">· 총 {totalQuestions}문항</span></span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-end gap-2 mb-3">
+                    <span className="text-xs text-gray-500">일괄:</span>
+                    <button onClick={() => setBulkCount((v) => Math.max(1, v - 1))} className="h-7 w-7 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-100">−</button>
+                    <span className="w-6 text-center text-sm font-bold">{bulkCount}</span>
+                    <button onClick={() => setBulkCount((v) => Math.min(10, v + 1))} className="h-7 w-7 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-100">+</button>
+                    <button onClick={applyBulk} className="rounded-lg bg-gray-800 px-3 py-1 text-xs font-bold text-white hover:bg-gray-900">일괄 적용</button>
+                  </div>
+                  <div className="space-y-2">
+                    {selectedTypes.map((t) => {
+                      const cnt = questionsPerTypeMap[t] ?? 3;
+                      const unitPrice = unitFor(t);
+                      return (
+                        <div key={t} className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5">
+                          <div>
+                            <span className="font-medium text-gray-800 text-sm">{t}</span>
+                            <span className="ml-2 text-xs text-gray-400">{unitPrice}원/문항</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setTypeCount(t, cnt - 1)} className="h-7 w-7 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-100 text-sm">−</button>
+                            <span className="w-6 text-center text-sm font-bold text-purple-700">{cnt}</span>
+                            <button onClick={() => setTypeCount(t, cnt + 1)} className="h-7 w-7 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-100 text-sm">+</button>
+                            <span className="w-20 text-right text-xs text-gray-500">= {(unitPrice * cnt * totalSources).toLocaleString()}원</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <span className="text-sm text-gray-500">소계: <span className="font-bold text-gray-800">{totalPrice.toLocaleString()}원</span></span>
+                  </div>
+                </>
+              )}
             </div>
           )}
+
+          {/* 학생 이름 — 학생별 이름 박힌 개별 문제지 */}
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h2 className="font-bold text-gray-800">학생 이름 <span className="text-xs font-normal text-gray-400">(선택)</span></h2>
+              <div className="flex items-center gap-1.5">
+                {studentList.length > 0 && <span className="text-xs font-bold text-purple-700 mr-1">{studentList.length}명</span>}
+                <button type="button" onClick={() => void saveRoster()} disabled={rosterBusy || studentList.length === 0} className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-40">💾 저장</button>
+                <button type="button" onClick={() => setShowRosters((v) => !v)} className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-100">📂 불러오기{rosters.length ? ` (${rosters.length})` : ''}</button>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mb-2">한 줄에 한 명씩(또는 쉼표로 구분) 입력하면, 다운로드 시 <b>학생마다 이름이 박힌 개별 문제지</b>를 ZIP으로 받을 수 있어요. 자주 쓰는 반은 <b>저장</b>해 두고 <b>불러오기</b> 하세요.</p>
+
+            {showRosters && (
+              <div className="mb-2 rounded-xl border border-gray-200 bg-gray-50 p-2">
+                {rosters.length === 0 ? (
+                  <p className="px-1 py-1.5 text-[11px] text-gray-400">저장된 명단이 없습니다. 이름을 입력하고 「💾 저장」을 눌러보세요.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {rosters.map((r) => (
+                      <div key={r.id} className="flex items-center gap-1.5">
+                        <button type="button" onClick={() => applyRoster(r.names)} className="min-w-0 flex-1 truncate rounded-lg bg-white px-2.5 py-1.5 text-left text-xs font-semibold text-gray-700 ring-1 ring-gray-200 hover:bg-purple-50 hover:text-purple-700">
+                          {r.name} <span className="font-normal text-gray-400">· {r.names.length}명</span>
+                        </button>
+                        <button type="button" onClick={() => void deleteRoster(r.id)} disabled={rosterBusy} title="명단 삭제" className="shrink-0 rounded p-1 text-gray-400 hover:bg-rose-50 hover:text-rose-500">🗑</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <textarea
+              value={studentNames}
+              onChange={(e) => setStudentNames(e.target.value)}
+              rows={3}
+              placeholder={'김민준\n이서연\n박도윤'}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-200"
+            />
+            {studentList.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {studentList.slice(0, 30).map((nm, i) => (
+                  <span key={i} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">{nm}</span>
+                ))}
+                {studentList.length > 30 && <span className="text-[11px] text-gray-400">+{studentList.length - 30}명</span>}
+              </div>
+            )}
+          </div>
 
           {/* 순서·삽입 해설 옵션 — 삽입-고난도만 선택 시에는 해당 유형이 없어 빈 박스가 되므로 순서/삽입이 있을 때만 표시 */}
           {(selectedTypes.includes('순서') || selectedTypes.includes('삽입')) && (
@@ -2020,6 +2231,30 @@ export default function UnifiedOrder() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
               />
+            </div>
+          )}
+
+          {/* 학교명 + 이전 출제분과 겹치지 않기 */}
+          {!hasSolbookInOrder && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <h2 className="font-bold text-gray-900 mb-3">시험지 대상 학교 <span className="text-xs font-normal text-gray-400">(선택)</span></h2>
+              <input
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                placeholder="예: 고미고등학교"
+                maxLength={80}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:border-purple-400"
+              />
+              <label className="mt-3 flex items-start gap-2.5 cursor-pointer select-none">
+                <input type="checkbox" checked={avoidDuplicates} onChange={(e) => setAvoidDuplicates(e.target.checked)} className="mt-0.5 w-4 h-4 accent-purple-600" />
+                <span className="text-sm text-gray-700">
+                  <strong className="text-gray-900">이전 문제와 겹치지 않기</strong>
+                  <span className="block text-xs text-gray-500 mt-0.5">이 학교에 이미 발급했던 문항은 빼고 새 문항으로만 출제합니다. (재고가 부족하면 부족분을 자동 제작 요청)</span>
+                </span>
+              </label>
+              {avoidDuplicates && !school.trim() && (
+                <p className="mt-2 text-xs text-rose-500">학교명을 입력해야 겹치지 않기를 적용할 수 있어요.</p>
+              )}
             </div>
           )}
 
@@ -2221,6 +2456,7 @@ export default function UnifiedOrder() {
       )}
 
       {toast && <Toast msg={toast} onDone={() => setToast('')} />}
+      <SampleDrawer />
     </>
   );
 }

@@ -58,9 +58,15 @@ type FilterMeta = {
   hasEmptySource: boolean;
 };
 
-function loadColumnVisibility(): Record<ColumnKey, boolean> {
+/** localStorage 없이 기본값만 — SSR/첫 렌더용(hydration 일치). */
+function defaultColumnVisibility(): Record<ColumnKey, boolean> {
   const base: Record<ColumnKey, boolean> = {} as Record<ColumnKey, boolean>;
   for (const c of COLUMN_META) base[c.key] = c.defaultOn;
+  return base;
+}
+
+function loadColumnVisibility(): Record<ColumnKey, boolean> {
+  const base = defaultColumnVisibility();
   if (typeof window === 'undefined') return base;
   try {
     const raw = window.localStorage.getItem(LS_COLUMNS);
@@ -147,7 +153,9 @@ export default function MyMemberVariants({ refreshKey, listMode = 'full', highli
   const [detailMeta, setDetailMeta] = useState<DetailMeta | null>(null);
   const [detailQuestionData, setDetailQuestionData] = useState<Record<string, unknown> | null>(null);
 
-  const [colVis, setColVis] = useState<Record<ColumnKey, boolean>>(() => loadColumnVisibility());
+  // ⚠️ SSR/첫 페인트(기본 컬럼)와 동일해야 hydration 오류가 안 남 — localStorage 복원은 mount 후
+  const [colVis, setColVis] = useState<Record<ColumnKey, boolean>>(defaultColumnVisibility);
+  useEffect(() => { setColVis(loadColumnVisibility()); }, []);
   const [colMenuOpen, setColMenuOpen] = useState(false);
   const colMenuRef = useRef<HTMLDivElement | null>(null);
 

@@ -37,6 +37,42 @@ export interface VipApiKeyUsageDoc {
   status: number; // HTTP status
   ip?: string;
   userAgent?: string;
+  // 추가 수집 정보
+  referer?: string; // 호출한 페이지(referer)
+  origin?: string; // CORS origin
+  acceptLanguage?: string; // 클라이언트 언어
+  country?: string; // IP 기반 국가(best-effort)
+  city?: string; // IP 기반 도시(best-effort)
+  responseMs?: number; // 처리 시간(ms)
+  bytes?: number; // 응답 크기(byte)
+}
+
+/** 사설/로컬 IP 는 지오 조회 생략. */
+function isPrivateIp(ip: string): boolean {
+  return !ip || ip === '::1' || ip === 'localhost' || ip.startsWith('127.') || ip.startsWith('10.') ||
+    ip.startsWith('192.168.') || /^172\.(1[6-9]|2\d|3[01])\./.test(ip) || ip.startsWith('fc') || ip.startsWith('fd');
+}
+
+const GEO_CACHE = new Map<string, { country?: string; city?: string }>();
+
+/** IP → 국가·도시 (무료 공개 API ipwho.is, 키 없음, 캐시·타임아웃·실패무시). */
+export async function lookupGeo(ip: string): Promise<{ country?: string; city?: string }> {
+  if (isPrivateIp(ip)) return {};
+  const cached = GEO_CACHE.get(ip);
+  if (cached) return cached;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 1500);
+    const r = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}?fields=success,country,city`, { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = (await r.json()) as { success?: boolean; country?: string; city?: string };
+    const out = d?.success ? { country: d.country || undefined, city: d.city || undefined } : {};
+    if (GEO_CACHE.size > 1000) GEO_CACHE.clear();
+    GEO_CACHE.set(ip, out);
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 /** 로그 보존 기간(초) — 1년 후 자동 만료. */

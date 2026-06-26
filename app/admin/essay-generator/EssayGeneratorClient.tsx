@@ -1536,9 +1536,11 @@ interface PassageRow {
 }
 
 function CoveragePanel({
+  examType,
   onClose,
   onJumpToPassage,
 }: {
+  examType: string;
   onClose: () => void;
   onJumpToPassage: (passageId: string, textbook: string) => void;
 }) {
@@ -1608,7 +1610,7 @@ function CoveragePanel({
   const loadCoverage = useCallback(async () => {
     setLoadingCoverage(true);
     try {
-      const res = await fetch(`/api/admin/essay-generator/coverage?rounds=${rounds}`, { credentials: 'include' });
+      const res = await fetch(`/api/admin/essay-generator/coverage?rounds=${rounds}&examType=${encodeURIComponent(examType)}`, { credentials: 'include' });
       const d = await res.json();
       const items = (d.items ?? []) as CoverageItem[];
       setCoverage(items);
@@ -1616,7 +1618,7 @@ function CoveragePanel({
     } finally {
       setLoadingCoverage(false);
     }
-  }, [rounds]);
+  }, [rounds, examType]);
 
   useEffect(() => {
     void loadCoverage();
@@ -1626,7 +1628,7 @@ function CoveragePanel({
     setLoadingRows(true);
     try {
       const res = await fetch(
-        `/api/admin/essay-generator/passage-exam-counts?textbook=${encodeURIComponent(textbook)}`,
+        `/api/admin/essay-generator/passage-exam-counts?textbook=${encodeURIComponent(textbook)}&examType=${encodeURIComponent(examType)}`,
         { credentials: 'include' },
       );
       const d = await res.json();
@@ -1634,7 +1636,7 @@ function CoveragePanel({
     } finally {
       setLoadingRows(false);
     }
-  }, []);
+  }, [examType]);
 
   useEffect(() => {
     if (selectedTextbook) void loadRows(selectedTextbook);
@@ -2057,31 +2059,51 @@ function CoveragePanel({
                     </label>
                     {selectedTextbook && (() => {
                       const tb = selectedTextbook;
+                      const isMeaningType = examType === ESSAY_MEANING_EXAM_TYPE;
                       const envPrefix = rounds > 1 ? `ESSAY_TARGET_PER_DIFFICULTY=${rounds} ` : '';
                       const targetParam = rounds > 1 ? ` (target_per_difficulty=${rounds})` : '';
-                      const scriptCmd = `${envPrefix}./scripts/run-essay-loop.sh "${tb}"`;
-                      const oneLiner = `/loop 10m @scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 "${tb}" 1 cycle 돌려줘${targetParam}. ScheduleWakeup 은 /loop 가 대신하니 호출하지 마.`;
-                      const longPrompt = [
-                        `교재 "${tb}" 에서 essay_exams 가 0 건인 지문 1 건을 찾아 4 난도(기본·중·고·최고) 모두 만들어 저장해줘.`,
-                        `저장 폴더는 "${tb}".`,
-                        ``,
-                        `실행 순서:`,
-                        `1. npm run cc:essay -- next-empty --textbook "${tb}"  로 다음 지문 받기`,
-                        `2. 응답이 {done: true} 면 — 모두 완료. 사용자에게 "「${tb}」 자동 채움 완료" 알리고 ScheduleWakeup 호출하지 말고 종료.`,
-                        `3. 응답에 next.passage_id 가 있으면:`,
-                        `   a. npm run cc:essay -- passage --id <passage_id>  로 지문·문장표 받기`,
-                        `   b. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 4 개 ExamData JSON 작성`,
-                        `      - 기본 → .essay-drafts/<sourceKey_slug>_basic.json`,
-                        `      - 중   → .essay-drafts/<sourceKey_slug>_mid.json`,
-                        `      - 고   → .essay-drafts/<sourceKey_slug>_hard.json`,
-                        `      - 최고 → .essay-drafts/<sourceKey_slug>_max.json`,
-                        `      (sourceKey_slug 는 영문·숫자·한글 외 문자를 _ 로 치환)`,
-                        `   c. npm run cc:essay -- save-all 의 4 개 인자로 위 파일들을 묶어 일괄 저장`,
-                        `   d. 검증 실패가 한 건이라도 있으면 — 멈추고 사용자에게 오류 알리고 ScheduleWakeup 호출 안 함 (--force 자동 우회 금지)`,
-                        `4. 정상 저장 완료 시 — 다음 tick 은 10 분 후 자동 재호출됨`,
-                        ``,
-                        `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 / 최고: 한국어 해석만. 난이도별 문법 포인트 겹침 최소화.`,
-                      ].join('\n');
+                      const scriptCmd = isMeaningType
+                        ? `./scripts/run-essay-loop.sh "${tb}" "${ESSAY_MEANING_EXAM_TYPE}"`
+                        : `${envPrefix}./scripts/run-essay-loop.sh "${tb}"`;
+                      const oneLiner = isMeaningType
+                        ? `/loop 10m 교재 "${tb}" 의 글의의미서술형(기본난도)을 1 지문씩 채워줘. 각 cycle: ① npm run cc:essay -- next-empty --textbook "${tb}" --examType "${ESSAY_MEANING_EXAM_TYPE}" (done:true 면 "완료" 알리고 종료) ② passage --id 로 문장표 ③ generation_prompt_meaning.md 규칙대로 기본난도 ExamData(meta.examType="${ESSAY_MEANING_EXAM_TYPE}", meta.difficulty="기본난도") 작성 → .essay-drafts/<slug>_basic.json ④ npm run cc:essay -- save --json 으로 저장. ScheduleWakeup 은 /loop 가 대신하니 호출하지 마.`
+                        : `/loop 10m @scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 "${tb}" 1 cycle 돌려줘${targetParam}. ScheduleWakeup 은 /loop 가 대신하니 호출하지 마.`;
+                      const longPrompt = (isMeaningType
+                        ? [
+                            `교재 "${tb}" 의 글의의미서술형(기본난도)이 아직 없는 지문 1 건을 찾아 만들어 저장해줘.`,
+                            `저장 폴더는 "${tb}".`,
+                            ``,
+                            `실행 순서:`,
+                            `1. npm run cc:essay -- next-empty --textbook "${tb}" --examType "${ESSAY_MEANING_EXAM_TYPE}"  로 다음 지문 받기`,
+                            `2. 응답이 {done: true} 면 — 모두 완료. "「${tb}」 글의의미 자동 채움 완료" 알리고 ScheduleWakeup 호출하지 말고 종료.`,
+                            `3. 응답에 next.passage_id 가 있으면:`,
+                            `   a. npm run cc:essay -- passage --id <passage_id>  로 지문·문장표 받기`,
+                            `   b. assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙대로 기본난도 ExamData 1 개 작성 (meta.examType="${ESSAY_MEANING_EXAM_TYPE}", meta.difficulty="기본난도") → .essay-drafts/<sourceKey_slug>_basic.json`,
+                            `   c. npm run cc:essay -- save --json .essay-drafts/<sourceKey_slug>_basic.json  로 저장 (글의의미는 기본난도 1 종뿐 — save-all 불필요)`,
+                            `   d. 검증 실패면 — 멈추고 오류 알리고 ScheduleWakeup 호출 안 함 (--force 자동 우회 금지)`,
+                            `4. 정상 저장 완료 시 — 다음 tick 은 10 분 후 자동 재호출됨`,
+                          ]
+                        : [
+                            `교재 "${tb}" 에서 essay_exams 가 0 건인 지문 1 건을 찾아 4 난도(기본·중·고·최고) 모두 만들어 저장해줘.`,
+                            `저장 폴더는 "${tb}".`,
+                            ``,
+                            `실행 순서:`,
+                            `1. npm run cc:essay -- next-empty --textbook "${tb}"  로 다음 지문 받기`,
+                            `2. 응답이 {done: true} 면 — 모두 완료. 사용자에게 "「${tb}」 자동 채움 완료" 알리고 ScheduleWakeup 호출하지 말고 종료.`,
+                            `3. 응답에 next.passage_id 가 있으면:`,
+                            `   a. npm run cc:essay -- passage --id <passage_id>  로 지문·문장표 받기`,
+                            `   b. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 4 개 ExamData JSON 작성`,
+                            `      - 기본 → .essay-drafts/<sourceKey_slug>_basic.json`,
+                            `      - 중   → .essay-drafts/<sourceKey_slug>_mid.json`,
+                            `      - 고   → .essay-drafts/<sourceKey_slug>_hard.json`,
+                            `      - 최고 → .essay-drafts/<sourceKey_slug>_max.json`,
+                            `      (sourceKey_slug 는 영문·숫자·한글 외 문자를 _ 로 치환)`,
+                            `   c. npm run cc:essay -- save-all 의 4 개 인자로 위 파일들을 묶어 일괄 저장`,
+                            `   d. 검증 실패가 한 건이라도 있으면 — 멈추고 사용자에게 오류 알리고 ScheduleWakeup 호출 안 함 (--force 자동 우회 금지)`,
+                            `4. 정상 저장 완료 시 — 다음 tick 은 10 분 후 자동 재호출됨`,
+                            ``,
+                            `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 / 최고: 한국어 해석만. 난이도별 문법 포인트 겹침 최소화.`,
+                          ]).join('\n');
                       return (
                         <span className="inline-flex items-center gap-1 whitespace-nowrap">
                           <button
@@ -3255,6 +3277,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
 
       {showCoverage && (
         <CoveragePanel
+          examType={examType}
           onClose={() => setShowCoverage(false)}
           onJumpToPassage={async (pid) => {
             try {
@@ -3350,7 +3373,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
           if (isMeaningType) {
             parts.push(meaningClueMode
               ? `유형은 글의의미서술형 「양상·영향 문장 찾아 직역」 변형 — assets/exam_kit/generation_prompt_meaning.md 의 「5. 변형」 섹션 규칙대로 한 지문에 2문항(id "2-1" 양상·"2-2" 영향)을 만들고, 각 answer.text 를 본문 문장의 구조 보존 우리말 직역으로, meta.examType="${ESSAY_MEANING_EXAM_TYPE}"·meta.difficulty="기본난도" 로 설정해줘.`
-              : `유형은 글의의미서술형 — assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙을 따르고, ExamData 의 meta.examType 을 "${ESSAY_MEANING_EXAM_TYPE}" 로 설정해줘. (기본=우리말 서술 / 중·고·최고=의미 영작)`);
+              : `유형은 글의의미서술형 — assets/exam_kit/generation_prompt_meaning.md 규칙을 따르고, meta.examType="${ESSAY_MEANING_EXAM_TYPE}"·meta.difficulty="기본난도" 로 설정해줘. (글의의미서술형은 기본난도 1 종뿐 — 밑줄 친 의미 구절의 속뜻을 우리말로 서술)`);
           }
           parts.push(`완성되면 cc:essay save 로 저장까지 진행해줘 (passageId: ${pid})`);
           return parts.join(' ');
@@ -3414,7 +3437,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                 {/* 1 */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-bold text-white">1. 부족 지문 확인 (선택)</h4>
-                  <CmdBlock label="shortage" cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}`} />
+                  <CmdBlock label="shortage" cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}${isMeaningType ? ` --examType "${ESSAY_MEANING_EXAM_TYPE}"` : ''}`} />
                 </div>
 
                 {/* 2 */}
@@ -3516,19 +3539,19 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                 {/* 구분선 */}
                 <div className="border-t border-slate-600 pt-1" />
 
-                {/* 한 지문 4난도 묶음 생성 */}
+                {/* 한 지문 묶음 생성 (배열형=4난도 / 글의의미=기본난도 1종) */}
                 <div className="rounded-xl border border-emerald-600/40 bg-emerald-950/20 p-4 space-y-4">
-                  <h4 className="text-sm font-bold text-emerald-200">📦 한 지문 4난도 한 번에 (기본·중·고·최고)</h4>
+                  <h4 className="text-sm font-bold text-emerald-200">{isMeaningType ? '📝 글의의미 서술형 — 기본난도 (1 건)' : '📦 한 지문 4난도 한 번에 (기본·중·고·최고)'}</h4>
 
                   {/* Step A — Claude Code 채팅 프롬프트 */}
                   <div className="space-y-1.5">
-                    <p className="text-xs font-semibold text-emerald-300">① Claude Code 채팅에 붙여넣어 4 개 draft 자동 작성</p>
+                    <p className="text-xs font-semibold text-emerald-300">{isMeaningType ? '① Claude Code 채팅에 붙여넣어 기본난도 draft 작성' : '① Claude Code 채팅에 붙여넣어 4 개 draft 자동 작성'}</p>
                     {selectedPassageInfo?.passageId ? (
                       <CmdBlock
                         label="all4-prompt"
                         cmd={[
                           isMeaningType
-                            ? `"${tb} ${sk}" 지문(passageId: ${pid})으로 글의 의미(함의) 서술형을 기본난도·중난도·고난도·최고난도 4 종 모두 만들어줘.`
+                            ? `"${tb} ${sk}" 지문(passageId: ${pid})으로 글의 의미(함의) 서술형을 기본난도로 만들어줘. (글의의미서술형은 기본난도 1 종뿐)`
                             : `"${tb} ${sk}" 지문(passageId: ${pid})을 기본난도·중난도·고난도·최고난도 4 종 모두 만들어줘.`,
                           ...(examTitle && examTitle !== '영어 서·논술형 평가' ? [`시험지 제목: "${examTitle}"`] : []),
                           ...(schoolName ? [`학교: "${schoolName}"`] : []),
@@ -3552,22 +3575,30 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                             return out;
                           })(),
                           ``,
-                          `각 난이도마다 다음 절차로 진행:`,
-                          `1. npm run cc:essay -- passage --id ${pid}  로 지문·문장표 확인 (한 번만 받으면 됨)`,
-                          isMeaningType
-                            ? `2. assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙대로 ExamData JSON 작성 (각 JSON 의 meta.examType 을 "${ESSAY_MEANING_EXAM_TYPE}" 로 설정)`
-                            : `2. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 ExamData JSON 작성`,
-                          `   - 기본난도 → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json`,
-                          `   - 중난도   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_mid.json`,
-                          `   - 고난도   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_hard.json`,
-                          `   - 최고난도 → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_max.json`,
-                          `3. 4 개 draft 모두 작성 완료되면 마지막에 한 번 save-all 로 일괄 저장:`,
-                          `   npm run cc:essay -- save-all .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_mid.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_hard.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_max.json`,
-                          ``,
-                          isMeaningType
-                            ? `난이도별 핵심 차이 — 기본: 밑줄 함의를 우리말로 서술 / 중: 의미 영작(키워드 다수) / 고: 의미 영작(키워드 소수) / 최고: 의미 영작(키워드 없음·우리말 의미문만).`
-                            : `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 (완전 영작) / 최고: 키워드 없음 한국어 해석만 (완전 영작).`,
-                          `4 개 모두 같은 지문 다른 문장 선택해도 됨 — 난이도 간 문법 포인트 겹침 최소화.`,
+                          ...(isMeaningType
+                            ? [
+                                `절차:`,
+                                `1. npm run cc:essay -- passage --id ${pid}  로 지문·문장표 확인`,
+                                `2. assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙대로 ExamData JSON 작성 (meta.examType="${ESSAY_MEANING_EXAM_TYPE}", meta.difficulty="기본난도")`,
+                                `   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json`,
+                                `3. npm run cc:essay -- save --json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json  로 저장 (글의의미는 기본난도 1 종뿐 — save-all 불필요)`,
+                                ``,
+                                `기본난도 = 밑줄 친 의미 구절(함의)을 우리말로 서술.`,
+                              ]
+                            : [
+                                `각 난이도마다 다음 절차로 진행:`,
+                                `1. npm run cc:essay -- passage --id ${pid}  로 지문·문장표 확인 (한 번만 받으면 됨)`,
+                                `2. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 ExamData JSON 작성`,
+                                `   - 기본난도 → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json`,
+                                `   - 중난도   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_mid.json`,
+                                `   - 고난도   → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_hard.json`,
+                                `   - 최고난도 → .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_max.json`,
+                                `3. 4 개 draft 모두 작성 완료되면 마지막에 한 번 save-all 로 일괄 저장:`,
+                                `   npm run cc:essay -- save-all .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_mid.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_hard.json .essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_max.json`,
+                                ``,
+                                `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 (완전 영작) / 최고: 키워드 없음 한국어 해석만 (완전 영작).`,
+                                `4 개 모두 같은 지문 다른 문장 선택해도 됨 — 난이도 간 문법 포인트 겹침 최소화.`,
+                              ]),
                         ].join('\n')}
                       />
                     ) : (
@@ -3577,12 +3608,14 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     )}
                   </div>
 
-                  {/* Step B — save-all 단독 명령 */}
+                  {/* Step B — 저장 단독 명령 (배열형=save-all 4개 / 글의의미=save 1개) */}
                   <div className="space-y-1.5">
-                    <p className="text-xs font-semibold text-emerald-300">② draft 4 개가 이미 있을 때 — save-all 단독 호출</p>
+                    <p className="text-xs font-semibold text-emerald-300">{isMeaningType ? '② draft 가 이미 있을 때 — save 단독 호출' : '② draft 4 개가 이미 있을 때 — save-all 단독 호출'}</p>
                     <CmdBlock
-                      label="save-all"
-                      cmd={`npm run cc:essay -- save-all ${
+                      label={isMeaningType ? 'save' : 'save-all'}
+                      cmd={isMeaningType
+                        ? `npm run cc:essay -- save --json ${selectedPassageInfo ? `.essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json` : '<basic.json>'} [--dry-run] [--force]`
+                        : `npm run cc:essay -- save-all ${
                         selectedPassageInfo
                           ? [
                               `.essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json`,
@@ -3594,16 +3627,19 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                       } [--dry-run] [--force]`}
                     />
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      각 파일이 차례로 검증·저장됨. <code className="text-slate-300">--dry-run</code> 으로 먼저 검증만 가능. 결과는 JSON 한 덩어리로 출력되며, 일부 실패해도 나머지는 저장 시도 후 exit code 2 로 종료.
+                      {isMeaningType
+                        ? '글의의미서술형은 기본난도 1 종뿐이라 save 단건이면 충분합니다. '
+                        : '각 파일이 차례로 검증·저장됨. 일부 실패해도 나머지는 저장 시도 후 exit code 2 로 종료. '}
+                      <code className="text-slate-300">--dry-run</code> 으로 먼저 검증만 가능.
                     </p>
                   </div>
                 </div>
 
                 {/* 4난도 자동 채움 스케줄러 (/loop) */}
                 <div className="rounded-xl border border-fuchsia-600/40 bg-fuchsia-950/20 p-4 space-y-4">
-                  <h4 className="text-sm font-bold text-fuchsia-200">🔄 4난도 자동 채움 (10분 간격 · 자동 종료)</h4>
+                  <h4 className="text-sm font-bold text-fuchsia-200">{isMeaningType ? '🔄 글의의미 자동 채움 (기본난도 · 10분 간격 · 자동 종료)' : '🔄 4난도 자동 채움 (10분 간격 · 자동 종료)'}</h4>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    교재 전체에서 <span className="text-white font-semibold">essay_exams 가 0 건인 지문</span>들을 자동으로 큐에 올려, 10 분 간격으로 한 지문씩 4 난도 작업을 진행합니다. 우선순위(<span className="text-amber-300">⭐</span>) 가 높은 지문부터. 모두 채워지면 <code className="text-fuchsia-200">{`{done: true}`}</code> 응답을 받고 <span className="text-white font-semibold">자동 종료</span>.
+                    교재 전체에서 <span className="text-white font-semibold">{isMeaningType ? '글의의미서술형(기본난도) 이 없는 지문' : 'essay_exams 가 0 건인 지문'}</span>들을 자동으로 큐에 올려, 10 분 간격으로 한 지문씩 {isMeaningType ? '기본난도 1 건' : '4 난도'} 작업을 진행합니다. 우선순위(<span className="text-amber-300">⭐</span>) 가 높은 지문부터. 모두 채워지면 <code className="text-fuchsia-200">{`{done: true}`}</code> 응답을 받고 <span className="text-white font-semibold">자동 종료</span>.
                   </p>
 
                   {/* ⭐ 권장 — 헬퍼 스크립트 한 줄 (터미널) */}
@@ -3611,7 +3647,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     <p className="text-xs font-semibold text-emerald-300">⭐ 권장 ① 헬퍼 스크립트 한 줄 — 터미널에서 실행</p>
                     <CmdBlock
                       label="loop-script"
-                      cmd={`./scripts/run-essay-loop.sh "${tb}"`}
+                      cmd={isMeaningType ? `./scripts/run-essay-loop.sh "${tb}" "${ESSAY_MEANING_EXAM_TYPE}"` : `./scripts/run-essay-loop.sh "${tb}"`}
                     />
                     <p className="text-xs text-slate-400 leading-relaxed">
                       자동으로 <code className="text-slate-300">claude --dangerously-skip-permissions</code> 띄우고 첫 메시지까지 입력합니다. ScheduleWakeup 으로 10 분마다 자동 진행 — <span className="text-emerald-300 font-semibold">권한 프롬프트·paste 사고 없음</span>. 8 교재 병렬은 <code className="text-slate-300">./scripts/run-essay-loop-multi.sh &quot;교재1&quot; &quot;교재2&quot; ...</code>
@@ -3623,7 +3659,9 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     <p className="text-xs font-semibold text-fuchsia-300">② claude 안에서 한 줄 호출 — 이미 띄운 세션에서</p>
                     <CmdBlock
                       label="loop-one-liner"
-                      cmd={`/loop 10m @scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 "${tb}" 1 cycle 돌려줘. ScheduleWakeup 은 /loop 가 대신하니 호출하지 마.`}
+                      cmd={isMeaningType
+                        ? `/loop 10m 교재 "${tb}" 의 글의의미서술형(기본난도)을 1 지문씩 채워줘. 각 cycle: ① npm run cc:essay -- next-empty --textbook "${tb}" --examType "${ESSAY_MEANING_EXAM_TYPE}" (done:true 면 "완료" 알리고 종료) ② passage --id 로 문장표 ③ generation_prompt_meaning.md 규칙대로 기본난도 ExamData(meta.examType="${ESSAY_MEANING_EXAM_TYPE}", meta.difficulty="기본난도") 작성 → .essay-drafts/<slug>_basic.json ④ npm run cc:essay -- save --json 으로 저장. ScheduleWakeup 은 /loop 가 대신하니 호출하지 마.`
+                        : `/loop 10m @scripts/cc-essay-loop-prompt.md 워크플로우대로 교재 "${tb}" 1 cycle 돌려줘. ScheduleWakeup 은 /loop 가 대신하니 호출하지 마.`}
                     />
                     <p className="text-xs text-slate-400 leading-relaxed">
                       이미 띄워둔 claude 세션에 위 한 줄을 paste. <span className="text-fuchsia-200">단일 라인이라 truncate 위험 없음</span>. <code>@scripts/cc-essay-loop-prompt.md</code> 가 워크플로우를 inline expansion. 권한 우회가 필요하면 claude 를 <code className="text-slate-300">claude --dangerously-skip-permissions</code> 로 미리 띄워둘 것.
@@ -3637,27 +3675,42 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     <div className="px-3 pb-3 pt-1 space-y-1.5">
                       <CmdBlock
                         label="loop-prompt"
-                        cmd={[
-                          `교재 "${tb}" 에서 essay_exams 가 0 건인 지문 1 건을 찾아 4 난도(기본·중·고·최고) 모두 만들어 저장해줘.`,
-                          `저장 폴더는 "${fold}".`,
-                          ``,
-                          `실행 순서:`,
-                          `1. npm run cc:essay -- next-empty --textbook "${tb}"  로 다음 지문 받기`,
-                          `2. 응답이 {done: true} 면 — 모두 완료. 사용자에게 "「${tb}」 자동 채움 완료" 알리고 ScheduleWakeup 호출하지 말고 종료.`,
-                          `3. 응답에 next.passage_id 가 있으면:`,
-                          `   a. npm run cc:essay -- passage --id <passage_id>  로 지문·문장표 받기`,
-                          `   b. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 4 개 ExamData JSON 작성`,
-                          `      - 기본 → .essay-drafts/<sourceKey_slug>_basic.json`,
-                          `      - 중   → .essay-drafts/<sourceKey_slug>_mid.json`,
-                          `      - 고   → .essay-drafts/<sourceKey_slug>_hard.json`,
-                          `      - 최고 → .essay-drafts/<sourceKey_slug>_max.json`,
-                          `      (sourceKey_slug 는 영문·숫자·한글 외 문자를 _ 로 치환)`,
-                          `   c. npm run cc:essay -- save-all 의 4 개 인자로 위 파일들을 묶어 일괄 저장`,
-                          `   d. 검증 실패가 한 건이라도 있으면 — 멈추고 사용자에게 오류 알리고 ScheduleWakeup 호출 안 함 (--force 자동 우회 금지)`,
-                          `4. 정상 저장 완료 시 — 다음 tick 은 10 분 후 자동 재호출됨 (사용자는 채팅에 아무 입력 안 하면 됨)`,
-                          ``,
-                          `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 (완전 영작) / 최고: 키워드 없음 한국어 해석만 (완전 영작). 난이도별 문법 포인트가 겹치지 않도록 문장 선택.`,
-                        ].join('\n')}
+                        cmd={(isMeaningType
+                          ? [
+                              `교재 "${tb}" 의 글의의미서술형(기본난도)이 아직 없는 지문 1 건을 찾아 만들어 저장해줘.`,
+                              `저장 폴더는 "${fold}".`,
+                              ``,
+                              `실행 순서:`,
+                              `1. npm run cc:essay -- next-empty --textbook "${tb}" --examType "${ESSAY_MEANING_EXAM_TYPE}"  로 다음 지문 받기`,
+                              `2. 응답이 {done: true} 면 — 모두 완료. "「${tb}」 글의의미 자동 채움 완료" 알리고 ScheduleWakeup 호출하지 말고 종료.`,
+                              `3. 응답에 next.passage_id 가 있으면:`,
+                              `   a. npm run cc:essay -- passage --id <passage_id>  로 지문·문장표 받기`,
+                              `   b. assets/exam_kit/generation_prompt_meaning.md + 난이도 부록(글의의미) 규칙대로 기본난도 ExamData 1 개 작성 (meta.examType="${ESSAY_MEANING_EXAM_TYPE}", meta.difficulty="기본난도") → .essay-drafts/<sourceKey_slug>_basic.json`,
+                              `   c. npm run cc:essay -- save --json .essay-drafts/<sourceKey_slug>_basic.json  로 저장 (글의의미는 기본난도 1 종뿐 — save-all 불필요)`,
+                              `   d. 검증 실패면 — 멈추고 사용자에게 오류 알리고 ScheduleWakeup 호출 안 함 (--force 자동 우회 금지)`,
+                              `4. 정상 저장 완료 시 — 다음 tick 은 10 분 후 자동 재호출됨 (사용자는 채팅에 아무 입력 안 하면 됨)`,
+                            ]
+                          : [
+                              `교재 "${tb}" 에서 essay_exams 가 0 건인 지문 1 건을 찾아 4 난도(기본·중·고·최고) 모두 만들어 저장해줘.`,
+                              `저장 폴더는 "${fold}".`,
+                              ``,
+                              `실행 순서:`,
+                              `1. npm run cc:essay -- next-empty --textbook "${tb}"  로 다음 지문 받기`,
+                              `2. 응답이 {done: true} 면 — 모두 완료. 사용자에게 "「${tb}」 자동 채움 완료" 알리고 ScheduleWakeup 호출하지 말고 종료.`,
+                              `3. 응답에 next.passage_id 가 있으면:`,
+                              `   a. npm run cc:essay -- passage --id <passage_id>  로 지문·문장표 받기`,
+                              `   b. assets/exam_kit/generation_prompt.md + 난이도 부록 규칙대로 4 개 ExamData JSON 작성`,
+                              `      - 기본 → .essay-drafts/<sourceKey_slug>_basic.json`,
+                              `      - 중   → .essay-drafts/<sourceKey_slug>_mid.json`,
+                              `      - 고   → .essay-drafts/<sourceKey_slug>_hard.json`,
+                              `      - 최고 → .essay-drafts/<sourceKey_slug>_max.json`,
+                              `      (sourceKey_slug 는 영문·숫자·한글 외 문자를 _ 로 치환)`,
+                              `   c. npm run cc:essay -- save-all 의 4 개 인자로 위 파일들을 묶어 일괄 저장`,
+                              `   d. 검증 실패가 한 건이라도 있으면 — 멈추고 사용자에게 오류 알리고 ScheduleWakeup 호출 안 함 (--force 자동 우회 금지)`,
+                              `4. 정상 저장 완료 시 — 다음 tick 은 10 분 후 자동 재호출됨 (사용자는 채팅에 아무 입력 안 하면 됨)`,
+                              ``,
+                              `난이도별 핵심 차이 — 기본: 변형 0 (셔플만) / 중: 1~2 청크 어형 변형 / 고: 키워드 lemma 알파벳순 (완전 영작) / 최고: 키워드 없음 한국어 해석만 (완전 영작). 난이도별 문법 포인트가 겹치지 않도록 문장 선택.`,
+                            ]).join('\n')}
                       />
                       <p className="text-xs text-slate-400 leading-relaxed">
                         Claude Code 채팅에 paste 시 「[Pasted text #1 +N lines]」 첨부로 자동 변환되면 <code className="text-fuchsia-200">/loop</code> skill 이 내용을 못 읽어 실패합니다. 가능하면 위의 ⭐ 권장 ① 또는 ② 옵션 사용.
@@ -3673,7 +3726,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                       <p>아래 명령 한 번으로 다음 작업 대상 지문과 남은 건수를 확인할 수 있습니다.</p>
                       <CmdBlock
                         label="loop-peek"
-                        cmd={`npm run cc:essay -- next-empty --textbook "${tb}"`}
+                        cmd={isMeaningType ? `npm run cc:essay -- next-empty --textbook "${tb}" --examType "${ESSAY_MEANING_EXAM_TYPE}"` : `npm run cc:essay -- next-empty --textbook "${tb}"`}
                       />
                       <p className="text-slate-400 mt-1">
                         응답의 <code>empty_passages</code> = 아직 0 건인 지문 수, <code>next.priority</code> = ⭐ 우선순위. <code>done: true</code> 면 큐가 비어있음.
@@ -3691,7 +3744,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     <p className="text-xs font-semibold text-sky-300">① shortage 실행 → 부족 지문 목록 확인</p>
                     <CmdBlock
                       label="batch-shortage"
-                      cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}`}
+                      cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}${isMeaningType ? ` --examType "${ESSAY_MEANING_EXAM_TYPE}"` : ''}`}
                     />
                     <p className="text-xs text-slate-400 leading-relaxed">
                       출력의 <code className="text-slate-300">shortage[]</code> 배열에 처리해야 할 지문 목록(passage_id 포함)이 나옵니다.

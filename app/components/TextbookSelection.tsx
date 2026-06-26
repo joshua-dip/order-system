@@ -161,7 +161,7 @@ function useHubSections(
   isMember: boolean,
   isPremiumMember: boolean,
   onFinalGate: () => void
-): { vocabulary: HubEntry; classkit: HubEntry; primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[] } {
+): { vocabulary: HubEntry; classkit: HubEntry; finalMock: HubEntry; primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[] } {
   return useMemo(() => {
     const vocabulary: HubEntry = {
       id: 'vocabulary',
@@ -305,7 +305,6 @@ function useHubSections(
     ];
 
     const more: HubEntry[] = [
-      finalMock,
       {
         id: 'order-num',
         title: '번호별 교재 제작하기',
@@ -369,7 +368,7 @@ function useHubSections(
         ),
       },
     ];
-    return { vocabulary, classkit, primary: [mock, textbook, gyogwaseo], workbook, more };
+    return { vocabulary, classkit, finalMock, primary: [mock, textbook, gyogwaseo], workbook, more };
   }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
 
@@ -402,7 +401,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const analysisUnlocked = isMember && user.canAccessAnalysis;
   const isPremiumMember = user?.isPremiumMember === true;
   const openFinalGate = () => setFinalGateOpen(true);
-  const { vocabulary: hubVocabulary, classkit: hubClassKit, primary: hubPrimary, workbook: hubWorkbook, more: hubMore } = useHubSections(
+  const { vocabulary: hubVocabulary, classkit: hubClassKit, finalMock: hubFinalMock, primary: hubPrimary, workbook: hubWorkbook, more: hubMore } = useHubSections(
     analysisUnlocked,
     isMember,
     isPremiumMember,
@@ -457,13 +456,13 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
             >
               <div className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">
-                  Q&amp;A 분석지
+                  모고 Q&amp;A 분석지
                 </span>
                 <p className="text-sm font-medium text-emerald-50">
-                  모의고사 지문을 문장별로 — 단어 클릭으로 바로 질문, 한글 해석 가리기, SVOC 보기
+                  모의고사 회차·번호별 지문 분석 — 문장별 해석·SVOC, 단어 클릭으로 바로 질문
                 </p>
                 <p className="mt-0.5 text-xs text-emerald-100/90">
-                  비로그인도 누구나 작성 가능
+                  비로그인도 누구나 열람·질문 가능
                 </p>
               </div>
               <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-emerald-50 sm:ml-6">
@@ -703,11 +702,11 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                 </span>
               </div>
               <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
-                <strong className="text-slate-800">단어장</strong>은 구매 즉시 편집·다운로드되고, <strong className="text-slate-800">클래스키트</strong>는 교재 지문을 강의·수업용 자료로 바로 변환해 PDF 로 받습니다.
+                <strong className="text-slate-800">단어장</strong>은 구매 즉시 편집·다운로드되고, <strong className="text-slate-800">클래스키트</strong>는 교재 지문을 강의·수업용 자료로 바로 변환해 PDF 로 받습니다. <strong className="text-slate-800">파이널 예비 모의고사</strong>는 시험 범위로 예비 시험지를 바로 제작합니다(연회원·월구독).
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2" role="list">
-              {[hubVocabulary, hubClassKit].map((it) => (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3" role="list">
+              {[hubVocabulary, hubClassKit, hubFinalMock].map((it) => (
                 <div key={it.id} role="listitem">
                   <OrderHubCard
                     title={it.title}

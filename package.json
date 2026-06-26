@@ -16,6 +16,7 @@
     "mcp-bridge:setup": "node scripts/ensure-mcp-bridge-env.cjs",
     "mcp-bridge:dev": "node scripts/mcp-bridge-dev.cjs",
     "mcp:variant": "tsx scripts/mcp-next-order-variant.ts",
+    "mcp:vip": "tsx scripts/mcp-next-order-vip.ts",
     "cc:variant": "tsx scripts/cc-variant-cli.ts",
     "cc:narrative": "tsx scripts/cc-narrative-cli.ts",
     "cc:essay": "tsx scripts/cc-essay-cli.ts",

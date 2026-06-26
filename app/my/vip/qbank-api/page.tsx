@@ -7,7 +7,7 @@ import { getPublicSiteUrl } from '@/lib/site-branding';
 const PUBLIC_BASE = getPublicSiteUrl() || 'https://gomijoshua.com';
 
 interface ApiKey { id: string; key: string; label: string; createdAt: string; lastUsedAt: string | null }
-interface UsageLog { id: string; keyId: string; keyLabel: string; at: string; endpoint: string; folder: string; type: string; limit: number | null; offset: number | null; count: number; status: number; ip: string; userAgent: string }
+interface UsageLog { id: string; keyId: string; keyLabel: string; at: string; endpoint: string; folder: string; type: string; limit: number | null; offset: number | null; count: number; status: number; ip: string; userAgent: string; referer: string; origin: string; acceptLanguage: string; country: string; city: string; responseMs: number | null; bytes: number | null }
 interface UsageSummary { total: number; last7d: number; last24h: number; returned: number; perKey: { keyId: string; keyLabel: string; calls: number; items: number; lastAt: string }[] }
 
 function when(iso: string | null): string {
@@ -30,6 +30,7 @@ export default function QbankApiPage() {
   const [usage, setUsage] = useState<UsageLog[]>([]);
   const [usageSummary, setUsageSummary] = useState<UsageSummary | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
+  const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const d = await fetch('/api/my/vip/api-keys', { credentials: 'include' }).then((r) => r.json());
@@ -198,23 +199,49 @@ export default function QbankApiPage() {
           <div className="py-8 text-center text-xs text-zinc-600">아직 외부 호출 기록이 없습니다. 키로 API를 호출하면 여기에 시각·건수·IP가 쌓입니다.</div>
         ) : (
           <div className="rounded-lg border border-zinc-800/70 overflow-hidden">
-            <div className="grid grid-cols-[1.6fr_1.2fr_1.3fr_0.6fr_0.6fr] gap-2 px-3 py-1.5 bg-zinc-900/70 text-[10px] text-zinc-500 font-medium">
-              <span>시각</span><span>키</span><span>필터</span><span className="text-right">건수</span><span className="text-right">상태</span>
+            <div className="grid grid-cols-[1.4fr_0.9fr_1fr_1.1fr_0.45fr_0.45fr] gap-2 px-3 py-1.5 bg-zinc-900/70 text-[10px] text-zinc-500 font-medium">
+              <span>시각</span><span>키</span><span>필터</span><span>IP</span><span className="text-right">건수</span><span className="text-right">상태</span>
             </div>
-            <div className="max-h-80 overflow-y-auto divide-y divide-zinc-800/50">
-              {usage.map((u) => (
-                <div key={u.id} className="grid grid-cols-[1.6fr_1.2fr_1.3fr_0.6fr_0.6fr] gap-2 px-3 py-1.5 text-[11px] items-center">
-                  <span className="text-zinc-400" title={u.ip ? `IP ${u.ip}` : ''}>{when(u.at)}</span>
-                  <span className="text-zinc-300 truncate">{u.keyLabel}</span>
-                  <span className="text-zinc-500 truncate">{[u.folder && `folder=${u.folder}`, u.type && `type=${u.type}`].filter(Boolean).join(' ') || '전체'}</span>
-                  <span className="text-right text-zinc-300 tabular-nums">{u.count}</span>
-                  <span className={`text-right tabular-nums ${u.status === 200 ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>{u.status}</span>
-                </div>
-              ))}
+            <div className="max-h-96 overflow-y-auto divide-y divide-zinc-800/50">
+              {usage.map((u) => {
+                const open = expandedLog === u.id;
+                return (
+                  <div key={u.id}>
+                    <button onClick={() => setExpandedLog(open ? null : u.id)} className="w-full grid grid-cols-[1.4fr_0.9fr_1fr_1.1fr_0.45fr_0.45fr] gap-2 px-3 py-1.5 text-[11px] items-center text-left hover:bg-zinc-900/40">
+                      <span className="text-zinc-400">{when(u.at)}</span>
+                      <span className="text-zinc-300 truncate">{u.keyLabel}</span>
+                      <span className="text-zinc-500 truncate">{[u.folder && `folder=${u.folder}`, u.type && `type=${u.type}`].filter(Boolean).join(' ') || '전체'}</span>
+                      <span className="text-zinc-400 font-mono truncate" title={u.ip || ''}>{u.ip || '—'}{u.country && <span className="text-zinc-500 font-sans"> · {u.country}</span>}</span>
+                      <span className="text-right text-zinc-300 tabular-nums">{u.count}</span>
+                      <span className={`text-right tabular-nums ${u.status === 200 ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>{u.status}</span>
+                    </button>
+                    {open && (
+                      <div className="px-3 pb-2.5 pt-1 bg-zinc-950/40 text-[11px] space-y-1">
+                        {[
+                          ['IP', u.ip || '—'],
+                          ['위치', [u.country, u.city].filter(Boolean).join(' · ') || '—'],
+                          ['Referer', u.referer || '—'],
+                          ['Origin', u.origin || '—'],
+                          ['언어', u.acceptLanguage || '—'],
+                          ['User-Agent', u.userAgent || '—'],
+                          ['처리시간', u.responseMs != null ? `${u.responseMs} ms` : '—'],
+                          ['응답크기', u.bytes != null ? `${u.bytes.toLocaleString()} B` : '—'],
+                          ['요청', `limit=${u.limit ?? '—'} offset=${u.offset ?? '—'} → ${u.count}건`],
+                        ].map(([k, v]) => (
+                          <div key={k} className="flex gap-2">
+                            <span className="text-zinc-600 w-20 shrink-0">{k}</span>
+                            <span className="text-zinc-300 break-all">{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
-        <p className="text-[11px] text-zinc-600">최근 200건까지 표시 · 로그는 1년간 보관됩니다.</p>
+        <p className="text-[11px] text-zinc-600">행을 누르면 상세(위치·Referer·UA·처리시간 등) 표시 · 최근 200건 · 로그 1년 보관.</p>
       </section>
 
       {/* 사용법 */}

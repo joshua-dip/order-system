@@ -35,8 +35,13 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'academy', label: '학원 교습소 정보' },
   { id: 'school-info', label: '학교 정보 관리' },
   { id: 'payroll', label: '급여 관리' },
+  { id: 'admissions', label: '입시관리' },
+  { id: 'schedule', label: '일정관리' },
+  { id: 'memo', label: '메모장' },
   { id: 'writing', label: '영작 수업' },
   { id: 'dictionary', label: '전자사전' },
+  { id: 'class-kit', label: '클래스키트' },
+  { id: 'passage-analysis', label: '출제 포인트' },
   { id: 'qbank-api', label: '문제은행 API' },
 ];
 
@@ -72,7 +77,12 @@ export const DEFAULT_MENU_DEPENDENCIES: Record<string, string[]> = {
   academy: [],                       // 학원 교습소 정보 = 독립(단일 정보)
   'school-info': [],                 // 학교 정보 관리 = 독립(학교 목록)
   payroll: [],                       // 급여 관리 = 독립(직원 급여)
+  admissions: ['students'],          // 입시관리 = 학생 명단(학생별 입시 현황)
+  schedule: [],                      // 일정관리 = 독립(학원 일정)
+  memo: [],                          // 메모장 = 독립(개인 메모)
   dictionary: [],                    // 전자사전 = 독립(무료 사전 API)
+  'class-kit': [],                   // 클래스키트 = 독립(모의고사 지문 수업자료·PDF)
+  'passage-analysis': [],            // 출제 포인트 = 독립(교사가 문장별 출제 포인트 작성)
   'qbank-api': ['questions'],        // 문제은행 API = 내 문제은행(문제 관리)
 };
 
@@ -88,8 +98,18 @@ export const ALWAYS_FREE_MENU_IDS = new Set(['dashboard']);
 
 export const VIP_MENU_STORE_SETTINGS_ID = 'vipMenuStore';
 
-/** settings.value 형태: { [menuId]: { paid, price, requires? } } */
-export type VipMenuStoreConfig = Record<string, { paid?: boolean; price?: number; requires?: string[] }>;
+/**
+ * settings.value 형태: { [menuId]: { paid, price, requires?, published? } }
+ * - paid=false/미설정 → 기본 제공(모든 VIP 무료)
+ * - paid=true → 유료. published=true 인 것만 실제 구매 가능(공개). published=false 면 「준비 중」으로 구매 불가.
+ */
+export type VipMenuStoreConfig = Record<string, { paid?: boolean; price?: number; requires?: string[]; published?: boolean }>;
+
+/** 전체 메뉴 접근 예외 계정(테스트 계정 '조슈아') — loginId 로 식별. */
+export const VIP_ALL_ACCESS_LOGIN_IDS = new Set<string>(['01079270806']);
+export function isVipAllAccess(loginId: string | null | undefined): boolean {
+  return !!loginId && VIP_ALL_ACCESS_LOGIN_IDS.has(loginId);
+}
 
 export function menuPrice(config: VipMenuStoreConfig | null | undefined, menuId: string): number {
   const c = config?.[menuId];
@@ -101,10 +121,20 @@ export function isMenuPaid(config: VipMenuStoreConfig | null | undefined, menuId
   return !!c?.paid && menuPrice(config, menuId) > 0;
 }
 
+/** 공개 여부 — 유료 메뉴는 published=true 일 때만 노출/구매 가능. */
+export function isMenuPublished(config: VipMenuStoreConfig | null | undefined, menuId: string): boolean {
+  return !!config?.[menuId]?.published;
+}
+
+/** 구매 가능 여부 — 유료 + 공개. */
+export function isMenuPurchasable(config: VipMenuStoreConfig | null | undefined, menuId: string): boolean {
+  return isMenuPaid(config, menuId) && isMenuPublished(config, menuId);
+}
+
 /** 메뉴 사용 가능 여부 — 무료이거나, 유료지만 사용자가 언락했으면 true. */
 export function isMenuAccessible(menuId: string, config: VipMenuStoreConfig | null | undefined, userMenus: string[] | null | undefined): boolean {
   if (ALWAYS_FREE_MENU_IDS.has(menuId)) return true;
-  if (!isMenuPaid(config, menuId)) return true; // 미설정/무료
+  if (!isMenuPaid(config, menuId)) return true; // 미설정/무료(기본 제공)
   return Array.isArray(userMenus) && userMenus.includes(menuId);
 }
 

@@ -62,6 +62,21 @@ export interface GradeAnswer {
   score: number; // 이 문항 배점 (정답 시 획득)
 }
 
+/**
+ * 재응시 결과 — 공식(첫 제출) 점수는 그대로 두고, 학생이 답을 고쳐 다시 풀어본 최신 결과만 별도 보관.
+ * (선생님은 "정답을 바로 고쳤는지" 확인용, 학생은 개선된 점수 확인용. 공식 기록은 불변.)
+ */
+export interface GradeRetake {
+  attemptCount: number; // 재응시 횟수
+  correctCount: number;
+  objectiveCount: number;
+  earnedScore: number;
+  maxObjectiveScore: number;
+  wrongNums: number[];
+  byType: { type: string; correct: number; total: number }[];
+  createdAt: Date; // 최신 재응시 시각
+}
+
 export interface GradeResultDoc {
   _id?: ObjectId;
   paperId: ObjectId;
@@ -77,6 +92,7 @@ export interface GradeResultDoc {
   maxObjectiveScore: number; // 객관식 만점
   byType: { type: string; correct: number; total: number }[];
   bySource: { sourceKey: string; correct: number; total: number }[];
+  retake?: GradeRetake; // 재응시 최신 결과(선택)
   createdAt: Date;
 }
 

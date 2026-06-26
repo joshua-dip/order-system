@@ -22,8 +22,9 @@ interface GradeResult {
   maxObjectiveScore: number;
   weakTypes: string[];
   wrongNums: number[];
-  /** 이미 한 번 제출한 학생의 재제출 — 첫 제출 결과를 보여줌(점수 변경 없음). */
-  alreadySubmitted?: boolean;
+  /** 재응시 결과 — 방금 고쳐 푼 점수를 보여줌. 공식(첫 제출) 점수는 official 로 유지. */
+  isRetake?: boolean;
+  official?: { correctCount: number; objectiveCount: number; earnedScore: number; maxObjectiveScore: number };
 }
 
 export default function ExamGradePage({ params }: { params: Promise<{ token: string }> }) {
@@ -108,9 +109,12 @@ export default function ExamGradePage({ params }: { params: Promise<{ token: str
             <h1 className="text-lg font-bold text-slate-800 mt-1">채점 결과</h1>
           </div>
 
-          {result.alreadySubmitted && (
-            <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-[13px] text-amber-800 text-center">
-              이미 제출한 시험이에요. <b>처음 제출한 결과</b>를 보여드립니다. (재제출로 점수는 바뀌지 않습니다)
+          {result.isRetake && (
+            <div className="rounded-xl bg-sky-50 border border-sky-200 px-4 py-3 text-[13px] text-sky-800 text-center">
+              ✏️ <b>재응시 결과</b>예요 — 방금 고쳐 푼 점수입니다.
+              {result.official && (
+                <> 공식 점수(처음 제출)는 <b>{result.official.earnedScore}점 ({result.official.correctCount}/{result.official.objectiveCount})</b> 로 유지돼요.</>
+              )}
             </div>
           )}
 
@@ -144,7 +148,16 @@ export default function ExamGradePage({ params }: { params: Promise<{ token: str
             </div>
           )}
 
-          <p className="text-center text-xs text-slate-400">선생님이 결과를 확인하실 수 있어요.</p>
+          <button
+            onClick={() => { setResult(null); setErr(''); }}
+            className="w-full py-3.5 rounded-2xl bg-white border border-indigo-200 text-indigo-600 font-bold text-sm hover:bg-indigo-50 active:scale-[0.99] transition-all"
+          >
+            ✏️ 다시 풀기 (재응시)
+          </button>
+          <p className="text-center text-xs text-slate-400">
+            틀린 문항을 고쳐 다시 풀어볼 수 있어요. 선생님이 결과를 확인하실 수 있어요.<br />
+            <span className="text-slate-300">공식 점수는 처음 제출한 결과로 유지됩니다.</span>
+          </p>
         </div>
       </div>
     );

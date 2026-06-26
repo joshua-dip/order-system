@@ -26,6 +26,13 @@ function view(u: VipApiKeyUsageDoc) {
     status: u.status,
     ip: u.ip ?? '',
     userAgent: u.userAgent ?? '',
+    referer: u.referer ?? '',
+    origin: u.origin ?? '',
+    acceptLanguage: u.acceptLanguage ?? '',
+    country: u.country ?? '',
+    city: u.city ?? '',
+    responseMs: typeof u.responseMs === 'number' ? u.responseMs : null,
+    bytes: typeof u.bytes === 'number' ? u.bytes : null,
   };
 }
 
