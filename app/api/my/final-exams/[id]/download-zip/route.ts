@@ -232,6 +232,9 @@ export async function GET(
     });
   } catch (e) {
     console.error('[final-exams download-zip]', e);
-    return NextResponse.json({ error: 'ZIP 생성에 실패했습니다.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'PDF 생성에 실패했습니다. 잠시 후 다시 시도해주세요. (학생 수가 많으면 시간이 더 걸릴 수 있습니다)' },
+      { status: 500 },
+    );
   }
 }
