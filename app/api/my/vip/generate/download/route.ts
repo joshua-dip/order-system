@@ -180,7 +180,7 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
   /** 객관식 출처 카테고리 (ids 순서 정렬) — 표지 분포용(범위 기준). 없으면 교재명으로 분류. */
   const objCategories = (sp.get('categories') || '').split(',').map((s) => s.trim());
   /** 서술형 문항 (기출 그대로, 객관식 뒤에 배치) */
-  let subjectives: { question: string; paragraph: string; source: string; score: number; category?: string; type?: string }[] = [];
+  let subjectives: { question: string; paragraph: string; source: string; score: number; category?: string; type?: string; modelAnswer?: string; explanation?: string }[] = [];
   try { const raw = sp.get('subjectives'); if (raw) subjectives = JSON.parse(raw); } catch { /* 무시 */ }
   if (ids.length === 0 && subjectives.length === 0) return NextResponse.json({ error: '문제 ID가 없습니다.' }, { status: 400 });
 
@@ -224,15 +224,24 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
       answer: clean(d.question_data.CorrectAnswer || d.question_data.Answer || ''),
     }));
     subjectives.forEach((_sj, j) => ansList.push({ num: docs.length + j + 1, answer: '서술형' }));
-    // answers = 정답 및 해설 → 문항별 해설(Explanation) 동봉
+    // answers = 정답 및 해설 → 문항별 해설(Explanation) + 서술형 모범답안·해설 동봉
     const details = sheet === 'answers'
-      ? docs.map((d, i) => ({
-          num: i + 1,
-          answer: clean(d.question_data.CorrectAnswer || d.question_data.Answer || ''),
-          src: sourceLabel(d.textbook, d.question_data.Source),
-          serial: formatGeneratedSerial(d.serialNo),
-          explanation: clean(d.question_data.Explanation || ''),
-        }))
+      ? [
+          ...docs.map((d, i) => ({
+            num: i + 1,
+            answer: clean(d.question_data.CorrectAnswer || d.question_data.Answer || ''),
+            src: sourceLabel(d.textbook, d.question_data.Source),
+            serial: formatGeneratedSerial(d.serialNo),
+            explanation: clean(d.question_data.Explanation || ''),
+          })),
+          ...subjectives.map((sj, j) => ({
+            num: docs.length + j + 1,
+            answer: clean(sj.modelAnswer || '') || '서술형',
+            src: sj.source || '',
+            serial: '',
+            explanation: clean(sj.explanation || ''),
+          })),
+        ]
       : undefined;
     return buildAnswerOnlyPdf({ sheet, title, school: coverSchool, grade: coverGrade, answers: ansList, details });
   }
@@ -323,6 +332,33 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
         rows.push(new TableRow({ children: Array.from({ length: COLS }, (_, c) => { const a = answers[r * COLS + c]; return new TableCell({ children: [new DocxParagraph({ children: a ? [new TextRun({ text: `${a.num}.  `, bold: true, size: 20 }), new TextRun({ text: a.answer, size: 20 })] : [new TextRun({ text: '' })], alignment: AlignmentType.CENTER })], width: { size: 25, type: WidthType.PERCENTAGE } }); }) }));
       }
       children.push(new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+
+      // 해설 — 객관식 해설 + 서술형 모범답안·해설
+      const hasExpl = docs.some((d) => clean(d.question_data.Explanation || '')) || subjectives.some((s) => clean(s.modelAnswer || '') || clean(s.explanation || ''));
+      if (hasExpl) {
+        children.push(new DocxParagraph({ pageBreakBefore: true, children: [new TextRun({ text: '해 설', bold: true, size: 28 })], heading: HeadingLevel.HEADING_2, alignment: AlignmentType.CENTER, spacing: { after: 240 } }));
+        docs.forEach((d, i) => {
+          const ans = clean(d.question_data.CorrectAnswer || d.question_data.Answer || '');
+          const expl = clean(d.question_data.Explanation || '');
+          children.push(new DocxParagraph({ children: [
+            new TextRun({ text: `${i + 1}. `, bold: true, size: 20 }),
+            new TextRun({ text: `정답 ${ans}`, bold: true, size: 20, color: 'B91C1C' }),
+            new TextRun({ text: `   [${d.type}] ${sourceLabel(d.textbook, d.sourceKey)}`, size: 14, color: '6B7280' }),
+          ], spacing: { before: 120, after: 20 } }));
+          if (expl) children.push(new DocxParagraph({ children: docxRunsFromHtml(expl, 18), spacing: { after: 40 } }));
+        });
+        subjectives.forEach((sj, j) => {
+          const ma = clean(sj.modelAnswer || '');
+          const ex = clean(sj.explanation || '');
+          children.push(new DocxParagraph({ children: [
+            new TextRun({ text: `${docs.length + j + 1}. `, bold: true, size: 20 }),
+            new TextRun({ text: '[서술형] 모범답안', bold: true, size: 20, color: 'B45309' }),
+            ...(sj.source ? [new TextRun({ text: `   ${sj.source}`, size: 14, color: '6B7280' })] : []),
+          ], spacing: { before: 120, after: 20 } }));
+          if (ma) children.push(new DocxParagraph({ children: [new TextRun({ text: ma, bold: true, size: 18, color: '047857' })], spacing: { after: 20 } }));
+          if (ex) children.push(new DocxParagraph({ children: docxRunsFromHtml(ex, 18), spacing: { after: 40 } }));
+        });
+      }
     }
 
     const buf = await Packer.toBuffer(new Document({ sections: [{ properties: {}, children }] }));
@@ -815,6 +851,31 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
       }
     }
     aY.v += rowH;
+  }
+
+  // 해설 — 객관식 해설 + 서술형 모범답안·해설
+  const hasExplPdf = docs.some((d) => clean(d.question_data.Explanation || '')) || subjectives.some((s) => clean(s.modelAnswer || '') || clean(s.explanation || ''));
+  if (hasExplPdf) {
+    const ensureA = (need: number) => { if (aY.v + need > PAGE_H - MB) { pdfDoc.addPage(); aY.v = MT; } };
+    aY.v += 16; ensureA(40);
+    pdfDoc.font('B').fontSize(12).fillColor('#111827').text('해  설', ML, aY.v, { width: aFullW, align: 'center' }); aY.v += lineH(12) + 6;
+    pdfDoc.moveTo(ML, aY.v).lineTo(ML + aFullW, aY.v).strokeColor('#374151').lineWidth(1).stroke(); aY.v += 10;
+    const drawExpl = (head: string, headColor: string, body: string) => {
+      const headH = pdfDoc.font('B').fontSize(9.5).heightOfString(head, { width: aFullW });
+      const bodyH = body ? pdfDoc.font('R').fontSize(9).heightOfString(body, { width: aFullW, lineGap: 1.5 }) : 0;
+      ensureA(headH + bodyH + 12);
+      pdfDoc.font('B').fontSize(9.5).fillColor(headColor).text(head, ML, aY.v, { width: aFullW }); aY.v += headH + 2;
+      if (body) { pdfDoc.font('R').fontSize(9).fillColor('#374151').text(body, ML, aY.v, { width: aFullW, lineGap: 1.5 }); aY.v += bodyH; }
+      aY.v += 7;
+    };
+    docs.forEach((d, i) => {
+      const ans = clean(d.question_data.CorrectAnswer || d.question_data.Answer || '');
+      drawExpl(`${i + 1}. 정답 ${ans}    [${d.type}] ${sourceLabel(d.textbook, d.sourceKey)}`, '#B91C1C', clean(d.question_data.Explanation || ''));
+    });
+    subjectives.forEach((sj, j) => {
+      const body = [clean(sj.modelAnswer || ''), clean(sj.explanation || '')].filter(Boolean).join('\n');
+      drawExpl(`${docs.length + j + 1}. [서술형] 모범답안${sj.source ? '    ' + sj.source : ''}`, '#B45309', body);
+    });
   }
   }
 

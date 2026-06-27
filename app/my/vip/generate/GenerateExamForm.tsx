@@ -16,7 +16,7 @@ type SourceCategory = '교과서' | '부교재' | '모의고사';
 const CATEGORY_ORDER: SourceCategory[] = ['교과서', '부교재', '모의고사'];
 
 /** 서술형 문항 (범위 지문의 주제완성형 등 — paragraph 에 지문·주제틀·조건 임베드). */
-interface SubjectiveItem { question: string; paragraph: string; score: number; source: string; textbook: string; modelAnswer?: string; subtype?: string }
+interface SubjectiveItem { question: string; paragraph: string; score: number; source: string; textbook: string; modelAnswer?: string; explanation?: string; subtype?: string }
 
 /** 기준 배점 배열 → 합계 total(기본 100)에 맞춰 정수 배분(largest remainder). */
 function distributeScores(bases: number[], total = 100): number[] {
@@ -418,7 +418,7 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
     const allScores = distributeScores([...objBases, ...subjBases], 100);
     const objScores = allScores.slice(0, selected.length);
     const subjScores = allScores.slice(selected.length);
-    const subjectivesPayload = subjList.map((s2, i) => ({ question: s2.question, paragraph: s2.paragraph, source: [s2.textbook, s2.source].filter(Boolean).join(' · '), score: subjScores[i] ?? s2.score, category: classifyCategory(s2.textbook), type: '서술형', textbook: s2.textbook, sourceKey: s2.source }));
+    const subjectivesPayload = subjList.map((s2, i) => ({ question: s2.question, paragraph: s2.paragraph, source: [s2.textbook, s2.source].filter(Boolean).join(' · '), score: subjScores[i] ?? s2.score, category: classifyCategory(s2.textbook), type: '서술형', textbook: s2.textbook, sourceKey: s2.source, modelAnswer: s2.modelAnswer ?? '', explanation: s2.explanation ?? '' }));
     const categories = selected.map((q) => q.scopeCategory || classifyCategory(q.textbook));
 
     return { selectedIds, examTitle, objScores, categories, subjectivesPayload, school, examYear: sExam?.academicYear, examTerm: sExam?.examType };
