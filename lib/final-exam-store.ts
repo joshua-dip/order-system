@@ -268,6 +268,15 @@ export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<F
       const qd = (d.question_data ?? {}) as Record<string, unknown>;
       const S = (k: string): string => (typeof qd[k] === 'string' ? (qd[k] as string) : '');
       const N = (k: string): number | undefined => (Number.isFinite(Number(qd[k])) ? Number(qd[k]) : undefined);
+      // 요약문빈칸완성형: 빈칸들 [{기호,단어수,답}]
+      const blanksRaw = Array.isArray(qd['빈칸들']) ? (qd['빈칸들'] as Record<string, unknown>[]) : [];
+      const blanks = blanksRaw.map((b) => ({
+        label: typeof b?.['기호'] === 'string' ? (b['기호'] as string) : '',
+        words: Number(b?.['단어수']) || 0,
+        answer: typeof b?.['답'] === 'string' ? (b['답'] as string) : '',
+      }));
+      // 모범답안 — 명시값 우선, 없으면 빈칸 답을 합성
+      const modelAnswer = S('모범답안') || (blanks.length ? blanks.map((b) => `(${b.label}) ${b.answer}`).join(' / ') : '');
       num += 1;
       out.push({
         num,
@@ -276,7 +285,7 @@ export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<F
         question: S('문제'),
         paragraph: S('본문'),
         options: '',
-        correctAnswer: S('모범답안'),
+        correctAnswer: modelAnswer,
         explanation: S('해설'),
         questionId: String(c.qid),
         serialNo: null,
@@ -285,7 +294,9 @@ export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<F
         frame: S('주제틀'),
         given: S('주어진표현'),
         conditions: S('조건'),
-        modelAnswer: S('모범답안'),
+        modelAnswer,
+        ...(S('요약문') ? { summary: S('요약문') } : {}),
+        ...(blanks.length ? { blanks } : {}),
       });
     }
   }

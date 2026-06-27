@@ -33,6 +33,10 @@ export interface FinalExamQuestion {
   conditions?: string;
   /** 주관식 모범답안 (정답·해설지용; 주제완성형은 빈칸을 채운 명사구) */
   modelAnswer?: string;
+  /** 요약문빈칸완성형: (A)(B)(C) 빈칸이 든 한 문장 요약 */
+  summary?: string;
+  /** 요약문빈칸완성형: 답란 (기호·단어수·답) */
+  blanks?: { label: string; words: number; answer: string }[];
 }
 
 /** 고유번호 표시 문자열 (V-NNNNNN). 없으면 ''. */
@@ -130,34 +134,64 @@ function renderParagraph(leakedGiven: string, paragraph: string): string {
     .join('');
 }
 
+/** 발문에 이미 [N점] 이 있으면 배지를 중복 표기하지 않는다 */
+function ptsBadgeFor(q: FinalExamQuestion, pts: number): string {
+  return /\[\s*\d+\s*점\s*\]/.test(q.question) ? '' : ` <span class="sj-pts">[${pts}점]</span>`;
+}
+
+/** 조건 박스 (① ② ③ …) — 주관식 공통. */
+function conditionsBox(conditions?: string): string {
+  const lines = (conditions ?? '').split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  if (!lines.length) return '';
+  return `<div class="sj-cond"><div class="sj-cond-title">조 건</div>${lines
+    .map((c) => `<div class="sj-cond-line">${escKeepUnderline(c)}</div>`)
+    .join('')}</div>`;
+}
+
+/** 요약문빈칸완성형 — 지문 + 요약문((A)(B)(C) 빈칸) + 조건 + 답란 표. */
+function summaryBlankQuestionBlock(q: FinalExamQuestion): string {
+  const pts = typeof q.points === 'number' && q.points > 0 ? q.points : 5;
+  const blanks = q.blanks ?? [];
+  // 요약문 안의 (A)(B)(C) 표식을 밑줄 빈칸으로
+  let summaryHtml = escKeepUnderline(q.summary ?? '');
+  for (const b of blanks) {
+    summaryHtml = summaryHtml.split(`(${b.label})`).join(`<span class="sj-sblank">&nbsp;&nbsp;(${esc(b.label)})&nbsp;&nbsp;</span>`);
+  }
+  const rows = blanks
+    .map(
+      (b) =>
+        `<tr><td class="sj-bl-label">(${esc(b.label)})</td><td class="sj-bl-write"></td><td class="sj-bl-count">${b.words}단어</td></tr>`,
+    )
+    .join('');
+  return `<div class="q sj">
+  <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(q.question)}${ptsBadgeFor(q, pts)}</div>
+  <div class="q-src">[서술형·${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` <span class="q-serial">${esc(fmtFinalSerial(q.serialNo))}</span>` : ''}</div>
+  <div class="q-para">${renderParagraph('', q.paragraph)}</div>
+  <div class="sj-arrow">↓</div>
+  <div class="sj-summary">${summaryHtml}</div>
+  ${conditionsBox(q.conditions)}
+  ${rows ? `<table class="sj-blanktable">${rows}</table>` : ''}
+</div>`;
+}
+
 /** 서술형 주관식(주제완성형 등) — 발문 + 지문 + 빈칸틀 + 조건. ①②③④⑤ 보기 없음. */
 function subjectiveQuestionBlock(q: FinalExamQuestion): string {
+  if (q.summary && (q.blanks?.length ?? 0) > 0) return summaryBlankQuestionBlock(q);
   const pts = typeof q.points === 'number' && q.points > 0 ? q.points : 5;
   const givenList = (q.given ?? '').split('/').map((s) => s.trim()).filter(Boolean);
   const givenBox = givenList.length
     ? `<div class="sj-given">${givenList.map((g) => `<span class="sj-chip">${esc(g)}</span>`).join('')}</div>`
     : '';
-  const condLines = (q.conditions ?? '')
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const cond = condLines.length
-    ? `<div class="sj-cond"><div class="sj-cond-title">조 건</div>${condLines
-        .map((c) => `<div class="sj-cond-line">${escKeepUnderline(c)}</div>`)
-        .join('')}</div>`
-    : '';
   const frame = q.frame
     ? `<div class="sj-frame">${escKeepUnderline(q.frame)} <span class="sj-blank"></span></div>`
     : `<div class="sj-frame"><span class="sj-blank wide"></span></div>`;
-  // 발문에 이미 [N점] 이 있으면 배지를 중복 표기하지 않는다
-  const ptsBadge = /\[\s*\d+\s*점\s*\]/.test(q.question) ? '' : ` <span class="sj-pts">[${pts}점]</span>`;
   return `<div class="q sj">
-  <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(q.question)}${ptsBadge}</div>
+  <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(q.question)}${ptsBadgeFor(q, pts)}</div>
   <div class="q-src">[서술형·${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` <span class="q-serial">${esc(fmtFinalSerial(q.serialNo))}</span>` : ''}</div>
   <div class="q-para">${renderParagraph('', q.paragraph)}</div>
   ${frame}
   ${givenBox}
-  ${cond}
+  ${conditionsBox(q.conditions)}
 </div>`;
 }
 
@@ -272,6 +306,15 @@ const SHEET_CSS = `
   .sj-cond { border: 1.3px solid #333; border-radius: 4px; margin-top: 8px; padding: 18px 12px 10px; position: relative; }
   .sj-cond-title { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 12px; font-weight: 800; font-size: 10pt; letter-spacing: 4px; }
   .sj-cond-line { font-size: 9.5pt; line-height: 1.6; margin: 3px 0; }
+  /* 요약문빈칸완성형 */
+  .sj-arrow { text-align: center; font-size: 14pt; color: #444; margin: 4px 0; }
+  .sj-summary { border: 1.3px solid #555; border-radius: 4px; padding: 10px 12px; font-size: 10.5pt; line-height: 2.0; }
+  .sj-sblank { display: inline-block; min-width: 26mm; border-bottom: 1.2px solid #333; text-align: center; font-weight: 700; }
+  .sj-blanktable { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .sj-blanktable td { border: 1.2px solid #555; padding: 8px 10px; }
+  .sj-bl-label { width: 14%; text-align: center; font-weight: 800; font-size: 11pt; }
+  .sj-bl-write { width: 66%; height: 26px; }
+  .sj-bl-count { width: 20%; text-align: center; font-weight: 700; font-size: 9.5pt; color: #333; }
   /* 합본: 학생마다 새 페이지에서 시작 + 홀수페이지 정렬용 빈 페이지(짝수로 끝난 학생 뒤) */
   .sheet-break { break-before: page; page-break-before: page; }
   .blank-page { break-before: page; page-break-before: page; break-after: page; page-break-after: page; }
