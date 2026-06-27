@@ -30,7 +30,9 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const scopeExamId = sp.get('scopeExamId') ?? '';
   const limit = Math.min(20, Math.max(0, Number(sp.get('limit') || '6')));
-  const subtype = (sp.get('subtype') || '주제완성형').trim();
+  // 기본은 주제완성형 + 요약문빈칸완성형 혼합. subtypes 파라미터로 특정 유형만 지정 가능.
+  const subtypes = (sp.get('subtypes') || sp.get('subtype') || '주제완성형,요약문빈칸완성형')
+    .split(',').map((s) => s.trim()).filter(Boolean);
   if (!ObjectId.isValid(scopeExamId)) return NextResponse.json({ ok: true, subjectives: [] });
   if (limit === 0) return NextResponse.json({ ok: true, subjectives: [] });
 
@@ -52,44 +54,54 @@ export async function GET(request: NextRequest) {
   const pidToMeta = new Map(passages.map((p) => [String(p._id), { textbook: String(p.textbook ?? ''), source: String(p.source_key ?? '') }]));
   const pids = passages.map((p) => p._id as ObjectId);
 
-  // 범위 지문의 서술형 변형 (주제완성형) — 지문당 1개, 서로 다른 지문에서 limit 개
+  // 범위 지문의 서술형 변형 (주제완성형·요약문빈칸완성형) — 지문당 1개, 서로 다른 지문에서 limit 개
   const docs = await db.collection('narrative_questions')
-    .find({ passage_id: { $in: pids }, narrative_subtype: subtype })
-    .project({ passage_id: 1, textbook: 1, question_data: 1 })
+    .find({ passage_id: { $in: pids }, narrative_subtype: { $in: subtypes } })
+    .project({ passage_id: 1, textbook: 1, narrative_subtype: 1, question_data: 1 })
     .toArray();
-  // 지문별 1개로 추리기 + 셔플
+  // 먼저 셔플 → 지문별 1개(랜덤 유형) → limit 개. (한 지문이 두 유형을 가져도 한 문항만)
+  for (let i = docs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [docs[i], docs[j]] = [docs[j], docs[i]]; }
   const byPassage = new Map<string, Record<string, unknown>>();
-  for (const d of docs) {
-    const pid = String(d.passage_id);
-    if (!byPassage.has(pid)) byPassage.set(pid, d);
-  }
-  const picked = [...byPassage.values()];
-  for (let i = picked.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [picked[i], picked[j]] = [picked[j], picked[i]]; }
-  const chosen = picked.slice(0, limit);
+  for (const d of docs) { const pid = String(d.passage_id); if (!byPassage.has(pid)) byPassage.set(pid, d); }
+  const chosen = [...byPassage.values()].slice(0, limit);
+
+  // 유형별 paragraph 임베드 (지문 + 빈칸틀/요약문 + 조건) — 기존 서술형 렌더 재사용
+  const buildParagraph = (subtype: string, qd: Record<string, unknown>): string => {
+    const S = (k: string) => (typeof qd[k] === 'string' ? (qd[k] as string) : '');
+    const condLines = S('조건').split(/\n+/).map((s) => s.trim()).filter(Boolean);
+    const parts: string[] = [esc(S('본문')), ''];
+    if (subtype === '요약문빈칸완성형') {
+      const blanks = Array.isArray(qd['빈칸들']) ? (qd['빈칸들'] as Record<string, unknown>[]) : [];
+      let summaryHtml = esc(S('요약문'));
+      for (const b of blanks) { const label = String(b?.['기호'] ?? ''); if (label) summaryHtml = summaryHtml.split(`(${label})`).join(`______(${esc(label)})______`); }
+      parts.push('[요약문]', summaryHtml, '');
+      if (condLines.length) { parts.push('[조건]'); for (const c of condLines) parts.push(esc(c)); parts.push(''); }
+      const wordRow = blanks.map((b) => `(${esc(String(b?.['기호'] ?? ''))}) ${Number(b?.['단어수']) || 0}단어`).join('      ');
+      if (wordRow) parts.push(esc(wordRow));
+    } else {
+      // 주제완성형
+      const frame = S('주제틀'); const given = S('주어진표현');
+      if (frame) parts.push(`<b>${esc(frame)}</b> ______________________________`);
+      if (given) parts.push(`[주어진 표현]  ${esc(given)}`);
+      if (condLines.length) { parts.push('[조건]'); for (const c of condLines) parts.push(esc(c)); }
+    }
+    return parts.join('<br/>');
+  };
 
   const subjectives = chosen.map((d) => {
     const qd = (d.question_data ?? {}) as Record<string, unknown>;
     const S = (k: string) => (typeof qd[k] === 'string' ? (qd[k] as string) : '');
+    const subtype = String(d.narrative_subtype ?? '주제완성형');
     const meta = pidToMeta.get(String(d.passage_id)) ?? { textbook: String(d.textbook ?? ''), source: '' };
-    const frame = S('주제틀');
-    const given = S('주어진표현');
-    const condLines = S('조건').split(/\n+/).map((s) => s.trim()).filter(Boolean);
-    // 발문 + 지문 + 주제틀 빈칸 + 주어진표현 + 조건 을 paragraph 에 임베드(HTML)
-    const parts: string[] = [];
-    parts.push(esc(S('본문')));
-    parts.push('');
-    if (frame) parts.push(`<b>${esc(frame)}</b> ______________________________`);
-    if (given) parts.push(`[주어진 표현]  ${esc(given)}`);
-    if (condLines.length) { parts.push('[조건]'); for (const c of condLines) parts.push(esc(c)); }
-    const paragraph = parts.join('<br/>');
     return {
-      question: S('문제') || '주어진 글 속의 어구를 활용하여, 다음 글의 주제를 완성하시오.',
-      paragraph,
+      question: S('문제') || '다음 글을 읽고 서술형 문제에 답하시오.',
+      paragraph: buildParagraph(subtype, qd),
       source: meta.source,
       textbook: meta.textbook,
       score: Number(qd['점수']) || 5,
-      // 정답(교사용) — 다운로드 답안지에서 쓸 수 있게 함께 전달
+      // 정답·해설(교사용) — 다운로드 답안지/해설지에서 쓸 수 있게 함께 전달
       modelAnswer: S('완전한문제') || S('모범답안'),
+      explanation: S('해설'),
       subtype,
     };
   });
