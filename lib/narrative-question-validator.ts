@@ -2,21 +2,38 @@
  * 서술형 변형(narrative_questions) question_data 검증 — Pro 전용 저장 경로(cc:narrative) 전용.
  * 객관식 변형의 lib/variant-review-validators.ts 에 대응.
  *
- * 보유 3종 subtype:
+ * 보유 4종 subtype:
  *   - 이중요지영작형                : 자유 영작(2개 <u>과제</u> + 답안 단어수 범위)
  *   - 빈칸재배열형(A+B·주제·Hard)   : <보기> 단어 재배열 영작 (키워드 ↔ 모범답안 멀티셋 일치)
  *   - 빈칸재배열형(A+B·어법·Hard)   : 위와 동일 구조(어법 초점)
+ *   - 주제완성형                    : 주어진 어구를 변형 없이 활용해 주제를 명사구로 완성 (6단어 이상)
  */
 
 export const NARRATIVE_SUBTYPES = [
   '이중요지영작형',
   '빈칸재배열형(A+B·주제·Hard)',
   '빈칸재배열형(A+B·어법·Hard)',
+  '주제완성형',
 ] as const;
 export type NarrativeSubtype = (typeof NARRATIVE_SUBTYPES)[number];
 
 export function isRearrangeSubtype(s: string): boolean {
   return s.startsWith('빈칸재배열형');
+}
+
+export function isTopicCompletionSubtype(s: string): boolean {
+  return s === '주제완성형';
+}
+
+/** 주어진표현(' / ' 구분)을 토큰 배열로. 빈 토큰 제거. */
+export function givenExpressionTokens(s: string): string[] {
+  return s.split('/').map((t) => t.trim()).filter(Boolean);
+}
+
+/** 어구가 답안에 (변형 없이) 포함됐는지 — 대소문자 무시 + 공백 정규화 후 부분문자열. */
+function answerContainsExpression(answer: string, expr: string): boolean {
+  const norm = (x: string) => x.toLowerCase().replace(/\s+/g, ' ').trim();
+  return norm(answer).includes(norm(expr));
 }
 
 export interface NarrativeValidationResult {
@@ -67,7 +84,41 @@ export function validateNarrativeQuestion(
     errors.push("해설/모범답안에 'nan' 토큰이 포함되어 있습니다.");
   }
 
-  if (isRearrangeSubtype(subtype)) {
+  if (isTopicCompletionSubtype(subtype)) {
+    // ── 주제완성형: 주어진 어구(변형불가)를 답안에 포함 + 명사구 6단어 이상 ──
+    const frame = STR(qd['주제틀']).trim();
+    if (!frame) errors.push("question_data.주제틀 이 비어 있습니다. (빈칸 앞 제시 어구, 예: 'the historical pursuit of')");
+    const givenRaw = STR(qd['주어진표현']);
+    const given = givenExpressionTokens(givenRaw);
+    if (given.length === 0) {
+      errors.push("question_data.주어진표현 이 비어 있습니다. (' / ' 로 구분된 제시 어구 목록 필수)");
+    }
+    const minWords = Number.isFinite(Number(qd['최소단어수'])) ? Number(qd['최소단어수']) : 6;
+    const ansToks = wordTokens(answer);
+    // (1) 주어진 어구가 모두 변형 없이 답안에 포함돼야 한다
+    const missing = given.filter((g) => !answerContainsExpression(answer, g));
+    if (missing.length > 0) {
+      errors.push(`주어진표현이 모범답안에 (변형 없이) 포함되지 않았습니다: {${missing.join(', ')}} / 모범답안="${answer}"`);
+    }
+    // (2) 답안 단어 수 ≥ 최소단어수 (조건 ②)
+    if (ansToks.length < minWords) {
+      errors.push(`모범답안 단어 수(${ansToks.length})가 최소 ${minWords}단어 미만입니다. (조건: ${minWords}단어 이상)`);
+    }
+    // (3) 완전한문제 = 주제틀 + 모범답안 정합 (불일치는 경고)
+    const full = STR(qd['완전한문제']).toLowerCase().replace(/\s+/g, ' ').trim();
+    const expectFull = `${frame} ${answer}`.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (full && expectFull && full !== expectFull && !full.includes(answer.toLowerCase().replace(/\s+/g, ' ').trim())) {
+      warnings.push('완전한문제가 "주제틀 + 모범답안" 과 정확히 일치하지 않습니다. (구두점 차이면 무시 가능)');
+    }
+    // (4) 명사구 휴리스틱 — to부정사/정형동사로 시작하면 명사구가 아닐 수 있음(경고)
+    if (/^(to\s+|is\b|are\b|was\b|were\b|do\b|does\b|did\b)/i.test(answer)) {
+      warnings.push('모범답안이 명사구가 아닐 수 있습니다(to부정사/정형동사 시작). 조건 ③(명사구) 재확인.');
+    }
+    const ansCount = Number(qd['답안단어수']);
+    if (Number.isFinite(ansCount) && ansCount !== ansToks.length) {
+      warnings.push(`답안단어수(${ansCount}) 가 실제 모범답안 단어 수(${ansToks.length})와 다릅니다.`);
+    }
+  } else if (isRearrangeSubtype(subtype)) {
     // ── 빈칸재배열형: 키워드(섞인 단어) ↔ 모범답안(정답 어순) 멀티셋 일치 ──
     const kw = STR(qd['키워드']);
     if (!kw.trim()) {

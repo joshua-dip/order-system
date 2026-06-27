@@ -48,7 +48,8 @@ export async function GET(
     }
 
     // 학생별 개별 문제지 QR 은 ?seed= 를 실어 보낸다 → 그 학생 배치 그대로 채점.
-    const questions = await loadExamQuestions(db, jobWithSeed(job, request));
+    // 서술형 주관식은 OMR·자동채점 대상이 아니다(수기채점) → 객관식만 OMR 에 노출.
+    const questions = (await loadExamQuestions(db, jobWithSeed(job, request))).filter((q) => !q.subjective);
     const viewer = await viewerLoginId(request);
     return NextResponse.json({
       title: job.title,
@@ -92,7 +93,8 @@ export async function POST(
       return NextResponse.json({ error: '아직 제작 중인 시험지입니다.' }, { status: 409 });
     }
 
-    const questions = await loadExamQuestions(db, jobWithSeed(job, request));
+    // 서술형 주관식은 자동채점 제외 — 객관식만 채점·집계.
+    const questions = (await loadExamQuestions(db, jobWithSeed(job, request))).filter((q) => !q.subjective);
     const chosenByNum = new Map<number, string>();
     for (const a of rawAnswers) {
       const num = typeof (a as { num?: unknown })?.num === 'number' ? (a as { num: number }).num : NaN;

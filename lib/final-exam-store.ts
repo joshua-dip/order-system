@@ -23,9 +23,11 @@ export interface FinalExamJobItem {
   passageId: ObjectId;
   type: string;
   requested: number;
-  /** 배정된 generated_questions._id (요청 수만큼 차면 shortBy=0) */
+  /** 배정된 문항 _id (객관식=generated_questions, 주관식=narrative_questions). 요청 수만큼 차면 shortBy=0 */
   questionIds: ObjectId[];
   shortBy: number;
+  /** 서술형 주관식(narrative_questions 출처) — true 면 시험지 끝 「서·논술형」 섹션에 배치, QR 자동채점 제외 */
+  subjective?: boolean;
 }
 
 export interface FinalExamJobDoc {
@@ -150,9 +152,12 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
  */
 export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<FinalExamQuestion[]> {
   type Cell = { it: FinalExamJobItem; qid: ObjectId; round?: number };
+  // 객관식 / 주관식(서술형) 분리 — 주관식은 정렬·셔플과 무관하게 시험지 끝 섹션으로.
+  const objectiveItems = job.items.filter((it) => !it.subjective);
+  const subjectiveItems = job.items.filter((it) => it.subjective);
   // job.items 순서(범위/지문 순) 그대로 평탄화 — 회차(interleave)의 지문 순서 기준이 됨.
   const itemsFlat: Cell[] = [];
-  for (const it of job.items) for (const qid of it.questionIds) itemsFlat.push({ it, qid });
+  for (const it of objectiveItems) for (const qid of it.questionIds) itemsFlat.push({ it, qid });
 
   const mode = job.orderMode ?? 'default';
   let flat: Cell[];
@@ -241,6 +246,48 @@ export async function loadExamQuestions(db: Db, job: FinalExamJobDoc): Promise<F
       ...(typeof c.round === 'number' ? { round: c.round } : {}),
       ...(graphImage ? { graphImage } : {}),
     });
+  }
+
+  // ── 서술형 주관식 섹션 (narrative_questions) — 객관식 뒤에 이어 붙임 ──
+  if (subjectiveItems.length > 0) {
+    const subCells: { it: FinalExamJobItem; qid: ObjectId }[] = [];
+    for (const it of subjectiveItems) for (const qid of it.questionIds) subCells.push({ it, qid });
+    const subIds = subCells.map((c) => c.qid);
+    const ndocs = await db
+      .collection('narrative_questions')
+      .find({ _id: { $in: subIds } })
+      .project<{ _id: ObjectId; narrative_subtype?: string; question_data?: Record<string, unknown> }>({
+        narrative_subtype: 1,
+        question_data: 1,
+      })
+      .toArray();
+    const nById = new Map(ndocs.map((d) => [String(d._id), d]));
+    for (const c of subCells) {
+      const d = nById.get(String(c.qid));
+      if (!d) continue;
+      const qd = (d.question_data ?? {}) as Record<string, unknown>;
+      const S = (k: string): string => (typeof qd[k] === 'string' ? (qd[k] as string) : '');
+      const N = (k: string): number | undefined => (Number.isFinite(Number(qd[k])) ? Number(qd[k]) : undefined);
+      num += 1;
+      out.push({
+        num,
+        type: String(d.narrative_subtype ?? c.it.type ?? '주제완성형'),
+        sourceKey: c.it.sourceKey,
+        question: S('문제'),
+        paragraph: S('본문'),
+        options: '',
+        correctAnswer: S('모범답안'),
+        explanation: S('해설'),
+        questionId: String(c.qid),
+        serialNo: null,
+        subjective: true,
+        points: N('점수') ?? 5,
+        frame: S('주제틀'),
+        given: S('주어진표현'),
+        conditions: S('조건'),
+        modelAnswer: S('모범답안'),
+      });
+    }
   }
   return out;
 }
