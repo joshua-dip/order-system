@@ -213,7 +213,7 @@ function help() {
 
 지원 subtype: ${NARRATIVE_SUBTYPES.join(' / ')}
 
-save JSON: { passage_id, narrative_subtype, question_data{번호,강,문제유형,점수,문제,본문,완전한문제,모범답안,해설, (빈칸재배열형: 원문·키워드·키워드개수·답안단어수) (주제완성형: 주제틀·주어진표현·최소단어수·답안단어수·조건)}, [textbook,chapter,number,status] }
+save JSON: { passage_id, narrative_subtype, question_data{번호,강,문제유형,점수,문제,본문,완전한문제,모범답안,해설, (빈칸재배열형: 원문·키워드·키워드개수·답안단어수) (주제완성형: 주제틀·주어진표현·최소단어수·답안단어수·조건) (요약문빈칸완성형: 요약문·빈칸들[{기호,단어수,답}]·조건)}, [textbook,chapter,number,status] }
 저장 마커: source_file='claude-code', excel_row_status='claude-authored' (엑셀 임포트분과 구분).
 원칙: API 키 호출 없음. 채팅에서 question_data 작성 → save 가 검증·insert.`);
 }

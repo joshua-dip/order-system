@@ -2,11 +2,12 @@
  * 서술형 변형(narrative_questions) question_data 검증 — Pro 전용 저장 경로(cc:narrative) 전용.
  * 객관식 변형의 lib/variant-review-validators.ts 에 대응.
  *
- * 보유 4종 subtype:
+ * 보유 5종 subtype:
  *   - 이중요지영작형                : 자유 영작(2개 <u>과제</u> + 답안 단어수 범위)
  *   - 빈칸재배열형(A+B·주제·Hard)   : <보기> 단어 재배열 영작 (키워드 ↔ 모범답안 멀티셋 일치)
  *   - 빈칸재배열형(A+B·어법·Hard)   : 위와 동일 구조(어법 초점)
  *   - 주제완성형                    : 주어진 어구를 변형 없이 활용해 주제를 명사구로 완성 (6단어 이상)
+ *   - 요약문빈칸완성형              : 요약문 (A)(B)(C) 빈칸을 지문 속 단어로 단어수 맞춰 채움
  */
 
 export const NARRATIVE_SUBTYPES = [
@@ -14,6 +15,7 @@ export const NARRATIVE_SUBTYPES = [
   '빈칸재배열형(A+B·주제·Hard)',
   '빈칸재배열형(A+B·어법·Hard)',
   '주제완성형',
+  '요약문빈칸완성형',
 ] as const;
 export type NarrativeSubtype = (typeof NARRATIVE_SUBTYPES)[number];
 
@@ -23,6 +25,34 @@ export function isRearrangeSubtype(s: string): boolean {
 
 export function isTopicCompletionSubtype(s: string): boolean {
   return s === '주제완성형';
+}
+
+export function isSummaryBlankSubtype(s: string): boolean {
+  return s === '요약문빈칸완성형';
+}
+
+export interface SummaryBlankItem {
+  기호: string;
+  단어수: number;
+  답: string;
+}
+
+/** question_data.빈칸들 → 정규화 (기호·단어수·답). */
+export function parseSummaryBlanks(v: unknown): SummaryBlankItem[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((b) => {
+    const o = (b ?? {}) as Record<string, unknown>;
+    return {
+      기호: typeof o['기호'] === 'string' ? o['기호'].trim() : '',
+      단어수: Number(o['단어수']),
+      답: typeof o['답'] === 'string' ? o['답'].trim() : '',
+    };
+  });
+}
+
+/** 단어 정규화 — 비교용. 양끝 구두점 제거 + 소문자. */
+function normWord(s: string): string {
+  return s.toLowerCase().replace(/^[^a-z0-9-]+|[^a-z0-9-]+$/gi, '');
 }
 
 /** 주어진표현(' / ' 구분)을 토큰 배열로. 빈 토큰 제거. */
@@ -84,7 +114,42 @@ export function validateNarrativeQuestion(
     errors.push("해설/모범답안에 'nan' 토큰이 포함되어 있습니다.");
   }
 
-  if (isTopicCompletionSubtype(subtype)) {
+  if (isSummaryBlankSubtype(subtype)) {
+    // ── 요약문빈칸완성형: 요약문 (A)(B)(C) 빈칸 + 빈칸별 단어수 일치 + 지문 속 단어 그대로 ──
+    const summary = STR(qd['요약문']).trim();
+    if (!summary) errors.push("question_data.요약문 이 비어 있습니다. (빈칸 (A)(B)(C) 가 든 한 문장 요약)");
+    const passage = STR(qd['본문']);
+    const passageWords = new Set(passage.toLowerCase().split(/\s+/).map(normWord).filter(Boolean));
+    const passageNorm = passage.toLowerCase().replace(/\s+/g, ' ');
+    const blanks = parseSummaryBlanks(qd['빈칸들']);
+    if (blanks.length === 0) {
+      errors.push("question_data.빈칸들 이 비어 있습니다. ([{기호:'A',단어수:3,답:'...'}] 배열 필수)");
+    }
+    const seen = new Set<string>();
+    for (const b of blanks) {
+      if (!b.기호) { errors.push('빈칸 항목에 기호(A/B/C…)가 없습니다.'); continue; }
+      if (seen.has(b.기호)) errors.push(`빈칸 기호 (${b.기호}) 가 중복됩니다.`);
+      seen.add(b.기호);
+      if (summary && !summary.includes(`(${b.기호})`)) {
+        errors.push(`요약문에 빈칸 (${b.기호}) 표식이 없습니다.`);
+      }
+      if (!b.답) { errors.push(`빈칸 (${b.기호}) 의 답이 비어 있습니다.`); continue; }
+      const toks = wordTokens(b.답);
+      // ① 제시 단어 수와 일치 (하이픈 결합어는 1단어)
+      if (Number.isFinite(b.단어수) && toks.length !== b.단어수) {
+        errors.push(`빈칸 (${b.기호}) 답 단어 수(${toks.length})가 제시 단어 수(${b.단어수})와 다릅니다. 답="${b.답}"`);
+      }
+      // ②③ 지문 속 단어를 그대로 — 각 단어가 본문에 존재해야
+      if (passage) {
+        const missing = toks.filter((t) => !passageWords.has(normWord(t)));
+        if (missing.length > 0) {
+          errors.push(`빈칸 (${b.기호}) 답의 단어가 지문에 없습니다(조건③ 감점 대상): {${missing.join(', ')}}`);
+        } else if (toks.length > 1 && !passageNorm.includes(b.답.toLowerCase().replace(/\s+/g, ' '))) {
+          warnings.push(`빈칸 (${b.기호}) 답 "${b.답}" 의 단어들은 지문에 있으나 연속 구로는 보이지 않습니다. 확인 권장.`);
+        }
+      }
+    }
+  } else if (isTopicCompletionSubtype(subtype)) {
     // ── 주제완성형: 주어진 어구(변형불가)를 답안에 포함 + 명사구 6단어 이상 ──
     const frame = STR(qd['주제틀']).trim();
     if (!frame) errors.push("question_data.주제틀 이 비어 있습니다. (빈칸 앞 제시 어구, 예: 'the historical pursuit of')");
