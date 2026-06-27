@@ -21,6 +21,18 @@ export interface FinalExamQuestion {
   round?: number;
   /** 지문(도표) 그래프 이미지 — base64 data URI. 있으면 본문 위에 인쇄(25번 도표 등). */
   graphImage?: string | null;
+  /** 서술형 주관식(주제완성형 등) — true 면 ①②③④⑤ 보기 대신 조건·빈칸틀로 렌더. QR 자동채점 제외. */
+  subjective?: boolean;
+  /** 주관식 배점 (서술형은 보통 5점) */
+  points?: number;
+  /** 주제완성형: 빈칸 앞 제시 어구 (예: "the historical pursuit of") */
+  frame?: string;
+  /** 주관식 제시 어구(변형불가) — ' / ' 구분 (예: "machines / creating / like humans") */
+  given?: string;
+  /** 주관식 조건문 (줄바꿈 구분 ①②③) */
+  conditions?: string;
+  /** 주관식 모범답안 (정답·해설지용; 주제완성형은 빈칸을 채운 명사구) */
+  modelAnswer?: string;
 }
 
 /** 고유번호 표시 문자열 (V-NNNNNN). 없으면 ''. */
@@ -118,7 +130,39 @@ function renderParagraph(leakedGiven: string, paragraph: string): string {
     .join('');
 }
 
+/** 서술형 주관식(주제완성형 등) — 발문 + 지문 + 빈칸틀 + 조건. ①②③④⑤ 보기 없음. */
+function subjectiveQuestionBlock(q: FinalExamQuestion): string {
+  const pts = typeof q.points === 'number' && q.points > 0 ? q.points : 5;
+  const givenList = (q.given ?? '').split('/').map((s) => s.trim()).filter(Boolean);
+  const givenBox = givenList.length
+    ? `<div class="sj-given">${givenList.map((g) => `<span class="sj-chip">${esc(g)}</span>`).join('')}</div>`
+    : '';
+  const condLines = (q.conditions ?? '')
+    .split(/\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const cond = condLines.length
+    ? `<div class="sj-cond"><div class="sj-cond-title">조 건</div>${condLines
+        .map((c) => `<div class="sj-cond-line">${escKeepUnderline(c)}</div>`)
+        .join('')}</div>`
+    : '';
+  const frame = q.frame
+    ? `<div class="sj-frame">${escKeepUnderline(q.frame)} <span class="sj-blank"></span></div>`
+    : `<div class="sj-frame"><span class="sj-blank wide"></span></div>`;
+  // 발문에 이미 [N점] 이 있으면 배지를 중복 표기하지 않는다
+  const ptsBadge = /\[\s*\d+\s*점\s*\]/.test(q.question) ? '' : ` <span class="sj-pts">[${pts}점]</span>`;
+  return `<div class="q sj">
+  <div class="q-head"><span class="q-num">${q.num}.</span> ${escKeepUnderline(q.question)}${ptsBadge}</div>
+  <div class="q-src">[서술형·${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` <span class="q-serial">${esc(fmtFinalSerial(q.serialNo))}</span>` : ''}</div>
+  <div class="q-para">${renderParagraph('', q.paragraph)}</div>
+  ${frame}
+  ${givenBox}
+  ${cond}
+</div>`;
+}
+
 function questionBlock(q: FinalExamQuestion): string {
+  if (q.subjective) return subjectiveQuestionBlock(q);
   const { instruction, given } = splitGivenSentence(q.type, q.question);
   const graph =
     typeof q.graphImage === 'string' && q.graphImage.startsWith('data:image/')
@@ -150,12 +194,18 @@ const COMMON_CSS = `
 /** 회차 구분선 포함 문항 본문 (cols 안에 들어갈 내용) */
 function renderQuestionBody(questions: FinalExamQuestion[]): string {
   let prevRound: number | undefined;
+  let sjStarted = false;
   return questions
     .map((q) => {
       let prefix = '';
       if (typeof q.round === 'number' && q.round !== prevRound) {
         prefix = `<div class="round-divider">${q.round}회차</div>`;
         prevRound = q.round;
+      }
+      // 객관식 → 주관식 전환 지점에 서·논술형 섹션 구분선 (한 번만)
+      if (q.subjective && !sjStarted) {
+        prefix += '<div class="section-divider">서 · 논 술 형</div>';
+        sjStarted = true;
       }
       return prefix + questionBlock(q);
     })
@@ -210,6 +260,18 @@ const SHEET_CSS = `
   .q-para-block:last-child { margin-bottom: 0; }
   .q-opts .opt { margin: 2px 0; font-size: 9.5pt; }
   .opts-inline { font-size: 10pt; letter-spacing: 2px; }
+  /* 서·논술형(주관식) 섹션 — 전 너비(2단 가로지름) */
+  .section-divider { column-span: all; margin: 10px 0 12px; padding: 5px 0; border-top: 2px solid #111; border-bottom: 2px solid #111; text-align: center; font-weight: 800; font-size: 12pt; letter-spacing: 6px; }
+  .q.sj { column-span: all; break-inside: avoid; font-size: 10.5pt; }
+  .sj-pts { color: #b91c1c; font-weight: 800; font-size: 9.5pt; }
+  .sj-frame { margin: 10px 0 8px; padding: 10px 12px; border: 1.3px solid #555; border-radius: 4px; font-size: 11.5pt; }
+  .sj-blank { display: inline-block; min-width: 70mm; border-bottom: 1.3px solid #333; vertical-align: bottom; }
+  .sj-blank.wide { min-width: 130mm; }
+  .sj-given { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px auto; padding: 8px 10px; border: 1.3px dashed #777; border-radius: 4px; max-width: 80%; }
+  .sj-chip { border: 1px solid #999; border-radius: 4px; padding: 2px 12px; font-size: 10.5pt; font-weight: 700; background: #fafafa; }
+  .sj-cond { border: 1.3px solid #333; border-radius: 4px; margin-top: 8px; padding: 18px 12px 10px; position: relative; }
+  .sj-cond-title { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 12px; font-weight: 800; font-size: 10pt; letter-spacing: 4px; }
+  .sj-cond-line { font-size: 9.5pt; line-height: 1.6; margin: 3px 0; }
   /* 합본: 학생마다 새 페이지에서 시작 + 홀수페이지 정렬용 빈 페이지(짝수로 끝난 학생 뒤) */
   .sheet-break { break-before: page; page-break-before: page; }
   .blank-page { break-before: page; page-break-before: page; break-after: page; page-break-after: page; }
@@ -260,23 +322,35 @@ ${body}
 }
 
 export function buildFinalExamAnswerHtml(input: FinalExamBuildInput): string {
-  // 빠른 정답표 — 번호+답만 (최상단)
+  // 주관식(서술형) 모범답안 — 주제틀 + 모범답안 (있으면), 없으면 correctAnswer
+  const modelOf = (q: FinalExamQuestion): string => {
+    const ma = (q.modelAnswer ?? q.correctAnswer ?? '').trim();
+    if (q.frame && ma && !ma.toLowerCase().startsWith(q.frame.toLowerCase())) return `${q.frame} ${ma}`;
+    return ma;
+  };
+  // 빠른 정답표 — 번호+답만 (최상단). 주관식은 '서술'로 표기(동그라미 정답 없음).
   const quick = input.questions
-    .map((q) => `<div class="qa"><span class="qn">${q.num}</span><span class="qv">${esc(q.correctAnswer)}</span></div>`)
+    .map((q) => `<div class="qa"><span class="qn">${q.num}</span><span class="qv${q.subjective ? ' sj' : ''}">${q.subjective ? '서술' : esc(q.correctAnswer)}</span></div>`)
     .join('');
   const rows = input.questions
     .map(
       (q) =>
-        `<tr><td>${q.num}</td><td>${esc(q.type)}</td><td class="src">${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</td><td class="ans">${esc(q.correctAnswer)}</td></tr>`,
+        `<tr><td>${q.num}</td><td>${esc(q.subjective ? `서술·${q.type}` : q.type)}</td><td class="src">${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</td><td class="ans">${q.subjective ? '<span class="sj">서술형</span>' : esc(q.correctAnswer)}</td></tr>`,
     )
     .join('\n');
   const expls = input.questions
-    .map(
-      (q) => `<div class="ex">
-  <div class="ex-head">${q.num}. <span class="ex-ans">정답 ${esc(q.correctAnswer)}</span> <span class="ex-type">[${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</span></div>
-  <div class="ex-body">${escKeepUnderline(q.explanation || '해설이 제공되지 않은 문항입니다.')}</div>
-</div>`,
-    )
+    .map((q) => {
+      const head = q.subjective
+        ? `${q.num}. <span class="ex-ans">모범답안</span> <span class="ex-type">[서술·${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</span>`
+        : `${q.num}. <span class="ex-ans">정답 ${esc(q.correctAnswer)}</span> <span class="ex-type">[${esc(q.type)}] ${esc(q.sourceKey)}${fmtFinalSerial(q.serialNo) ? ` · ${esc(fmtFinalSerial(q.serialNo))}` : ''}</span>`;
+      const body = q.subjective
+        ? `<div class="ex-model">${escKeepUnderline(modelOf(q) || '(모범답안 없음)')}</div>${q.explanation ? `<div class="ex-body">${escKeepUnderline(q.explanation)}</div>` : ''}`
+        : `<div class="ex-body">${escKeepUnderline(q.explanation || '해설이 제공되지 않은 문항입니다.')}</div>`;
+      return `<div class="ex">
+  <div class="ex-head">${head}</div>
+  ${body}
+</div>`;
+    })
     .join('\n');
   return `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"/>
@@ -299,6 +373,9 @@ ${COMMON_CSS}
   .qa { display: flex; align-items: center; justify-content: center; gap: 3px; padding: 3px 2px; font-size: 9pt; border-right: 1px solid #bbb; border-bottom: 1px solid #bbb; }
   .qa .qn { color: #555; font-weight: 700; }
   .qa .qv { font-weight: 800; }
+  .qa .qv.sj { color: #7c3aed; font-size: 7.5pt; }
+  td.ans .sj { color: #7c3aed; font-weight: 800; }
+  .ex-model { font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 4px; padding: 4px 8px; margin: 2px 0 3px; }
 </style></head>
 <body>
 <div class="sheet">
