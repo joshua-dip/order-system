@@ -298,7 +298,13 @@ async function buildDownload(sp: URLSearchParams): Promise<NextResponse> {
           new TextRun({ text: `${num}.  ${clean(sj.question || '') || '[서술형]'}`, bold: true, size: 22 }),
           ...(Number.isFinite(sc2) ? [new TextRun({ text: `   [${sc2}점]`, size: 16, color: '6B7280' })] : []),
         ], spacing: { before: sj.source ? 0 : 200, after: 80 } }));
-        if (sj.paragraph) children.push(new DocxParagraph({ children: docxRunsFromHtml(sj.paragraph), spacing: { after: 100 } }));
+        // 줄바꿈(<br/>)을 문단으로 분리 — 주제완성형 등 여러 줄 구조(본문·주제틀·조건)가 한 줄로 뭉치지 않게
+        if (sj.paragraph) {
+          const lines = cleanKeepU(sj.paragraph).split('\n');
+          lines.forEach((line, li) => {
+            children.push(new DocxParagraph({ children: docxRunsFromHtml(line), spacing: { after: li === lines.length - 1 ? 100 : 20 } }));
+          });
+        }
         children.push(new DocxParagraph({ children: [new TextRun({ text: '답) ', size: 18, color: '9CA3AF' })], spacing: { after: 260 } }));
       });
     }

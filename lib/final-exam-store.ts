@@ -431,44 +431,96 @@ export async function selectQuestionsForScope(
   const englishMatch = matchGeneratedQuestionOptionTypeEnglish();
   const ZERO_OID = new ObjectId('0'.repeat(24));
 
-  /* ── 시험형(총 문항수): 유형별 균등 분배 + 범위 전체 지문에서 랜덤 샘플 ── */
+  /* ── 시험형(총 문항수): 유형별 균등 분배 + 범위 전체 지문에서 랜덤 샘플 ──
+   *  지문 수 ≥ 총문항이면 한 시험지에 같은 지문이 절대 겹치지 않게(전 유형 통합으로 지문 1회만).
+   *  지문 수 < 총문항일 때만 같은 지문 재사용(불가피). 부족분은 미사용 지문에 제작요청. */
   if (input.examTotal && input.examTotal > 0 && input.selectedTypes.length > 0) {
-    const perType = distributeEvenly(Math.floor(input.examTotal), input.selectedTypes);
+    const N = Math.floor(input.examTotal);
+    const perType = distributeEvenly(N, input.selectedTypes);
+    const availSources = sourceKeys.filter((sk) => bySource.has(sk));
+    const noDup = availSources.length >= N; // 지문이 충분 → 절대 겹치지 않음
+
+    // 유형별 후보 (source → 후보 id 배열). fresh 우선, hardAvoid 아니면 reused 폴백.
+    const candByType = new Map<string, Map<string, ObjectId[]>>();
+    for (const type of input.selectedTypes) {
+      if ((perType.get(type) ?? 0) <= 0) continue;
+      const m = new Map<string, ObjectId[]>();
+      for (const sk of availSources) {
+        const candidates = await gq
+          .find({ passage_id: bySource.get(sk)!, type, status: '완료', ...englishMatch })
+          .project<{ _id: ObjectId }>({ _id: 1 })
+          .toArray();
+        const fresh: ObjectId[] = [];
+        const reused: ObjectId[] = [];
+        for (const c of candidates) (usedBefore.has(String(c._id)) ? reused : fresh).push(c._id);
+        const ids = hardAvoid ? fresh : [...fresh, ...reused];
+        if (ids.length) m.set(sk, ids);
+      }
+      candByType.set(type, m);
+    }
+
     const items: FinalExamJobItem[] = [];
-    let totalRequested = 0;
-    let totalAssigned = 0;
     const itemFor = (sk: string, type: string): FinalExamJobItem => {
       let it = items.find((x) => x.sourceKey === sk && x.type === type);
       if (!it) { it = { sourceKey: sk, passageId: bySource.get(sk) ?? ZERO_OID, type, requested: 0, questionIds: [], shortBy: 0 }; items.push(it); }
       return it;
     };
-    for (const type of input.selectedTypes) {
+    const usedPassages = new Set<string>(); // 전 유형 통합 — noDup이면 지문 1회만 (제작요청 포함)
+    const usedQ = new Set<string>();
+    let totalRequested = 0;
+    let totalAssigned = 0;
+
+    // 희소 유형(보유 지문 적은 유형)부터 처리 → 지문 충돌·불필요한 제작요청 최소화
+    const orderedTypes = input.selectedTypes
+      .filter((t) => (perType.get(t) ?? 0) > 0)
+      .sort((a, b) => (candByType.get(a)?.size ?? 0) - (candByType.get(b)?.size ?? 0));
+
+    for (const type of orderedTypes) {
       const target = perType.get(type) ?? 0;
-      if (target <= 0) continue;
       totalRequested += target;
-      // 범위 전체 지문에서 (유형) 후보 모으기 → fresh/reused 분리
-      const fresh: { sk: string; id: ObjectId }[] = [];
-      const reused: { sk: string; id: ObjectId }[] = [];
-      for (const sk of sourceKeys) {
-        const passageId = bySource.get(sk);
-        if (!passageId) continue;
-        const candidates = await gq
-          .find({ passage_id: passageId, type, status: '완료', ...englishMatch })
-          .project<{ _id: ObjectId }>({ _id: 1 })
-          .toArray();
-        for (const c of candidates) (usedBefore.has(String(c._id)) ? reused : fresh).push({ sk, id: c._id });
+      const m = candByType.get(type) ?? new Map<string, ObjectId[]>();
+      let assigned = 0;
+
+      // 1차: 아직 안 쓰인 지문에서 한 문제씩 (지문 랜덤). 겹침 방지의 핵심.
+      for (const sk of randomShuffle([...m.keys()])) {
+        if (assigned >= target) break;
+        if (usedPassages.has(sk)) continue;
+        const pick = m.get(sk)!.find((id) => !usedQ.has(String(id)));
+        if (!pick) continue;
+        const it = itemFor(sk, type); it.questionIds.push(pick); it.requested += 1;
+        usedPassages.add(sk); usedQ.add(String(pick)); assigned++;
       }
-      // hardAvoid면 미사용만, 아니면 미사용 우선 후 재사용. 각 풀은 랜덤 셔플(지문 랜덤).
-      const ordered = hardAvoid ? randomShuffle(fresh) : [...randomShuffle(fresh), ...randomShuffle(reused)];
-      const picked = ordered.slice(0, target);
-      totalAssigned += picked.length;
-      for (const p of picked) { const it = itemFor(p.sk, type); it.questionIds.push(p.id); it.requested += 1; }
-      // 부족분 → 범위 내 지문에 라운드로빈 배분(제작 요청)
-      const short = target - picked.length;
+
+      // 2차: 지문이 부족할 때만(noDup=false) 같은 지문 재사용 — 라운드로빈으로 균등 분산
+      if (!noDup) {
+        let progressed = true;
+        while (assigned < target && progressed) {
+          progressed = false;
+          for (const sk of randomShuffle([...m.keys()])) {
+            if (assigned >= target) break;
+            const pick = m.get(sk)!.find((id) => !usedQ.has(String(id)));
+            if (!pick) continue;
+            const it = itemFor(sk, type); it.questionIds.push(pick); it.requested += 1;
+            usedQ.add(String(pick)); assigned++; progressed = true;
+          }
+        }
+      }
+      totalAssigned += assigned;
+
+      // 부족분 → 제작요청. noDup이면 미사용 지문에만 배정(겹침 방지), 아니면 라운드로빈.
+      const short = target - assigned;
       if (short > 0) {
-        const avail = sourceKeys.filter((sk) => bySource.has(sk));
-        const pool = avail.length ? avail : sourceKeys;
-        for (let i = 0; i < short; i++) { const it = itemFor(pool[i % pool.length], type); it.requested += 1; it.shortBy += 1; }
+        if (noDup) {
+          const pool = randomShuffle(availSources.filter((sk) => !usedPassages.has(sk)));
+          for (let i = 0; i < short; i++) {
+            const sk = pool[i] ?? availSources[i % Math.max(1, availSources.length)] ?? sourceKeys[i % Math.max(1, sourceKeys.length)];
+            const it = itemFor(sk, type); it.requested += 1; it.shortBy += 1;
+            usedPassages.add(sk);
+          }
+        } else {
+          const pool = availSources.length ? availSources : sourceKeys;
+          for (let i = 0; i < short; i++) { const it = itemFor(pool[i % pool.length], type); it.requested += 1; it.shortBy += 1; }
+        }
       }
     }
     return { items, totalRequested, totalAssigned, totalShort: totalRequested - totalAssigned, missingSources };

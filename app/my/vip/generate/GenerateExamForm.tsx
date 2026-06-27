@@ -15,8 +15,8 @@ interface SchoolExam {
 type SourceCategory = '교과서' | '부교재' | '모의고사';
 const CATEGORY_ORDER: SourceCategory[] = ['교과서', '부교재', '모의고사'];
 
-/** 서술형(기출 그대로 가져오는) 문항. */
-interface SubjectiveItem { question: string; paragraph: string; score: number; source: string; textbook: string }
+/** 서술형 문항 (범위 지문의 주제완성형 등 — paragraph 에 지문·주제틀·조건 임베드). */
+interface SubjectiveItem { question: string; paragraph: string; score: number; source: string; textbook: string; modelAnswer?: string; subtype?: string }
 
 /** 기준 배점 배열 → 합계 total(기본 100)에 맞춰 정수 배분(largest remainder). */
 function distributeScores(bases: number[], total = 100): number[] {
@@ -130,6 +130,8 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (m: string) => { setToast(m); window.setTimeout(() => setToast((t) => (t === m ? null : t)), 4500); };
   const [resultTypeCounts, setResultTypeCounts] = useState<Record<string, number>>({});
+  /** 서술형 — '이번 시험범위' 지문의 주제완성형(narrative)에서 가져옴 (기출 패턴 서술형 대체). */
+  const [subjectiveItems, setSubjectiveItems] = useState<SubjectiveItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [downloading, setDownloading] = useState<number | null>(null); // set index or -1 for all
@@ -164,11 +166,6 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
     setScopeExamId(filtered[0]?.id ?? '');
     setPatternExamId(filtered[1]?.id ?? '');
   }, [schoolExams, selectedGrade]);
-
-  useEffect(() => {
-    const pe = schoolExams.find((e) => e.id === patternExamId);
-    setTypeCounts(pe ? computeTypeCounts(pe.questions, schoolCount) : {});
-  }, [patternExamId, schoolExams, schoolCount]);
 
   const selectedStudentObj = students.find((s) => s.id === selectedStudent);
   const scopeExam = schoolExams.find((e) => e.id === scopeExamId);
@@ -224,7 +221,7 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
   /* 기출(pattern) 시험의 출처 카테고리 분포 — 문항별 textbook을 분류해 집계 */
   const patternCategoryCounts = useMemo<Record<SourceCategory, number>>(() => {
     const m: Record<SourceCategory, number> = { 교과서: 0, 부교재: 0, 모의고사: 0 };
-    if (!patternExam) return m;
+    if (!patternExam?.questions) return m;
     for (const q of Object.values(patternExam.questions)) {
       const tb = q.textbook?.trim();
       if (tb) m[classifyCategory(tb)]++;
@@ -235,7 +232,7 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
   /* 기출 유형별 평균 배점 (서술형 제외) — 객관식 점수 분포 기준 */
   const typeAvgScore = useMemo<Record<string, number>>(() => {
     const acc: Record<string, { sum: number; n: number }> = {};
-    if (patternExam) {
+    if (patternExam?.questions) {
       for (const q of Object.values(patternExam.questions)) {
         if (q.isSubjective || q.questionType === '서술형') continue;
         const t = q.questionType; const s = Number(q.score);
@@ -248,21 +245,35 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
     return m;
   }, [patternExam]);
 
-  /* 기출 서술형 문항 (포함 시 그대로 가져옴) */
-  const subjectiveItems = useMemo<SubjectiveItem[]>(() => {
-    if (!patternExam) return [];
-    return Object.entries(patternExam.questions)
-      .filter(([, q]) => q.isSubjective || q.questionType === '서술형')
-      .sort((a, b) => Number(a[0]) - Number(b[0]))
-      .map(([, q]) => ({
-        question: (q.questionText ?? '').trim(),
-        paragraph: (q.questionBody ?? '').trim(),
-        score: Number(q.score) || 5,
-        source: (q.source ?? '').trim(),
-        textbook: (q.textbook ?? '').trim(),
-      }))
-      .filter((s) => s.question || s.paragraph);
+  /* 기출 패턴(이전 시험)의 서술형 문항 수 — 이번 시험지에 넣을 서술형 개수의 기준 */
+  const patternSubjectiveCount = useMemo<number>(() => {
+    if (!patternExam?.questions) return 0;
+    return Object.values(patternExam.questions).filter((q) => q.isSubjective || q.questionType === '서술형').length;
   }, [patternExam]);
+
+  /* 서술형 = '이번 시험범위' 지문의 주제완성형(narrative)에서 patternSubjectiveCount 개를 가져온다.
+     (기출 패턴 서술형은 범위 밖이라 그대로 쓰지 않고, 범위 지문의 서술형으로 교체) */
+  useEffect(() => {
+    if (mode !== 'school' || !scopeExamId || patternSubjectiveCount <= 0) { setSubjectiveItems([]); return; }
+    let alive = true;
+    fetch(`/api/my/vip/generate/scope-subjectives?scopeExamId=${scopeExamId}&limit=${patternSubjectiveCount}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => { if (alive) setSubjectiveItems(d.ok && Array.isArray(d.subjectives) ? d.subjectives : []); })
+      .catch(() => { if (alive) setSubjectiveItems([]); });
+    return () => { alive = false; };
+  }, [mode, scopeExamId, patternSubjectiveCount]);
+
+  /* 유형별 문제 수 계산 — 서술형은 '범위 내'로 필터된 실제 수(subjectiveItems)로 맞춘다(raw 아님). */
+  useEffect(() => {
+    const pe = schoolExams.find((e) => e.id === patternExamId);
+    if (!pe) { setTypeCounts({}); return; }
+    const counts = computeTypeCounts(pe.questions, schoolCount);
+    if ('서술형' in counts) {
+      if (subjectiveItems.length > 0) counts['서술형'] = subjectiveItems.length;
+      else delete counts['서술형'];
+    }
+    setTypeCounts(counts);
+  }, [patternExamId, schoolExams, schoolCount, subjectiveItems]);
 
   /* 기출 객관식 수 → 「문제 수/세트」 자동 세팅 (기출 선택 시) */
   useEffect(() => {
@@ -485,6 +496,9 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
   };
 
   const totalTypeCount = Object.entries(typeCounts).reduce((s, [t, v]) => s + (t === '서술형' && !includeSubjective ? 0 : v), 0);
+  // 「문제 수 / 세트」는 객관식 목표치(schoolCount)에 포함된 서술형 수를 더한 '총 문항'으로 표기.
+  const subjIncludedCount = includeSubjective ? subjectiveItems.length : 0;
+  const schoolTotalCount = schoolCount + subjIncludedCount;
   const currentSet = examSets[activeSet];
 
   return (
@@ -756,7 +770,17 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
           <div className="flex items-center gap-4">
             <div>
               <label className="block text-xs text-zinc-500 mb-1">문제 수 / 세트</label>
-              <input type="number" min={1} max={100} value={schoolCount} onChange={(e) => setSchoolCount(Number(e.target.value))} className="w-20 px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 focus:outline-none" />
+              <input
+                type="number"
+                min={subjIncludedCount + 1}
+                max={100 + subjIncludedCount}
+                value={schoolTotalCount}
+                onChange={(e) => setSchoolCount(Math.max(1, Math.min(100, Number(e.target.value) - subjIncludedCount)))}
+                className="w-20 px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-sm text-zinc-100 focus:outline-none"
+              />
+              {subjIncludedCount > 0 && (
+                <p className="text-[10px] text-zinc-500 mt-1">객관식 {schoolCount} + 서술형 {subjIncludedCount}</p>
+              )}
             </div>
             {patternExam && (
               <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer mt-4" title="기출 시험지의 문항(지문·유형) 순서 그대로 배치">
@@ -887,6 +911,32 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* 서술형 섹션 (기출 그대로 · 항상 시험지에 포함 · 선택 불필요) */}
+              {mode === 'school' && includeSubjective && subjectiveItems.length > 0 && (
+                <div className="mt-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-amber-300">서술형 {subjectiveItems.length}문항</span>
+                    <span className="text-[10px] text-zinc-500">기출 그대로 포함 · 항상 시험지에 출제됩니다 (선택 불필요)</span>
+                  </div>
+                  <div className="space-y-3">
+                    {subjectiveItems.map((sj, i) => (
+                      <div key={i} className="rounded-2xl border border-amber-700/40 bg-amber-900/10 overflow-hidden">
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-xs font-mono text-amber-500/70">서술 #{i + 1}</span>
+                            <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-300 text-[10px] rounded">서술형</span>
+                            {sj.textbook && <span className="text-[10px] text-zinc-600 truncate max-w-[200px]">{sj.textbook}</span>}
+                            {sj.source && <span className="text-[10px] text-zinc-700 truncate">{sj.source}</span>}
+                          </div>
+                          {sj.question && <p className="text-sm text-amber-100/90 leading-relaxed mb-1">{sj.question}</p>}
+                          {sj.paragraph && <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3" dangerouslySetInnerHTML={{ __html: sj.paragraph }} />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>
