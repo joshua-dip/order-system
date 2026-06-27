@@ -106,8 +106,10 @@ export async function GET(request: NextRequest) {
     : [];
 
   const passageSourceLookup = new Map<string, string>();
+  const ownIdByKey = new Map<string, string>(); // 교재::source_key → 그 지문 자신의 passage_id
   const psKeys: string[] = [];
   for (const p of passageDocs) {
+    ownIdByKey.set(`${p.textbook}::${p.source_key}`, String(p._id));
     const ps = String((p as Record<string, unknown>).passage_source ?? '').trim();
     if (ps) { passageSourceLookup.set(`${p.textbook}::${p.source_key}`, ps); psKeys.push(ps); }
   }
@@ -126,16 +128,23 @@ export async function GET(request: NextRequest) {
   for (const [tb, entries] of scopeByTextbook) {
     if (entries.length === 0) { noSourceTextbooks.push(tb); continue; }
     const normal: string[] = [];
+    const addPid = (hex: string) => {
+      passageIdSet.add(hex);
+      if (!passageIdsByTb.has(tb)) passageIdsByTb.set(tb, []);
+      passageIdsByTb.get(tb)!.push(hex);
+    };
     for (const { sourceKey } of entries) {
-      const ps = passageSourceLookup.get(`${tb}::${sourceKey}`);
+      const key = `${tb}::${sourceKey}`;
+      const ownId = ownIdByKey.get(key);
+      // 지문 자신의 변형문항을 항상 후보로 (올림포스처럼 passage_source 가 있어도 자기 변형이 누락되지 않게)
+      if (ownId) addPid(ownId);
+      const ps = passageSourceLookup.get(key);
       if (ps) {
         const origId = passageSourceToId.get(ps);
-        if (origId) {
-          passageIdSet.add(origId);
-          if (!passageIdsByTb.has(tb)) passageIdsByTb.set(tb, []);
-          passageIdsByTb.get(tb)!.push(origId);
-        }
-      } else normal.push(sourceKey);
+        if (origId) addPid(origId); // 원본(모의고사) 변형도 재사용 후보로
+      } else if (!ownId) {
+        normal.push(sourceKey); // 지문 자체를 못 찾았을 때만 Source 매칭 폴백
+      }
     }
     if (normal.length > 0) { if (!normalSrcMap.has(tb)) normalSrcMap.set(tb, []); normalSrcMap.get(tb)!.push(...normal); }
   }
@@ -201,6 +210,38 @@ export async function GET(request: NextRequest) {
     return { id: (q._id as ObjectId).toString(), textbook: q.textbook, passageId: q.passage_id ? (q.passage_id as ObjectId).toString() : null, type: q.type, difficulty: q.difficulty, paragraph: qd.Paragraph ?? '', options: qd.Options ?? '', answer: qd.Answer ?? '', explanation: qd.Explanation ?? '', source: qd.Source ?? '', pric: q.pric ?? null, scopeCategory };
   };
 
+  /**
+   * filter 에서 count 개를 '지문 우선 비중복'으로 선택 (시험지처럼 같은 지문 안 겹치게).
+   *  - setPassages 에 없는 지문에서 먼저 한 개씩 → 한 시험지(set) 안에서 지문 안 겹침.
+   *  - 후보 지문이 문항 수보다 적을 때만 같은 지문 재사용(불가피).
+   * 경량 (_id, passage_id) 전수 조회로 모든 지문을 보게 해 비중복을 보장한다.
+   */
+  const pickDistinctPassages = async (
+    baseFilter: Record<string, unknown>,
+    count: number,
+    setPassages: Set<string>,
+  ): Promise<Record<string, unknown>[]> => {
+    if (count <= 0) return [];
+    const lite = await db.collection('generated_questions')
+      .find(baseFilter).project({ _id: 1, passage_id: 1 }).limit(5000).toArray();
+    if (lite.length === 0) return [];
+    if (random) shuffle(lite);
+    const chosen: ObjectId[] = [];
+    const reuse: ObjectId[] = [];
+    for (const q of lite) {
+      if (chosen.length >= count) break;
+      const pid = q.passage_id ? String(q.passage_id) : `__nopid_${String(q._id)}`;
+      if (setPassages.has(pid)) { reuse.push(q._id as ObjectId); continue; }
+      chosen.push(q._id as ObjectId); setPassages.add(pid);
+    }
+    for (const id of reuse) { if (chosen.length >= count) break; chosen.push(id); } // 지문 부족 시 재사용
+    if (chosen.length === 0) return [];
+    const docs = await db.collection('generated_questions')
+      .find({ _id: { $in: chosen } }).project(project).toArray();
+    const byId = new Map(docs.map((d) => [String(d._id), d]));
+    return chosen.map((id) => byId.get(String(id))).filter((d): d is Record<string, unknown> => !!d);
+  };
+
   // 4) N세트 비중복 생성
   const resultSets: ReturnType<typeof mapQ>[][] = [];
   const globalUsedIds = new Set<string>();
@@ -220,12 +261,16 @@ export async function GET(request: NextRequest) {
         .map(([, q]) => q)
         .filter((q) => !(q.isSubjective || q.questionType === '서술형'));
 
-      // 후보 교재 + 유형 → 1문항 무작위 샘플 (중복 제외)
-      const sampleOne = async (tbs: string[], typeFilter: string | undefined, used: Set<string>) => {
+      // 후보 교재 + 유형 → 1문항 무작위 샘플 (중복 문항 제외 + avoidPassages 면 이미 쓴 지문도 제외)
+      const sampleOne = async (tbs: string[], typeFilter: string | undefined, used: Set<string>, avoidPassages: Set<string> | null) => {
         const exOids = [...used].map((h) => new ObjectId(h));
         const conds = tbs.map((tb) => buildTbFilter(tb, typeFilter, exOids)).filter((f): f is Record<string, unknown> => !!f);
         if (conds.length === 0) return null;
-        const filter = conds.length === 1 ? conds[0] : { $or: conds };
+        let filter: Record<string, unknown> = conds.length === 1 ? conds[0] : { $or: conds };
+        if (avoidPassages && avoidPassages.size > 0) {
+          const pidOids = [...avoidPassages].filter((p) => !p.startsWith('__') && ObjectId.isValid(p)).map((p) => new ObjectId(p));
+          if (pidOids.length > 0) filter = { $and: [filter, { passage_id: { $nin: pidOids } }] };
+        }
         const res = await db.collection('generated_questions')
           .aggregate([{ $match: filter }, { $sample: { size: 1 } }, { $project: project }]).toArray();
         return res[0] ?? null;
@@ -233,6 +278,7 @@ export async function GET(request: NextRequest) {
 
       for (let s = 0; s < setsCount; s++) {
         const setQuestions: Record<string, unknown>[] = [];
+        const setPassages = new Set<string>(); // 이 시험지(set)에서 이미 쓴 지문 — 겹침 방지
         for (const pq of orderedPattern) {
           const type = pq.questionType;
           const refTb = pq.textbook?.trim();
@@ -243,15 +289,22 @@ export async function GET(request: NextRequest) {
           else if (cat && scopeByCat[cat]?.length) candidates = scopeByCat[cat];
           else candidates = scopeTbs;
           // 같은 후보+유형 → 후보 아무유형 → 전체+유형 → 전체 아무거나
-          let picked = await sampleOne(candidates, type, globalUsedIds);
-          if (!picked) picked = await sampleOne(candidates, undefined, globalUsedIds);
-          if (!picked && type) picked = await sampleOne(scopeTbs, type, globalUsedIds);
-          if (!picked) picked = await sampleOne(scopeTbs, undefined, globalUsedIds);
+          const tryChain = async (avoid: Set<string> | null) => {
+            let p = await sampleOne(candidates, type, globalUsedIds, avoid);
+            if (!p) p = await sampleOne(candidates, undefined, globalUsedIds, avoid);
+            if (!p && type) p = await sampleOne(scopeTbs, type, globalUsedIds, avoid);
+            if (!p) p = await sampleOne(scopeTbs, undefined, globalUsedIds, avoid);
+            return p;
+          };
+          // 1차: 지문 안 겹치게 → 부족하면(2차) 같은 지문 재사용 허용
+          let picked = await tryChain(setPassages);
+          if (!picked) picked = await tryChain(null);
           if (picked) {
             // 어느 카테고리에서 뽑았는지 태깅(올림포스처럼 passage_source로 원본 교재가 모의고사여도 범위 기준으로 집계)
             picked._scopeCat = cat ?? classifyScope(String(picked.textbook ?? ''));
             setQuestions.push(picked);
             globalUsedIds.add((picked._id as ObjectId).toHexString());
+            if (picked.passage_id) setPassages.add(String(picked.passage_id));
           }
         }
         resultSets.push(setQuestions.map(mapQ));
@@ -277,6 +330,7 @@ export async function GET(request: NextRequest) {
   for (let s = 0; s < setsCount; s++) {
     const excludeOids = [...globalUsedIds].map((h) => new ObjectId(h));
     const setQuestions: Record<string, unknown>[] = [];
+    const setPassages = new Set<string>(); // 이 시험지(set)에서 이미 쓴 지문 — 겹침 방지
 
     if (perTbMode) {
       // ── 교재별 문제 수 지정 모드 ──
@@ -289,18 +343,14 @@ export async function GET(request: NextRequest) {
             if (share <= 0) continue;
             const filter = buildTbFilter(tb, type, excludeOids);
             if (!filter) continue;
-            const qs = random
-              ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: share } }, { $project: project }]).toArray()
-              : await db.collection('generated_questions').find(filter).project(project).limit(share).toArray();
+            const qs = await pickDistinctPassages(filter, share, setPassages);
             for (const q of qs) { (q as Record<string, unknown>)._scopeCat = classifyScope(tb); globalUsedIds.add((q._id as ObjectId).toHexString()); }
             setQuestions.push(...qs);
           }
         } else {
           const filter = buildTbFilter(tb, undefined, excludeOids);
           if (!filter) continue;
-          const qs = random
-            ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: tbTotal } }, { $project: project }]).toArray()
-            : await db.collection('generated_questions').find(filter).project(project).limit(tbTotal).toArray();
+          const qs = await pickDistinctPassages(filter, tbTotal, setPassages);
           for (const q of qs) { (q as Record<string, unknown>)._scopeCat = classifyScope(tb); globalUsedIds.add((q._id as ObjectId).toHexString()); }
           setQuestions.push(...qs);
         }
@@ -311,9 +361,7 @@ export async function GET(request: NextRequest) {
       for (const [type, count] of Object.entries(typeCounts)) {
         if (count <= 0) continue;
         const filter = buildFilter(type, excludeOids);
-        const qs = random
-          ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: count } }, { $project: project }]).toArray()
-          : await db.collection('generated_questions').find(filter).project(project).limit(count).toArray();
+        const qs = await pickDistinctPassages(filter, count, setPassages);
         setQuestions.push(...qs);
         for (const q of qs) globalUsedIds.add((q._id as ObjectId).toHexString());
       }
@@ -321,9 +369,7 @@ export async function GET(request: NextRequest) {
     } else {
       // ── 전체 범위 fetch 모드 ──
       const filter = buildFilter(undefined, excludeOids);
-      const qs = random
-        ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: total } }, { $project: project }]).toArray()
-        : await db.collection('generated_questions').find(filter).project(project).limit(total).toArray();
+      const qs = await pickDistinctPassages(filter, total, setPassages);
       setQuestions.push(...qs);
       for (const q of qs) globalUsedIds.add((q._id as ObjectId).toHexString());
     }
@@ -334,9 +380,7 @@ export async function GET(request: NextRequest) {
       const fallbackExclude = [...new Set([...globalUsedIds, ...setUsedIds])].map((h) => new ObjectId(h));
       const need = total - setQuestions.length;
       const filter = buildFilter(undefined, fallbackExclude);
-      const extra = random
-        ? await db.collection('generated_questions').aggregate([{ $match: filter }, { $sample: { size: need } }, { $project: project }]).toArray()
-        : await db.collection('generated_questions').find(filter).project(project).limit(need).toArray();
+      const extra = await pickDistinctPassages(filter, need, setPassages); // 보충도 같은 지문 안 겹치게
       setQuestions.push(...extra);
       for (const q of extra) globalUsedIds.add((q._id as ObjectId).toHexString());
       if (random) shuffle(setQuestions);
