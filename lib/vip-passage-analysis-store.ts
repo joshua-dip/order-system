@@ -105,6 +105,7 @@ export function analysisListView(a: VipPassageAnalysis) {
     id: String(a._id),
     title: a.title,
     source: a.source,
+    passageId: a.passageId ?? '',
     sentenceCount: a.sentences?.length ?? 0,
     vocabCount: a.vocab?.length ?? 0,
     createdAt: a.createdAt,

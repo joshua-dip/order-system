@@ -125,6 +125,7 @@ export default function AdminMembershipApplicationsPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [accountResult, setAccountResult] = useState<CreateAccountResult | null>(null);
   const [copyMsg, setCopyMsg] = useState('');
+  const [noticeCopied, setNoticeCopied] = useState(false); // 안내 멘트 전체 복사 버튼 피드백
   // 계정 자동 생성 시 가입 환영 쿠폰(포인트 10% 할인) 함께 지급 여부
   const [grantWelcomeCoupon, setGrantWelcomeCoupon] = useState(true);
 
@@ -686,18 +687,22 @@ export default function AdminMembershipApplicationsPage() {
                 <div className="mt-4 flex flex-col gap-2">
                   <button
                     type="button"
-                    onClick={() => copyText(
-                      buildAccountNoticeText({
-                        name: accountResult.name,
-                        loginId: accountResult.loginId,
-                        initialPassword: accountResult.initialPassword,
-                        couponGrantedPct: accountResult.couponGrantedPct,
-                      }),
-                      '안내 멘트 복사 완료 (SMS·카톡 그대로 붙여넣기)',
-                    )}
-                    className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-500"
+                    onClick={() => {
+                      copyText(
+                        buildAccountNoticeText({
+                          name: accountResult.name,
+                          loginId: accountResult.loginId,
+                          initialPassword: accountResult.initialPassword,
+                          couponGrantedPct: accountResult.couponGrantedPct,
+                        }),
+                        '안내 멘트 복사 완료 (SMS·카톡 그대로 붙여넣기)',
+                      );
+                      setNoticeCopied(true);
+                      window.setTimeout(() => setNoticeCopied(false), 1800);
+                    }}
+                    className={`w-full py-2.5 rounded-lg font-bold text-sm text-white transition-colors ${noticeCopied ? 'bg-emerald-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
                   >
-                    📋 안내 멘트 전체 복사 (SMS·카톡용)
+                    {noticeCopied ? '✅ 복사되었습니다' : '📋 안내 멘트 전체 복사 (SMS·카톡용)'}
                   </button>
                   <button
                     type="button"

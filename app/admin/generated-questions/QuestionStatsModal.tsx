@@ -85,17 +85,18 @@ function buildPendingReviewClipboardText(textbook: string, p: PendingReviewCopyP
 
 type ShortageItem = { type: string; current: number; avg: number; need: number };
 
-function buildShortageClipboardText(textbook: string, source: string, items: ShortageItem[]): string {
+function buildShortageClipboardText(textbook: string, source: string, items: ShortageItem[], target: number): string {
   if (items.length === 0) return '';
   const totalNeed = items.reduce((s, i) => s + i.need, 0);
   return [
     `교재: ${textbook}`,
     `소스(지문): ${source}`,
+    `목표 문항 수: 유형당 ${target}개`,
     ``,
-    `아래 유형의 변형문제를 만들어주세요 (평균 미달 → 추가 필요):`,
+    `아래 유형의 변형문제를 만들어주세요 (목표 미달 → 추가 필요):`,
     ...items.map(
       ({ type, current, avg, need }) =>
-        `- [${type}] ${need}개 추가 (현재 ${current}개 → 목표 ${MAX_PER_SOURCE_TYPE}개, 평균 ${avg.toFixed(1)})`,
+        `- [${type}] ${need}개 추가 (현재 ${current}개 → 목표 ${target}개, 평균 ${avg.toFixed(1)})`,
     ),
     ``,
     `총 ${totalNeed}개 추가 필요`,
@@ -107,11 +108,13 @@ function CopyTypeShortageButton({
   type,
   avg,
   items,
+  defaultTarget,
 }: {
   textbook: string;
   type: string;
   avg: number;
-  items: Array<{ source: string; current: number; need: number }>;
+  items: Array<{ source: string; current: number; need: number; target: number }>;
+  defaultTarget: number;
 }) {
   const [copied, setCopied] = useState(false);
   const totalNeed = items.reduce((s, i) => s + i.need, 0);
@@ -121,13 +124,13 @@ function CopyTypeShortageButton({
       const lines = [
         `교재: ${textbook}`,
         `유형: ${type}`,
-        `목표 문항 수: ${MAX_PER_SOURCE_TYPE}개 / 소스 (유형 소스별 평균: ${avg.toFixed(1)}개)`,
+        `목표 문항 수: 교재 기본 ${defaultTarget}개 / 소스 (소스별 목표 개별 설정 · 평균 ${avg.toFixed(1)}개)`,
         ``,
         `아래 소스에서 [${type}] 유형 변형문제 추가 제작이 필요합니다.`,
         ``,
         ...items.map(
-          ({ source, current, need }) =>
-            `소스(지문): ${source} — 현재 ${current}개 → 목표 ${MAX_PER_SOURCE_TYPE}개 (${need}개 추가 필요)`,
+          ({ source, current, need, target }) =>
+            `소스(지문): ${source} — 현재 ${current}개 → 목표 ${target}개 (${need}개 추가 필요)`,
         ),
         ``,
         `합계: ${totalNeed}개 추가 필요`,
@@ -146,7 +149,7 @@ function CopyTypeShortageButton({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     },
-    [textbook, type, avg, items, totalNeed],
+    [textbook, type, avg, items, totalNeed, defaultTarget],
   );
   return (
     <button
@@ -168,16 +171,18 @@ function CopyShortageButton({
   textbook,
   source,
   items,
+  target,
 }: {
   textbook: string;
   source: string;
   items: ShortageItem[];
+  target: number;
 }) {
   const [copied, setCopied] = useState(false);
   const handleClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
-      const text = buildShortageClipboardText(textbook, source, items);
+      const text = buildShortageClipboardText(textbook, source, items, target);
       try {
         await navigator.clipboard.writeText(text);
       } catch {
@@ -191,7 +196,7 @@ function CopyShortageButton({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     },
-    [textbook, source, items],
+    [textbook, source, items, target],
   );
   return (
     <button
@@ -489,6 +494,9 @@ function SourceHeatmap({
   selectedType,
   onCellClick,
   onPendingReviewCopy,
+  targetFor,
+  defaultTarget,
+  onSetSourceTarget,
 }: {
   data: SourceData;
   statusFilter: StatusFilter;
@@ -496,6 +504,12 @@ function SourceHeatmap({
   selectedType: string | null;
   onCellClick?: (info: { source: string; type: string; count: number; avgNonZero: number; need: number }) => void;
   onPendingReviewCopy?: (payload: PendingReviewCopyPayload) => void;
+  /** 소스별 목표 문항수(유형당). perSource override → 없으면 defaultTarget */
+  targetFor: (source: string) => number;
+  /** 교재 기본 목표 */
+  defaultTarget: number;
+  /** 소스 목표 변경 (null = 기본값으로 되돌림) */
+  onSetSourceTarget: (source: string, value: number | null) => void;
 }) {
   const rowMap = new Map<string, SourceRow>();
   for (const r of data.rows) rowMap.set(`${r.source}|${r.type}`, r);
@@ -649,8 +663,9 @@ function SourceHeatmap({
                 const avg = typeAvgMap.get(tp) ?? 0;
                 const typeShortageItems = data.sources.flatMap((src) => {
                   const v = getValue(src, tp);
-                  const need = Math.max(0, MAX_PER_SOURCE_TYPE - v);
-                  return need > 0 ? [{ source: src, current: v, need }] : [];
+                  const target = targetFor(src);
+                  const need = Math.max(0, target - v);
+                  return need > 0 ? [{ source: src, current: v, need, target }] : [];
                 });
                 return (
                   <th
@@ -670,6 +685,7 @@ function SourceHeatmap({
                           type={tp}
                           avg={avg}
                           items={typeShortageItems}
+                          defaultTarget={defaultTarget}
                         />
                       )}
                     </div>
@@ -745,12 +761,14 @@ function SourceHeatmap({
               const chapter = getChapter(src);
               const isNewChapter = chapter !== prevChapter;
               prevChapter = chapter;
+              const rowTarget = targetFor(src);
+              const isOverridden = rowTarget !== defaultTarget;
               const rowTotal = data.types.reduce((s, tp) => s + getValue(src, tp), 0);
-              // 부족 유형 계산
+              // 부족 유형 계산 (소스별 목표 기준)
               const shortageItems: ShortageItem[] = data.types.flatMap((tp) => {
                 const v = getValue(src, tp);
                 const avg = typeAvgMap.get(tp) ?? 0;
-                const need = Math.max(0, MAX_PER_SOURCE_TYPE - v);
+                const need = Math.max(0, rowTarget - v);
                 return need > 0 ? [{ type: tp, current: v, avg, need }] : [];
               });
               return (
@@ -765,6 +783,7 @@ function SourceHeatmap({
                           textbook={data.textbook}
                           source={src}
                           items={shortageItems}
+                          target={rowTarget}
                         />
                       )}
                       <div className="flex flex-col leading-tight">
@@ -775,6 +794,23 @@ function SourceHeatmap({
                           </span>
                         )}
                       </div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={99}
+                        value={rowTarget}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const raw = e.target.value.trim();
+                          if (raw === '') { onSetSourceTarget(src, null); return; }
+                          const n = Math.round(Number(raw));
+                          onSetSourceTarget(src, Number.isFinite(n) ? n : null);
+                        }}
+                        title={`목표 문항수 (유형당). 비우면 교재 기본값 ${defaultTarget} 사용`}
+                        className={`ml-auto w-11 shrink-0 rounded px-1 py-0.5 text-[10px] text-center font-mono border bg-slate-800 focus:outline-none focus:border-indigo-400 ${
+                          isOverridden ? 'border-indigo-500 text-indigo-200' : 'border-slate-700 text-slate-400'
+                        }`}
+                      />
                     </div>
                   </td>
                   {data.types.map((tp) => {
@@ -783,21 +819,21 @@ function SourceHeatmap({
                     const completed = r?.완료 ?? 0;
                     const pending = r?.대기 ?? 0;
                     const avg = typeAvgMap.get(tp) ?? 0;
-                    const need = Math.max(0, MAX_PER_SOURCE_TYPE - v);
+                    const need = Math.max(0, rowTarget - v);
                     const clickable = onCellClick && need > 0;
                     const tooltipBase = showSplit
                       ? `완료 ${completed} / 대기 ${pending}`
                       : undefined;
-                    const overTarget = v > MAX_PER_SOURCE_TYPE;
+                    const overTarget = v > rowTarget;
                     const tooltip = overTarget
-                      ? `${tooltipBase ? tooltipBase + '\n' : ''}목표(${MAX_PER_SOURCE_TYPE}) 초과`
+                      ? `${tooltipBase ? tooltipBase + '\n' : ''}목표(${rowTarget}) 초과`
                       : clickable
-                      ? `${tooltipBase ? tooltipBase + '\n' : ''}클릭: 목표 ${MAX_PER_SOURCE_TYPE}개 도달에 ${need}개 필요 — 클립보드 복사`
+                      ? `${tooltipBase ? tooltipBase + '\n' : ''}클릭: 목표 ${rowTarget}개 도달에 ${need}개 필요 — 클립보드 복사`
                       : tooltipBase;
                     return (
                       <td
                         key={tp}
-                        className={`px-0.5 py-0 text-center font-mono ${heatColor(v, MAX_PER_SOURCE_TYPE)} ${
+                        className={`px-0.5 py-0 text-center font-mono ${heatColor(v, rowTarget)} ${
                           selectedType === tp ? 'ring-1 ring-inset ring-white/20' : ''
                         } ${clickable ? 'cursor-pointer hover:brightness-125 active:scale-95 transition-all' : ''}`}
                         title={tooltip}
@@ -929,17 +965,75 @@ function DrilldownPanel({
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  /* 교재별 목표 문항수 설정 (서버 저장) */
+  const [targetCfg, setTargetCfg] = useState<{ defaultTarget: number; perSource: Record<string, number> }>({
+    defaultTarget: MAX_PER_SOURCE_TYPE,
+    perSource: {},
+  });
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const targetFor = useCallback(
+    (source: string) => targetCfg.perSource[source] ?? targetCfg.defaultTarget,
+    [targetCfg],
+  );
+
+  const persistCfg = useCallback(
+    (cfg: { defaultTarget: number; perSource: Record<string, number> }) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        fetch('/api/admin/generated-questions/stats/target-config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ textbook, defaultTarget: cfg.defaultTarget, perSource: cfg.perSource }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
+            if (d?.ok) {
+              setToast('✔ 목표 문항수 저장됨');
+              setTimeout(() => setToast(null), 1500);
+            }
+          })
+          .catch(() => {});
+      }, 500);
+    },
+    [textbook],
+  );
+
+  const handleSetDefaultTarget = useCallback(
+    (value: number) => {
+      const v = Math.max(0, Math.min(99, Math.round(Number.isFinite(value) ? value : MAX_PER_SOURCE_TYPE)));
+      const next = { defaultTarget: v, perSource: targetCfg.perSource };
+      setTargetCfg(next);
+      persistCfg(next);
+    },
+    [targetCfg, persistCfg],
+  );
+
+  const handleSetSourceTarget = useCallback(
+    (source: string, value: number | null) => {
+      const perSource = { ...targetCfg.perSource };
+      if (value == null || value === targetCfg.defaultTarget) delete perSource[source];
+      else perSource[source] = Math.max(0, Math.min(99, Math.round(value)));
+      const next = { defaultTarget: targetCfg.defaultTarget, perSource };
+      setTargetCfg(next);
+      persistCfg(next);
+    },
+    [targetCfg, persistCfg],
+  );
+
   const handleCellClick = useCallback((info: { source: string; type: string; count: number; avgNonZero: number; need: number }) => {
     const avg = info.avgNonZero;
+    const target = targetFor(info.source);
     const text = [
       `교재: ${textbook}`,
       `소스(지문): ${info.source}`,
       `유형: ${info.type}`,
       `현재 문항 수: ${info.count}개`,
-      `목표 문항 수: ${MAX_PER_SOURCE_TYPE}개 (유형 소스별 평균: ${avg.toFixed(1)}개)`,
+      `목표 문항 수: ${target}개 (유형 소스별 평균: ${avg.toFixed(1)}개)`,
       ``,
       `위 소스에서 [${info.type}] 유형 변형문제 ${info.need}개를 만들어주세요.`,
-      `(현재 ${info.count}개 → 목표 ${MAX_PER_SOURCE_TYPE}개)`,
+      `(현재 ${info.count}개 → 목표 ${target}개)`,
     ].join('\n');
 
     navigator.clipboard.writeText(text).then(() => {
@@ -949,7 +1043,7 @@ function DrilldownPanel({
       setToast('클립보드 복사 실패');
       setTimeout(() => setToast(null), 2000);
     });
-  }, [textbook]);
+  }, [textbook, targetFor]);
 
   const handlePendingReviewCopy = useCallback(
     (payload: PendingReviewCopyPayload) => {
@@ -987,6 +1081,24 @@ function DrilldownPanel({
       .finally(() => setLoading(false));
   }, [textbook]);
 
+  // 교재별 목표 문항수 설정 로드
+  useEffect(() => {
+    fetch(
+      `/api/admin/generated-questions/stats/target-config?textbook=${encodeURIComponent(textbook)}`,
+      { credentials: 'include' },
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.ok) {
+          setTargetCfg({
+            defaultTarget: typeof d.defaultTarget === 'number' ? d.defaultTarget : MAX_PER_SOURCE_TYPE,
+            perSource: d.perSource && typeof d.perSource === 'object' ? d.perSource : {},
+          });
+        }
+      })
+      .catch(() => {});
+  }, [textbook]);
+
   const filteredData: SourceData | null = data
     ? {
         ...data,
@@ -1016,11 +1128,30 @@ function DrilldownPanel({
             · {data?.sources.length ?? 0}개 소스
           </p>
         </div>
+        {/* 교재 기본 목표 문항수 */}
+        <div className="ml-auto flex items-center gap-2 rounded-lg bg-slate-800 border border-slate-600 px-3 py-1.5">
+          <span className="text-[11px] text-slate-400">교재 기본 목표</span>
+          <input
+            type="number"
+            min={0}
+            max={99}
+            value={targetCfg.defaultTarget}
+            onChange={(e) => handleSetDefaultTarget(Number(e.target.value))}
+            className="w-14 rounded bg-slate-900 border border-slate-600 px-2 py-1 text-sm text-white text-center font-mono focus:outline-none focus:border-indigo-400"
+          />
+          <span className="text-[11px] text-slate-400">문항 / 유형</span>
+          {Object.keys(targetCfg.perSource).length > 0 && (
+            <span className="text-[10px] text-indigo-300 ml-1">
+              · 소스 {Object.keys(targetCfg.perSource).length}개 개별설정
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 안내 문구 */}
       <p className="text-[11px] text-slate-500 mb-2">
         히트맵에서 총합 숫자 영역을 클릭하면 추가 제작 요청이, 주황색 <strong className="text-orange-400">대기</strong> 숫자를 클릭하면 검수·완료 처리 요청이 클립보드에 복사됩니다.
+        각 소스 행 오른쪽 <strong className="text-indigo-300">숫자 입력칸</strong>에서 그 소스의 목표 문항수를 개별 조절할 수 있습니다(시험범위 소스는 더 높게).
       </p>
 
       {/* 클립보드 복사 토스트 */}
@@ -1076,6 +1207,9 @@ function DrilldownPanel({
               selectedType={selectedType}
               onCellClick={handleCellClick}
               onPendingReviewCopy={handlePendingReviewCopy}
+              targetFor={targetFor}
+              defaultTarget={targetCfg.defaultTarget}
+              onSetSourceTarget={handleSetSourceTarget}
             />
           : <SourceBarChart data={filteredData} statusFilter={statusFilter} />
       )}

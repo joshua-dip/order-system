@@ -41,7 +41,7 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'writing', label: '영작 수업' },
   { id: 'dictionary', label: '전자사전' },
   { id: 'class-kit', label: '클래스키트' },
-  { id: 'passage-analysis', label: '출제 포인트' },
+  { id: 'passage-analysis', label: '출제 스튜디오' },
   { id: 'qbank-api', label: '문제은행 API' },
 ];
 

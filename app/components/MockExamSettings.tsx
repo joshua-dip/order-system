@@ -137,7 +137,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     loadMockExamsData();
   }, []);
 
-  const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '순서', '삽입', '무관한문장'];
+  const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '어휘', '순서', '삽입', '무관한문장'];
   const advancedTypes = ['삽입-고난도', '어법-고난도', '빈칸-고난도', '어휘-고난도', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도', '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도'];
   const advancedTypeDesc: Record<string, string> = {
     '삽입-고난도': '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import AdminSidebar from '../../_components/AdminSidebar';
@@ -52,6 +52,8 @@ interface AdminOrder {
   completedAt: string | null;
   fileUrl: string | null;
   dropboxFolderCreated: boolean;
+  textbooks?: string[];
+  questionTypes?: string[];
 }
 
 interface PointLedgerItem {
@@ -101,6 +103,19 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-500/20 text-red-300 border-red-500/40',
 };
 
+/* orderMeta.flow → 사람이 읽는 유형 라벨 */
+const FLOW_LABELS: Record<string, string> = {
+  bookVariant: '부교재 변형',
+  mockVariant: '모의고사 변형',
+  unifiedVariant: '파이널 예비모의',
+  pointPurchase: '포인트 구매',
+  workbook: '워크북',
+};
+function flowLabel(flow: string | null | undefined): string {
+  if (!flow) return '기타';
+  return FLOW_LABELS[flow] ?? flow;
+}
+
 const AVATAR_COLORS = [
   'from-violet-500 to-purple-600',
   'from-sky-500 to-blue-600',
@@ -108,6 +123,31 @@ const AVATAR_COLORS = [
   'from-amber-500 to-orange-600',
   'from-pink-500 to-rose-600',
 ];
+
+/* 주문 분석 — 가로 막대 목록 */
+function StatBarList({ title, rows, color, emptyText }: { title: string; rows: [string, number][]; color: string; emptyText: string }) {
+  const max = rows.length ? rows[0][1] : 1;
+  return (
+    <div className="rounded-xl bg-slate-800/80 border border-slate-700 px-4 py-3">
+      <p className="text-xs font-semibold text-slate-300 mb-2.5">{title}</p>
+      {rows.length === 0 ? (
+        <p className="text-xs text-slate-500">{emptyText}</p>
+      ) : (
+        <div className="space-y-2">
+          {rows.map(([label, n]) => (
+            <div key={label} className="flex items-center gap-2">
+              <span className="text-xs text-slate-300 truncate w-32 shrink-0" title={label}>{label}</span>
+              <div className="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(8, (n / max) * 100)}%` }} />
+              </div>
+              <span className="text-xs text-slate-400 w-7 text-right shrink-0">{n}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Badge({ text, cls }: { text: string; cls: string }) {
   return (
@@ -187,6 +227,11 @@ export default function UserDetailPage() {
   const [adminLoginId, setAdminLoginId] = useState('');
   const [user, setUser] = useState<DetailUser | null>(null);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
+  /* 주문 내역 검색·필터·분석 */
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [orderTextbookFilter, setOrderTextbookFilter] = useState('all');
+  const [orderShowStats, setOrderShowStats] = useState(false);
   const [pointItems, setPointItems] = useState<PointLedgerItem[]>([]);
   const [vocabItems, setVocabItems] = useState<VocabAdminRow[]>([]);
   const [vocabTotal, setVocabTotal] = useState(0);
@@ -307,6 +352,60 @@ export default function UserDetailPage() {
     const d = await r.json();
     if (d?.orders) setOrders(d.orders);
   }, [user?.loginId]);
+
+  /* 주문 내역 검색·필터·분석 (파생값) */
+  const orderTextbookOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const o of orders) for (const t of o.textbooks ?? []) s.add(t);
+    return [...s].sort((a, b) => a.localeCompare(b, 'ko'));
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    const q = orderSearch.trim().toLowerCase();
+    return orders.filter((o) => {
+      if (orderStatusFilter !== 'all' && o.status !== orderStatusFilter) return false;
+      if (orderTextbookFilter !== 'all' && !(o.textbooks ?? []).includes(orderTextbookFilter)) return false;
+      if (q) {
+        const hay = [
+          o.orderNumber ?? '',
+          flowLabel(o.orderMetaFlow),
+          o.orderMetaFlow ?? '',
+          ...(o.textbooks ?? []),
+          ...(o.questionTypes ?? []),
+        ].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [orders, orderSearch, orderStatusFilter, orderTextbookFilter]);
+
+  const orderStats = useMemo(() => {
+    const byTextbook = new Map<string, number>();
+    const byType = new Map<string, number>();
+    const byFlow = new Map<string, number>();
+    let revenueTotal = 0;
+    let completed = 0;
+    for (const o of orders) {
+      for (const t of o.textbooks ?? []) byTextbook.set(t, (byTextbook.get(t) ?? 0) + 1);
+      for (const t of o.questionTypes ?? []) byType.set(t, (byType.get(t) ?? 0) + 1);
+      const fl = flowLabel(o.orderMetaFlow);
+      byFlow.set(fl, (byFlow.get(fl) ?? 0) + 1);
+      if (o.status === 'completed') {
+        completed += 1;
+        if (typeof o.revenueWon === 'number') revenueTotal += o.revenueWon;
+      }
+    }
+    const top = (m: Map<string, number>, n = 6) =>
+      [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+    return {
+      total: orders.length,
+      completed,
+      revenueTotal,
+      topTextbooks: top(byTextbook),
+      topTypes: top(byType),
+      topFlows: top(byFlow),
+    };
+  }, [orders]);
 
   const openOrderModal = (o: AdminOrder) => {
     setOrderModal(o);
@@ -1215,12 +1314,100 @@ export default function UserDetailPage() {
           {/* ─── 탭 내용: 주문 내역 ─── */}
           {tab === 'orders' && (
             <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between gap-3">
                 <h3 className="font-semibold text-white">주문 내역</h3>
-                <span className="text-slate-400 text-sm">{orders.length}건</span>
+                <div className="flex items-center gap-2">
+                  {orders.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setOrderShowStats((v) => !v)}
+                      className={`text-xs px-2.5 py-1 rounded-lg font-medium border transition-colors ${orderShowStats ? 'bg-sky-600/30 text-sky-200 border-sky-500/50' : 'bg-slate-700/60 text-slate-300 border-slate-600 hover:bg-slate-700'}`}
+                    >
+                      📊 분석 {orderShowStats ? '닫기' : '보기'}
+                    </button>
+                  )}
+                  <span className="text-slate-400 text-sm">{orders.length}건</span>
+                </div>
               </div>
+
+              {/* 분석 패널 */}
+              {orders.length > 0 && orderShowStats && (
+                <div className="px-5 py-4 border-b border-slate-700 bg-slate-900/40 space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 px-4 py-3">
+                      <p className="text-xs text-slate-400">총 주문</p>
+                      <p className="text-xl font-bold text-white mt-0.5">{orderStats.total}건</p>
+                    </div>
+                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 px-4 py-3">
+                      <p className="text-xs text-slate-400">완료</p>
+                      <p className="text-xl font-bold text-emerald-300 mt-0.5">{orderStats.completed}건</p>
+                    </div>
+                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 px-4 py-3">
+                      <p className="text-xs text-slate-400">완료 매출</p>
+                      <p className="text-xl font-bold text-white mt-0.5">{orderStats.revenueTotal.toLocaleString()}원</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <StatBarList title="교재·모의고사별 주문" rows={orderStats.topTextbooks} color="bg-sky-500" emptyText="교재 데이터 없음" />
+                    <StatBarList title="유형별 주문" rows={orderStats.topTypes} color="bg-violet-500" emptyText="유형 데이터 없음" />
+                  </div>
+                  {orderStats.topFlows.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {orderStats.topFlows.map(([fl, n]) => (
+                        <span key={fl} className="text-xs px-2.5 py-1 rounded-full bg-slate-700/70 text-slate-300 border border-slate-600">
+                          {fl} <span className="text-slate-400">{n}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 검색·필터 바 */}
+              {orders.length > 0 && (
+                <div className="px-5 py-3 border-b border-slate-700 flex flex-wrap items-center gap-2">
+                  <input
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    placeholder="주문번호·교재·유형 검색"
+                    className="flex-1 min-w-[180px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
+                  />
+                  <select
+                    value={orderStatusFilter}
+                    onChange={(e) => setOrderStatusFilter(e.target.value)}
+                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-400"
+                  >
+                    <option value="all">상태 전체</option>
+                    {[...new Map(orders.map((o) => [o.status, o.statusLabel])).entries()].map(([st, label]) => (
+                      <option key={st} value={st}>{label}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={orderTextbookFilter}
+                    onChange={(e) => setOrderTextbookFilter(e.target.value)}
+                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-400 max-w-[220px]"
+                  >
+                    <option value="all">교재 전체</option>
+                    {orderTextbookOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  {(orderSearch || orderStatusFilter !== 'all' || orderTextbookFilter !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderTextbookFilter('all'); }}
+                      className="text-xs px-2.5 py-2 rounded-lg bg-slate-700/60 text-slate-300 border border-slate-600 hover:bg-slate-700"
+                    >
+                      초기화
+                    </button>
+                  )}
+                </div>
+              )}
+
               {orders.length === 0 ? (
                 <div className="text-center py-10 text-slate-500 text-sm">주문 내역이 없습니다.</div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-sm">검색·필터 결과가 없습니다.</div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
@@ -1228,13 +1415,13 @@ export default function UserDetailPage() {
                       <th className="text-left px-5 py-3 font-medium">주문번호</th>
                       <th className="text-left px-5 py-3 font-medium">주문일</th>
                       <th className="text-left px-5 py-3 font-medium">상태</th>
-                      <th className="text-left px-5 py-3 font-medium hidden md:table-cell">유형</th>
+                      <th className="text-left px-5 py-3 font-medium hidden md:table-cell">교재 · 유형</th>
                       <th className="text-right px-5 py-3 font-medium hidden lg:table-cell">매출</th>
                       <th className="text-right px-5 py-3 font-medium">관리</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((o) => (
+                    {filteredOrders.map((o) => (
                       <tr
                         key={o.id}
                         onClick={() => openOrderModal(o)}
@@ -1251,8 +1438,18 @@ export default function UserDetailPage() {
                             {o.statusLabel}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-slate-400 text-xs hidden md:table-cell">
-                          {o.orderMetaFlow ?? '—'}
+                        <td className="px-5 py-3.5 text-slate-300 text-xs hidden md:table-cell">
+                          <div className="flex flex-col gap-1">
+                            {(o.textbooks ?? []).length > 0 ? (
+                              <span className="text-slate-200">{(o.textbooks ?? []).join(', ')}</span>
+                            ) : (
+                              <span className="text-slate-500">—</span>
+                            )}
+                            <span className="text-slate-500">
+                              {flowLabel(o.orderMetaFlow)}
+                              {(o.questionTypes ?? []).length > 0 && ` · ${(o.questionTypes ?? []).join(', ')}`}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-5 py-3.5 text-right text-slate-300 hidden lg:table-cell">
                           {o.revenueWon != null ? `${o.revenueWon.toLocaleString()}원` : '—'}
