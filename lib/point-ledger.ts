@@ -17,7 +17,9 @@ export type PointLedgerKind =
   /** 주문 취소(pending 등) 시 주문에 사용한 포인트 환급 */
   | 'order_cancel_refund'
   /** VIP 사이드바 메뉴 개별 언락(à la carte) 구매 차감 */
-  | 'vip_menu_unlock';
+  | 'vip_menu_unlock'
+  /** 일일 출석 보상 — 내 정보에서 하루 1회 랜덤 포인트 적립 */
+  | 'attendance';
 
 export type PointLedgerInsert = {
   userId: ObjectId;

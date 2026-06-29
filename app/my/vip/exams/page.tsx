@@ -32,13 +32,14 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
 const EXAM_TYPES = ['1학기 중간고사', '1학기 기말고사', '2학기 중간고사', '2학기 기말고사'];
 
-const OBJECTIVE_TYPES = ['주제', '제목', '요지', '빈칸', '순서', '삽입', '연결사', '지칭추론', '어법', '어휘', '요약', '내용일치', '내용불일치', '심경', '함의', '글의목적', '장문', '기타'];
+const OBJECTIVE_TYPES = ['주제', '제목', '요지', '빈칸', '순서', '삽입', '무관한문장', '연결사', '지칭추론', '어법', '어휘', '요약', '내용일치', '내용불일치', '심경', '함의', '글의목적', '장문', '기타'];
 const SUBJECTIVE_TYPES = ['서술형', '영작', '요약서술', '기타'];
 
 // 엑셀 문제유형 → 시스템 유형 매핑
 const EXCEL_TYPE_MAP: Record<string, string> = {
   요지: '요지', 주제: '주제', 제목: '제목', 일치: '내용일치', 불일치: '내용불일치',
   문장삽입: '삽입', 삽입: '삽입', 순서: '순서', 어법: '어법', 어휘: '어휘',
+  무관: '무관한문장', 무관한문장: '무관한문장', 흐름무관: '무관한문장', 무관한: '무관한문장',
   빈칸: '빈칸', 연결사: '연결사', 지칭추론: '지칭추론', 심경: '심경',
   함의: '함의', 글의의미: '함의', 요약: '요약', 글의목적: '글의목적', 장문: '장문',
   서술형: '서술형', 영작: '영작', 요약서술: '요약서술',
@@ -54,6 +55,10 @@ const TITLE_KEYWORD_RULES: { keyword: string; type: string }[] = [
   { keyword: '내용일치', type: '내용일치' },
   { keyword: '문장이 들어가기에', type: '삽입' },
   { keyword: '들어갈 문장', type: '삽입' },
+  { keyword: '관계 없는', type: '무관한문장' },
+  { keyword: '관계없는', type: '무관한문장' },
+  { keyword: '흐름과 관계', type: '무관한문장' },
+  { keyword: '무관한', type: '무관한문장' },
   { keyword: '글의 순서', type: '순서' },
   { keyword: '이어질 글의 순서', type: '순서' },
   { keyword: '의미', type: '함의' },
@@ -620,6 +625,43 @@ export default function VipExamsPage() {
     setLocalExams((prev) => ({ ...prev, [id]: { ...(prev[id] || exams.find((e) => e.id === id)!), ...patch } }));
   };
 
+  /* ── 지문 범위 칩: 드래그(쭉 끌어서) 다중 선택/해제 ── */
+  const passageDragRef = useRef<{ examId: string; mode: 'add' | 'remove' } | null>(null);
+  const [passageDragging, setPassageDragging] = useState(false);
+
+  // 한 칩에 모드(add/remove)를 적용 — 항상 최신 state 기준(드래그 중 stale 방지)
+  const applyPassageDrag = (examId: string, key: string, mode: 'add' | 'remove') => {
+    setLocalExams((prev) => {
+      const exam = prev[examId] || exams.find((e) => e.id === examId);
+      if (!exam) return prev;
+      const cur = exam.examScopePassages ?? [];
+      const has = cur.includes(key);
+      if (mode === 'add' && has) return prev;
+      if (mode === 'remove' && !has) return prev;
+      const next = mode === 'add' ? [...cur, key] : cur.filter((k) => k !== key);
+      return { ...prev, [examId]: { ...exam, examScopePassages: next } };
+    });
+  };
+
+  const startPassageDrag = (examId: string, key: string, isSelected: boolean) => {
+    const mode: 'add' | 'remove' = isSelected ? 'remove' : 'add';
+    passageDragRef.current = { examId, mode };
+    setPassageDragging(true);
+    applyPassageDrag(examId, key, mode);
+  };
+
+  const enterPassageDrag = (examId: string, key: string) => {
+    const d = passageDragRef.current;
+    if (d && d.examId === examId) applyPassageDrag(examId, key, d.mode);
+  };
+
+  // 드래그 종료는 어디서 손을 떼든 감지
+  useEffect(() => {
+    const end = () => { passageDragRef.current = null; setPassageDragging(false); };
+    window.addEventListener('mouseup', end);
+    return () => window.removeEventListener('mouseup', end);
+  }, []);
+
   const updateQuestion = (examId: string, qNum: string, patch: Partial<ExamQuestion>) => {
     setLocalExams((prev) => {
       const exam = prev[examId] || exams.find((e) => e.id === examId)!;
@@ -684,7 +726,7 @@ export default function VipExamsPage() {
 
     const school = selectedSchool?.name || '';
     const title = `${school} ${local.examType || ''}`;
-    const totalScore = qNums.reduce((s, n) => s + (local.questions[String(n)]?.score || 0), 0);
+    const totalScore = Math.round(qNums.reduce((s, n) => s + (local.questions[String(n)]?.score || 0), 0) * 10) / 10;
 
     const html = `<!DOCTYPE html>
 <html lang="ko">
@@ -729,13 +771,15 @@ export default function VipExamsPage() {
 
   const calcScores = (exam: SchoolExam) => {
     const qs = Object.entries(exam.questions);
-    const totalScore = qs.reduce((s, [, q]) => s + (q.score || 0), 0);
-    const objScore = qs
+    // 배점이 소수(2.9 등)라 부동소수점 합산 오차(예: 70.00000000000001) 발생 → 소수 1자리로 반올림
+    const round1 = (n: number) => Math.round(n * 10) / 10;
+    const totalScore = round1(qs.reduce((s, [, q]) => s + (q.score || 0), 0));
+    const objScore = round1(qs
       .filter(([k]) => Number(k) <= exam.objectiveCount)
-      .reduce((s, [, q]) => s + (q.score || 0), 0);
-    const subScore = qs
+      .reduce((s, [, q]) => s + (q.score || 0), 0));
+    const subScore = round1(qs
       .filter(([k]) => Number(k) > exam.objectiveCount)
-      .reduce((s, [, q]) => s + (q.score || 0), 0);
+      .reduce((s, [, q]) => s + (q.score || 0), 0));
     return { totalScore, objScore, subScore };
   };
 
@@ -1241,7 +1285,7 @@ export default function VipExamsPage() {
                                   )}
                                 </div>
                                 <p className="text-[10px] text-zinc-600 -mt-1">
-                                  선택하지 않으면 위 교재 전체 범위. 초록색 = 변형문제 데이터 있음.
+                                  선택하지 않으면 위 교재 전체 범위. 초록색 = 변형문제 데이터 있음. <span className="text-zinc-500">드래그하면 여러 개를 한 번에 선택/해제할 수 있어요.</span>
                                 </p>
 
                                 {/* 선택된 소스 요약 (소스 목록 로드 전에도 표시) */}
@@ -1267,16 +1311,9 @@ export default function VipExamsPage() {
                                   if (tbPassages.length === 0) return null;
                                   const tbPassageKeys = tbPassages.map((p) => `${p.textbook}::${p.sourceKey}`);
                                   const allTbSelected = tbPassageKeys.every((k) => selectedPassages.includes(k));
-                                  // 선택된 항목이 먼저 오도록 정렬
-                                  const sortedPassages = [...tbPassages].sort((a, b) => {
-                                    const aKey = `${a.textbook}::${a.sourceKey}`;
-                                    const bKey = `${b.textbook}::${b.sourceKey}`;
-                                    const aSelected = selectedPassages.includes(aKey);
-                                    const bSelected = selectedPassages.includes(bKey);
-                                    if (aSelected && !bSelected) return -1;
-                                    if (!aSelected && bSelected) return 1;
-                                    return 0;
-                                  });
+                                  // 소스(번호) 순서 고정 — 선택해도 칩이 앞으로 이동하지 않게(드래그 중 커서 밑 칩 유지).
+                                  // 선택 여부는 색으로만 구분.
+                                  const sortedPassages = tbPassages;
                                   const selectedInTb = tbPassageKeys.filter((k) => selectedPassages.includes(k)).length;
                                   return (
                                     <div key={tb}>
@@ -1299,17 +1336,22 @@ export default function VipExamsPage() {
                                           {allTbSelected ? '전체 해제' : '전체 선택'}
                                         </button>
                                       </div>
-                                      <div className="flex flex-wrap gap-1">
+                                      <div className={`flex flex-wrap gap-1 select-none ${passageDragging ? 'cursor-grabbing' : ''}`}>
                                         {sortedPassages.map((p) => {
                                           const key = `${p.textbook}::${p.sourceKey}`;
                                           const isSelected = selectedPassages.includes(key);
                                           return (
                                             <button
                                               key={key}
-                                              onClick={() => {
-                                                const current = selectedPassages;
-                                                const next = isSelected ? current.filter((k) => k !== key) : [...current, key];
-                                                updateLocal(exam.id, { examScopePassages: next });
+                                              draggable={false}
+                                              onMouseDown={(e) => { e.preventDefault(); startPassageDrag(exam.id, key, isSelected); }}
+                                              onMouseEnter={() => enterPassageDrag(exam.id, key)}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                  e.preventDefault();
+                                                  const next = isSelected ? selectedPassages.filter((k) => k !== key) : [...selectedPassages, key];
+                                                  updateLocal(exam.id, { examScopePassages: next });
+                                                }
                                               }}
                                               className={`px-1.5 py-0.5 text-[10px] rounded border transition-colors ${
                                                 isSelected

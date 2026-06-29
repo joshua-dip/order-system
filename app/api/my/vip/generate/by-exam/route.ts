@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { requireVip } from '@/lib/vip-auth';
 import { getVipDb, col } from '@/lib/vip-db';
 import { getDb } from '@/lib/mongodb';
+import { expandVariantTypes } from '@/lib/book-variant-types';
 
 export async function GET(request: NextRequest) {
   const auth = await requireVip(request);
@@ -155,6 +156,50 @@ export async function GET(request: NextRequest) {
   if (tcStr) { try { textbookCountsParam = JSON.parse(tcStr); } catch { /* 무시 */ } }
   const perTbMode = Object.keys(textbookCountsParam).length > 1;
 
+  // 지문별 유형 고정 — { "교재::source_key": "유형" }. 해당 지문은 무조건 그 유형 1문항으로 출제.
+  // (한 시험지 안에서 같은 지문은 재사용 안 되므로 '이 지문은 이 유형으로만' 과 동치)
+  const passagePins: { tb: string; sourceKey: string; type: string }[] = [];
+  const ppStr = sp.get('passagePins');
+  if (ppStr) {
+    try {
+      const obj = JSON.parse(ppStr) as Record<string, unknown>;
+      for (const [k, v] of Object.entries(obj)) {
+        const t = String(v ?? '').trim();
+        const sep = k.indexOf('::');
+        if (t && t !== '자동' && sep > 0) passagePins.push({ tb: k.slice(0, sep), sourceKey: k.slice(sep + 2), type: t });
+      }
+    } catch { /* 무시 */ }
+  }
+
+  /** 고정 지문(교재::source_key) → 그 지문의 후보 passage_id 목록 (자기 변형 + passage_source 원본). */
+  const resolvePinPids = (tb: string, sourceKey: string): ObjectId[] => {
+    const key = `${tb}::${sourceKey}`;
+    const hexes: string[] = [];
+    const ownId = ownIdByKey.get(key); if (ownId) hexes.push(ownId);
+    const ps = passageSourceLookup.get(key);
+    if (ps) { const o = passageSourceToId.get(ps); if (o) hexes.push(o); }
+    return [...new Set(hexes)].map((h) => new ObjectId(h));
+  };
+
+  /** 고정 지문에서 유형(별칭·고난도 폴백) 1문항 샘플 — used(전역 사용)·status 완료 준수. */
+  const placeOnePin = async (
+    pin: { tb: string; sourceKey: string; type: string },
+    used: Set<string>,
+  ): Promise<Record<string, unknown> | null> => {
+    const pids = resolvePinPids(pin.tb, pin.sourceKey);
+    if (pids.length === 0) return null;
+    const exclude = [...used].map((h) => new ObjectId(h));
+    // 정확한 지정 유형 우선 → 없으면 별칭·고난도까지 확장
+    for (const types of [[pin.type], expandVariantTypes(pin.type)]) {
+      const match: Record<string, unknown> = { status: '완료', passage_id: { $in: pids }, type: { $in: types } };
+      if (exclude.length > 0) match._id = { $nin: exclude };
+      const res = await db.collection('generated_questions')
+        .aggregate([{ $match: match }, { $sample: { size: 1 } }, { $project: project }]).toArray();
+      if (res[0]) { const q = res[0] as Record<string, unknown>; q._scopeCat = classifyScope(pin.tb); return q; }
+    }
+    return null;
+  };
+
   // 교재 단위 필터 빌더 (per-textbook fetch용)
   const buildTbFilter = (tb: string, typeFilter?: string, excludeIds: ObjectId[] = []): Record<string, unknown> | null => {
     const conditions: Record<string, unknown>[] = [];
@@ -165,7 +210,8 @@ export async function GET(request: NextRequest) {
     if (noSourceTextbooks.includes(tb)) conditions.push({ textbook: tb });
     if (conditions.length === 0) return null;
     const f: Record<string, unknown> = { status: '완료' };
-    if (typeFilter) f.type = typeFilter;
+    // 유형은 별칭 정규화(내용일치→일치) + 고난도형까지 후보에 포함
+    if (typeFilter) f.type = { $in: expandVariantTypes(typeFilter) };
     if (conditions.length === 1) Object.assign(f, conditions[0]);
     else f.$or = conditions;
     if (excludeIds.length === 0) return f;
@@ -181,7 +227,7 @@ export async function GET(request: NextRequest) {
     if (scopeConditions.length === 0) return { _id: new ObjectId() }; // 빈 결과 보장
 
     const scopeFilter: Record<string, unknown> = { status: '완료' };
-    if (typeFilter) scopeFilter.type = typeFilter;
+    if (typeFilter) scopeFilter.type = { $in: expandVariantTypes(typeFilter) };
     if (scopeConditions.length === 1) Object.assign(scopeFilter, scopeConditions[0]);
     else scopeFilter.$or = scopeConditions;
 
@@ -279,10 +325,26 @@ export async function GET(request: NextRequest) {
       for (let s = 0; s < setsCount; s++) {
         const setQuestions: Record<string, unknown>[] = [];
         const setPassages = new Set<string>(); // 이 시험지(set)에서 이미 쓴 지문 — 겹침 방지
+        const remainingPins = [...passagePins]; // 이 슬롯들에 우선 배치할 고정 지문
         for (const pq of orderedPattern) {
           const type = pq.questionType;
           const refTb = pq.textbook?.trim();
           const cat = refTb ? classifyScope(refTb) : null;
+          // 고정 지문 우선: 이 슬롯 교재(또는 같은 카테고리)에 고정 지문이 있으면 그 지문을 지정 유형으로 배치
+          if (remainingPins.length > 0) {
+            let pinIdx = refTb ? remainingPins.findIndex((p) => p.tb === refTb) : -1;
+            if (pinIdx < 0 && cat) pinIdx = remainingPins.findIndex((p) => classifyScope(p.tb) === cat);
+            if (pinIdx >= 0) {
+              const pinned = await placeOnePin(remainingPins[pinIdx], globalUsedIds);
+              if (pinned) {
+                setQuestions.push(pinned);
+                globalUsedIds.add((pinned._id as ObjectId).toHexString());
+                if (pinned.passage_id) setPassages.add(String(pinned.passage_id));
+                remainingPins.splice(pinIdx, 1);
+                continue;
+              }
+            }
+          }
           // 후보: 기출과 동일 교재(범위에 있으면) → 같은 카테고리 범위 교재 → 전체 범위
           let candidates: string[];
           if (refTb && scopeByTextbook.has(refTb)) candidates = [refTb];
@@ -307,6 +369,15 @@ export async function GET(request: NextRequest) {
             if (picked.passage_id) setPassages.add(String(picked.passage_id));
           }
         }
+        // 패턴 슬롯에 못 들어간 고정 지문은 끝에 덧붙임
+        for (const pin of remainingPins) {
+          const pinned = await placeOnePin(pin, globalUsedIds);
+          if (pinned) {
+            setQuestions.push(pinned);
+            globalUsedIds.add((pinned._id as ObjectId).toHexString());
+            if (pinned.passage_id) setPassages.add(String(pinned.passage_id));
+          }
+        }
         resultSets.push(setQuestions.map(mapQ));
       }
       return NextResponse.json({ ok: true, sets: resultSets, typeCounts, followedOrder: true });
@@ -328,17 +399,38 @@ export async function GET(request: NextRequest) {
   };
 
   for (let s = 0; s < setsCount; s++) {
-    const excludeOids = [...globalUsedIds].map((h) => new ObjectId(h));
     const setQuestions: Record<string, unknown>[] = [];
     const setPassages = new Set<string>(); // 이 시험지(set)에서 이미 쓴 지문 — 겹침 방지
 
+    // ── 지문별 유형 고정 — 이 세트에서 먼저 강제 배치 ──
+    const pinnedThisSet: { tb: string; vtype: string }[] = [];
+    for (const pin of passagePins) {
+      const pinned = await placeOnePin(pin, globalUsedIds);
+      if (pinned) {
+        setQuestions.push(pinned);
+        globalUsedIds.add((pinned._id as ObjectId).toHexString());
+        if (pinned.passage_id) setPassages.add(String(pinned.passage_id));
+        pinnedThisSet.push({ tb: pin.tb, vtype: String(pinned.type) });
+      }
+    }
+    // 고정으로 채운 만큼 유형·교재 목표치에서 차감(총 문항수 유지)
+    const adjTypeCounts: Record<string, number> = { ...typeCounts };
+    for (const { vtype } of pinnedThisSet) {
+      const key = Object.keys(adjTypeCounts).find((k) => adjTypeCounts[k] > 0 && expandVariantTypes(k).includes(vtype));
+      if (key) adjTypeCounts[key] = Math.max(0, adjTypeCounts[key] - 1);
+    }
+    const adjTbCounts: Record<string, number> = { ...textbookCountsParam };
+    for (const { tb } of pinnedThisSet) { if (adjTbCounts[tb] != null) adjTbCounts[tb] = Math.max(0, adjTbCounts[tb] - 1); }
+
+    const excludeOids = [...globalUsedIds].map((h) => new ObjectId(h));
+
     if (perTbMode) {
       // ── 교재별 문제 수 지정 모드 ──
-      for (const [tb, tbTotal] of Object.entries(textbookCountsParam)) {
+      for (const [tb, tbTotal] of Object.entries(adjTbCounts)) {
         if (tbTotal <= 0) continue;
         if (hasTypeFilter) {
           // 유형 분포를 교재 할당량 안에서 비례 배분
-          const tbTypeCounts = distributeTypes(typeCounts, tbTotal);
+          const tbTypeCounts = distributeTypes(adjTypeCounts, tbTotal);
           for (const [type, share] of Object.entries(tbTypeCounts)) {
             if (share <= 0) continue;
             const filter = buildTbFilter(tb, type, excludeOids);
@@ -358,7 +450,7 @@ export async function GET(request: NextRequest) {
       if (random) shuffle(setQuestions);
     } else if (hasTypeFilter) {
       // ── 유형별 fetch 모드 ──
-      for (const [type, count] of Object.entries(typeCounts)) {
+      for (const [type, count] of Object.entries(adjTypeCounts)) {
         if (count <= 0) continue;
         const filter = buildFilter(type, excludeOids);
         const qs = await pickDistinctPassages(filter, count, setPassages);
@@ -369,7 +461,7 @@ export async function GET(request: NextRequest) {
     } else {
       // ── 전체 범위 fetch 모드 ──
       const filter = buildFilter(undefined, excludeOids);
-      const qs = await pickDistinctPassages(filter, total, setPassages);
+      const qs = await pickDistinctPassages(filter, Math.max(0, total - setQuestions.length), setPassages);
       setQuestions.push(...qs);
       for (const q of qs) globalUsedIds.add((q._id as ObjectId).toHexString());
     }

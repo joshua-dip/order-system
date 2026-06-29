@@ -1733,6 +1733,8 @@ export default function UnifiedOrder() {
                         const selCount = sources.filter((s) => entry.selectedSources.includes(s)).length;
                         const expandKey = `${entry.id}-${groupKey}`;
                         const isExpanded = expandedGroups[expandKey];
+                        // 라벨(접두부 제거 후)이 길면(교과서 본문N(pXXX)) 2열, 짧으면(모의고사 N번) 3열
+                        const longLabels = sources.some((s) => (s.startsWith(groupKey + ' ') ? s.slice(groupKey.length + 1) : s).length >= 8);
 
                         return (
                           <div key={groupKey} className="rounded-xl border border-gray-100 overflow-hidden">
@@ -1793,10 +1795,15 @@ export default function UnifiedOrder() {
                             </div>
                             {isExpanded && (
                               <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-                                <div className="grid grid-cols-3 gap-1">
+                                <div className={`grid gap-1 ${longLabels ? 'grid-cols-2' : 'grid-cols-3'}`}>
                                   {sources.map((src, srcIdx) => {
                                     const checked = entry.selectedSources.includes(src);
-                                    const label = src.replace(/^.*?(\d+[~]?\d*번)$/, '$1').replace(entry.displayName + ' ', '').replace(/^.*? /, '');
+                                    // 출처 = `${groupKey} ${번호/본문}` 구조 → 그룹 접두부를 떼어 '구분되는 뒷부분'(본문1(p.134)·18번)만 표시.
+                                    // (groupKey 가 헤더에 이미 보이므로 중복 제거 + 잘림 방지)
+                                    const trailingNum = src.match(/(\d+[~]?\d*번)$/);
+                                    const label = src.startsWith(groupKey + ' ')
+                                      ? src.slice(groupKey.length + 1).trim()
+                                      : trailingNum ? trailingNum[1] : src;
                                     const passCbId = `uo-pass-${expandKey}-${srcIdx}`;
                                     return (
                                       <label
@@ -1825,7 +1832,7 @@ export default function UnifiedOrder() {
                                         >
                                           ✓
                                         </button>
-                                        <span className="text-xs text-gray-600 group-hover:text-purple-700 truncate">
+                                        <span className="min-w-0 flex-1 truncate text-xs text-gray-600 group-hover:text-purple-700" title={src}>
                                           {label}
                                         </span>
                                       </label>

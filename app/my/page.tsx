@@ -105,6 +105,8 @@ function pointHistoryKindLabel(kind: string): string {
       return '변형문제(포인트 환급)';
     case 'order_cancel_refund':
       return '주문 취소 환급';
+    case 'attendance':
+      return '출석 보상';
     default:
       return kind;
   }
@@ -228,6 +230,11 @@ export default function MyPage() {
   const [studentsCount, setStudentsCount] = useState(0);
   const [pointHistory, setPointHistory] = useState<PointHistoryEntry[]>([]);
   const [pointHistoryLoading, setPointHistoryLoading] = useState(false);
+  /* 일일 출석 보상 */
+  const [attendanceClaimedToday, setAttendanceClaimedToday] = useState<boolean | null>(null);
+  const [attendanceClaiming, setAttendanceClaiming] = useState(false);
+  const [attendanceReward, setAttendanceReward] = useState<number | null>(null);
+  const [attendanceMsg, setAttendanceMsg] = useState<string>('');
   const [pointChargeOpen, setPointChargeOpen] = useState(false);
 
   const orderIdByOrderNumber = useMemo(() => {
@@ -352,7 +359,46 @@ export default function MyPage() {
       .then((data) => setPointHistory(Array.isArray(data.entries) ? data.entries : []))
       .catch(() => setPointHistory([]))
       .finally(() => setPointHistoryLoading(false));
+    // 일일 출석 상태
+    fetch('/api/my/attendance/check-in', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => setAttendanceClaimedToday(!!data.claimedToday))
+      .catch(() => setAttendanceClaimedToday(null));
   }, [user, activeTab]);
+
+  const reloadPointHistory = () => {
+    fetch('/api/my/point-history', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => setPointHistory(Array.isArray(data.entries) ? data.entries : []))
+      .catch(() => {});
+  };
+
+  const claimAttendance = async () => {
+    if (attendanceClaiming || attendanceClaimedToday) return;
+    setAttendanceClaiming(true);
+    setAttendanceMsg('');
+    try {
+      const res = await fetch('/api/my/attendance/check-in', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setAttendanceReward(typeof data.reward === 'number' ? data.reward : null);
+        setAttendanceClaimedToday(true);
+        if (typeof data.balanceAfter === 'number') {
+          setUser((u) => (u ? { ...u, points: data.balanceAfter } : u));
+        }
+        reloadPointHistory();
+      } else if (data.alreadyClaimed) {
+        setAttendanceClaimedToday(true);
+        setAttendanceMsg('오늘은 이미 출석 보상을 받았어요. 내일 다시 받아주세요!');
+      } else {
+        setAttendanceMsg(data.error || '출석 처리에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      }
+    } catch {
+      setAttendanceMsg('출석 처리에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setAttendanceClaiming(false);
+    }
+  };
 
   useEffect(() => {
     if (!annualMenuUnlocked || activeTab !== 'annualShared') return;
@@ -1928,6 +1974,44 @@ export default function MyPage() {
                   >
                     미리 충전하기
                   </button>
+                </div>
+
+                {/* 일일 출석 보상 */}
+                <div className="mb-5 rounded-2xl border border-[#fde68a] bg-gradient-to-br from-[#fffbeb] to-[#fef3c7] p-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-2xl">🎁</span>
+                    <div className="flex-1 min-w-[180px]">
+                      <div className="text-[13px] font-extrabold text-[#92400e]">출석하고 포인트 받기</div>
+                      <div className="text-[11px] text-[#b45309] mt-0.5">하루 한 번, 100~1,000P를 랜덤으로 드려요!</div>
+                    </div>
+                    {attendanceReward != null ? (
+                      <div className="px-4 py-2 rounded-xl bg-[#16a34a] text-white text-[13px] font-extrabold shadow-sm whitespace-nowrap">
+                        🎉 +{attendanceReward.toLocaleString()}P 획득!
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={claimAttendance}
+                        disabled={attendanceClaiming || attendanceClaimedToday === true}
+                        className={`px-4 py-2.5 rounded-xl text-[13px] font-extrabold shadow-sm border whitespace-nowrap transition-opacity ${
+                          attendanceClaimedToday === true
+                            ? 'bg-[#e2e8f0] text-[#94a3b8] border-[#e2e8f0] cursor-default'
+                            : 'bg-[#f59e0b] text-white border-[#d97706] hover:opacity-95'
+                        } ${attendanceClaiming ? 'opacity-60 cursor-wait' : ''}`}
+                      >
+                        {attendanceClaiming
+                          ? '받는 중…'
+                          : attendanceClaimedToday === true
+                            ? '오늘 출석 완료 ✓'
+                            : '🙌 출석하러 가기'}
+                      </button>
+                    )}
+                  </div>
+                  {(attendanceMsg || (attendanceClaimedToday === true && attendanceReward == null)) && (
+                    <p className="text-[11px] text-[#b45309] mt-2.5">
+                      {attendanceMsg || '오늘은 이미 출석 보상을 받았어요. 내일 다시 받아주세요!'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="border-t border-[#f1f5f9] pt-4">

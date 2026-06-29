@@ -7,6 +7,7 @@ import {
   getBookVariantSolbookAccounting,
 } from '@/lib/order-revenue';
 import { extractOrderItemKeys, orderCustomerEmail } from '@/lib/order-overlap';
+import { normalizeOrderScope } from '@/lib/order-scope';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '주문 접수',
@@ -59,6 +60,17 @@ export async function GET(request: NextRequest) {
       const storedRev =
         typeof rev === 'number' && Number.isFinite(rev) && rev >= 0 ? Math.round(rev) : null;
       const solAcc = getBookVariantSolbookAccounting(meta ?? undefined);
+
+      // 교재·유형 추출 (필터·검색·분석용) — orderMeta flow별 정규화
+      let textbooks: string[] = [];
+      let questionTypes: string[] = [];
+      if (meta) {
+        const { scope } = normalizeOrderScope(meta);
+        if (scope) {
+          textbooks = [...new Set(scope.dbEntries.map((e) => e.displayName).filter(Boolean))];
+          questionTypes = [...new Set(scope.selectedTypes.filter(Boolean))];
+        }
+      }
 
       let revenueWon: number | null = null;
       let orderGrossWon: number | null = null;
@@ -120,6 +132,10 @@ export async function GET(request: NextRequest) {
         dropboxFolderCreated: !!(o as { dropboxFolderCreated?: boolean }).dropboxFolderCreated,
         hasOrderMeta: !!meta,
         orderMetaFlow: meta && typeof meta.flow === 'string' ? meta.flow : null,
+        /** 주문에 포함된 교재·모의고사 표시명 (필터·검색·분석) */
+        textbooks,
+        /** 주문한 변형 유형 목록 (분석) */
+        questionTypes,
         revenueWon,
         pointsUsed,
         /** 쏠북 BV: 변형 제작 포함 주문 합계. 포인트 주문: 기존 추정 총액 */

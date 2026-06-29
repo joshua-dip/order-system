@@ -251,7 +251,7 @@ const NAV_SECTIONS: NavSection[] = [
           { label: "해석쓰기", href: "/my/vip/class-kit/lesson/write-ko" },
         ],
       },
-      { id: "passage-analysis", icon: <Microscope size={18} />, label: "출제 포인트", href: "/my/vip/passage-analysis" },
+      { id: "passage-analysis", icon: <Microscope size={18} />, label: "출제 스튜디오", href: "/my/vip/studio" },
       { id: "memo", icon: <StringText size={18} />, label: "메모장", href: "/my/vip/memo" },
       { id: "qbank-api", icon: <Api size={18} />, label: "문제은행 API", href: "/my/vip/qbank-api" },
     ],
