@@ -119,10 +119,11 @@ function buildOrderAnalytics(list: AdminOrder[]) {
     byStatus[s] = (byStatus[s] || 0) + 1;
     const flow = (o.orderMetaFlow && String(o.orderMetaFlow).trim()) || '—';
     byFlow[flow] = (byFlow[flow] || 0) + 1;
-    if (s === 'completed' && typeof o.revenueWon === 'number' && o.revenueWon >= 0) {
-      completedRevenue += o.revenueWon;
-    }
     const pu = o.pointsUsed ?? 0;
+    if (s === 'completed' && typeof o.revenueWon === 'number' && o.revenueWon >= 0) {
+      // 실입금(현금)만 — 포인트 사용분은 포인트충전 매출로 이미 잡힘.
+      completedRevenue += pu > 0 ? (o.paymentDueWon ?? Math.max(0, o.revenueWon - pu)) : o.revenueWon;
+    }
     if (pu > 0) pointsUsedTotal += pu;
   }
   const flowEntries = Object.entries(byFlow).sort((a, b) => b[1] - a[1]);
@@ -447,9 +448,14 @@ export default function AdminDashboardPage() {
     files: { originalName: string; fileIndex: number }[];
     adminCategories?: string[];
     adminClassifiedAt?: string;
+    includesAnswerSheet?: boolean;
+    pointAwarded?: boolean;
+    pointAwardedAt?: string | null;
+    pointAwardAmount?: number | null;
     createdAt: string;
   }
   const [examUploads, setExamUploads] = useState<PastExamUpload[]>([]);
+  const [examPointGrantingId, setExamPointGrantingId] = useState<string | null>(null);
   const [examUploadsLoading, setExamUploadsLoading] = useState(false);
   const [examPreview, setExamPreview] = useState<{ url: string; name: string; type: 'pdf' | 'image' } | null>(null);
   const [examUploadForClassify, setExamUploadForClassify] = useState<PastExamUpload | null>(null);
@@ -2429,6 +2435,33 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleGrantExamPoints = async (ex: PastExamUpload, amount: 50000 | 60000) => {
+    if (ex.pointAwarded) return;
+    const withAnswers = amount === 60000;
+    const label = withAnswers ? '문제 + 답지' : '문제만';
+    if (!confirm(`${ex.loginId} 님의 「${ex.school} ${ex.examYear}년 ${ex.examType}」 기출문제를 확인하셨나요?\n\n[${label}] 기준으로 ${amount.toLocaleString()} 포인트를 지급합니다.\n전체 문제가 빠짐없이 포함되어 있는지${withAnswers ? ', 답지(정답·해설)가 포함되어 있는지' : ''} 확인해 주세요.`)) return;
+    setExamPointGrantingId(ex.id);
+    try {
+      const res = await fetch(`/api/admin/past-exam-uploads/${ex.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ awardPoints: true, awardAmount: amount }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        const granted = typeof data.points === 'number' ? data.points : amount;
+        setExamUploads((prev) => prev.map((e) => (e.id === ex.id ? { ...e, pointAwarded: true, pointAwardedAt: new Date().toISOString(), pointAwardAmount: granted } : e)));
+        if (!data.already) alert(`✅ ${ex.loginId} 님에게 ${granted.toLocaleString()} 포인트를 지급했습니다.`);
+      } else {
+        alert(data?.error || '지급에 실패했습니다.');
+      }
+    } catch {
+      alert('요청 중 오류가 발생했습니다.');
+    } finally {
+      setExamPointGrantingId(null);
+    }
+  };
+
   const handleAddFilesSubmit = async () => {
     if (!examUploadForAddFiles || !addFilesList?.length) return;
     setAddFilesSavingId(examUploadForAddFiles.id);
@@ -3088,7 +3121,7 @@ export default function AdminDashboardPage() {
               <p className="text-slate-500 text-xs mt-1">
                 누적(완료) <span className="text-slate-400 tabular-nums">{typeof stats?.revenueTotal === 'number' ? `${stats.revenueTotal.toLocaleString()}원` : '—'}</span>
                 <span className="block text-slate-600 mt-0.5">
-                  이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱
+                  이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱 · 포인트 사용분 제외(실입금)
                 </span>
               </p>
             </button>
@@ -3892,6 +3925,7 @@ export default function AdminDashboardPage() {
                         <th className="text-left py-3 px-5">시험범위</th>
                         <th className="text-left py-3 px-5">파일</th>
                         <th className="text-left py-3 px-5">문제 유형</th>
+                        <th className="text-left py-3 px-5">포인트 지급(5만/6만)</th>
                         <th className="text-left py-3 px-5">등록일</th>
                       </tr>
                     </thead>
@@ -3972,6 +4006,42 @@ export default function AdminDashboardPage() {
                                 유형 분류
                               </button>
                             </div>
+                          </td>
+                          <td className="py-3 px-5">
+                            {ex.pointAwarded ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" title={ex.pointAwardedAt ? `지급: ${formatDateTime(ex.pointAwardedAt)}` : ''}>
+                                ✓ {((ex.pointAwardAmount ?? 50000) / 10000).toLocaleString()}만P 지급완료
+                              </span>
+                            ) : (
+                              <div className="flex flex-col gap-1.5">
+                                {ex.includesAnswerSheet && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30 whitespace-nowrap" title="회원이 답지 포함으로 표시함">
+                                    📑 회원: 답지 포함
+                                  </span>
+                                )}
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleGrantExamPoints(ex, 50000)}
+                                    disabled={examPointGrantingId === ex.id}
+                                    className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500 text-white hover:bg-amber-400 disabled:opacity-60 whitespace-nowrap"
+                                    title="문제만 포함 — 5만 포인트 지급"
+                                  >
+                                    {examPointGrantingId === ex.id ? '지급 중…' : '5만P'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleGrantExamPoints(ex, 60000)}
+                                    disabled={examPointGrantingId === ex.id}
+                                    className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60 whitespace-nowrap"
+                                    title="문제 + 답지 포함 — 6만 포인트 지급"
+                                  >
+                                    6만P
+                                  </button>
+                                </div>
+                                <span className="text-[10px] text-slate-500 whitespace-nowrap">문제만 / 문제+답지</span>
+                              </div>
+                            )}
                           </td>
                           <td className="py-3 px-5 text-slate-500 text-xs whitespace-nowrap">{formatDateTime(ex.createdAt)}</td>
                         </tr>

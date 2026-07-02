@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { isDropboxConfigured } from '@/lib/dropbox';
-import { effectiveOrderRevenueWon } from '@/lib/order-revenue';
+import { effectiveOrderNetRevenueWon } from '@/lib/order-revenue';
 import { koreaDateKey, koreaYearMonthKey } from '@/lib/korea-date-key';
 import { revenueMonthKeyForOrder } from '@/lib/order-number';
 import { POINT_LEDGER_COLLECTION } from '@/lib/point-ledger';
@@ -47,11 +47,21 @@ export async function GET(request: NextRequest) {
       ]).toArray(),
       db.collection('users').countDocuments({ role: 'user', createdAt: { $gte: startOfMonth } }),
       db.collection('orders').countDocuments({ createdAt: { $gte: startOfWeek } }),
-      db
-        .collection('orders')
-        .find({ status: 'completed' })
-        .project({ orderText: 1, revenueWon: 1, orderMeta: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
-        .toArray(),
+      // 완료 주문 — orderText(주문서 전문)는 실제로 필요한 건(revenueWon 미저장 또는 포인트 사용)만 포함해
+      // 페이로드·조회 시간을 줄인다 (대시보드 로딩 최적화).
+      Promise.all([
+        db
+          .collection('orders')
+          .find({ status: 'completed', $or: [{ revenueWon: null }, { revenueWon: { $exists: false } }, { pointsUsed: { $gt: 0 } }] })
+          .project({ orderText: 1, revenueWon: 1, pointsUsed: 1, orderMeta: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
+          .toArray(),
+        db
+          .collection('orders')
+          // 위 A 쿼리의 정확한 여집합: revenueWon 저장됨 AND NOT(pointsUsed>0) — null·0·미존재 모두 포함
+          .find({ status: 'completed', revenueWon: { $ne: null }, pointsUsed: { $not: { $gt: 0 } } })
+          .project({ revenueWon: 1, pointsUsed: 1, orderMeta: 1, completedAt: 1, orderNumber: 1, loginId: 1 })
+          .toArray(),
+      ]).then(([a, b]) => [...a, ...b]),
       db.collection<SiteStatsDaily>('site_stats_daily').findOne({ _id: todayKey }),
       db
         .collection(POINT_LEDGER_COLLECTION)
@@ -67,7 +77,8 @@ export async function GET(request: NextRequest) {
     const orderCountByLoginId: Record<string, number> = {};
     const revenueByLoginId: Record<string, number> = {};
     for (const o of completedForRevenue) {
-      const amount = effectiveOrderRevenueWon(o);
+      // 주문 매출은 실입금(현금)만 — 사용 포인트는 포인트충전 매출로 이미 잡혔으므로 제외.
+      const amount = effectiveOrderNetRevenueWon(o);
       revenueTotal += amount;
       const monthKey = revenueMonthKeyForOrder(o as { orderNumber?: unknown; completedAt?: unknown });
       if (monthKey === thisYearMonth) {

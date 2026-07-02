@@ -10,14 +10,20 @@ import {
 } from '@/lib/premium-member';
 import { getVariantTrialInfo } from '@/lib/variant-trial';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+/** 세션 상태는 절대 캐시되면 안 됨 (CDN·브라우저 캐시로 인한 간헐 로그인 풀림 방지) */
+const NO_STORE = { headers: { 'Cache-Control': 'private, no-store, max-age=0' } } as const;
+
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) {
-    return NextResponse.json({ user: null }, { status: 200 });
+    return NextResponse.json({ user: null }, { status: 200, ...NO_STORE });
   }
   const payload = await verifyToken(token);
   if (!payload) {
-    return NextResponse.json({ user: null }, { status: 200 });
+    return NextResponse.json({ user: null }, { status: 200, ...NO_STORE });
   }
   try {
     const db = await getDb('gomijoshua');
@@ -130,7 +136,7 @@ export async function GET(request: NextRequest) {
         mustChangePassword,
         variantTrial,
       },
-    });
+    }, NO_STORE);
   } catch {
     return NextResponse.json({
       user: {
@@ -160,6 +166,6 @@ export async function GET(request: NextRequest) {
         mustChangePassword: false,
         variantTrial: null,
       },
-    });
+    }, NO_STORE);
   }
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { effectiveOrderRevenueWon } from '@/lib/order-revenue';
+import { effectiveOrderNetRevenueWon } from '@/lib/order-revenue';
 import { revenueMonthKeyForOrder } from '@/lib/order-number';
 
 /**
@@ -25,15 +25,15 @@ export async function GET(request: NextRequest) {
     const completed = await db
       .collection('orders')
       .find({ status: 'completed' })
-      .project({ orderText: 1, revenueWon: 1, orderMeta: 1, completedAt: 1, orderNumber: 1 })
+      .project({ orderText: 1, revenueWon: 1, pointsUsed: 1, orderMeta: 1, completedAt: 1, orderNumber: 1 })
       .toArray();
 
     const map = new Map<string, { totalWon: number; orderCount: number }>();
     for (const o of completed) {
       const key = revenueMonthKeyForOrder(o as { orderNumber?: unknown; completedAt?: unknown });
       if (key == null) continue;
-      const amount = effectiveOrderRevenueWon(
-        o as { revenueWon?: unknown; orderText?: unknown; orderMeta?: unknown }
+      const amount = effectiveOrderNetRevenueWon(
+        o as { revenueWon?: unknown; orderText?: unknown; orderMeta?: unknown; pointsUsed?: unknown }
       );
       const cur = map.get(key) ?? { totalWon: 0, orderCount: 0 };
       cur.totalWon += amount;

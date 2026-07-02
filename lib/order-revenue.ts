@@ -151,3 +151,27 @@ export function effectiveOrderRevenueWon(order: {
   );
   return parsed ?? 0;
 }
+
+/**
+ * 「실입금 매출」 — 주문 매출에서 사용한 포인트를 제외한 실제 현금 입금액.
+ * 포인트 사용분은 포인트 충전(토스 결제) 시점에 이미 매출(pointRevenue)로 잡히므로,
+ * 주문 매출에서 또 세면 이중계상된다. → 주문 매출 = 총액 − 사용 포인트.
+ *
+ * revenueWon 은 주문서에 「입금하실 금액」(포인트 차감 후)이 있으면 그 값(net), 없으면 총액(gross)이라
+ * 값 의미가 섞여 있다. 그래서: 주문서의 「입금하실 금액」이 있으면 그 값을 실입금으로 신뢰하고,
+ * 없으면 총액에서 포인트를 뺀다.
+ */
+export function effectiveOrderNetRevenueWon(order: {
+  revenueWon?: unknown;
+  orderText?: unknown;
+  orderMeta?: unknown;
+  pointsUsed?: unknown;
+}): number {
+  const base = effectiveOrderRevenueWon(order);
+  const rawPu = order.pointsUsed;
+  const pointsUsed = typeof rawPu === 'number' && Number.isFinite(rawPu) && rawPu > 0 ? Math.round(rawPu) : 0;
+  if (pointsUsed <= 0) return base;
+  const deposit = parseDepositDueFromOrderText(typeof order.orderText === 'string' ? order.orderText : '');
+  if (deposit != null && deposit >= 0) return deposit;
+  return Math.max(0, base - pointsUsed);
+}

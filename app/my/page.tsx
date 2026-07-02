@@ -107,6 +107,8 @@ function pointHistoryKindLabel(kind: string): string {
       return '주문 취소 환급';
     case 'attendance':
       return '출석 보상';
+    case 'past_exam_reward':
+      return '기출문제 보상';
     default:
       return kind;
   }
@@ -187,6 +189,7 @@ export default function MyPage() {
   const [pastExamYear, setPastExamYear] = useState('');
   const [pastExamType, setPastExamType] = useState('');
   const [pastExamScope, setPastExamScope] = useState('');
+  const [pastExamIncludesAnswerSheet, setPastExamIncludesAnswerSheet] = useState(false);
   const [pastExamSubmitting, setPastExamSubmitting] = useState(false);
   const [pastExamMessage, setPastExamMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [pastExamFiles, setPastExamFiles] = useState<FileList | null>(null);
@@ -202,6 +205,10 @@ export default function MyPage() {
     examScope: string;
     files: { originalName: string; fileIndex: number }[];
     adminCategories?: string[];
+    includesAnswerSheet?: boolean;
+    pointAwarded?: boolean;
+    pointAwardedAt?: string | null;
+    pointAwardAmount?: number | null;
     createdAt: string;
   }
   const [pastExamUploads, setPastExamUploads] = useState<PastExamUpload[]>([]);
@@ -245,10 +252,10 @@ export default function MyPage() {
     return m;
   }, [orders]);
 
-  /** 단어장·무료공유자료: 유효 연회원 또는 가입 프리미엄 체험 */
+  /** 단어장·무료공유자료: 월·연 회원(동등) 또는 가입 프리미엄 체험 */
   const annualMenuUnlocked = useMemo(
-    () => !!(user?.isAnnualMemberActive || user?.signupPremiumTrialActive),
-    [user?.isAnnualMemberActive, user?.signupPremiumTrialActive],
+    () => !!(user?.isAnnualMemberActive || user?.isMonthlyMemberActive || user?.signupPremiumTrialActive),
+    [user?.isAnnualMemberActive, user?.isMonthlyMemberActive, user?.signupPremiumTrialActive],
   );
 
   const [annualSharedItems, setAnnualSharedItems] = useState<AnnualSharedFileItem[]>([]);
@@ -269,6 +276,12 @@ export default function MyPage() {
   const [vocabTestDirection, setVocabTestDirection] = useState<'word-to-meaning' | 'meaning-to-word'>('word-to-meaning');
   const [vocabTestColumns, setVocabTestColumns] = useState<1 | 2>(1);
   const [vocabTestShuffle, setVocabTestShuffle] = useState(false);
+
+  // URL ?tab=… 으로 진입 시 해당 탭 열기 (홈 공지 「내 정보에서 포인트 받기」 등)
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t === 'settings' || t === 'exam' || t === 'orders') setActiveTab(t as TabKey);
+  }, []);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -750,6 +763,7 @@ export default function MyPage() {
       formData.append('examYear', pastExamYear);
       formData.append('examType', pastExamType);
       formData.append('examScope', pastExamScope);
+      formData.append('includesAnswerSheet', pastExamIncludesAnswerSheet ? 'true' : 'false');
       if (pastExamFiles?.length) {
         for (let i = 0; i < pastExamFiles.length; i++) {
           formData.append('files', pastExamFiles[i]);
@@ -767,6 +781,7 @@ export default function MyPage() {
         setPastExamYear('');
         setPastExamType('');
         setPastExamScope('');
+        setPastExamIncludesAnswerSheet(false);
         setPastExamFiles(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
         fetchPastExamUploads();
@@ -906,7 +921,7 @@ export default function MyPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-lg font-extrabold tracking-tight">{user.name || user.loginId}</span>
-                  {user.isAnnualMemberActive && (
+                  {(user.isAnnualMemberActive || user.isMonthlyMemberActive) && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                       정회원
@@ -1139,6 +1154,16 @@ export default function MyPage() {
                 <p className="text-sm font-bold text-[#0f172a]">기출문제 업로드</p>
                 <p className="text-[12px] text-[#94a3b8] mt-0.5">서술형 맞춤 제작에 사용할 기출문제를 등록해 주세요</p>
               </div>
+              <div className="mx-5 mt-4 rounded-xl border border-[#fde68a] bg-gradient-to-br from-[#fffbeb] to-[#fef3c7] px-4 py-3">
+                <div className="flex items-start gap-2.5">
+                  <span className="text-xl leading-none">🎁</span>
+                  <div className="text-[12px] text-[#92400e] leading-relaxed">
+                    <span className="font-extrabold">기출문제를 올리면 1건당 50,000 포인트!</span>
+                    <span className="block mt-0.5"><b>답지(정답·해설)까지</b> 함께 올리면 <b className="text-[#b45309]">60,000 포인트</b>를 드려요.</span>
+                    <span className="block mt-0.5">반드시 <b>전체 문제가 빠짐없이</b> 포함되어야 하며, 관리자가 누락 없이 확인한 뒤 포인트를 지급해 드려요.</span>
+                  </div>
+                </div>
+              </div>
               <form onSubmit={handlePastExamSubmit} className="p-5 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -1213,6 +1238,18 @@ export default function MyPage() {
                     className="w-full px-3.5 py-3 border border-[#e2e8f0] rounded-xl text-[13px] text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.1)] resize-y"
                   />
                 </div>
+                <label className="flex items-start gap-2.5 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-4 py-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={pastExamIncludesAnswerSheet}
+                    onChange={(e) => setPastExamIncludesAnswerSheet(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#d1d5db] text-[#16a34a] focus:ring-[#16a34a]"
+                  />
+                  <span className="text-[12px] leading-relaxed text-[#92400e]">
+                    <span className="font-bold">답지(정답·해설)도 함께 첨부했어요</span>
+                    <span className="block mt-0.5 text-[#b45309]">답지까지 포함되면 <b>60,000P</b>로 지급돼요. (관리자가 답지 포함 여부를 확인합니다)</span>
+                  </span>
+                </label>
                 <div>
                   <label className="block text-xs font-semibold text-[#475569] mb-1.5">기출문제 파일 첨부 (선택)</label>
                   <div
@@ -1307,6 +1344,22 @@ export default function MyPage() {
                           ) : (
                             <p className="text-[11px] text-amber-600 font-medium mb-1.5">서술형 기출문제를 분석 중입니다.</p>
                           )}
+                          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                            {upload.pointAwarded ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0]">
+                                🎁 {(upload.pointAwardAmount ?? 50000).toLocaleString()}P 지급 완료
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a]">
+                                ⏳ {upload.includesAnswerSheet ? '6만' : '5만'}P 지급 대기 (관리자 확인 중)
+                              </span>
+                            )}
+                            {upload.includesAnswerSheet && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#eff6ff] text-[#1d4ed8] border border-[#bfdbfe]">
+                                📑 답지 포함
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-3 flex-wrap">
                             <span className="text-[11px] text-[#94a3b8]">{formatDate(upload.createdAt)}</span>
                             {upload.files.length > 0 && (
@@ -1967,13 +2020,12 @@ export default function MyPage() {
                   <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">
                     주문 시 포인트 사용 가능
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setPointChargeOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc]"
+                  <a
+                    href="/my/point-charge"
+                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc] no-underline"
                   >
-                    미리 충전하기
-                  </button>
+                    충전 · 멤버십 결제 →
+                  </a>
                 </div>
 
                 {/* 일일 출석 보상 */}

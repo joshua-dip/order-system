@@ -87,6 +87,14 @@ function resolveShorthandCommand(
     }
     return { cmd: 'pipeline', tail: ['--order-number', num, ...tail] };
   }
+  const split = cmd.match(/^split:(.+)$/i);
+  if (split) {
+    const num = split[1].trim();
+    if (!ORDER_NUMBER_SHORTHAND.test(num)) {
+      die(`split: 뒤 주문번호 형식이 아닙니다: ${num} (예: split:MV-20260630-001)`);
+    }
+    return { cmd: 'split', tail: ['--order-number', num, ...tail] };
+  }
   // claude:BV-… 는 backward-compat: shortage 로만 라우팅 (변경 없음)
   const claude = cmd.match(/^claude:(.+)$/i);
   if (claude) {
@@ -109,6 +117,14 @@ function flagNum(flags: Map<string, string>, key: string, fallback: number): num
   const n = Number(v);
   if (!Number.isFinite(n)) die(`--${key} 는 숫자여야 합니다.`);
   return n;
+}
+
+/** --passages "id,id,…" → Set<string> (없으면 null). 병렬 샤드 범위 지정용. */
+function parsePassagesFlag(flags: Map<string, string>): Set<string> | null {
+  const raw = (flags.get('passages') ?? '').trim();
+  if (!raw) return null;
+  const ids = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return ids.length ? new Set(ids) : null;
 }
 
 async function cmdTextbooks(flags: Map<string, string>) {
@@ -517,6 +533,22 @@ async function cmdPipeline(flags: Map<string, string>) {
   const orderLessonsRequested = Number(sliced.orderLessonsRequested ?? 0);
   const orderLessonsMatched = Number(sliced.orderLessonsMatched ?? 0);
 
+  // 샤드 처리 — --passages <id,id,…> 면 해당 지문만 범위 축소(병렬 분할 실행·검수용)
+  const passagesFilter = parsePassagesFlag(flags);
+  const underfilledUse = passagesFilter
+    ? underfilled.filter((u) => passagesFilter.has(u.passageId))
+    : underfilled;
+  const noQuestionsUse = passagesFilter
+    ? noQuestions.filter((p) => passagesFilter.has(p.passageId))
+    : noQuestions;
+  // 샤드일 때 grand total 은 샤드 범위 기준으로 재계산
+  const emptyPerPassage = noQuestions.length > 0
+    ? Math.round(Number(sliced.needCreateFromEmptyPassagesTotal ?? 0) / noQuestions.length)
+    : 0;
+  const shardNeedGrandTotal = passagesFilter
+    ? underfilledUse.reduce((s, u) => s + Number(u.shortBy ?? 0), 0) + noQuestionsUse.length * emptyPerPassage
+    : needCreateGrandTotal;
+
   // 2) 대기 자동 검수 (Pro-only · per-question 종합 검증 자동 적용)
   let review: ReviewLoopResult | { skipped: true; reason: string } = {
     skipped: true,
@@ -528,9 +560,13 @@ async function cmdPipeline(flags: Map<string, string>) {
     // 주문은 여러 교재에 걸칠 수 있으므로(예: MV 한 주문이 26년 6월 + 26년 3월 지문을 섞음),
     // textbook 단일 필드가 아니라 shortage 가 집계한 지문 집합(scopePassageIds)으로 검수 범위를 잡는다.
     // 그래야 「대표 교재」가 아닌 lesson 의 대기 문항이 검수에서 누락되지 않는다.
-    const scopePassageIds = Array.isArray(sliced.scopePassageIds)
+    const scopePassageIdsAll = Array.isArray(sliced.scopePassageIds)
       ? (sliced.scopePassageIds as string[]).filter((s) => typeof s === 'string' && s.length > 0)
       : [];
+    // 샤드면 자기 지문만 검수 (병렬 충돌 방지)
+    const scopePassageIds = passagesFilter
+      ? scopePassageIdsAll.filter((s) => passagesFilter.has(s))
+      : scopePassageIdsAll;
     const isOrderScope = Boolean(orderNumberRaw || orderIdRaw);
     let pendingDocs: Record<string, unknown>[];
     let reviewLabel: string;
@@ -561,7 +597,7 @@ async function cmdPipeline(flags: Map<string, string>) {
 
   // 3) 다음 작업 가이드
   const needCreateBreakdown = new Map<string, { type: string; total: number; passages: string[] }>();
-  for (const u of underfilled) {
+  for (const u of underfilledUse) {
     const cur = needCreateBreakdown.get(u.type) ?? { type: u.type, total: 0, passages: [] };
     cur.total += Number(u.shortBy ?? 0);
     if (!cur.passages.includes(u.passageId)) cur.passages.push(u.passageId);
@@ -572,7 +608,7 @@ async function cmdPipeline(flags: Map<string, string>) {
   );
 
   const nextChatSteps: string[] =
-    needCreateGrandTotal > 0
+    shardNeedGrandTotal > 0
       ? [
           '1) 위 need_create_by_type 의 각 항목에 대해 variant_get_passage(passage_id) 로 원문 읽기',
           '2) variant_draft_grammar_rules 등 유형별 규칙에 맞춰 채팅에서 question_data JSON 작성',
@@ -597,11 +633,12 @@ async function cmdPipeline(flags: Map<string, string>) {
     textbook,
     counts: {
       pendingReviewTotal: pendingTotal,
-      needCreateGrandTotal,
+      needCreateGrandTotal: shardNeedGrandTotal,
       needCreateShortBySum: Number(sliced.needCreateShortBySum ?? 0),
       needCreateFromEmptyPassagesTotal: Number(
         sliced.needCreateFromEmptyPassagesTotal ?? 0,
       ),
+      ...(passagesFilter ? { shard: true, shardPassages: passagesFilter.size } : {}),
     },
     order_lessons:
       orderNumberRaw || orderIdRaw
@@ -614,16 +651,100 @@ async function cmdPipeline(flags: Map<string, string>) {
     review,
     next_actions: {
       review_done: !skipReview && pendingTotal > 0,
-      need_chat_generation: needCreateGrandTotal > 0,
+      need_chat_generation: shardNeedGrandTotal > 0,
       passages_missing_original: lessonsWithoutPassage,
-      empty_passages: noQuestions.map((p) => ({
+      empty_passages: noQuestionsUse.map((p) => ({
         passage_id: p.passageId,
         label: p.label ?? '',
       })),
       need_create_by_type: needCreateByType,
     },
     next_chat_steps: nextChatSteps,
-    raw_shortage: { underfilled, noQuestions },
+    raw_shortage: { underfilled: underfilledUse, noQuestions: noQuestionsUse },
+  });
+}
+
+/**
+ * split — 주문 부족분이 threshold 초과면 지문 단위로 N 샤드로 분할(작업량 균형).
+ * 각 샤드는 독립적으로 `pipeline … --passages <ids>` 로 생성·검수할 수 있어 병렬 에이전트 분배에 쓴다.
+ */
+async function cmdSplit(flags: Map<string, string>) {
+  const orderNumberRaw = (flags.get('order-number') ?? '').trim();
+  const orderIdRaw = (flags.get('order-id') ?? '').trim();
+  const textbookParam = (flags.get('textbook') ?? '').trim();
+  if (!orderNumberRaw && !orderIdRaw && !textbookParam) {
+    die('split: --order-number MV-… 또는 --order-id … 또는 --textbook "이름" 중 하나가 필요합니다.');
+  }
+  const requiredPerType = Math.floor(flagNum(flags, 'required', 3));
+  const threshold = Math.floor(flagNum(flags, 'threshold', 40));
+  const perShard = Math.floor(flagNum(flags, 'per-shard', 60));
+  const shardsForced = flags.get('shards') ? Math.max(1, Math.floor(flagNum(flags, 'shards', 0))) : 0;
+  const maxRows = Math.min(2000, Math.max(20, Math.floor(flagNum(flags, 'max-rows', 400))));
+
+  const shortageRes = await runQuestionCountValidation({
+    textbookParam, orderIdRaw, orderNumberRaw: orderNumberRaw || null,
+    requiredPerTypeRaw: String(requiredPerType), questionStatusRaw: null,
+  });
+  if (!shortageRes.ok) {
+    die(`split: shortage 실패 — ${typeof shortageRes.body.error === 'string' ? shortageRes.body.error : JSON.stringify(shortageRes.body)}`);
+  }
+  const sliced = sliceQuestionCountPayloadForApi(shortageRes, maxRows) as Record<string, unknown>;
+  const textbook = String((sliced.textbook as string) ?? textbookParam);
+  const underfilled = (Array.isArray(sliced.underfilled) ? sliced.underfilled : []) as QCountUnderfilledLite[];
+  const noQuestions = (Array.isArray(sliced.noQuestions) ? sliced.noQuestions : []) as QCountNoQuestionLite[];
+  const emptyTotal = Number(sliced.needCreateFromEmptyPassagesTotal ?? 0);
+  const emptyPer = noQuestions.length ? Math.max(1, Math.round(emptyTotal / noQuestions.length)) : 0;
+
+  // 지문별 작업량 집계 (underfilled 유형×부족 + 빈지문 전유형)
+  type Work = { passage_id: string; label: string; empty: boolean; total: number; items: { type: string; shortBy: number }[] };
+  const byPassage = new Map<string, Work>();
+  for (const u of underfilled) {
+    const w = byPassage.get(u.passageId) ?? { passage_id: u.passageId, label: u.label ?? '', empty: false, total: 0, items: [] };
+    w.items.push({ type: u.type, shortBy: Number(u.shortBy ?? 0) });
+    w.total += Number(u.shortBy ?? 0);
+    if (!w.label && u.label) w.label = u.label;
+    byPassage.set(u.passageId, w);
+  }
+  for (const p of noQuestions) {
+    const ex = byPassage.get(p.passageId);
+    if (ex) { ex.empty = true; continue; }
+    byPassage.set(p.passageId, { passage_id: p.passageId, label: p.label ?? '', empty: true, total: emptyPer, items: [{ type: '(빈지문·주문 전유형)', shortBy: emptyPer }] });
+  }
+  const works = [...byPassage.values()].sort((a, b) => b.total - a.total);
+  const grand = works.reduce((s, w) => s + w.total, 0);
+
+  if (grand <= threshold || works.length <= 1) {
+    out({
+      ok: true, parallel: false, order_number: orderNumberRaw || null, textbook,
+      grand_total: grand, threshold, work_passages: works.length,
+      recommend: orderNumberRaw ? `npm run cc:variant -- pipeline:${orderNumberRaw}` : 'pipeline --textbook …',
+      note: 'threshold 이하 — 단일 처리 권장(병렬 불필요)',
+    });
+    return;
+  }
+
+  // 작업량 기준 그리디 분배 (큰 지문부터 가장 적은 샤드에)
+  const shardsN = shardsForced > 0 ? shardsForced : Math.max(2, Math.ceil(grand / Math.max(1, perShard)));
+  const shards = Array.from({ length: shardsN }, () => ({ passages: [] as Work[], total: 0 }));
+  for (const w of works) {
+    const s = shards.reduce((m, x) => (x.total < m.total ? x : m));
+    s.passages.push(w);
+    s.total += w.total;
+  }
+  const used = shards.filter((s) => s.passages.length > 0);
+
+  out({
+    ok: true, parallel: true, order_number: orderNumberRaw || null, textbook,
+    grand_total: grand, threshold, shard_count: used.length, work_passages: works.length,
+    shards: used.map((s, i) => ({
+      index: i + 1,
+      total: s.total,
+      passage_count: s.passages.length,
+      passage_ids: s.passages.map((p) => p.passage_id),
+      passages: s.passages.map((p) => ({ passage_id: p.passage_id, label: p.label, empty: p.empty, total: p.total, items: p.items })),
+      recheck_cmd: `npm run cc:variant -- pipeline:${orderNumberRaw} --passages ${s.passages.map((p) => p.passage_id).join(',')} --skip-review true`,
+    })),
+    final_review_cmd: orderNumberRaw ? `npm run cc:variant -- pipeline:${orderNumberRaw}` : 'pipeline --textbook …',
   });
 }
 
@@ -695,6 +816,9 @@ async function main() {
       break;
     case 'pipeline':
       await cmdPipeline(flags);
+      break;
+    case 'split':
+      await cmdSplit(flags);
       break;
     case 'next-empty':
       await cmdNextEmpty(flags);

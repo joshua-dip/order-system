@@ -19,7 +19,9 @@ export type PointLedgerKind =
   /** VIP 사이드바 메뉴 개별 언락(à la carte) 구매 차감 */
   | 'vip_menu_unlock'
   /** 일일 출석 보상 — 내 정보에서 하루 1회 랜덤 포인트 적립 */
-  | 'attendance';
+  | 'attendance'
+  /** 기출문제 업로드 보상 — 관리자 확인 후 1건당 지급 */
+  | 'past_exam_reward';
 
 export type PointLedgerInsert = {
   userId: ObjectId;

@@ -4,6 +4,7 @@ import { requireVip } from '@/lib/vip-auth';
 import { getVipDb, col } from '@/lib/vip-db';
 import { getDb } from '@/lib/mongodb';
 import { expandVariantTypes } from '@/lib/book-variant-types';
+import { QUESTION_BANK_COLLECTION } from '@/lib/vip-question-bank-store';
 
 export async function GET(request: NextRequest) {
   const auth = await requireVip(request);
@@ -26,6 +27,25 @@ export async function GET(request: NextRequest) {
   const vipDb = await getVipDb();
   const uid = new ObjectId(auth.userId);
   const db = await getDb('gomijoshua');
+
+  // '내 문제은행만' — 체크 시 후보를 내가 담아둔 문항(vip_saved_questions)으로 제한.
+  // bankFolder: null=은행 전체 / '폴더명'·''(미분류)=그 폴더만 (세트별 폴더 → 세트 간 문제 중복 방지)
+  const bankOnly = sp.get('bankOnly') === '1' || sp.get('bankOnly') === 'true';
+  const bankFolder = sp.get('bankFolder'); // 미지정(null)=전체
+  let bankConstraint: Record<string, unknown> | null = null;
+  let bankCount = 0;
+  if (bankOnly) {
+    const bankQuery: Record<string, unknown> = { userId: uid };
+    if (bankFolder !== null) bankQuery.folder = bankFolder; // 폴더 지정 시 그 폴더만
+    const saved = await db.collection(QUESTION_BANK_COLLECTION).find(bankQuery).project({ questionId: 1 }).limit(20000).toArray();
+    const bankOids = saved
+      .map((s) => (s.questionId instanceof ObjectId ? s.questionId : (ObjectId.isValid(String(s.questionId)) ? new ObjectId(String(s.questionId)) : null)))
+      .filter((x): x is ObjectId => !!x);
+    bankCount = bankOids.length;
+    bankConstraint = { _id: { $in: bankOids } }; // 비면 빈 결과(의도)
+  }
+  /** bankOnly 면 후보 필터에 '내 문제은행' 제약을 AND 로 덧붙인다. */
+  const withBank = (f: Record<string, unknown>): Record<string, unknown> => (bankConstraint ? { $and: [f, bankConstraint] } : f);
 
   // 교재 → 카테고리 분류 (admin/passages 설정 + 모의고사 이름 패턴)
   // 표지 출처 분포가 "어느 범위 교재에서 뽑았는지"로 집계되도록 문항에 scope 카테고리를 태깅한다.
@@ -194,7 +214,7 @@ export async function GET(request: NextRequest) {
       const match: Record<string, unknown> = { status: '완료', passage_id: { $in: pids }, type: { $in: types } };
       if (exclude.length > 0) match._id = { $nin: exclude };
       const res = await db.collection('generated_questions')
-        .aggregate([{ $match: match }, { $sample: { size: 1 } }, { $project: project }]).toArray();
+        .aggregate([{ $match: withBank(match) }, { $sample: { size: 1 } }, { $project: project }]).toArray();
       if (res[0]) { const q = res[0] as Record<string, unknown>; q._scopeCat = classifyScope(pin.tb); return q; }
     }
     return null;
@@ -214,8 +234,8 @@ export async function GET(request: NextRequest) {
     if (typeFilter) f.type = { $in: expandVariantTypes(typeFilter) };
     if (conditions.length === 1) Object.assign(f, conditions[0]);
     else f.$or = conditions;
-    if (excludeIds.length === 0) return f;
-    return { $and: [f, { _id: { $nin: excludeIds } }] };
+    if (excludeIds.length === 0) return withBank(f);
+    return withBank({ $and: [f, { _id: { $nin: excludeIds } }] });
   };
 
   // 전체 범위 필터 빌더 (excludeIds 포함)
@@ -231,8 +251,8 @@ export async function GET(request: NextRequest) {
     if (scopeConditions.length === 1) Object.assign(scopeFilter, scopeConditions[0]);
     else scopeFilter.$or = scopeConditions;
 
-    if (excludeIds.length === 0) return scopeFilter;
-    return { $and: [scopeFilter, { _id: { $nin: excludeIds } }] };
+    if (excludeIds.length === 0) return withBank(scopeFilter);
+    return withBank({ $and: [scopeFilter, { _id: { $nin: excludeIds } }] });
   };
 
   const project = {
@@ -380,7 +400,7 @@ export async function GET(request: NextRequest) {
         }
         resultSets.push(setQuestions.map(mapQ));
       }
-      return NextResponse.json({ ok: true, sets: resultSets, typeCounts, followedOrder: true });
+      return NextResponse.json({ ok: true, sets: resultSets, typeCounts, followedOrder: true, bankOnly, bankCount, bankFolder });
     }
   }
 
@@ -481,5 +501,5 @@ export async function GET(request: NextRequest) {
     resultSets.push(setQuestions.map(mapQ));
   }
 
-  return NextResponse.json({ ok: true, sets: resultSets, typeCounts });
+  return NextResponse.json({ ok: true, sets: resultSets, typeCounts, bankOnly, bankCount, bankFolder });
 }

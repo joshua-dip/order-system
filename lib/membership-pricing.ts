@@ -14,3 +14,19 @@ export function membershipPricingOneLiner(): string {
   const y = MEMBERSHIP_ANNUAL_REFERENCE_WON.toLocaleString('ko-KR');
   return `월구독 월 ${m}원 · 연회원 연 ${y}원`;
 }
+
+/** 결제 가능한 멤버십 플랜 */
+export type MembershipPlan = 'monthly' | 'annual';
+
+export const MEMBERSHIP_MONTHLY_ORDER_NAME = '월회원 (1개월)';
+export const MEMBERSHIP_ANNUAL_ORDER_NAME = '연회원 (12개월)';
+
+/** 플랜별 결제 금액(원) */
+export function membershipAmountWon(plan: MembershipPlan): number {
+  return plan === 'annual' ? MEMBERSHIP_ANNUAL_REFERENCE_WON : MEMBERSHIP_MONTHLY_WON;
+}
+
+/** 플랜별 토스 주문명 */
+export function membershipOrderName(plan: MembershipPlan): string {
+  return plan === 'annual' ? MEMBERSHIP_ANNUAL_ORDER_NAME : MEMBERSHIP_MONTHLY_ORDER_NAME;
+}

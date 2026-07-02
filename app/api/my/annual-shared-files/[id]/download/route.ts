@@ -24,12 +24,13 @@ export async function GET(
     const db = await getDb('gomijoshua');
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(payload.sub) },
-      { projection: { annualMemberSince: 1, signupPremiumTrialUntil: 1 } }
+      { projection: { annualMemberSince: 1, monthlyMemberUntil: 1, signupPremiumTrialUntil: 1 } }
     );
     const since = (user as { annualMemberSince?: Date } | null)?.annualMemberSince;
+    const monthlyUntil = (user as { monthlyMemberUntil?: Date } | null)?.monthlyMemberUntil;
     const trialUntil = (user as { signupPremiumTrialUntil?: Date } | null)?.signupPremiumTrialUntil;
-    if (!hasAnnualMemberMenuAccess({ annualSince: since ?? null, signupPremiumTrialUntil: trialUntil ?? null })) {
-      return NextResponse.json({ error: '연회원 전용입니다.' }, { status: 403 });
+    if (!hasAnnualMemberMenuAccess({ annualSince: since ?? null, monthlyUntil: monthlyUntil ?? null, signupPremiumTrialUntil: trialUntil ?? null })) {
+      return NextResponse.json({ error: '멤버십(월·연) 회원 전용입니다.' }, { status: 403 });
     }
 
     const doc = await db.collection(COLLECTION).findOne({ _id: new ObjectId(id) });

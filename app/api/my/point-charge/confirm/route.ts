@@ -8,6 +8,19 @@ import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
 import { consumeCoupon } from '@/lib/coupons';
 import { extendOneMonth } from '@/lib/vip-subscription';
 
+/** 기준일(또는 지금)에서 n개월 뒤 */
+function addMonths(base: Date, n: number): Date {
+  const d = new Date(base);
+  d.setMonth(d.getMonth() + n);
+  return d;
+}
+/** 기준일(또는 지금)에서 n년 뒤 */
+function addYears(base: Date, n: number): Date {
+  const d = new Date(base);
+  d.setFullYear(d.getFullYear() + n);
+  return d;
+}
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /** 토스 승인 API + DB 반영까지 여유 */
@@ -80,6 +93,44 @@ export async function POST(request: NextRequest) {
     const until = extendOneMonth((cur as { vipSubscriptionUntil?: Date } | null)?.vipSubscriptionUntil);
     await usersCol.updateOne({ _id: userId }, { $set: { vipSubscriptionUntil: until } });
     return NextResponse.json({ ok: true, vipSubscription: true, vipSubscriptionUntil: until });
+  }
+
+  // 월/연 멤버십 결제 — 포인트 대신 monthlyMemberUntil / annualMemberSince 활성화·연장.
+  if (order.purpose === 'membership') {
+    const markPaid = await col.updateOne(
+      { orderId, userId, status: 'pending' },
+      { $set: { status: 'paid', paymentKey, paidAt: new Date(), updatedAt: new Date() } },
+    );
+    if (markPaid.matchedCount === 0) {
+      const cur = await col.findOne({ orderId, userId });
+      if (cur?.status === 'paid') return NextResponse.json({ ok: true, already: true, membership: true, plan: cur.plan ?? null });
+      return NextResponse.json({ error: '주문 상태를 갱신할 수 없습니다.' }, { status: 409 });
+    }
+    const plan = order.plan === 'annual' ? 'annual' : 'monthly';
+    const usersCol = db.collection('users');
+    const now = new Date();
+    if (plan === 'annual') {
+      // 활성 연회원이면 현재 만료일(가입일+1년)에서 +1년 스택, 아니면 지금부터.
+      const cur = await usersCol.findOne({ _id: userId }, { projection: { annualMemberSince: 1 } });
+      const sinceRaw = (cur as { annualMemberSince?: Date } | null)?.annualMemberSince;
+      const since = sinceRaw ? new Date(sinceRaw) : null;
+      const curEnd = since && !Number.isNaN(since.getTime()) ? addYears(since, 1) : null;
+      const newSince = curEnd && curEnd.getTime() > now.getTime() ? curEnd : now;
+      await usersCol.updateOne({ _id: userId }, { $set: { annualMemberSince: newSince } });
+      return NextResponse.json({ ok: true, membership: true, plan: 'annual', validUntil: addYears(newSince, 1) });
+    }
+    // monthly — 활성 월회원이면 현재 만료일에서 +1개월 스택, 아니면 지금부터.
+    const cur = await usersCol.findOne({ _id: userId }, { projection: { monthlyMemberUntil: 1, monthlyMemberSince: 1 } });
+    const untilRaw = (cur as { monthlyMemberUntil?: Date } | null)?.monthlyMemberUntil;
+    const until = untilRaw ? new Date(untilRaw) : null;
+    const active = until && !Number.isNaN(until.getTime()) && until.getTime() > now.getTime();
+    const base = active ? until! : now;
+    const newUntil = addMonths(base, 1);
+    const set: Record<string, Date> = { monthlyMemberUntil: newUntil };
+    const sinceRaw = (cur as { monthlyMemberSince?: Date } | null)?.monthlyMemberSince;
+    if (!active || !sinceRaw) set.monthlyMemberSince = now;
+    await usersCol.updateOne({ _id: userId }, { $set: set });
+    return NextResponse.json({ ok: true, membership: true, plan: 'monthly', validUntil: newUntil });
   }
 
   const points = typeof order.points === 'number' && order.points > 0 ? order.points : 0;

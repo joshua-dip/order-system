@@ -8,8 +8,21 @@ export const VIP_SUBJECT_KEY = 'vipSubject';
 export const VIP_SUBJECT_COOKIE = 'vip_subject';
 export const DEFAULT_VIP_SUBJECT = '영어';
 
-/** 변형문제(영어 독해) 전용 메뉴 — 타 과목 선택 시 숨김. */
-export const ENGLISH_ONLY_MENU_IDS = new Set(['generate', 'questions', 'qbank-api', 'review', 'homework', 'writing', 'class-kit', 'passage-analysis']);
+/**
+ * 변형문제(영어 독해) 전용 메뉴 — 타 과목 선택 시 숨김.
+ * (오답노트 'review' 는 영어=QR 자동 + 국어·수학=수동 하위메뉴로 전 과목 지원하므로 제외)
+ */
+export const ENGLISH_ONLY_MENU_IDS = new Set(['generate', 'questions', 'qbank-api', 'homework', 'writing', 'class-kit', 'passage-analysis']);
+
+/** 수학 전용 메뉴 — 수학 과목 선택 시에만 노출(다른 과목에선 숨김). */
+export const MATH_ONLY_MENU_IDS = new Set(['math-problems']);
+
+/** 과목별 메뉴 노출 여부. 영어전용/수학전용은 해당 과목에서만 보이고, 그 외 메뉴는 전 과목 공통. */
+export function isMenuVisibleForSubject(menuId: string, subject: string): boolean {
+  if (ENGLISH_ONLY_MENU_IDS.has(menuId)) return subject === DEFAULT_VIP_SUBJECT;
+  if (MATH_ONLY_MENU_IDS.has(menuId)) return subject === '수학';
+  return true;
+}
 
 export function getCurrentSubject(): string {
   if (typeof window === 'undefined') return DEFAULT_VIP_SUBJECT;

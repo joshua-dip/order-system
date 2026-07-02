@@ -13,6 +13,9 @@ const KIND_LABELS: Record<string, string> = {
   member_variant_hard: '변형문제 생성',
   member_variant_refund: '변형문제 환급',
   order_cancel_refund: '주문 취소 환급',
+  vip_menu_unlock: 'VIP 메뉴 언락',
+  attendance: '출석 보상',
+  past_exam_reward: '기출문제 보상',
 };
 
 export async function GET(
