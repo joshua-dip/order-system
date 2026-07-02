@@ -19,14 +19,44 @@ import {
 import { renderExamPdfs, countPdfPages } from '@/lib/render-exam-pdf';
 import { getEmbeddedKoreanFontFaceCss } from '@/lib/pdf-korean-font';
 import { publicBaseUrl } from '@/lib/public-base-url';
+import { isDropboxConfigured, uploadTempDownload } from '@/lib/dropbox';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* 지문 수만큼 PDF 를 렌더하므로 여유 있게 */
 export const maxDuration = 300;
 
+/** Amplify(Lambda) 응답 페이로드 한도 안전선. 초과분은 Dropbox로 오프로드. */
+const OFFLOAD_THRESHOLD = 4 * 1024 * 1024; // 4MB
+
 function safe(name: string): string {
   return name.replace(/[\\/:*?"<>|\n\r]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || '지문';
+}
+
+/**
+ * 바이너리(ZIP·PDF) 응답. 용량이 크면 Dropbox 임시 링크로 오프로드해 6MB 한도를 우회한다.
+ *  - 작으면: 그대로 바이너리 스트림 (기존 동작)
+ *  - 크면: Dropbox 업로드 후 JSON `{ ok, url, filename }` (클라이언트가 링크로 다운로드)
+ */
+async function respondBinary(bytes: Uint8Array<ArrayBuffer>, contentType: string, displayName: string, asciiName: string) {
+  if (bytes.byteLength > OFFLOAD_THRESHOLD && isDropboxConfigured()) {
+    try {
+      const { tempUrl } = await uploadTempDownload(displayName, Buffer.from(bytes));
+      return NextResponse.json({ ok: true, url: tempUrl, filename: displayName, size: bytes.byteLength });
+    } catch (e) {
+      console.error('[download-zip] Dropbox 오프로드 실패, 직접 반환 시도:', e);
+      // 오프로드 실패 시 아래에서 직접 반환 (작은 파일이면 성공)
+    }
+  }
+  return new NextResponse(bytes, {
+    status: 200,
+    headers: {
+      'Content-Type': contentType,
+      'Content-Length': String(bytes.byteLength),
+      'Content-Disposition': `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(displayName)}`,
+      'Cache-Control': 'no-store',
+    },
+  });
 }
 
 /** jobId 기반 고정 셔플 시드 (download 라우트와 동일 규칙 — 전부랜덤 순서 재현). */
@@ -136,15 +166,7 @@ export async function GET(
         const [pdf] = await renderExamPdfs([html]);
         if (!pdf) return NextResponse.json({ error: '합본 PDF 생성에 실패했습니다.' }, { status: 500 });
         const fn = safe(`파이널예비모의고사_${st}_학생합본`) + '.pdf';
-        return new NextResponse(new Uint8Array(pdf), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Length': String(pdf.byteLength),
-            'Content-Disposition': `attachment; filename="final-exam-${st}-students-merged.pdf"; filename*=UTF-8''${encodeURIComponent(fn)}`,
-            'Cache-Control': 'no-store',
-          },
-        });
+        return respondBinary(new Uint8Array(pdf), 'application/pdf', fn, `final-exam-${st}-students-merged.pdf`);
       }
 
       if (studentEntries.length === 0) return NextResponse.json({ error: '생성할 문항이 없습니다.' }, { status: 400 });
@@ -153,15 +175,7 @@ export async function GET(
       studentEntries.forEach((e, i) => zip.file(`${e.name}.pdf`, pdfs[i]));
       const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } });
       const fn = safe(`파이널예비모의고사_${st}_학생별`) + '.zip';
-      return new NextResponse(new Uint8Array(buf), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/zip',
-          'Content-Length': String(buf.byteLength),
-          'Content-Disposition': `attachment; filename="final-exam-${st}-students.zip"; filename*=UTF-8''${encodeURIComponent(fn)}`,
-          'Cache-Control': 'no-store',
-        },
-      });
+      return respondBinary(new Uint8Array(buf), 'application/zip', fn, `final-exam-${st}-students.zip`);
     }
 
     const fontFaceCss = await getEmbeddedKoreanFontFaceCss();
@@ -221,15 +235,7 @@ export async function GET(
     const stamp = (job.createdAt instanceof Date ? job.createdAt : new Date()).toISOString().slice(0, 10).replace(/-/g, '');
     const tag = full ? '전체묶음' : '지문별';
     const fname = safe(`파이널예비모의고사_${stamp}_${tag}`) + '.zip';
-    return new NextResponse(new Uint8Array(buf), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Length': String(buf.byteLength),
-        'Content-Disposition': `attachment; filename="final-exam-${stamp}-${full ? 'all' : 'bysource'}.zip"; filename*=UTF-8''${encodeURIComponent(fname)}`,
-        'Cache-Control': 'no-store',
-      },
-    });
+    return respondBinary(new Uint8Array(buf), 'application/zip', fname, `final-exam-${stamp}-${full ? 'all' : 'bysource'}.zip`);
   } catch (e) {
     console.error('[final-exams download-zip]', e);
     return NextResponse.json(

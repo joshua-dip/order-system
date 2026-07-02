@@ -376,7 +376,6 @@ function useHubSections(
 
 const TextbookSelection = (_props: TextbookSelectionProps) => {
   const [user, setUser] = useState<{ canAccessAnalysis: boolean; isPremiumMember?: boolean } | null>(null);
-  const [premiumLoad, setPremiumLoad] = useState(true);
   const [finalGateOpen, setFinalGateOpen] = useState(false);
   const [byokGateOpen, setByokGateOpen] = useState(false);
 
@@ -393,8 +392,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
           setUser(null);
         }
       })
-      .catch(() => setUser(null))
-      .finally(() => setPremiumLoad(false));
+      .catch(() => setUser(null));
   }, []);
 
   const isMember = user !== null;
@@ -479,19 +477,8 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                 </span>
               </div>
             </Link>
-            {premiumLoad ? (
-              <div
-                className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md opacity-80 animate-pulse cursor-wait sm:px-7"
-                style={{
-                  background: 'linear-gradient(120deg, #0c4a6e 0%, #0369a1 48%, #0d9488 100%)',
-                }}
-              >
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">변형문제 만들기</span>
-                  <p className="text-sm font-medium text-cyan-100">불러오는 중…</p>
-                </div>
-              </div>
-            ) : isPremiumMember ? (
+            {/* 로딩 플레이스홀더 없이 즉시 렌더 — premium 확인되면 Link 로 자연 전환 */}
+            {isPremiumMember ? (
               <Link
                 href="/my/premium/variant-generate"
                 className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"

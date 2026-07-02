@@ -43,6 +43,8 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'class-kit', label: '클래스키트' },
   { id: 'passage-analysis', label: '출제 스튜디오' },
   { id: 'qbank-api', label: '문제은행 API' },
+  { id: 'tutoring', label: '과외솔루션' },
+  { id: 'math-problems', label: '문제관리' }, // 수학 전용 (진도별 문제 관리)
 ];
 
 export const VIP_MENU_IDS = new Set(VIP_MENU_CATALOG.map((m) => m.id));
@@ -84,6 +86,8 @@ export const DEFAULT_MENU_DEPENDENCIES: Record<string, string[]> = {
   'class-kit': [],                   // 클래스키트 = 독립(모의고사 지문 수업자료·PDF)
   'passage-analysis': [],            // 출제 포인트 = 독립(교사가 문장별 출제 포인트 작성)
   'qbank-api': ['questions'],        // 문제은행 API = 내 문제은행(문제 관리)
+  tutoring: [],                      // 과외솔루션 = 독립(과외 시간표 관리 등)
+  'math-problems': [],               // 수학 문제관리 = 독립(진도 트리 기반)
 };
 
 /** 메뉴의 실효 의존 목록 (admin config 의 requires 우선, 없으면 기본값). 카탈로그 내 id 로만 한정. */

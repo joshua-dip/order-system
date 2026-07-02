@@ -3,6 +3,8 @@ export function pathToMenuId(pathname: string): string {
   if (pathname.startsWith('/my/vip/menu-store')) return 'menu-store';
   if (pathname === '/my/vip') return 'dashboard';
   if (pathname.startsWith('/my/vip/qbank-api')) return 'qbank-api';
+  if (pathname.startsWith('/my/vip/math-problems')) return 'math-problems';
+  if (pathname.startsWith('/my/vip/tutoring')) return 'tutoring';
   if (pathname.startsWith('/my/vip/review')) return 'review';
   if (pathname.startsWith('/my/vip/homework')) return 'homework';
   if (pathname.startsWith('/my/vip/report')) return 'report';

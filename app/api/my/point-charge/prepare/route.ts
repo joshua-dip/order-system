@@ -7,6 +7,7 @@ import { getPointChargePackage, type PointChargeTierId } from '@/lib/point-charg
 import { POINT_CHARGE_ORDERS_COLLECTION } from '@/lib/point-charge-orders';
 import { getActiveCoupon, effectivePointChargeDiscount } from '@/lib/coupons';
 import { VIP_SUBSCRIPTION_MONTHLY_WON, VIP_SUBSCRIPTION_ORDER_NAME } from '@/lib/vip-subscription';
+import { membershipAmountWon, membershipOrderName, type MembershipPlan } from '@/lib/membership-pricing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, orderId, amount: VIP_SUBSCRIPTION_MONTHLY_WON, orderName: VIP_SUBSCRIPTION_ORDER_NAME, purpose: 'vip_subscription' });
     } catch (e) {
       console.error('vip-subscription prepare:', e);
+      return NextResponse.json({ error: '주문 준비 중 오류가 발생했습니다.' }, { status: 500 });
+    }
+  }
+
+  // 월/연 멤버십 결제 — 포인트 충전과 같은 토스 위젯, purpose 로 구분.
+  if (body?.purpose === 'membership') {
+    const plan: MembershipPlan = body?.plan === 'annual' ? 'annual' : 'monthly';
+    const amountWon = membershipAmountWon(plan);
+    const orderName = membershipOrderName(plan);
+    const orderId = `mem_${plan}_${userId.toHexString().slice(-8)}_${Date.now()}_${randomBytes(4).toString('hex')}`;
+    try {
+      const db = await getDb('gomijoshua');
+      await db.collection(POINT_CHARGE_ORDERS_COLLECTION).insertOne({
+        orderId,
+        userId,
+        purpose: 'membership',
+        plan,
+        points: 0,
+        amountWon,
+        status: 'pending',
+        createdAt: new Date(),
+      });
+      await db.collection(POINT_CHARGE_ORDERS_COLLECTION).createIndex({ orderId: 1 }, { unique: true }).catch(() => {});
+      return NextResponse.json({ ok: true, orderId, amount: amountWon, orderName, purpose: 'membership', plan });
+    } catch (e) {
+      console.error('membership prepare:', e);
       return NextResponse.json({ error: '주문 준비 중 오류가 발생했습니다.' }, { status: 500 });
     }
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { effectiveOrderRevenueWon } from '@/lib/order-revenue';
+import { effectiveOrderNetRevenueWon } from '@/lib/order-revenue';
 import { revenueMonthKeyForOrder } from '@/lib/order-number';
 import {
   parseMockExamSelections,
@@ -174,6 +174,7 @@ export async function GET(request: NextRequest) {
         userId: 1,
         orderText: 1,
         revenueWon: 1,
+        pointsUsed: 1,
         orderMeta: 1,
       })
       .sort({ completedAt: -1 })
@@ -212,10 +213,11 @@ export async function GET(request: NextRequest) {
       });
       if (!monthKey) continue;
 
-      const total = effectiveOrderRevenueWon({
+      const total = effectiveOrderNetRevenueWon({
         revenueWon: ord.revenueWon,
         orderText: ord.orderText,
         orderMeta: ord.orderMeta,
+        pointsUsed: ord.pointsUsed,
       });
 
       const meta = (ord.orderMeta && typeof ord.orderMeta === 'object' && !Array.isArray(ord.orderMeta))

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentSubject, setCurrentSubject, DEFAULT_VIP_SUBJECT, ENGLISH_ONLY_MENU_IDS } from "@/lib/vip-subject";
+import { getCurrentSubject, setCurrentSubject, DEFAULT_VIP_SUBJECT, isMenuVisibleForSubject } from "@/lib/vip-subject";
 import {
   Search as SearchIcon,
   Dashboard,
@@ -136,6 +136,8 @@ function getActiveSectionFromPath(pathname: string): string {
   if (pathname.startsWith("/my/vip/questions")) return "questions";
   if (pathname.startsWith("/my/vip/class-kit")) return "class-kit";
   if (pathname.startsWith("/my/vip/passage-analysis")) return "passage-analysis";
+  if (pathname.startsWith("/my/vip/materials")) return "materials";
+  if (pathname.startsWith("/my/vip/tutoring")) return "tutoring";
   if (pathname.startsWith("/my/vip/generate")) return "generate";
   return "dashboard";
 }
@@ -178,9 +180,20 @@ const NAV_SECTIONS: NavSection[] = [
           { label: "시험 분석", href: "/my/vip/analysis", id: "analysis" },
         ],
       },
+      { id: "math-problems", icon: <Catalog size={18} />, label: "문제관리", href: "/my/vip/math-problems" },
       { id: "scores", icon: <ChartBar size={18} />, label: "성적 관리", href: "/my/vip/scores" },
       { id: "report", icon: <Report size={18} />, label: "성적표", href: "/my/vip/report" },
-      { id: "review", icon: <Notebook size={18} />, label: "오답노트", href: "/my/vip/review" },
+      {
+        id: "review",
+        icon: <Notebook size={18} />,
+        label: "오답노트",
+        href: "/my/vip/review",
+        children: [
+          { label: "영어 오답노트", href: "/my/vip/review" },
+          { label: "국어 오답노트", href: "/my/vip/review/korean" },
+          { label: "수학 오답노트", href: "/my/vip/review/math" },
+        ],
+      },
       { id: "homework", icon: <Education size={18} />, label: "숙제 관리", href: "/my/vip/homework" },
       { id: "assessments", icon: <Result size={18} />, label: "수행평가 관리", href: "/my/vip/assessments" },
     ],
@@ -198,6 +211,15 @@ const NAV_SECTIONS: NavSection[] = [
           { label: "출결 입력", href: "/my/vip/attendance" },
           { label: "반 관리", href: "/my/vip/attendance/classes" },
           { label: "출결 통계", href: "/my/vip/attendance/history" },
+        ],
+      },
+      {
+        id: "tutoring",
+        icon: <Calendar size={18} />,
+        label: "과외솔루션",
+        href: "/my/vip/tutoring/timetable",
+        children: [
+          { label: "시간표관리", href: "/my/vip/tutoring/timetable" },
         ],
       },
       { id: "tuition", icon: <Money size={18} />, label: "수강료 관리", href: "/my/vip/tuition" },
@@ -235,7 +257,16 @@ const NAV_SECTIONS: NavSection[] = [
       },
       { id: "questions", icon: <Catalog size={18} />, label: "문제 관리", href: "/my/vip/questions" },
       { id: "writing", icon: <Pen size={18} />, label: "영작 수업", href: "/my/vip/writing" },
-      { id: "materials", icon: <Document size={18} />, label: "교재 만들기", href: "/my/vip/materials" },
+      {
+        id: "materials",
+        icon: <Document size={18} />,
+        label: "교재 만들기",
+        href: "/my/vip/materials",
+        children: [
+          { label: "교재 목록", href: "/my/vip/materials" },
+          { label: "스튜디오 (자유 편집)", href: "/my/vip/materials/studio" },
+        ],
+      },
       { id: "words", icon: <ListChecked size={18} />, label: "단어 관리", href: "/my/vip/words" },
       { id: "dictionary", icon: <Translate size={18} />, label: "전자사전", href: "/my/vip/dictionary" },
       {
@@ -294,7 +325,7 @@ function UnifiedSidebar({ userName, theme = 'dark', onToggleTheme }: { userName:
       title: sec.title,
       items: sec.items
         .filter((it) => !accessible || accessible.has(it.id))
-        .filter((it) => subject === DEFAULT_VIP_SUBJECT || !ENGLISH_ONLY_MENU_IDS.has(it.id)),
+        .filter((it) => isMenuVisibleForSubject(it.id, subject)),
     }))
     .filter((sec) => sec.items.length > 0);
 
@@ -398,7 +429,7 @@ function UnifiedSidebar({ userName, theme = 'dark', onToggleTheme }: { userName:
                 <div className="ml-[2.1rem] mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-zinc-800 pl-2">
                   {item.children!
                     .filter((c) => !c.id || (accessible ? accessible.has(c.id) : true))
-                    .filter((c) => !c.id || subject === DEFAULT_VIP_SUBJECT || !ENGLISH_ONLY_MENU_IDS.has(c.id))
+                    .filter((c) => !c.id || isMenuVisibleForSubject(c.id, subject))
                     .map((c) => {
                     const cActive = pathname === c.href;
                     return (

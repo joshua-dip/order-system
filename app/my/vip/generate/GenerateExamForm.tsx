@@ -124,6 +124,12 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
   /* 지문별 보유 변형 유형(완료) — 고정 드롭다운에 실제 있는 유형만 노출 */
   const [passageTypeAvail, setPassageTypeAvail] = useState<Record<string, Record<string, number>>>({});
 
+  /* '내 문제'(내 문제은행)에 담아둔 문항으로만 변형 세트 구성 */
+  const [bankOnly, setBankOnly] = useState(false);
+  const [bankCount, setBankCount] = useState<number | null>(null);
+  const [bankFolders, setBankFolders] = useState<{ name: string; count: number }[]>([]);
+  const [bankFolder, setBankFolder] = useState<string>(''); // ''=은행 전체 / 폴더명=그 세트(폴더)만 → 세트 간 중복 방지
+
   /* 교재별 문제 수 */
   const [textbookCounts, setTextbookCounts] = useState<Record<string, number>>({});
   /* 교재 분류(교과서/부교재/모의고사) — settings.textbookTypeMeta 기반, API가 내려줌 */
@@ -159,6 +165,19 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
     fetch('/api/my/vip/textbooks', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => { if (d.ok && d.types && typeof d.types === 'object') setTextbookTypes(d.types); })
+      .catch(() => {});
+  }, []);
+
+  /* 내 문제은행 폴더(세트) 목록 + 담긴 문항 수 — '내 문제만으로 구성' 폴더 선택용 */
+  useEffect(() => {
+    fetch('/api/my/vip/question-bank', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok && Array.isArray(d.folders)) {
+          setBankCount(d.folders.reduce((s: number, f: { count?: number }) => s + (f.count ?? 0), 0));
+          setBankFolders(d.folders.map((f: { name?: string; count?: number }) => ({ name: String(f.name ?? ''), count: f.count ?? 0 })).filter((f: { name: string }) => f.name));
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -275,12 +294,14 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
   useEffect(() => {
     if (mode !== 'school' || !scopeExamId || patternSubjectiveCount <= 0) { setSubjectiveItems([]); return; }
     let alive = true;
-    fetch(`/api/my/vip/generate/scope-subjectives?scopeExamId=${scopeExamId}&limit=${patternSubjectiveCount}`, { credentials: 'include' })
+    // 내 문제만으로 구성 + 폴더(세트) 선택 시, 그 세트로 작성한 새 서술형을 우선 사용(없으면 전체 범위 풀)
+    const subjSetParam = bankOnly && bankFolder ? `&subjSet=${encodeURIComponent(bankFolder)}` : '';
+    fetch(`/api/my/vip/generate/scope-subjectives?scopeExamId=${scopeExamId}&limit=${patternSubjectiveCount}${subjSetParam}`, { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => { if (alive) setSubjectiveItems(d.ok && Array.isArray(d.subjectives) ? d.subjectives : []); })
       .catch(() => { if (alive) setSubjectiveItems([]); });
     return () => { alive = false; };
-  }, [mode, scopeExamId, patternSubjectiveCount]);
+  }, [mode, scopeExamId, patternSubjectiveCount, bankOnly, bankFolder]);
 
   /* 유형별 문제 수 계산 — 서술형은 '범위 내'로 필터된 실제 수(subjectiveItems)로 맞춘다(raw 아님). */
   useEffect(() => {
@@ -407,13 +428,19 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
         if (perTb) params.set('textbookCounts', JSON.stringify(textbookCounts));
         const activePins = Object.fromEntries(Object.entries(passagePins).filter(([, v]) => v && v !== '자동'));
         if (Object.keys(activePins).length > 0) params.set('passagePins', JSON.stringify(activePins));
+        if (bankOnly) { params.set('bankOnly', '1'); if (bankFolder) params.set('bankFolder', bankFolder); }
         const d = await fetch(`/api/my/vip/generate/by-exam?${params}`, { credentials: 'include' }).then((r) => r.json());
-        if (d.ok) applyResult(d.sets ?? [], d.typeCounts);
-        else alert(d.error ?? '생성에 실패했습니다.');
+        if (d.ok) {
+          if (typeof d.bankCount === 'number') setBankCount(d.bankCount);
+          if (d.bankOnly && (d.sets ?? []).every((set: unknown[]) => set.length === 0)) {
+            alert(d.bankCount === 0 ? '「내 문제」에 담긴 문항이 없습니다. 「문제 관리」에서 먼저 문항을 담아주세요.' : '내 문제은행에 시험 범위에 해당하는 문항이 없어 세트를 만들지 못했습니다.');
+          }
+          applyResult(d.sets ?? [], d.typeCounts);
+        } else alert(d.error ?? '생성에 실패했습니다.');
       }
     } finally { setLoading(false); }
   }, [mode, count, randomOrder, setsCount, selectedStudent, filterType, filterDifficulty,
-      scopeExamId, patternExamId, typeCounts, schoolCount, schoolRandom, followOrder, textbookCounts, passagePins]);
+      scopeExamId, patternExamId, typeCounts, schoolCount, schoolRandom, followOrder, textbookCounts, passagePins, bankOnly, bankFolder]);
 
   const toggleSelect = (setIdx: number, id: string) => {
     setExamSets((prev) => prev.map((s, i) => {
@@ -767,6 +794,35 @@ export default function GenerateExamForm({ forcedMode }: { forcedMode: Mode }) {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* 내 문제(내 문제은행)만으로 변형 세트 구성 — 폴더(세트) 선택 시 세트 간 중복 방지 */}
+          {scopeExamId && (
+            <div className="rounded-xl border border-indigo-800/50 bg-indigo-950/20">
+              <label className="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-indigo-950/30 transition-colors">
+                <input type="checkbox" checked={bankOnly} onChange={(e) => setBankOnly(e.target.checked)} className="mt-0.5 rounded accent-indigo-500" />
+                <span className="min-w-0">
+                  <span className="text-sm font-medium text-zinc-200">내 문제만으로 구성
+                    {bankCount != null && <span className="ml-2 text-[11px] font-normal text-indigo-300/80">담긴 문항 {bankCount.toLocaleString()}개</span>}
+                  </span>
+                  <span className="block text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+                    체크하면 <b className="text-zinc-400">「문제 관리 → 내 문제」</b>에 담아둔 문항 중에서만 변형 세트를 구성합니다. (전체 변형 DB 대신 내가 고른 문항만)
+                    {bankOnly && bankCount === 0 && <span className="text-rose-400"> — 담긴 문항이 없어 결과가 비어요. 먼저 「문제 관리」에서 담아주세요.</span>}
+                  </span>
+                </span>
+              </label>
+              {bankOnly && bankFolders.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 border-t border-indigo-900/40 px-4 py-2.5">
+                  <span className="text-[11px] font-medium text-zinc-300">세트(폴더)</span>
+                  <select value={bankFolder} onChange={(e) => setBankFolder(e.target.value)}
+                    className="rounded-lg bg-zinc-900 border border-indigo-800/60 px-2 py-1 text-[11px] text-zinc-100 [&>option]:bg-zinc-900 focus:outline-none">
+                    <option value="">전체 은행 ({bankCount ?? 0})</option>
+                    {bankFolders.map((f) => <option key={f.name} value={f.name}>📁 {f.name} ({f.count})</option>)}
+                  </select>
+                  <span className="text-[10px] text-zinc-500">{bankFolder ? '이 폴더(세트) 문항만 출제 → 다른 세트와 중복 없음' : '폴더를 고르면 그 세트만으로 출제돼 세트 간 중복이 방지됩니다'}</span>
+                </div>
+              )}
             </div>
           )}
 

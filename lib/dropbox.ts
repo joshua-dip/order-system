@@ -360,6 +360,40 @@ export async function uploadVipExamPdf(
 }
 
 /**
+ * 대용량 다운로드(ZIP·합본 PDF)를 Dropbox에 임시 업로드하고 4시간짜리 다운로드 링크를 반환.
+ * Amplify(Lambda) 응답 페이로드 한도(~6MB)를 우회하기 위한 오프로드 용도.
+ * 다운로드 파일명이 그대로 유지되도록 유니크 폴더 아래 실제 파일명으로 저장한다.
+ * (tmp-downloads 폴더는 주기적으로 정리 대상 — 링크 자체는 4시간 후 만료)
+ */
+export async function uploadTempDownload(
+  fileName: string,
+  fileBuffer: Buffer,
+): Promise<{ path: string; name: string; tempUrl: string }> {
+  const token = await getAccessToken();
+  const root = process.env.DROPBOX_ROOT_FOLDER ?? 'gomijoshua';
+  const safeFileName = fileName.replace(/[/\\:*?"<>|]/g, '_');
+  const uniq = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const logicalPath = `/${root}/tmp-downloads/${uniq}/${safeFileName}`;
+  const apiPath = toApiPath(logicalPath);
+
+  const uploadRes = await fetch(`${DROPBOX_CONTENT_URL}/files/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': dropboxApiArgHeader({ path: apiPath, mode: { '.tag': 'overwrite' }, autorename: false }),
+    },
+    body: fileBuffer as unknown as BodyInit,
+  });
+  if (!uploadRes.ok) {
+    const data = await uploadRes.json().catch(() => ({}));
+    throw new Error(`Dropbox 임시 다운로드 업로드 실패: ${JSON.stringify(data)}`);
+  }
+  const tempUrl = await getDropboxTempLink(apiPath, token);
+  return { path: apiPath, name: safeFileName, tempUrl };
+}
+
+/**
  * VIP 기출 시험 문항별 학생 필기 사진 업로드 (Dropbox). 번호별로 여러 장 가능.
  */
 export async function uploadVipExamPhoto(

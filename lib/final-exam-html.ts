@@ -3,6 +3,8 @@
  * puppeteer A4 세로 PDF 렌더용. 문제지는 실제 모의고사처럼 2단 컬럼.
  */
 
+import { splitQuestionOptionSegments } from './question-options-segments';
+
 export interface FinalExamQuestion {
   num: number;
   type: string;
@@ -81,7 +83,8 @@ function renderOptions(raw: string): string {
     const nums = t.split(/\s+/).map((x) => x.trim()).filter(Boolean);
     return `<div class="opts-inline">${nums.map(esc).join('&nbsp;&nbsp;&nbsp;')}</div>`;
   }
-  const parts = t.split(/\s*###\s*/).map((s) => s.trim()).filter(Boolean);
+  // 보기 구분: `###` 우선, 없으면 줄바꿈(기존 DB 다수 포맷) — 표준 분리기와 동일 규칙
+  const parts = splitQuestionOptionSegments(t);
   if (parts.length === 0) return '';
   /* 어법형 "①###②###…" — 번호만 */
   if (parts.every((p) => /^[①②③④⑤]$/.test(p))) {

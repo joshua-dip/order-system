@@ -42,6 +42,10 @@ export async function GET(request: NextRequest) {
         fileIndex: idx,
       })),
       adminCategories: d.adminCategories || [],
+      includesAnswerSheet: d.includesAnswerSheet === true,
+      pointAwarded: d.pointAwarded === true,
+      pointAwardedAt: d.pointAwardedAt ?? null,
+      pointAwardAmount: typeof d.pointAwardAmount === 'number' ? d.pointAwardAmount : null,
       createdAt: d.createdAt,
     }));
 
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
     const examYear = (formData.get('examYear') as string)?.trim() ?? '';
     const examType = (formData.get('examType') as string)?.trim() ?? '';
     const examScope = (formData.get('examScope') as string)?.trim() ?? '';
+    const includesAnswerSheet = (formData.get('includesAnswerSheet') as string) === 'true';
 
     if (!school) {
       return NextResponse.json({ error: '학교를 입력해주세요.' }, { status: 400 });
@@ -139,6 +144,7 @@ export async function POST(request: NextRequest) {
       examYear,
       examType,
       examScope,
+      includesAnswerSheet,
       files: [] as { originalName: string; savedPath: string }[],
       createdAt: new Date(),
     };

@@ -769,6 +769,34 @@ export default function VipExamsPage() {
     setTimeout(() => win.print(), 500);
   };
 
+  // 문항별 분석(유형·교재·출처·배점)을 PDF 리포트로 다운로드
+  const [reportingId, setReportingId] = useState<string | null>(null);
+  const downloadReport = async (exam: SchoolExam) => {
+    setReportingId(exam.id);
+    try {
+      const res = await fetch(`/api/my/vip/school-exams/${exam.id}/report`, { credentials: 'include' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || '리포트 생성에 실패했습니다.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const local = localExams[exam.id] || exam;
+      a.download = `${selectedSchool?.name || '시험'} ${local.grade}학년 ${local.examType || ''} 분석리포트.pdf`.replace(/\s+/g, ' ').trim();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('리포트 다운로드 중 오류가 발생했습니다.');
+    } finally {
+      setReportingId(null);
+    }
+  };
+
   const calcScores = (exam: SchoolExam) => {
     const qs = Object.entries(exam.questions);
     // 배점이 소수(2.9 등)라 부동소수점 합산 오차(예: 70.00000000000001) 발생 → 소수 1자리로 반올림
@@ -910,6 +938,23 @@ export default function VipExamsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
                         내보내기
+                      </button>
+
+                      {/* 문항별 분석 리포트 PDF */}
+                      <button
+                        disabled={reportingId === exam.id}
+                        onClick={(e) => { e.stopPropagation(); downloadReport(exam); }}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-violet-500/20 text-violet-300 rounded-lg hover:bg-violet-500/30 transition-colors disabled:opacity-50"
+                        title="문항별 분석(유형·교재·출처·배점)을 PDF 리포트로 다운로드"
+                      >
+                        {reportingId === exam.id ? (
+                          <div className="w-3.5 h-3.5 border border-violet-300 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                          </svg>
+                        )}
+                        분석 리포트
                       </button>
 
                       {/* PDF 상태 */}

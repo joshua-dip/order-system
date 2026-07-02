@@ -45,6 +45,10 @@ export async function GET(request: NextRequest) {
       })),
       adminCategories: d.adminCategories || [],
       adminClassifiedAt: d.adminClassifiedAt,
+      includesAnswerSheet: d.includesAnswerSheet === true,
+      pointAwarded: d.pointAwarded === true,
+      pointAwardedAt: d.pointAwardedAt ?? null,
+      pointAwardAmount: typeof d.pointAwardAmount === 'number' ? d.pointAwardAmount : null,
       createdAt: d.createdAt,
     }));
 

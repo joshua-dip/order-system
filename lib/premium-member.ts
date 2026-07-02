@@ -15,13 +15,19 @@ export function isSignupPremiumTrialActive(until: Date | string | null | undefin
 }
 
 /**
- * 단어장·연회원 무료공유자료 등 「연회원 메뉴」: 유효 연회원이거나 위 체험 기간 중.
+ * 단어장·무료공유자료 등 「멤버십 메뉴」: 유효 연회원·월회원이거나 위 체험 기간 중.
+ * (월회원·연회원 기능 동등 — 월회원도 단어장·공유자료 이용 가능)
  */
 export function hasAnnualMemberMenuAccess(input: {
   annualSince: Date | string | null | undefined;
+  monthlyUntil?: Date | string | null | undefined;
   signupPremiumTrialUntil: Date | string | null | undefined;
 }): boolean {
-  return isAnnualMemberActive(input.annualSince) || isSignupPremiumTrialActive(input.signupPremiumTrialUntil);
+  return (
+    isAnnualMemberActive(input.annualSince) ||
+    isMonthlyMemberActive(input.monthlyUntil) ||
+    isSignupPremiumTrialActive(input.signupPremiumTrialUntil)
+  );
 }
 
 /**

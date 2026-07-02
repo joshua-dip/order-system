@@ -20,7 +20,7 @@ const MENU_DESC: Record<string, string> = {
   questions: '변형문제 검색·내 문제은행',
   analysis: '시험별 유형·성적 분석',
   homework: '문제은행 문항을 학생에게 숙제로 배정·진행관리',
-  review: 'QR 채점 오답 → 오답노트·약점 재시험 PDF',
+  review: '오답노트 — 영어(QR 자동 오답·약점 재시험 PDF) + 국어·수학(수동 기록)',
   report: '학생별 성적 추이·석차·출석률 리포트(인쇄·PDF)',
   tuition: '월별 수강료 청구·수납 관리',
   counseling: '상담 예약(예정)·기록(완료)·다음 계획 관리',
@@ -41,6 +41,7 @@ const MENU_DESC: Record<string, string> = {
   writing: '영작 주제 출제 → 학생 영작 제출 → 직접 첨삭·피드백·점수',
   dictionary: '영단어 뜻·발음·예문 검색 (무료 사전)',
   'qbank-api': '내 문제은행을 외부에서 불러쓰는 API 키 발급',
+  tutoring: '과외솔루션 — 학생별 요일·시간 수업을 주간 시간표로 관리(시간표관리)',
 };
 
 /** 상위 층 노드를 요구 노드들의 평균 x(무게중심)로 정렬해 엣지 교차를 줄임. */

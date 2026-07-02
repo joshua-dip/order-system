@@ -82,6 +82,36 @@ function GradingChips({ job, expanded, onToggle }: { job: JobRow; expanded: bool
   );
 }
 
+/**
+ * ZIP/PDF 다운로드 응답 처리.
+ *  - 응답이 JSON(`{ url }`)이면 대용량이라 Dropbox 임시 링크로 오프로드된 것 → 그 링크로 받는다.
+ *  - 바이너리면 기존처럼 blob 으로 저장. (Amplify 응답 6MB 한도 우회)
+ */
+async function saveDownloadResponse(res: Response, fallbackName: string) {
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    const d = await res.json().catch(() => ({} as { url?: string; filename?: string; error?: string }));
+    if (!d?.url) throw new Error(typeof d?.error === 'string' ? d.error : '다운로드 링크 생성에 실패했습니다.');
+    const a = document.createElement('a');
+    a.href = d.url;
+    a.download = d.filename || fallbackName; // 크로스오리진이라 무시될 수 있으나 Dropbox가 파일명을 지정함
+    a.rel = 'noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fallbackName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: boolean; onReload?: () => void }) {
   const pad = compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2';
   const [order, setOrder] = useState<'default' | 'interleave' | 'shuffle'>(job.orderMode ?? 'default');
@@ -151,15 +181,7 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
         alert(typeof d.error === 'string' ? d.error : '묶음 ZIP 생성에 실패했습니다.');
         return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${job.title} 전체묶음.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await saveDownloadResponse(res, `${job.title} 전체묶음.zip`);
     } catch {
       alert('묶음 ZIP 생성에 실패했습니다.');
     } finally {
@@ -178,15 +200,7 @@ function ActionButtons({ job, compact, onReload }: { job: JobRow; compact?: bool
         alert(typeof d.error === 'string' ? d.error : '학생별 문제지 생성에 실패했습니다.');
         return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = mode === 'combined' ? `${job.title} 학생합본.pdf` : `${job.title} 학생별.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await saveDownloadResponse(res, mode === 'combined' ? `${job.title} 학생합본.pdf` : `${job.title} 학생별.zip`);
     } catch {
       alert('학생별 문제지 생성에 실패했습니다.');
     } finally {
@@ -292,15 +306,7 @@ function SourceDownloads({ job }: { job: JobRow }) {
         alert(typeof d.error === 'string' ? d.error : 'ZIP 생성에 실패했습니다.');
         return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${job.title} 지문별.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await saveDownloadResponse(res, `${job.title} 지문별.zip`);
     } catch {
       alert('ZIP 생성에 실패했습니다.');
     } finally {

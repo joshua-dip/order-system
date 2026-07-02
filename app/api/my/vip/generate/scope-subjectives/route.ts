@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
   // 기본은 주제완성형 + 요약문빈칸완성형 혼합. subtypes 파라미터로 특정 유형만 지정 가능.
   const subtypes = (sp.get('subtypes') || sp.get('subtype') || '주제완성형,요약문빈칸완성형')
     .split(',').map((s) => s.trim()).filter(Boolean);
+  const subjSet = (sp.get('subjSet') || '').trim(); // 세트(폴더)로 작성한 새 서술형만 — 없으면 전체 풀로 폴백
   if (!ObjectId.isValid(scopeExamId)) return NextResponse.json({ ok: true, subjectives: [] });
   if (limit === 0) return NextResponse.json({ ok: true, subjectives: [] });
 
@@ -55,10 +56,15 @@ export async function GET(request: NextRequest) {
   const pids = passages.map((p) => p._id as ObjectId);
 
   // 범위 지문의 서술형 변형 (주제완성형·요약문빈칸완성형) — 지문당 1개, 서로 다른 지문에서 limit 개
-  const docs = await db.collection('narrative_questions')
-    .find({ passage_id: { $in: pids }, narrative_subtype: { $in: subtypes } })
-    .project({ passage_id: 1, textbook: 1, narrative_subtype: 1, question_data: 1 })
-    .toArray();
+  const proj = { passage_id: 1, textbook: 1, narrative_subtype: 1, question_data: 1 };
+  // subjSet(세트) 지정 시 그 마커로 작성한 새 서술형만 — 결과 없으면 전체 풀로 폴백(다른 세트 호환)
+  let docs = subjSet
+    ? await db.collection('narrative_questions').find({ passage_id: { $in: pids }, subj_set: subjSet }).project(proj).toArray()
+    : [];
+  if (docs.length === 0) {
+    docs = await db.collection('narrative_questions')
+      .find({ passage_id: { $in: pids }, narrative_subtype: { $in: subtypes } }).project(proj).toArray();
+  }
   // 먼저 셔플 → 지문별 1개(랜덤 유형) → limit 개. (한 지문이 두 유형을 가져도 한 문항만)
   for (let i = docs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [docs[i], docs[j]] = [docs[j], docs[i]]; }
   const byPassage = new Map<string, Record<string, unknown>>();
