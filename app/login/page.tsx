@@ -6,6 +6,7 @@ import Link from 'next/link';
 import MembershipApplyModal from '@/app/components/MembershipApplyModal';
 import { DEFAULT_APP_BAR_TITLE, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 import { getSafeUserLoginRedirect } from '@/lib/post-login-redirect';
+import { setAuthUserCache } from '@/lib/auth-user-cache';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -18,6 +19,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,13 +36,18 @@ function LoginForm() {
       const data = await res.json();
       if (!res.ok) {
         setError(data?.error || '로그인에 실패했습니다.');
+        setLoading(false);
         return;
       }
       const dest = getSafeUserLoginRedirect(searchParams.get('from'), data?.mustChangePassword === true, data?.role);
+      // 로그인 응답의 user 를 세션 캐시에 저장 → 마이페이지가 auth/me 를 기다리지 않고 즉시 렌더.
+      if (data?.user) setAuthUserCache(data.user);
+      // 성공: 하드 이동이 시작돼도 목적지 응답까지 이 화면이 남아 있으므로,
+      // 로딩을 해제하지 않고 "이동 중" 상태를 유지해 멈춘 것처럼 보이지 않게 한다.
+      setRedirecting(true);
       window.location.assign(dest);
     } catch {
       setError('로그인 요청 중 오류가 발생했습니다.');
-    } finally {
       setLoading(false);
     }
   };
@@ -135,11 +142,11 @@ function LoginForm() {
               )}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || redirecting}
                 className="w-full py-3.5 rounded-xl font-semibold text-white transition-all shadow-lg shadow-blue-900/20 hover:shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                 style={{ backgroundColor: '#13294B' }}
               >
-                {loading ? '로그인 중...' : '로그인'}
+                {redirecting ? '로그인 완료 · 이동 중…' : loading ? '로그인 중...' : '로그인'}
               </button>
             </form>
             <p className="text-center mt-6">

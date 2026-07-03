@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { STUDENT_GRADE_OPTIONS } from '@/lib/student-grade';
+import { clearAuthUserCache } from '@/lib/auth-user-cache';
 
 export default function StudentProfilePage() {
-  const router = useRouter();
   const [name, setName] = useState('');
   const [grade, setGrade] = useState('');
   const [loginId, setLoginId] = useState('');
@@ -64,8 +63,13 @@ export default function StudentProfilePage() {
   };
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      clearAuthUserCache();
+      // 소프트 네비게이션은 클라이언트 상태를 유지해 로그아웃이 안 된 것처럼 보임 → 전체 리로드.
+      window.location.replace('/');
+    }
   };
 
   return (

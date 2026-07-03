@@ -14,6 +14,7 @@ import WorkbookMakerNav from './_components/WorkbookMakerNav';
 import GeneratedQuestionsNav from './_components/GeneratedQuestionsNav';
 import ClassKitNav from './_components/ClassKitNav';
 import EssayGeneratorNav from './_components/EssayGeneratorNav';
+import { clearAuthUserCache } from '@/lib/auth-user-cache';
 
 interface EssayTypeItem {
   id: string;
@@ -414,6 +415,8 @@ export default function AdminDashboardPage() {
   const [memberSegmentFilter, setMemberSegmentFilter] = useState<MemberSegmentFilter>('all');
   const [memberSortOrder, setMemberSortOrder] = useState<MemberSortOrder>('default');
   const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
+  /** Q&A 분석지 미답변(open) 질문 수 — 대시보드 배너·사이드바 배지 */
+  const [qnaOpenCount, setQnaOpenCount] = useState(0);
   /** 대시보드 최상단 인라인 승인용 — 대기 중 가입 신청 목록 */
   const [pendingApplications, setPendingApplications] = useState<PendingApplication[]>([]);
   const [signupApprovingId, setSignupApprovingId] = useState<string | null>(null);
@@ -853,6 +856,39 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
+    // 대시보드 데이터는 auth/me 응답을 기다리지 않고 즉시 병렬 시작 —
+    // (기존엔 auth/me 이후에 시작해 대기 시간이 두 배로 늘었음. 각 API 는 서버에서
+    //  admin 을 재검증하므로 비관리자는 403 으로 무해하게 실패하고 아래 redirect 가 처리)
+    fetchUsers();
+    fetchOrders();
+    fetchStats();
+    fetchExamUploads();
+    fetchEmailDrafts();
+    // Q&A 미답변 질문 수 — 놓치지 않게 대시보드 배너·사이드바 배지로 노출
+    fetch('/api/qna/admin/recent?status=open&limit=1', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setQnaOpenCount(typeof d?.openCount === 'number' ? d.openCount : 0))
+      .catch(() => setQnaOpenCount(0));
+    fetch('/api/admin/settings/default-textbooks', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setDefaultTextbooks(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []))
+      .catch(() => setDefaultTextbooks([]));
+    fetch('/api/admin/settings/variant-solbook', { credentials: 'include', cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        setVariantSolbookKeys(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []);
+        setVariantSolbookPurchaseUrl(typeof d?.purchaseUrl === 'string' ? d.purchaseUrl : '');
+        const fee =
+          typeof d?.extraFeeWon === 'number' && Number.isFinite(d.extraFeeWon) && d.extraFeeWon >= 0
+            ? Math.round(d.extraFeeWon)
+            : DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON;
+        setVariantSolbookExtraFeeWon(fee);
+        setVariantSolbookRetailGuideText(
+          typeof d?.retailPriceGuideText === 'string' ? d.retailPriceGuideText : ''
+        );
+      })
+      .catch(() => {});
+
     fetch('/api/auth/me', { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => {
@@ -865,30 +901,6 @@ export default function AdminDashboardPage() {
           router.replace('/admin/login');
           return;
         }
-        fetchUsers();
-        fetchOrders();
-        fetchStats();
-        fetchExamUploads();
-        fetchEmailDrafts();
-        fetch('/api/admin/settings/default-textbooks', { credentials: 'include' })
-          .then((r) => r.json())
-          .then((d) => setDefaultTextbooks(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []))
-          .catch(() => setDefaultTextbooks([]));
-        fetch('/api/admin/settings/variant-solbook', { credentials: 'include', cache: 'no-store' })
-          .then((r) => r.json())
-          .then((d) => {
-            setVariantSolbookKeys(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []);
-            setVariantSolbookPurchaseUrl(typeof d?.purchaseUrl === 'string' ? d.purchaseUrl : '');
-            const fee =
-              typeof d?.extraFeeWon === 'number' && Number.isFinite(d.extraFeeWon) && d.extraFeeWon >= 0
-                ? Math.round(d.extraFeeWon)
-                : DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON;
-            setVariantSolbookExtraFeeWon(fee);
-            setVariantSolbookRetailGuideText(
-              typeof d?.retailPriceGuideText === 'string' ? d.retailPriceGuideText : ''
-            );
-          })
-          .catch(() => {});
       })
       .catch(() => router.replace('/admin/login'))
       .finally(() => setLoading(false));
@@ -949,9 +961,13 @@ export default function AdminDashboardPage() {
     : ESSAY_CATEGORIES.map((c) => [c.대분류, c.소분류] as [string, string[]]);
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.replace('/admin/login');
-    router.refresh();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      clearAuthUserCache();
+      // 소프트 네비게이션은 클라이언트 상태를 유지해 로그아웃이 안 된 것처럼 보임 → 전체 리로드.
+      window.location.replace('/admin/login');
+    }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -2757,19 +2773,19 @@ export default function AdminDashboardPage() {
           </button>
         </div>
         <nav className="p-3 flex-1 text-sm overflow-y-auto min-h-0">
-          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
+          <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
           <button
             type="button"
             onClick={() => setSection('dashboard')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${section === 'dashboard' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors ${section === 'dashboard' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             대시보드
           </button>
-          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">ORDERS</p>
+          <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">ORDERS</p>
           <button
             type="button"
             onClick={() => setSection('orders')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-between ${section === 'orders' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors flex items-center justify-between ${section === 'orders' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             <span>전체 주문</span>
             {unprocessedCount > 0 && (
@@ -2781,15 +2797,15 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={() => { setSection('orders'); setOrderFilter('pending'); }}
-            className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
             미처리 주문
           </button>
-          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">UPLOADS</p>
+          <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">UPLOADS</p>
           <button
             type="button"
             onClick={() => setSection('exams')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-between ${section === 'exams' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors flex items-center justify-between ${section === 'exams' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             <span>기출문제</span>
             {examUploads.length > 0 && (
@@ -2801,13 +2817,13 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={() => setSection('passageUpload')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${section === 'passageUpload' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors ${section === 'passageUpload' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             지문 업로드
           </button>
           <Link
             href="/admin/passages"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
             원문 관리 (DB)
           </Link>
@@ -2820,66 +2836,72 @@ export default function AdminDashboardPage() {
           </div>
           <Link
             href="/admin/syntax-analyzer"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
             구문 분석기
           </Link>
           <Link
             href="/admin/mcp"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
             Claude MCP
           </Link>
           <Link
             href="/admin/generated-questions/review-logs"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-emerald-200/90 hover:bg-emerald-950/40 transition-colors border border-emerald-800/40 mt-1"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-emerald-200/90 hover:bg-emerald-950/40 transition-colors border border-emerald-800/40 mt-1"
           >
             Claude Code 검수 로그
           </Link>
-          <div className="border-t border-slate-700 my-2 pt-2">
+          <div className="border-t border-slate-700 my-1.5 pt-1.5">
             <p className="text-xs text-slate-500 px-1 mb-1 uppercase tracking-wide font-semibold">워크북 관리</p>
           </div>
           <Link
             href="/admin/workbook"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40"
           >
             워크북 대시보드
           </Link>
           <div className="mt-1">
             <WorkbookMakerNav />
           </div>
-          <div className="border-t border-slate-700 my-2 pt-2">
+          <div className="border-t border-slate-700 my-1.5 pt-1.5">
             <p className="text-xs text-slate-500 px-1 mb-1 uppercase tracking-wide font-semibold">학생 관리</p>
           </div>
           <Link
             href="/admin/students"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40"
           >
             학생 목록
           </Link>
           <Link
             href="/admin/enrollments"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
           >
             등록 신청 관리
           </Link>
           <Link
             href="/admin/cycles"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
           >
             사이클 관리
           </Link>
-          <div className="border-t border-slate-700 my-2 pt-2" />
+          <div className="border-t border-slate-700 my-1.5 pt-1.5" />
           <Link
             href="/admin/guest-variant-logs"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40"
           >
             비회원 변형 로그
           </Link>
-          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
+          <Link
+            href="/admin/exam-type-analysis"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors mt-1"
+          >
+            📊 기출 유형 분석
+          </Link>
+          <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">MEMBERS</p>
           <Link
             href="/admin/membership-applications"
-            className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+            className="flex items-center justify-between w-full px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
             <span>가입 신청 관리</span>
             {pendingApplicationCount > 0 && (
@@ -2891,47 +2913,70 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={() => setSection('members')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${section === 'members' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors ${section === 'members' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             회원 관리
           </button>
           <button
             type="button"
             onClick={() => { setSection('members'); setTimeout(() => document.getElementById('quick-create')?.scrollIntoView({ behavior: 'smooth' }), 100); }}
-            className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
           >
             + 계정 생성
           </button>
           <Link
             href="/admin/users"
-            className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
           >
             회원상세관리
           </Link>
           <Link
             href="/admin/point-charges"
-            className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
           >
             💳 포인트 구매내역
           </Link>
           <Link
+            href="/admin/vip-menu-store"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+          >
+            🧩 VIP 메뉴 판매 설정
+          </Link>
+          <Link
+            href="/admin/vocabulary-library"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+          >
+            단어장 구매·편집 분석
+          </Link>
+          <Link
+            href="/admin/qna"
+            className="flex items-center justify-between w-full px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
+          >
+            <span>Q&amp;A 분석지 모더레이션</span>
+            {qnaOpenCount > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold min-w-[1.25rem] h-5 px-1.5 rounded-full flex items-center justify-center">
+                {qnaOpenCount}
+              </span>
+            )}
+          </Link>
+          <Link
             href="/admin/solbook-lesson-links"
-            className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
+            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
           >
             쏠북 강별 링크 관리
           </Link>
-          <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
+          <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">SETTINGS</p>
           <button
             type="button"
             onClick={() => setSection('settings')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${section === 'settings' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors ${section === 'settings' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             교재 노출 설정
           </button>
           <button
             type="button"
             onClick={() => setSection('essayTypes')}
-            className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${section === 'essayTypes' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
+            className={`w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors ${section === 'essayTypes' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
           >
             서술형 유형 관리
           </button>
@@ -2976,6 +3021,23 @@ export default function AdminDashboardPage() {
               <button type="button" onClick={() => { setDataError(null); fetchUsers(); fetchOrders(); fetchStats(); }} className="text-amber-200 hover:text-white font-medium text-sm underline">
                 다시 불러오기
               </button>
+            </div>
+          )}
+
+          {/* Q&A 분석지 미답변 질문 — 놓치지 않게 대시보드 최상단 알림 */}
+          {section === 'dashboard' && qnaOpenCount > 0 && (
+            <div className="bg-sky-500/10 border border-sky-500/40 rounded-xl px-4 py-3.5 mb-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="font-bold text-sky-100 text-base flex items-center gap-2">
+                  💬 Q&amp;A 분석지 미답변 질문 <span className="tabular-nums">{qnaOpenCount}</span>건 — 답변을 기다리고 있어요
+                </p>
+                <Link
+                  href="/admin/qna"
+                  className="text-xs text-sky-300 hover:text-white px-2.5 py-1 rounded-lg border border-sky-500/40 hover:bg-sky-500/20 transition-colors"
+                >
+                  답변하러 가기 →
+                </Link>
+              </div>
             </div>
           )}
 
