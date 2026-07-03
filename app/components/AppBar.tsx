@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   APP_BAR_ACCENT_LINE,
@@ -11,6 +10,7 @@ import {
 } from '@/lib/site-branding';
 import MembershipApplyModal from './MembershipApplyModal';
 import { MEMBERSHIP_APPLY_OPEN_EVENT } from '@/lib/membership-apply-event';
+import { getAuthUserCache, setAuthUserCache, clearAuthUserCache } from '@/lib/auth-user-cache';
 
 interface AppBarProps {
   title?: string;
@@ -26,20 +26,35 @@ interface AuthUser {
 }
 
 const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackClick, onHomeClick }: AppBarProps) => {
-  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [applyOpen, setApplyOpen] = useState(false);
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
-    router.refresh();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      clearAuthUserCache();
+      // 소프트 네비게이션(router.push)은 클라이언트 상태(user)를 유지해
+      // 로그아웃이 안 된 것처럼 보임 → 전체 리로드로 모든 상태 초기화.
+      window.location.replace('/');
+    }
   };
 
   useEffect(() => {
+    // 세션 캐시가 있으면 auth/me 응답 전에도 즉시 로그인 상태로 표시(로그인 직후 깜빡임 방지).
+    const cached = getAuthUserCache<AuthUser>();
+    if (cached) setUser(cached);
     fetch('/api/auth/me')
       .then((res) => res.json())
-      .then((data) => data.user && setUser(data.user))
+      .then((data) => {
+        if (data.user) {
+          setUser(data.user);
+          setAuthUserCache(data.user);
+        } else {
+          setUser(null);
+          clearAuthUserCache();
+        }
+      })
       .catch(() => {});
   }, []);
 

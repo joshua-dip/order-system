@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import StreakBadge from './_components/StreakBadge';
 import QuotaGauge from './_components/QuotaGauge';
+import { clearAuthUserCache } from '@/lib/auth-user-cache';
 
 interface StudentProfile {
   loginId: string;
@@ -287,6 +288,7 @@ export default function StudentDashboardPage() {
             type="button"
             onClick={async () => {
               await fetch('/api/auth/logout', { method: 'POST' });
+              clearAuthUserCache();
               window.location.assign('/');
             }}
             className="text-slate-400 hover:text-slate-600 transition-colors"

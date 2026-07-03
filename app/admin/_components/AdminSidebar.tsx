@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import WorkbookMakerNav from './WorkbookMakerNav';
 import GeneratedQuestionsNav from './GeneratedQuestionsNav';
 import ClassKitNav from './ClassKitNav';
 import EssayGeneratorNav from './EssayGeneratorNav';
+import { clearAuthUserCache } from '@/lib/auth-user-cache';
 
 interface AdminSidebarProps {
   loginId: string;
@@ -14,14 +15,13 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ loginId }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   const linkCls = (href: string) =>
-    `block w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${
+    `block w-full text-left px-4 py-1.5 rounded-lg font-medium transition-colors ${
       isActive(href)
         ? 'bg-slate-700 text-white'
         : 'text-slate-300 hover:bg-slate-700/50'
@@ -33,7 +33,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } finally {
-      router.push('/admin/login');
+      clearAuthUserCache();
+      // 전체 리로드로 클라이언트 상태까지 초기화 (소프트 네비게이션은 로그인 상태가 남아 보임)
+      window.location.replace('/admin/login');
     }
   }
 
@@ -88,17 +90,17 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
           [&::-webkit-scrollbar-thumb:hover]:bg-slate-500"
         style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(71 85 105 / 0.7) transparent' }}
       >
-        <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
+        <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs">OVERVIEW</p>
         <Link href="/admin" className={linkCls('/admin')}>
           대시보드
         </Link>
 
-        <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">ORDERS</p>
-        <Link href="/admin?section=orders" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
+        <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">ORDERS</p>
+        <Link href="/admin?section=orders" className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
           전체 주문
         </Link>
 
-        <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">UPLOADS</p>
+        <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">UPLOADS</p>
         <Link href="/admin/passages" className={linkCls('/admin/passages')}>
           원문 관리 (DB)
         </Link>
@@ -114,13 +116,13 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         </Link>
         <Link
           href="/admin/generated-questions/review-logs"
-          className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-emerald-200/90 hover:bg-emerald-950/40 transition-colors border border-emerald-800/40 mt-1"
+          className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-emerald-200/90 hover:bg-emerald-950/40 transition-colors border border-emerald-800/40 mt-1"
         >
           Claude Code 검수 로그
         </Link>
         <Link
           href="/admin/guest-variant-logs"
-          className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40 mt-1"
+          className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-amber-200/90 hover:bg-amber-950/40 transition-colors border border-amber-800/40 mt-1"
         >
           비회원 변형 로그
         </Link>
@@ -128,8 +130,8 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
           📊 기출 유형 분석
         </Link>
 
-        <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">MEMBERS</p>
-        <Link href="/admin?section=members" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
+        <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">MEMBERS</p>
+        <Link href="/admin?section=members" className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
           회원 관리
         </Link>
         <Link href="/admin/users" className={linkCls('/admin/users')}>
@@ -148,11 +150,11 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
           Q&amp;A 분석지 모더레이션
         </Link>
 
-        <p className="px-3 py-2 text-slate-500 uppercase tracking-wider text-xs mt-4">SETTINGS</p>
-        <Link href="/admin?section=settings" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
+        <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">SETTINGS</p>
+        <Link href="/admin?section=settings" className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
           교재 노출 설정
         </Link>
-        <Link href="/admin?section=essayTypes" className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
+        <Link href="/admin?section=essayTypes" className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">
           서술형 유형 관리
         </Link>
       </nav>

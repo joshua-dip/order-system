@@ -252,6 +252,13 @@ export async function listRecentThreads(opts: {
   return docs.map((d) => toRow(d as QnaThreadDoc & { _id: ObjectId }));
 }
 
+/** status 별 전체 건수 — admin 대시보드 「미답변 질문」 배지용. */
+export async function countThreadsByStatus(status: QnaThreadStatus): Promise<number> {
+  await ensureIndexes();
+  const db = await getDb('gomijoshua');
+  return db.collection(QNA_THREADS_COLLECTION).countDocuments({ status });
+}
+
 /** 동일 IP 의 최근 1시간 내 thread 작성 건수. POST rate-limit 용. */
 export async function countRecentThreadsByIp(ip: string): Promise<number> {
   await ensureIndexes();

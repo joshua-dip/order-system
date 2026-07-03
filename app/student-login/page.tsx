@@ -26,10 +26,12 @@ function StudentLoginForm() {
       const data = await res.json();
       if (!res.ok) {
         setError(data?.error || '로그인에 실패했습니다.');
+        setLoading(false);
         return;
       }
       const role = data?.role;
       const from = searchParams.get('from');
+      // 성공: 목적지 응답까지 이 화면이 남아 있으므로 로딩을 유지해 멈춘 것처럼 보이지 않게 한다.
       if (role === 'student') {
         window.location.assign(from?.startsWith('/my/student') ? from : '/my/student');
       } else {
@@ -37,7 +39,6 @@ function StudentLoginForm() {
       }
     } catch {
       setError('로그인 요청 중 오류가 발생했습니다.');
-    } finally {
       setLoading(false);
     }
   };

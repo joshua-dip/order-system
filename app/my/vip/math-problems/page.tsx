@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { MATH_CURRICULA, mathTopicKey, countTopics, type MathCurriculum } from '@/lib/math-curriculum';
+import { MATH_CURRICULA, SCHOOL_LEVELS, mathTopicKey, countTopics, countSubunitTopics, type MathCurriculum } from '@/lib/math-curriculum';
 
 interface Selected {
   교과: string;
   대단원: string;
   중단원: string;
   소단원: string;
+  그룹명?: string; // 중등만 (고등은 없음)
   학습주제: string;
 }
 
@@ -31,7 +32,7 @@ export default function MathProblemsPage() {
   const toggleMid = (k: string) => setOpenMid((s) => ({ ...s, [k]: !s[k] }));
 
   const selectedKey = selected
-    ? mathTopicKey(selected.교과, selected.대단원, selected.중단원, selected.소단원, selected.학습주제)
+    ? mathTopicKey(selected.교과, selected.대단원, selected.중단원, selected.소단원, selected.그룹명 ?? '', selected.학습주제)
     : '';
 
   return (
@@ -58,9 +59,17 @@ export default function MathProblemsPage() {
           }}
           className="rounded-lg bg-zinc-900/60 border border-zinc-800 px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-[#c9a44e]/50"
         >
-          {MATH_CURRICULA.map((c) => (
-            <option key={c.교과} value={c.교과}>{c.교과}</option>
-          ))}
+          {SCHOOL_LEVELS.map((lv) => {
+            const items = MATH_CURRICULA.filter((c) => c.학교급 === lv);
+            if (items.length === 0) return null;
+            return (
+              <optgroup key={lv} label={lv}>
+                {items.map((c) => (
+                  <option key={c.교과} value={c.교과}>{c.교과}</option>
+                ))}
+              </optgroup>
+            );
+          })}
         </select>
         <span className="text-xs text-zinc-500">학습주제 <strong className="text-zinc-300">{totalTopics}</strong>개</span>
         <input
@@ -76,7 +85,7 @@ export default function MathProblemsPage() {
         <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3 max-h-[70vh] overflow-y-auto">
           {curriculum.대단원.map((big) => {
             const bigOpen = !!openBig[big.대단원명] || !!q;
-            const bigTopicCount = big.중단원.reduce((s, m) => s + m.소단원.reduce((t, u) => t + u.학습주제.length, 0), 0);
+            const bigTopicCount = big.중단원.reduce((s, m) => s + m.소단원.reduce((t, u) => t + countSubunitTopics(u), 0), 0);
             return (
               <div key={big.대단원명} className="mb-1.5">
                 <button
@@ -108,39 +117,52 @@ export default function MathProblemsPage() {
                           {midOpen && (
                             <div className="mt-0.5 ml-2 space-y-2 pb-1">
                               {mid.소단원.map((sub) => {
-                                const topics = q
-                                  ? sub.학습주제.filter((t) => t.toLowerCase().includes(q.toLowerCase()))
-                                  : sub.학습주제;
-                                if (topics.length === 0) return null;
+                                const match = (t: string) => !q || t.toLowerCase().includes(q.toLowerCase());
+                                // 고등: 소단원 바로 아래 주제 / 중등: 그룹 > 주제
+                                const flatTopics = (sub.학습주제 ?? []).filter(match);
+                                const groups = (sub.학습주제그룹 ?? [])
+                                  .map((g) => ({ 그룹명: g.그룹명, 주제: g.주제.filter(match) }))
+                                  .filter((g) => g.주제.length > 0);
+                                if (flatTopics.length === 0 && groups.length === 0) return null;
+
+                                const chip = (topic: string, 그룹명?: string) => {
+                                  const key = mathTopicKey(curriculum.교과, big.대단원명, mid.중단원명, sub.소단원명, 그룹명 ?? '', topic);
+                                  const active = key === selectedKey;
+                                  return (
+                                    <button
+                                      key={(그룹명 ?? '') + '␟' + topic}
+                                      type="button"
+                                      onClick={() => setSelected({
+                                        교과: curriculum.교과,
+                                        대단원: big.대단원명,
+                                        중단원: mid.중단원명,
+                                        소단원: sub.소단원명,
+                                        ...(그룹명 ? { 그룹명 } : {}),
+                                        학습주제: topic,
+                                      })}
+                                      className={`rounded-md border px-2 py-1 text-[12px] transition-colors ${
+                                        active
+                                          ? 'border-[#c9a44e]/60 bg-[#c9a44e]/15 text-[#e8d48b]'
+                                          : 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100'
+                                      }`}
+                                    >
+                                      {topic}
+                                    </button>
+                                  );
+                                };
+
                                 return (
                                   <div key={sub.소단원명}>
-                                    <p className="px-1.5 py-0.5 text-[11px] font-semibold text-zinc-500">{sub.소단원명}</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {topics.map((topic) => {
-                                        const key = mathTopicKey(curriculum.교과, big.대단원명, mid.중단원명, sub.소단원명, topic);
-                                        const active = key === selectedKey;
-                                        return (
-                                          <button
-                                            key={topic}
-                                            type="button"
-                                            onClick={() => setSelected({
-                                              교과: curriculum.교과,
-                                              대단원: big.대단원명,
-                                              중단원: mid.중단원명,
-                                              소단원: sub.소단원명,
-                                              학습주제: topic,
-                                            })}
-                                            className={`rounded-md border px-2 py-1 text-[12px] transition-colors ${
-                                              active
-                                                ? 'border-[#c9a44e]/60 bg-[#c9a44e]/15 text-[#e8d48b]'
-                                                : 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100'
-                                            }`}
-                                          >
-                                            {topic}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
+                                    <p className="px-1.5 py-0.5 text-[11px] font-semibold text-zinc-400">{sub.소단원명}</p>
+                                    {flatTopics.length > 0 && (
+                                      <div className="flex flex-wrap gap-1.5">{flatTopics.map((t) => chip(t))}</div>
+                                    )}
+                                    {groups.map((g) => (
+                                      <div key={g.그룹명} className="mt-1 ml-1.5 border-l border-zinc-800/70 pl-2">
+                                        <p className="px-0.5 py-0.5 text-[11px] text-zinc-500">{g.그룹명}</p>
+                                        <div className="flex flex-wrap gap-1.5">{g.주제.map((t) => chip(t, g.그룹명))}</div>
+                                      </div>
+                                    ))}
                                   </div>
                                 );
                               })}
@@ -175,6 +197,12 @@ export default function MathProblemsPage() {
                   <span>{selected.중단원}</span>
                   <span className="text-zinc-600">›</span>
                   <span>{selected.소단원}</span>
+                  {selected.그룹명 && (
+                    <>
+                      <span className="text-zinc-600">›</span>
+                      <span>{selected.그룹명}</span>
+                    </>
+                  )}
                 </nav>
                 <h2 className="mt-1.5 text-lg font-bold text-[#e8d48b]">{selected.학습주제}</h2>
               </div>

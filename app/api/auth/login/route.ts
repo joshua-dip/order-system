@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { comparePassword, createToken, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
+import { buildAuthUserPayload } from '@/lib/auth-user-payload';
 
 export async function POST(request: NextRequest) {
   if (!process.env.MONGODB_URI) {
@@ -55,7 +56,10 @@ export async function POST(request: NextRequest) {
       role,
     });
 
-    const res = NextResponse.json({ ok: true, loginId: user.loginId, role, mustChangePassword });
+    // auth/me 와 동일 형태의 user 를 함께 내려 로그인 직후 마이페이지가
+    // auth/me 왕복 없이 즉시 렌더되게 한다(클라이언트 세션 캐시 프라임).
+    const userPayload = buildAuthUserPayload({ ...user, role }, mustChangePassword);
+    const res = NextResponse.json({ ok: true, loginId: user.loginId, role, mustChangePassword, user: userPayload });
     res.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

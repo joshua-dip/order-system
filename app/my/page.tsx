@@ -9,6 +9,7 @@ import StudentManagement from '../components/StudentManagement';
 import SchoolScopeManagement from '../components/SchoolScopeManagement';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
+import { getAuthUserCache, setAuthUserCache, clearAuthUserCache } from '@/lib/auth-user-cache';
 import { hasStoredByokAnthropicKey, writeStoredByokAnthropicKey } from '@/lib/member-byok-anthropic-key-storage';
 import { isMockExamPassageTextbookStored } from '@/lib/member-variant-passage-sources';
 
@@ -284,18 +285,32 @@ export default function MyPage() {
   }, []);
 
   useEffect(() => {
+    // 로그인 직후·재방문: 세션 캐시가 있으면 전면 스피너 없이 즉시 렌더하고,
+    // auth/me 는 백그라운드에서 최신값으로 갱신(stale-while-revalidate).
+    const cached = getAuthUserCache<AuthUser>();
+    if (cached) {
+      setUser(cached);
+      setEditEmail(cached.email ?? '');
+      setEditPhone(cached.phone ?? '');
+      setLoading(false);
+    }
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
         if (!data.user) {
+          clearAuthUserCache();
           router.replace('/login?from=/my');
           return;
         }
         setUser(data.user);
+        setAuthUserCache(data.user);
         setEditEmail(data.user.email ?? '');
         setEditPhone(data.user.phone ?? '');
       })
-      .catch(() => router.replace('/login?from=/my'))
+      .catch(() => {
+        // 캐시로 이미 렌더된 상태면 순간적인 네트워크 오류로 로그인 화면에 쫓아내지 않는다.
+        if (!getAuthUserCache()) router.replace('/login?from=/my');
+      })
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -590,9 +605,13 @@ export default function MyPage() {
   }, [annualMenuUnlocked, user?.isVip, orders.length, studentsCount]);
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.replace('/');
-    router.refresh();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      clearAuthUserCache();
+      // 소프트 네비게이션은 클라이언트 상태를 유지해 로그아웃이 안 된 것처럼 보임 → 전체 리로드.
+      window.location.replace('/');
+    }
   };
 
   const handleSaveEmail = async (e: React.FormEvent) => {

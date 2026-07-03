@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { listRecentThreads, type QnaThreadStatus } from '@/lib/qna-store';
+import { listRecentThreads, countThreadsByStatus, type QnaThreadStatus } from '@/lib/qna-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,9 +28,13 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(parseInt(limitRaw || '50', 10) || 50, 1), 200);
 
   try {
-    const threads = await listRecentThreads({ status, limit });
+    // 대시보드 배지용 미답변(open) 총 건수 — 목록 status 필터와 무관하게 항상 포함.
+    const [threads, openCount] = await Promise.all([
+      listRecentThreads({ status, limit }),
+      countThreadsByStatus('open'),
+    ]);
     if (threads.length === 0) {
-      return NextResponse.json({ threads: [] });
+      return NextResponse.json({ threads: [], openCount });
     }
     const passageOids = Array.from(
       new Set(threads.map((t) => t.passageId)),
@@ -66,7 +70,7 @@ export async function GET(request: NextRequest) {
       // textbook 은 thread 안에도 있으니 추가하지 않음.
     }));
 
-    return NextResponse.json({ threads: enriched });
+    return NextResponse.json({ threads: enriched, openCount });
   } catch (e) {
     console.error('qna admin recent:', e);
     return NextResponse.json({ error: '목록 조회에 실패했습니다.' }, { status: 500 });
