@@ -25,6 +25,12 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
   // 테마(다크/라이트) — 라이트는 흑백 반전(.vip-light-root)
   const [theme, setTheme] = useState<VipTheme>('dark');
   useEffect(() => { setTheme(getVipTheme()); }, []);
+  // 혹시 어떤 페이지가 가로로 넘쳐도 흰 body 배경이 드러나지 않게 VIP 구간에선 body 도 어둡게
+  useEffect(() => {
+    const prev = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#09090b';
+    return () => { document.body.style.backgroundColor = prev; };
+  }, []);
   const toggleTheme = () => { const n: VipTheme = theme === 'light' ? 'dark' : 'light'; setVipTheme(n); setTheme(n); };
 
   useEffect(() => {
@@ -32,7 +38,8 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
       .then((r) => r.json())
       .then((d) => {
         if (!d.user) { router.replace('/login?from=/my/vip'); return; }
-        if (!d.user.isVip) { router.replace('/my'); return; }
+        // 관리자는 VIP 기능 점검을 위해 항상 통과
+        if (!d.user.isVip && d.user.role !== 'admin') { router.replace('/my'); return; }
         setUser(d.user);
       })
       .catch(() => router.replace('/login?from=/my/vip'))
@@ -61,7 +68,9 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
     return () => { alive = false; };
   }, [pathname, user, router]);
 
-  if (loading || !user || gateOk === null || gateOk === false) {
+  // 최초 인증 전에만 전체 스피너. 이후 라우트 이동의 게이트 재검사는 본문만 가려서
+  // 사이드바가 리마운트되지 않게 유지(스크롤 위치·펼침 상태 보존).
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
@@ -113,11 +122,19 @@ export default function VipLayout({ children }: { children: React.ReactNode }) {
           </>
         )}
 
-        {/* Main content */}
-        <main className="flex-1 min-h-screen">
-          <div className="max-w-6xl mx-auto px-6 py-8 lg:px-10 lg:py-10">
-            {children}
-          </div>
+        {/* Main content — 게이트 검사 중(잠긴 메뉴 확인)에는 본문만 스피너 */}
+        {/* min-w-0: flex 항목의 min-width:auto 가 넓은 자식(썸네일 스트립 등)의 min-content 를
+            그대로 물려받아 페이지 가로 스크롤(흰 배경 노출)을 만드는 것 방지 */}
+        <main className="flex-1 min-h-screen min-w-0">
+          {gateOk === true ? (
+            <div className="max-w-6xl mx-auto px-6 py-8 lg:px-10 lg:py-10">
+              {children}
+            </div>
+          ) : (
+            <div className="min-h-[60vh] flex items-center justify-center">
+              <div className="w-7 h-7 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
+            </div>
+          )}
         </main>
       </div>
     </div>

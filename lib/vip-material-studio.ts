@@ -36,6 +36,10 @@ export interface StudioElement {
   h: number;
   /** 쌓임 순서 (클수록 위) */
   z: number;
+  /** 잠금 — 선택은 가능하나 이동·크기조절·삭제 차단 (배경 오조작 방지) */
+  locked?: boolean;
+  /** 회전 각도 (deg, 시계방향, 중심 기준) */
+  rotation?: number;
   /* ── text ── */
   text?: string;
   /** pt */
@@ -46,6 +50,10 @@ export interface StudioElement {
   bg?: string;
   /** 줄간격 배수 (기본 1.35) */
   lineHeight?: number;
+  /** 자간 (pt) — 세련된 라벨·제목 트래킹용 */
+  letterSpacing?: number;
+  /** 그라데이션 채움 — rect fill / text bg 를 대체 (angle: CSS deg, 기본 135) */
+  gradient?: { from: string; to: string; angle?: number };
   /* ── image ── (업로드 파일 서빙 URL) */
   src?: string;
   /* ── qr ── */
@@ -92,6 +100,13 @@ function color(v: unknown, def = ''): string {
   const c = s(v, 30).trim();
   return /^#[0-9a-fA-F]{3,8}$|^rgba?\([\d\s.,%]+\)$|^transparent$/.test(c) ? c : def;
 }
+function gradient(v: unknown): StudioElement['gradient'] | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const g = v as Record<string, unknown>;
+  const from = color(g.from, ''), to = color(g.to, '');
+  if (!from || !to) return undefined;
+  return { from, to, angle: n(g.angle, 135, 0, 360) };
+}
 
 export function sanitizeStudioPages(raw: unknown): StudioPage[] {
   if (!Array.isArray(raw)) return [];
@@ -111,10 +126,16 @@ export function sanitizeStudioPages(raw: unknown): StudioPage[] {
         kind,
         x: n(er.x, 10, -A4_W, A4_W * 2),
         y: n(er.y, 10, -A4_H, A4_H * 2),
-        w: n(er.w, 50, 2, A4_W * 1.5),
-        h: n(er.h, 12, 1, A4_H * 1.5),
+        // 최소값 0.2mm — 헤어라인·세로 악센트 바 같은 얇은 장식 허용 (기존 2/1 클램프가 두껍게 왜곡)
+        w: n(er.w, 50, 0.2, A4_W * 1.5),
+        h: n(er.h, 12, 0.2, A4_H * 1.5),
         z: Math.round(n(er.z, 1, 0, 9999)),
       };
+      if (er.locked === true) el.locked = true;
+      {
+        const rot = n(er.rotation, 0, 0, 359.99);
+        if (rot > 0) el.rotation = rot;
+      }
       if (kind === 'text') {
         el.text = s(er.text, MAX_TEXT);
         el.fontSize = n(er.fontSize, 11, 5, 96);
@@ -124,6 +145,8 @@ export function sanitizeStudioPages(raw: unknown): StudioPage[] {
         el.color = color(er.color, '#111111');
         el.bg = color(er.bg, '');
         el.lineHeight = n(er.lineHeight, 1.35, 0.9, 3);
+        const ls = n(er.letterSpacing, 0, -2, 20);
+        if (ls !== 0) el.letterSpacing = ls;
       }
       if (kind === 'image') el.src = s(er.src, 500);
       if (kind === 'qr') {
@@ -148,9 +171,12 @@ export function sanitizeStudioPages(raw: unknown): StudioPage[] {
       }
       if (kind === 'rect' || kind === 'line' || kind === 'text') {
         el.fill = color(er.fill, kind === 'rect' ? '#f5f5f5' : '');
-        el.borderColor = color(er.borderColor, kind === 'text' ? '' : '#333333');
-        el.borderWidth = n(er.borderWidth, kind === 'line' ? 0.6 : 0.3, 0, 5);
+        // 테두리는 명시했을 때만 — 기본 #333333 이 프로그래매틱 요소(헤어라인 등)에 검은 테두리를 입히던 문제
+        el.borderColor = color(er.borderColor, '');
+        el.borderWidth = n(er.borderWidth, 0, 0, 5);
         el.radius = n(er.radius, 0, 0, 20);
+        const g = gradient(er.gradient);
+        if (g) el.gradient = g;
       }
       els.push(el);
     }
@@ -221,9 +247,58 @@ const T = (partial: Partial<StudioElement>): StudioElement => ({
   ...partial,
 });
 
+/** 표지 템플릿 종류 */
+export type CoverTemplateId = 'classic' | 'minimal' | 'dark';
+export const COVER_TEMPLATES: { id: CoverTemplateId; label: string; desc: string }[] = [
+  { id: 'classic', label: '클래식', desc: '컬러 헤더 + 커리큘럼 목차' },
+  { id: 'minimal', label: '미니멀', desc: '화이트 배경 + 얇은 라인, 중앙 제목' },
+  { id: 'dark', label: '볼드', desc: '풀컬러 배경 + 큰 타이포' },
+];
+
 /** 표지 페이지 (요소들 전부 자유 편집 가능) */
-export function buildCoverPage(opts: { title: string; subtitle: string; level: StudioDifficulty; academy?: string }): StudioPage {
+export function buildCoverPage(opts: { title: string; subtitle: string; level: StudioDifficulty; academy?: string; template?: CoverTemplateId }): StudioPage {
   const c = LEVEL_COLOR[opts.level];
+  const curriculum = '1회차  문장의 구조\n2회차  수동태\n3회차  관계사\n4회차  접속사\n5회차  to부정사\n6회차  동명사\n7회차  분사·분사구문\n8회차  가정법';
+
+  if (opts.template === 'minimal') {
+    return {
+      id: uid(),
+      elements: [
+        { id: uid(), kind: 'rect', x: 0, y: 0, w: A4_W, h: A4_H, z: 0, fill: '#ffffff', borderWidth: 0 },
+        { id: uid(), kind: 'line', x: 20, y: 26, w: 170, h: 0.8, z: 1, fill: '#111827', borderWidth: 0 },
+        T({ x: 20, y: 32, w: 100, h: 7, z: 2, text: '2026 여름방학 특강', fontSize: 11, color: '#6b7280' }),
+        T({ x: 120, y: 32, w: 70, h: 7, z: 2, text: opts.level, fontSize: 11, bold: true, align: 'right', color: c }),
+        T({ x: 15, y: 105, w: 180, h: 20, z: 2, text: opts.title, fontSize: 32, bold: true, align: 'center', color: '#111827' }),
+        T({ x: 15, y: 130, w: 180, h: 9, z: 2, text: opts.subtitle, fontSize: 13, align: 'center', color: '#6b7280' }),
+        { id: uid(), kind: 'line', x: 90, y: 148, w: 30, h: 0.6, z: 1, fill: c, borderWidth: 0 },
+        T({ x: 62, y: 160, w: 86, h: 56, z: 2, fontSize: 10.5, color: '#4b5563', lineHeight: 1.75, text: curriculum }),
+        T({ x: 55, y: 250, w: 100, h: 8, z: 2, text: '이름 : ______________________', fontSize: 12, align: 'center', color: '#111827' }),
+        T({ x: 15, y: 265, w: 180, h: 7, z: 2, text: opts.academy ?? '', fontSize: 11, bold: true, align: 'center', color: '#111827' }),
+        { id: uid(), kind: 'line', x: 20, y: 278, w: 170, h: 0.8, z: 1, fill: '#111827', borderWidth: 0 },
+      ],
+    };
+  }
+
+  if (opts.template === 'dark') {
+    return {
+      id: uid(),
+      elements: [
+        { id: uid(), kind: 'rect', x: 0, y: 0, w: A4_W, h: A4_H, z: 0, fill: c, borderWidth: 0 },
+        { id: uid(), kind: 'rect', x: 0, y: 0, w: A4_W, h: A4_H, z: 0, fill: 'rgba(17,24,39,0.45)', borderWidth: 0 },
+        T({ x: 20, y: 26, w: 170, h: 10, z: 2, text: '2026 여름방학 특강', fontSize: 13, bold: true, color: '#ffffff' }),
+        { id: uid(), kind: 'line', x: 20, y: 38, w: 40, h: 1.2, z: 2, fill: '#ffffff', borderWidth: 0 },
+        T({ x: 20, y: 60, w: 170, h: 42, z: 2, text: opts.title, fontSize: 42, bold: true, color: '#ffffff', lineHeight: 1.15 }),
+        T({ x: 20, y: 108, w: 170, h: 10, z: 2, text: opts.subtitle, fontSize: 15, color: 'rgba(255,255,255,0.85)' }),
+        { id: uid(), kind: 'rect', x: 20, y: 128, w: 34, h: 11, z: 2, fill: '#ffffff', radius: 5.5, borderWidth: 0 },
+        T({ x: 20, y: 130, w: 34, h: 8.5, z: 3, text: opts.level, fontSize: 12, bold: true, align: 'center', color: c }),
+        T({ x: 20, y: 158, w: 170, h: 63, z: 2, fontSize: 11.5, color: 'rgba(255,255,255,0.92)', lineHeight: 1.75, text: curriculum }),
+        T({ x: 20, y: 252, w: 100, h: 8, z: 2, text: '이름 : ______________________', fontSize: 12, color: '#ffffff' }),
+        T({ x: 20, y: 268, w: 170, h: 8, z: 2, text: opts.academy ?? '', fontSize: 12, bold: true, color: '#ffffff' }),
+      ],
+    };
+  }
+
+  // classic (기본)
   return {
     id: uid(),
     elements: [
@@ -233,9 +308,9 @@ export function buildCoverPage(opts: { title: string; subtitle: string; level: S
       T({ x: 20, y: 24, w: 170, h: 12, z: 2, text: '2026 여름방학 특강', fontSize: 15, bold: true, color: '#ffffff' }),
       T({ x: 20, y: 38, w: 170, h: 22, z: 2, text: opts.title, fontSize: 34, bold: true, color: '#ffffff' }),
       { id: uid(), kind: 'rect', x: 20, y: 96, w: 42, h: 12, z: 2, fill: c, radius: 6, borderWidth: 0 },
-      T({ x: 20, y: 99, w: 42, h: 8, z: 3, text: opts.level, fontSize: 13, bold: true, align: 'center', color: '#ffffff' }),
+      T({ x: 20, y: 98.5, w: 42, h: 9.5, z: 3, text: opts.level, fontSize: 13, bold: true, align: 'center', color: '#ffffff' }),
       T({ x: 20, y: 118, w: 170, h: 10, z: 2, text: opts.subtitle, fontSize: 14, color: '#374151' }),
-      T({ x: 20, y: 132, w: 170, h: 44, z: 2, fontSize: 11.5, color: '#4b5563', lineHeight: 1.7, text: '1회차  문장의 구조\n2회차  수동태\n3회차  관계사\n4회차  접속사\n5회차  to부정사\n6회차  동명사\n7회차  분사·분사구문\n8회차  가정법' }),
+      T({ x: 20, y: 132, w: 170, h: 60, z: 2, fontSize: 11.5, color: '#4b5563', lineHeight: 1.7, text: '1회차  문장의 구조\n2회차  수동태\n3회차  관계사\n4회차  접속사\n5회차  to부정사\n6회차  동명사\n7회차  분사·분사구문\n8회차  가정법' }),
       T({ x: 20, y: 255, w: 100, h: 8, z: 2, text: '이름 : ______________________', fontSize: 12, color: '#111827' }),
       T({ x: 20, y: 270, w: 170, h: 8, z: 2, text: opts.academy ?? '', fontSize: 12, bold: true, color: '#111827' }),
       { id: uid(), kind: 'rect', x: 0, y: 288, w: A4_W, h: 9, z: 1, fill: '#111827', borderWidth: 0 },

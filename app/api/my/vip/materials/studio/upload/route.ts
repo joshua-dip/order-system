@@ -10,6 +10,30 @@ const UPLOAD_DIR = 'uploads/vip-material-studio';
 const MAX_SIZE = 8 * 1024 * 1024; // 8MB
 const ALLOWED_EXT = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp']);
 
+/** GET — 내가 업로드한 이미지 목록 (최신순, 편집기 「보관함」 재사용용) */
+export async function GET(request: NextRequest) {
+  const auth = await requireVipMenu(request, 'materials');
+  if (auth instanceof NextResponse) return auth;
+  try {
+    const dir = path.join(process.cwd(), UPLOAD_DIR, auth.userId);
+    let names: string[] = [];
+    try { names = await fs.readdir(dir); } catch { /* 폴더 없음 = 업로드 0건 */ }
+    const items = await Promise.all(
+      names
+        .filter((f) => ALLOWED_EXT.has(path.extname(f).toLowerCase()))
+        .map(async (f) => {
+          const st = await fs.stat(path.join(dir, f)).catch(() => null);
+          return { name: f, url: `/api/my/vip/materials/studio/file/${auth.userId}/${f}`, mtime: st?.mtimeMs ?? 0 };
+        }),
+    );
+    items.sort((a, b) => b.mtime - a.mtime);
+    return NextResponse.json({ ok: true, items: items.slice(0, 60).map(({ name, url }) => ({ name, url })) });
+  } catch (e) {
+    console.error('studio upload list:', e);
+    return NextResponse.json({ error: '이미지 목록을 불러오지 못했습니다.' }, { status: 500 });
+  }
+}
+
 /** POST multipart { file } — 편집기 이미지 업로드 → 본인 폴더에 저장, 서빙 URL 반환 */
 export async function POST(request: NextRequest) {
   const auth = await requireVipMenu(request, 'materials');

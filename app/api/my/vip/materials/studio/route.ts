@@ -22,20 +22,29 @@ export async function GET(request: NextRequest) {
   const docs = await db
     .collection(STUDIO_MATERIALS_COLLECTION)
     .find({ userId: new ObjectId(auth.userId) })
-    .project({ title: 1, subtitle: 1, difficulty: 1, updatedAt: 1, createdAt: 1, pages: { $slice: 0 }, pageCount: 1 })
+    .project({ title: 1, subtitle: 1, difficulty: 1, folder: 1, updatedAt: 1, createdAt: 1, pages: { $slice: 1 }, pageCount: 1 })
     .sort({ updatedAt: -1 })
     .limit(200)
     .toArray();
   return NextResponse.json({
     ok: true,
-    items: docs.map((d) => ({
-      id: String(d._id),
-      title: d.title ?? '',
-      subtitle: d.subtitle ?? '',
-      difficulty: d.difficulty ?? '',
-      pageCount: typeof d.pageCount === 'number' ? d.pageCount : 0,
-      updatedAt: d.updatedAt instanceof Date ? d.updatedAt.toISOString() : null,
-    })),
+    items: docs.map((d) => {
+      // 1페이지의 전면 이미지(업로드 표지)를 목록 썸네일로 노출. dataURL 등 대형 src 는 제외
+      const els = Array.isArray(d.pages?.[0]?.elements) ? (d.pages[0].elements as Array<Record<string, unknown>>) : [];
+      const coverEl = els.find((e) =>
+        e?.kind === 'image' && typeof e.src === 'string' && e.src.startsWith('/api/') && e.src.length < 500
+        && Number(e.w ?? 0) >= 180 && Number(e.h ?? 0) >= 250 && Number(e.x ?? 99) <= 12 && Number(e.y ?? 99) <= 12);
+      return {
+        id: String(d._id),
+        title: d.title ?? '',
+        subtitle: d.subtitle ?? '',
+        difficulty: d.difficulty ?? '',
+        pageCount: typeof d.pageCount === 'number' ? d.pageCount : 0,
+        folder: typeof d.folder === 'string' ? d.folder : '',
+        updatedAt: d.updatedAt instanceof Date ? d.updatedAt.toISOString() : null,
+        coverImageUrl: (coverEl?.src as string | undefined) ?? null,
+      };
+    }),
   });
 }
 
@@ -75,12 +84,14 @@ export async function POST(request: NextRequest) {
   const title = (typeof body.title === 'string' ? body.title.trim() : '').slice(0, 120) || '새 교재';
   const diffRaw = typeof body.difficulty === 'string' ? body.difficulty : '';
   const difficulty = (STUDIO_DIFFICULTIES as readonly string[]).includes(diffRaw) ? (diffRaw as StudioDifficulty) : '기초';
+  const folder = (typeof body.folder === 'string' ? body.folder.trim() : '').slice(0, 40);
   const cover = buildCoverPage({ title, subtitle: '', level: difficulty });
   const r = await col.insertOne({
     userId,
     title,
     subtitle: '',
     difficulty,
+    folder,
     pages: sanitizeStudioPages([cover]),
     pageCount: 1,
     createdAt: now,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentSubject, setCurrentSubject, DEFAULT_VIP_SUBJECT, isMenuVisibleForSubject } from "@/lib/vip-subject";
@@ -137,8 +137,14 @@ function getActiveSectionFromPath(pathname: string): string {
   if (pathname.startsWith("/my/vip/class-kit")) return "class-kit";
   if (pathname.startsWith("/my/vip/passage-analysis")) return "passage-analysis";
   if (pathname.startsWith("/my/vip/materials")) return "materials";
+  if (pathname.startsWith("/my/vip/hwpx-edit")) return "hwpx-edit";
+  if (pathname.startsWith("/my/vip/pdf-edit")) return "pdf-edit";
   if (pathname.startsWith("/my/vip/tutoring")) return "tutoring";
   if (pathname.startsWith("/my/vip/generate")) return "generate";
+  if (pathname.startsWith("/my/vip/math-problems")) return "math-problems";
+  if (pathname.startsWith("/my/vip/grammar-problems")) return "grammar-problems";
+  if (pathname.startsWith("/my/vip/writing-problems")) return "writing-problems";
+  if (pathname.startsWith("/my/vip/dapji")) return "dapji";
   return "dashboard";
 }
 
@@ -181,8 +187,10 @@ const NAV_SECTIONS: NavSection[] = [
         ],
       },
       { id: "math-problems", icon: <Catalog size={18} />, label: "문제관리", href: "/my/vip/math-problems" },
+      { id: "grammar-problems", icon: <Book size={18} />, label: "문법 문제관리", href: "/my/vip/grammar-problems" },
+      { id: "writing-problems", icon: <Pen size={18} />, label: "라이팅 문제관리", href: "/my/vip/writing-problems" },
       { id: "scores", icon: <ChartBar size={18} />, label: "성적 관리", href: "/my/vip/scores" },
-      { id: "report", icon: <Report size={18} />, label: "성적표", href: "/my/vip/report" },
+      { id: "report", icon: <Report size={18} />, label: "학생 리포트", href: "/my/vip/report" },
       {
         id: "review",
         icon: <Notebook size={18} />,
@@ -260,13 +268,17 @@ const NAV_SECTIONS: NavSection[] = [
       {
         id: "materials",
         icon: <Document size={18} />,
-        label: "교재 만들기",
+        label: "교재 스튜디오",
         href: "/my/vip/materials",
         children: [
-          { label: "교재 목록", href: "/my/vip/materials" },
-          { label: "스튜디오 (자유 편집)", href: "/my/vip/materials/studio" },
+          { label: "블록 교재 (빠른 제작)", href: "/my/vip/materials" },
+          { label: "자유 편집 (A4 캔버스)", href: "/my/vip/materials/studio" },
+          { label: "고등 교재", href: "/my/vip/materials/studio?folder=고등 교재" },
         ],
       },
+      { id: "hwpx-edit", icon: <DocumentAdd size={18} />, label: "한글파일 편집", href: "/my/vip/hwpx-edit" },
+      { id: "pdf-edit", icon: <Template size={18} />, label: "PDF 편집", href: "/my/vip/pdf-edit" },
+      { id: "dapji", icon: <Book size={18} />, label: "답지닷컴", href: "/my/vip/dapji" },
       { id: "words", icon: <ListChecked size={18} />, label: "단어 관리", href: "/my/vip/words" },
       { id: "dictionary", icon: <Translate size={18} />, label: "전자사전", href: "/my/vip/dictionary" },
       {
@@ -318,6 +330,22 @@ function UnifiedSidebar({ userName, theme = 'dark', onToggleTheme }: { userName:
     }).catch(() => {});
   }, []);
   const changeSubject = (s: string) => { if (s === subject) return; setCurrentSubject(s); window.location.reload(); };
+
+  /* 클릭한 메뉴가 제자리에 있도록 — 다른 메뉴의 하위목록이 접히며 목록이 위로 밀리는 것을 scrollTop 으로 보정 */
+  const navRef = useRef<HTMLElement>(null);
+  const clickAnchorRef = useRef<{ id: string; top: number } | null>(null);
+  const rememberAnchor = (id: string, e: React.MouseEvent) => {
+    if (!navRef.current) return;
+    clickAnchorRef.current = { id, top: (e.currentTarget as HTMLElement).getBoundingClientRect().top };
+  };
+  useLayoutEffect(() => {
+    const a = clickAnchorRef.current;
+    const nav = navRef.current;
+    if (!a || !nav) return;
+    const el = nav.querySelector<HTMLElement>(`[data-nav-id="${a.id}"]`);
+    if (el) nav.scrollTop += el.getBoundingClientRect().top - a.top;
+    clickAnchorRef.current = null;
+  }, [activeId]);
 
   // 섹션별 메뉴 = 접근가능(엔타이틀먼트) ∩ 과목 적용(영어전용 메뉴는 영어일 때만). 빈 섹션은 숨김.
   const visibleSections = NAV_SECTIONS
@@ -392,7 +420,7 @@ function UnifiedSidebar({ userName, theme = 'dark', onToggleTheme }: { userName:
       ))}
 
       {/* 네비게이션 */}
-      <nav className={`flex-1 overflow-y-auto w-full flex flex-col ${collapsed ? "items-center gap-1" : "gap-0.5 px-2"}`}>
+      <nav ref={navRef} className={`flex-1 overflow-y-auto w-full flex flex-col ${collapsed ? "items-center gap-1" : "gap-0.5 px-2"}`}>
         {visibleSections.map((sec, si) => (
           <div key={sec.title ?? `__top-${si}`} className="w-full flex flex-col gap-0.5">
             {sec.title && !collapsed && (
@@ -408,7 +436,8 @@ function UnifiedSidebar({ userName, theme = 'dark', onToggleTheme }: { userName:
             <div key={item.id} className="w-full">
               <button
                 type="button"
-                onClick={() => router.push(item.href)}
+                data-nav-id={item.id}
+                onClick={(e) => { rememberAnchor(item.id, e); router.push(item.href); }}
                 title={collapsed ? item.label : undefined}
                 className={`relative flex items-center rounded-lg transition-colors ${
                   collapsed ? "justify-center w-10 h-10" : "w-full gap-3 px-3 py-2"

@@ -21,12 +21,14 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'homework', label: '숙제 관리' },
   { id: 'analysis', label: '시험 분석' },
   { id: 'review', label: '오답노트' },
-  { id: 'report', label: '성적표' },
+  { id: 'report', label: '학생 리포트' },
   { id: 'tuition', label: '수강료 관리' },
   { id: 'counseling', label: '상담 관리' },
   { id: 'lessons', label: '수업일지' },
   { id: 'videos', label: '강의영상관리' },
-  { id: 'materials', label: '교재 만들기' },
+  { id: 'materials', label: '교재 스튜디오' },
+  { id: 'hwpx-edit', label: '한글파일 편집' },
+  { id: 'pdf-edit', label: 'PDF 편집' },
   { id: 'words', label: '단어 관리' },
   { id: 'assessments', label: '수행평가 관리' },
   { id: 'forms', label: '학원 양식 관리' },
@@ -45,6 +47,9 @@ export const VIP_MENU_CATALOG: VipMenuDef[] = [
   { id: 'qbank-api', label: '문제은행 API' },
   { id: 'tutoring', label: '과외솔루션' },
   { id: 'math-problems', label: '문제관리' }, // 수학 전용 (진도별 문제 관리)
+  { id: 'grammar-problems', label: '문법 문제관리' }, // 영어 전용 (문법 진도별 문제 관리)
+  { id: 'writing-problems', label: '라이팅 문제관리' }, // 영어 전용 (라이팅 진도별 문제 관리)
+  { id: 'dapji', label: '답지닷컴' }, // 답지(정답·해설) 파일 라이브러리
 ];
 
 export const VIP_MENU_IDS = new Set(VIP_MENU_CATALOG.map((m) => m.id));
@@ -64,13 +69,15 @@ export const DEFAULT_MENU_DEPENDENCIES: Record<string, string[]> = {
   students: [],
   homework: ['questions'],           // 숙제 = 내 문제은행(문제 관리)
   review: ['generate'],              // 오답노트 = QR 자가채점(문제 생성) 결과
-  report: ['scores'],                // 성적표 = 성적 관리
+  report: ['scores'],                // 학생 리포트 = 성적 관리
   tuition: ['students'],             // 수강료 = 학생 명단·과목 수강료
   counseling: ['students'],          // 상담 관리 = 학생 명단
   lessons: ['attendance'],           // 수업일지 = 반(출결관리)
   writing: ['students'],             // 영작 수업 = 학생 명단(학생별 첨삭)
   videos: [],                        // 강의영상관리 = 독립(영상 링크 라이브러리)
-  materials: [],                     // 교재 만들기 = 독립(블록 기반 교재 빌더)
+  materials: [],                     // 교재 스튜디오 = 독립(블록 교재 + 자유 편집 캔버스)
+  'hwpx-edit': [],                   // 한글파일 편집 = 독립(브라우저 내 hwpx 텍스트 편집)
+  'pdf-edit': [],                    // PDF 편집 = 독립(브라우저 내 페이지 합치기·회전·삭제)
   words: [],                         // 단어 관리 = 독립(단어장·단어시험지)
   assessments: [],                   // 수행평가 관리 = 독립(학교 수행평가 일정)
   forms: [],                         // 학원 양식 관리 = 독립(문서 양식)
@@ -88,6 +95,9 @@ export const DEFAULT_MENU_DEPENDENCIES: Record<string, string[]> = {
   'qbank-api': ['questions'],        // 문제은행 API = 내 문제은행(문제 관리)
   tutoring: [],                      // 과외솔루션 = 독립(과외 시간표 관리 등)
   'math-problems': [],               // 수학 문제관리 = 독립(진도 트리 기반)
+  'grammar-problems': [],            // 영어 문법 문제관리 = 독립(문법 진도 트리 기반)
+  'writing-problems': [],            // 영어 라이팅 문제관리 = 독립(라이팅 진도 트리 기반)
+  dapji: [],                         // 답지닷컴 = 독립(답지 파일 라이브러리)
 };
 
 /** 메뉴의 실효 의존 목록 (admin config 의 requires 우선, 없으면 기본값). 카탈로그 내 id 로만 한정. */

@@ -4,6 +4,9 @@ export function pathToMenuId(pathname: string): string {
   if (pathname === '/my/vip') return 'dashboard';
   if (pathname.startsWith('/my/vip/qbank-api')) return 'qbank-api';
   if (pathname.startsWith('/my/vip/math-problems')) return 'math-problems';
+  if (pathname.startsWith('/my/vip/grammar-problems')) return 'grammar-problems';
+  if (pathname.startsWith('/my/vip/writing-problems')) return 'writing-problems';
+  if (pathname.startsWith('/my/vip/dapji')) return 'dapji';
   if (pathname.startsWith('/my/vip/tutoring')) return 'tutoring';
   if (pathname.startsWith('/my/vip/review')) return 'review';
   if (pathname.startsWith('/my/vip/homework')) return 'homework';
@@ -13,6 +16,8 @@ export function pathToMenuId(pathname: string): string {
   if (pathname.startsWith('/my/vip/lessons')) return 'lessons';
   if (pathname.startsWith('/my/vip/videos')) return 'videos';
   if (pathname.startsWith('/my/vip/materials')) return 'materials';
+  if (pathname.startsWith('/my/vip/hwpx-edit')) return 'hwpx-edit';
+  if (pathname.startsWith('/my/vip/pdf-edit')) return 'pdf-edit';
   if (pathname.startsWith('/my/vip/words')) return 'words';
   if (pathname.startsWith('/my/vip/assessments')) return 'assessments';
   if (pathname.startsWith('/my/vip/forms')) return 'forms';

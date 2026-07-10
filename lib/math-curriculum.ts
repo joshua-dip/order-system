@@ -8,6 +8,9 @@
 // 중등 교과는 JSON 파일로 관리(용량 큼) → 학교급:'중등'으로 태깅해 편입.
 import JUNG_1_1 from '@/lib/math-curriculum-data/중1-1.json';
 import JUNG_1_2 from '@/lib/math-curriculum-data/중1-2.json';
+import JUNG_2_1 from '@/lib/math-curriculum-data/중2-1.json';
+import JUNG_2_2 from '@/lib/math-curriculum-data/중2-2.json';
+import JUNG_3_1 from '@/lib/math-curriculum-data/중3-1.json';
 
 /** 중등 소단원 아래의 주제 묶음 (그룹명 + 주제 목록). */
 export interface MathTopicGroup {
@@ -3466,7 +3469,8 @@ function asJungdeung(data: unknown): MathCurriculum {
 /** 문제관리에서 선택 가능한 교과 목록 (추후 확장). 고등=TS 상수 / 중등=JSON 파일(asJungdeung). */
 export const MATH_CURRICULA: MathCurriculum[] = [
   COMMON_MATH_1, COMMON_MATH_2, MATH_SANG, MATH_HA, MATH_DAESU, MATH_MICHAK_1, MATH_HWAKTONG, MATH_MICHAK_2, MATH_GEOMETRY,
-  asJungdeung(JUNG_1_1), asJungdeung(JUNG_1_2),
+  asJungdeung(JUNG_1_1), asJungdeung(JUNG_1_2), asJungdeung(JUNG_2_1), asJungdeung(JUNG_2_2),
+  asJungdeung(JUNG_3_1),
 ];
 
 /** 한 소단원의 주제 개수 (고등 학습주제[] + 중등 학습주제그룹 내 주제[]). */
@@ -3479,4 +3483,38 @@ export function countTopics(c: MathCurriculum): number {
   let n = 0;
   for (const big of c.대단원) for (const mid of big.중단원) for (const sub of mid.소단원) n += countSubunitTopics(sub);
   return n;
+}
+
+/** 한 리프 학습주제의 진도 좌표 (문제은행 매칭·검증용). */
+export interface MathTopicRef {
+  교과: string;
+  대단원: string;
+  중단원: string;
+  소단원: string;
+  그룹명?: string; // 중등만
+  학습주제: string;
+  topicKey: string;
+}
+
+/**
+ * 모든 교과의 리프 학습주제를 topicKey → 좌표로 인덱싱.
+ * 문제은행(vip_math_problems)의 topicKey 검증과 좌표(교과/대단원/…) 보강에 사용.
+ * 교과명이 topicKey 앞단에 들어가므로 교과 간 충돌 없음.
+ */
+export function buildMathTopicIndex(): Map<string, MathTopicRef> {
+  const map = new Map<string, MathTopicRef>();
+  for (const c of MATH_CURRICULA) {
+    for (const big of c.대단원) for (const mid of big.중단원) for (const sub of mid.소단원) {
+      const add = (학습주제: string, 그룹명?: string) => {
+        const topicKey = mathTopicKey(c.교과, big.대단원명, mid.중단원명, sub.소단원명, 그룹명 ?? '', 학습주제);
+        map.set(topicKey, {
+          교과: c.교과, 대단원: big.대단원명, 중단원: mid.중단원명, 소단원: sub.소단원명,
+          ...(그룹명 ? { 그룹명 } : {}), 학습주제, topicKey,
+        });
+      };
+      for (const t of sub.학습주제 ?? []) add(t);
+      for (const g of sub.학습주제그룹 ?? []) for (const t of g.주제) add(t, g.그룹명);
+    }
+  }
+  return map;
 }

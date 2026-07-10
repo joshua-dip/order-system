@@ -68,8 +68,11 @@ export default function VipMaterialsPage() {
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-zinc-100">교재 만들기</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">특강·문법·리딩 교재를 블록으로 직접 만들고 인쇄·PDF로 출력합니다.</p>
+          <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-md bg-[#c9a44e]/15 text-[#e8d48b] text-sm border border-[#c9a44e]/25">교재 스튜디오</span>
+            블록 교재
+          </h1>
+          <p className="text-sm text-zinc-500 mt-0.5">특강·문법·리딩 교재를 블록으로 빠르게 조립하고 인쇄·PDF로 출력합니다.</p>
         </div>
         <button onClick={() => setOpen((v) => !v)} className="px-4 py-2 rounded-lg bg-indigo-600/80 text-zinc-100 text-sm font-medium hover:bg-indigo-500 transition-colors">{open ? '닫기' : '＋ 새 교재'}</button>
       </div>
@@ -80,7 +83,7 @@ export default function VipMaterialsPage() {
         <div className="flex items-center gap-3">
           <span className="text-xl">🎨</span>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-emerald-200">스튜디오 — 인디자인처럼 자유 편집 <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">NEW</span></div>
+            <div className="text-sm font-bold text-emerald-200">자유 편집 — 미리캔버스처럼 A4 캔버스에 직접 배치 <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">NEW</span></div>
             <div className="text-[12px] text-zinc-500 mt-0.5">표지·이미지·QR·문제를 페이지 위에 자유 배치 → PDF·HWPX 다운로드. 여름방학 문법특강 8회차 세트(기초·심화·고난도) 샘플 제공.</div>
           </div>
           <span className="text-emerald-300 text-sm shrink-0">열기 →</span>

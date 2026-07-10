@@ -87,7 +87,7 @@ export default function ReportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-zinc-100">성적표 · 학습 리포트</h1>
+        <h1 className="text-xl font-bold text-zinc-100">학생 리포트</h1>
         <p className="text-sm text-zinc-500 mt-0.5">학생별 <b className="text-zinc-300">성적 추이·반평균·석차·출석률</b>을 한 장으로. 인쇄해서 PDF로 저장하거나 학부모께 전달하세요.</p>
       </div>
 
