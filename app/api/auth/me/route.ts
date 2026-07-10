@@ -56,8 +56,14 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ user: null }, { status: 200 });
     }
+    // 초기 비밀번호 여부(mustChangePassword) 판정은 bcrypt 비교라 비싸다(순수 JS bcryptjs).
+    // AppBar 등 거의 모든 페이지가 매 로드마다 부르는 이 엔드포인트의 핫패스에서 매번 돌리면
+    // 세션 확인이 수백 ms~초 단위로 느려진다. 실제로 이 값이 필요한 화면(마이페이지)만
+    // ?pwcheck=1 로 요청하고, 그 외에는 계산하지 않는다(= false).
+    const wantPwCheck = request.nextUrl.searchParams.get('pwcheck') === '1';
     const passwordHash = (user as { passwordHash?: string }).passwordHash;
     const mustChangePassword =
+      wantPwCheck &&
       user.role === 'user' &&
       typeof passwordHash === 'string' &&
       (await comparePassword(DEFAULT_MEMBER_INITIAL_PASSWORD, passwordHash));
