@@ -347,8 +347,10 @@ export default function LessonClient({
     setPassage(p);
     setShowPicker(false);
     try { localStorage.setItem(LAST_PASSAGE_KEY, p._id); } catch { /* ignore */ }
+    // 시험정보(title): 다른 교재를 불러오면 새 교재명으로 갱신. 같은 교재 안 형제 이동 등에서 직접 수정한 값은 유지.
+    const prevTextbook = passage?.textbook ?? '';
     setTitle(prev => {
-      if (prev.trim()) return prev;
+      if (prev.trim() && p.textbook === prevTextbook) return prev;
       persist(TITLE_KEY, p.textbook);
       return p.textbook;
     });
