@@ -1177,6 +1177,7 @@ export default function AdminPassagesPage() {
   const [linksLoading, setLinksLoading] = useState(false);
   const [linkSearch, setLinkSearch] = useState('');
   const [linkSavingKey, setLinkSavingKey] = useState<string | null>(null);
+  const [deletingRowKey, setDeletingRowKey] = useState<string | null>(null);
   const [linkMsg, setLinkMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [linkFolderScope, setLinkFolderScope] = useState('');
   const [textbookLinkFolders, setTextbookLinkFolders] = useState<TextbookLinkFolder[]>([]);
@@ -1432,29 +1433,49 @@ export default function AdminPassagesPage() {
     }
   };
 
-  const deleteTextbookLink = async (textbookKey: string) => {
-    if (!confirm(`「${textbookKey}」 구매 링크를 삭제할까요?`)) return;
-    setLinkSavingKey(textbookKey);
+  // 행별 「교재 삭제」 — 이 교재의 모든 지문·변형문제·링크·폴더배정을 삭제(되돌릴 수 없음).
+  // 상단 「🗑 이 교재 전체 삭제」와 동일 엔드포인트. 오삭제 방지로 교재명 재입력 2차 확인.
+  const deleteTextbookEntirely = async (textbookKey: string) => {
+    const tb = textbookKey.trim();
+    if (!tb) return;
+    if (
+      !confirm(
+        `교재 "${tb}" 의 모든 지문·변형문제·메타데이터를 삭제합니다.\n되돌릴 수 없습니다. 계속할까요?`
+      )
+    )
+      return;
+    const typed = prompt(`정말 삭제하려면 교재명을 그대로 입력하세요:\n${tb}`);
+    if (typed == null) return;
+    if (typed.trim() !== tb) {
+      alert('교재명이 일치하지 않아 취소했습니다.');
+      return;
+    }
+    setDeletingRowKey(textbookKey);
     setLinkMsg(null);
     try {
-      const res = await fetch(
-        `/api/admin/textbook-links?key=${encodeURIComponent(textbookKey)}`,
-        { method: 'DELETE', credentials: 'include' }
-      );
-      const j = await res.json();
+      const res = await fetch(`/api/admin/passages/by-textbook?textbook=${encodeURIComponent(tb)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const d = await res.json();
       if (!res.ok) {
-        setLinkMsg({ type: 'err', text: j.error || '삭제 실패' });
+        setLinkMsg({ type: 'err', text: d.error || '교재 삭제 실패' });
         return;
       }
-      setLinkDrafts((prev) => ({
-        ...prev,
-        [textbookKey]: emptyLinkDraft(),
-      }));
-      setLinkMsg({ type: 'ok', text: '삭제했습니다.' });
+      const extra = [
+        d.deletedLinks ? `링크 ${d.deletedLinks}건` : '',
+        d.deletedFolderAssignments ? `폴더배정 ${d.deletedFolderAssignments}건` : '',
+      ]
+        .filter(Boolean)
+        .join(', ');
+      setLinkMsg({ type: 'ok', text: `교재 "${tb}" 삭제 완료 — 지문 ${d.deletedPassages}건${extra ? ` (${extra})` : ''}` });
+      // 목록·교재 메타데이터 갱신 → 해당 행이 사라짐
+      fetchList();
+      fetchTextbooks();
     } catch {
       setLinkMsg({ type: 'err', text: '요청 실패' });
     } finally {
-      setLinkSavingKey(null);
+      setDeletingRowKey(null);
     }
   };
 
@@ -2123,11 +2144,12 @@ export default function AdminPassagesPage() {
                               </button>
                               <button
                                 type="button"
-                                disabled={linkSavingKey === key || !hasSaved}
-                                onClick={() => deleteTextbookLink(key)}
-                                className="text-red-400 hover:text-red-300 text-xs disabled:opacity-40"
+                                disabled={linkSavingKey === key || deletingRowKey === key}
+                                onClick={() => deleteTextbookEntirely(key)}
+                                className="text-red-400 hover:text-red-300 text-xs font-semibold disabled:opacity-40"
+                                title={`교재 "${key}" 의 모든 지문·변형문제·메타데이터 삭제 (되돌릴 수 없음)`}
                               >
-                                삭제
+                                {deletingRowKey === key ? '삭제 중…' : '교재 삭제'}
                               </button>
                             </td>
                           </tr>
