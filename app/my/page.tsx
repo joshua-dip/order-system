@@ -294,7 +294,8 @@ export default function MyPage() {
       setEditPhone(cached.phone ?? '');
       setLoading(false);
     }
-    fetch('/api/auth/me')
+    // pwcheck=1: 이 화면은 초기 비밀번호 변경 유도가 필요하므로 서버에 명시 요청(핫패스는 생략).
+    fetch('/api/auth/me?pwcheck=1')
       .then((res) => res.json())
       .then((data) => {
         if (!data.user) {

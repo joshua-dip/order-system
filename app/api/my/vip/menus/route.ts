@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
   // 활성 월 구독 중이면 모든 유료 메뉴를 사용 가능(언락 취급).
   const subUntil = (user as { vipSubscriptionUntil?: Date } | null)?.vipSubscriptionUntil ?? null;
   const subscribed = isVipSubscriptionActive(subUntil);
-  // 테스트 계정(조슈아)은 전 메뉴 접근.
-  const allAccess = isVipAllAccess(auth.loginId);
+  // 관리자·테스트 계정(조슈아)은 전 메뉴 접근.
+  const allAccess = auth.role === 'admin' || isVipAllAccess(auth.loginId);
   return NextResponse.json({
     ok: true,
     points,

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import MembershipApplyModal from '@/app/components/MembershipApplyModal';
 import { DEFAULT_APP_BAR_TITLE, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 import { getSafeUserLoginRedirect } from '@/lib/post-login-redirect';
-import { setAuthUserCache } from '@/lib/auth-user-cache';
+import { setAuthUserCache, clearAuthUserCache } from '@/lib/auth-user-cache';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -21,6 +21,33 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+  /** 자동로그인(세션 쿠키) 확인 결과 — 이미 로그인돼 있으면 폼 대신 바로 이동 */
+  const [already, setAlready] = useState<{ name?: string; loginId?: string } | null>(null);
+
+  // 자동로그인된 사용자가 로그인 페이지에 오면 다시 로그인시키지 말고 자기 페이지로 이동.
+  // 캐시만 믿고 이동하면(만료 세션) /my ↔ /login 루프가 생기므로 반드시 auth/me 확인 후 이동.
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive) return;
+        if (d?.user) {
+          setAuthUserCache(d.user);
+          setAlready(d.user);
+          const role = typeof d.user.role === 'string' ? d.user.role : undefined;
+          let dest = getSafeUserLoginRedirect(searchParams.get('from'), false, role);
+          // from 이 없으면 홈('/') 대신 역할별 내 페이지로
+          if (dest === '/') dest = role === 'admin' ? '/admin' : role === 'student' ? '/my/student' : '/my';
+          window.location.replace(dest);
+        } else {
+          // 세션 만료 — 헤더 등에 남은 표시 캐시 정리
+          clearAuthUserCache();
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +122,14 @@ function LoginForm() {
 
           {/* 폼 영역 */}
           <div className="px-8 py-8">
+            {already && (
+              <div className="mb-5 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2.5">
+                <span className="inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                <span>
+                  이미 <b>{(already.name || already.loginId || '').trim() || '회원'}</b>님으로 로그인되어 있어요 — 내 페이지로 이동 중…
+                </span>
+              </div>
+            )}
             <p className="text-slate-600 text-sm text-center mb-6">
               관리자가 안내한 아이디와 비밀번호를 입력해주세요.
             </p>
@@ -142,11 +177,11 @@ function LoginForm() {
               )}
               <button
                 type="submit"
-                disabled={loading || redirecting}
+                disabled={loading || redirecting || !!already}
                 className="w-full py-3.5 rounded-xl font-semibold text-white transition-all shadow-lg shadow-blue-900/20 hover:shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                 style={{ backgroundColor: '#13294B' }}
               >
-                {redirecting ? '로그인 완료 · 이동 중…' : loading ? '로그인 중...' : '로그인'}
+                {already ? '이미 로그인됨 · 이동 중…' : redirecting ? '로그인 완료 · 이동 중…' : loading ? '로그인 중...' : '로그인'}
               </button>
             </form>
             <p className="text-center mt-6">

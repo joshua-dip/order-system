@@ -43,32 +43,79 @@ function stripTags(s: string): string {
   return (s || '').replace(/<\/?u>/g, '').replace(/<br\s*\/?>/g, '\n');
 }
 
-/** 원형숫자 폴백 폰트를 섞어 텍스트 출력 (좌측 정렬 흐름) */
-function writeRuns(doc: PDFKit.PDFDocument, text: string, x: number, y: number, w: number, opts: { size: number; bold: boolean; color: string; lineGap: number; align: 'left' | 'center' | 'right'; hasCircled: boolean }) {
+/** <u>…</u> 구간 파싱 → 밑줄 플래그 세그먼트 배열 */
+function parseUnderlineSegs(text: string): { t: string; u: boolean }[] {
+  const out: { t: string; u: boolean }[] = [];
+  let u = false;
+  for (const part of (text || '').replace(/<br\s*\/?>/g, '\n').split(/(<u>|<\/u>)/)) {
+    if (part === '<u>') { u = true; continue; }
+    if (part === '</u>') { u = false; continue; }
+    if (part) out.push({ t: part, u });
+  }
+  return out;
+}
+
+/**
+ * 텍스트 출력 — 원형숫자(폴백 폰트)와 <u>밑줄</u> 을 run 으로 섞어 렌더.
+ * 밑줄·원형숫자가 없으면 단순 출력(중앙/우측 정렬 지원), 있으면 좌측 정렬 흐름으로 run 출력.
+ */
+function writeRuns(doc: PDFKit.PDFDocument, rawText: string, x: number, y: number, w: number, opts: { size: number; bold: boolean; color: string; lineGap: number; align: 'left' | 'center' | 'right'; hasCircled: boolean; charSpace?: number }) {
   const base = opts.bold ? 'B' : 'R';
+  const cs = opts.charSpace ? { characterSpacing: opts.charSpace } : {};
   doc.fontSize(opts.size).fillColor(opts.color);
-  if (!opts.hasCircled || !CIRCLED_RE.test(text)) {
-    doc.font(base).text(text, x, y, { width: w, align: opts.align, lineGap: opts.lineGap });
+  const hasU = /<u>/.test(rawText);
+  const plain = stripTags(rawText);
+  const needRuns = hasU || (opts.hasCircled && CIRCLED_RE.test(plain));
+  if (!needRuns || opts.align !== 'left') {
+    // 중앙/우측 정렬은 run 흐름과 호환되지 않아 태그 제거 후 단순 출력
+    doc.font(base).text(plain, x, y, { width: w, align: opts.align, lineGap: opts.lineGap, ...cs });
     return;
   }
-  // 원형숫자 포함 — 세그먼트 run (좌측 정렬로 흐름 출력)
-  const segs = text.split(CIRCLED_RE).filter((s) => s !== '');
-  doc.text('', x, y, { width: w, lineGap: opts.lineGap, continued: true });
-  segs.forEach((seg, i) => {
-    const isC = CIRCLED_RE.test(seg) && seg.length === 1;
-    doc.font(isC ? 'C' : base);
-    doc.text(seg, { width: w, lineGap: opts.lineGap, continued: i < segs.length - 1 });
+  // run 출력: <u> 세그먼트 → 각 세그먼트를 원형숫자 기준으로 재분할
+  const uSegs = parseUnderlineSegs(rawText);
+  const runs: { t: string; u: boolean; c: boolean }[] = [];
+  for (const seg of uSegs) {
+    for (const part of seg.t.split(CIRCLED_RE)) {
+      if (!part) continue;
+      runs.push({ t: part, u: seg.u, c: opts.hasCircled && CIRCLED_RE.test(part) && part.length === 1 });
+    }
+  }
+  doc.text('', x, y, { width: w, lineGap: opts.lineGap, continued: true, ...cs });
+  runs.forEach((r, i) => {
+    doc.font(r.c ? 'C' : base);
+    doc.text(r.t, { width: w, lineGap: opts.lineGap, underline: r.u, continued: i < runs.length - 1, ...cs });
   });
 }
 
-function drawElement(doc: PDFKit.PDFDocument, el: StudioElement, assets: { images: Map<string, Buffer>; qrs: Map<string, Buffer>; hasCircled: boolean }) {
+type PdfAssets = { images: Map<string, Buffer>; qrs: Map<string, Buffer>; hasCircled: boolean; pageNo: number };
+
+/** 회전 지원 래퍼 — rotation 이 있으면 요소 중심 기준으로 좌표계를 돌려 그린다. */
+function drawElement(doc: PDFKit.PDFDocument, el: StudioElement, assets: PdfAssets) {
+  const rot = el.rotation ?? 0;
+  if (!rot) return drawElementInner(doc, el, assets);
+  doc.save();
+  doc.rotate(rot, { origin: [(el.x + el.w / 2) * MM, (el.y + el.h / 2) * MM] });
+  try { drawElementInner(doc, el, assets); } finally { doc.restore(); }
+}
+
+/** 그라데이션 채움 페인트 (CSS deg 각도 → pdfkit 선형 그라데이션 축) */
+function gradientPaint(doc: PDFKit.PDFDocument, g: NonNullable<StudioElement['gradient']>, x: number, y: number, w: number, h: number) {
+  const a = ((g.angle ?? 135) * Math.PI) / 180;
+  const dx = Math.sin(a), dy = -Math.cos(a);
+  const cx = x + w / 2, cy = y + h / 2;
+  const half = (Math.abs(dx) * w + Math.abs(dy) * h) / 2;
+  const grad = doc.linearGradient(cx - dx * half, cy - dy * half, cx + dx * half, cy + dy * half);
+  grad.stop(0, g.from).stop(1, g.to);
+  return grad;
+}
+
+function drawElementInner(doc: PDFKit.PDFDocument, el: StudioElement, assets: PdfAssets) {
   const x = el.x * MM, y = el.y * MM, w = el.w * MM, h = el.h * MM;
   if (el.kind === 'rect' || el.kind === 'line') {
     const r = (el.radius ?? 0) * MM;
     doc.save();
-    if (el.fill && el.fill !== 'transparent') {
-      (r > 0 ? doc.roundedRect(x, y, w, h, r) : doc.rect(x, y, w, h)).fill(el.fill);
-    }
+    const paint = el.gradient ? gradientPaint(doc, el.gradient, x, y, w, h) : (el.fill && el.fill !== 'transparent' ? el.fill : null);
+    if (paint) (r > 0 ? doc.roundedRect(x, y, w, h, r) : doc.rect(x, y, w, h)).fill(paint);
     if (el.borderColor && (el.borderWidth ?? 0) > 0) {
       doc.lineWidth((el.borderWidth ?? 0.3) * MM);
       (r > 0 ? doc.roundedRect(x, y, w, h, r) : doc.rect(x, y, w, h)).stroke(el.borderColor);
@@ -78,7 +125,8 @@ function drawElement(doc: PDFKit.PDFDocument, el: StudioElement, assets: { image
   }
   if (el.kind === 'text') {
     doc.save();
-    if (el.bg && el.bg !== 'transparent') doc.rect(x, y, w, h).fill(el.bg);
+    const bgPaint = el.gradient ? gradientPaint(doc, el.gradient, x, y, w, h) : (el.bg && el.bg !== 'transparent' ? el.bg : null);
+    if (bgPaint) doc.rect(x, y, w, h).fill(bgPaint);
     if (el.borderColor && (el.borderWidth ?? 0) > 0) {
       doc.lineWidth((el.borderWidth ?? 0.3) * MM);
       doc.rect(x, y, w, h).stroke(el.borderColor);
@@ -86,8 +134,10 @@ function drawElement(doc: PDFKit.PDFDocument, el: StudioElement, assets: { image
     doc.restore();
     const size = el.fontSize ?? 11;
     const lineGap = size * ((el.lineHeight ?? 1.35) - 1);
-    writeRuns(doc, stripTags(el.text ?? ''), x + 1.2 * MM, y + 1.2 * MM, w - 2.4 * MM, {
+    writeRuns(doc, (el.text ?? '').replace(/\{\{page\}\}/g, String(assets.pageNo)), x + 1.2 * MM, y + 1.2 * MM, w - 2.4 * MM, {
       size, bold: el.bold === true, color: el.color || '#111111', lineGap, align: el.align ?? 'left', hasCircled: assets.hasCircled,
+      // letterSpacing 은 이미 pt 단위 — MM(mm→pt) 곱하면 2.8배 과대 적용됨
+      charSpace: el.letterSpacing || undefined,
     });
     return;
   }
@@ -122,7 +172,7 @@ function drawElement(doc: PDFKit.PDFDocument, el: StudioElement, assets: { image
       const paraH = doc.font('R').fontSize(size - 0.5).heightOfString(paraText, { width: inW - 4 * MM, lineGap: size * 0.35 }) + 4 * MM;
       doc.rect(inX, cy, inW, paraH).lineWidth(0.5).stroke('#9ca3af');
       doc.restore();
-      writeRuns(doc, paraText, inX + 2 * MM, cy + 2 * MM, inW - 4 * MM, { size: size - 0.5, bold: false, color: '#111111', lineGap: size * 0.35, align: 'left', hasCircled: assets.hasCircled });
+      writeRuns(doc, q.paragraph ?? '', inX + 2 * MM, cy + 2 * MM, inW - 4 * MM, { size: size - 0.5, bold: false, color: '#111111', lineGap: size * 0.35, align: 'left', hasCircled: assets.hasCircled });
       cy = doc.y + 3 * MM;
     }
     const opts = (q.options ?? []).filter((o) => o.trim());
@@ -176,8 +226,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   pdf.on('data', (c: Buffer) => chunks.push(c));
   const done = new Promise<Buffer>((resolve) => pdf.on('end', () => resolve(Buffer.concat(chunks))));
 
-  const assets = { images, qrs, hasCircled: !!circled };
-  for (const page of pages) {
+  for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+    const page = pages[pIdx];
+    const assets = { images, qrs, hasCircled: !!circled, pageNo: pIdx + 1 };
     pdf.addPage({ size: 'A4', margin: 0 });
     const els = [...(page.elements ?? [])].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
     for (const el of els) {

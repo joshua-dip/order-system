@@ -12,7 +12,7 @@ export const DEFAULT_VIP_SUBJECT = '영어';
  * 변형문제(영어 독해) 전용 메뉴 — 타 과목 선택 시 숨김.
  * (오답노트 'review' 는 영어=QR 자동 + 국어·수학=수동 하위메뉴로 전 과목 지원하므로 제외)
  */
-export const ENGLISH_ONLY_MENU_IDS = new Set(['generate', 'questions', 'qbank-api', 'homework', 'writing', 'class-kit', 'passage-analysis']);
+export const ENGLISH_ONLY_MENU_IDS = new Set(['generate', 'questions', 'qbank-api', 'homework', 'writing', 'class-kit', 'passage-analysis', 'grammar-problems', 'writing-problems']);
 
 /** 수학 전용 메뉴 — 수학 과목 선택 시에만 노출(다른 과목에선 숨김). */
 export const MATH_ONLY_MENU_IDS = new Set(['math-problems']);

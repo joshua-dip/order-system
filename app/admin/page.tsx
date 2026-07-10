@@ -3174,16 +3174,16 @@ export default function AdminDashboardPage() {
               className="bg-slate-800 rounded-xl border border-slate-700 p-5 text-left w-full transition-colors hover:border-slate-500 hover:bg-slate-700/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 cursor-pointer"
             >
               <p className="text-slate-400 text-sm flex items-center justify-between gap-2">
-                이번달 매출
+                총 매출
                 <span className="text-[10px] font-medium text-cyan-400/90">월별 조회 →</span>
               </p>
               <p className="text-2xl font-bold text-white mt-1 tabular-nums">
-                {typeof stats?.revenueThisMonth === 'number' ? `${stats.revenueThisMonth.toLocaleString()}원` : '—'}
+                {typeof stats?.revenueTotal === 'number' ? `${stats.revenueTotal.toLocaleString()}원` : '—'}
               </p>
               <p className="text-slate-500 text-xs mt-1">
-                누적(완료) <span className="text-slate-400 tabular-nums">{typeof stats?.revenueTotal === 'number' ? `${stats.revenueTotal.toLocaleString()}원` : '—'}</span>
+                이번 달 <span className="text-slate-300 tabular-nums font-medium">{typeof stats?.revenueThisMonth === 'number' ? `${stats.revenueThisMonth.toLocaleString()}원` : '—'}</span>
                 <span className="block text-slate-600 mt-0.5">
-                  이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱 · 포인트 사용분 제외(실입금)
+                  누적은 완료 주문 전체 합 · 이번 달 구분: 주문번호 중간 날짜(YYYYMMDD) → 없으면 완료일(한국) · 금액은 주문서 파싱 · 포인트 사용분 제외(실입금)
                 </span>
               </p>
             </button>

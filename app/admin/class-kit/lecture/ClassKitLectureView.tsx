@@ -214,9 +214,11 @@ export function ClassKitLectureView({
     setPassage(p);
     setShowPicker(false);
     try { localStorage.setItem(LAST_PASSAGE_KEY, p._id); } catch { /* ignore */ }
-    // 시험정보(title) 비어 있으면 교재명으로 채움 / 문항번호는 지문 번호로 갱신
+    // 문항번호는 지문 번호로 갱신. 시험정보(title)는 다른 교재를 불러오면 새 교재명으로 갱신하고,
+    // 같은 교재 안 형제 이동 등에서 직접 수정한 값은 유지.
+    const prevTextbook = passage?.textbook ?? '';
     setTitle(prev => {
-      if (prev.trim()) return prev;
+      if (prev.trim() && p.textbook === prevTextbook) return prev;
       persist(TITLE_KEY, p.textbook);
       return p.textbook;
     });

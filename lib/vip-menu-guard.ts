@@ -16,8 +16,8 @@ export async function requireVipMenu(
 ): Promise<VipUser | NextResponse> {
   const auth = await requireVip(request);
   if (auth instanceof NextResponse) return auth;
-  // 테스트 계정(조슈아)은 모든 메뉴 통과.
-  if (isVipAllAccess(auth.loginId)) return auth;
+  // 관리자·테스트 계정(조슈아)은 모든 메뉴 통과.
+  if (auth.role === 'admin' || isVipAllAccess(auth.loginId)) return auth;
   try {
     const db = await getDb('gomijoshua');
     const userId = new ObjectId(auth.userId);

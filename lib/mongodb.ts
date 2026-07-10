@@ -21,20 +21,20 @@ function freshClientPromise(): Promise<MongoClient> {
 }
 
 function getClientPromise(): Promise<MongoClient> {
-  if (process.env.NODE_ENV === 'development') {
-    if (!global._mongoClientPromise) {
-      global._mongoClientPromise = freshClientPromise();
-    }
-    return global._mongoClientPromise;
+  // 개발·프로덕션 모두 globalThis 에 연결 promise 를 캐시한다.
+  // 서버리스(Amplify)에서 warm Lambda 재사용·모듈 재평가 시에도 매번 새 연결을 맺지 않게 해
+  // 콜드스타트 외 요청의 세션 확인(auth/me 등)이 연결 대기로 느려지는 것을 막는다.
+  if (!global._mongoClientPromise) {
+    global._mongoClientPromise = freshClientPromise();
   }
-  return freshClientPromise();
+  return global._mongoClientPromise;
 }
 
 let clientPromise: Promise<MongoClient> | undefined;
 
 function resetCache(): void {
   clientPromise = undefined;
-  if (process.env.NODE_ENV === 'development') global._mongoClientPromise = undefined;
+  global._mongoClientPromise = undefined;
 }
 
 /**

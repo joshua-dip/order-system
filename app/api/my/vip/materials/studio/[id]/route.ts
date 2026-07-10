@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   });
 }
 
-/** PATCH { title?, subtitle?, difficulty?, pages? } — 저장(자동저장) */
+/** PATCH { title?, subtitle?, difficulty?, folder?, pages? } — 저장(자동저장·폴더 이동) */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const r = await loadOwned(request, id);
@@ -45,6 +45,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (typeof body.title === 'string') set.title = body.title.trim().slice(0, 120);
   if (typeof body.subtitle === 'string') set.subtitle = body.subtitle.trim().slice(0, 200);
   if (typeof body.difficulty === 'string') set.difficulty = body.difficulty.trim().slice(0, 20);
+  if (typeof body.folder === 'string') set.folder = body.folder.trim().slice(0, 40);
   if (body.pages !== undefined) {
     const pages = sanitizeStudioPages(body.pages);
     set.pages = pages;
