@@ -1,0 +1,238 @@
+/**
+ * 교재 스튜디오 문서 → A4 PDF 렌더러 (pdfkit).
+ *
+ * PDF 라우트(app/api/my/vip/materials/studio/[id]/pdf)와 배치 export 스크립트가
+ * **같은 렌더 코드**를 쓰도록 순수 함수로 분리. 좌표계는 A4 mm(lib/vip-material-studio).
+ * 이미지 로딩은 호출자가 resolveImage 로 주입(라우트=userId 스코프 uploads, 스크립트=동일 경로).
+ */
+import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
+import path from 'path';
+import fs from 'fs';
+import type { StudioElement, StudioPage } from './vip-material-studio';
+
+/* ── 폰트 ── */
+const fontCache: Record<string, Buffer> = {};
+export async function loadFont(variant: 'Regular' | 'Bold'): Promise<Buffer> {
+  if (fontCache[variant]) return fontCache[variant];
+  const name = `NanumGothic-${variant}.ttf`;
+  const local = path.join(process.cwd(), 'lib', 'fonts', name);
+  if (fs.existsSync(local)) { fontCache[variant] = fs.readFileSync(local); return fontCache[variant]; }
+  const res = await fetch(`https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/${name}`, { signal: AbortSignal.timeout(8000) });
+  if (res.ok) {
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length > 100_000) { fontCache[variant] = buf; return buf; }
+  }
+  if (variant === 'Bold') return loadFont('Regular');
+  throw new Error('한글 폰트를 불러올 수 없습니다.');
+}
+let circledCache: Buffer | null | undefined;
+export function loadCircled(): Buffer | null {
+  if (circledCache !== undefined) return circledCache;
+  const local = path.join(process.cwd(), 'lib', 'fonts', 'CircledFallback-subset.ttf');
+  circledCache = fs.existsSync(local) ? fs.readFileSync(local) : null;
+  return circledCache;
+}
+
+const MM = 72 / 25.4; // mm → pt
+const CIRCLED_RE = /([①②③④⑤⑥⑦⑧⑨⑩])/;
+const CIRCLED = ['①', '②', '③', '④', '⑤'];
+
+function stripTags(s: string): string {
+  return (s || '').replace(/<\/?u>/g, '').replace(/<br\s*\/?>/g, '\n');
+}
+
+/** <u>…</u> 구간 파싱 → 밑줄 플래그 세그먼트 배열 */
+function parseUnderlineSegs(text: string): { t: string; u: boolean }[] {
+  const out: { t: string; u: boolean }[] = [];
+  let u = false;
+  for (const part of (text || '').replace(/<br\s*\/?>/g, '\n').split(/(<u>|<\/u>)/)) {
+    if (part === '<u>') { u = true; continue; }
+    if (part === '</u>') { u = false; continue; }
+    if (part) out.push({ t: part, u });
+  }
+  return out;
+}
+
+/**
+ * 텍스트 출력 — 원형숫자(폴백 폰트)와 <u>밑줄</u> 을 run 으로 섞어 렌더.
+ * 밑줄·원형숫자가 없으면 단순 출력(중앙/우측 정렬 지원), 있으면 좌측 정렬 흐름으로 run 출력.
+ */
+function writeRuns(doc: PDFKit.PDFDocument, rawText: string, x: number, y: number, w: number, opts: { size: number; bold: boolean; color: string; lineGap: number; align: 'left' | 'center' | 'right'; hasCircled: boolean; charSpace?: number }) {
+  const base = opts.bold ? 'B' : 'R';
+  const cs = opts.charSpace ? { characterSpacing: opts.charSpace } : {};
+  doc.fontSize(opts.size).fillColor(opts.color);
+  const hasU = /<u>/.test(rawText);
+  const plain = stripTags(rawText);
+  const needRuns = hasU || (opts.hasCircled && CIRCLED_RE.test(plain));
+  if (!needRuns || opts.align !== 'left') {
+    // 중앙/우측 정렬은 run 흐름과 호환되지 않아 태그 제거 후 단순 출력
+    doc.font(base).text(plain, x, y, { width: w, align: opts.align, lineGap: opts.lineGap, ...cs });
+    return;
+  }
+  // run 출력: <u> 세그먼트 → 각 세그먼트를 원형숫자 기준으로 재분할
+  const uSegs = parseUnderlineSegs(rawText);
+  const runs: { t: string; u: boolean; c: boolean }[] = [];
+  for (const seg of uSegs) {
+    for (const part of seg.t.split(CIRCLED_RE)) {
+      if (!part) continue;
+      runs.push({ t: part, u: seg.u, c: opts.hasCircled && CIRCLED_RE.test(part) && part.length === 1 });
+    }
+  }
+  doc.text('', x, y, { width: w, lineGap: opts.lineGap, continued: true, ...cs });
+  runs.forEach((r, i) => {
+    doc.font(r.c ? 'C' : base);
+    doc.text(r.t, { width: w, lineGap: opts.lineGap, underline: r.u, continued: i < runs.length - 1, ...cs });
+  });
+}
+
+type PdfAssets = { images: Map<string, Buffer>; qrs: Map<string, Buffer>; hasCircled: boolean; pageNo: number };
+
+/** 회전 지원 래퍼 — rotation 이 있으면 요소 중심 기준으로 좌표계를 돌려 그린다. */
+function drawElement(doc: PDFKit.PDFDocument, el: StudioElement, assets: PdfAssets) {
+  const rot = el.rotation ?? 0;
+  if (!rot) return drawElementInner(doc, el, assets);
+  doc.save();
+  doc.rotate(rot, { origin: [(el.x + el.w / 2) * MM, (el.y + el.h / 2) * MM] });
+  try { drawElementInner(doc, el, assets); } finally { doc.restore(); }
+}
+
+/** 그라데이션 채움 페인트 (CSS deg 각도 → pdfkit 선형 그라데이션 축) */
+function gradientPaint(doc: PDFKit.PDFDocument, g: NonNullable<StudioElement['gradient']>, x: number, y: number, w: number, h: number) {
+  const a = ((g.angle ?? 135) * Math.PI) / 180;
+  const dx = Math.sin(a), dy = -Math.cos(a);
+  const cx = x + w / 2, cy = y + h / 2;
+  const half = (Math.abs(dx) * w + Math.abs(dy) * h) / 2;
+  const grad = doc.linearGradient(cx - dx * half, cy - dy * half, cx + dx * half, cy + dy * half);
+  grad.stop(0, g.from).stop(1, g.to);
+  return grad;
+}
+
+function drawElementInner(doc: PDFKit.PDFDocument, el: StudioElement, assets: PdfAssets) {
+  const x = el.x * MM, y = el.y * MM, w = el.w * MM, h = el.h * MM;
+  if (el.kind === 'rect' || el.kind === 'line') {
+    const r = (el.radius ?? 0) * MM;
+    doc.save();
+    const paint = el.gradient ? gradientPaint(doc, el.gradient, x, y, w, h) : (el.fill && el.fill !== 'transparent' ? el.fill : null);
+    if (paint) (r > 0 ? doc.roundedRect(x, y, w, h, r) : doc.rect(x, y, w, h)).fill(paint);
+    if (el.borderColor && (el.borderWidth ?? 0) > 0) {
+      doc.lineWidth((el.borderWidth ?? 0.3) * MM);
+      (r > 0 ? doc.roundedRect(x, y, w, h, r) : doc.rect(x, y, w, h)).stroke(el.borderColor);
+    }
+    doc.restore();
+    return;
+  }
+  if (el.kind === 'text') {
+    doc.save();
+    const bgPaint = el.gradient ? gradientPaint(doc, el.gradient, x, y, w, h) : (el.bg && el.bg !== 'transparent' ? el.bg : null);
+    if (bgPaint) doc.rect(x, y, w, h).fill(bgPaint);
+    if (el.borderColor && (el.borderWidth ?? 0) > 0) {
+      doc.lineWidth((el.borderWidth ?? 0.3) * MM);
+      doc.rect(x, y, w, h).stroke(el.borderColor);
+    }
+    doc.restore();
+    const size = el.fontSize ?? 11;
+    const lineGap = size * ((el.lineHeight ?? 1.35) - 1);
+    writeRuns(doc, (el.text ?? '').replace(/\{\{page\}\}/g, String(assets.pageNo)), x + 1.2 * MM, y + 1.2 * MM, w - 2.4 * MM, {
+      size, bold: el.bold === true, color: el.color || '#111111', lineGap, align: el.align ?? 'left', hasCircled: assets.hasCircled,
+      // letterSpacing 은 이미 pt 단위 — MM(mm→pt) 곱하면 2.8배 과대 적용됨
+      charSpace: el.letterSpacing || undefined,
+    });
+    return;
+  }
+  if (el.kind === 'image') {
+    const buf = el.src ? assets.images.get(el.src) : undefined;
+    if (buf) {
+      try { doc.image(buf, x, y, { fit: [w, h], align: 'center', valign: 'center' }); } catch { /* 손상 이미지 무시 */ }
+    }
+    return;
+  }
+  if (el.kind === 'qr') {
+    const buf = el.qrUrl ? assets.qrs.get(el.qrUrl) : undefined;
+    const side = Math.min(w, h - (el.qrLabel ? 5 * MM : 0));
+    if (buf) doc.image(buf, x + (w - side) / 2, y, { width: side, height: side });
+    if (el.qrLabel) {
+      doc.font('R').fontSize(8).fillColor('#374151').text(el.qrLabel, x, y + side + 1.5 * MM, { width: w, align: 'center' });
+    }
+    return;
+  }
+  if (el.kind === 'question' && el.q) {
+    const q = el.q;
+    const size = el.fontSize ?? 10;
+    const inX = x + 1.5 * MM, inW = w - 3 * MM;
+    let cy = y + 1.5 * MM;
+    const head = `${q.num ? `${q.num}. ` : ''}${stripTags(q.question ?? '')}`;
+    doc.font('B').fontSize(size).fillColor('#111111');
+    doc.text(head, inX, cy, { width: inW, lineGap: size * 0.3 });
+    cy = doc.y + 1.5 * MM;
+    if (q.paragraph) {
+      const paraText = stripTags(q.paragraph);
+      doc.save();
+      const paraH = doc.font('R').fontSize(size - 0.5).heightOfString(paraText, { width: inW - 4 * MM, lineGap: size * 0.35 }) + 4 * MM;
+      doc.rect(inX, cy, inW, paraH).lineWidth(0.5).stroke('#9ca3af');
+      doc.restore();
+      writeRuns(doc, q.paragraph ?? '', inX + 2 * MM, cy + 2 * MM, inW - 4 * MM, { size: size - 0.5, bold: false, color: '#111111', lineGap: size * 0.35, align: 'left', hasCircled: assets.hasCircled });
+      cy = doc.y + 3 * MM;
+    }
+    const opts = (q.options ?? []).filter((o) => o.trim());
+    if (opts.length > 0) {
+      const optText = opts.map((o, i) => `${CIRCLED[i] ?? `${i + 1})`} ${o}`).join('\n');
+      writeRuns(doc, optText, inX, cy, inW, { size: size - 0.5, bold: false, color: '#111111', lineGap: size * 0.45, align: 'left', hasCircled: assets.hasCircled });
+      cy = doc.y;
+    }
+    if (q.showAnswer && q.answer) {
+      writeRuns(doc, `정답 ${q.answer}${q.explanation ? `  |  ${stripTags(q.explanation)}` : ''}`, inX, cy + 1.5 * MM, inW, { size: size - 1.5, bold: false, color: '#6b7280', lineGap: size * 0.3, align: 'left', hasCircled: assets.hasCircled });
+    }
+  }
+}
+
+export interface RenderStudioPdfOptions {
+  /** 이미지 요소 src → 파일 Buffer 해석기(없거나 null 반환 시 이미지 생략). */
+  resolveImage?: (src: string) => Buffer | null;
+}
+
+/** 스튜디오 문서(pages)를 A4 PDF Buffer 로 렌더. 라우트·스크립트 공용. */
+export async function renderStudioDocToPdf(
+  doc: { title?: string; pages?: unknown },
+  options: RenderStudioPdfOptions = {},
+): Promise<Buffer> {
+  const pages = (Array.isArray(doc.pages) ? doc.pages : []) as StudioPage[];
+  const [regular, bold] = await Promise.all([loadFont('Regular'), loadFont('Bold')]);
+  const circled = loadCircled();
+
+  // 이미지·QR 미리 로드
+  const images = new Map<string, Buffer>();
+  const qrs = new Map<string, Buffer>();
+  for (const p of pages) {
+    for (const el of p.elements ?? []) {
+      if (el.kind === 'image' && el.src && !images.has(el.src)) {
+        const buf = options.resolveImage?.(el.src) ?? null;
+        if (buf) images.set(el.src, buf);
+      }
+      if (el.kind === 'qr' && el.qrUrl && !qrs.has(el.qrUrl)) {
+        try { qrs.set(el.qrUrl, await QRCode.toBuffer(el.qrUrl, { margin: 0, width: 512 })); } catch { /* URL 오류 무시 */ }
+      }
+    }
+  }
+
+  const pdf = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: false, bufferPages: true });
+  pdf.registerFont('R', regular);
+  pdf.registerFont('B', bold);
+  if (circled) pdf.registerFont('C', circled);
+  const chunks: Buffer[] = [];
+  pdf.on('data', (c: Buffer) => chunks.push(c));
+  const done = new Promise<Buffer>((resolve) => pdf.on('end', () => resolve(Buffer.concat(chunks))));
+
+  for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+    const page = pages[pIdx];
+    const assets = { images, qrs, hasCircled: !!circled, pageNo: pIdx + 1 };
+    pdf.addPage({ size: 'A4', margin: 0 });
+    const els = [...(page.elements ?? [])].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
+    for (const el of els) {
+      try { drawElement(pdf, el as StudioElement, assets); } catch (e) { console.error('studio pdf element:', e); }
+    }
+  }
+  if (pages.length === 0) pdf.addPage({ size: 'A4', margin: 0 });
+  pdf.end();
+  return done;
+}

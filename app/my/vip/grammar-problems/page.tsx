@@ -6,6 +6,7 @@ import { questionHtml, answerLabel, problemView, CIRCLED_NUMS, categoryBadgeClas
 import { PrintWorksheet } from './print-worksheet';
 import { ConceptEditor } from './concept-editor';
 import { WorksheetManager } from './worksheet-manager';
+import { SubunitMap } from './subunit-map';
 import { PROBLEM_CATEGORIES } from '@/lib/vip-problem-category';
 
 const CONCEPT_BASE = '/api/my/vip/grammar-problems/concept';
@@ -39,6 +40,7 @@ export default function GrammarProblemsPage() {
   const [conceptTopics, setConceptTopics] = useState<Set<string>>(new Set()); // 개념 보유 topicKey
   const [editConcept, setEditConcept] = useState<{ topicKey: string; label: string } | null>(null);
   const [showWorksheets, setShowWorksheets] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [savingWs, setSavingWs] = useState(false);
 
   const saveWorksheet = async () => {
@@ -142,6 +144,13 @@ export default function GrammarProblemsPage() {
           <p className="text-sm text-zinc-500 mt-0.5">문법 진도(레벨·목차)에서 학습주제를 고르면, 해당 진도의 문제를 생성·관리합니다</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowMap(true)}
+            className="rounded-lg border border-zinc-700 bg-zinc-900/60 px-3 py-2 text-sm font-semibold text-zinc-300 hover:border-[#c9a44e]/50 hover:text-[#e8d48b] transition-colors"
+          >
+            🗺 소단원 지도
+          </button>
           <button
             type="button"
             onClick={() => setShowWorksheets(true)}
@@ -525,6 +534,8 @@ export default function GrammarProblemsPage() {
       )}
 
       {showWorksheets && <WorksheetManager onClose={() => setShowWorksheets(false)} />}
+
+      {showMap && <SubunitMap onClose={() => setShowMap(false)} />}
     </div>
   );
 }
