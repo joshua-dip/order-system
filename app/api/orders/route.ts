@@ -45,6 +45,35 @@ export async function POST(request: NextRequest) {
     const collection = db.collection(COLLECTION);
     const usersColl = db.collection('users');
 
+    /* ── 비회원 주문의 회원 자동 배정 ───────────────────────────────────
+       로그인하지 않고 주문해도, 자료 받을 이메일이 예전에 **회원으로 주문할 때 쓴 것과 같으면**
+       같은 사람으로 보고 그 회원에게 붙인다. (계정 이메일과 수신 이메일이 다른 경우가 많아
+       users.email 대신 주문 이력을 근거로 쓴다.)
+       추정으로 붙인 것이므로 loginIdSource 로 표시해 두어 나중에 구분·되돌리기가 가능하다. */
+    let loginIdInferredFromEmail = false;
+    if (!loginId) {
+      const metaForMatch =
+        body?.orderMeta && typeof body.orderMeta === 'object' && !Array.isArray(body.orderMeta)
+          ? (body.orderMeta as Record<string, unknown>)
+          : null;
+      const em = typeof metaForMatch?.email === 'string' ? metaForMatch.email.trim() : '';
+      if (em) {
+        const esc = em.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const prior = await collection.findOne(
+          {
+            'orderMeta.email': { $regex: `^${esc}$`, $options: 'i' },
+            loginId: { $exists: true, $nin: [null, ''] },
+          },
+          { projection: { loginId: 1 }, sort: { createdAt: -1 } },
+        );
+        const found = typeof prior?.loginId === 'string' ? prior.loginId.trim() : '';
+        if (found) {
+          loginId = found;
+          loginIdInferredFromEmail = true;
+        }
+      }
+    }
+
     // ── 중복 주문 경고 (채번·포인트 차감 이전) ─────────────────────────────
     // 같은 고객(회원 또는 동일 이메일)의 최근 변형 주문과 (지문×유형)이 겹치면,
     // confirmDuplicate 플래그가 없을 때 409 로 안내해 고객이 확인 후 진행하게 한다.
@@ -114,8 +143,10 @@ export async function POST(request: NextRequest) {
       userDropboxFolderPath = typeof path === 'string' && path.trim() ? path.trim() : undefined;
       userPhone = typeof userDoc?.phone === 'string' && userDoc.phone.trim() ? userDoc.phone.trim() : undefined;
 
-      // 포인트 사용 시 차감
-      if (pointsUsed > 0 && userDoc) {
+      /* 포인트 사용 시 차감.
+         ⚠️ 이메일로 **추정**해 붙인 회원에게는 절대 차감하지 않는다 — 로그인으로 본인 확인이
+         된 주문만 포인트를 건드릴 수 있다. (추정 배정은 집계·이력 연결용이다.) */
+      if (pointsUsed > 0 && userDoc && !loginIdInferredFromEmail) {
         const docPoints = (userDoc as { points?: number }).points;
         const currentPoints = typeof docPoints === 'number' && docPoints >= 0 ? docPoints : 0;
         if (currentPoints < pointsUsed) {
@@ -205,6 +236,8 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
       status: 'pending',
       orderNumber,
       ...(loginId && { loginId }),
+      // 로그인으로 확인된 회원인지, 이메일 이력으로 추정한 회원인지 구분해 둔다
+      ...(loginId && { loginIdSource: loginIdInferredFromEmail ? 'email-match' : 'auth' }),
       ...(pointsUsed > 0 && { pointsUsed }),
       ...(orderMeta && { orderMeta }),
     };

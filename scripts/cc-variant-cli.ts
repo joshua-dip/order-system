@@ -373,6 +373,26 @@ async function cmdSave(flags: Map<string, string>) {
     const status = o.status != null ? String(o.status) : undefined;
     const option_type = o.option_type != null ? String(o.option_type) : undefined;
 
+    /* 같은 파일을 두 번 저장해 문항이 통째로 복제되는 사고를 막는다.
+       판별 기준은 지문·유형·본문(Paragraph) — 발문은 유형마다 정형이라 같은 지문·같은 유형이면
+       늘 겹치는 반면, Paragraph 는 문항마다 다르다(빈칸 위치·순서 배치·삽입 마커 등).
+       ⚠️ passage_id 는 DB 에 ObjectId 로 저장돼 있어 문자열로만 찾으면 못 잡는다 — 둘 다 본다. */
+    const pidCandidates: unknown[] = [passage_id];
+    if (ObjectId.isValid(passage_id)) pidCandidates.push(new ObjectId(passage_id));
+    const dup = await (await getDb('gomijoshua')).collection('generated_questions').findOne(
+      {
+        passage_id: { $in: pidCandidates },
+        type,
+        'question_data.Paragraph': String((qd as Record<string, unknown>).Paragraph ?? ''),
+      },
+      { projection: { _id: 1 } },
+    );
+    if (dup) {
+      results.push({ index: i, ok: false, skipped_duplicate: true, existing_id: String(dup._id), error: '이미 같은 문항이 있습니다 (중복 저장 방지)' });
+      if (items.length > 1) console.error(`  [${i + 1}/${items.length}] ${source} / ${type} → 건너뜀(중복)`);
+      continue;
+    }
+
     const saved = await saveGeneratedQuestionToDb({
       passage_id,
       textbook,
@@ -385,7 +405,18 @@ async function cmdSave(flags: Map<string, string>) {
     results.push({ index: i, ...saved });
     if (items.length > 1) console.error(`  [${i + 1}/${items.length}] ${source} / ${type} → ${saved.ok ? 'OK' : saved.error}`);
   }
-  if (items.length === 1) { out(results[0]); } else { out({ ok: true, total: items.length, saved: results.filter((r) => (r as { ok?: boolean }).ok).length, results }); }
+  const skippedDup = results.filter((r) => (r as { skipped_duplicate?: boolean }).skipped_duplicate).length;
+  if (items.length === 1) {
+    out(results[0]);
+  } else {
+    out({
+      ok: true,
+      total: items.length,
+      saved: results.filter((r) => (r as { ok?: boolean }).ok).length,
+      skipped_duplicate: skippedDup,
+      results,
+    });
+  }
 }
 
 async function cmdRecordReview(flags: Map<string, string>) {
@@ -766,7 +797,11 @@ async function main() {
   const argv = argvAfterScript();
   let cmd = argv[0] ?? '';
   const tail = argv.slice(1);
-  if (!cmd || cmd === '-h' || cmd === '--help') {
+  /* --help 는 **어디에 있든** 도움말만 보여 주고 끝낸다.
+     예전에는 첫 인자일 때만 잡아서 `save --json x.json --help` 가 도움말인 줄 알고
+     실행됐다가 그대로 저장까지 돼 중복 insert 사고가 반복됐다. */
+  const wantsHelp = argv.some((a) => a === '-h' || a === '--help');
+  if (!cmd || wantsHelp) {
     console.error(`사용법: npx tsx scripts/cc-variant-cli.ts <명령> [옵션]
 
 명령:
