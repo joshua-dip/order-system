@@ -54,6 +54,11 @@ export function getQuestionDataForReview(raw: unknown): {
       '정답',
       'answer',
       'correct_answer',
+      // 서술형(영작·배열·요약) 변형은 정답을 SampleAnswer(완성 영문)에 둔다.
+      // cf. lib/member-essay-draft-claude.ts (MEMBER_ESSAY_QUESTION_TYPES)
+      'SampleAnswer',
+      'sampleAnswer',
+      '모범답안',
     ]),
   };
 }

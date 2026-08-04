@@ -112,7 +112,14 @@ function checkItem(it: Item, original: string | null): string[] {
 
   // placeholder / truncation
   for (const { re, label } of PLACEHOLDER_PATTERNS) {
-    if (re.test(P)) reasons.push(`Paragraph placeholder/축약 의심: ${label}`);
+    if (label === 'non-<u> HTML/markup') {
+      // 원문에 실제로 들어 있는 < > (예: <Hop-on Hop-off City Tour>) 는 콘텐츠이므로 제외
+      const matches = P.match(/<(?!\/?u>)[^>]+>/g) || [];
+      const bad = matches.filter((m) => !original || !original.includes(m));
+      if (bad.length) reasons.push(`Paragraph placeholder/축약 의심: ${label} (${bad[0]})`);
+    } else if (re.test(P)) {
+      reasons.push(`Paragraph placeholder/축약 의심: ${label}`);
+    }
   }
 
   // 길이 비율 (truncation 차단). 삽입=원문+주어진문장, 요약=원문+요약문 → 상한 완화
@@ -124,8 +131,10 @@ function checkItem(it: Item, original: string | null): string[] {
       // 무관한문장은 원문 일부만 쓰고 한 문장을 외부 문장으로 교체 → 길이 하한 완화.
       // (truncation 의 주 신호는 length 가 아니라 placeholder/ellipsis 검사.)
       const isInsert = type === '삽입' || type === '삽입-고난도';
-      const lo = type === '무관한문장' ? 0.4 : isInsert ? 0.75 : type === '요약' ? 0.95 : 0.85;
-      const hi = type === '요약' ? 1.6 : isInsert ? 1.5 : type === '무관한문장' ? 1.3 : 1.2;
+      const isSummary = type === '요약' || type === '요약-고난도';
+      const isIrrelevant = type === '무관한문장' || type === '무관한문장-고난도';
+      const lo = isIrrelevant ? 0.4 : isInsert ? 0.75 : isSummary ? 0.95 : 0.85;
+      const hi = isSummary ? 1.6 : isInsert ? 1.5 : isIrrelevant ? 1.3 : 1.2;
       if (ratio < lo) reasons.push(`Paragraph 길이 부족(원문 대비 ${(ratio * 100) | 0}%) — truncation 의심`);
       if (ratio > hi) reasons.push(`Paragraph 길이 과다(원문 대비 ${(ratio * 100) | 0}%)`);
     }
@@ -136,17 +145,34 @@ function checkItem(it: Item, original: string | null): string[] {
   const markerCount = CIRCLED.filter((c) => P.includes(c)).length;
   const optCount = CIRCLED.filter((c) => Opt.includes(c)).length;
 
+  // 보기 중복 검사(서버 검증이 잡는 항목): ①~⑤ 텍스트가 서로 달라야 함. 어법/삽입은 save 가 보기를 덮으므로 제외.
+  if (type !== '어법' && type !== '삽입' && type !== '삽입-고난도') {
+    const parts = Opt.split(/\s*###\s*|\n/).map((s) => s.replace(/^[①②③④⑤]\s*/, '').trim()).filter((s) => s.length > 0);
+    const seen = new Set<string>();
+    for (const p of parts) {
+      const k = p.toLowerCase().replace(/\s+/g, ' ');
+      if (seen.has(k)) { reasons.push(`보기 중복: "${p.slice(0, 40)}"`); break; }
+      seen.add(k);
+    }
+  }
+
   switch (type) {
     case '주제':
+    case '주제-고난도':
     case '제목':
+    case '제목-고난도':
     case '주장':
+    case '주장-고난도':
     case '일치':
-    case '불일치': {
+    case '일치-고난도':
+    case '불일치':
+    case '불일치-고난도': {
       if (optCount < 5) reasons.push(`Options 보기 ${optCount}/5`);
       if (markerCount > 0 || uCount > 0) reasons.push('본문에 불필요한 ①~⑤/<u> 마커');
       break;
     }
-    case '함의': {
+    case '함의':
+    case '함의-고난도': {
       if (uCount !== 1 || uCloseCount !== 1) reasons.push(`<u> 정확히 1개여야 함 (열${uCount}/닫${uCloseCount})`);
       if (optCount < 5) reasons.push(`Options 보기 ${optCount}/5`);
       // 밑줄 구절이 원문에 존재?
@@ -167,6 +193,19 @@ function checkItem(it: Item, original: string | null): string[] {
       if (order !== '①②③④⑤') reasons.push(`밑줄 번호 순서 오류: ${order}`);
       // ③<u> 처럼 공백 없이 붙은 경우
       if (/[①②③④⑤]<u>/.test(P)) reasons.push('동그라미와 <u> 사이 공백 누락');
+      break;
+    }
+    case '어휘': {
+      // 표준 구조: 본문에 인라인 ①word 마커 5곳(①→⑤ 순, <u> 태그 없음), Options 는 밑줄 단어 5개 배열.
+      // 정답은 문맥상 쓰임이 부적절한 낱말 1곳(①~⑤ 단일, 위 FIRST 검사로 확인). (cf. reference_variant_eohwi_vocab_structure)
+      if (markerCount !== 5) reasons.push(`①~⑤ 인라인 마커 ${markerCount}/5`);
+      const order = (P.match(/[①②③④⑤]/g) || []).join('');
+      if (order !== '①②③④⑤') reasons.push(`마커 순서 오류: ${order}`);
+      if (uCount > 0) reasons.push('어휘 본문에 <u> 태그가 있음 — 인라인 ①word 형식이어야 함');
+      const eohwiOpts = (qd as { Options?: unknown }).Options;
+      if (!Array.isArray(eohwiOpts) || eohwiOpts.length !== 5) {
+        reasons.push(`Options 는 밑줄 단어 5개 배열이어야 함 (받음: ${Array.isArray(eohwiOpts) ? `${eohwiOpts.length}개 배열` : typeof eohwiOpts})`);
+      }
       break;
     }
     case '어법-고난도': {
@@ -203,7 +242,8 @@ function checkItem(it: Item, original: string | null): string[] {
       if (original && normalize(original).includes(normalize(given).slice(0, 40))) reasons.push('생성 문장이 원문에 이미 존재(고난도는 새 문장이어야)');
       break;
     }
-    case '순서': {
+    case '순서':
+    case '순서-고난도': {
       const parsed = parseOrderParagraph(P);
       if (!parsed) { reasons.push('순서 Paragraph 형식 불일치 (intro\\n\\n(A) ..\\n\\n(B) ..\\n\\n(C) ..)'); break; }
       if (!original) { reasons.push('원문 없음 — 순서 검증 불가'); break; }
@@ -215,6 +255,13 @@ function checkItem(it: Item, original: string | null): string[] {
       if (!expected) reasons.push(`읽기순서 ${key} 매핑 불가`);
       else if (expected !== FIRST) reasons.push(`CorrectAnswer ${CA} != ORDER_MAP[${key}]=${expected}`);
       if (optCount < 5) reasons.push(`Options 보기 ${optCount}/5`);
+      // 학생 일관성: Options 는 ORDER_MAP 정합 표준이어야 함 (보기 N = ORDER_MAP 으로 N 에 매핑되는 배열).
+      // 구분자는 `###` 또는 개행 모두 허용 — 학생 practice page 는 split('###') 만 하므로 `###` 가 렌더 정답이지만,
+      // 키 검증 관점에선 둘 다 동일. (cf. feedback_variant_order_options_validator_bug)
+      const optNorm = Opt.replace(/\s+/g, '').replace(/###/g, '');
+      if (optNorm !== '①(A)-(C)-(B)②(B)-(A)-(C)③(B)-(C)-(A)④(C)-(A)-(B)⑤(C)-(B)-(A)') {
+        reasons.push('순서 Options 가 표준(ORDER_MAP 정합) 형식이 아님 — cc-variant-fix-order 로 통일 필요');
+      }
       break;
     }
     case '삽입': {
@@ -233,14 +280,16 @@ function checkItem(it: Item, original: string | null): string[] {
       }
       break;
     }
-    case '빈칸': {
+    case '빈칸':
+    case '빈칸-고난도': {
       const blanks = (P.match(/<u>_+<\/u>|_{3,}/g) || []).length;
       if (blanks < 1) reasons.push('빈칸(<u>____</u>) 없음');
       if (blanks > 1) reasons.push(`빈칸이 ${blanks}개 (1개여야 함)`);
       if (optCount < 5) reasons.push(`Options 보기 ${optCount}/5`);
       break;
     }
-    case '요약': {
+    case '요약':
+    case '요약-고난도': {
       const hasA = /\(A\)/.test(P);
       const hasB = /\(B\)/.test(P);
       if (!hasA || !hasB) reasons.push('요약문에 (A)/(B) 빈칸 누락');
@@ -250,11 +299,27 @@ function checkItem(it: Item, original: string | null): string[] {
       if (/\(A\)/.test(Opt) === false || /\(B\)/.test(Opt) === false) reasons.push('Options 에 (A)/(B) 형식 누락');
       break;
     }
-    case '무관한문장': {
+    case '무관한문장':
+    case '무관한문장-고난도': {
       const nums = (P.match(/[①②③④⑤]/g) || []);
       if (nums.length !== 5) reasons.push(`①~⑤ 문장 번호 ${nums.length}/5`);
       const order = nums.join('');
       if (order !== '①②③④⑤') reasons.push(`문장 번호 순서 오류: ${order}`);
+      break;
+    }
+    case '어휘-고난도': {
+      // 본문에 인라인 `① <u>word</u>` 마커 5곳(①→⑤ 순), Options 는 밑줄 단어 5개 문자열(### 구분),
+      // CorrectAnswer 는 문맥상 부적절한 낱말을 모두 고르기(①~⑤ 중 1~5개, ①→⑤ 순, 중복 금지).
+      if (markerCount !== 5) reasons.push(`①~⑤ 마커 ${markerCount}/5`);
+      const order = (P.match(/[①②③④⑤]/g) || []).join('');
+      if (order !== '①②③④⑤') reasons.push(`마커 순서 오류: ${order}`);
+      if (uCount !== 5 || uCloseCount !== 5) reasons.push(`<u> 5쌍 필요 (열${uCount}/닫${uCloseCount})`);
+      if (optCount < 5) reasons.push(`Options 보기 ${optCount}/5`);
+      if (!/^[①②③④⑤]{1,5}$/.test(CA)) reasons.push(`어휘-고난도 CorrectAnswer 는 ①~⑤ 1~5개 연속이어야 함: "${CA}"`);
+      else {
+        const sorted = CIRCLED.filter((c) => CA.includes(c)).join('');
+        if (sorted !== CA) reasons.push(`CorrectAnswer 정렬/중복 오류(①→⑤ 순, 중복 금지): "${CA}"`);
+      }
       break;
     }
     default:
