@@ -30,6 +30,7 @@ type QuestionDataView = {
   explanation: string;
   question: string;
   correctAnswer: string;
+  sampleAnswer: string;
 };
 
 function getQDView(qd: Record<string, unknown>): QuestionDataView {
@@ -40,8 +41,22 @@ function getQDView(qd: Record<string, unknown>): QuestionDataView {
     question: typeof qd.Question === 'string' ? qd.Question : '',
     correctAnswer:
       typeof qd.CorrectAnswer === 'string' ? qd.CorrectAnswer : '',
+    sampleAnswer: typeof qd.SampleAnswer === 'string' ? qd.SampleAnswer : '',
   };
 }
+
+/**
+ * 서술형(자유 영작·배열·요약 완성) 변형 — 정답이 동그라미 CorrectAnswer 가 아니라
+ * SampleAnswer(완성 영문)에 저장되는 유형. 동그라미 형식 검증 대상이 아니다.
+ * cf. MEMBER_ESSAY_QUESTION_TYPES in lib/member-essay-draft-claude.ts
+ */
+const SAMPLE_ANSWER_TYPES = new Set<string>([
+  '요약문조건영작배열',
+  '요약문조건영작형',
+  '요약문본문어휘',
+  '빈칸재배열형',
+  '이중요지영작형',
+]);
 
 /** Explanation 'API' 검증 — Explanation 에 'API' 토큰 포함 */
 function checkExplanationApi(v: QuestionDataView): ReviewValidationIssue[] {
@@ -246,8 +261,22 @@ function checkBlankParagraphMissingUnderline(
 
 /** CorrectAnswer ①~⑤ 정합성 — 표기 규칙(memory에 저장된 룰) */
 function checkCorrectAnswerCircled(
+  type: string,
   v: QuestionDataView,
 ): ReviewValidationIssue[] {
+  // 서술형(영작·배열) 유형은 동그라미 정답이 없고 SampleAnswer 로 채점한다.
+  if (SAMPLE_ANSWER_TYPES.has(type)) {
+    if (!v.sampleAnswer.trim()) {
+      return [
+        {
+          rule: 'sample_answer_missing',
+          severity: 'error',
+          message: '서술형(영작·배열) 유형인데 SampleAnswer(모범 답안)가 비어 있습니다.',
+        },
+      ];
+    }
+    return [];
+  }
   if (!v.correctAnswer) {
     return [
       {
@@ -316,7 +345,7 @@ export async function runPerQuestionValidations(
   issues.push(...checkExplanationApi(v));
   issues.push(...checkOptionsApi(v));
   issues.push(...checkDuplicateChoicesWithinQuestion(v));
-  issues.push(...checkCorrectAnswerCircled(v));
+  issues.push(...checkCorrectAnswerCircled(type, v));
   issues.push(...checkGrammarAllCorrectClaim(type, v));
   issues.push(...checkCefrAdvancedGloss(type, v));
   issues.push(...checkBlankParagraphMissingUnderline(type, v));
