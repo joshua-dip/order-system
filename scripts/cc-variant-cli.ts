@@ -42,6 +42,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 loadCliEnv(PROJECT_ROOT);
 
+/**
+ * Paragraph 가 원문 그대로여서 같은 지문의 변형끼리 본문이 완전히 같아지는 유형.
+ * (보기만 달라진다 — 빈칸·순서·삽입처럼 본문을 건드리는 유형과 반대)
+ * save 의 중복 판정에서 이 유형만 Options 를 함께 본다. 안 그러면 정상 변형이 중복으로 폐기된다.
+ */
+const SAME_PARAGRAPH_TYPES = new Set<string>([
+  '주제', '제목', '주장', '일치', '불일치',
+  '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도',
+]);
+
 function parseFlags(argv: string[]): { positional: string[]; flags: Map<string, string> } {
   const positional: string[] = [];
   const flags = new Map<string, string>();
@@ -375,16 +385,25 @@ async function cmdSave(flags: Map<string, string>) {
 
     /* 같은 파일을 두 번 저장해 문항이 통째로 복제되는 사고를 막는다.
        판별 기준은 지문·유형·본문(Paragraph) — 발문은 유형마다 정형이라 같은 지문·같은 유형이면
-       늘 겹치는 반면, Paragraph 는 문항마다 다르다(빈칸 위치·순서 배치·삽입 마커 등).
+       늘 겹치는 반면, Paragraph 는 대개 문항마다 다르다(빈칸 위치·순서 배치·삽입 마커 등).
+
+       다만 SAME_PARAGRAPH_TYPES 는 Paragraph 가 원문 그대로여서 변형끼리 본문이 완전히 같다.
+       (주제·제목·주장·일치·불일치 — 보기만 바뀐다) 이 유형까지 본문만으로 판정하면
+       정상 변형 2번째가 중복으로 폐기된다. 실제로 09강 생성분 35문항이 이렇게 사라졌다.
+       그래서 이 유형만 Options 를 판정에 함께 쓴다.
        ⚠️ passage_id 는 DB 에 ObjectId 로 저장돼 있어 문자열로만 찾으면 못 잡는다 — 둘 다 본다. */
     const pidCandidates: unknown[] = [passage_id];
     if (ObjectId.isValid(passage_id)) pidCandidates.push(new ObjectId(passage_id));
+    const dupFilter: Record<string, unknown> = {
+      passage_id: { $in: pidCandidates },
+      type,
+      'question_data.Paragraph': String((qd as Record<string, unknown>).Paragraph ?? ''),
+    };
+    if (SAME_PARAGRAPH_TYPES.has(type)) {
+      dupFilter['question_data.Options'] = (qd as Record<string, unknown>).Options ?? '';
+    }
     const dup = await (await getDb('gomijoshua')).collection('generated_questions').findOne(
-      {
-        passage_id: { $in: pidCandidates },
-        type,
-        'question_data.Paragraph': String((qd as Record<string, unknown>).Paragraph ?? ''),
-      },
+      dupFilter,
       { projection: { _id: 1 } },
     );
     if (dup) {
