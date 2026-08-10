@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gomijoshua.com/schemas/variant-job/1.0.0",
+  "title": "변형문제 제작기 job",
+  "description": "multi_job_runner.py 가 소비하는 작업 정의. 웹 주문서 폼도 이 스키마에서 생성한다. x-layer: customer=고객이 고르는 값, operator=운영자만 보는 값.",
+  "type": "object",
+  "required": ["textbook", "sources", "categories"],
+  "additionalProperties": true,
+  "properties": {
+    "id":   { "type": "string", "x-layer": "operator", "description": "작업 식별자(로그용)" },
+    "name": { "type": "string", "x-layer": "operator", "description": "작업 이름(로그용)" },
+
+    "textbook": {
+      "type": "string", "minLength": 1, "x-layer": "customer",
+      "title": "교재", "description": "generated_questions.textbook 과 일치해야 한다"
+    },
+    "sources": {
+      "type": "array", "minItems": 1, "items": { "type": "string" },
+      "x-layer": "customer", "title": "강·번호",
+      "description": "예: [\"09강 대표 기출 1\", \"09강 103번\"]"
+    },
+    "categories": {
+      "type": "array", "minItems": 1, "x-layer": "customer", "title": "문제 유형",
+      "items": {
+        "type": "string",
+        "enum": ["주제", "제목", "주장", "일치", "불일치", "함의", "빈칸",
+                 "어법", "어법-고난도", "어휘", "어휘-고난도", "삽입",
+                 "순서", "순서-고난도", "요약", "요약-고난도", "무관한문장"]
+      }
+    },
+
+    "option_type": {
+      "type": "string", "enum": ["English", "Korean", "전체"], "default": "English",
+      "x-layer": "customer", "title": "선택지 언어",
+      "description": "주의: DB 의 option_type 필드는 실제 내용을 보증하지 않는다. 생성 규칙(rules)에서도 언어를 강제할 것. 2026-08 기준 전 유형 영문이 기본."
+    },
+    "difficulty": {
+      "type": "string", "enum": ["상", "중", "하"], "default": "중",
+      "x-layer": "customer", "title": "난이도"
+    },
+    "n_per_source_category": {
+      "type": ["integer", "null"], "minimum": 1, "x-layer": "customer",
+      "title": "유형당 문항 수", "description": "null 이면 전체"
+    },
+    "n_as_total": {
+      "type": "boolean", "default": false, "x-layer": "customer",
+      "title": "총 개수로 해석", "description": "true 면 n_per_source_category 를 전체 문항 수로 본다"
+    },
+    "explanation_by_category": {
+      "type": "object", "x-layer": "customer", "title": "유형별 해설 포함 여부",
+      "additionalProperties": { "type": "boolean" },
+      "description": "예: {\"순서\": false, \"삽입\": false}. 전역 category_explanation_pref.json 보다 우선한다. 넣지 않으면 전역 파일을 따른다.",
+      "examples": [{ "순서": false, "삽입": false }]
+    },
+
+    "output_mode": {
+      "type": "string", "default": "일반", "x-layer": "customer", "title": "출력 형태",
+      "enum": ["일반", "일반(번호)", "간단정답지", "간단정답지+해설",
+               "지문통합", "지문통합+해설", "지문통합+간단정답지+해설"]
+    },
+    "save": {
+      "type": "object", "x-layer": "customer", "title": "저장 방식",
+      "additionalProperties": false,
+      "properties": {
+        "single_full":  { "type": "boolean", "default": true,  "title": "전체 1파일" },
+        "by_number":    { "type": "boolean", "default": false, "title": "번호별" },
+        "by_category":  { "type": "boolean", "default": false, "title": "유형별" },
+        "by_chapter":   { "type": "boolean", "default": false, "title": "강별" },
+        "by_round":     { "type": "boolean", "default": false, "title": "회차별" }
+      }
+    },
+    "round_count": {
+      "type": ["integer", "null"], "minimum": 1, "x-layer": "customer",
+      "title": "회차 수", "description": "save.by_round 와 함께 쓴다"
+    },
+    "shuffle_full_file": {
+      "type": "boolean", "default": false, "x-layer": "customer",
+      "title": "전문항 랜덤", "description": "전체 1파일에서 지문·유형 순서를 섞는다"
+    },
+    "hwp_template": {
+      "type": "string", "x-layer": "customer", "title": "커스텀 HWP 양식",
+      "description": "고객 업로드 양식의 경로. 비우면 교재 기본 양식."
+    },
+
+    "exclude_delivered_for_email": {
+      "type": "string", "format": "email", "x-layer": "customer",
+      "title": "기제공 문항 제외",
+      "description": "이 이메일에 이전에 나간 문항(delivered_serials)을 뺀다"
+    },
+    "exclude_delivered_except_order": {
+      "type": "string", "x-layer": "operator",
+      "title": "제외에서 뺄 주문번호", "description": "같은 주문을 다시 돌릴 때 자기 이력에 막히지 않게 한다"
+    },
+
+    "free_mode": {
+      "type": "string", "enum": ["paid_only", "free_only", "all"], "default": "paid_only",
+      "x-layer": "operator", "title": "무료 문항 처리"
+    },
+    "random_sample":      { "type": "boolean", "default": true,  "x-layer": "operator", "title": "무작위 표본" },
+    "options_diversity":  { "type": "boolean", "default": false, "x-layer": "operator", "title": "보기 다양성" },
+    "answer_diversity":   { "type": "boolean", "default": false, "x-layer": "operator", "title": "정답 번호 고르게" },
+    "spacing_question_paragraph": { "type": "integer", "minimum": 1, "maximum": 2, "default": 1, "x-layer": "operator", "title": "발문–본문 간격" },
+    "spacing_paragraph_options":  { "type": "integer", "minimum": 1, "maximum": 2, "default": 1, "x-layer": "operator", "title": "본문–선택지 간격" },
+    "output_file_tag":    { "type": "string", "x-layer": "operator", "title": "파일명 꼬리표", "description": "보통 고객 이메일" },
+    "hwp_visible":        { "type": "boolean", "default": false, "x-layer": "operator", "title": "한글 창 표시" },
+    "auto_pdf":           { "type": "boolean", "default": false, "x-layer": "operator", "title": "PDF 자동 변환" },
+
+    "order_text_file": { "type": "string", "x-layer": "operator", "description": "주문서 텍스트 파일에서 textbook/sources/categories 를 채운다" },
+    "order_type":      { "type": "string", "default": "textbook", "x-layer": "operator" }
+  },
+
+  "allOf": [
+    {
+      "if":   { "properties": { "save": { "required": ["by_round"], "properties": { "by_round": { "const": true } } } }, "required": ["save"] },
+      "then": { "anyOf": [
+        { "required": ["round_count"], "properties": { "round_count": { "type": "integer", "minimum": 1 } } },
+        { "required": ["n_per_source_category"], "properties": { "n_per_source_category": { "type": "integer", "minimum": 1 } } }
+      ] }
+    }
+  ]
+}

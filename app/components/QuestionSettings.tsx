@@ -98,6 +98,12 @@ const QuestionSettings = ({
   /** HWP 저장 방식 — 복수 선택, 기본은 강별 */
   const [hwpStorageModes, setHwpStorageModes] = useState<HwpStorageModeKey[]>(DEFAULT_HWP_STORAGE_MODES);
   const [hwpStorageDetailOpen, setHwpStorageDetailOpen] = useState(false);
+  /** 난이도 — 제작기 job 의 difficulty. 기본 '중' */
+  const [difficulty, setDifficulty] = useState<'상' | '중' | '하'>('중');
+  /** 전문항 랜덤 — 전체 1파일에서 지문·유형 순서를 섞는다 */
+  const [shuffleFullFile, setShuffleFullFile] = useState(false);
+  /** 이전 주문에 나간 문항 제외 — 같은 이메일 기준 */
+  const [excludeDelivered, setExcludeDelivered] = useState(false);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const orderSubmittingRef = useRef(false);
 
@@ -240,6 +246,9 @@ const QuestionSettings = ({
         if (t || allowEmptyEmail) setEmail(t);
       }
       if (typeof m.useCustomHwp === 'boolean') setUseCustomHwp(m.useCustomHwp);
+      if (m.difficulty === '상' || m.difficulty === '중' || m.difficulty === '하') setDifficulty(m.difficulty);
+      if (typeof m.shuffleFullFile === 'boolean') setShuffleFullFile(m.shuffleFullFile);
+      if (typeof m.excludeDelivered === 'boolean') setExcludeDelivered(m.excludeDelivered);
       if (Array.isArray(m.hwpStorageModes)) {
         const allowed: HwpStorageModeKey[] = HWP_STORAGE_OPTIONS.map((o) => o.key);
         const next = m.hwpStorageModes.filter(
@@ -594,7 +603,9 @@ ${solbookRetailLine}
     : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제하시며, 포인트 사용은 적용되지 않습니다.' : ''}
 
 5-1. HWP 저장 방식
-: ${formatHwpStorageSummary(hwpStorageModes)}${solbookBlock}${useCustomHwp ? `
+: ${formatHwpStorageSummary(hwpStorageModes)}
+5-2. 난이도
+: ${difficulty}${shuffleFullFile ? '\n5-3. 전문항 랜덤\n: 적용 (전체 파일에서 지문·유형 순서를 섞음)' : ''}${excludeDelivered ? '\n5-4. 기제공 문항 제외\n: 적용 (같은 이메일로 이전에 받으신 문항 제외)' : ''}${solbookBlock}${useCustomHwp ? `
 
 6. 커스텀 HWP 양식 사용
    나의양식 「변형문제」 양식 적용 요청 (업로드 ${formatCounts.변형문제}건)` : ''}`;
@@ -610,6 +621,9 @@ ${solbookRetailLine}
       email: email.trim(),
       useCustomHwp,
       hwpStorageModes: [...hwpStorageModes],
+      difficulty,
+      shuffleFullFile,
+      excludeDelivered,
       ...(isSolbookTextbook
         ? {
             solbook: {
@@ -1162,6 +1176,58 @@ ${solbookRetailLine}
                   <p className="text-sm text-gray-700">비회원 주문 · 기본 양식</p>
                 </div>
               )}
+
+              <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3">
+                <div className="text-sm font-bold text-black mb-2">제작 옵션</div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs text-slate-600 w-14 shrink-0">난이도</span>
+                  <div className="flex gap-1">
+                    {(['상', '중', '하'] as const).map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDifficulty(d)}
+                        className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                          difficulty === d
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className="flex items-start gap-2 cursor-pointer mb-2">
+                  <input
+                    type="checkbox"
+                    checked={shuffleFullFile}
+                    onChange={(e) => setShuffleFullFile(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="text-xs font-medium text-slate-800">전문항 랜덤</span>
+                    <span className="block text-[11px] text-slate-500">전체 파일에서 지문·유형 순서를 섞습니다.</span>
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={excludeDelivered}
+                    onChange={(e) => setExcludeDelivered(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="text-xs font-medium text-slate-800">이전에 받은 문항 제외</span>
+                    <span className="block text-[11px] text-slate-500">
+                      같은 이메일로 이전 주문에서 받으신 문항을 빼고 제작합니다. 재고가 부족하면 문항 수가 줄 수 있습니다.
+                    </span>
+                  </span>
+                </label>
+              </div>
 
               <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/90 overflow-hidden">
                 <button
