@@ -18,6 +18,8 @@ import {
   variantUnitPrice,
   variantVolumeDiscountRate,
   VARIANT_PRICE,
+  FREE_VARIANT_TYPES,
+  isFreeVariantType,
 } from '@/lib/variant-pricing';
 
 const KAKAO_INQUIRY_URL =
@@ -26,15 +28,36 @@ const KAKAO_INQUIRY_URL =
 /** HWP 결과물 저장·분할 방식 (주문 미리보기에서 복수 선택) */
 export type HwpStorageModeKey = 'bySourceNumber' | 'byCategory' | 'byChapter' | 'byRound' | 'fullRandomPair';
 
+/* 「전문항랜덤」은 아래 「문항 순서 섞기」와 이름이 거의 같아 어느 쪽을 켠 건지 알 수 없었다.
+   여기는 *파일을 몇 벌 만드는가*, 아래는 *순서를 섞는가* 라서 이름을 그렇게 갈랐다. */
 const HWP_STORAGE_OPTIONS: readonly { key: HwpStorageModeKey; label: string; hint: string }[] = [
   { key: 'bySourceNumber', label: '번호별', hint: '번호(Source)마다 파일 나눔' },
   { key: 'byCategory', label: '카테고리별', hint: '문제 유형마다 파일 나눔' },
   { key: 'byChapter', label: '강별', hint: '강(Chapter)마다 파일 나눔' },
   { key: 'byRound', label: '회차별', hint: '회차마다 파일 나눔' },
-  { key: 'fullRandomPair', label: '전문항랜덤', hint: '기본 순서 1벌 + 무작위 순서 1벌 추가' },
+  { key: 'fullRandomPair', label: '전체 1파일 + 랜덤본', hint: '기본 순서 1벌과 무작위 순서 1벌을 함께 드립니다' },
 ] as const;
 
 const DEFAULT_HWP_STORAGE_MODES: HwpStorageModeKey[] = ['byChapter'];
+
+/**
+ * 결과 문서의 구성. 값은 제작기가 그대로 쓰는 문자열이라 바꾸면 안 된다
+ * (schemas/variant-job.schema.json 의 output_mode enum · 변형문제제작기_DB.py 의 mode).
+ * 설명은 제작기 코드의 mode 주석을 그대로 옮긴 것이다.
+ */
+const OUTPUT_MODE_OPTIONS: readonly { key: string; label: string; hint: string }[] = [
+  { key: '지문통합+간단정답지+해설', label: '지문통합 + 정답표 + 해설', hint: '같은 지문은 한 번만, 각주 해설 + 마지막에 정답표 (기본)' },
+  { key: '지문통합+해설', label: '지문통합 + 해설', hint: '같은 지문은 한 번만, 각주 해설' },
+  { key: '지문통합', label: '지문통합', hint: '같은 지문은 한 번만 싣고 문제만 반복' },
+  { key: '간단정답지+해설', label: '정답표 + 해설', hint: '번호·발문·본문·선택지 + 정답·해설 + 마지막 정답표' },
+  { key: '간단정답지', label: '정답표만', hint: '번호·발문·본문·선택지 (각주 없음)' },
+  { key: '일반', label: '일반', hint: '발문 + 해설 각주 + 본문 + 선택지' },
+] as const;
+
+const DEFAULT_OUTPUT_MODE = '지문통합+간단정답지+해설';
+
+/** 세부 옵션 기본값 저장 키 (이 브라우저 전용) */
+const DETAIL_DEFAULTS_KEY = 'bv-detail-option-defaults-v1';
 
 function formatHwpStorageSummary(modes: HwpStorageModeKey[]): string {
   if (modes.length === 0) return '1파일(기본)';
@@ -71,6 +94,10 @@ const QuestionSettings = ({
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [email, setEmail] = useState<string>('');
+  /** 자동으로 채워 넣은 주소인지 — 맞으면 입력칸 아래에 안내를 띄운다 */
+  const [emailAutoFilled, setEmailAutoFilled] = useState(false);
+  /** 계정 이메일. 「직전 주문 주소」로 덮어써도 되는지 판단할 때만 쓴다 */
+  const accountEmailRef = useRef('');
   const [questionSamples, setQuestionSamples] = useState<Record<string, {blogUrl: string, description: string, sampleTitle: string}>>({});
   const [orderInsertExplanation, setOrderInsertExplanation] = useState<{ 순서: boolean; 삽입: boolean }>({
     순서: true,
@@ -97,13 +124,25 @@ const QuestionSettings = ({
   const [pointsToUse, setPointsToUse] = useState(0);
   /** HWP 저장 방식 — 복수 선택, 기본은 강별 */
   const [hwpStorageModes, setHwpStorageModes] = useState<HwpStorageModeKey[]>(DEFAULT_HWP_STORAGE_MODES);
-  const [hwpStorageDetailOpen, setHwpStorageDetailOpen] = useState(false);
-  /** 난이도 — 제작기 job 의 difficulty. 기본 '중' */
-  const [difficulty, setDifficulty] = useState<'상' | '중' | '하'>('중');
+  /** 세부 옵션 패널 — 기본은 접힘. 예전 주문서와 같은 화면을 유지하려는 것이다. */
+  const [detailOptionsOpen, setDetailOptionsOpen] = useState(false);
+  const [detailDefaultsSaved, setDetailDefaultsSaved] = useState(false);
+  /* 난이도(job 의 difficulty)는 주문서에서 묻지 않는다.
+     고난도는 이미 「문제 유형 선택」에 별도 유형(삽입-고난도·어법-고난도 …)으로 있어서
+     여기서 상/중/하를 또 고르게 하면 같은 걸 두 번 묻는 셈이 된다. job 변환은 기본값 '중' 을 쓴다.
+     (옛 주문에 남아 있는 difficulty 는 buildVariantJob 이 그대로 읽으므로 호환된다) */
   /** 전문항 랜덤 — 전체 1파일에서 지문·유형 순서를 섞는다 */
   const [shuffleFullFile, setShuffleFullFile] = useState(false);
   /** 이전 주문에 나간 문항 제외 — 같은 이메일 기준 */
-  const [excludeDelivered, setExcludeDelivered] = useState(false);
+  /* 기제공 문항 제외는 고객이 끌 수 없다. 끄면 이전에 받은 문항이 또 나가 손해라
+     상수로 두고 화면에는 안내만 띄운다. (job 의 exclude_delivered_for_email 로 나간다) */
+  const excludeDelivered = true;
+  /** 결과 문서 구성 — 제작기 job 의 output_mode */
+  const [outputMode, setOutputMode] = useState<string>(DEFAULT_OUTPUT_MODE);
+  /** 회차 수 — 저장 방식에 「회차별」을 켰을 때만 쓴다 */
+  /* 회차 수는 「유형별 문제 개수」를 그대로 따른다 — 유형당 3문항이면 회차마다 1문항씩 3회차.
+     따로 고르게 하면 두 값이 어긋나 (예: 2문항인데 5회차) 나눌 수 없는 주문이 된다. */
+  const roundCount = questionsPerType;
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const orderSubmittingRef = useRef(false);
 
@@ -153,12 +192,64 @@ const QuestionSettings = ({
         if (u?.myFormatApproved) refreshMyFormats();
         const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
         setUserPoints(pts);
+        /* 자료 받을 이메일 자동 채움 — 매번 손으로 적다 오타가 나면 자료가 엉뚱한 데로 간다.
+           계정 이메일을 먼저 넣고, 직전 주문에서 실제로 쓴 수신 주소가 있으면 그걸로 덮는다
+           (계정 이메일과 자료 받는 주소가 다른 분이 많다). 사용자가 이미 입력했으면 건드리지 않는다. */
+        const accountEmail = typeof u?.email === 'string' ? u.email.trim() : '';
+        accountEmailRef.current = accountEmail;
+        if (accountEmail) {
+          setEmail((prev) => {
+            if (prev.trim()) return prev;
+            setEmailAutoFilled(true);
+            return accountEmail;
+          });
+        }
       })
       .catch(() => {
         setLoggedIn(false);
         setIsMember(false);
       });
   }, [refreshMyFormats]);
+
+  /** 저장해 둔 세부 옵션 기본값 적용 — mount 후에만 읽는다(하이드레이션 불일치 방지) */
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DETAIL_DEFAULTS_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof d.outputMode === 'string' && OUTPUT_MODE_OPTIONS.some((o) => o.key === d.outputMode)) {
+        setOutputMode(d.outputMode);
+      }
+      if (Array.isArray(d.hwpStorageModes)) {
+        const allowed = HWP_STORAGE_OPTIONS.map((o) => o.key) as string[];
+        const next = d.hwpStorageModes.filter(
+          (x): x is HwpStorageModeKey => typeof x === 'string' && allowed.includes(x)
+        );
+        if (next.length) setHwpStorageModes(next);
+      }
+      if (typeof d.shuffleFullFile === 'boolean') setShuffleFullFile(d.shuffleFullFile);
+    } catch {
+      /* 저장값이 깨졌으면 그냥 기본값으로 간다 */
+    }
+  }, []);
+
+  /** 직전 주문에서 쓴 수신 이메일을 우선 적용 (계정 이메일보다 정확하다) */
+  useEffect(() => {
+    if (!loggedIn) return;
+    let cancelled = false;
+    fetch('/api/my/latest-order-options?flow=bookVariant', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        const prevEmail = (d?.orderMeta as { email?: unknown } | null)?.email;
+        if (typeof prevEmail === 'string' && prevEmail.trim()) {
+          setEmail((cur) => (cur.trim() && cur.trim() !== accountEmailRef.current ? cur : prevEmail.trim()));
+          setEmailAutoFilled(true);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [loggedIn]);
 
   useEffect(() => {
     fetch('/api/settings/variant-solbook', { cache: 'no-store' })
@@ -201,6 +292,8 @@ const QuestionSettings = ({
   }, []);
 
   const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '어휘', '순서', '삽입', '무관한문장'];
+  const freeStandardTypes = standardTypes.filter(isFreeVariantType);
+  const paidStandardTypes = standardTypes.filter((t) => !isFreeVariantType(t));
   const advancedTypes = ['삽입-고난도', '어법-고난도', '빈칸-고난도', '어휘-고난도', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도', '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도'];
   const advancedTypeDesc: Record<string, string> = {
     '삽입-고난도': '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항',
@@ -246,9 +339,10 @@ const QuestionSettings = ({
         if (t || allowEmptyEmail) setEmail(t);
       }
       if (typeof m.useCustomHwp === 'boolean') setUseCustomHwp(m.useCustomHwp);
-      if (m.difficulty === '상' || m.difficulty === '중' || m.difficulty === '하') setDifficulty(m.difficulty);
       if (typeof m.shuffleFullFile === 'boolean') setShuffleFullFile(m.shuffleFullFile);
-      if (typeof m.excludeDelivered === 'boolean') setExcludeDelivered(m.excludeDelivered);
+      if (typeof m.outputMode === 'string' && OUTPUT_MODE_OPTIONS.some((o) => o.key === m.outputMode)) {
+        setOutputMode(m.outputMode);
+      }
       if (Array.isArray(m.hwpStorageModes)) {
         const allowed: HwpStorageModeKey[] = HWP_STORAGE_OPTIONS.map((o) => o.key);
         const next = m.hwpStorageModes.filter(
@@ -415,6 +509,49 @@ const QuestionSettings = ({
     };
   }, [selectedTextbook, selectedLessons, selectedTypes, questionsPerType]);
 
+  /** 기본값에서 바뀐 세부 옵션만 모은다 — 접힌 상태의 요약 줄과 뱃지에 쓴다. */
+  const detailOptionChanges: string[] = [];
+  if (outputMode !== DEFAULT_OUTPUT_MODE) {
+    detailOptionChanges.push(OUTPUT_MODE_OPTIONS.find((o) => o.key === outputMode)?.label ?? outputMode);
+  }
+  const storageIsDefault =
+    hwpStorageModes.length === DEFAULT_HWP_STORAGE_MODES.length &&
+    DEFAULT_HWP_STORAGE_MODES.every((k) => hwpStorageModes.includes(k));
+  if (!storageIsDefault) {
+    detailOptionChanges.push(
+      formatHwpStorageSummary(hwpStorageModes) + (hwpStorageModes.includes('byRound') ? ` ${roundCount}회차` : '')
+    );
+  }
+  if (shuffleFullFile) detailOptionChanges.push('전문항 랜덤');
+
+  const detailOptionSummary =
+    detailOptionChanges.length > 0
+      ? detailOptionChanges.join(' · ')
+      : '기본 설정 — 강별 · 지문통합+정답표+해설';
+
+  /* 세부 옵션 기본값 — 이 브라우저에만 저장한다. 매번 같은 설정을 다시 고르던 분들 요청.
+     ⚠️ useState 초기값으로 localStorage 를 읽으면 SSR 결과와 달라져 하이드레이션이 깨진다.
+     반드시 mount 후 useEffect 에서 읽는다. */
+  const saveDetailDefaults = () => {
+    try {
+      localStorage.setItem(
+        DETAIL_DEFAULTS_KEY,
+        JSON.stringify({ v: 1, outputMode, hwpStorageModes, shuffleFullFile })
+      );
+      setDetailDefaultsSaved(true);
+      setTimeout(() => setDetailDefaultsSaved(false), 2000);
+    } catch {
+      alert('저장에 실패했습니다. 브라우저의 저장공간이 가득 찼을 수 있어요.');
+    }
+  };
+
+  const resetDetailOptions = () => {
+    setOutputMode(DEFAULT_OUTPUT_MODE);
+    setHwpStorageModes([...DEFAULT_HWP_STORAGE_MODES]);
+    setShuffleFullFile(false);
+
+  };
+
   const computeBookVariantPrice = () => {
     const mult = selectedLessons.length;
     let basePrice = 0;
@@ -426,7 +563,7 @@ const QuestionSettings = ({
           : type === '삽입'
             ? orderInsertExplanation.삽입
             : true;
-      basePrice += n * variantUnitPrice(type, { withExplanation });
+      basePrice += isFreeVariantType(type) ? 0 : n * variantUnitPrice(type, { withExplanation });
     }
     const totalQuestions = selectedTypes.length * questionsPerType * mult;
     const discountRate = variantVolumeDiscountRate(totalQuestions);
@@ -452,13 +589,113 @@ const QuestionSettings = ({
     };
   };
 
+  /**
+   * 무료 유형은 유료 유형을 하나 이상 고른 뒤에만 선택할 수 있다.
+   * 마지막 유료 유형을 끄면 딸려 있던 무료 유형도 같이 빠진다 — 안 그러면
+   * 「무료만 담긴 주문」이 만들어져 결제 금액이 0원이 된다.
+   */
+  const hasPaidType = (types: string[]) => types.some((t) => !isFreeVariantType(t));
+
   const handleTypeChange = (type: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+    setSelectedTypes((prev) => {
+      const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
+      if (isFreeVariantType(type) && !prev.includes(type) && !hasPaidType(prev)) {
+        return prev; // 유료 유형이 아직 없으면 무료 유형은 켜지지 않는다
+      }
+      return hasPaidType(next) ? next : next.filter((t) => !isFreeVariantType(t));
+    });
+  };
+
+  /** 기본난도 카드 1장 — 무료·유료 두 섹션에서 같은 모양을 쓴다 */
+  const renderStandardTypeCard = (type: string) => {
+    const locked = isFreeVariantType(type) && !hasPaidType(selectedTypes) && !selectedTypes.includes(type);
+    return (
+                <div
+                  key={type}
+                  title={locked ? '유료 유형을 하나 이상 고르면 선택할 수 있어요' : undefined}
+                  className={`p-3 border-2 rounded-lg transition-all ${
+                    locked
+                      ? 'border-gray-200 bg-gray-50 opacity-60'
+                      : selectedTypes.includes(type)
+                        ? 'border-blue-500 bg-blue-50 hover:shadow-md'
+                        : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label
+                      className={`flex items-center space-x-3 flex-1 min-w-0 ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTypes.includes(type)}
+                        disabled={locked}
+                        onChange={() => handleTypeChange(type)}
+                        className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0 disabled:cursor-not-allowed"
+                      />
+                      <span className={`font-medium whitespace-nowrap ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
+                      {isFreeVariantType(type) && !locked && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">무료</span>
+                      )}
+                    </label>
+                    {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
+                      <div
+                        className="flex rounded-lg border border-amber-300 bg-white overflow-hidden text-[11px] font-semibold shrink-0"
+                        role="group"
+                        aria-label={`${type} 해설 여부`}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOrderInsertExplanation((p) =>
+                              type === '순서' ? { ...p, 순서: false } : { ...p, 삽입: false }
+                            );
+                          }}
+                          className={`px-2 py-1 transition-colors ${
+                            !(type === '순서' ? orderInsertExplanation.순서 : orderInsertExplanation.삽입)
+                              ? 'bg-amber-500 text-white'
+                              : 'text-gray-600 hover:bg-amber-50'
+                          }`}
+                        >
+                          미포함
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOrderInsertExplanation((p) =>
+                              type === '순서' ? { ...p, 순서: true } : { ...p, 삽입: true }
+                            );
+                          }}
+                          className={`px-2 py-1 border-l border-amber-300 transition-colors ${
+                            (type === '순서' ? orderInsertExplanation.순서 : orderInsertExplanation.삽입)
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-600 hover:bg-blue-50'
+                          }`}
+                        >
+                          해설
+                        </button>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.dispatchEvent(new CustomEvent('open-sample', { detail: type }));
+                      }}
+                      className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
+                      title={`${type} 유형 샘플·설명·공부방향 보기`}
+                    >
+                      📝 샘플
+                    </button>
+                  </div>
+                  {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
+                    <p className="text-[10px] text-gray-500 mt-1.5 pl-8">미포함 {VARIANT_PRICE.orderInsertNoExplanation}원 · 해설 {VARIANT_PRICE.orderInsertWithExplanation}원/문항</p>
+                  )}
+                </div>
     );
   };
+
 
   const handleAllTypesToggle = () => {
     if (selectedTypes.length === questionTypes.length) {
@@ -593,6 +830,7 @@ ${solbookRetailLine}
 : ${selectedLessons.join(', ')}
 2. 문제 유형
 : ${selectedTypes.join(', ')}${orderInsertNote}
+   (선택지 ①~⑤는 전 유형 영문)
 3. 유형별로 필요한 문제수
 : ${questionsPerType}문항씩
 4. 총 문항 수
@@ -603,9 +841,9 @@ ${solbookRetailLine}
     : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제하시며, 포인트 사용은 적용되지 않습니다.' : ''}
 
 5-1. HWP 저장 방식
-: ${formatHwpStorageSummary(hwpStorageModes)}
-5-2. 난이도
-: ${difficulty}${shuffleFullFile ? '\n5-3. 전문항 랜덤\n: 적용 (전체 파일에서 지문·유형 순서를 섞음)' : ''}${excludeDelivered ? '\n5-4. 기제공 문항 제외\n: 적용 (같은 이메일로 이전에 받으신 문항 제외)' : ''}${solbookBlock}${useCustomHwp ? `
+: ${formatHwpStorageSummary(hwpStorageModes)}${hwpStorageModes.includes('byRound') ? `\n   회차 수: ${roundCount}회차` : ''}
+5-2. 결과 문서 구성
+: ${OUTPUT_MODE_OPTIONS.find((o) => o.key === outputMode)?.label ?? outputMode}${shuffleFullFile ? '\n5-3. 전문항 랜덤\n: 적용 (전체 파일에서 지문·유형 순서를 섞음)' : ''}\n5-4. 기제공 문항 제외\n: 적용 (같은 이메일로 이전에 받으신 문항 제외 — 항상 적용)${solbookBlock}${useCustomHwp ? `
 
 6. 커스텀 HWP 양식 사용
    나의양식 「변형문제」 양식 적용 요청 (업로드 ${formatCounts.변형문제}건)` : ''}`;
@@ -621,9 +859,11 @@ ${solbookRetailLine}
       email: email.trim(),
       useCustomHwp,
       hwpStorageModes: [...hwpStorageModes],
-      difficulty,
       shuffleFullFile,
       excludeDelivered,
+      outputMode,
+      // 회차 수는 「회차별」을 켰을 때만 의미가 있다 — 아니면 job 에 안 실린다
+      ...(hwpStorageModes.includes('byRound') ? { roundCount } : {}),
       ...(isSolbookTextbook
         ? {
             solbook: {
@@ -903,93 +1143,58 @@ ${solbookRetailLine}
                     {isMember ? '회원: 서버에 있는 직전 완료 주문을 불러오거나, ' : ''}이름으로 저장한 옵션은 이 기기(브라우저)에만 보관됩니다. 다른 PC에서는 보이지 않습니다.
                   </p>
                 )}
-                {/* 기본 유형 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {standardTypes.map((type) => (
-                    <div 
-                      key={type} 
-                      className={`p-3 border-2 rounded-lg transition-all hover:shadow-md ${
-                        selectedTypes.includes(type)
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <label className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0">
-                          <input
-                            type="checkbox"
-                            checked={selectedTypes.includes(type)}
-                            onChange={() => handleTypeChange(type)}
-                            className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0"
-                          />
-                          <span className="font-medium text-black">{type}</span>
-                        </label>
-                        {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
-                          <div
-                            className="flex rounded-lg border border-amber-300 bg-white overflow-hidden text-[11px] font-semibold shrink-0"
-                            role="group"
-                            aria-label={`${type} 해설 여부`}
-                          >
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setOrderInsertExplanation((p) =>
-                                  type === '순서' ? { ...p, 순서: false } : { ...p, 삽입: false }
-                                );
-                              }}
-                              className={`px-2 py-1 transition-colors ${
-                                !(type === '순서' ? orderInsertExplanation.순서 : orderInsertExplanation.삽입)
-                                  ? 'bg-amber-500 text-white'
-                                  : 'text-gray-600 hover:bg-amber-50'
-                              }`}
-                            >
-                              미포함
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setOrderInsertExplanation((p) =>
-                                  type === '순서' ? { ...p, 순서: true } : { ...p, 삽입: true }
-                                );
-                              }}
-                              className={`px-2 py-1 border-l border-amber-300 transition-colors ${
-                                (type === '순서' ? orderInsertExplanation.순서 : orderInsertExplanation.삽입)
-                                  ? 'bg-blue-600 text-white'
-                                  : 'text-gray-600 hover:bg-blue-50'
-                              }`}
-                            >
-                              해설
-                            </button>
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.dispatchEvent(new CustomEvent('open-sample', { detail: type }));
-                          }}
-                          className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
-                          title={`${type} 유형 샘플·설명·공부방향 보기`}
-                        >
-                          📝 샘플
-                        </button>
-                      </div>
-                      {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
-                        <p className="text-[10px] text-gray-500 mt-1.5 pl-8">미포함 {VARIANT_PRICE.orderInsertNoExplanation}원 · 해설 {VARIANT_PRICE.orderInsertWithExplanation}원/문항</p>
-                      )}
-                    </div>
-                  ))}
+                {/* 선택지 언어 안내 — job 의 option_type 은 항상 English 로 나간다.
+                    한글 선택지를 기대하고 주문했다가 받아보고 문의가 오던 부분이라 미리 알린다. */}
+                <p className="mb-3 flex items-start gap-1.5 text-[11px] text-slate-500">
+                  <span className="shrink-0" aria-hidden="true">ℹ️</span>
+                  <span>모든 유형의 <span className="font-medium text-slate-700">선택지(①~⑤)는 영문</span>으로 제공됩니다.</span>
+                </p>
+
+                {/* 기본난도 구분 — 고난도 배지와 같은 모양으로 짝을 맞춘다 */}
+                <div className="mb-3 flex items-center justify-center gap-2">
+                  <span className="tier-badge-in text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">기본난도</span>
+                  <span className="text-xs text-gray-500">수능·내신 표준 유형</span>
+                </div>
+
+                {/* 기본 유형 — 3열.
+                    lg 에서 바깥 레이아웃이 2단(왼쪽 유형 / 오른쪽 미리보기)으로 갈라져 이 칸이 절반으로 좁아진다.
+                    그 구간만 2열로 낮추고, xl 부터 다시 3열로 돌린다. 안 그러면 「무관한문장」이 줄바꿈된다. */}
+                {/* 유료 유형 */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {paidStandardTypes.map(renderStandardTypeCard)}
+                  {/* 남는 칸 — 원하는 유형이 없을 때 카톡으로 문의 */}
+                  <a
+                    href={KAKAO_INQUIRY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center gap-1.5 text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/40 transition-all"
+                    title="원하는 문제 유형이 목록에 없으면 카카오톡으로 문의해 주세요"
+                  >
+                    <span className="text-base leading-none">＋</span>
+                    <span className="text-sm font-medium whitespace-nowrap">유형 추가 문의</span>
+                  </a>
+                </div>
+
+                {/* 무료 유형 — 유료를 하나 이상 골라야 열린다 */}
+                <div className="mt-5 pt-4 border-t border-gray-200">
+                  <div className="mb-3 flex items-center justify-center gap-2">
+                    <span className="tier-badge-in text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">무료</span>
+                    <span className="text-xs text-gray-500">
+                      {hasPaidType(selectedTypes) ? '추가 비용 없이 함께 드립니다' : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {freeStandardTypes.map(renderStandardTypeCard)}
+                  </div>
                 </div>
 
                 {/* 고난도 유형 */}
                 <div className="mt-5 pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">고난도</span>
+                  <div className="mb-3 flex items-center justify-center gap-2">
+                    <span className="tier-badge-breathe text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">고난도</span>
                     <span className="text-xs text-gray-500">더 높은 변별력의 문항 유형</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                     {advancedTypes.map((type) => (
                       <div
                         key={type}
@@ -1007,7 +1212,7 @@ ${solbookRetailLine}
                               onChange={() => handleTypeChange(type)}
                               className="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-400 shrink-0"
                             />
-                            <span className="font-medium text-black">{type}</span>
+                            <span className="font-medium text-black whitespace-nowrap">{type}</span>
                           </label>
                           <button
                             type="button"
@@ -1046,6 +1251,17 @@ ${solbookRetailLine}
                   </select>
                   <span className="text-black text-lg">문항씩</span>
                 </div>
+                {/* 회차 편집본 안내 — 고른 문항 수만큼 회차로 나눈 편집본이 함께 나간다.
+                    세부 옵션의 「회차별」과 같은 결과물이라, 여기서 미리 알려 중복 문의를 줄인다. */}
+                <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-blue-50/70 border border-blue-100 px-2.5 py-2 text-[12px] text-blue-900">
+                  <span className="shrink-0" aria-hidden="true">🎁</span>
+                  <span>
+                    <strong>{questionsPerType}회차로 나눈 편집본</strong>도 함께 보내드립니다.
+                    <span className="block text-[11px] text-blue-800/80 mt-0.5">
+                      유형별 {questionsPerType}문항을 회차마다 1문항씩 나눠, {questionsPerType}회분 시험지로 쓰실 수 있어요.
+                    </span>
+                  </span>
+                </p>
                 <p className="text-sm text-black mt-2">
                   각 문제 유형별로 <strong>{questionsPerType}개</strong>의 문항이 출제됩니다
                 </p>
@@ -1116,13 +1332,25 @@ ${solbookRetailLine}
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailAutoFilled(false);   // 직접 고치기 시작하면 자동 채움 안내는 내린다
+                  }}
                   placeholder="example@email.com"
                   className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-black focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
                   required
                 />
+                {emailAutoFilled && email.trim() ? (
+                  <p className="text-[11px] text-blue-700 mt-1.5">
+                    이전에 쓰시던 주소를 넣어뒀어요. 다른 주소로 받으시려면 고쳐 주세요.
+                  </p>
+                ) : null}
                 <p className="text-xs text-gray-600 mt-2">
                   완성된 부교재 변형문제 자료를 받으실 이메일 주소를 입력해주세요
+                </p>
+                <p className="mt-2 flex items-start gap-1.5 text-xs text-gray-600">
+                  <span className="shrink-0" aria-hidden="true">📦</span>
+                  <span>자료는 <span className="font-medium text-gray-800">ZIP 파일</span>로 압축해 이 주소로 메일 발송해 드립니다.</span>
                 </p>
               </div>
             </div>
@@ -1177,98 +1405,174 @@ ${solbookRetailLine}
                 </div>
               )}
 
-              <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3">
-                <div className="text-sm font-bold text-black mb-2">제작 옵션</div>
-
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs text-slate-600 w-14 shrink-0">난이도</span>
-                  <div className="flex gap-1">
-                    {(['상', '중', '하'] as const).map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setDifficulty(d)}
-                        className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
-                          difficulty === d
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                        }`}
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <label className="flex items-start gap-2 cursor-pointer mb-2">
-                  <input
-                    type="checkbox"
-                    checked={shuffleFullFile}
-                    onChange={(e) => setShuffleFullFile(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
-                  />
-                  <span className="min-w-0">
-                    <span className="text-xs font-medium text-slate-800">전문항 랜덤</span>
-                    <span className="block text-[11px] text-slate-500">전체 파일에서 지문·유형 순서를 섞습니다.</span>
-                  </span>
-                </label>
-
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={excludeDelivered}
-                    onChange={(e) => setExcludeDelivered(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
-                  />
-                  <span className="min-w-0">
-                    <span className="text-xs font-medium text-slate-800">이전에 받은 문항 제외</span>
-                    <span className="block text-[11px] text-slate-500">
-                      같은 이메일로 이전 주문에서 받으신 문항을 빼고 제작합니다. 재고가 부족하면 문항 수가 줄 수 있습니다.
-                    </span>
-                  </span>
-                </label>
-              </div>
-
+              {/* 세부 옵션 — 접힌 상태가 기본. 대부분의 주문은 손댈 필요가 없어서,
+                  펼치지 않으면 예전 주문서와 똑같이 보인다. 요약 줄에 바꾼 항목만 뜬다. */}
               <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/90 overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setHwpStorageDetailOpen((v) => !v)}
+                  onClick={() => setDetailOptionsOpen((v) => !v)}
                   className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-slate-100/80 transition-colors"
                 >
                   <span className="min-w-0">
-                    <span className="text-sm font-bold text-black">저장 방식</span>
-                    <span className="block text-xs text-slate-600 mt-0.5 truncate">{formatHwpStorageSummary(hwpStorageModes)}</span>
+                    <span className="text-sm font-bold text-black">
+                      세부 옵션
+                      {detailOptionChanges.length > 0 ? (
+                        <span className="ml-1.5 align-middle inline-block px-1.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-bold">
+                          {detailOptionChanges.length}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="block text-xs text-slate-600 mt-0.5 truncate">{detailOptionSummary}</span>
                   </span>
-                  <span className="text-xs font-medium text-blue-600 shrink-0">{hwpStorageDetailOpen ? '접기' : '추가로 선택'}</span>
+                  <span className="text-xs font-medium text-blue-600 shrink-0">
+                    {detailOptionsOpen ? '접기' : '설정하기'}
+                  </span>
                 </button>
-                {hwpStorageDetailOpen ? (
+
+                {detailOptionsOpen ? (
                   <div className="px-3 pb-3 pt-0 border-t border-slate-200">
-                    <p className="text-[11px] text-slate-500 pt-2 pb-2">여러 개 동시에 켤 수 있어요.</p>
-                    <ul className="space-y-2">
-                      {HWP_STORAGE_OPTIONS.map((opt) => {
-                        const checked = hwpStorageModes.includes(opt.key);
-                        return (
-                          <li key={opt.key}>
-                            <label className="flex items-start gap-2 cursor-pointer group">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleHwpStorageMode(opt.key)}
-                                className="mt-0.5 w-4 h-4 rounded border-slate-400 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span className="flex-1 min-w-0">
-                                <span className="text-sm font-medium text-black">{opt.label}</span>
-                                <span className="block text-[11px] text-slate-500 mt-0.5">{opt.hint}</span>
-                              </span>
-                            </label>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                    <p className="text-[11px] text-slate-500 pt-2 pb-2">
+                      안 건드리셔도 됩니다. 기본값 그대로도 주문에 문제 없어요.
+                    </p>
+
+                    {/* 결과 문서 구성 — 드롭다운 대신 전부 펼친다. 항목마다 설명이 붙어야 고르기 쉬운데
+                        select 안에서는 설명을 보여줄 수 없었다. 하나만 고르는 항목이라 radio 를 쓴다
+                        (바로 아래 「파일 나누기」는 여러 개 고르는 체크박스라 모양으로 구분된다). */}
+                    <div className="mb-3">
+                      <span className="block text-xs text-slate-600 mb-1.5">
+                        결과 문서 구성 <span className="text-slate-400">(하나만 선택)</span>
+                      </span>
+                      <ul className="space-y-1">
+                        {OUTPUT_MODE_OPTIONS.map((o) => {
+                          const checked = outputMode === o.key;
+                          return (
+                            <li key={o.key}>
+                              <label
+                                className={`flex items-start gap-2 cursor-pointer rounded-lg border px-2 py-1.5 transition-colors ${
+                                  checked
+                                    ? 'border-blue-500 bg-blue-50/70'
+                                    : 'border-slate-200 bg-white hover:border-slate-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="outputMode"
+                                  value={o.key}
+                                  checked={checked}
+                                  onChange={() => setOutputMode(o.key)}
+                                  className="mt-0.5 w-3.5 h-3.5 border-slate-400 text-blue-600 focus:ring-blue-500 shrink-0"
+                                />
+                                <span className="flex-1 min-w-0">
+                                  <span className={`text-xs font-medium ${checked ? 'text-blue-900' : 'text-black'}`}>
+                                    {o.label}
+                                  </span>
+                                  <span className="block text-[10px] leading-snug text-slate-500 mt-0.5">{o.hint}</span>
+                                </span>
+                              </label>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+
+                    <div className="mb-3">
+                      <span className="block text-xs text-slate-600 mb-1.5">
+                        파일 나누기 <span className="text-slate-400">(여러 개 동시에 가능)</span>
+                      </span>
+                      <ul className="space-y-1.5">
+                        {HWP_STORAGE_OPTIONS.map((opt) => {
+                          const checked = hwpStorageModes.includes(opt.key);
+                          /* 회차 수는 「회차별」 바로 옆에 붙인다. 목록 아래 따로 두면
+                             어느 항목의 설정인지 바로 안 보인다. label 바깥에 둬야
+                             숫자를 누를 때 체크가 풀리지 않는다. */
+                          return (
+                            <li key={opt.key} className="flex items-start gap-2">
+                              <label className="flex items-start gap-2 cursor-pointer flex-1 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleHwpStorageMode(opt.key)}
+                                  className="mt-0.5 w-3.5 h-3.5 rounded border-slate-400 text-blue-600 focus:ring-blue-500 shrink-0"
+                                />
+                                <span className="flex-1 min-w-0">
+                                  <span className="text-xs font-medium text-black">{opt.label}</span>
+                                  <span className="block text-[10px] leading-snug text-slate-500 mt-0.5">{opt.hint}</span>
+                                </span>
+                              </label>
+                              {opt.key === 'byRound' && checked ? (
+                                // 회차 수는 「유형별 문제 개수」를 따라가므로 여기서는 결과만 보여준다
+                                <span
+                                  className="flex items-center gap-1 shrink-0"
+                                  title="「유형별 문제 개수」에서 바꾸시면 회차도 같이 바뀝니다"
+                                >
+                                  <span className="min-w-[1.75rem] rounded-md bg-slate-200/70 px-1.5 py-0.5 text-xs font-semibold text-slate-800 text-center">
+                                    {roundCount}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">회차</span>
+                                </span>
+                              ) : null}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={shuffleFullFile}
+                        onChange={(e) => setShuffleFullFile(e.target.checked)}
+                        className="mt-0.5 w-3.5 h-3.5 accent-blue-600 shrink-0"
+                      />
+                      <span className="min-w-0">
+                        <span className="text-xs font-medium text-slate-800">문항 순서 섞기</span>
+                        <span className="block text-[10px] leading-snug text-slate-500">
+                          파일 안에서 지문·유형 순서를 무작위로 섞습니다.
+                        </span>
+                      </span>
+                    </label>
+
+                    {/* 기제공 문항 제외는 늘 켜 둔다 — 껐다가 이전에 받은 문항이 또 나가면
+                        고객이 손해라, 고르게 하지 않고 안내만 한다. */}
+                    <div className="mt-2 flex items-start gap-2 rounded-lg bg-slate-100/70 px-2 py-1.5">
+                      <span className="mt-0.5 text-blue-600 text-xs shrink-0" aria-hidden="true">✓</span>
+                      <span className="min-w-0">
+                        <span className="text-xs font-medium text-slate-800">이전에 받은 문항은 자동 제외</span>
+                        <span className="block text-[10px] leading-snug text-slate-500">
+                          같은 이메일로 이전 주문에서 받으신 문항은 빼고 제작합니다. 항상 적용됩니다.
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={saveDetailDefaults}
+                        className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          detailDefaultsSaved
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                            : 'border-blue-500 bg-white text-blue-700 hover:bg-blue-50'
+                        }`}
+                      >
+                        {detailDefaultsSaved ? '✓ 저장했어요' : '이 설정을 기본값으로 저장'}
+                      </button>
+                      {detailOptionChanges.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={resetDetailOptions}
+                          className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                        >
+                          되돌리기
+                        </button>
+                      ) : null}
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-slate-400">
+                      저장하면 다음 주문부터 이 설정으로 시작합니다 (이 브라우저에만 저장).
+                    </p>
                   </div>
                 ) : null}
               </div>
-              
+
               {selectedTypes.length > 0 ? (
                 <div className="space-y-4">
                   <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">

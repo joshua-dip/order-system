@@ -24,7 +24,6 @@ function OrderDoneContent() {
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState('');
   const [user, setUser] = useState<{ loginId: string } | null>(null);
-  const [cancelling, setCancelling] = useState(false);
   const [orderNumberCopied, setOrderNumberCopied] = useState(false);
 
   useEffect(() => {
@@ -52,28 +51,6 @@ function OrderDoneContent() {
     });
   }, [id]);
 
-  const handleCancelOrder = async () => {
-    if (!id || order?.status !== 'pending') return;
-    if (!confirm('이 주문을 취소하시겠습니까?')) return;
-    setCancelling(true);
-    try {
-      const res = await fetch('/api/orders/' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'cancel' }),
-      });
-      const data = await res.json();
-      if (res.ok && data.ok) {
-        setOrder((prev) => (prev ? { ...prev, status: 'cancelled' } : null));
-      } else {
-        alert(data.error || '취소에 실패했습니다.');
-      }
-    } catch {
-      alert('취소 요청 중 오류가 발생했습니다.');
-    } finally {
-      setCancelling(false);
-    }
-  };
 
   const copyOrderNumberToClipboard = async (num: string) => {
     try {
@@ -209,6 +186,7 @@ function OrderDoneContent() {
 
           <OrderDisplay
             orderText={order.orderText}
+            orderNumber={order.orderNumber ?? undefined}
             onClear={() => router.push('/')}
           />
 
@@ -229,32 +207,27 @@ function OrderDoneContent() {
             </div>
           )}
 
+          {/* 주문 취소는 여기 두지 않는다 — 방금 만든 주문 옆에 빨간 취소 버튼이 있으면 잘못 누르기 쉽다.
+              주문내역에서 다른 주문과 함께 보면서 취소하는 편이 안전하다. */}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {order.status === 'pending' && (
-              <button
-                type="button"
-                onClick={handleCancelOrder}
-                disabled={cancelling}
-                className="px-6 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
-              >
-                {cancelling ? '취소 중…' : '주문 취소'}
-              </button>
-            )}
+            <Link
+              href="/my"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              📄 나의 주문내역 확인하기
+            </Link>
             <Link
               href="/"
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-6 py-3 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
               메인으로
             </Link>
-            {user && (
-              <Link
-                href="/my"
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-              >
-                내정보에서 보기
-              </Link>
-            )}
           </div>
+          {order.status === 'pending' && (
+            <p className="mt-3 text-center text-xs text-gray-500">
+              주문 취소는 <span className="font-medium text-gray-700">주문내역</span>에서 하실 수 있습니다.
+            </p>
+          )}
         </div>
       </div>
     </>

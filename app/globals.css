@@ -115,6 +115,46 @@ body {
   }
 }
 
+/* 문제 유형 선택 — 난도 구분 배지 (기본난도 / 고난도)
+   화면에 늘 떠 있는 요소라 크게 움직이지 않는다. 처음 한 번 부드럽게 올라오고,
+   고난도만 아주 옅은 링이 천천히 숨쉬어 눈에 먼저 들어오게 한다. */
+@keyframes tierBadgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tierBadgeBreathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(234, 88, 12, 0);
+  }
+}
+
+.tier-badge-in {
+  animation: tierBadgeIn 0.35s ease-out both;
+}
+
+.tier-badge-breathe {
+  animation: tierBadgeIn 0.35s ease-out both, tierBadgeBreathe 2.8s ease-out 0.35s infinite;
+}
+
+/* 애니메이션을 줄여 달라는 설정이면 움직임을 끈다 */
+@media (prefers-reduced-motion: reduce) {
+  .tier-badge-in,
+  .tier-badge-breathe {
+    animation: none;
+  }
+}
+
 @keyframes vocabOrderShimmer {
   0% {
     transform: translateX(-100%);
