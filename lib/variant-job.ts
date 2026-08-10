@@ -56,12 +56,16 @@ export interface VariantJob {
   hwp_visible: boolean;
 }
 
+// 주문서(QuestionSettings)가 쓰는 키 그대로. 이름이 어긋나면 옵션이 조용히 누락된다
+// — BV-20260810-001 시험 주문에서 bySourceNumber·fullRandomPair 가 빠지는 것을 확인하고 맞춤.
 const STORAGE_TO_SAVE: Record<string, keyof VariantJob['save']> = {
-  byNumber: 'by_number',
+  bySourceNumber: 'by_number',
+  byNumber: 'by_number',          // 구 이름 호환
   byCategory: 'by_category',
   byChapter: 'by_chapter',
   byRound: 'by_round',
-  singleFull: 'single_full',
+  fullRandomPair: 'single_full',  // 전체 1파일 + 랜덤본
+  singleFull: 'single_full',      // 구 이름 호환
 };
 
 const VALID_DIFFICULTY = new Set(['상', '중', '하']);
