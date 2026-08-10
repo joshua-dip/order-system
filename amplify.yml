@@ -13,6 +13,13 @@ frontend:
         - env | grep -e NEXT_PUBLIC_ >> .env.production || true
         # 토스페이먼츠 시크릿(NEXT_PUBLIC_ 접두사 없음) — 포인트 충전 승인 API에 필요
         - env | grep -e TOSS_ >> .env.production || true
+        # Dropbox 연동(주문 폴더 생성·파일 목록·임시 링크) — 이 줄이 없으면 콘솔에 값이 있어도
+        # 런타임에 전달되지 않아 isDropboxConfigured() 가 false 가 되고 503 이 난다.
+        - env | grep -e DROPBOX_ >> .env.production || true
+        # Resend 메일 발송(주문 안내 메일)
+        - env | grep -e RESEND_ >> .env.production || true
+        # ANTHROPIC_API_KEY 는 의도적으로 제외한다 — 배포 서버에 키를 두지 않아야
+        # 실수로 API 과금이 나가지 않는다(CLAUDE.md 의 Pro 전용 운영 방침).
         - npm run build
   artifacts:
     baseDirectory: .next
