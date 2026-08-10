@@ -197,6 +197,32 @@ npm run cc:studio -- save-marks --json draft.json [--dry-run] [--passage-id <pid
 - **save JSON**: `{ passageId, user, mode(merge|replace), marks:[{scope:word|phrase|sentence, target:"원문표현", qTypes:["어법","빈칸"…], note, occurrence}] }`. 위치(start/end)는 target 의 `occurrence`(기본 1)번째 등장을 원문에서 찾아 **자동 고정**(같은 단어 다른 위치 구분). `qTypes` 는 STUDIO_QTYPES(빈칸·어법·어휘·순서·삽입·요약·무관한문장·함의·주제·제목·주장·일치·불일치·영작·기타) — 어법 5개 이상이어야 어법 문제 가능(응답 `grammarStatus` 로 확인).
 - **merge(기본)**: 같은 위치만 건너뛰고 추가(레거시 start 없는 마크는 첫 등장으로 환산해 비교) / **replace**: marks 전부 교체. user 는 email 없이 **loginId(전화번호)·이름**으로도 됨(owners 목록 참고).
 - **금지**: 웹 안 라이브 Claude 챗/서버 API 호출(ANTHROPIC 과금). 출제 포인트도 CLI `save-marks` 만 사용.
+## 국어 해설지 생성기 (Pro 전용 — `cc:korean-explain`)
+
+`/admin/korean/explainer` 와 동일한 데이터(`korean_explanations` 컬렉션)를 만드는 CLI. 13종 블록(`cover` · `section_header` · `info_box` · `paragraph_table` · `timeline` · `character_grid` · `compare_2col` · `concept_grid` · `process_diagram` · `emotion_flow` · `sijo_box` · `gist_box` · `question`) 조합으로 모의고사 국어 해설지 작성·검증·저장. **API 호출 없음**.
+
+```
+npm run cc:korean-explain -- textbooks                                   # 저장된 해설지 distinct 교재
+npm run cc:korean-explain -- list [--textbook "..."] [--folder "..."]    # 목록
+npm run cc:korean-explain -- get --id <explanationId>                    # 단건
+npm run cc:korean-explain -- validate --json draft.json                  # 검증만
+npm run cc:korean-explain -- save --json draft.json [--dry-run]          # 검증 → insert/update
+cat draft.json | npm run cc:korean-explain -- save --json -              # stdin (코드 펜스 자동 제거)
+npm run cc:korean-explain -- delete --id <explanationId>
+단축: npm run cc:korean-explain -- "2025학년도 3월 고1 국어 모의고사"      # list --textbook 와 동일
+```
+
+**작성 흐름 (Pro 채팅):**
+1. 지문 본문을 채팅에 붙임
+2. `scripts/cc-korean-explain-prompt.md` 의 갈래별 권장 조합·블록 스키마·인라인 하이라이트 규칙 따라 JSON 작성
+3. `validate --json …` 또는 `save --json … --dry-run` 로 검증 (블록 13종 외 type, choices 의 `correct_n` 일치, paragraph_table cells 길이, emotion_flow arrow_labels 등)
+4. 통과 시 `save --json …` 로 실제 insert. `/admin/korean/explainer/list` 에서 즉시 보임.
+
+**save JSON 필수 키** — `textbook` · `sourceKey` · `setRange` · `genre` · `workTitle` · `examTitle` · `blocks`. `id` 가 있으면 update, 없으면 insert. `folder` 미지정 시 `기본`.
+
+**비문학 우선 · 문학은 후속 epic.** 비문학(독서·화법/작문·문법) 은 본 CLI 로 새로 작성. 문학(현대소설·현대시·고전시가·고전소설) 은 외부 정리물 import 파이프라인이 결정된 뒤 별도 epic 에서 진행. 렌더러는 13종 모두 이미 동작.
+
+**금지** — `/api/admin/korean-explainer/generate` 라우트는 **만들지 않음** (Pro-only 정책). 갈래별 if/else 코드 금지(데이터로만 분기). `lib/korean-explainer/styles.css` 수정 금지 — 보정은 `print-fix.css` 에만.
 
 ## 대기 vs 신규 작성 (한 번에 보기)
 

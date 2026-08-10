@@ -1,0 +1,113 @@
+{
+  "_comment": "문법 회귀 샘플. 음운 변동 — 비음화·유음화. concept_grid + question 5종. PR #5 시각 회귀용.",
+  "textbook": "2025학년도 3월 고1 국어 모의고사",
+  "sourceKey": "25-03-go1-11-15",
+  "setRange": "11-15",
+  "genre": "문법",
+  "workTitle": "음운 변동 — 비음화·유음화",
+  "examTitle": "2025학년도 3월 고1 국어 모의고사 해설",
+  "showSubtitle": false,
+  "folder": "기본",
+  "blocks": [
+    {
+      "type": "cover",
+      "data": {
+        "exam_title": "2025학년도 3월 고1 국어 모의고사 해설",
+        "set_range": "11-15",
+        "genre": "문법",
+        "work_title": "음운 변동 — 비음화·유음화",
+        "show_subtitle": false
+      }
+    },
+    { "type": "section_header", "data": { "tag": "CONCEPTS", "title": "핵심 개념 정리" } },
+    {
+      "type": "concept_grid",
+      "data": {
+        "columns": 3,
+        "cards": [
+          { "name": "비음화", "desc_html": "장애음(파열·파찰·마찰음)이 비음 앞에서 비음으로 바뀜.<br/>예: 닫는다[<span class='hl-term'>단는다</span>]" },
+          { "name": "유음화", "desc_html": "ㄴ + ㄹ 또는 ㄹ + ㄴ 환경에서 ㄴ → ㄹ.<br/>예: 신라[<span class='hl-term'>실라</span>]" },
+          { "name": "구개음화", "desc_html": "ㄷ·ㅌ + ㅣ → ㅈ·ㅊ. (참고)<br/>예: 굳이[<span class='hl-term'>구지</span>]" }
+        ]
+      }
+    },
+    {
+      "type": "compare_2col",
+      "data": {
+        "left":  { "title": "비음화", "items_html": ["환경: 장애음 + 비음", "방향: 장애음 → 비음", "예: 밥물[<span class='hl-term'>밤물</span>]"] },
+        "right": { "title": "유음화", "items_html": ["환경: ㄴ + ㄹ / ㄹ + ㄴ", "방향: ㄴ → ㄹ", "예: 칼날[<span class='hl-term'>칼랄</span>]"] },
+        "left_color": "navy",
+        "right_color": "red"
+      }
+    },
+    {
+      "type": "gist_box",
+      "data": {
+        "label": "정리",
+        "body_html": "비음화·유음화는 모두 <strong>이웃 자음의 영향을 받아 자질이 변하는</strong> 음운 동화 현상. 환경(어떤 자음끼리 만나는지)이 결정 요인."
+      }
+    },
+    { "type": "section_header", "data": { "tag": "SOLUTION", "title": "문제 해설" } },
+    {
+      "type": "question",
+      "data": {
+        "num": 11,
+        "answer": "①",
+        "points": 2,
+        "intent": "음운 변동의 종류를 식별한다",
+        "prompt_html": "다음 단어들의 음운 변동 종류로 알맞게 묶인 것은?",
+        "choices": [
+          { "n": "①", "judge": "O", "text_html": "‘닫는다, 잡는다, 부엌만’ — 모두 <span class='hl-term'>비음화</span>" },
+          { "n": "②", "judge": "X", "text_html": "‘신라’ 는 유음화" },
+          { "n": "③", "judge": "X", "text_html": "‘굳이’ 는 구개음화" },
+          { "n": "④", "judge": "X", "text_html": "분류가 일관되지 않음" },
+          { "n": "⑤", "judge": "X", "text_html": "분류가 일관되지 않음" }
+        ],
+        "correct_n": "①"
+      }
+    },
+    {
+      "type": "question",
+      "data": {
+        "num": 12,
+        "answer": "③",
+        "points": 2,
+        "intent": "유음화의 조건을 이해한다",
+        "prompt_html": "다음 중 유음화가 일어나는 단어는?",
+        "choices": [
+          { "n": "①", "judge": "X", "text_html": "‘닫는’ — 비음화" },
+          { "n": "②", "judge": "X", "text_html": "‘굳이’ — 구개음화" },
+          { "n": "③", "judge": "O", "text_html": "‘대관령[<span class='hl-term'>대괄령</span>]’ — 유음화" },
+          { "n": "④", "judge": "X", "text_html": "‘밥물’ — 비음화" },
+          { "n": "⑤", "judge": "X", "text_html": "‘잡는’ — 비음화" }
+        ],
+        "correct_n": "③"
+      }
+    },
+    {
+      "type": "question",
+      "data": {
+        "num": 15,
+        "answer": "④",
+        "points": 3,
+        "intent": "음운 변동을 적용한 표기 규칙을 종합적으로 판단한다",
+        "prompt_html": "<보기>의 ㉠~㉤ 중 발음과 표기가 음운 변동 규칙에 어긋난 것은?",
+        "evidences": [
+          { "label": "핵심 판단", "body_html": "㉣ ‘별는[별는]’ 표기는 유음화 규칙 적용 시 [별른] 이 되어야 함." }
+        ],
+        "choices": [
+          { "n": "①", "judge": "O", "text_html": "㉠ 비음화 적용 정상" },
+          { "n": "②", "judge": "O", "text_html": "㉡ 유음화 적용 정상" },
+          { "n": "③", "judge": "O", "text_html": "㉢ 구개음화 적용 정상" },
+          { "n": "④", "judge": "X", "text_html": "㉣ 유음화 규칙 위반 — [<span class='hl-cause'>별는</span>] X / [<span class='hl-effect'>별른</span>] O" },
+          { "n": "⑤", "judge": "O", "text_html": "㉤ 비음화 적용 정상" }
+        ],
+        "correct_n": "④",
+        "trap": {
+          "title": "함정 포인트 — 규칙 적용 vs 표기 관습",
+          "body_html": "발음은 자동 적용되지만 <strong>표기는 별도 규칙</strong> 을 따른다. ‘적용했다’ 와 ‘맞게 적었다’ 를 구분하라."
+        }
+      }
+    }
+  ]
+}

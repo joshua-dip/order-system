@@ -1,0 +1,126 @@
+{
+  "_comment": "비문학(독서·사회) 회귀 샘플. 디지털 격차 정책 지문 가정. PR #5 시각 회귀용.",
+  "textbook": "2025학년도 3월 고1 국어 모의고사",
+  "sourceKey": "25-03-go1-19-22",
+  "setRange": "19-22",
+  "genre": "독서(사회)",
+  "workTitle": "디지털 격차 해소 정책",
+  "examTitle": "2025학년도 3월 고1 국어 모의고사 해설",
+  "showSubtitle": false,
+  "folder": "기본",
+  "blocks": [
+    {
+      "type": "cover",
+      "data": {
+        "exam_title": "2025학년도 3월 고1 국어 모의고사 해설",
+        "set_range": "19-22",
+        "genre": "독서(사회)",
+        "work_title": "디지털 격차 해소 정책",
+        "show_subtitle": false
+      }
+    },
+    { "type": "section_header", "data": { "tag": "PASSAGE", "title": "지문 상세 분석" } },
+    {
+      "type": "info_box",
+      "data": {
+        "heading": "지문 기본 정보",
+        "rows": [
+          { "label": "갈래", "value_html": "비문학 (사회)" },
+          { "label": "주제", "value_html": "<span class='hl-key'>디지털 격차</span>의 의미 전환과 그 해소 방안" },
+          { "label": "구조", "value_html": "문제 제기 → 원인 분석 → 정책 변천 → 한계" }
+        ]
+      }
+    },
+    {
+      "type": "paragraph_table",
+      "data": {
+        "columns": ["문단", "핵심 내용", "키워드"],
+        "first_col_is_paranum": true,
+        "rows": [
+          { "cells": ["①", "초기 디지털 격차의 정의 — <span class='hl-term'>접근 격차</span>", "1차 격차"] },
+          { "cells": ["②", "인프라 보급 이후 등장한 <span class='hl-term'>역량 격차</span>", "2차 격차"] },
+          { "cells": ["③", "온라인 의사결정에서의 <span class='hl-term'>참여 격차</span>", "3차 격차"] },
+          { "cells": ["④", "정책 전환의 필요성과 한계", "<span class='hl-cause'>구조적 요인</span>"] }
+        ]
+      }
+    },
+    {
+      "type": "compare_2col",
+      "data": {
+        "left":  { "title": "기존 정책 (~2010)", "items_html": ["대상: 단말기·인터넷 보급", "지표: <span class='hl-term'>접근율</span>", "한계: 활용·참여 격차 누락"] },
+        "right": { "title": "전환 정책 (2010~)", "items_html": ["대상: 역량 교육·참여 구조", "지표: <span class='hl-term'>활용도·참여율</span>", "<span class='hl-effect'>다층 격차</span>에 동시 대응"] },
+        "left_color": "navy",
+        "right_color": "red"
+      }
+    },
+    {
+      "type": "concept_grid",
+      "data": {
+        "columns": 3,
+        "cards": [
+          { "name": "접근 격차", "desc_html": "단말기·인터넷에 접근할 수 있는가의 차이 (1차)" },
+          { "name": "역량 격차", "desc_html": "디지털 기기를 활용할 수 있는 능력의 차이 (2차)" },
+          { "name": "참여 격차", "desc_html": "온라인 의사결정·서비스 참여 정도의 차이 (3차)" }
+        ]
+      }
+    },
+    {
+      "type": "gist_box",
+      "data": {
+        "label": "한 줄 요지",
+        "body_html": "디지털 격차 해소는 인프라 보급만으로는 부족하며, <strong>역량·참여를 함께 보장하는 다층 정책</strong>으로 전환해야 한다."
+      }
+    },
+    { "type": "section_header", "data": { "tag": "SOLUTION", "title": "문제 해설" } },
+    {
+      "type": "question",
+      "data": {
+        "num": 19,
+        "answer": "②",
+        "points": 2,
+        "intent": "지문의 중심 내용을 파악한다",
+        "prompt_html": "윗글의 중심 내용으로 가장 적절한 것은?",
+        "evidences": [
+          { "label": "핵심 판단", "body_html": "③·④문단에서 역량·참여 격차를 새 정책 의제로 직접 제시." }
+        ],
+        "choices": [
+          { "n": "①", "judge": "X", "text_html": "1차 격차만이 본질이라는 판단은 ②~④와 충돌" },
+          { "n": "②", "judge": "O", "text_html": "다층 격차에 대응하는 정책 전환 — 글 전체 요지와 일치" },
+          { "n": "③", "judge": "X", "text_html": "지문은 시장 자율 해법을 주장하지 않음" },
+          { "n": "④", "judge": "X", "text_html": "교육 일변도가 아니라 참여 구조까지 포괄" },
+          { "n": "⑤", "judge": "X", "text_html": "지문 범위 밖" }
+        ],
+        "correct_n": "②",
+        "trap": {
+          "title": "함정 포인트 — 부분 주제를 전체로 일반화 금지",
+          "body_html": "①문단의 '접근 격차' 만으로 글 전체 주제를 단정하지 말 것."
+        }
+      }
+    },
+    {
+      "type": "question",
+      "data": {
+        "num": 22,
+        "answer": "⑤",
+        "points": 3,
+        "intent": "외적 준거를 바탕으로 정책을 평가한다",
+        "prompt_html": "<보기>를 바탕으로 윗글의 ‘전환 정책’ 을 평가한 내용으로 적절하지 <u>않은</u> 것은?",
+        "evidences": [
+          { "label": "핵심 판단", "body_html": "전환 정책은 접근·역량·참여를 동시에 다루므로, ‘접근 지표를 폐기했다’ 는 진술은 지문과 모순." }
+        ],
+        "choices": [
+          { "n": "①", "judge": "O", "text_html": "다층 격차 인식 — 지문과 부합" },
+          { "n": "②", "judge": "O", "text_html": "교육·참여 구조 강화 — 지문과 부합" },
+          { "n": "③", "judge": "O", "text_html": "참여율 지표 도입 — 지문과 부합" },
+          { "n": "④", "judge": "O", "text_html": "구조적 요인 분석 — 지문과 부합" },
+          { "n": "⑤", "judge": "X", "text_html": "접근 지표 자체를 폐기했다는 진술은 지문과 모순" }
+        ],
+        "correct_n": "⑤",
+        "trap": {
+          "title": "함정 포인트 — 정책 전환 = 폐기 ≠ 확장",
+          "body_html": "‘전환’ 은 새 지표 추가 이지 기존 지표 폐기가 아니다. <strong>확장</strong> 과 <strong>대체</strong> 를 혼동하면 안 됨."
+        }
+      }
+    }
+  ]
+}

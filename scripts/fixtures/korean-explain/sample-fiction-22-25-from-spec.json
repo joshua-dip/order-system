@@ -1,0 +1,215 @@
+{
+  "textbook": "2025학년도 3월 고1 국어 모의고사",
+  "sourceKey": "25-03-go1-22-25",
+  "setRange": "22-25",
+  "genre": "현대소설",
+  "workTitle": "이문구 「암소」",
+  "examTitle": "2025학년도 3월 고1 국어 모의고사 해설",
+  "showSubtitle": false,
+  "folder": "기본",
+  "blocks": [
+    {
+      "type": "cover",
+      "data": {
+        "exam_title": "2025학년도 3월 고1 국어 모의고사 해설",
+        "set_range": "22-25",
+        "genre": "현대소설",
+        "work_title": "이문구 「암소」",
+        "show_subtitle": false
+      }
+    },
+    {
+      "type": "section_header",
+      "data": {
+        "tag": "PASSAGE",
+        "title": "작품 상세 분석"
+      }
+    },
+    {
+      "type": "info_box",
+      "data": {
+        "heading": "작품 기본 정보",
+        "rows": [
+          {
+            "label": "갈래",
+            "value_html": "현대 소설 (단편 소설), 농촌 소설"
+          },
+          {
+            "label": "시점",
+            "value_html": "<span class='hl-term'>전지적 작가 시점</span> — 서술자가 인물 심리까지 전달"
+          },
+          {
+            "label": "주제",
+            "value_html": "농촌 사회의 변모 속 농민의 <span class='hl-key'>경제적 소외와 좌절</span>"
+          }
+        ]
+      }
+    },
+    {
+      "type": "character_grid",
+      "data": {
+        "columns": 2,
+        "cards": [
+          {
+            "name": "황씨",
+            "role": "주인공",
+            "desc_html": "두 번의 비극을 겪음. <span class='hl-cause'>회한 → 원망</span>으로 정서 이동"
+          },
+          {
+            "name": "고랏댁",
+            "role": "황씨의 아내",
+            "desc_html": "[B]의 발단을 무심코 일으킴. 현실적·실리적"
+          }
+        ]
+      }
+    },
+    {
+      "type": "timeline",
+      "data": {
+        "items": [
+          {
+            "time": "[A] 사업 실패",
+            "content_html": "공업 단지 조성·카시미론 등장 → <span class='hl-cause'>장기간</span> 폐업"
+          },
+          {
+            "time": "[B] 암소 죽음",
+            "content_html": "고랏댁 술지게미 → 하룻밤 사이 우발적 죽음"
+          }
+        ]
+      }
+    },
+    {
+      "type": "compare_2col",
+      "data": {
+        "left": {
+          "title": "[A] 황씨의 사업 실패",
+          "items_html": [
+            "원인: 사회 변화(외적)",
+            "기간: 장기적",
+            "정서: 회한·자책"
+          ]
+        },
+        "right": {
+          "title": "[B] 암소의 죽음",
+          "items_html": [
+            "원인: 개인 실수(우발)",
+            "기간: 단기적",
+            "정서: 원망·분노"
+          ]
+        },
+        "left_color": "navy",
+        "right_color": "red"
+      }
+    },
+    {
+      "type": "gist_box",
+      "data": {
+        "label": "한 줄 요지",
+        "body_html": "황씨는 산업화로 사업이 무너지고 암소마저 잃으며 좌절하고, 마을 공동체는 <strong>겉과 속이 다른 인심의 이중성</strong>을 드러낸다."
+      }
+    },
+    {
+      "type": "section_header",
+      "data": {
+        "tag": "SOLUTION",
+        "title": "문제 해설"
+      }
+    },
+    {
+      "type": "question",
+      "data": {
+        "num": 22,
+        "answer": "②",
+        "points": 2,
+        "intent": "서술상의 특징을 이해한다",
+        "prompt_html": "윗글에 대한 설명으로 가장 적절한 것은?",
+        "evidences": [
+          {
+            "label": "핵심 판단",
+            "body_html": "전지적 작가 시점. 서술자가 인물 내면 심리까지 깊이 서술."
+          }
+        ],
+        "choices": [
+          {
+            "n": "①",
+            "judge": "X",
+            "text_html": "서술자가 사건을 전해 들은 것이 아님"
+          },
+          {
+            "n": "②",
+            "judge": "O",
+            "text_html": "사건 전달 + 인물 내면 심리 서술 — 전지적 작가 시점"
+          },
+          {
+            "n": "③",
+            "judge": "X",
+            "text_html": "1인칭 회상이 아니라 3인칭 전지적"
+          },
+          {
+            "n": "④",
+            "judge": "X",
+            "text_html": "이야기 밖 서술자임"
+          },
+          {
+            "n": "⑤",
+            "judge": "X",
+            "text_html": "하나의 서술자가 시종일관 서술"
+          }
+        ],
+        "correct_n": "②",
+        "trap": {
+          "title": "함정 포인트 — 시점 용어 정리",
+          "body_html": "인물의 속마음이 직접 서술되면 전지적 작가 시점 확정."
+        }
+      }
+    },
+    {
+      "type": "question",
+      "data": {
+        "num": 25,
+        "answer": "⑤",
+        "points": 3,
+        "intent": "외적 준거를 바탕으로 작품을 감상한다",
+        "prompt_html": "&lt;보기&gt;를 바탕으로 [A]와 [B]를 비교한 내용으로 적절하지 <u>않은</u> 것은?",
+        "evidences": [
+          {
+            "label": "핵심 판단",
+            "body_html": "황씨의 분노 대상은 죽은 암소이지 마을 공동체가 아님."
+          }
+        ],
+        "choices": [
+          {
+            "n": "①",
+            "judge": "O",
+            "text_html": "[A] 사회 변화 / [B] 개인 실수 — 원인 구분 O"
+          },
+          {
+            "n": "②",
+            "judge": "O",
+            "text_html": "[A] 회한 / [B] 원망 — 정서 구분 O"
+          },
+          {
+            "n": "③",
+            "judge": "O",
+            "text_html": "[A] 장기간 / [B] 하룻밤 — 시간 구분 O"
+          },
+          {
+            "n": "④",
+            "judge": "O",
+            "text_html": "[A] 황씨 행동 / [B] 마을 사람 행동 — 주체 구분 O"
+          },
+          {
+            "n": "⑤",
+            "judge": "X",
+            "text_html": "황씨는 마을 공동체에 반감을 갖지 않음 — 분노 대상은 암소"
+          }
+        ],
+        "correct_n": "⑤",
+        "trap": {
+          "title": "함정 포인트 — [3점] 분노의 대상을 정확히 짚기",
+          "body_html": "마을 사람들의 이중성은 <strong>서술자가 독자에게</strong> 알려 주는 것이지, 황씨가 인식한 게 아니다. 서술자의 시각 ≠ 인물의 시각."
+        }
+      }
+    }
+  ]
+}

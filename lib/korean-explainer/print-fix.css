@@ -1,0 +1,143 @@
+/* === PRINT-FIX: 브라우저 인쇄(Chromium/Webkit) 보정 ===
+ *
+ * reference_styles.css(styles.css) 는 WeasyPrint 기준 검증 자산이므로 변경하지 않는다.
+ * 브라우저 인쇄/PDF 다운로드 경로에서 다음 차이를 흡수한다:
+ *   1. 색상 보정 — `print-color-adjust: exact` 강제
+ *   2. 페이지 분리 — `page-break-*` ↔ `break-*` 양쪽 표기
+ *   3. WeasyPrint 의 `@top-right` running header 는 브라우저 미지원 → 무시 (별도 표지 헤더로 대체)
+ *   4. 다크 모드 브라우저에서 body 가 어두워지지 않도록 흰 배경 강제 (reference 는 body bg 미지정)
+ *
+ * 이 파일은 styles.css 뒤에 로드해야 한다.
+ */
+
+/* 다크 모드 브라우저에서 body 가 어두운 회색으로 비치는 것 방지 */
+html, body { background: #ffffff !important; color: #1a1a1a; }
+table { background: #ffffff; }
+table.choice-table td,
+table.paragraph-table td { background: #ffffff; }
+table.choice-table tr.correct td { background: #fff3a8 !important; }
+table.choice-table tr.correct td.choice-num,
+table.choice-table tr.correct td.judge { background: #f4b942 !important; }
+table.paragraph-table td.para-num { background: #f0f3f8; }
+
+/* 색상 보정 — 인쇄 시 배경/형광색 그대로 유지 */
+.cover-title,
+.cover-title h1,
+.cover-title .subtitle,
+.cover-title .meta,
+.section-header,
+.section-header .tag,
+.info-box,
+.info-box h3,
+.info-grid .label,
+table.paragraph-table th,
+table.paragraph-table td.para-num,
+.character-card,
+.character-card .char-name,
+.character-card .char-role,
+.ab-card.A,
+.ab-card.B,
+.ab-card .ab-title,
+.ab-card .ab-subtitle,
+.vs-card,
+.vs-card .vs-name,
+.c3c4-card,
+.c3c4-card .cc-name,
+.compare-card,
+.compare-card .cc-title,
+.work-card,
+.work-card .wc-title,
+.poem-card,
+.poem-card .pc-title,
+.concept-card,
+.concept-card .term,
+.term-card,
+.term-card .tc-name,
+.process-node,
+.process-node.light,
+.process-node.dark,
+.process-arrow,
+.emotion-stage,
+.emotion-stage.negative,
+.emotion-stage.trigger,
+.emotion-stage.positive,
+.emotion-arrow,
+.timeline-time,
+.timeline-content,
+.sijo-box,
+.sijo-num,
+.gist-box,
+.gist-box .gist-label,
+.question-block,
+.question-header,
+.q-num,
+.q-answer,
+.q-intent,
+.q-prompt,
+.evidence-box,
+.evidence-box .ev-label,
+table.choice-table,
+table.choice-table th,
+table.choice-table td,
+table.choice-table td.choice-num,
+table.choice-table td.judge,
+table.choice-table td.judge.o,
+table.choice-table td.judge.x,
+table.choice-table tr.correct,
+table.choice-table tr.correct td,
+table.choice-table tr.correct td.choice-num,
+table.choice-table tr.correct td.judge,
+.trap-box,
+.trap-box .trap-title,
+.utility-table th,
+.utility-table td,
+.utility-table tr.optimum td,
+.verse-box,
+.hl-key,
+.hl-term,
+.hl-cause,
+.hl-effect {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* 페이지 분리 — 표준/구표기 양쪽 명시.
+ *
+ * 클래스명은 reference_styles.css 의 실제 클래스를 따른다:
+ *   .question-block / .evidence-box / .trap-box / table.choice-table
+ * (`.q-*` 는 chip 용 — q-num, q-answer, q-intent).
+ */
+.cover-title { page-break-after: avoid; break-after: avoid; }
+.section-header { page-break-after: avoid; break-after: avoid; }
+.info-box { page-break-inside: avoid; break-inside: avoid; }
+.character-card,
+.concept-card,
+.process-node,
+.sijo-box,
+.emotion-stage,
+.ab-card,
+.vs-card,
+.c3c4-card,
+.compare-card,
+.work-card,
+.poem-card,
+.term-card { page-break-inside: avoid; break-inside: avoid; }
+.question-block { page-break-inside: auto; break-inside: auto; }
+.evidence-box,
+.trap-box { page-break-inside: avoid; break-inside: avoid; }
+.question-header { page-break-after: avoid; break-after: avoid; }
+.q-prompt { page-break-after: avoid; break-after: avoid; }
+table.choice-table tr { page-break-inside: avoid; break-inside: avoid; }
+table.choice-table thead { display: table-header-group; }
+table.paragraph-table thead { display: table-header-group; }
+table.paragraph-table tr { page-break-inside: avoid; break-inside: avoid; }
+
+/* 미리보기 컨테이너 — A4 비율 모의 (편집기에서 iframe 또는 article 안에서 사용) */
+.korean-explanation-preview {
+  background: #fff;
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 18mm 16mm 20mm 16mm;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}

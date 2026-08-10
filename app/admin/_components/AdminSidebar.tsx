@@ -27,6 +27,13 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         : 'text-slate-300 hover:bg-slate-700/50'
     }`;
 
+  const koreanLinkCls = (href: string) =>
+    `block w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors border ${
+      isActive(href)
+        ? 'bg-rose-700/40 text-rose-50 border-rose-600/60'
+        : 'text-rose-200/90 hover:bg-rose-950/40 border-rose-800/40'
+    }`;
+
   async function handleLogout() {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -58,6 +65,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
           )}
           {isActive('/admin/essay-generator') && (
             <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1" />
+          )}
+          {isActive('/admin/korean') && (
+            <div className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1" />
           )}
         </div>
         {/* 하단 아바타 */}
@@ -128,6 +138,30 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         </Link>
         <Link href="/admin/exam-type-analysis" className={linkCls('/admin/exam-type-analysis')}>
           📊 기출 유형 분석
+        </Link>
+
+        <p className="px-3 py-2 text-rose-400/80 uppercase tracking-wider text-xs mt-4">KOREAN · 국어</p>
+        <Link href="/admin/korean/passages" className={koreanLinkCls('/admin/korean/passages')}>
+          국어 원문 관리
+        </Link>
+        <Link href="/admin/korean/explainer" className={koreanLinkCls('/admin/korean/explainer')}>
+          국어 해설지 생성기
+        </Link>
+        <div className="ml-3 mt-0.5 mb-1 flex flex-col gap-0.5">
+          <Link
+            href="/admin/korean/explainer/list"
+            className="block w-full text-left px-3 py-1.5 rounded-md text-xs text-rose-300/80 hover:text-rose-100 hover:bg-rose-950/40 transition-colors"
+          >
+            └ 해설지 목록
+          </Link>
+        </div>
+        <Link
+          href="/admin/korean/questions"
+          aria-disabled="true"
+          className="block w-full text-left px-4 py-2.5 rounded-lg font-medium text-rose-400/40 border border-rose-900/30 cursor-not-allowed select-none"
+          onClick={(e) => e.preventDefault()}
+        >
+          국어 변형문제 관리 <span className="text-[10px] ml-1">(준비 중)</span>
         </Link>
 
         <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">MEMBERS</p>

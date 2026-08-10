@@ -27,6 +27,7 @@
     "cc:studio": "tsx scripts/cc-studio-cli.ts",
     "cc:math": "tsx scripts/cc-math-cli.ts",
     "cc:audit": "tsx scripts/audit-variant-validate-textbook.ts",
+    "cc:korean-explain": "tsx scripts/cc-korean-explain-cli.ts",
     "claude": "tsx scripts/cc-variant-cli.ts",
     "passage-analyzer:cli": "tsx scripts/passage-analyzer-cli.ts",
     "ainca:migrate": "tsx scripts/migrate-ainca-pdf.ts",
