@@ -13,7 +13,7 @@ import { buildVariantJob, estimateQuestionCount, type VariantOrderMeta } from '@
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ orderNumber: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -25,7 +25,8 @@ export async function GET(
       return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
     }
 
-    const { orderNumber } = await params;
+    // 동적 세그먼트는 형제 라우트([id]/send-email 등)와 이름이 같아야 한다 — 값은 주문번호다
+    const { id: orderNumber } = await params;
     const db = await getDb('gomijoshua');
     const order = await db.collection('orders').findOne({ orderNumber });
     if (!order) {

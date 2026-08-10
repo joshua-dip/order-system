@@ -39,6 +39,17 @@ export const CEFR_ADVANCED_VARIANT_TYPES = [
 /** 해설 포함/미포함 토글이 적용되는 유형 */
 export const ORDER_INSERT_TYPES = ['순서', '삽입'] as const;
 
+/**
+ * 무료 제공 유형 (부교재 변형 주문).
+ * 단, **무료 유형만으로는 주문할 수 없다** — 유료 유형을 하나 이상 고른 주문에 덤으로 붙는다.
+ * 그 규칙은 주문 화면(QuestionSettings)이 강제한다.
+ */
+export const FREE_VARIANT_TYPES = ['주제', '제목', '주장', '일치', '불일치', '순서', '삽입'] as const;
+
+export function isFreeVariantType(type: string): boolean {
+  return (FREE_VARIANT_TYPES as readonly string[]).includes(type);
+}
+
 export function isAdvancedVariantType(type: string): boolean {
   return (ADVANCED_VARIANT_TYPES as readonly string[]).includes(type);
 }

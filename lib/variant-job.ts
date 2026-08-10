@@ -56,11 +56,22 @@ export interface VariantJob {
   hwp_visible: boolean;
 }
 
+/**
+ * 주문서 폼의 저장 방식 키 → job.save.
+ *
+ * 키 문자열은 QuestionSettings 의 HwpStorageModeKey 와 **정확히** 같아야 한다.
+ * 처음 구현에서 'byNumber'/'singleFull' 로 적어 두는 바람에, 폼이 실제로 보내는
+ * 'bySourceNumber'/'fullRandomPair' 가 조용히 버려졌다 — 고객이 「번호별」을 골라도
+ * job 에 실리지 않아 강별로만 나갔다. 옛 주문 호환을 위해 두 이름 모두 받는다.
+ */
 const STORAGE_TO_SAVE: Record<string, keyof VariantJob['save']> = {
-  byNumber: 'by_number',
+  bySourceNumber: 'by_number',
   byCategory: 'by_category',
   byChapter: 'by_chapter',
   byRound: 'by_round',
+  fullRandomPair: 'single_full',
+  // 옛 주문(2026-08 이전 표기) 호환
+  byNumber: 'by_number',
   singleFull: 'single_full',
 };
 
@@ -97,6 +108,14 @@ export function buildVariantJob(
   }
   if (!Object.values(save).some(Boolean)) save.by_chapter = true;  // 아무것도 없으면 강별
 
+  /**
+   * 「전문항랜덤」은 폼 설명상 *기본 순서 1벌 + 무작위 순서 1벌* 이다.
+   * 러너(multi_job_runner.py)는 job 하나당 파일 한 벌만 만들고 shuffle_full_file 은
+   * 단순히 섞기 여부라, 두 벌은 job 하나로 표현할 수 없다. 여기서는 전체 1파일 + 섞기로
+   * 내보내고, 기본 순서 벌이 함께 필요하면 같은 주문을 shuffle 없이 한 번 더 돌린다.
+   */
+  const wantsRandomPair = (meta.hwpStorageModes ?? []).includes('fullRandomPair');
+
   // 유형별 해설 포함 여부 — 주문서는 순서·삽입만 받는다. 나머지는 기본(포함).
   const explanation: Record<string, boolean> = {};
   for (const [k, v] of Object.entries(meta.orderInsertExplanation ?? {})) {
@@ -119,7 +138,7 @@ export function buildVariantJob(
     n_per_source_category: meta.questionsPerType ?? null,
     output_mode: meta.outputMode || '지문통합+간단정답지+해설',
     save,
-    shuffle_full_file: Boolean(meta.shuffleFullFile),
+    shuffle_full_file: Boolean(meta.shuffleFullFile) || wantsRandomPair,
     auto_pdf: opts.autoPdf ?? true,
     hwp_visible: false,
   };
