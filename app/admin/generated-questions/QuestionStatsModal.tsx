@@ -41,6 +41,77 @@ interface SourceData {
   sourcePassageSource?: Record<string, string>;
 }
 
+/**
+ * 소스(지문) 이름에서 강/단원을 뽑는다. 못 뽑으면 null.
+ *   "01강 01번"        → "01강"
+ *   "01강 대표 기출 1"  → "01강"
+ *   "UNIT 01 01번"     → "UNIT 01"
+ * 모의고사("25년 10월 고1 영어모의고사 18번")처럼 강 구분이 없는 교재는 null 이 나오고,
+ * 그런 교재에서는 강별 보기 버튼 자체를 숨긴다.
+ */
+function chapterOfSource(source: string): string | null {
+  // 「강」 뒤에 \b 를 쓰면 안 된다 — \b 는 [A-Za-z0-9_] 기준이라 한글 뒤에서는 경계가 잡히지 않아
+  // "01강 01번" 이 통째로 한 그룹이 돼 버린다. 다음 글자가 공백이거나 끝인지로 확인한다.
+  const m1 = source.match(/^\s*(\d+)\s*강(?=\s|$)/);
+  if (m1) return `${m1[1]}강`;
+  const m2 = source.match(/^\s*(UNIT|Unit|unit)\s*(\d+)\b/);
+  if (m2) return `UNIT ${m2[2]}`;
+  const m3 = source.match(/^\s*(Exercise|EXERCISE)\s*(\d+)\b/);
+  if (m3) return `Exercise ${m3[2]}`;
+  return null;
+}
+
+/** 강별 보기가 의미 있는 교재인지 — 강이 2개 이상이고 소스보다 적어야 묶는 보람이 있다 */
+function canGroupByChapter(sources: string[]): boolean {
+  const chapters = new Set<string>();
+  let withChapter = 0;
+  for (const s of sources) {
+    const c = chapterOfSource(s);
+    if (c) { chapters.add(c); withChapter++; }
+  }
+  return withChapter >= sources.length * 0.6 && chapters.size >= 2 && chapters.size < sources.length;
+}
+
+/** 소스별 데이터를 강 단위로 합친다. 강을 못 뽑는 소스는 자기 이름 그대로 한 줄이 된다. */
+function groupSourceDataByChapter(data: SourceData): SourceData {
+  const order: string[] = [];
+  const seen = new Set<string>();
+  const memberMap = new Map<string, string[]>();
+  for (const s of data.sources) {
+    const key = chapterOfSource(s) ?? s;
+    if (!seen.has(key)) { seen.add(key); order.push(key); }
+    memberMap.set(key, [...(memberMap.get(key) ?? []), s]);
+  }
+
+  const acc = new Map<string, SourceRow>();
+  for (const r of data.rows) {
+    const key = chapterOfSource(r.source) ?? r.source;
+    const k = `${key}|${r.type}`;
+    const cur = acc.get(k);
+    if (cur) {
+      cur.total += r.total; cur.완료 += r.완료; cur.대기 += r.대기;
+      cur.검수불일치 += r.검수불일치; cur.기타 += r.기타;
+    } else {
+      acc.set(k, { ...r, source: key });
+    }
+  }
+
+  const sourceTotals: Record<string, number> = {};
+  for (const [key, members] of memberMap) {
+    sourceTotals[key] = members.reduce((s, m) => s + (data.sourceTotals[m] ?? 0), 0);
+  }
+
+  return {
+    textbook: data.textbook,
+    sources: order,
+    types: data.types,
+    rows: [...acc.values()],
+    sourceTotals,
+    // 원문출처는 강 단위로 합칠 수 없다(소스마다 다름) — 강별 보기에서는 뺀다
+    sourcePassageSource: undefined,
+  };
+}
+
 type ViewMode = 'heatmap' | 'bar-textbook' | 'bar-type';
 type StatusFilter = 'all' | '완료' | '대기' | '검수불일치';
 
@@ -497,6 +568,7 @@ function SourceHeatmap({
   targetFor,
   defaultTarget,
   onSetSourceTarget,
+  targetReadOnly = false,
 }: {
   data: SourceData;
   statusFilter: StatusFilter;
@@ -510,6 +582,8 @@ function SourceHeatmap({
   defaultTarget: number;
   /** 소스 목표 변경 (null = 기본값으로 되돌림) */
   onSetSourceTarget: (source: string, value: number | null) => void;
+  /** 강별 보기 — 목표는 합계 표시만 하고 편집은 막는다 */
+  targetReadOnly?: boolean;
 }) {
   const rowMap = new Map<string, SourceRow>();
   for (const r of data.rows) rowMap.set(`${r.source}|${r.type}`, r);
@@ -799,16 +873,25 @@ function SourceHeatmap({
                         min={0}
                         max={99}
                         value={rowTarget}
+                        readOnly={targetReadOnly}
+                        disabled={targetReadOnly}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
+                          if (targetReadOnly) return;
                           const raw = e.target.value.trim();
                           if (raw === '') { onSetSourceTarget(src, null); return; }
                           const n = Math.round(Number(raw));
                           onSetSourceTarget(src, Number.isFinite(n) ? n : null);
                         }}
-                        title={`목표 문항수 (유형당). 비우면 교재 기본값 ${defaultTarget} 사용`}
+                        title={
+                          targetReadOnly
+                            ? '이 강에 속한 번호들의 목표 합계입니다. 목표 조절은 「번호별」 보기에서 하세요.'
+                            : `목표 문항수 (유형당). 비우면 교재 기본값 ${defaultTarget} 사용`
+                        }
                         className={`ml-auto w-11 shrink-0 rounded px-1 py-0.5 text-[10px] text-center font-mono border bg-slate-800 focus:outline-none focus:border-indigo-400 ${
-                          isOverridden ? 'border-indigo-500 text-indigo-200' : 'border-slate-700 text-slate-400'
+                          targetReadOnly
+                            ? 'border-slate-700 text-slate-500 cursor-default'
+                            : isOverridden ? 'border-indigo-500 text-indigo-200' : 'border-slate-700 text-slate-400'
                         }`}
                       />
                     </div>
@@ -961,6 +1044,8 @@ function DrilldownPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subView, setSubView] = useState<'heatmap' | 'bar'>('heatmap');
+  /** 행 묶음 단위 — 번호별(소스 그대로) / 강별(01강·UNIT 01 로 합산) */
+  const [groupBy, setGroupBy] = useState<'source' | 'chapter'>('source');
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -975,6 +1060,18 @@ function DrilldownPanel({
   const targetFor = useCallback(
     (source: string) => targetCfg.perSource[source] ?? targetCfg.defaultTarget,
     [targetCfg],
+  );
+
+  /**
+   * 강별 보기의 목표 = 그 강에 속한 소스들의 목표 합.
+   * 소스마다 목표를 다르게 잡을 수 있으니(시험범위는 더 높게) 단순히 기본값 × 개수로 치면 안 된다.
+   */
+  const chapterTargetFor = useCallback(
+    (chapter: string, allSources: string[]) =>
+      allSources
+        .filter((s) => (chapterOfSource(s) ?? s) === chapter)
+        .reduce((sum, s) => sum + targetFor(s), 0),
+    [targetFor],
   );
 
   const persistCfg = useCallback(
@@ -1107,6 +1204,13 @@ function DrilldownPanel({
       }
     : null;
 
+  /** 이 교재에 강 구분이 있나 (모의고사처럼 없으면 토글 자체를 숨긴다) */
+  const chapterGroupable = !!data && canGroupByChapter(data.sources);
+  const grouped = chapterGroupable && groupBy === 'chapter';
+  const shownData: SourceData | null = filteredData
+    ? (grouped ? groupSourceDataByChapter(filteredData) : filteredData)
+    : null;
+
   const totalCount = data
     ? Object.values(data.sourceTotals).reduce((s, v) => s + v, 0)
     : 0;
@@ -1178,6 +1282,33 @@ function DrilldownPanel({
             </button>
           ))}
         </div>
+
+        {/* 행 묶음 단위 — 강 구분이 있는 교재에서만 보인다 */}
+        {chapterGroupable && (
+          <div className="flex rounded-lg overflow-hidden border border-slate-600 text-xs">
+            {([
+              { k: 'source', label: '번호별' },
+              { k: 'chapter', label: '강별' },
+            ] as const).map((g) => (
+              <button
+                key={g.k}
+                onClick={() => setGroupBy(g.k)}
+                title={
+                  g.k === 'chapter'
+                    ? '같은 강의 번호들을 한 줄로 합쳐서 봅니다 (목표도 강 단위 합계)'
+                    : '소스(번호) 한 줄씩 봅니다'
+                }
+                className={`px-3 py-1.5 font-medium transition-colors ${
+                  groupBy === g.k
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        )}
         {data && (
           <select
             value={typeFilter}
@@ -1201,17 +1332,24 @@ function DrilldownPanel({
       {filteredData && !loading && (
         subView === 'heatmap'
           ? <SourceHeatmap
-              data={filteredData}
+              data={shownData ?? filteredData}
               statusFilter={statusFilter}
               onTypeClick={(tp) => setSelectedType((prev) => prev === tp ? null : tp)}
               selectedType={selectedType}
               onCellClick={handleCellClick}
               onPendingReviewCopy={handlePendingReviewCopy}
-              targetFor={targetFor}
+              targetFor={
+                grouped
+                  ? (chapter) => chapterTargetFor(chapter, filteredData.sources)
+                  : targetFor
+              }
               defaultTarget={targetCfg.defaultTarget}
               onSetSourceTarget={handleSetSourceTarget}
+              /* 강별 보기에서는 목표를 강 단위 합계로만 보여준다 — 강 하나에 값을 넣으면
+                 그 안의 어느 소스에 반영할지 정할 수 없다. 편집은 번호별에서. */
+              targetReadOnly={grouped}
             />
-          : <SourceBarChart data={filteredData} statusFilter={statusFilter} />
+          : <SourceBarChart data={shownData ?? filteredData} statusFilter={statusFilter} />
       )}
 
       {/* 유형 분석 패널 */}
