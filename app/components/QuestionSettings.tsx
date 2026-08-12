@@ -139,6 +139,8 @@ const QuestionSettings = ({
   const excludeDelivered = true;
   /** 결과 문서 구성 — 제작기 job 의 output_mode */
   const [outputMode, setOutputMode] = useState<string>(DEFAULT_OUTPUT_MODE);
+  /** 선택지 언어 — 한글은 재고가 없어 주문 제작으로만 나간다(요청 접수 → 별도 제작) */
+  const [optionType, setOptionType] = useState<'English' | 'Korean'>('English');
   /** 회차 수 — 저장 방식에 「회차별」을 켰을 때만 쓴다 */
   /* 회차 수는 「유형별 문제 개수」를 그대로 따른다 — 유형당 3문항이면 회차마다 1문항씩 3회차.
      따로 고르게 하면 두 값이 어긋나 (예: 2문항인데 5회차) 나눌 수 없는 주문이 된다. */
@@ -220,6 +222,7 @@ const QuestionSettings = ({
       if (typeof d.outputMode === 'string' && OUTPUT_MODE_OPTIONS.some((o) => o.key === d.outputMode)) {
         setOutputMode(d.outputMode);
       }
+      if (d.optionType === 'Korean' || d.optionType === 'English') setOptionType(d.optionType);
       if (Array.isArray(d.hwpStorageModes)) {
         const allowed = HWP_STORAGE_OPTIONS.map((o) => o.key) as string[];
         const next = d.hwpStorageModes.filter(
@@ -343,6 +346,7 @@ const QuestionSettings = ({
       if (typeof m.outputMode === 'string' && OUTPUT_MODE_OPTIONS.some((o) => o.key === m.outputMode)) {
         setOutputMode(m.outputMode);
       }
+      if (m.optionType === 'Korean' || m.optionType === 'English') setOptionType(m.optionType);
       if (Array.isArray(m.hwpStorageModes)) {
         const allowed: HwpStorageModeKey[] = HWP_STORAGE_OPTIONS.map((o) => o.key);
         const next = m.hwpStorageModes.filter(
@@ -522,6 +526,7 @@ const QuestionSettings = ({
       formatHwpStorageSummary(hwpStorageModes) + (hwpStorageModes.includes('byRound') ? ` ${roundCount}회차` : '')
     );
   }
+  if (optionType === 'Korean') detailOptionChanges.push('한글 선택지(주문 제작)');
   if (shuffleFullFile) detailOptionChanges.push('전문항 랜덤');
 
   const detailOptionSummary =
@@ -536,7 +541,7 @@ const QuestionSettings = ({
     try {
       localStorage.setItem(
         DETAIL_DEFAULTS_KEY,
-        JSON.stringify({ v: 1, outputMode, hwpStorageModes, shuffleFullFile })
+        JSON.stringify({ v: 1, outputMode, hwpStorageModes, shuffleFullFile, optionType })
       );
       setDetailDefaultsSaved(true);
       setTimeout(() => setDetailDefaultsSaved(false), 2000);
@@ -549,6 +554,7 @@ const QuestionSettings = ({
     setOutputMode(DEFAULT_OUTPUT_MODE);
     setHwpStorageModes([...DEFAULT_HWP_STORAGE_MODES]);
     setShuffleFullFile(false);
+    setOptionType('English');
 
   };
 
@@ -830,7 +836,7 @@ ${solbookRetailLine}
 : ${selectedLessons.join(', ')}
 2. 문제 유형
 : ${selectedTypes.join(', ')}${orderInsertNote}
-   (선택지 ①~⑤는 전 유형 영문)
+   (선택지 ①~⑤ ${optionType === 'Korean' ? '한글 — 주문 제작 요청' : '전 유형 영문'})
 3. 유형별로 필요한 문제수
 : ${questionsPerType}문항씩
 4. 총 문항 수
@@ -862,6 +868,7 @@ ${solbookRetailLine}
       shuffleFullFile,
       excludeDelivered,
       outputMode,
+      optionType,
       // 회차 수는 「회차별」을 켰을 때만 의미가 있다 — 아니면 job 에 안 실린다
       ...(hwpStorageModes.includes('byRound') ? { roundCount } : {}),
       ...(isSolbookTextbook
@@ -1147,7 +1154,11 @@ ${solbookRetailLine}
                     한글 선택지를 기대하고 주문했다가 받아보고 문의가 오던 부분이라 미리 알린다. */}
                 <p className="mb-3 flex items-start gap-1.5 text-[11px] text-slate-500">
                   <span className="shrink-0" aria-hidden="true">ℹ️</span>
-                  <span>모든 유형의 <span className="font-medium text-slate-700">선택지(①~⑤)는 영문</span>으로 제공됩니다.</span>
+                  <span>
+                    {optionType === 'Korean'
+                      ? <>선택지를 <span className="font-medium text-emerald-700">한글로 주문 제작</span>합니다 — 세부 옵션에서 바꿀 수 있어요.</>
+                      : <>모든 유형의 <span className="font-medium text-slate-700">선택지(①~⑤)는 영문</span>으로 제공됩니다. 한글이 필요하시면 세부 옵션에서 요청하세요.</>}
+                  </span>
                 </p>
 
                 {/* 기본난도 구분 — 고난도 배지와 같은 모양으로 짝을 맞춘다 */}
@@ -1434,6 +1445,55 @@ ${solbookRetailLine}
                     <p className="text-[11px] text-slate-500 pt-2 pb-2">
                       안 건드리셔도 됩니다. 기본값 그대로도 주문에 문제 없어요.
                     </p>
+
+                    {/* 선택지 언어 — 한글은 DB 재고가 없어(2026-08 기준 전 유형 0건) 골라도
+                        바로 뽑아 드릴 수 없다. 그래서 「요청 접수 → 주문 제작」으로만 받는다.
+                        제작 기간이 더 걸린다는 점을 여기서 분명히 알린다. */}
+                    <div className="mb-3">
+                      <span className="block text-xs text-slate-600 mb-1.5">
+                        선택지 언어 <span className="text-slate-400">(하나만 선택)</span>
+                      </span>
+                      <ul className="space-y-1">
+                        {([
+                          { key: 'English' as const, label: '영문 (기본)', hint: '보유 문항에서 바로 제작합니다.' },
+                          { key: 'Korean' as const, label: '한글 — 주문 제작 요청', hint: '보유 문항이 없어 새로 만들어 드립니다. 제작 기간이 더 걸리고, 확인 후 개별 안내드립니다.' },
+                        ]).map((o) => {
+                          const checked = optionType === o.key;
+                          return (
+                            <li key={o.key}>
+                              <label
+                                className={`flex items-start gap-2 cursor-pointer rounded-lg border px-2 py-1.5 transition-colors ${
+                                  checked
+                                    ? o.key === 'Korean'
+                                      ? 'border-emerald-500 bg-emerald-50/70'
+                                      : 'border-blue-500 bg-blue-50/70'
+                                    : 'border-slate-200 bg-white hover:border-slate-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="optionType"
+                                  value={o.key}
+                                  checked={checked}
+                                  onChange={() => setOptionType(o.key)}
+                                  className="mt-0.5 w-3.5 h-3.5 border-slate-400 text-blue-600 focus:ring-blue-500 shrink-0"
+                                />
+                                <span className="flex-1 min-w-0">
+                                  <span
+                                    className={`text-xs font-medium ${
+                                      checked ? (o.key === 'Korean' ? 'text-emerald-900' : 'text-blue-900') : 'text-black'
+                                    }`}
+                                  >
+                                    {o.label}
+                                  </span>
+                                  <span className="block text-[10px] leading-snug text-slate-500 mt-0.5">{o.hint}</span>
+                                </span>
+                              </label>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
 
                     {/* 결과 문서 구성 — 드롭다운 대신 전부 펼친다. 항목마다 설명이 붙어야 고르기 쉬운데
                         select 안에서는 설명을 보여줄 수 없었다. 하나만 고르는 항목이라 radio 를 쓴다
