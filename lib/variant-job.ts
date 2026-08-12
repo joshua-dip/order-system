@@ -25,6 +25,8 @@ export interface VariantOrderMeta {
   shuffleFullFile?: boolean;
   excludeDelivered?: boolean;
   outputMode?: string;
+  /** 선택지 언어. 'Korean' 은 주문 제작 요청(재고에서 뽑지 않고 새로 만든다) */
+  optionType?: string;
   roundCount?: number;
 }
 
@@ -34,7 +36,7 @@ export interface VariantJob {
   textbook: string;
   sources: string[];
   categories: string[];
-  option_type: 'English';
+  option_type: 'English' | 'Korean';
   difficulty: string;
   n_per_source_category: number | null;
   explanation_by_category?: Record<string, boolean>;
@@ -78,10 +80,15 @@ const STORAGE_TO_SAVE: Record<string, keyof VariantJob['save']> = {
 const VALID_DIFFICULTY = new Set(['상', '중', '하']);
 
 /**
- * 선택지 언어는 항상 English.
- * 2026-08 납품에서 주제·주장·일치·불일치 392문항이 한국어 선택지로 나가 전량 재생성했다.
- * 고객이 고를 수 있게 만들려면 생성 규칙(rules.py)까지 함께 바꿔야 한다 — 필드만으로는
- * 내용이 보증되지 않는다(당시 option_type 은 전부 English 였다).
+ * 선택지 언어는 기본 English. 주문서에서 「한글 — 주문 제작 요청」을 고른 경우에만 Korean 이 된다.
+ *
+ * ⚠️ Korean 은 **재고에서 뽑는 값이 아니다.** 2026-08 기준 DB 의 완료 문항 중 option_type=Korean
+ * 은 전 유형 0건이라, 이 값으로 그냥 돌리면 문항이 하나도 안 나온다. 운영자가 요청을 확인하고
+ * 한글 선택지 문항을 새로 만들어야 한다(주문 제작).
+ *
+ * 또한 이 필드만으로는 내용이 보증되지 않는다 — 2026-08 납품에서 주제·주장·일치·불일치
+ * 392문항이 option_type 은 English 인데 내용은 한국어로 나가 전량 재생성했다. 생성 규칙에서도
+ * 언어를 강제해야 한다.
  */
 export function buildVariantJob(
   orderNumber: string,
@@ -133,7 +140,7 @@ export function buildVariantJob(
     textbook,
     sources,
     categories,
-    option_type: 'English',
+    option_type: meta.optionType === 'Korean' ? 'Korean' : 'English',
     difficulty,
     n_per_source_category: meta.questionsPerType ?? null,
     output_mode: meta.outputMode || '지문통합+간단정답지+해설',
