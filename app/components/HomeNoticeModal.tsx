@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MEMBERSHIP_APPLY_OPEN_EVENT } from '@/lib/membership-apply-event';
+import { getAuthUserCache } from '@/lib/auth-user-cache';
+import { FREE_VARIANT_TYPES } from '@/lib/variant-pricing';
 import {
   shouldShowHomeNotice,
   dismissHomeNoticeThisSession,
@@ -22,8 +24,18 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
   /** 로그인 상태 확정 후의 대상(게스트/회원). 확정 전에는 노출 결정을 미룬다. */
   const [audience, setAudience] = useState<HomeNoticeAudience | null>(null);
 
-  // 로그인 여부를 직접 확인해 audience 를 확정한다.
-  // (부모의 user 로드가 비동기라, mount 시점에는 항상 게스트로 보이는 문제 방지)
+  /** 사용자가 한 번 닫았으면 audience 가 뒤늦게 바뀌어도 다시 열지 않는다 */
+  const dismissedRef = useRef(false);
+
+  // ① 마운트 직후 — 표시 캐시로 audience 를 즉시 확정한다.
+  //    예전에는 auth/me 응답을 기다렸는데, 콜드스타트면 수 초 뒤에야 모달이 떠서
+  //    「페이지 다 뜬 줄 알고 누른 첫 클릭」을 모달 배경이 삼켜 버렸다(로그인 버튼이 안 눌리는 원인).
+  //    ⚠️ useState 초기값으로 스토리지를 읽으면 하이드레이션이 깨지므로 반드시 mount effect 에서 복원.
+  useEffect(() => {
+    setAudience(getAuthUserCache<{ loginId?: string }>() ? 'member' : 'guest');
+  }, []);
+
+  // ② auth/me 로 보정 — 캐시가 없거나(첫 방문) 만료된 경우만 값이 달라진다.
   useEffect(() => {
     let cancelled = false;
     fetch('/api/auth/me', { credentials: 'include' })
@@ -32,7 +44,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
         if (!cancelled) setAudience(d?.user ? 'member' : 'guest');
       })
       .catch(() => {
-        if (!cancelled) setAudience('guest');
+        if (!cancelled) setAudience((prev) => prev ?? 'guest');
       });
     return () => {
       cancelled = true;
@@ -40,7 +52,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
   }, []);
 
   useEffect(() => {
-    if (!audience) return;
+    if (!audience || dismissedRef.current) return;
     if (shouldShowHomeNotice(audience)) setOpen(true);
   }, [audience]);
 
@@ -65,11 +77,13 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
   if (!open) return null;
 
   const closeSession = () => {
+    dismissedRef.current = true;
     dismissHomeNoticeThisSession(audience ?? 'guest');
     setOpen(false);
   };
 
   const hideToday = () => {
+    dismissedRef.current = true;
     dismissHomeNoticeForTodayKst(audience ?? 'guest');
     setOpen(false);
   };
@@ -80,72 +94,75 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
   };
 
   return (
+    // 모달 내용이 화면보다 길어질 수 있으므로(작은 폰·가로 모드) 배경 자체를 스크롤 컨테이너로 둔다.
+    // items-center + 고정 높이로 두면 위아래가 잘린 채 스크롤도 안 돼 「닫기」에 닿지 못한다.
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-black/60"
       onClick={closeSession}
       role="dialog"
       aria-modal="true"
       aria-labelledby="home-notice-title"
     >
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-rose-500 to-amber-500 px-6 py-5 text-white">
+        <div className="bg-gradient-to-r from-indigo-600 to-sky-500 px-6 py-5 text-white">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold tracking-wide">
-            🎉 시험기간 마무리 이벤트
+            📚 2학기 중간고사 대비
           </div>
           <h2 id="home-notice-title" className="mt-2 text-xl font-extrabold leading-snug">
-            이번 시험기간 정말 수고 많으셨어요!
+            2학기 중간고사, 지금부터 준비하세요
           </h2>
-          <p className="mt-1 text-sm text-rose-50">
-            고생하신 만큼, 포인트로 보답할게요 💝
+          <p className="mt-1 text-sm text-indigo-50">
+            시험 범위만 고르면 변형문제·예비 시험지까지 한 번에
           </p>
         </div>
 
         {/* 본문 */}
         <div className="px-6 py-5">
-          <p className="mb-3 text-[13px] font-bold text-slate-500">지금 포인트 받는 세 가지 방법</p>
+          <p className="mb-3 text-[13px] font-bold text-slate-500">시험 대비, 이렇게 준비하세요</p>
           <div className="space-y-3">
-            {/* 1. 기출문제 업로드 */}
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
-              <div className="flex items-start gap-2.5">
-                <span className="text-xl leading-none">🎁</span>
-                <div className="text-sm text-amber-900">
-                  <p className="font-extrabold">
-                    기출문제 올리면 <span className="text-amber-700">1건당 50,000P</span>
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-relaxed text-amber-800/90">
-                    내 정보 &gt; 기출문제 탭에서 업로드! <b>전체 문제가 빠짐없이</b> 들어 있으면 관리자 확인 후 지급, <b>답지까지</b> 있으면 <b className="text-amber-700">60,000P</b>!
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* 2. 출석 */}
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3.5">
-              <div className="flex items-start gap-2.5">
-                <span className="text-xl leading-none">🙌</span>
-                <div className="text-sm text-indigo-900">
-                  <p className="font-extrabold">
-                    매일 출석하면 <span className="text-indigo-700">랜덤 100~1,000P</span>
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-relaxed text-indigo-800/90">
-                    내 정보에서 「출석하러 가기」 버튼 한 번이면 끝! 하루 한 번 랜덤 적립돼요.
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* 3. 사용법 문의 — 카톡만 해도 포인트 */}
+            {/* 1. 기본 유형 무료 */}
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5">
               <div className="flex items-start gap-2.5">
-                <span className="text-xl leading-none">💬</span>
+                <span className="text-xl leading-none">🆓</span>
                 <div className="text-sm text-emerald-900">
                   <p className="font-extrabold">
-                    홈페이지 사용법 물어만 봐도 <span className="text-emerald-700">포인트!</span>
+                    기본 유형 {FREE_VARIANT_TYPES.length}종은 <span className="text-emerald-700">문항당 0원</span>
                   </p>
                   <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-800/90">
-                    어렵게 생각 마세요. 카톡으로 <b>&ldquo;사용법 알려주세요&rdquo;</b> 한마디면 관리자가 안내드리고 포인트도 드려요.
+                    <b>{FREE_VARIANT_TYPES.join(' · ')}</b> 유형을 무료로 드려요. 유료 유형을 하나 이상 고른 주문에 추가 비용 없이 함께 담깁니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+            {/* 2. 변형문제 */}
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3.5">
+              <div className="flex items-start gap-2.5">
+                <span className="text-xl leading-none">📝</span>
+                <div className="text-sm text-indigo-900">
+                  <p className="font-extrabold">
+                    시험 범위만 고르면 <span className="text-indigo-700">변형문제 자동 생성</span>
+                  </p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-indigo-800/90">
+                    교재·회차와 지문만 선택하세요. 객관식 · 서술형 · 워크북 어법까지 지문 하나로 만들어 드립니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+            {/* 3. 파이널 예비 모의고사 */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+              <div className="flex items-start gap-2.5">
+                <span className="text-xl leading-none">🎯</span>
+                <div className="text-sm text-amber-900">
+                  <p className="font-extrabold">
+                    시험 범위 그대로 <span className="text-amber-700">예비 시험지</span>
+                  </p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-amber-800/90">
+                    파이널 예비 모의고사로 실전 시험지를 바로 제작해요. QR 자가채점까지 됩니다(연회원 · 월구독).
                   </p>
                 </div>
               </div>
@@ -154,7 +171,33 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
 
           {/* 버튼 */}
           <div className="mt-5 flex flex-col gap-2">
-            {/* 카톡 문의 — 사용법만 물어봐도 포인트 (게스트·회원 공통, 최상단 강조) */}
+            {showApply ? (
+              <button
+                type="button"
+                onClick={openApply}
+                className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+              >
+                가입 신청하고 시험 대비 시작하기
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={closeSession}
+                  className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+                >
+                  시험 범위 정하고 주문 시작하기
+                </button>
+                <a
+                  href="/my/point-charge"
+                  onClick={closeSession}
+                  className="w-full rounded-xl border border-indigo-200 bg-indigo-50 py-2.5 text-center text-sm font-bold text-indigo-600 transition hover:bg-indigo-100"
+                >
+                  💳 포인트 충전하러 가기 →
+                </a>
+              </>
+            )}
+            {/* 카톡 문의 — 사용법만 물어봐도 포인트 (게스트·회원 공통) */}
             <a
               href={KAKAO_INQUIRY_URL}
               target="_blank"
@@ -163,32 +206,6 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
             >
               💬 카톡으로 사용법 물어보고 포인트 받기
             </a>
-            {showApply ? (
-              <button
-                type="button"
-                onClick={openApply}
-                className="w-full rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
-              >
-                가입 신청하고 포인트 받기
-              </button>
-            ) : (
-              <>
-                <a
-                  href="/my/point-charge"
-                  onClick={closeSession}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-center text-sm font-bold text-white shadow-sm transition hover:opacity-90"
-                >
-                  💳 포인트 충전하러 가기
-                </a>
-                <a
-                  href="/my?tab=settings"
-                  onClick={closeSession}
-                  className="w-full rounded-xl border border-rose-200 bg-rose-50 py-2.5 text-center text-sm font-bold text-rose-600 transition hover:bg-rose-100"
-                >
-                  내 정보에서 포인트 받기 →
-                </a>
-              </>
-            )}
             <button
               type="button"
               onClick={closeSession}
@@ -208,6 +225,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
           >
             오늘 하루 보지 않기
           </button>
+        </div>
         </div>
       </div>
     </div>
