@@ -1,0 +1,108 @@
+{
+  "_comment": "화법/작문 회귀 샘플. 학교 안전 캠페인 연설/초고 가정. PR #5 시각 회귀용.",
+  "textbook": "2025학년도 3월 고1 국어 모의고사",
+  "sourceKey": "25-03-go1-01-03",
+  "setRange": "01-03",
+  "genre": "화법/작문",
+  "workTitle": "학교 안전 캠페인 — 연설·초고",
+  "examTitle": "2025학년도 3월 고1 국어 모의고사 해설",
+  "showSubtitle": false,
+  "folder": "기본",
+  "blocks": [
+    {
+      "type": "cover",
+      "data": {
+        "exam_title": "2025학년도 3월 고1 국어 모의고사 해설",
+        "set_range": "01-03",
+        "genre": "화법/작문",
+        "work_title": "학교 안전 캠페인 — 연설·초고",
+        "show_subtitle": false
+      }
+    },
+    { "type": "section_header", "data": { "tag": "PASSAGE", "title": "지문 분석" } },
+    {
+      "type": "info_box",
+      "data": {
+        "heading": "담화 기본 정보",
+        "rows": [
+          { "label": "갈래", "value_html": "연설 + 작문 초고 (복합)" },
+          { "label": "주제", "value_html": "교내 안전사고 예방을 위한 <span class='hl-key'>공동 행동</span> 호소" },
+          { "label": "전략", "value_html": "통계 인용 · 사례 제시 · 청유형 발문" }
+        ]
+      }
+    },
+    {
+      "type": "paragraph_table",
+      "data": {
+        "columns": ["단락", "전개", "표현 전략"],
+        "first_col_is_paranum": true,
+        "rows": [
+          { "cells": ["①", "도입 — 안전사고 통계 환기", "수치 인용"] },
+          { "cells": ["②", "사례 — 복도 미끄럼 사고", "구체적 사례"] },
+          { "cells": ["③", "원인 — 시설·습관 양 측면", "<span class='hl-term'>이원 분석</span>"] },
+          { "cells": ["④", "당부 — 학생 참여 권유", "<span class='hl-effect'>청유형 발문</span>"] }
+        ]
+      }
+    },
+    {
+      "type": "compare_2col",
+      "data": {
+        "left":  { "title": "연설 (담화)", "items_html": ["발화자: 학생회장", "청자: 전교생", "표현: 직접 발문·청유형"] },
+        "right": { "title": "초고 (작문)", "items_html": ["필자: 학생회 임원", "독자: 교내 게시판 독자", "표현: 객관 진술·근거 보강"] },
+        "left_color": "navy",
+        "right_color": "red"
+      }
+    },
+    {
+      "type": "gist_box",
+      "data": {
+        "label": "한 줄 요지",
+        "body_html": "동일 주제 — 안전사고 예방 — 를 <strong>연설(화법)</strong> 과 <strong>작문</strong> 두 매체로 풀어내며, 청자·독자에 맞춘 표현 전략 차이가 핵심."
+      }
+    },
+    { "type": "section_header", "data": { "tag": "SOLUTION", "title": "문제 해설" } },
+    {
+      "type": "question",
+      "data": {
+        "num": 1,
+        "answer": "③",
+        "points": 2,
+        "intent": "발화의 표현 전략을 이해한다",
+        "prompt_html": "(가) 연설에서 활용한 표현 전략으로 가장 적절한 것은?",
+        "choices": [
+          { "n": "①", "judge": "X", "text_html": "통계 인용은 했으나 ‘비유’ 는 쓰지 않음" },
+          { "n": "②", "judge": "X", "text_html": "전문 용어를 다수 사용한 부분 없음" },
+          { "n": "③", "judge": "O", "text_html": "통계 인용 + <span class='hl-effect'>청유형 발문</span> 으로 참여 유도" },
+          { "n": "④", "judge": "X", "text_html": "반대 견해 인용은 없음" },
+          { "n": "⑤", "judge": "X", "text_html": "일화·고사 없음" }
+        ],
+        "correct_n": "③"
+      }
+    },
+    {
+      "type": "question",
+      "data": {
+        "num": 3,
+        "answer": "②",
+        "points": 3,
+        "intent": "매체 전환에 따른 표현 변화를 평가한다",
+        "prompt_html": "<보기>를 참고할 때 (가)의 청유형 표현이 (나)에서 객관 진술로 바뀐 이유로 가장 적절한 것은?",
+        "evidences": [
+          { "label": "핵심 판단", "body_html": "(가) 연설은 청자 즉각 참여 유도, (나) 작문은 시간·공간이 분리된 독자 대상 — 표현 강도 조절 필요." }
+        ],
+        "choices": [
+          { "n": "①", "judge": "X", "text_html": "주제가 달라진 것이 아님" },
+          { "n": "②", "judge": "O", "text_html": "<span class='hl-term'>독자와의 거리</span> 가 멀어 강한 발문을 약화" },
+          { "n": "③", "judge": "X", "text_html": "근거가 부족해서가 아님" },
+          { "n": "④", "judge": "X", "text_html": "필자의 권위가 바뀐 게 아님" },
+          { "n": "⑤", "judge": "X", "text_html": "게시판 분량 제약은 본문에 없음" }
+        ],
+        "correct_n": "②",
+        "trap": {
+          "title": "함정 포인트 — ‘매체’ 와 ‘주제’ 변경 혼동",
+          "body_html": "주제는 동일하지만 매체가 바뀌어 <strong>표현 강도</strong> 가 조정된 것. 주제 변경으로 단정하면 안 됨."
+        }
+      }
+    }
+  ]
+}

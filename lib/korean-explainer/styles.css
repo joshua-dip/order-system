@@ -1,0 +1,761 @@
+/* === BASE: extracted from validated worksheet haeseol_22-25 === */
+@page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-family: 'Noto Sans CJK KR', sans-serif;
+      font-size: 9pt;
+      color: #888;
+    }
+    @top-right {
+      content: "2025학년도 3월 고1 국어 모의고사 해설";
+      font-family: 'Noto Sans CJK KR', sans-serif;
+      font-size: 8.5pt;
+      color: #999;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif CJK KR', serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .cover-title {
+    text-align: center;
+    padding: 6mm 0 4mm 0;
+    border-bottom: 3px solid #1e3a5f;
+    margin-bottom: 6mm;
+  }
+  .cover-title .subtitle {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 10pt;
+    color: #1e3a5f;
+    letter-spacing: 2px;
+    margin-bottom: 3mm;
+  }
+  .cover-title h1 {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 18pt;
+    font-weight: 900;
+    margin: 0;
+    color: #1e3a5f;
+    letter-spacing: -0.5px;
+  }
+  .cover-title .meta {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 9pt;
+    color: #666;
+    margin-top: 2mm;
+  }
+
+  .section-header {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 3mm 5mm;
+    margin: 6mm 0 4mm 0;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    font-size: 12pt;
+    border-radius: 1mm;
+    page-break-after: avoid;
+  }
+  .section-header .tag {
+    background: #f4b942;
+    color: #1e3a5f;
+    font-size: 9pt;
+    padding: 0.5mm 2mm;
+    border-radius: 1mm;
+    margin-right: 3mm;
+    font-weight: 900;
+  }
+
+  .info-box {
+    border: 1.2px solid #1e3a5f;
+    border-left: 5px solid #1e3a5f;
+    padding: 3mm 4mm;
+    margin-bottom: 4mm;
+    background: #f7f9fc;
+    page-break-inside: avoid;
+  }
+  .info-box h3 {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 11pt;
+    margin: 0 0 2mm 0;
+    color: #1e3a5f;
+    font-weight: 700;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 25mm 1fr;
+    row-gap: 1.2mm;
+    column-gap: 3mm;
+    font-size: 10pt;
+  }
+  .info-grid .label {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #1e3a5f;
+    background: #e6ecf3;
+    padding: 0.8mm 2mm;
+    border-radius: 1mm;
+    text-align: center;
+    font-size: 9.5pt;
+  }
+  .info-grid .value { padding: 0.8mm 0; }
+
+  table.paragraph-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 3mm 0 4mm 0;
+    font-size: 9.8pt;
+  }
+  table.paragraph-table thead { display: table-header-group; }
+  table.paragraph-table tr { page-break-inside: avoid; }
+  table.paragraph-table th {
+    background: #1e3a5f;
+    color: #fff;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    padding: 2mm 3mm;
+    text-align: center;
+    font-size: 10pt;
+    border: 1px solid #1e3a5f;
+  }
+  table.paragraph-table td {
+    border: 1px solid #c8d2dd;
+    padding: 2mm 3mm;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  table.paragraph-table td.para-num {
+    background: #f0f3f8;
+    text-align: center;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #1e3a5f;
+    white-space: nowrap;
+    font-size: 9.5pt;
+  }
+
+  .hl-key { background: linear-gradient(transparent 55%, #fff3a8 55%); font-weight: 700; }
+  .hl-term { background: #e8f0fa; color: #1e3a5f; font-weight: 700; padding: 0 1.2mm; border-radius: 1mm; }
+  .hl-cause { color: #c0392b; font-weight: 700; }
+  .hl-effect { color: #1e7e34; font-weight: 700; }
+
+  .question-block { margin: 4mm 0 4mm 0; }
+  .question-header {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 2mm;
+    margin-bottom: 3mm;
+    page-break-after: avoid;
+  }
+  .q-num {
+    background: #1e3a5f; color: #fff;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900; font-size: 13pt;
+    padding: 1.5mm 4mm;
+    border-radius: 1.5mm;
+  }
+  .q-answer {
+    background: #c0392b; color: #fff;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900; font-size: 13pt;
+    padding: 1.5mm 4mm;
+    border-radius: 1.5mm;
+  }
+  .q-intent {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-size: 10pt; color: #555; flex: 1;
+  }
+  .q-intent strong { color: #1e3a5f; }
+
+  table.choice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 3mm 0;
+    font-size: 9.8pt;
+    page-break-inside: avoid;
+  }
+  table.choice-table th {
+    background: #e6ecf3; color: #1e3a5f;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    padding: 1.8mm 2mm;
+    border: 1px solid #c8d2dd;
+    text-align: center;
+    font-size: 9.5pt;
+  }
+  table.choice-table td {
+    border: 1px solid #c8d2dd;
+    padding: 1.8mm 2.5mm;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  table.choice-table td.choice-num {
+    text-align: center;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    width: 10mm;
+    background: #fafbfd;
+  }
+  table.choice-table td.judge {
+    text-align: center;
+    width: 12mm;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 11pt;
+  }
+  table.choice-table td.judge.o { color: #1e7e34; }
+  table.choice-table td.judge.x { color: #c0392b; }
+  table.choice-table tr.correct td { background: #fff3a8; }
+  table.choice-table tr.correct td.choice-num,
+  table.choice-table tr.correct td.judge {
+    background: #f4b942; color: #1e3a5f;
+  }
+
+  .trap-box {
+    border-left: 4px solid #f4b942;
+    background: #fffbf0;
+    padding: 2.5mm 4mm;
+    margin: 3mm 0;
+    font-size: 9.8pt;
+    page-break-inside: avoid;
+  }
+  .trap-box .trap-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #b8860b;
+    margin-bottom: 1.5mm;
+    font-size: 10pt;
+  }
+  .trap-box .trap-title::before { content: "⚠ "; }
+
+  .evidence-box {
+    background: #f7f9fc;
+    border-left: 3px solid #1e3a5f;
+    padding: 2mm 3mm;
+    margin: 2mm 0;
+    font-size: 9.5pt;
+    line-height: 1.5;
+  }
+  .evidence-box .ev-label {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 9pt;
+    margin-right: 2mm;
+  }
+
+  h2.passage-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    color: #1e3a5f;
+    font-size: 13pt;
+    margin: 0 0 3mm 0;
+    padding-bottom: 1.5mm;
+    border-bottom: 2px solid #1e3a5f;
+  }
+
+  .gist-box {
+    border: 2px solid #1e3a5f;
+    padding: 3mm 4mm;
+    background: #fff;
+    margin: 3mm 0 4mm 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  .gist-box .gist-label {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    background: #1e3a5f; color: #fff;
+    display: inline-block;
+    padding: 0.5mm 3mm;
+    font-size: 9.5pt;
+    font-weight: 700;
+    margin-bottom: 2mm;
+    border-radius: 1mm;
+  }
+
+  /* 인물 카드 */
+  .character-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0 3mm 0;
+  }
+  .character-card {
+    border: 1px solid #c8d2dd;
+    border-top: 3px solid #1e3a5f;
+    padding: 2.5mm 3mm;
+    background: #f7f9fc;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  .character-card .char-name {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    color: #1e3a5f;
+    font-size: 11pt;
+    margin-bottom: 1mm;
+    padding-bottom: 0.8mm;
+    border-bottom: 1px dotted #1e3a5f;
+  }
+  .character-card .char-role {
+    font-size: 8.8pt;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 1mm;
+  }
+
+  /* [A] vs [B] 비교 카드 */
+  .ab-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0 3mm 0;
+  }
+  .ab-card {
+    border: 1px solid #c8d2dd;
+    padding: 3mm 3.5mm;
+    font-size: 9.7pt;
+    page-break-inside: avoid;
+  }
+  .ab-card.A { border-top: 3px solid #1e3a5f; background: #f0f3f8; }
+  .ab-card.B { border-top: 3px solid #c0392b; background: #fdf5f4; }
+  .ab-card .ab-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 12pt;
+    margin-bottom: 2mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px dotted #888;
+  }
+  .ab-card.A .ab-title { color: #1e3a5f; }
+  .ab-card.B .ab-title { color: #c0392b; }
+  .ab-card .ab-subtitle {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    font-size: 9.5pt;
+    color: #1a1a1a;
+    margin: 1.5mm 0 1mm 0;
+    background: #fff8e0;
+    padding: 0.5mm 2mm;
+    border-radius: 1mm;
+    display: inline-block;
+  }
+  .ab-card ul {
+    margin: 0;
+    padding-left: 4mm;
+    line-height: 1.5;
+  }
+  .ab-card li { margin-bottom: 0.8mm; }
+
+  /* 사건 흐름 (타임라인 스타일) */
+  .timeline {
+    margin: 2mm 0 3mm 0;
+    page-break-inside: avoid;
+  }
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 20mm 1fr;
+    gap: 3mm;
+    margin-bottom: 2mm;
+    font-size: 9.7pt;
+  }
+  .timeline-time {
+    background: #1e3a5f;
+    color: #fff;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    padding: 1.5mm 1mm;
+    border-radius: 1mm;
+    font-size: 9.3pt;
+    align-self: start;
+  }
+  .timeline-content {
+    padding: 1.2mm 0;
+    border-left: 2px solid #f4b942;
+    padding-left: 3mm;
+  }
+
+  /* ㉠ vs ㉡ 비교 */
+  .vs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0;
+  }
+  .vs-card {
+    border: 1px solid #c8d2dd;
+    padding: 2.5mm 3mm;
+    font-size: 9.6pt;
+    page-break-inside: avoid;
+  }
+  .vs-card.conflict { border-top: 3px solid #c0392b; background: #fdf5f4; }
+  .vs-card.cooperation { border-top: 3px solid #1e7e34; background: #f3faf5; }
+  .vs-card .vs-name {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 10.5pt;
+    margin-bottom: 1mm;
+  }
+  .vs-card.conflict .vs-name { color: #c0392b; }
+  .vs-card.cooperation .vs-name { color: #1e7e34; }
+
+/* === extra blocks from haeseol_26-29.html === */
+.emotion-flow {
+    display: grid;
+    grid-template-columns: 1fr 18mm 1fr 18mm 1fr;
+    gap: 2mm;
+    align-items: center;
+    margin: 3mm 0;
+  }
+.emotion-stage {
+    border: 1px solid #c8d2dd;
+    padding: 2mm 3mm;
+    font-size: 9.3pt;
+    text-align: center;
+    border-radius: 1mm;
+    page-break-inside: avoid;
+  }
+.emotion-stage.negative { background: #fdf5f4; border-color: #c0392b; }
+.emotion-stage.trigger { background: #fff8e0; border-color: #f4b942; }
+.emotion-stage.positive { background: #f3faf5; border-color: #1e7e34; }
+.emotion-stage .es-label {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 10pt;
+    margin-bottom: 1mm;
+  }
+.emotion-stage.negative .es-label { color: #c0392b; }
+.emotion-stage.trigger .es-label { color: #b8860b; }
+.emotion-stage.positive .es-label { color: #1e7e34; }
+.emotion-arrow {
+    text-align: center;
+    font-size: 13pt;
+    color: #1e3a5f;
+    font-weight: 900;
+  }
+.emotion-arrow .ar-label {
+    display: block;
+    font-size: 8.3pt;
+    color: #666;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    margin-top: 1mm;
+  }
+.poem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0 3mm 0;
+  }
+.poem-card {
+    border: 1px solid #c8d2dd;
+    padding: 3mm 3.5mm;
+    font-size: 9.7pt;
+    page-break-inside: avoid;
+  }
+.poem-card.A { border-top: 3px solid #1e7e34; background: #f3faf5; }
+.poem-card.B { border-top: 3px solid #1e3a5f; background: #f0f3f8; }
+.poem-card .pc-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 11pt;
+    margin-bottom: 1.5mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px dotted #888;
+  }
+.poem-card.A .pc-title { color: #1e7e34; }
+.poem-card.B .pc-title { color: #1e3a5f; }
+.poem-card .pc-author {
+    font-size: 9pt;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 1mm;
+  }
+.verse-box {
+    background: #faf7f0;
+    border-left: 3px solid #b8860b;
+    padding: 2mm 4mm;
+    margin: 1.5mm 0;
+    font-style: italic;
+    color: #4a3a1a;
+    font-size: 9.7pt;
+    line-height: 1.6;
+  }
+.verse-box::before {
+    content: "❝ ";
+    color: #b8860b;
+    font-style: normal;
+    font-weight: 900;
+  }
+.verse-box::after {
+    content: " ❞";
+    color: #b8860b;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+/* === extra blocks from haeseol_30-33.html === */
+.process-diagram {
+    background: #f7f9fc;
+    border: 1.5px solid #1e3a5f;
+    border-radius: 2mm;
+    padding: 4mm;
+    margin: 3mm 0;
+    page-break-inside: avoid;
+  }
+.process-diagram .pd-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 10.5pt;
+    text-align: center;
+    margin-bottom: 3mm;
+  }
+.process-row {
+    display: grid;
+    grid-template-columns: 1fr 14mm 1fr 14mm 1fr;
+    align-items: center;
+    gap: 2mm;
+    margin-bottom: 2mm;
+  }
+.process-node {
+    border: 1px solid #1e3a5f;
+    background: #fff;
+    padding: 2mm 2.5mm;
+    text-align: center;
+    font-size: 9pt;
+    border-radius: 1.5mm;
+    page-break-inside: avoid;
+  }
+.process-node.light { background: #fff8e0; border-color: #f4b942; }
+.process-node.dark { background: #eaf2ec; border-color: #1e7e34; }
+.process-node .pn-label {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 9.7pt;
+    display: block;
+    margin-bottom: 0.8mm;
+    color: #1e3a5f;
+  }
+.process-arrow {
+    text-align: center;
+    font-size: 13pt;
+    color: #1e3a5f;
+    font-weight: 900;
+  }
+.c3c4-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0 3mm 0;
+  }
+.c3c4-card {
+    border: 1px solid #c8d2dd;
+    padding: 3mm 3.5mm;
+    font-size: 9.6pt;
+    page-break-inside: avoid;
+  }
+.c3c4-card.c3 { border-top: 3px solid #c0392b; background: #fdf5f4; }
+.c3c4-card.c4 { border-top: 3px solid #1e7e34; background: #f3faf5; }
+.c3c4-card .cc-name {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 11.5pt;
+    margin-bottom: 1.5mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px dotted #888;
+  }
+.c3c4-card.c3 .cc-name { color: #c0392b; }
+.c3c4-card.c4 .cc-name { color: #1e7e34; }
+.c3c4-card ul {
+    margin: 0;
+    padding-left: 4mm;
+    line-height: 1.5;
+  }
+.c3c4-card li { margin-bottom: 0.8mm; }
+.term-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2mm;
+    margin: 3mm 0;
+  }
+.term-card {
+    border: 1px solid #c8d2dd;
+    border-top: 3px solid #f4b942;
+    padding: 2.5mm 3mm;
+    background: #fffbf2;
+    page-break-inside: avoid;
+  }
+.term-card .tc-name {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    color: #1e3a5f;
+    font-size: 10pt;
+    margin-bottom: 1mm;
+    border-bottom: 1px dotted #1e3a5f;
+    padding-bottom: 0.8mm;
+  }
+.term-card .tc-desc {
+    font-size: 9.3pt;
+    line-height: 1.4;
+  }
+
+/* === extra blocks from haeseol_39-42.html === */
+.sijo-box {
+    background: #faf7f0;
+    border-left: 3px solid #b8860b;
+    padding: 2.5mm 4mm;
+    margin: 2mm 0;
+    font-size: 9.6pt;
+    line-height: 1.55;
+  }
+.sijo-box .sijo-num {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    color: #b8860b;
+    font-size: 10pt;
+    margin-bottom: 1mm;
+  }
+.sijo-num {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    color: #b8860b;
+    font-size: 10pt;
+    margin-bottom: 1mm;
+  }
+.sijo-original {
+    font-style: italic;
+    color: #4a3a1a;
+    margin-bottom: 1mm;
+  }
+.sijo-modern {
+    color: #1a1a1a;
+    padding-left: 3mm;
+    border-left: 2px solid #d0c0a0;
+  }
+.work-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0 3mm 0;
+  }
+.work-card {
+    border: 1px solid #c8d2dd;
+    padding: 3mm 3.5mm;
+    font-size: 9.6pt;
+    page-break-inside: avoid;
+  }
+.work-card.A { border-top: 3px solid #1e7e34; background: #f3faf5; }
+.work-card.B { border-top: 3px solid #1e3a5f; background: #f0f3f8; }
+.work-card .wc-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 11pt;
+    margin-bottom: 1.5mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px dotted #888;
+  }
+.work-card.A .wc-title { color: #1e7e34; }
+.work-card.B .wc-title { color: #1e3a5f; }
+.work-card .wc-author {
+    font-size: 9pt;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 1mm;
+  }
+
+/* === extra blocks from haeseol_16-21.html === */
+.concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2mm;
+    margin: 3mm 0;
+  }
+.concept-card {
+    border: 1px solid #c8d2dd;
+    border-top: 3px solid #f4b942;
+    padding: 2.5mm 3mm;
+    background: #fffbf2;
+    page-break-inside: avoid;
+  }
+.concept-card .term {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    color: #1e3a5f;
+    font-size: 10.5pt;
+    margin-bottom: 1mm;
+    border-bottom: 1px dotted #1e3a5f;
+    padding-bottom: 0.8mm;
+  }
+.concept-card .desc {
+    font-size: 9.5pt;
+    line-height: 1.45;
+  }
+.compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin: 2mm 0 3mm 0;
+  }
+.compare-card {
+    border: 1px solid #c8d2dd;
+    padding: 3mm 3.5mm;
+    font-size: 9.7pt;
+    page-break-inside: avoid;
+  }
+.compare-card.before { border-top: 3px solid #c0392b; background: #fdf5f4; }
+.compare-card.after  { border-top: 3px solid #1e7e34; background: #f3faf5; }
+.compare-card .cc-title {
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 900;
+    font-size: 11pt;
+    margin-bottom: 1.5mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px dotted #888;
+  }
+.compare-card.before .cc-title { color: #c0392b; }
+.compare-card.after .cc-title { color: #1e7e34; }
+.compare-card ul {
+    margin: 0;
+    padding-left: 4mm;
+    line-height: 1.5;
+  }
+.compare-card li {
+    margin-bottom: 1mm;
+  }
+.utility-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2mm 0;
+    font-size: 9.5pt;
+  }
+.utility-table th, table.utility-table td {
+    border: 1px solid #c8d2dd;
+    padding: 1.5mm 2mm;
+    text-align: center;
+  }
+.utility-table th {
+    background: #1e3a5f; color: #fff;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    font-size: 9.3pt;
+  }
+.utility-table td.label-cell {
+    background: #f0f3f8;
+    font-family: 'Noto Sans CJK KR', sans-serif;
+    font-weight: 700;
+    color: #1e3a5f;
+  }
+.utility-table tr.optimum td { background: #fff3a8; font-weight: 700; }
+.utility-table tr.optimum td.label-cell { background: #f4b942; }
