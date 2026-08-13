@@ -8,7 +8,7 @@
  *   로그인하면 「회원」 대상 안내(포인트 충전 등)는 다시 한 번 노출된다.
  */
 
-export const HOME_NOTICE_VERSION = '2026-07-exam-rewards';
+export const HOME_NOTICE_VERSION = '2026-08-midterm2-prep';
 
 export type HomeNoticeAudience = 'member' | 'guest';
 

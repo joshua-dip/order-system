@@ -92,9 +92,9 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
       }}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between gap-2 h-16">
           {/* 왼쪽 공간 (뒤로가기 버튼용) */}
-          <div className="flex items-center">
+          <div className="flex items-center shrink-0">
             {showBackButton && onBackClick && (
               <button
                 onClick={onBackClick}
@@ -121,19 +121,21 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
             )}
           </div>
 
-          {/* 중앙 제목 */}
-          <div className="absolute left-1/2 -translate-x-1/2 max-w-[min(92vw,20rem)] sm:max-w-none text-center px-2">
+          {/* 중앙 제목 — 모바일은 남은 공간 안에서 줄임표 처리한다.
+              (absolute 로 정중앙에 고정하면 좁은 화면에서 제목 박스가 우측 버튼 위를 덮어
+               가입신청·로그인 탭이 제목 버튼에 먹힌다.) 640px 이상은 여백이 충분해 정중앙 고정. */}
+          <div className="min-w-0 flex-1 px-2 text-center sm:absolute sm:left-1/2 sm:w-auto sm:max-w-none sm:flex-none sm:-translate-x-1/2">
             <button
               type="button"
               onClick={handleHomeClick}
-              className="text-base sm:text-xl font-bold text-white hover:opacity-90 transition-all cursor-pointer leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+              className="block max-w-full truncate mx-auto text-base sm:text-xl font-bold text-white hover:opacity-90 transition-all cursor-pointer leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
             >
               {title}
             </button>
           </div>
 
           {/* 우측 메뉴 */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 shrink-0">
             {user ? (
               <>
                 <Link
