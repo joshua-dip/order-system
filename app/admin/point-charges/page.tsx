@@ -1,8 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '../_components/AdminSidebar';
+import {
+  pointChargeUrl,
+  buildPointChargeSmsShort,
+  buildPointChargeSmsLong,
+} from '@/lib/point-charge-guide';
 
 interface ChargeRow {
   id: string;
@@ -37,6 +42,40 @@ export default function AdminPointChargesPage() {
   const [q, setQ] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+
+  /* ── 안내 문자 보내기 ── */
+  const [origin, setOrigin] = useState('');
+  const [guideName, setGuideName] = useState('');
+  const [guideLong, setGuideLong] = useState(true);
+  const [copied, setCopied] = useState<'link' | 'text' | null>(null);
+
+  // origin 은 브라우저에서만 알 수 있다(SSR 하이드레이션 불일치 방지 — mount 후 설정)
+  useEffect(() => setOrigin(window.location.origin), []);
+
+  const chargeLink = origin ? pointChargeUrl(origin) : '';
+  const guideText = useMemo(() => {
+    if (!origin) return '';
+    const input = { name: guideName, origin };
+    return guideLong ? buildPointChargeSmsLong(input) : buildPointChargeSmsShort(input);
+  }, [origin, guideName, guideLong]);
+
+  const copy = async (text: string, kind: 'link' | 'text') => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // 클립보드 권한이 없으면 임시 textarea 로 폴백
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(kind);
+    window.setTimeout(() => setCopied(null), 1800);
+  };
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -100,6 +139,75 @@ export default function AdminPointChargesPage() {
           >
             {loading ? '⏳' : '↻ 새로고침'}
           </button>
+        </div>
+
+        {/* 안내 문자 보내기 — 「포인트를 어디서 결제하냐」는 문의에 링크·안내문을 바로 복사해 보낸다 */}
+        <div className="mb-6 rounded-xl border border-slate-700 bg-slate-800 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              ✉️ 포인트 충전 안내 보내기
+            </h2>
+            <span className="text-[11px] text-slate-500">회원 화면 경로: 내 정보 → 💳 포인트 충전 탭</span>
+          </div>
+
+          {/* 링크 */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <code className="flex-1 min-w-[240px] rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-xs text-sky-300 break-all">
+              {chargeLink || '주소 확인 중…'}
+            </code>
+            <button
+              type="button"
+              onClick={() => copy(chargeLink, 'link')}
+              disabled={!chargeLink}
+              className="px-3 py-2 rounded-lg bg-sky-600 text-sm font-bold text-white hover:bg-sky-500 disabled:opacity-50 whitespace-nowrap"
+            >
+              {copied === 'link' ? '✓ 복사됨' : '🔗 링크 복사'}
+            </button>
+          </div>
+
+          {/* 안내문 */}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <input
+              value={guideName}
+              onChange={(e) => setGuideName(e.target.value)}
+              placeholder="받는 분 이름 (비우면 「선생님」)"
+              className="flex-1 min-w-[180px] rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500"
+            />
+            <div className="inline-flex rounded-lg border border-slate-600 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setGuideLong(false)}
+                className={`px-3 py-2 text-xs font-bold ${!guideLong ? 'bg-slate-600 text-white' : 'text-slate-400 hover:bg-slate-700/60'}`}
+              >
+                단문
+              </button>
+              <button
+                type="button"
+                onClick={() => setGuideLong(true)}
+                className={`px-3 py-2 text-xs font-bold ${guideLong ? 'bg-slate-600 text-white' : 'text-slate-400 hover:bg-slate-700/60'}`}
+              >
+                장문
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => copy(guideText, 'text')}
+              disabled={!guideText}
+              className="px-3 py-2 rounded-lg bg-emerald-600 text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-50 whitespace-nowrap"
+            >
+              {copied === 'text' ? '✓ 복사됨' : '📋 안내문 복사'}
+            </button>
+          </div>
+          <textarea
+            readOnly
+            value={guideText}
+            rows={guideLong ? 12 : 4}
+            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-xs leading-relaxed text-slate-200 font-mono resize-y"
+          />
+          <p className="mt-2 text-[11px] text-slate-500">
+            복사한 뒤 문자 앱에 붙여 넣어 보내세요. 단문은 SMS 한 건, 장문은 LMS 로 전송됩니다.
+            {guideText && <span className="ml-1 text-slate-400">({guideText.length}자)</span>}
+          </p>
         </div>
 
         {/* 요약 카드 */}
