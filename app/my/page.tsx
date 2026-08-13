@@ -159,7 +159,7 @@ interface AnnualSharedFileItem {
   uploadedAt: string | null;
 }
 
-type TabKey = 'orders' | 'schools' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'settings';
+type TabKey = 'orders' | 'schools' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'points' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -281,7 +281,7 @@ export default function MyPage() {
   // URL ?tab=… 으로 진입 시 해당 탭 열기 (홈 공지 「내 정보에서 포인트 받기」 등)
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab');
-    if (t === 'settings' || t === 'exam' || t === 'orders') setActiveTab(t as TabKey);
+    if (t === 'settings' || t === 'exam' || t === 'orders' || t === 'points') setActiveTab(t as TabKey);
   }, []);
 
   useEffect(() => {
@@ -381,7 +381,8 @@ export default function MyPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!user || activeTab !== 'settings') return;
+    // 포인트 블록은 「포인트 충전」 탭으로 옮겼다. 「내 정보」 탭에도 요약 카드가 남아 있어 둘 다 로드.
+    if (!user || (activeTab !== 'settings' && activeTab !== 'points')) return;
     setPointHistoryLoading(true);
     fetch('/api/my/point-history', { credentials: 'include' })
       .then((res) => res.json())
@@ -601,6 +602,8 @@ export default function MyPage() {
     if (user?.isVip) {
       base.push({ key: 'vip', label: 'VIP', icon: '👑' });
     }
+    // 포인트 충전은 「내 정보」 탭 안쪽에 묻혀 있어 못 찾는다는 문의가 잦아 별도 탭으로 올렸다.
+    base.push({ key: 'points', label: '포인트 충전', icon: '💳' });
     base.push({ key: 'settings', label: '내 정보', icon: '⚙️' });
     return base;
   }, [annualMenuUnlocked, user?.isVip, orders.length, studentsCount]);
@@ -1842,6 +1845,179 @@ export default function MyPage() {
             </div>
           )}
 
+          {/* ━━ 포인트 충전 탭 ━━ */}
+          {activeTab === 'points' && (
+            <div className="space-y-4">
+              {/* 포인트 */}
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+                <div className="text-sm font-bold text-[#0f172a] mb-3">내 포인트</div>
+                <div className="flex flex-wrap items-center gap-3 mb-5">
+                  <span className="text-2xl font-black tracking-tight">
+                    {(user.points ?? 0).toLocaleString()}{' '}
+                    <sub className="text-xs font-medium text-[#94a3b8]">P</sub>
+                  </span>
+                  <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">
+                    주문 시 포인트 사용 가능
+                  </span>
+                  <a
+                    href="/my/point-charge"
+                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc] no-underline"
+                  >
+                    충전 · 멤버십 결제 →
+                  </a>
+                </div>
+
+                {/* 일일 출석 보상 */}
+                <div className="mb-5 rounded-2xl border border-[#fde68a] bg-gradient-to-br from-[#fffbeb] to-[#fef3c7] p-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-2xl">🎁</span>
+                    <div className="flex-1 min-w-[180px]">
+                      <div className="text-[13px] font-extrabold text-[#92400e]">출석하고 포인트 받기</div>
+                      <div className="text-[11px] text-[#b45309] mt-0.5">하루 한 번, 100~1,000P를 랜덤으로 드려요!</div>
+                    </div>
+                    {attendanceReward != null ? (
+                      <div className="px-4 py-2 rounded-xl bg-[#16a34a] text-white text-[13px] font-extrabold shadow-sm whitespace-nowrap">
+                        🎉 +{attendanceReward.toLocaleString()}P 획득!
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={claimAttendance}
+                        disabled={attendanceClaiming || attendanceClaimedToday === true}
+                        className={`px-4 py-2.5 rounded-xl text-[13px] font-extrabold shadow-sm border whitespace-nowrap transition-opacity ${
+                          attendanceClaimedToday === true
+                            ? 'bg-[#e2e8f0] text-[#94a3b8] border-[#e2e8f0] cursor-default'
+                            : 'bg-[#f59e0b] text-white border-[#d97706] hover:opacity-95'
+                        } ${attendanceClaiming ? 'opacity-60 cursor-wait' : ''}`}
+                      >
+                        {attendanceClaiming
+                          ? '받는 중…'
+                          : attendanceClaimedToday === true
+                            ? '오늘 출석 완료 ✓'
+                            : '🙌 출석하러 가기'}
+                      </button>
+                    )}
+                  </div>
+                  {(attendanceMsg || (attendanceClaimedToday === true && attendanceReward == null)) && (
+                    <p className="text-[11px] text-[#b45309] mt-2.5">
+                      {attendanceMsg || '오늘은 이미 출석 보상을 받았어요. 내일 다시 받아주세요!'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="border-t border-[#f1f5f9] pt-4">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-xs font-bold text-[#475569]">포인트 사용·적립 내역</span>
+                    {pointHistoryLoading && (
+                      <span className="text-[11px] text-[#94a3b8]">불러오는 중…</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#94a3b8] mb-3 leading-relaxed">
+                    시스템에 기록된 거래만 표시됩니다. 이 기능 도입 이전 주문·지급은 목록에 없을 수 있어요.
+                  </p>
+                  {pointHistoryLoading && pointHistory.length === 0 ? (
+                    <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] py-8 text-center text-[13px] text-[#94a3b8]">
+                      내역을 불러오는 중입니다…
+                    </div>
+                  ) : !pointHistoryLoading && pointHistory.length === 0 ? (
+                    <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] py-8 text-center text-[13px] text-[#94a3b8]">
+                      아직 표시할 내역이 없습니다.
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-[#e2e8f0] overflow-hidden overflow-x-auto">
+                      <table className="w-full text-left text-[12px] min-w-[320px]">
+                        <thead>
+                          <tr className="bg-[#f8fafc] text-[#64748b] font-semibold border-b border-[#e2e8f0]">
+                            <th className="px-3 py-2.5 whitespace-nowrap">일시</th>
+                            <th className="px-3 py-2.5 whitespace-nowrap">구분</th>
+                            <th className="px-3 py-2.5 whitespace-nowrap text-right">변동</th>
+                            <th className="px-3 py-2.5 whitespace-nowrap text-right">잔액</th>
+                            <th className="px-3 py-2.5 min-w-[100px]">비고</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pointHistory.map((row) => {
+                            const orderNumber =
+                              typeof row.meta?.orderNumber === 'string' ? row.meta.orderNumber : '';
+                            const chargePts = typeof row.meta?.points === 'number' ? row.meta.points : null;
+                            const note =
+                              row.kind === 'point_charge' && chargePts != null
+                                ? `토스 결제 · ${chargePts.toLocaleString()}P`
+                                : row.kind === 'order_spend' && orderNumber
+                                  ? `주문 ${orderNumber}`
+                                  : row.kind === 'order_cancel_refund'
+                                    ? orderNumber
+                                      ? `취소 환급 · ${orderNumber}`
+                                      : '주문 취소 환급'
+                                    : row.kind === 'member_variant_hard'
+                                      ? (typeof row.meta?.type === 'string' && row.meta.type.trim()
+                                          ? `${row.meta.type.trim()} 초안 생성`
+                                          : '고난도 초안 생성')
+                                      : '';
+                            const deltaStr =
+                              row.delta > 0
+                                ? `+${row.delta.toLocaleString()}`
+                                : row.delta.toLocaleString();
+                            return (
+                              <tr
+                                key={row.id}
+                                className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#fafafa]"
+                              >
+                                <td className="px-3 py-2.5 text-[#475569] whitespace-nowrap align-top">
+                                  {formatPointHistoryWhen(row.createdAt)}
+                                </td>
+                                <td className="px-3 py-2.5 text-[#0f172a] whitespace-nowrap align-top">
+                                  {pointHistoryKindLabel(row.kind)}
+                                </td>
+                                <td
+                                  className={`px-3 py-2.5 text-right font-bold whitespace-nowrap align-top ${
+                                    row.delta >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'
+                                  }`}
+                                >
+                                  {deltaStr} P
+                                </td>
+                                <td className="px-3 py-2.5 text-right text-[#0f172a] font-medium whitespace-nowrap align-top">
+                                  {row.balanceAfter.toLocaleString()} P
+                                </td>
+                                <td className="px-3 py-2.5 text-[#64748b] align-top break-words max-w-[200px]">
+                                  {(row.kind === 'order_spend' || row.kind === 'order_cancel_refund') &&
+                                  orderNumber ? (
+                                    <>
+                                      {row.kind === 'order_cancel_refund' ? '취소 환급 · ' : '주문 '}
+                                      {(() => {
+                                        const detailId = resolvePointHistoryOrderDetailId(
+                                          row.meta,
+                                          orderNumber,
+                                          orderIdByOrderNumber
+                                        );
+                                        return detailId ? (
+                                          <Link
+                                            href={`/order/done?id=${encodeURIComponent(detailId)}`}
+                                            className="text-[#2563eb] font-semibold hover:underline font-mono"
+                                          >
+                                            {orderNumber}
+                                          </Link>
+                                        ) : (
+                                          <span className="font-mono text-[#64748b]">{orderNumber}</span>
+                                        );
+                                      })()}
+                                    </>
+                                  ) : (
+                                    note
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ━━ 내 정보 탭 ━━ */}
           {activeTab === 'settings' && (
             <div className="space-y-4">
@@ -2029,172 +2205,25 @@ export default function MyPage() {
                 )}
               </div>
 
-              {/* 포인트 */}
+              {/* 포인트 — 본체는 「💳 포인트 충전」 탭으로 옮겼다 */}
               <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="text-sm font-bold text-[#0f172a] mb-3">내 포인트</div>
-                <div className="flex flex-wrap items-center gap-3 mb-5">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="text-2xl font-black tracking-tight">
                     {(user.points ?? 0).toLocaleString()}{' '}
                     <sub className="text-xs font-medium text-[#94a3b8]">P</sub>
                   </span>
-                  <span className="px-3 py-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full text-[11px] text-[#166534]">
-                    주문 시 포인트 사용 가능
-                  </span>
-                  <a
-                    href="/my/point-charge"
-                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc] no-underline"
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('points')}
+                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc]"
                   >
-                    충전 · 멤버십 결제 →
-                  </a>
+                    💳 포인트 충전 탭으로 →
+                  </button>
                 </div>
-
-                {/* 일일 출석 보상 */}
-                <div className="mb-5 rounded-2xl border border-[#fde68a] bg-gradient-to-br from-[#fffbeb] to-[#fef3c7] p-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-2xl">🎁</span>
-                    <div className="flex-1 min-w-[180px]">
-                      <div className="text-[13px] font-extrabold text-[#92400e]">출석하고 포인트 받기</div>
-                      <div className="text-[11px] text-[#b45309] mt-0.5">하루 한 번, 100~1,000P를 랜덤으로 드려요!</div>
-                    </div>
-                    {attendanceReward != null ? (
-                      <div className="px-4 py-2 rounded-xl bg-[#16a34a] text-white text-[13px] font-extrabold shadow-sm whitespace-nowrap">
-                        🎉 +{attendanceReward.toLocaleString()}P 획득!
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={claimAttendance}
-                        disabled={attendanceClaiming || attendanceClaimedToday === true}
-                        className={`px-4 py-2.5 rounded-xl text-[13px] font-extrabold shadow-sm border whitespace-nowrap transition-opacity ${
-                          attendanceClaimedToday === true
-                            ? 'bg-[#e2e8f0] text-[#94a3b8] border-[#e2e8f0] cursor-default'
-                            : 'bg-[#f59e0b] text-white border-[#d97706] hover:opacity-95'
-                        } ${attendanceClaiming ? 'opacity-60 cursor-wait' : ''}`}
-                      >
-                        {attendanceClaiming
-                          ? '받는 중…'
-                          : attendanceClaimedToday === true
-                            ? '오늘 출석 완료 ✓'
-                            : '🙌 출석하러 가기'}
-                      </button>
-                    )}
-                  </div>
-                  {(attendanceMsg || (attendanceClaimedToday === true && attendanceReward == null)) && (
-                    <p className="text-[11px] text-[#b45309] mt-2.5">
-                      {attendanceMsg || '오늘은 이미 출석 보상을 받았어요. 내일 다시 받아주세요!'}
-                    </p>
-                  )}
-                </div>
-
-                <div className="border-t border-[#f1f5f9] pt-4">
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-xs font-bold text-[#475569]">포인트 사용·적립 내역</span>
-                    {pointHistoryLoading && (
-                      <span className="text-[11px] text-[#94a3b8]">불러오는 중…</span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-[#94a3b8] mb-3 leading-relaxed">
-                    시스템에 기록된 거래만 표시됩니다. 이 기능 도입 이전 주문·지급은 목록에 없을 수 있어요.
-                  </p>
-                  {pointHistoryLoading && pointHistory.length === 0 ? (
-                    <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] py-8 text-center text-[13px] text-[#94a3b8]">
-                      내역을 불러오는 중입니다…
-                    </div>
-                  ) : !pointHistoryLoading && pointHistory.length === 0 ? (
-                    <div className="rounded-xl bg-[#f8fafc] border border-[#e2e8f0] py-8 text-center text-[13px] text-[#94a3b8]">
-                      아직 표시할 내역이 없습니다.
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-[#e2e8f0] overflow-hidden overflow-x-auto">
-                      <table className="w-full text-left text-[12px] min-w-[320px]">
-                        <thead>
-                          <tr className="bg-[#f8fafc] text-[#64748b] font-semibold border-b border-[#e2e8f0]">
-                            <th className="px-3 py-2.5 whitespace-nowrap">일시</th>
-                            <th className="px-3 py-2.5 whitespace-nowrap">구분</th>
-                            <th className="px-3 py-2.5 whitespace-nowrap text-right">변동</th>
-                            <th className="px-3 py-2.5 whitespace-nowrap text-right">잔액</th>
-                            <th className="px-3 py-2.5 min-w-[100px]">비고</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pointHistory.map((row) => {
-                            const orderNumber =
-                              typeof row.meta?.orderNumber === 'string' ? row.meta.orderNumber : '';
-                            const chargePts = typeof row.meta?.points === 'number' ? row.meta.points : null;
-                            const note =
-                              row.kind === 'point_charge' && chargePts != null
-                                ? `토스 결제 · ${chargePts.toLocaleString()}P`
-                                : row.kind === 'order_spend' && orderNumber
-                                  ? `주문 ${orderNumber}`
-                                  : row.kind === 'order_cancel_refund'
-                                    ? orderNumber
-                                      ? `취소 환급 · ${orderNumber}`
-                                      : '주문 취소 환급'
-                                    : row.kind === 'member_variant_hard'
-                                      ? (typeof row.meta?.type === 'string' && row.meta.type.trim()
-                                          ? `${row.meta.type.trim()} 초안 생성`
-                                          : '고난도 초안 생성')
-                                      : '';
-                            const deltaStr =
-                              row.delta > 0
-                                ? `+${row.delta.toLocaleString()}`
-                                : row.delta.toLocaleString();
-                            return (
-                              <tr
-                                key={row.id}
-                                className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#fafafa]"
-                              >
-                                <td className="px-3 py-2.5 text-[#475569] whitespace-nowrap align-top">
-                                  {formatPointHistoryWhen(row.createdAt)}
-                                </td>
-                                <td className="px-3 py-2.5 text-[#0f172a] whitespace-nowrap align-top">
-                                  {pointHistoryKindLabel(row.kind)}
-                                </td>
-                                <td
-                                  className={`px-3 py-2.5 text-right font-bold whitespace-nowrap align-top ${
-                                    row.delta >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'
-                                  }`}
-                                >
-                                  {deltaStr} P
-                                </td>
-                                <td className="px-3 py-2.5 text-right text-[#0f172a] font-medium whitespace-nowrap align-top">
-                                  {row.balanceAfter.toLocaleString()} P
-                                </td>
-                                <td className="px-3 py-2.5 text-[#64748b] align-top break-words max-w-[200px]">
-                                  {(row.kind === 'order_spend' || row.kind === 'order_cancel_refund') &&
-                                  orderNumber ? (
-                                    <>
-                                      {row.kind === 'order_cancel_refund' ? '취소 환급 · ' : '주문 '}
-                                      {(() => {
-                                        const detailId = resolvePointHistoryOrderDetailId(
-                                          row.meta,
-                                          orderNumber,
-                                          orderIdByOrderNumber
-                                        );
-                                        return detailId ? (
-                                          <Link
-                                            href={`/order/done?id=${encodeURIComponent(detailId)}`}
-                                            className="text-[#2563eb] font-semibold hover:underline font-mono"
-                                          >
-                                            {orderNumber}
-                                          </Link>
-                                        ) : (
-                                          <span className="font-mono text-[#64748b]">{orderNumber}</span>
-                                        );
-                                      })()}
-                                    </>
-                                  ) : (
-                                    note
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">
+                  충전·멤버십 결제, 출석 보상, 사용·적립 내역은 「💳 포인트 충전」 탭에 모아 두었어요.
+                </p>
               </div>
             </div>
           )}
