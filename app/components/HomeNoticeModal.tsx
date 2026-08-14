@@ -212,6 +212,14 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
                 >
                   시험 범위 정하고 주문 시작하기
                 </button>
+                {/* 출석 보상 — 하루 1회 랜덤 적립. 출석 UI 는 「💳 포인트 충전」 탭에 있다 */}
+                <a
+                  href="/my?tab=points"
+                  onClick={closeSession}
+                  className="w-full rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 py-2.5 text-center text-sm font-bold text-amber-800 transition hover:from-amber-100 hover:to-yellow-100"
+                >
+                  🎁 출석하고 포인트 받기 — 하루 한 번 랜덤 적립 →
+                </a>
                 <a
                   href="/my/point-charge"
                   onClick={closeSession}
@@ -219,17 +227,17 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
                 >
                   💳 포인트 충전하러 가기 →
                 </a>
+                {/* 멤버십 결제 — 파이널 예비 모의고사가 연회원·월구독 전용이라 함께 안내한다.
+                    게스트에게는 노출하지 않는다(계정이 없어 어차피 가입 신청이 먼저다). */}
+                <a
+                  href="/my/point-charge#membership"
+                  onClick={closeSession}
+                  className="w-full rounded-xl border border-amber-300 bg-amber-50 py-2.5 text-center text-sm font-bold text-amber-700 transition hover:bg-amber-100"
+                >
+                  👑 연회원 · 월구독 결제하기 →
+                </a>
               </>
             )}
-            {/* 멤버십 결제 — 파이널 예비 모의고사가 연회원·월구독 전용이라 함께 안내한다.
-                비로그인은 로그인 후 결제 화면으로 이어지도록 from 을 붙인다. */}
-            <a
-              href={showApply ? '/login?from=/my/point-charge' : '/my/point-charge#membership'}
-              onClick={closeSession}
-              className="w-full rounded-xl border border-amber-300 bg-amber-50 py-2.5 text-center text-sm font-bold text-amber-700 transition hover:bg-amber-100"
-            >
-              👑 연회원 · 월구독 결제하기 →
-            </a>
             {/* 카톡 문의 — 사용법만 물어봐도 포인트 (게스트·회원 공통) */}
             <a
               href={KAKAO_INQUIRY_URL}
