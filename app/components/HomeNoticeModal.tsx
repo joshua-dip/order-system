@@ -131,38 +131,62 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
                 <span className="text-xl leading-none">🆓</span>
                 <div className="text-sm text-emerald-900">
                   <p className="font-extrabold">
-                    기본 유형 {FREE_VARIANT_TYPES.length}종은 <span className="text-emerald-700">문항당 0원</span>
+                    <span className="text-emerald-700">기본난도</span> {FREE_VARIANT_TYPES.length}종은 문항당 0원
                   </p>
                   <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-800/90">
-                    <b>{FREE_VARIANT_TYPES.join(' · ')}</b> 유형을 무료로 드려요. 유료 유형을 하나 이상 고른 주문에 추가 비용 없이 함께 담깁니다.
+                    <b>{FREE_VARIANT_TYPES.join(' · ')}</b> — 유료 유형을 하나 이상 고른 주문에 추가 비용 없이 함께 담깁니다.
+                  </p>
+                  {/* 같은 이름의 고난도 유형은 유료라 헷갈리기 쉬워 명시한다 */}
+                  <p className="mt-1.5 rounded-lg bg-white/70 px-2 py-1 text-[11px] leading-relaxed text-emerald-900/80">
+                    ※ <b>기본난도만</b> 무료입니다. 같은 유형이라도 <b>「〜-고난도」는 유료</b>예요.
                   </p>
                 </div>
               </div>
             </div>
-            {/* 2. 변형문제 */}
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3.5">
-              <div className="flex items-start gap-2.5">
-                <span className="text-xl leading-none">📝</span>
-                <div className="text-sm text-indigo-900">
-                  <p className="font-extrabold">
-                    시험 범위만 고르면 <span className="text-indigo-700">변형문제 자동 생성</span>
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-relaxed text-indigo-800/90">
-                    교재·회차와 지문만 선택하세요. 객관식 · 서술형 · 워크북 어법까지 지문 하나로 만들어 드립니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* 3. 파이널 예비 모의고사 */}
+            {/* 2. 파이널 예비 모의고사 */}
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
               <div className="flex items-start gap-2.5">
                 <span className="text-xl leading-none">🎯</span>
                 <div className="text-sm text-amber-900">
                   <p className="font-extrabold">
-                    시험 범위 그대로 <span className="text-amber-700">예비 시험지</span>
+                    시험 범위 고르면 <span className="text-amber-700">PDF 바로 다운로드</span>
                   </p>
                   <p className="mt-0.5 text-[12px] leading-relaxed text-amber-800/90">
-                    파이널 예비 모의고사로 실전 시험지를 바로 제작해요. QR 자가채점까지 됩니다(연회원 · 월구독).
+                    파이널 예비 모의고사에서 범위만 정하면 문제지 · 정답표 · 빠른정답을 PDF 로 즉시 받습니다. QR 자가채점까지 돼요.
+                  </p>
+                  {/* 이 메뉴는 연회원·월구독 + 포인트 차감이라 두 조건을 함께 알리고 각각의 결제로 이어 준다 */}
+                  <p className="mt-1.5 rounded-lg bg-white/70 px-2 py-1 text-[11px] leading-relaxed text-amber-900/80">
+                    ※ <b>연회원 · 월구독</b> 전용이고, 발급할 때 <b>보유 포인트가 차감</b>돼요. 포인트가 없으면 먼저 충전해 주세요.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <a
+                      href={showApply ? '/login?from=/unified' : '/unified'}
+                      onClick={closeSession}
+                      className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-[12px] font-extrabold text-white no-underline transition hover:bg-amber-600"
+                    >
+                      파이널 열기 →
+                    </a>
+                    <a
+                      href={showApply ? '/login?from=/my/point-charge' : '/my/point-charge'}
+                      onClick={closeSession}
+                      className="inline-flex items-center gap-1 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-[12px] font-extrabold text-amber-700 no-underline transition hover:bg-amber-100"
+                    >
+                      💳 포인트 충전
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* 3. 사용법 문의 — 물어만 봐도 포인트 */}
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5">
+              <div className="flex items-start gap-2.5">
+                <span className="text-xl leading-none">💬</span>
+                <div className="text-sm text-rose-900">
+                  <p className="font-extrabold">
+                    사용법 물어만 봐도 <span className="text-rose-700">포인트 드려요</span>
+                  </p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-rose-800/90">
+                    처음이라 막막하시죠? 카톡으로 <b>&ldquo;사용법 알려주세요&rdquo;</b> 한마디면 관리자가 직접 안내드리고 포인트까지 드립니다.
                   </p>
                 </div>
               </div>
@@ -197,6 +221,15 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
                 </a>
               </>
             )}
+            {/* 멤버십 결제 — 파이널 예비 모의고사가 연회원·월구독 전용이라 함께 안내한다.
+                비로그인은 로그인 후 결제 화면으로 이어지도록 from 을 붙인다. */}
+            <a
+              href={showApply ? '/login?from=/my/point-charge' : '/my/point-charge#membership'}
+              onClick={closeSession}
+              className="w-full rounded-xl border border-amber-300 bg-amber-50 py-2.5 text-center text-sm font-bold text-amber-700 transition hover:bg-amber-100"
+            >
+              👑 연회원 · 월구독 결제하기 →
+            </a>
             {/* 카톡 문의 — 사용법만 물어봐도 포인트 (게스트·회원 공통) */}
             <a
               href={KAKAO_INQUIRY_URL}

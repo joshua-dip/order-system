@@ -983,6 +983,30 @@ export default function MyPage() {
               </button>
             </div>
 
+            {/* 포인트 바 — 탭 안쪽에 있으면 못 찾는다는 문의가 많아 어떤 탭에서도 보이도록 상단에 둔다 */}
+            <div className="flex flex-wrap items-center gap-3 p-3 mb-3 rounded-xl bg-[#eff6ff] border border-[#bfdbfe]">
+              <span className="text-base">💳</span>
+              <span className="text-[13px] font-medium text-[#1e40af]">내 포인트</span>
+              <span className="text-lg font-black tracking-tight text-[#1e3a8a] tabular-nums">
+                {(user.points ?? 0).toLocaleString()}
+                <sub className="ml-0.5 text-[11px] font-medium text-[#60a5fa]">P</sub>
+              </span>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => setActiveTab('points')}
+                className="px-3 py-1.5 rounded-lg border border-[#bfdbfe] bg-white text-[12px] font-bold text-[#1d4ed8] hover:bg-[#dbeafe] whitespace-nowrap"
+              >
+                사용 내역
+              </button>
+              <a
+                href="/my/point-charge"
+                className="inline-flex items-center px-3.5 py-2 rounded-lg bg-[#0064ff] text-white text-[12px] font-bold hover:bg-[#0052cc] no-underline whitespace-nowrap"
+              >
+                충전하기 →
+              </a>
+            </div>
+
             {/* Dropbox 상태 바 */}
             {hasDropbox ? (
               <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-[#f0f9ff] border border-[#bae6fd]">
@@ -1026,14 +1050,15 @@ export default function MyPage() {
               </div>
             )}
 
-            {/* 탭 네비게이션 */}
-            <div className="flex gap-0 -mb-px">
+            {/* 탭 네비게이션 — 탭이 늘어나면 flex 가 줄여 버려 라벨이 글자 단위로 쪼개진다.
+                shrink-0 + whitespace-nowrap 으로 본래 폭을 지키고, 넘치면 가로 스크롤. */}
+            <div className="flex gap-0 -mb-px overflow-x-auto">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold border-b-2 transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[13px] font-semibold border-b-2 transition-colors ${
                     activeTab === tab.key
                       ? 'border-[#2563eb] text-[#2563eb]'
                       : 'border-transparent text-[#94a3b8] hover:text-[#64748b]'
@@ -2205,26 +2230,6 @@ export default function MyPage() {
                 )}
               </div>
 
-              {/* 포인트 — 본체는 「💳 포인트 충전」 탭으로 옮겼다 */}
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
-                <div className="text-sm font-bold text-[#0f172a] mb-3">내 포인트</div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-2xl font-black tracking-tight">
-                    {(user.points ?? 0).toLocaleString()}{' '}
-                    <sub className="text-xs font-medium text-[#94a3b8]">P</sub>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('points')}
-                    className="px-4 py-2 rounded-xl bg-[#0064ff] text-white text-[13px] font-bold hover:opacity-95 shadow-sm border border-[#0052cc]"
-                  >
-                    💳 포인트 충전 탭으로 →
-                  </button>
-                </div>
-                <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">
-                  충전·멤버십 결제, 출석 보상, 사용·적립 내역은 「💳 포인트 충전」 탭에 모아 두었어요.
-                </p>
-              </div>
             </div>
           )}
         </div>

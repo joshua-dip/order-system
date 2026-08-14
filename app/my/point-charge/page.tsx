@@ -336,8 +336,8 @@ export default function PointChargePage() {
                     )}
                   </section>
 
-                  {/* 멤버십 */}
-                  <section className="bg-white rounded-2xl border border-[#e2e8f0] p-5 mb-5">
+                  {/* 멤버십 — 홈 공지 등에서 #membership 으로 바로 스크롤해 들어온다 */}
+                  <section id="membership" className="scroll-mt-24 bg-white rounded-2xl border border-[#e2e8f0] p-5 mb-5">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-lg">👑</span>
                       <h2 className="text-base font-bold text-[#0f172a]">멤버십 가입 · 연장</h2>
