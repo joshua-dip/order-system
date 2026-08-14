@@ -3,12 +3,12 @@ import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import { recordPointLedger } from '@/lib/point-ledger';
-
-// Next.js route 파일은 핸들러·라우트설정 외 export 를 허용하지 않으므로 모듈 로컬 상수로 둔다.
-/** 기출 시험지 업로드 1건 보상 포인트 (문제만) — 관리자 승인 시 지급 */
-const PAST_EXAM_REWARD_POINTS = 50000;
-/** 문제 + 답지(정답·해설)까지 업로드 시 보상 — 문제만 + 1만 */
-const PAST_EXAM_REWARD_POINTS_WITH_ANSWERS = 60000;
+// 보상 금액은 화면 문구(내 정보 기출문제 탭·홈 공지)와 같은 값을 써야 해 lib 로 단일화했다.
+// (route 파일은 핸들러·라우트설정 외 export 가 안 되므로 정의가 아니라 import 로 가져온다)
+import {
+  PAST_EXAM_REWARD_POINTS,
+  PAST_EXAM_REWARD_POINTS_WITH_ANSWERS,
+} from '@/lib/past-exam-reward';
 
 /** 지급 금액 정규화: 답지 포함(60,000) / 문제만(50,000). 기본 50,000. */
 function normalizeAwardAmount(raw: unknown): number {
