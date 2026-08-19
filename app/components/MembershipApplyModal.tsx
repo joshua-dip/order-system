@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+const KAKAO_INQUIRY_URL =
+  process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
+
 type Step = 'form' | 'done';
 type ApplicantType = 'student' | 'parent' | 'teacher';
 
@@ -48,6 +51,8 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
   const [showConsentDetails, setShowConsentDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  /** 카톡 알리기 — 문구를 클립보드에 넣었는지 */
+  const [notifyCopied, setNotifyCopied] = useState(false);
 
   const reset = useCallback(() => {
     setStep('form');
@@ -58,12 +63,44 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
     setShowConsentDetails(false);
     setSubmitting(false);
     setError('');
+    setNotifyCopied(false);
   }, []);
 
   const handleClose = useCallback(() => {
     onClose();
     setTimeout(reset, 300);
   }, [onClose, reset]);
+
+  /**
+   * 「카톡으로 가입 알리기」 — 오픈채팅 링크는 메시지를 미리 채워 넣을 수 없다.
+   * 그래서 보낼 문구를 클립보드에 복사해 두고 채팅방을 열어, 붙여넣기만 하면 되게 한다.
+   * 전화번호는 넣지 않는다(이미 신청서로 받았고, 클립보드에 남길 이유가 없다).
+   */
+  const handleNotifyKakao = useCallback(async () => {
+    const typeLabel = TYPE_OPTIONS.find((t) => t.value === applicantType)?.label ?? '';
+    const who = [name.trim(), typeLabel].filter(Boolean).join(' · ');
+    const text = `[고미조슈아 가입 신청] ${who || '가입 신청자'} — 방금 가입 신청했습니다. 확인 부탁드립니다!`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setNotifyCopied(true);
+    } catch {
+      // 클립보드 권한이 없으면 임시 textarea 로 폴백
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setNotifyCopied(true);
+      } catch {
+        /* 복사에 실패해도 채팅방은 열어 준다 */
+      }
+    }
+    window.open(KAKAO_INQUIRY_URL, '_blank', 'noopener,noreferrer');
+  }, [applicantType, name]);
 
   useEffect(() => {
     if (!open) return;
@@ -275,16 +312,41 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
         )}
 
         {step === 'done' && (
-          <div className="p-8 flex flex-col items-center text-center gap-6 overflow-y-auto flex-1 min-h-0">
+          <div className="p-8 flex flex-col items-center text-center gap-5 overflow-y-auto flex-1 min-h-0">
             <div className="space-y-3">
               <p className="text-lg font-bold text-slate-800 leading-snug">가입 신청이 완료되었습니다</p>
               <p className="text-sm text-slate-600 leading-relaxed">담당 매니저가 확인 후 연락드립니다.</p>
             </div>
+
+            {/* 카톡으로 알리면 승인이 훨씬 빨라진다 — 신청자가 직접 알리도록 유도 */}
+            <div className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left">
+              <p className="text-[13px] font-extrabold text-amber-900">
+                카톡으로 알려 주시면 더 빨리 처리돼요
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-amber-800/90">
+                아래 버튼을 누르면 <b>보낼 문구가 복사</b>되고 오픈채팅방이 열립니다. 채팅창에 붙여넣기만 해 주세요.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleNotifyKakao}
+              className="w-full py-3.5 rounded-xl font-extrabold text-[#3C1E1E] transition-all hover:brightness-95"
+              style={{ backgroundColor: '#FEE500' }}
+            >
+              💬 카톡으로 가입 알리기
+            </button>
+
+            {notifyCopied && (
+              <p className="-mt-2 text-[12px] font-bold text-emerald-600">
+                ✓ 문구를 복사했어요 — 채팅창에 붙여넣기 해 주세요
+              </p>
+            )}
+
             <button
               type="button"
               onClick={handleClose}
-              className="w-full py-3.5 rounded-xl font-bold text-slate-900 transition-all"
-              style={{ backgroundColor: '#FEE500' }}
+              className="w-full py-3 rounded-xl font-bold text-slate-600 bg-slate-100 transition-all hover:bg-slate-200"
             >
               확인
             </button>
