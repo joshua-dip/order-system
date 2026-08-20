@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import path from 'path';
-import fs from 'fs/promises';
+import { putPastExamFile, guessContentType, type PastExamFileRef } from '@/lib/past-exam-files';
 
 const EXAM_TYPES = ['1학기중간고사', '1학기기말고사', '2학기중간고사', '2학기기말고사'] as const;
-const UPLOAD_DIR = 'uploads/past-exam';
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const MAX_FILES = 10;
-
-function safeFileName(original: string, index: number): string {
-  const ext = path.extname(original) || '';
-  const base = path.basename(original, ext).replace(/[^a-zA-Z0-9가-힣._-]/g, '_').slice(0, 80);
-  return `${index}_${base}${ext}`;
-}
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -25,9 +17,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const db = await getDb('gomijoshua');
+    // 회원상세 화면에서는 그 회원 건만 본다 (loginId 없으면 기존처럼 전체)
+    const loginId = (request.nextUrl.searchParams.get('loginId') ?? '').trim();
     const docs = await db
       .collection('pastExamUploads')
-      .find({})
+      .find(loginId ? { loginId } : {})
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -39,13 +33,14 @@ export async function GET(request: NextRequest) {
       examYear: d.examYear,
       examType: d.examType,
       examScope: d.examScope,
-      files: (d.files || []).map((f: { originalName: string; savedPath: string }, idx: number) => ({
+      files: (d.files || []).map((f: { originalName: string }, idx: number) => ({
         originalName: f.originalName,
         fileIndex: idx,
       })),
       adminCategories: d.adminCategories || [],
       adminClassifiedAt: d.adminClassifiedAt,
       includesAnswerSheet: d.includesAnswerSheet === true,
+      uploadedByAdmin: d.uploadedByAdmin === true,
       pointAwarded: d.pointAwarded === true,
       pointAwardedAt: d.pointAwardedAt ?? null,
       pointAwardAmount: typeof d.pointAwardAmount === 'number' ? d.pointAwardAmount : null,
@@ -78,9 +73,10 @@ export async function POST(request: NextRequest) {
     const examYear = (formData.get('examYear') as string)?.trim() ?? '';
     const examType = (formData.get('examType') as string)?.trim() ?? '';
     const examScope = (formData.get('examScope') as string)?.trim() ?? '';
+    const includesAnswerSheet = (formData.get('includesAnswerSheet') as string) === 'true';
 
     if (!loginId) return NextResponse.json({ error: '회원(아이디)을 선택해 주세요.' }, { status: 400 });
-    if (!school) return NextResponse.json({ error: '학교를 입력해 주세요.' }, { status: 400 });
+    // 학교는 선택 — 회원이 안 알려 주는 경우가 있어 비워 둔 채 등록하고 나중에 채운다.
     if (!grade) return NextResponse.json({ error: '학년을 선택해 주세요.' }, { status: 400 });
     if (!examYear) return NextResponse.json({ error: '시험 연도를 선택해 주세요.' }, { status: 400 });
     if (!EXAM_TYPES.includes(examType as (typeof EXAM_TYPES)[number])) {
@@ -112,30 +108,30 @@ export async function POST(request: NextRequest) {
 
     const doc = {
       loginId,
+      // 관리자가 회원 대신 올린 건임을 남긴다
+      uploadedByAdmin: true,
+      uploadedByAdminLoginId: payload.loginId ?? '',
       school,
       grade,
       examYear,
       examType,
       examScope,
-      files: [] as { originalName: string; savedPath: string }[],
+      includesAnswerSheet,
+      files: [] as PastExamFileRef[],
       createdAt: new Date(),
     };
     const result = await db.collection('pastExamUploads').insertOne(doc);
     const uploadId = result.insertedId.toString();
 
-    const rootDir = path.join(process.cwd(), UPLOAD_DIR, uploadId);
-    await fs.mkdir(rootDir, { recursive: true });
-
+    // 파일은 GridFS 에 저장한다 — Amplify(Lambda) 는 로컬 파일시스템이 영구적이지 않아
+    // 예전 방식(uploads/past-exam/…)으로 저장하면 인스턴스 재활용 시 파일이 사라진다.
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      const savedName = safeFileName(file.name || 'file', i);
-      const savedPath = path.join(rootDir, savedName);
+      const name = file.name || `file_${i}`;
       const buf = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(savedPath, buf);
-      doc.files.push({
-        originalName: file.name || savedName,
-        savedPath: path.join(UPLOAD_DIR, uploadId, savedName),
-      });
+      const contentType = file.type || guessContentType(name);
+      const gridId = await putPastExamFile(db, buf, `${uploadId}_${i}_${name}`, contentType);
+      doc.files.push({ originalName: name, gridId, contentType, size: buf.length });
     }
 
     if (doc.files.length > 0) {
