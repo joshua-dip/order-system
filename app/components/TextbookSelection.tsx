@@ -445,6 +445,51 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
           {/* 관리자 공지 한 줄 — 누르면 상세. 팝업에 다 담기 어려운 안내를 여기로 뺀다 */}
           <HomeNoticeBar />
+
+          {/* 서술형 2단 배너 — 문제 주문(HWP)과 워크북(PDF)을 나눠 안내한다 */}
+          <div className="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <Link
+              href="/essay"
+              className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+              style={{ background: 'linear-gradient(120deg, #312e81 0%, #4338ca 50%, #6366f1 100%)' }}
+            >
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">
+                  서술형문제 주문제작
+                </span>
+                <p className="text-sm font-medium text-indigo-50">
+                  빈칸재배열 · 요약문조건영작 · 이중요지 · 글의의미 — 지문마다 새로 제작
+                </p>
+                <p className="mt-0.5 text-xs text-indigo-100/90">
+                  📝 한글파일(HWP) 제공 · 편집 가능
+                </p>
+              </div>
+              <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-indigo-50 sm:ml-6">
+                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">주문하기 →</span>
+              </div>
+            </Link>
+
+            <Link
+              href="/essay-workbook"
+              className="group flex min-h-[7.5rem] items-center justify-between overflow-hidden rounded-2xl px-5 py-5 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 sm:px-7"
+              style={{ background: 'linear-gradient(120deg, #7c2d12 0%, #c2410c 50%, #f59e0b 100%)' }}
+            >
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">
+                  서술형 워크북
+                </span>
+                <p className="text-sm font-medium text-amber-50">
+                  조건영작배열 · 글의의미 서술형 — 이미 제작된 자료를 바로
+                </p>
+                <p className="mt-0.5 text-xs text-amber-100/90">
+                  📄 PDF 제공 · 지문당 800원 · 앞 3지문 무료
+                </p>
+              </div>
+              <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-amber-50 sm:ml-6">
+                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">바로 받기 →</span>
+              </div>
+            </Link>
+          </div>
             {/* Q&A 분석지 · 변형문제 만들기 2단 강조 배너 */}
           <div className="mb-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
             {/* 왼쪽: Q&A 분석지 */}

@@ -23,6 +23,10 @@ interface CategorySelectorProps {
   onToggle: (id: string) => void;
   /** 예시 링크 base URL, typeId 쿼리로 붙임 */
   exampleFileBaseUrl?: string;
+  /** 대분류별 「샘플 보기」 — 넘기면 칩 아래에 버튼이 붙는다 */
+  onShowSample?: (categoryId: string) => void;
+  /** 샘플이 있는 대분류만 버튼을 보여 준다 */
+  sampleAvailableIds?: string[];
 }
 
 function ExternalLinkIcon() {
@@ -95,6 +99,8 @@ export default function CategorySelector({
   selectedIds,
   onToggle,
   exampleFileBaseUrl,
+  onShowSample,
+  sampleAvailableIds,
 }: CategorySelectorProps) {
   const [animKey, setAnimKey] = useState(0);
   const selectedCats = categories.filter((c) => selectedIds.includes(c.id));
@@ -120,35 +126,48 @@ export default function CategorySelector({
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap items-start gap-2 mb-5">
         {categories.map((cat) => {
           const isSelected = selectedIds.includes(cat.id);
+          const hasSample = !!onShowSample && (sampleAvailableIds?.includes(cat.id) ?? false);
           return (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => handleCatClick(cat.id)}
-              className={[
-                'flex items-center gap-2 px-[18px] py-[10px] rounded-[10px] border-[1.5px]',
-                'text-[13.5px] font-medium whitespace-nowrap transition-all duration-[180ms]',
-                'cursor-pointer',
-                isSelected
-                  ? 'border-[#1B3F7A] bg-[#1B3F7A] text-white shadow-[0_4px_14px_rgba(27,63,122,0.25)]'
-                  : 'border-gray-200 bg-white text-gray-500 hover:border-[#1B3F7A] hover:text-[#1B3F7A] hover:bg-[#f0f4ff]',
-              ].join(' ')}
-            >
-              {cat.icon && <span className="text-[15px]">{cat.icon}</span>}
-              {cat.name}
-              <span
+            /* 칩 + 그 아래 샘플 버튼을 한 덩이로 묶는다 */
+            <div key={cat.id} className="flex flex-col items-stretch gap-1">
+              <button
+                type="button"
+                onClick={() => handleCatClick(cat.id)}
                 className={[
-                  'inline-flex items-center justify-center min-w-[20px] h-5 px-[5px]',
-                  'rounded-[10px] text-[11px] font-semibold transition-all duration-[180ms]',
-                  isSelected ? 'bg-white/25 text-white' : 'bg-[#E8EDF7] text-[#1B3F7A]',
+                  'flex items-center justify-center gap-2 px-[18px] py-[10px] rounded-[10px] border-[1.5px]',
+                  'text-[13.5px] font-medium whitespace-nowrap transition-all duration-[180ms]',
+                  'cursor-pointer',
+                  isSelected
+                    ? 'border-[#1B3F7A] bg-[#1B3F7A] text-white shadow-[0_4px_14px_rgba(27,63,122,0.25)]'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-[#1B3F7A] hover:text-[#1B3F7A] hover:bg-[#f0f4ff]',
                 ].join(' ')}
               >
-                {cat.subs.length}
-              </span>
-            </button>
+                {cat.icon && <span className="text-[15px]">{cat.icon}</span>}
+                {cat.name}
+                <span
+                  className={[
+                    'inline-flex items-center justify-center min-w-[20px] h-5 px-[5px]',
+                    'rounded-[10px] text-[11px] font-semibold transition-all duration-[180ms]',
+                    isSelected ? 'bg-white/25 text-white' : 'bg-[#E8EDF7] text-[#1B3F7A]',
+                  ].join(' ')}
+                >
+                  {cat.subs.length}
+                </span>
+              </button>
+
+              {hasSample && (
+                <button
+                  type="button"
+                  onClick={() => onShowSample?.(cat.id)}
+                  className="rounded-[8px] border border-[#4A72C0] bg-[#EAF0FB] px-2 py-[5px] text-[11.5px] font-semibold text-[#1B3F7A] transition-colors hover:bg-[#D0DEFA] whitespace-nowrap"
+                >
+                  📄 샘플 보기
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
