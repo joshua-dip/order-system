@@ -25,6 +25,10 @@ frontend:
     baseDirectory: .next
     files:
       - '**/*'
+      # 빌드 캐시는 배포 산출물에 들어갈 이유가 없다. 넣으면 230MB 한도를 넘어
+      # 「빌드 성공」 뒤 CustomerError 로 배포가 통째로 실패한다.
+      # (캐시 자체는 아래 cache.paths 로 따로 보존되므로 빌드 속도에는 영향이 없다)
+      - '!cache/**/*'
   cache:
     paths:
       - node_modules/**/*
