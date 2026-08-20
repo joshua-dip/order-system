@@ -28,12 +28,9 @@ frontend:
         # artifacts 의 '!cache/**/*' 제외 패턴은 Amplify 가 지원하지 않아(job 206 에서 확인)
         # 산출물 수집 전에 직접 지운다. 실행에는 필요 없는 파일이다.
         - rm -rf .next/cache
-        # 무엇이 230MB 한도를 먹고 있는지 확인 (job 205~209 원인 추적)
-        - echo "=== .next 하위 ===" && du -sh .next/* 2>/dev/null | sort -rh | head -12 || true
-        - echo "=== .next/server 하위 ===" && du -sh .next/server/* 2>/dev/null | sort -rh | head -10 || true
-        - echo "=== 100MB+ 디렉터리 ===" && du -sh .next/**/node_modules 2>/dev/null | sort -rh | head -5 || true
-        - echo "=== 큰 파일 20 ===" && find .next -type f -size +3M -exec du -h {} + 2>/dev/null | sort -rh | head -20 || true
-        - echo "=== 합계 ===" && du -sh .next || true
+        # 한도(230MB)에 다시 부딪히면 여기 출력부터 본다. standalone/node_modules 가 대부분이다.
+        - du -sh .next .next/standalone .next/standalone/node_modules 2>/dev/null || true
+        - find .next -type f -size +10M -exec du -h {} + 2>/dev/null | sort -rh | head -8 || true
   artifacts:
     baseDirectory: .next
     files:

@@ -33,6 +33,14 @@ const nextConfig: NextConfig = {
       'node_modules/**/test/**',
       'node_modules/**/tests/**',
       'node_modules/**/__tests__/**',
+      // sharp 는 플랫폼별 libvips 를 함께 설치한다. Amplify Lambda 는 Amazon Linux(glibc) 라
+      // musl 빌드(17MB)는 절대 쓰이지 않는다. 다른 OS 용도 마찬가지.
+      'node_modules/@img/sharp-libvips-linuxmusl-*/**',
+      'node_modules/@img/sharp-linuxmusl-*/**',
+      'node_modules/@img/sharp-libvips-darwin-*/**',
+      'node_modules/@img/sharp-darwin-*/**',
+      'node_modules/@img/sharp-libvips-win32-*/**',
+      'node_modules/@img/sharp-win32-*/**',
     ],
   },
   /** Amplify SSR Lambda 번들에 fs로 읽는 파일들 명시 포함 */
