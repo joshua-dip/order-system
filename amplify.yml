@@ -21,15 +21,20 @@ frontend:
         # ANTHROPIC_API_KEY 는 의도적으로 제외한다 — 배포 서버에 키를 두지 않아야
         # 실수로 API 과금이 나가지 않는다(CLAUDE.md 의 Pro 전용 운영 방침).
         - npm run build
+    postBuild:
+      commands:
+        # 배포 산출물(artifacts)은 .next 전체다. 여기에 webpack 빌드 캐시(.next/cache)가
+        # 같이 들어가면 230MB 한도를 넘어 「빌드 성공」 뒤 CustomerError 로 배포가 실패한다.
+        # artifacts 의 '!cache/**/*' 제외 패턴은 Amplify 가 지원하지 않아(job 206 에서 확인)
+        # 산출물 수집 전에 직접 지운다. 실행에는 필요 없는 파일이다.
+        - du -sh .next .next/cache || true
+        - rm -rf .next/cache
+        - du -sh .next || true
   artifacts:
     baseDirectory: .next
     files:
       - '**/*'
-      # 빌드 캐시는 배포 산출물에 들어갈 이유가 없다. 넣으면 230MB 한도를 넘어
-      # 「빌드 성공」 뒤 CustomerError 로 배포가 통째로 실패한다.
-      # (캐시 자체는 아래 cache.paths 로 따로 보존되므로 빌드 속도에는 영향이 없다)
-      - '!cache/**/*'
   cache:
     paths:
+      # .next/cache 는 postBuild 에서 지우므로 캐시 대상에서 뺀다.
       - node_modules/**/*
-      - .next/cache/**/*
