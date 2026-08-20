@@ -28,6 +28,7 @@ function shortLabel(sourceKey: string, textbook: string): string {
 
 export default function EssayWorkbookPage() {
   const [textbooks, setTextbooks] = useState<TextbookRow[]>([]);
+  const [mockExamCount, setMockExamCount] = useState(0);
   const [selectedTextbook, setSelectedTextbook] = useState('');
   const [passages, setPassages] = useState<PassageRow[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -42,7 +43,10 @@ export default function EssayWorkbookPage() {
   useEffect(() => {
     fetch('/api/essay-workbook/catalog')
       .then((r) => r.json())
-      .then((d) => setTextbooks(Array.isArray(d?.textbooks) ? d.textbooks : []))
+      .then((d) => {
+        setTextbooks(Array.isArray(d?.textbooks) ? d.textbooks : []);
+        setMockExamCount(typeof d?.mockExamCount === 'number' ? d.mockExamCount : 0);
+      })
       .catch(() => {});
     fetch('/api/essay-workbook/sample')
       .then((r) => r.json())
@@ -140,6 +144,23 @@ export default function EssayWorkbookPage() {
               </p>
             </div>
 
+            {/* 모의고사 서술형은 payperic 에서 판다 — 여기서는 부교재만 취급 */}
+            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <p className="text-[13px] font-extrabold text-emerald-900">📚 부교재 자료입니다</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-emerald-800/90">
+                <b>모의고사</b> 서술형 워크북{mockExamCount > 0 ? ` (${mockExamCount}종)` : ''}은{' '}
+                <a
+                  href="https://payperic.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-emerald-900 underline"
+                >
+                  페이퍼릭(payperic.com)
+                </a>
+                에서 구매하실 수 있습니다. 회차·번호별로 골라 바로 다운로드됩니다.
+              </p>
+            </div>
+
             <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] leading-relaxed text-gray-700">
               <b>가격</b> — 지문 1개당 {ESSAY_WORKBOOK_PRICE_PER_SOURCE.toLocaleString()}원
               (기본·중·고·최고 <b>4난도 PDF 한 묶음</b>).
@@ -171,7 +192,7 @@ export default function EssayWorkbookPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="교재 검색 (예: 26년 5월, 수능특강)"
+              placeholder="교재 검색 (예: 수능특강, 올림포스)"
               className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
             <div className="mt-3 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">

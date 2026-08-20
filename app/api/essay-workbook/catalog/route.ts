@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,9 +20,14 @@ export async function GET() {
       ])
       .toArray();
 
+    // 모의고사 서술형 워크북은 payperic.com 에서 판매한다. 여기서는 부교재만 노출.
+    const all = rows.map((r) => ({ textbook: String(r._id), sourceCount: r.sourceCount as number }));
+    const textbooks = all.filter((t) => !isMockExamTextbookKey(t.textbook));
+
     return NextResponse.json({
       ok: true,
-      textbooks: rows.map((r) => ({ textbook: String(r._id), sourceCount: r.sourceCount as number })),
+      textbooks,
+      mockExamCount: all.length - textbooks.length,
     });
   } catch (e) {
     console.error('[essay-workbook catalog]', e);
