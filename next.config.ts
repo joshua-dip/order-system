@@ -14,6 +14,27 @@ const nextConfig: NextConfig = {
   // kordoc는 webpack 번들 대상 (cfb/canvas 동적 require 문제 회피 위해 serverExternal 제외).
   // hwpx 생성은 kordoc 대신 jszip 직접 구현으로 교체.
   serverExternalPackages: ["pdfkit", "xlsx", "docx", "puppeteer-core", "@sparticuz/chromium"],
+  /**
+   * Amplify SSR 컴퓨트 번들에서 런타임에 쓰지 않는 파일 제외.
+   *
+   * 배포 산출물이 230MB 한도를 넘으면 「빌드 성공」 뒤 CustomerError 로 배포가 통째로 실패한다
+   * (job 205~208). 소스맵만 100MB 가 넘고 타입 정의·빌드 도구는 서버 실행에 전혀 필요 없다.
+   * 여유를 충분히 두어야 기능을 추가할 때마다 한도에 부딪히지 않는다.
+   */
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/**/*.map',
+      'node_modules/**/*.d.ts',
+      'node_modules/typescript/**',
+      'node_modules/@esbuild/**',
+      'node_modules/esbuild/**',
+      'node_modules/eslint/**',
+      'node_modules/@typescript-eslint/**',
+      'node_modules/**/test/**',
+      'node_modules/**/tests/**',
+      'node_modules/**/__tests__/**',
+    ],
+  },
   /** Amplify SSR Lambda 번들에 fs로 읽는 파일들 명시 포함 */
   outputFileTracingIncludes: {
     "/api/my/member-variant/export": [

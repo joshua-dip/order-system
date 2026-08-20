@@ -28,7 +28,8 @@ function shortLabel(sourceKey: string, textbook: string): string {
 
 export default function EssayWorkbookPage() {
   const [textbooks, setTextbooks] = useState<TextbookRow[]>([]);
-  const [mockExamCount, setMockExamCount] = useState(0);
+  const [needLogin, setNeedLogin] = useState(false);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
   const [selectedTextbook, setSelectedTextbook] = useState('');
   const [passages, setPassages] = useState<PassageRow[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -45,7 +46,8 @@ export default function EssayWorkbookPage() {
       .then((r) => r.json())
       .then((d) => {
         setTextbooks(Array.isArray(d?.textbooks) ? d.textbooks : []);
-        setMockExamCount(typeof d?.mockExamCount === 'number' ? d.mockExamCount : 0);
+        setNeedLogin(d?.needLogin === true);
+        setCatalogLoaded(true);
       })
       .catch(() => {});
     fetch('/api/essay-workbook/sample')
@@ -129,10 +131,23 @@ export default function EssayWorkbookPage() {
           <Link href="/" className="text-sm text-blue-600 no-underline hover:underline">← 메인 화면으로</Link>
 
           <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h1 className="text-xl font-extrabold text-gray-900">서술형 워크북</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              이미 제작해 둔 서술형 연습 자료를 바로 받아 보실 수 있습니다.
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl font-extrabold text-gray-900">서술형 워크북</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  이미 제작해 둔 서술형 연습 자료를 바로 받아 보실 수 있습니다.
+                </p>
+              </div>
+              {/* 모의고사 서술형은 payperic 에서 판다 — 여기서는 부교재만 취급 */}
+              <a
+                href="https://payperic.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-[12px] font-semibold text-emerald-800 no-underline transition-colors hover:bg-emerald-100"
+              >
+                모의고사 서술형 워크북은 <b className="text-emerald-900 underline">페이퍼릭</b> →
+              </a>
+            </div>
 
             {/* 제공 형식 안내 — 문제 주문(한글파일)과 다르다 */}
             <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
@@ -141,23 +156,6 @@ export default function EssayWorkbookPage() {
                 서술형 워크북은 <b>편집이 불가능한 PDF</b> 로 드립니다. 한글파일(HWP)로 받아 직접 편집하시려면{' '}
                 <Link href="/essay" className="font-bold text-rose-900 underline">서술형문제 주문제작</Link>
                 {' '}메뉴를 이용해 주세요.
-              </p>
-            </div>
-
-            {/* 모의고사 서술형은 payperic 에서 판다 — 여기서는 부교재만 취급 */}
-            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <p className="text-[13px] font-extrabold text-emerald-900">📚 부교재 자료입니다</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-emerald-800/90">
-                <b>모의고사</b> 서술형 워크북{mockExamCount > 0 ? ` (${mockExamCount}종)` : ''}은{' '}
-                <a
-                  href="https://payperic.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold text-emerald-900 underline"
-                >
-                  페이퍼릭(payperic.com)
-                </a>
-                에서 구매하실 수 있습니다. 회차·번호별로 골라 바로 다운로드됩니다.
               </p>
             </div>
 
@@ -211,8 +209,39 @@ export default function EssayWorkbookPage() {
                   <span className="ml-2 shrink-0 text-[11px] text-gray-500">{t.sourceCount}지문</span>
                 </button>
               ))}
-              {filteredTextbooks.length === 0 && (
-                <p className="col-span-full py-6 text-center text-sm text-gray-400">검색 결과가 없습니다.</p>
+              {filteredTextbooks.length === 0 && catalogLoaded && (
+                needLogin ? (
+                  <div className="col-span-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center">
+                    <p className="text-[13px] font-bold text-amber-900">로그인이 필요합니다</p>
+                    <p className="mt-1 text-[12px] text-amber-800/90">
+                      서술형 워크북은 관리자가 열어 드린 교재만 주문하실 수 있어요.
+                    </p>
+                    <Link
+                      href="/login?from=/essay-workbook"
+                      className="mt-3 inline-block rounded-lg bg-amber-600 px-4 py-2 text-[12px] font-bold text-white no-underline hover:bg-amber-700"
+                    >
+                      로그인하기 →
+                    </Link>
+                  </div>
+                ) : textbooks.length === 0 ? (
+                  <div className="col-span-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-6 text-center">
+                    <p className="text-[13px] font-bold text-gray-700">이용 가능한 교재가 없습니다</p>
+                    <p className="mt-1 text-[12px] text-gray-600">
+                      서술형 워크북은 관리자가 열어 드린 교재만 주문하실 수 있어요.
+                      필요한 교재가 있으시면 카카오톡으로 문의해 주세요.
+                    </p>
+                    <a
+                      href={KAKAO_INQUIRY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-block rounded-lg bg-[#FEE500] px-4 py-2 text-[12px] font-bold text-[#3B1E1E] no-underline hover:brightness-95"
+                    >
+                      💬 교재 요청하기
+                    </a>
+                  </div>
+                ) : (
+                  <p className="col-span-full py-6 text-center text-sm text-gray-400">검색 결과가 없습니다.</p>
+                )
               )}
             </div>
           </div>
