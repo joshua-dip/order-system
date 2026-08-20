@@ -263,6 +263,17 @@ export default function UserDetailPage() {
   const [peMsg, setPeMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const peFileInputRef = useRef<HTMLInputElement | null>(null);
   const [peDragOver, setPeDragOver] = useState(false);
+  /* ─── 시험범위 메모 ─── */
+  interface ScopeRow {
+    id: string; year: string; semester: string; examType: string;
+    textbooks: string[]; scopeDetail: string; school: string; grade: string; note: string;
+  }
+  const [scopes, setScopes] = useState<ScopeRow[]>([]);
+  const [scopeDraft, setScopeDraft] = useState({
+    year: String(new Date().getFullYear()), semester: '2학기', examType: '중간·기말 공통',
+    textbook: '', scopeDetail: '', note: '',
+  });
+  const [scopeMsg, setScopeMsg] = useState<{ ok: boolean; text: string } | null>(null);
   /** 수정 중인 등록 건 — null 이면 수정 안 함 */
   const [peEditId, setPeEditId] = useState<string | null>(null);
   const [peEdit, setPeEdit] = useState<{ school: string; grade: string; examYear: string; examType: string; examScope: string; includesAnswerSheet: boolean }>(
@@ -680,6 +691,47 @@ export default function UserDetailPage() {
   useEffect(() => {
     if (user && tab === 'pastExam') loadPastExams();
   }, [user, tab, loadPastExams]);
+
+  const loadScopes = useCallback(async () => {
+    if (!user?.loginId) return;
+    try {
+      const r = await fetch(`/api/admin/member-exam-scopes?loginId=${encodeURIComponent(user.loginId)}`, { credentials: 'include' });
+      const d = await r.json();
+      setScopes(Array.isArray(d.items) ? d.items : []);
+    } catch { setScopes([]); }
+  }, [user?.loginId]);
+
+  useEffect(() => {
+    if (user && tab === 'pastExam') loadScopes();
+  }, [user, tab, loadScopes]);
+
+  async function handleAddScope() {
+    if (!user?.loginId) return;
+    if (!scopeDraft.textbook.trim() && !scopeDraft.scopeDetail.trim() && !scopeDraft.note.trim()) {
+      setScopeMsg({ ok: false, text: '교재나 범위를 한 가지는 입력해 주세요.' });
+      return;
+    }
+    const r = await fetch('/api/admin/member-exam-scopes', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        loginId: user.loginId,
+        year: scopeDraft.year, semester: scopeDraft.semester, examType: scopeDraft.examType,
+        textbooks: scopeDraft.textbook.trim() ? [scopeDraft.textbook.trim()] : [],
+        scopeDetail: scopeDraft.scopeDetail, note: scopeDraft.note,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) { setScopeMsg({ ok: false, text: d.error ?? '저장에 실패했습니다.' }); return; }
+    setScopeMsg({ ok: true, text: '저장했습니다.' });
+    setScopeDraft({ ...scopeDraft, textbook: '', scopeDetail: '', note: '' });
+    loadScopes();
+  }
+
+  async function handleDeleteScope(id: string) {
+    if (!window.confirm('이 시험범위 메모를 삭제할까요?')) return;
+    await fetch(`/api/admin/member-exam-scopes/${id}`, { method: 'DELETE', credentials: 'include' });
+    loadScopes();
+  }
 
   async function handlePastExamSaveInfo(id: string) {
     try {
@@ -1176,7 +1228,7 @@ export default function UserDetailPage() {
                 { key: 'points', label: '포인트 내역' },
                 { key: 'dropbox', label: 'Dropbox' },
                 { key: 'vocabulary', label: '단어장' },
-                { key: 'pastExam', label: '기출 시험지' },
+                { key: 'pastExam', label: '기출·시험범위' },
               ] as { key: Tab; label: string }[]
             ).map((t) => (
               <button
@@ -2113,6 +2165,108 @@ export default function UserDetailPage() {
           {/* ─── 탭 내용: 기출 시험지 ─── */}
           {tab === 'pastExam' && (
             <div className="space-y-4">
+              {/* 시험범위 메모 — 다음 시험 자료를 미리 준비할 때 쓴다 */}
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <SectionTitle>시험범위 메모</SectionTitle>
+                <p className="-mt-1 mb-4 text-xs text-slate-400">
+                  「2학기 중간·기말은 Booster 유형독해」처럼 적어 두면 다음 시험 자료를 미리 준비할 때 찾아보기 좋아요.
+                </p>
+
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <select
+                    value={scopeDraft.year}
+                    onChange={(e) => setScopeDraft({ ...scopeDraft, year: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  >
+                    {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + 1 - i).map((y) => (
+                      <option key={y} value={String(y)}>{y}학년도</option>
+                    ))}
+                  </select>
+                  <select
+                    value={scopeDraft.semester}
+                    onChange={(e) => setScopeDraft({ ...scopeDraft, semester: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  >
+                    {['1학기', '2학기'].map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                  <select
+                    value={scopeDraft.examType}
+                    onChange={(e) => setScopeDraft({ ...scopeDraft, examType: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                  >
+                    {['중간고사', '기말고사', '중간·기말 공통'].map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+
+                <input
+                  list="scope-textbook-list"
+                  value={scopeDraft.textbook}
+                  onChange={(e) => setScopeDraft({ ...scopeDraft, textbook: e.target.value })}
+                  placeholder="시험범위 교재 — 허용 교재에서 고르거나 직접 입력"
+                  className="mt-2 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500"
+                />
+                <datalist id="scope-textbook-list">
+                  {[...new Set([
+                    ...(user?.allowedTextbooks ?? []),
+                    ...(user?.allowedTextbooksVariant ?? []),
+                    ...(user?.allowedTextbooksWorkbook ?? []),
+                    ...(user?.allowedTextbooksEssay ?? []),
+                  ])].map((t) => <option key={t} value={t} />)}
+                </datalist>
+
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <input
+                    value={scopeDraft.scopeDetail}
+                    onChange={(e) => setScopeDraft({ ...scopeDraft, scopeDetail: e.target.value })}
+                    placeholder="범위 (예: 1~8강)"
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500"
+                  />
+                  <input
+                    value={scopeDraft.note}
+                    onChange={(e) => setScopeDraft({ ...scopeDraft, note: e.target.value })}
+                    placeholder="메모 (예: 서술형 비중 높음)"
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500"
+                  />
+                </div>
+
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddScope}
+                    className="px-4 py-2 rounded-lg bg-sky-600 text-sm font-bold text-white hover:bg-sky-500"
+                  >
+                    시험범위 저장
+                  </button>
+                  {scopeMsg && (
+                    <span className={`text-sm ${scopeMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{scopeMsg.text}</span>
+                  )}
+                </div>
+
+                {scopes.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {scopes.map((sc) => (
+                      <li key={sc.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-600 bg-slate-900/50 px-3 py-2">
+                        <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[11px] font-bold text-sky-300">
+                          {sc.year} {sc.semester} {sc.examType}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-white">
+                          {sc.textbooks.join(' · ') || '(교재 미지정)'}
+                          {sc.scopeDetail && <span className="text-slate-400"> — {sc.scopeDetail}</span>}
+                        </span>
+                        {sc.note && <span className="text-[11px] text-slate-400">{sc.note}</span>}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteScope(sc.id)}
+                          className="shrink-0 rounded px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-700 hover:text-rose-300"
+                        >
+                          삭제
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               {/* 대리 업로드 */}
               <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
                 <SectionTitle>기출 시험지 등록 (관리자 대리 업로드)</SectionTitle>

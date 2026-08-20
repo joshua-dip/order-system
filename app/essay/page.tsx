@@ -54,6 +54,15 @@ export default function EssayPage() {
   const [pastExamUploads, setPastExamUploads] = useState<{ id: string; school: string; grade: string; examYear: string; examType: string; examScope: string; adminCategories: string[] }[]>([]);
   const [selectedPastExamId, setSelectedPastExamId] = useState<string | null>(null);
   const [essayTypes, setEssayTypes] = useState<EssayTypeItem[]>([]);
+
+  /* ─── 유형별 샘플 (비로그인도 볼 수 있음) ─── */
+  interface EssaySample {
+    대분류: string; subtype: string; 점수: number | null;
+    문제: string; 본문: string; 키워드: string; 요약문: string;
+    조건: string; 모범답안: string; 해설: string;
+  }
+  const [samples, setSamples] = useState<EssaySample[]>([]);
+  const [openSample, setOpenSample] = useState<EssaySample | null>(null);
   const [lessonGroups, setLessonGroups] = useState<Record<string, string[]>>({});
   const [selectedPassages, setSelectedPassages] = useState<string[]>([]);
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
@@ -246,6 +255,15 @@ export default function EssayPage() {
     }
     return Array.from(set);
   })();
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/essay-types/sample')
+      .then((r) => r.json())
+      .then((d) => { if (alive && Array.isArray(d?.samples)) setSamples(d.samples); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   // 서술형 유형 목록 — 비회원도 EBS·모의고사 주문용으로 조회 (공통 유형만 반환됨)
   useEffect(() => {
@@ -532,6 +550,8 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
                     )
                   }
                   exampleFileBaseUrl="/api/essay-types/example-file"
+                  sampleAvailableIds={samples.map((x) => x.대분류)}
+                  onShowSample={(id) => setOpenSample(samples.find((x) => x.대분류 === id) ?? null)}
                 />
 
                 {/* 2. 교재 선택 (EBS / 모의고사 / 부교재) */}
@@ -979,6 +999,96 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
             </div>
         </div>
       </div>
+
+      {/* 유형별 샘플 문항 — 실제로 만들어 둔 문항을 그대로 보여 준다 */}
+      {openSample && (
+        <div
+          className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-black/60"
+          onClick={() => setOpenSample(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex min-h-full items-start justify-center p-4 sm:items-center">
+            <div
+              className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-3 border-b border-gray-200 px-6 py-4">
+                <div className="min-w-0 flex-1">
+                  <span className="inline-block rounded-full bg-[#E8EDF7] px-2 py-0.5 text-[11px] font-bold text-[#1B3F7A]">
+                    {openSample.대분류}
+                  </span>
+                  <h2 className="mt-1 text-base font-extrabold text-gray-900">
+                    예시 문항{openSample.점수 ? ` · ${openSample.점수}점` : ''}
+                  </h2>
+                  <p className="mt-0.5 text-[11px] text-gray-500">
+                    실제 제작 문항입니다. 주문하시면 이런 형태로 지문마다 만들어 드려요.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpenSample(null)}
+                  aria-label="닫기"
+                  className="shrink-0 rounded-lg px-2 py-1 text-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="max-h-[70vh] overflow-y-auto px-6 py-5 text-[13px] leading-relaxed text-gray-800">
+                {openSample.문제 && (
+                  <p className="mb-3 font-bold text-gray-900 whitespace-pre-line">{openSample.문제}</p>
+                )}
+                {openSample.본문 && (
+                  <div className="mb-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 whitespace-pre-line">
+                    {openSample.본문}
+                  </div>
+                )}
+                {openSample.요약문 && (
+                  <div className="mb-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+                    <p className="mb-1 text-[11px] font-bold text-indigo-700">요약문</p>
+                    <p className="whitespace-pre-line">{openSample.요약문}</p>
+                  </div>
+                )}
+                {openSample.키워드 && (
+                  <div className="mb-3 rounded-lg border border-gray-400 px-4 py-2 text-center">
+                    <p className="mb-1 text-[11px] font-bold text-gray-500">&lt; 보 기 &gt;</p>
+                    <p className="whitespace-pre-line">{openSample.키워드}</p>
+                  </div>
+                )}
+                {openSample.조건 && (
+                  <div className="mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                    <p className="mb-1 text-[11px] font-bold text-amber-800">조건</p>
+                    <p className="whitespace-pre-line text-amber-900">{openSample.조건}</p>
+                  </div>
+                )}
+                {openSample.모범답안 && (
+                  <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <p className="mb-1 text-[11px] font-bold text-emerald-700">모범답안</p>
+                    <p className="whitespace-pre-line text-emerald-900">{openSample.모범답안}</p>
+                  </div>
+                )}
+                {openSample.해설 && (
+                  <div className="rounded-xl border border-gray-200 px-4 py-3">
+                    <p className="mb-1 text-[11px] font-bold text-gray-500">해설</p>
+                    <p className="whitespace-pre-line text-gray-700">{openSample.해설}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
+                <button
+                  type="button"
+                  onClick={() => setOpenSample(null)}
+                  className="w-full rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
