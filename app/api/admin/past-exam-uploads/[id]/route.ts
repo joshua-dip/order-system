@@ -10,6 +10,8 @@ import {
   PAST_EXAM_REWARD_POINTS_WITH_ANSWERS,
 } from '@/lib/past-exam-reward';
 
+const EXAM_TYPES = ['1학기중간고사', '1학기기말고사', '2학기중간고사', '2학기기말고사'] as const;
+
 /** 지급 금액 정규화: 답지 포함(60,000) / 문제만(50,000). 기본 50,000. */
 function normalizeAwardAmount(raw: unknown): number {
   const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10);
@@ -36,6 +38,37 @@ export async function PATCH(
     const body = await request.json();
     const db = await getDb('gomijoshua');
     const uploads = db.collection('pastExamUploads');
+
+    // ── 기본 정보 수정 (학교·학년·연도·종류·범위·답지포함) ──
+    // 학교는 회원이 안 알려 주는 경우가 있어 비워 둔 채 등록하고 나중에 채울 수 있다.
+    if (body.updateInfo === true) {
+      const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined);
+      const set: Record<string, unknown> = {};
+      const school = str(body.school, 100);
+      if (school !== undefined) set.school = school;
+      const grade = str(body.grade, 20);
+      if (grade !== undefined) set.grade = grade;
+      const examYear = str(body.examYear, 10);
+      if (examYear !== undefined) set.examYear = examYear;
+      const examType = str(body.examType, 30);
+      if (examType !== undefined && EXAM_TYPES.includes(examType as (typeof EXAM_TYPES)[number])) {
+        set.examType = examType;
+      }
+      const examScope = str(body.examScope, 300);
+      if (examScope !== undefined) set.examScope = examScope;
+      if (typeof body.includesAnswerSheet === 'boolean') set.includesAnswerSheet = body.includesAnswerSheet;
+
+      if (Object.keys(set).length === 0) {
+        return NextResponse.json({ error: '수정할 내용이 없습니다.' }, { status: 400 });
+      }
+      set.infoUpdatedAt = new Date();
+      set.infoUpdatedBy = payload.loginId ?? 'admin';
+      const r = await uploads.updateOne({ _id: new ObjectId(id) }, { $set: set });
+      if (r.matchedCount === 0) {
+        return NextResponse.json({ error: '해당 업로드를 찾을 수 없습니다.' }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true });
+    }
 
     // ── 포인트 지급 승인 (전체 문제 포함 확인 후) ──
     // body.awardAmount 로 문제만(50,000) / 문제+답지(60,000) 선택. 기본 50,000.

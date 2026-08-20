@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import AdminSidebar from '../../_components/AdminSidebar';
@@ -66,7 +66,7 @@ interface PointLedgerItem {
   createdAt: string;
 }
 
-type Tab = 'info' | 'orders' | 'points' | 'dropbox' | 'vocabulary';
+type Tab = 'info' | 'orders' | 'points' | 'dropbox' | 'vocabulary' | 'pastExam';
 
 interface CouponRow {
   id: string;
@@ -239,6 +239,35 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('info');
+
+  /* ─── 기출 시험지 (관리자 대리 업로드) ─── */
+  interface PastExamRow {
+    id: string;
+    school: string; grade: string; examYear: string; examType: string; examScope?: string;
+    files: { originalName: string; fileIndex: number }[];
+    includesAnswerSheet?: boolean;
+    uploadedByAdmin?: boolean;
+    pointAwarded?: boolean; pointAwardAmount?: number | null;
+    createdAt?: string;
+  }
+  const [pastExams, setPastExams] = useState<PastExamRow[]>([]);
+  const [pastExamLoading, setPastExamLoading] = useState(false);
+  const [peSchool, setPeSchool] = useState('');
+  const [peGrade, setPeGrade] = useState('고1');
+  const [peYear, setPeYear] = useState(String(new Date().getFullYear()));
+  const [peType, setPeType] = useState('1학기중간고사');
+  const [peScope, setPeScope] = useState('');
+  const [peAnswerSheet, setPeAnswerSheet] = useState(false);
+  const [peFiles, setPeFiles] = useState<File[]>([]);
+  const [peUploading, setPeUploading] = useState(false);
+  const [peMsg, setPeMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const peFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [peDragOver, setPeDragOver] = useState(false);
+  /** 수정 중인 등록 건 — null 이면 수정 안 함 */
+  const [peEditId, setPeEditId] = useState<string | null>(null);
+  const [peEdit, setPeEdit] = useState<{ school: string; grade: string; examYear: string; examType: string; examScope: string; includesAnswerSheet: boolean }>(
+    { school: '', grade: '고1', examYear: String(new Date().getFullYear()), examType: '1학기중간고사', examScope: '', includesAnswerSheet: false },
+  );
 
   /* 저장 상태 */
   const [saving, setSaving] = useState(false);
@@ -630,6 +659,80 @@ export default function UserDetailPage() {
   useEffect(() => {
     if (user && tab === 'vocabulary') loadVocabularies();
   }, [user, tab, loadVocabularies]);
+
+  /* ─── 기출 시험지 (관리자 대리 업로드) ─── */
+  const loadPastExams = useCallback(async () => {
+    if (!user?.loginId) return;
+    setPastExamLoading(true);
+    try {
+      const r = await fetch(`/api/admin/past-exam-uploads?loginId=${encodeURIComponent(user.loginId)}`, {
+        credentials: 'include',
+      });
+      const d = await r.json();
+      setPastExams(Array.isArray(d.uploads) ? d.uploads : Array.isArray(d.items) ? d.items : []);
+    } catch {
+      setPastExams([]);
+    } finally {
+      setPastExamLoading(false);
+    }
+  }, [user?.loginId]);
+
+  useEffect(() => {
+    if (user && tab === 'pastExam') loadPastExams();
+  }, [user, tab, loadPastExams]);
+
+  async function handlePastExamSaveInfo(id: string) {
+    try {
+      const r = await fetch(`/api/admin/past-exam-uploads/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updateInfo: true, ...peEdit }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) { setPeMsg({ ok: false, text: d.error ?? '수정에 실패했습니다.' }); return; }
+      setPeEditId(null);
+      setPeMsg({ ok: true, text: '수정했습니다.' });
+      loadPastExams();
+    } catch {
+      setPeMsg({ ok: false, text: '수정 중 오류가 발생했습니다.' });
+    }
+  }
+
+  async function handlePastExamUpload() {
+    if (!user?.loginId) return;
+    if (peFiles.length === 0) { setPeMsg({ ok: false, text: '파일을 1개 이상 선택해 주세요.' }); return; }
+    // 학교는 선택 — 모르면 비워 두고 나중에 「수정」으로 채운다
+
+    setPeUploading(true);
+    setPeMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append('loginId', user.loginId);
+      fd.append('school', peSchool.trim());
+      fd.append('grade', peGrade);
+      fd.append('examYear', peYear);
+      fd.append('examType', peType);
+      fd.append('examScope', peScope.trim());
+      fd.append('includesAnswerSheet', String(peAnswerSheet));
+      for (const f of peFiles) fd.append('files', f);
+
+      const r = await fetch('/api/admin/past-exam-uploads', { method: 'POST', credentials: 'include', body: fd });
+      const d = await r.json();
+      if (!r.ok || !d.ok) { setPeMsg({ ok: false, text: d.error ?? '등록에 실패했습니다.' }); return; }
+
+      setPeMsg({ ok: true, text: '등록했습니다.' });
+      setPeFiles([]);
+      setPeScope('');
+      setPeAnswerSheet(false);
+      if (peFileInputRef.current) peFileInputRef.current.value = '';
+      loadPastExams();
+    } catch {
+      setPeMsg({ ok: false, text: '등록 중 오류가 발생했습니다.' });
+    } finally {
+      setPeUploading(false);
+    }
+  }
 
   /* ─── 기본정보 저장 ─── */
   async function handleSaveInfo() {
@@ -1073,6 +1176,7 @@ export default function UserDetailPage() {
                 { key: 'points', label: '포인트 내역' },
                 { key: 'dropbox', label: 'Dropbox' },
                 { key: 'vocabulary', label: '단어장' },
+                { key: 'pastExam', label: '기출 시험지' },
               ] as { key: Tab; label: string }[]
             ).map((t) => (
               <button
@@ -2003,6 +2107,290 @@ export default function UserDetailPage() {
                   최근 {vocabItems.length}건만 표시합니다. (전체 {vocabTotal}건)
                 </p>
               )}
+            </div>
+          )}
+
+          {/* ─── 탭 내용: 기출 시험지 ─── */}
+          {tab === 'pastExam' && (
+            <div className="space-y-4">
+              {/* 대리 업로드 */}
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <SectionTitle>기출 시험지 등록 (관리자 대리 업로드)</SectionTitle>
+                <p className="-mt-1 mb-4 text-xs text-slate-400">
+                  회원이 직접 올리지 않아도 관리자가 대신 등록할 수 있어요. 등록한 건은 회원의 「기출문제」 탭에 그대로 보입니다.
+                </p>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <Field label="학교 (선택 — 모르면 비워 두세요)">
+                    <EditInput value={peSchool} onChange={setPeSchool} placeholder="나중에 「수정」으로 채울 수 있어요" />
+                  </Field>
+                  <Field label="학년">
+                    <select
+                      value={peGrade}
+                      onChange={(e) => setPeGrade(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      {['중1', '중2', '중3', '고1', '고2', '고3'].map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="시험 연도">
+                    <select
+                      value={peYear}
+                      onChange={(e) => setPeYear(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                        <option key={y} value={String(y)}>{y}년</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="시험 종류">
+                    <select
+                      value={peType}
+                      onChange={(e) => setPeType(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                    >
+                      {['1학기중간고사', '1학기기말고사', '2학기중간고사', '2학기기말고사'].map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="mt-3">
+                  <Field label="시험 범위 (선택)">
+                    <EditInput value={peScope} onChange={setPeScope} placeholder="예: 능률(김) 1~3과, 부교재 1~5강" />
+                  </Field>
+                </div>
+
+                <div className="mt-3">
+                  <label className="block text-xs text-slate-400 mb-1.5">파일 (최대 10개 · 각 15MB)</label>
+                  {/* 카톡으로 받은 사진을 그대로 끌어다 놓을 수 있게 드롭 영역을 둔다 */}
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setPeDragOver(true); }}
+                    onDragEnter={(e) => { e.preventDefault(); setPeDragOver(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setPeDragOver(false); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setPeDragOver(false);
+                      const dropped = Array.from(e.dataTransfer.files ?? []);
+                      if (dropped.length === 0) return;
+                      setPeFiles((prev) => [...prev, ...dropped].slice(0, 10));
+                    }}
+                    onClick={() => peFileInputRef.current?.click()}
+                    className={`cursor-pointer rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${
+                      peDragOver ? 'border-emerald-400 bg-emerald-500/10' : 'border-slate-600 bg-slate-900/40 hover:border-slate-500'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-slate-300">
+                      사진·PDF 를 여기로 끌어다 놓으세요
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">클릭해서 파일을 고를 수도 있어요</p>
+                  </div>
+                  <input
+                    ref={peFileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf,.hwp,.hwpx,.doc,.docx,.zip"
+                    onChange={(e) => {
+                      const picked = Array.from(e.target.files ?? []);
+                      if (picked.length) setPeFiles((prev) => [...prev, ...picked].slice(0, 10));
+                    }}
+                    className="hidden"
+                  />
+                  {peFiles.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {peFiles.map((f, i) => (
+                        <li key={`${f.name}-${i}`} className="flex items-center gap-2 text-xs text-slate-400">
+                          <span className="flex-1 truncate">
+                            · {f.name} <span className="text-slate-500">({(f.size / 1024 / 1024).toFixed(1)}MB)</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPeFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                            className="shrink-0 rounded px-1.5 py-0.5 text-slate-500 hover:bg-slate-700 hover:text-slate-300"
+                            aria-label="빼기"
+                          >
+                            ✕
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <label className="mt-3 flex items-center gap-2 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={peAnswerSheet}
+                    onChange={(e) => setPeAnswerSheet(e.target.checked)}
+                  />
+                  답지(정답·해설) 포함
+                </label>
+
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handlePastExamUpload}
+                    disabled={peUploading}
+                    className="px-4 py-2 rounded-lg bg-emerald-600 text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {peUploading ? '등록 중…' : '등록'}
+                  </button>
+                  {peMsg && (
+                    <span className={`text-sm ${peMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{peMsg.text}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* 등록된 목록 */}
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+                  <h3 className="font-semibold text-white">등록된 기출 시험지</h3>
+                  <span className="text-slate-400 text-sm">
+                    {pastExamLoading ? '불러오는 중…' : `${pastExams.length}건`}
+                  </span>
+                </div>
+                {pastExams.length === 0 ? (
+                  <div className="text-center py-10 text-slate-500 text-sm">
+                    {pastExamLoading ? '' : '등록된 기출 시험지가 없습니다.'}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-slate-700">
+                    {pastExams.map((row) => (
+                      <li key={row.id} className="px-5 py-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {row.school ? (
+                            <span className="font-semibold text-white text-sm">{row.school}</span>
+                          ) : (
+                            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-300">
+                              학교 미입력
+                            </span>
+                          )}
+                          <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[11px] text-slate-300">{row.grade}</span>
+                          <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[11px] text-slate-300">
+                            {row.examYear} {row.examType}
+                          </span>
+                          {row.includesAnswerSheet && (
+                            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-300">답지 포함</span>
+                          )}
+                          {row.uploadedByAdmin && (
+                            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[11px] font-bold text-sky-300">관리자 등록</span>
+                          )}
+                          {row.pointAwarded && (
+                            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[11px] font-bold text-emerald-300">
+                              {(row.pointAwardAmount ?? 0).toLocaleString()}P 지급
+                            </span>
+                          )}
+                        </div>
+                        {row.examScope && <p className="mt-1 text-xs text-slate-400">범위: {row.examScope}</p>}
+
+                        {peEditId === row.id ? (
+                          <div className="mt-3 rounded-xl border border-slate-600 bg-slate-900/60 p-3">
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                              <input
+                                value={peEdit.school}
+                                onChange={(e) => setPeEdit({ ...peEdit, school: e.target.value })}
+                                placeholder="학교 (모르면 비워 두세요)"
+                                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500"
+                              />
+                              <select
+                                value={peEdit.grade}
+                                onChange={(e) => setPeEdit({ ...peEdit, grade: e.target.value })}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                              >
+                                {['중1', '중2', '중3', '고1', '고2', '고3'].map((g) => <option key={g} value={g}>{g}</option>)}
+                              </select>
+                              <select
+                                value={peEdit.examYear}
+                                onChange={(e) => setPeEdit({ ...peEdit, examYear: e.target.value })}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                              >
+                                {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                                  <option key={y} value={String(y)}>{y}년</option>
+                                ))}
+                              </select>
+                              <select
+                                value={peEdit.examType}
+                                onChange={(e) => setPeEdit({ ...peEdit, examType: e.target.value })}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                              >
+                                {['1학기중간고사', '1학기기말고사', '2학기중간고사', '2학기기말고사'].map((t) => (
+                                  <option key={t} value={t}>{t}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <input
+                              value={peEdit.examScope}
+                              onChange={(e) => setPeEdit({ ...peEdit, examScope: e.target.value })}
+                              placeholder="시험 범위 (선택)"
+                              className="mt-2 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500"
+                            />
+                            <label className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+                              <input
+                                type="checkbox"
+                                checked={peEdit.includesAnswerSheet}
+                                onChange={(e) => setPeEdit({ ...peEdit, includesAnswerSheet: e.target.checked })}
+                              />
+                              답지(정답·해설) 포함
+                            </label>
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handlePastExamSaveInfo(row.id)}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 text-[12px] font-bold text-white hover:bg-emerald-500"
+                              >
+                                저장
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPeEditId(null)}
+                                className="px-3 py-1.5 rounded-lg border border-slate-600 text-[12px] text-slate-300 hover:bg-slate-700/60"
+                              >
+                                취소
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPeEditId(row.id);
+                              setPeEdit({
+                                school: row.school ?? '',
+                                grade: row.grade ?? '고1',
+                                examYear: row.examYear ?? String(new Date().getFullYear()),
+                                examType: row.examType ?? '1학기중간고사',
+                                examScope: row.examScope ?? '',
+                                includesAnswerSheet: row.includesAnswerSheet === true,
+                              });
+                            }}
+                            className="mt-2 rounded-lg border border-slate-600 px-2.5 py-1 text-[12px] text-slate-300 hover:bg-slate-700/60"
+                          >
+                            ✏️ 정보 수정
+                          </button>
+                        )}
+
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {row.files.map((f) => (
+                            <a
+                              key={f.fileIndex}
+                              href={`/api/my/past-exam-upload/download?id=${row.id}&fileIndex=${f.fileIndex}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-lg border border-slate-600 px-2.5 py-1 text-[12px] text-slate-300 no-underline hover:bg-slate-700/60"
+                            >
+                              📄 {f.originalName}
+                            </a>
+                          ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
 

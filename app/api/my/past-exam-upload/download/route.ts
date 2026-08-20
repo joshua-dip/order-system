@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
+import { getPastExamFile } from '@/lib/past-exam-files';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -46,17 +47,29 @@ export async function GET(request: NextRequest) {
     }
 
     const fileInfo = files[fileIndex];
-    const filePath = path.join(process.cwd(), fileInfo.savedPath);
 
-    try {
-      await fs.access(filePath);
-    } catch {
-      return NextResponse.json({ error: '서버에서 파일을 찾을 수 없습니다.' }, { status: 404 });
+    // 신규 저장분은 GridFS, 예전 저장분은 로컬 경로(savedPath) — 둘 다 지원한다.
+    let fileBuffer: Buffer;
+    if (fileInfo.gridId) {
+      try {
+        fileBuffer = await getPastExamFile(db, new ObjectId(String(fileInfo.gridId)));
+      } catch {
+        return NextResponse.json({ error: '서버에서 파일을 찾을 수 없습니다.' }, { status: 404 });
+      }
+    } else if (fileInfo.savedPath) {
+      const filePath = path.join(process.cwd(), fileInfo.savedPath);
+      try {
+        await fs.access(filePath);
+      } catch {
+        return NextResponse.json({ error: '서버에서 파일을 찾을 수 없습니다.' }, { status: 404 });
+      }
+      fileBuffer = await fs.readFile(filePath);
+    } else {
+      return NextResponse.json({ error: '파일 정보가 올바르지 않습니다.' }, { status: 404 });
     }
 
-    const fileBuffer = await fs.readFile(filePath);
-    const ext = path.extname(fileInfo.originalName || fileInfo.savedPath).toLowerCase();
-    const contentType = MIME_MAP[ext] || 'application/octet-stream';
+    const ext = path.extname(fileInfo.originalName || fileInfo.savedPath || '').toLowerCase();
+    const contentType = fileInfo.contentType || MIME_MAP[ext] || 'application/octet-stream';
     const encodedName = encodeURIComponent(fileInfo.originalName || `file${ext}`);
 
     const disposition = inline
