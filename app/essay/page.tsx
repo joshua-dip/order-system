@@ -203,7 +203,9 @@ export default function EssayPage() {
       .then((data) => {
         const isMember = !!data?.user;
         setAuthorized(isMember);
-        setHasAccess(isMember && !!data?.user?.canAccessEssay);
+        // 관리자는 canAccessEssay 플래그가 없어도 통과시킨다 — 상담·확인용으로 전체를 봐야 한다.
+        const isAdmin = data?.user?.role === 'admin';
+        setHasAccess(isMember && (isAdmin || !!data?.user?.canAccessEssay));
       })
       .catch(() => {
         setAuthorized(false);
@@ -678,15 +680,34 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
                     {textbookTab === '부교재' && (
                       <div className="space-y-3">
                         {!canUse부교재 ? (
+                          /* 로그인 안 한 경우와 로그인했지만 서술형 권한이 없는 경우를 구분한다.
+                             (로그인한 사람에게 「로그인하세요」라고 하면 길이 막힌다) */
                           <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
-                            <p className="text-sm font-semibold text-amber-800 mb-2">부교재는 로그인한 회원만 이용할 수 있습니다.</p>
-                            <p className="text-xs text-amber-700 mb-4">EBS·모의고사는 비회원도 주문 가능합니다. 부교재를 이용하시려면 로그인해 주세요.</p>
-                            <Link
-                              href="/login?from=/essay"
-                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors no-underline"
-                            >
-                              로그인
-                            </Link>
+                            {!authorized ? (
+                              <>
+                                <p className="text-sm font-semibold text-amber-800 mb-2">부교재는 로그인한 회원만 이용할 수 있습니다.</p>
+                                <p className="text-xs text-amber-700 mb-4">EBS·모의고사는 비회원도 주문 가능합니다. 부교재를 이용하시려면 로그인해 주세요.</p>
+                                <Link
+                                  href="/login?from=/essay"
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors no-underline"
+                                >
+                                  로그인
+                                </Link>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-semibold text-amber-800 mb-2">서술형 부교재 이용 권한이 없습니다.</p>
+                                <p className="text-xs text-amber-700 mb-4">관리자가 열어 드리면 바로 이용하실 수 있어요. 카카오톡으로 문의해 주세요.</p>
+                                <a
+                                  href={KAKAO_INQUIRY_URL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FEE500] text-[#3B1E1E] rounded-lg text-sm font-bold hover:brightness-95 transition-colors no-underline"
+                                >
+                                  💬 이용 문의하기
+                                </a>
+                              </>
+                            )}
                           </div>
                         ) : 부교재Textbooks.length > 0 ? (
                           <div className="grid grid-cols-2 gap-2">

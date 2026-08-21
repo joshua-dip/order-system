@@ -30,6 +30,13 @@ export const ESSAY_CATEGORIES: EssayCategoryConfig[] = [
     pricePerPassage: 700,
   },
   {
+    /* 학교 기출 서술형 5~6번 형태 — 글의 요지를 <보기> 단어만 순서대로 써서
+       단어 수 제한 안에 한 문장으로 영작. 이중요지(두 갈래)와 달리 요지 하나만 쓴다. */
+    대분류: '일반요지요약형',
+    소분류: ['요지 한 문장 영작'],
+    pricePerPassage: 500,
+  },
+  {
     대분류: '요약문조건영작형',
     소분류: ['요약문 조건 영작'],
     pricePerPassage: 200,

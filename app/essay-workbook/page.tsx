@@ -180,6 +180,15 @@ export default function EssayWorkbookPage() {
                     📄 {s.label} 샘플
                   </button>
                 ))}
+                {/* 난도별 구성·실제 지면 예시는 블로그 글이 더 자세하다 */}
+                <a
+                  href="https://www.payperic.com/blog/conditional-writing-arrangement"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-gray-300 bg-white px-3 py-1 text-[12px] font-semibold text-gray-600 no-underline hover:bg-gray-50"
+                >
+                  자료 안내 상세 보기 →
+                </a>
               </div>
             )}
           </div>
@@ -407,7 +416,15 @@ export default function EssayWorkbookPage() {
                 ))}
               </div>
 
-              <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
+              <div className="flex flex-col gap-2 border-t border-gray-200 bg-gray-50 px-6 py-3">
+                <a
+                  href="https://www.payperic.com/blog/conditional-writing-arrangement"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full rounded-xl border border-[#4A72C0] bg-[#EAF0FB] py-2.5 text-center text-sm font-bold text-[#1B3F7A] no-underline hover:bg-[#D0DEFA]"
+                >
+                  난도별 구성·지면 예시 자세히 보기 →
+                </a>
                 <button
                   type="button"
                   onClick={() => setOpenSample(null)}
