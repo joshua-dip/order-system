@@ -60,7 +60,9 @@ const OUTPUT_MODE_OPTIONS: readonly { key: string; label: string; hint: string }
 const DEFAULT_OUTPUT_MODE = '지문통합+간단정답지+해설';
 
 /** 세부 옵션 기본값 저장 키 (이 브라우저 전용) */
-const DETAIL_DEFAULTS_KEY = 'bv-detail-option-defaults-v1';
+const DETAIL_DEFAULTS_KEY = 'bv-detail-option-defaults-v2';
+/** 옛 키 — 저장 방식 기본값이 강별 하나뿐이던 시절. 아래 useEffect 가 한 번만 이관한다. */
+const DETAIL_DEFAULTS_KEY_V1 = 'bv-detail-option-defaults-v1';
 
 function formatHwpStorageSummary(modes: HwpStorageModeKey[]): string {
   if (modes.length === 0) return '1파일(기본)';
@@ -217,23 +219,52 @@ const QuestionSettings = ({
   }, [refreshMyFormats]);
 
   /** 저장해 둔 세부 옵션 기본값 적용 — mount 후에만 읽는다(하이드레이션 불일치 방지) */
+  /* 세부 옵션 기본값 복원.
+     ⚠️ useState 초기값으로 localStorage 를 읽으면 SSR 결과와 달라져 하이드레이션이 깨진다.
+     반드시 mount 후 useEffect 에서 읽는다.
+
+     v1 → v2 이관: 강별·카테고리별·통합본을 모든 회원의 기본값으로 바꿨는데, 예전에
+     기본값을 저장해 둔 분은 옛 값(대개 강별 하나)이 그대로 복원돼 새 기본값을 못 받는다.
+     그래서 v1 만 있으면 출력 구성·선택지 언어·셔플 같은 개인 설정은 살리되, 저장 방식은
+     새 기본값을 합집합으로 얹어 세 가지가 반드시 켜지게 한 뒤 v2 로 옮긴다. */
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(DETAIL_DEFAULTS_KEY);
+      const rawV2 = localStorage.getItem(DETAIL_DEFAULTS_KEY);
+      const rawV1 = rawV2 ? null : localStorage.getItem(DETAIL_DEFAULTS_KEY_V1);
+      const raw = rawV2 ?? rawV1;
       if (!raw) return;
       const d = JSON.parse(raw) as Record<string, unknown>;
       if (typeof d.outputMode === 'string' && OUTPUT_MODE_OPTIONS.some((o) => o.key === d.outputMode)) {
         setOutputMode(d.outputMode);
       }
       if (d.optionType === 'Korean' || d.optionType === 'English') setOptionType(d.optionType);
-      if (Array.isArray(d.hwpStorageModes)) {
-        const allowed = HWP_STORAGE_OPTIONS.map((o) => o.key) as string[];
-        const next = d.hwpStorageModes.filter(
-          (x): x is HwpStorageModeKey => typeof x === 'string' && allowed.includes(x)
-        );
-        if (next.length) setHwpStorageModes(next);
-      }
+
+      const allowed = HWP_STORAGE_OPTIONS.map((o) => o.key) as string[];
+      const saved = Array.isArray(d.hwpStorageModes)
+        ? d.hwpStorageModes.filter(
+            (x): x is HwpStorageModeKey => typeof x === 'string' && allowed.includes(x)
+          )
+        : [];
+      const modes = rawV1
+        ? Array.from(new Set([...DEFAULT_HWP_STORAGE_MODES, ...saved]))
+        : saved;
+      if (modes.length) setHwpStorageModes(modes);
+
       if (typeof d.shuffleFullFile === 'boolean') setShuffleFullFile(d.shuffleFullFile);
+
+      if (rawV1) {
+        localStorage.setItem(
+          DETAIL_DEFAULTS_KEY,
+          JSON.stringify({
+            v: 2,
+            outputMode: d.outputMode,
+            hwpStorageModes: modes,
+            shuffleFullFile: d.shuffleFullFile,
+            optionType: d.optionType,
+          })
+        );
+        localStorage.removeItem(DETAIL_DEFAULTS_KEY_V1);
+      }
     } catch {
       /* 저장값이 깨졌으면 그냥 기본값으로 간다 */
     }
@@ -544,7 +575,7 @@ const QuestionSettings = ({
     try {
       localStorage.setItem(
         DETAIL_DEFAULTS_KEY,
-        JSON.stringify({ v: 1, outputMode, hwpStorageModes, shuffleFullFile, optionType })
+        JSON.stringify({ v: 2, outputMode, hwpStorageModes, shuffleFullFile, optionType })
       );
       setDetailDefaultsSaved(true);
       setTimeout(() => setDetailDefaultsSaved(false), 2000);
