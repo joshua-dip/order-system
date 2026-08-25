@@ -126,11 +126,15 @@ async function main() {
       if (marks.join('') !== '①②③④⑤') errs.push(`${tag} 마커 ${marks.length}개 / 순서 ${marks.join('')}`);
       const given = (P.split('\n\n')[0] ?? '').trim();
       const body = P.split('\n\n').slice(1).join(' ');
-      if (!SENT.some((s) => norm(s) === norm(given))) errs.push(`${tag} 주어진 문장이 원문에 없음`);
+      /* 주어진 문장은 보통 원문에서 빼낸 것이다. 다만 4문장짜리 지문은 하나를 빼면
+         마커 자리가 4개뿐이라 5개를 만들 수 없어, 원문을 그대로 두고 새로 쓴 브릿지
+         문장을 주어진 글로 삼는다. 그 경우 본문에 원문이 전부 남아 있어야 한다. */
+      const isBridge = !SENT.some((s) => norm(s) === norm(given));
+      if (isBridge && SENT.length > 4) errs.push(`${tag} 주어진 문장이 원문에 없음`);
       if (norm(body).includes(norm(given))) errs.push(`${tag} 주어진 문장이 본문에도 남아있음(유출)`);
       const restored = norm(body.replace(/[①②③④⑤]/g, ' '));
       for (const s of SENT) {
-        if (norm(s) === norm(given)) continue;
+        if (!isBridge && norm(s) === norm(given)) continue;
         if (!restored.includes(norm(s))) errs.push(`${tag} 본문에 원문 문장 누락: ${s.slice(0, 40)}…`);
       }
     }
