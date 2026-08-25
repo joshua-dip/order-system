@@ -72,9 +72,12 @@ const STORAGE_TO_SAVE: Record<string, keyof VariantJob['save']> = {
   byChapter: 'by_chapter',
   byRound: 'by_round',
   fullRandomPair: 'single_full',
+  /* 통합본 — 나눈 파일과 별도로 전체를 한 파일에 담는다. fullRandomPair 와 같은 save 플래그를
+     쓰지만 셔플(shuffle_full_file)은 걸지 않는다는 점이 다르다.
+     2026-08 이전 주문에 남아 있는 같은 이름도 뜻이 같아 그대로 받는다. */
+  singleFull: 'single_full',
   // 옛 주문(2026-08 이전 표기) 호환
   byNumber: 'by_number',
-  singleFull: 'single_full',
 };
 
 const VALID_DIFFICULTY = new Set(['상', '중', '하']);

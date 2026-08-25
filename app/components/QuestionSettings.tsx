@@ -26,7 +26,7 @@ const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
 /** HWP 결과물 저장·분할 방식 (주문 미리보기에서 복수 선택) */
-export type HwpStorageModeKey = 'bySourceNumber' | 'byCategory' | 'byChapter' | 'byRound' | 'fullRandomPair';
+export type HwpStorageModeKey = 'bySourceNumber' | 'byCategory' | 'byChapter' | 'byRound' | 'singleFull' | 'fullRandomPair';
 
 /* 「전문항랜덤」은 아래 「문항 순서 섞기」와 이름이 거의 같아 어느 쪽을 켠 건지 알 수 없었다.
    여기는 *파일을 몇 벌 만드는가*, 아래는 *순서를 섞는가* 라서 이름을 그렇게 갈랐다. */
@@ -35,10 +35,13 @@ const HWP_STORAGE_OPTIONS: readonly { key: HwpStorageModeKey; label: string; hin
   { key: 'byCategory', label: '카테고리별', hint: '문제 유형마다 파일 나눔' },
   { key: 'byChapter', label: '강별', hint: '강(Chapter)마다 파일 나눔' },
   { key: 'byRound', label: '회차별', hint: '회차마다 파일 나눔' },
+  { key: 'singleFull', label: '통합본', hint: '나눈 파일과 별도로 전체를 한 파일에 담아 드립니다' },
   { key: 'fullRandomPair', label: '전체 1파일 + 랜덤본', hint: '기본 순서 1벌과 무작위 순서 1벌을 함께 드립니다' },
 ] as const;
 
-const DEFAULT_HWP_STORAGE_MODES: HwpStorageModeKey[] = ['byChapter'];
+/* 강별·카테고리별·통합본을 처음부터 켜 둔다. 선생님들이 대부분 이 세 벌을 함께 쓰셔서
+   매번 다시 고르는 수고를 덜기 위한 것이고, 필요 없으면 주문서에서 끄면 된다. */
+const DEFAULT_HWP_STORAGE_MODES: HwpStorageModeKey[] = ['byChapter', 'byCategory', 'singleFull'];
 
 /**
  * 결과 문서의 구성. 값은 제작기가 그대로 쓰는 문자열이라 바꾸면 안 된다
@@ -532,7 +535,7 @@ const QuestionSettings = ({
   const detailOptionSummary =
     detailOptionChanges.length > 0
       ? detailOptionChanges.join(' · ')
-      : '기본 설정 — 강별 · 지문통합+정답표+해설';
+      : '기본 설정 — 강별+카테고리별+통합본 · 지문통합+정답표+해설';
 
   /* 세부 옵션 기본값 — 이 브라우저에만 저장한다. 매번 같은 설정을 다시 고르던 분들 요청.
      ⚠️ useState 초기값으로 localStorage 를 읽으면 SSR 결과와 달라져 하이드레이션이 깨진다.
