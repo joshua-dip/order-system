@@ -21,13 +21,13 @@ export const maxDuration = 60;
 
 /**
  * 수업용자료 단건을 A4 PDF 로 렌더링. 모드에 따라 가로(영한대조)/세로(나머지).
- * body: { kicker?, title?, number?, mode?, lineHeight?, splitPct?, sentences: { en, ko? }[] }
+ * body: { kicker?, title?, chapter?, number?, mode?, lineHeight?, splitPct?, sentences: { en, ko? }[] }
  */
 export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { kicker?: unknown; title?: unknown; number?: unknown; mode?: unknown; lineHeight?: unknown; splitPct?: unknown; lineLayout?: unknown; enFont?: unknown; koFont?: unknown; fontScale?: unknown; enFontScale?: unknown; koFontScale?: unknown; sentences?: unknown };
+  let body: { kicker?: unknown; title?: unknown; chapter?: unknown; number?: unknown; mode?: unknown; lineHeight?: unknown; splitPct?: unknown; lineLayout?: unknown; enFont?: unknown; koFont?: unknown; fontScale?: unknown; enFontScale?: unknown; koFontScale?: unknown; sentences?: unknown };
   try {
     body = (await request.json()) as Record<string, unknown>;
   } catch {
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
 
   const kicker = typeof body.kicker === 'string' ? body.kicker : undefined;
   const title = typeof body.title === 'string' ? body.title : undefined;
+  const chapter = typeof body.chapter === 'string' ? body.chapter : undefined;
   const number = typeof body.number === 'string' ? body.number : undefined;
   const lineHeight = clampLineHeight(body.lineHeight);
   const splitPct = clampSplitPct(body.splitPct);
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
   const mode = normalizeLessonMode(body.mode);
   const landscape = lessonModeIsLandscape(mode);
 
-  const html = buildLessonMaterialHtml({ kicker, title, number, sentences, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, fontScale, mode });
+  const html = buildLessonMaterialHtml({ kicker, title, chapter, number, sentences, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, fontScale, mode });
 
   const [{ default: chromium }, puppeteer] = await Promise.all([
     import('@sparticuz/chromium'),
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     });
 
     const modeLabel = LESSON_MODE_LABELS[mode];
-    const segs = [...(modeLabel !== '수업용자료' ? [modeLabel] : []), title, number].filter(Boolean).join('_');
+    const segs = [...(modeLabel !== '수업용자료' ? [modeLabel] : []), title, chapter, number].filter(Boolean).join('_');
     const part = sanitizeFilename(segs);
     const filename = part ? `수업용자료_${part}.pdf` : '수업용자료.pdf';
     const encoded = encodeURIComponent(filename);

@@ -174,8 +174,9 @@ export function ClassKitLectureView({
   const hasNext = curIndex >= 0 && curIndex < siblings.length - 1;
 
   const previewHtml = useMemo(
-    () => buildLectureMaterialHtml({ kicker, title, number, sentences, lineHeight }),
-    [kicker, title, number, sentences, lineHeight],
+    // chapter 는 시험정보(title)와 달리 지문에서 그대로 읽어 형제 이동 시 자동 갱신된다
+    () => buildLectureMaterialHtml({ kicker, title, chapter: passage?.chapter, number, sentences, lineHeight }),
+    [kicker, title, passage?.chapter, number, sentences, lineHeight],
   );
 
   /** manual 묶음에 담긴 지문들의 교재 집합 — 혼합 여부·요약 표시. */
@@ -263,7 +264,7 @@ export function ClassKitLectureView({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ kicker, title, number, lineHeight, sentences: sentences.map(s => s.text) }),
+        body: JSON.stringify({ kicker, title, chapter: passage?.chapter ?? '', number, lineHeight, sentences: sentences.map(s => s.text) }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));

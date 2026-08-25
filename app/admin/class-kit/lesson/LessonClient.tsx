@@ -333,8 +333,9 @@ export default function LessonClient({
   const isLandscape = lessonModeIsLandscape(mode);
 
   const previewHtml = useMemo(
-    () => buildLessonMaterialHtml({ kicker, title, number, sentences: pairs, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, mode }),
-    [kicker, title, number, pairs, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, mode],
+    // chapter 는 시험정보(title)와 달리 지문에서 그대로 읽는다 — 형제 지문으로 넘어가면 자동으로 바뀐다
+    () => buildLessonMaterialHtml({ kicker, title, chapter: passage?.chapter, number, sentences: pairs, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, mode }),
+    [kicker, title, passage?.chapter, number, pairs, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, mode],
   );
 
   const filenameBase = useMemo(() => {
@@ -614,7 +615,7 @@ export default function LessonClient({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ kicker, title, number, mode, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, sentences: pairs.map(p => ({ en: p.en, ko: p.ko })) }),
+        body: JSON.stringify({ kicker, title, chapter: passage?.chapter ?? '', number, mode, lineHeight, splitPct, lineLayout, enFont, koFont, enFontScale, koFontScale, sentences: pairs.map(p => ({ en: p.en, ko: p.ko })) }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));

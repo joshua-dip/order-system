@@ -20,6 +20,8 @@ export interface BuildLectureMaterialOptions {
   kicker?: string;
   /** 시험정보 (예: 26년 고3 5월 영어모의고사). */
   title?: string;
+  /** 강(chapter) 배지. 번호만으로는 몇 강 자료인지 알 수 없어 헤더에 함께 찍는다. */
+  chapter?: string;
   /** 헤더 오른쪽 워터마크 문항번호 (예: 21). */
   number?: string;
   sentences: LectureSentence[];
@@ -83,6 +85,7 @@ body{
 .kicker{position:relative;z-index:1;color:rgba(255,255,255,0.88);font-weight:600;font-size:1.55cqw;letter-spacing:0.04em;}
 .title{position:relative;z-index:1;color:#fff;font-weight:700;font-size:2.7cqw;letter-spacing:-0.015em;margin-top:0.3cqw;}
 .wm{position:absolute;right:1.6cqw;top:50%;transform:translateY(-46%);font-size:7cqw;font-weight:800;line-height:1;color:rgba(255,255,255,0.18);z-index:0;user-select:none;}
+.chap{display:inline-block;margin-left:0.9cqw;padding:0.1em 0.6em;border-radius:999px;background:rgba(255,255,255,0.24);color:#fff;font-weight:700;letter-spacing:0;vertical-align:baseline;}
 .passage{
   margin-top:3cqw;
   color:var(--ink);
@@ -136,6 +139,7 @@ function passageHtml(sentences: LectureSentence[], lineHeight: number): string {
 export function buildLectureMaterialHtml(opts: BuildLectureMaterialOptions): string {
   const kicker = (opts.kicker || '강의용자료').trim();
   const title = (opts.title || '').trim();
+  const chapter = (opts.chapter || '').trim();
   const number = (opts.number || '').trim();
   const lineHeight = clampLineHeight(opts.lineHeight);
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8">
@@ -145,7 +149,7 @@ export function buildLectureMaterialHtml(opts: BuildLectureMaterialOptions): str
 <body>
 <div class="page" id="page">
   <header class="head">
-    <div class="kicker">${escapeHtml(kicker)}</div>
+    <div class="kicker">${escapeHtml(kicker)}${chapter ? `<span class="chap">${escapeHtml(chapter)}</span>` : ''}</div>
     <div class="title">${escapeHtml(title)}</div>
     <div class="wm">${escapeHtml(number)}</div>
   </header>
@@ -159,6 +163,8 @@ export function buildLectureMaterialHtml(opts: BuildLectureMaterialOptions): str
 export interface LectureMultiPageItem {
   /** 시험정보 라벨 (예: 26년 고3 5월 영어모의고사). */
   title?: string;
+  /** 강(chapter) 배지. 번호만으로는 몇 강 자료인지 알 수 없어 헤더에 함께 찍는다. */
+  chapter?: string;
   /** 헤더 오른쪽 워터마크 (예: 21). */
   number?: string;
   sentences: LectureSentence[];
@@ -207,6 +213,7 @@ body{
 .kicker{position:relative;z-index:1;color:rgba(255,255,255,0.88);font-weight:600;font-size:1.55cqw;letter-spacing:0.04em;}
 .title{position:relative;z-index:1;color:#fff;font-weight:700;font-size:2.7cqw;letter-spacing:-0.015em;margin-top:0.3cqw;}
 .wm{position:absolute;right:1.6cqw;top:50%;transform:translateY(-46%);font-size:7cqw;font-weight:800;line-height:1;color:rgba(255,255,255,0.18);z-index:0;user-select:none;}
+.chap{display:inline-block;margin-left:0.9cqw;padding:0.1em 0.6em;border-radius:999px;background:rgba(255,255,255,0.24);color:#fff;font-weight:700;letter-spacing:0;vertical-align:baseline;}
 .passage{
   margin-top:3cqw;
   color:var(--ink);
@@ -250,11 +257,12 @@ export function buildLectureMaterialMultiPageHtml(opts: BuildLectureMaterialMult
   const pagesHtml = items
     .map((it) => {
       const title = (it.title || '').trim();
+      const chapter = (it.chapter || '').trim();
       const number = (it.number || '').trim();
       const lh = clampLineHeight(it.lineHeight);
       return `<div class="page-multi">
   <header class="head">
-    <div class="kicker">${escapeHtml(kicker)}</div>
+    <div class="kicker">${escapeHtml(kicker)}${chapter ? `<span class="chap">${escapeHtml(chapter)}</span>` : ''}</div>
     <div class="title">${escapeHtml(title)}</div>
     <div class="wm">${escapeHtml(number)}</div>
   </header>

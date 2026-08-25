@@ -176,8 +176,9 @@ export async function POST(request: NextRequest) {
         idx += 1;
         const html = buildLessonMaterialHtml({
           kicker,
-          // 헤더에 강을 함께 적는다 — 번호만 있으면 몇 강 자료인지 알 수 없다
-          title: w.chapter ? `${w.textbook || textbook} · ${w.chapter}` : (w.textbook || textbook),
+          title: w.textbook || textbook,
+          // 헤더에 강 배지를 함께 찍는다 — 번호만 있으면 몇 강 자료인지 알 수 없다
+          chapter: w.chapter,
           number: w.number,
           sentences: w.sentences,
           mode,
@@ -247,7 +248,8 @@ export async function POST(request: NextRequest) {
       kicker,
       mode,
       items: built.map((b) => ({
-        title: b.chapter ? `${b.textbook || textbook} · ${b.chapter}` : (b.textbook || textbook),
+        title: b.textbook || textbook,
+        chapter: b.chapter,
         number: b.number,
         sentences: b.sentences,
       })),

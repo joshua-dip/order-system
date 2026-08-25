@@ -10,14 +10,14 @@ export const maxDuration = 60;
 
 /**
  * 강의용자료 단건을 A4 한 페이지 PDF 로 렌더링.
- * body: { kicker?, title?, number?, lineHeight?, sentences: string[] }
+ * body: { kicker?, title?, chapter?, number?, lineHeight?, sentences: string[] }
  * (구조 파라미터를 받아 서버에서 HTML 을 재구성 — 임의 HTML 신뢰 안 함.)
  */
 export async function POST(request: NextRequest) {
   const { error } = await requireAdmin(request);
   if (error) return error;
 
-  let body: { kicker?: unknown; title?: unknown; number?: unknown; lineHeight?: unknown; sentences?: unknown };
+  let body: { kicker?: unknown; title?: unknown; chapter?: unknown; number?: unknown; lineHeight?: unknown; sentences?: unknown };
   try {
     body = (await request.json()) as Record<string, unknown>;
   } catch {
@@ -35,10 +35,11 @@ export async function POST(request: NextRequest) {
 
   const kicker = typeof body.kicker === 'string' ? body.kicker : undefined;
   const title = typeof body.title === 'string' ? body.title : undefined;
+  const chapter = typeof body.chapter === 'string' ? body.chapter : undefined;
   const number = typeof body.number === 'string' ? body.number : undefined;
   const lineHeight = clampLineHeight(body.lineHeight);
 
-  const html = buildLectureMaterialHtml({ kicker, title, number, sentences, lineHeight });
+  const html = buildLectureMaterialHtml({ kicker, title, chapter, number, sentences, lineHeight });
 
   // puppeteer 로 PDF 렌더링 — grammar/essay bulk-pdf-zip 와 동일 패턴
   const [{ default: chromium }, puppeteer] = await Promise.all([
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       pageRanges: '1', // 한 화면 = 한 페이지 보장
     });
 
-    const body2 = sanitizeFilename([title, number].filter(Boolean).join('_'));
+    const body2 = sanitizeFilename([title, chapter, number].filter(Boolean).join('_'));
     const filename = body2 ? `강의용자료_${body2}.pdf` : '강의용자료.pdf';
     const encoded = encodeURIComponent(filename);
     const bytes = new Uint8Array(pdfBuf);
