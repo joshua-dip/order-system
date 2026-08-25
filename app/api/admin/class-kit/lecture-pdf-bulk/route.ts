@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
     typeof body.kicker === 'string' && body.kicker.trim() ? body.kicker.trim() : '강의용자료';
   const lineHeight = clampLineHeight(body.lineHeight);
   const format: 'pdf' | 'zip' = body.format === 'pdf' ? 'pdf' : 'zip';
+  /* zip 을 강(chapter)별 폴더로 나눌지 — 지문이 많은 교재는 한 폴더에 쏟아지면 찾기 어렵다. */
+  const folderByChapter = body.folderByChapter !== false;
   const passageIdsRaw = Array.isArray(body.passageIds) ? body.passageIds : null;
   const passageIds = passageIdsRaw
     ?.filter((v): v is string => typeof v === 'string' && ObjectId.isValid(v))
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
       .toArray();
   }
 
-  type Built = { number: string; textbook: string; sentences: LectureSentence[] };
+  type Built = { number: string; chapter: string; textbook: string; sentences: LectureSentence[] };
   const built: Built[] = [];
   for (const d of docs) {
     const doc = d as Record<string, unknown>;
@@ -84,7 +86,12 @@ export async function POST(request: NextRequest) {
       .filter((s) => s.text);
     if (sentences.length === 0) continue;
     const rawNumber = String(doc.number ?? '');
-    built.push({ number: deriveNumber(rawNumber) || rawNumber, textbook: String(doc.textbook ?? '').trim(), sentences });
+    built.push({
+      number: deriveNumber(rawNumber) || rawNumber,
+      chapter: String(doc.chapter ?? '').trim(),
+      textbook: String(doc.textbook ?? '').trim(),
+      sentences,
+    });
   }
   if (built.length === 0) {
     return NextResponse.json({ error: '지문이 없습니다.' }, { status: 404 });
@@ -132,7 +139,8 @@ export async function POST(request: NextRequest) {
         idx += 1;
         const html = buildLectureMaterialHtml({
           kicker,
-          title: w.textbook || textbook,
+          // 헤더에 강을 함께 적는다 — 번호만으로는 몇 강 자료인지 알 수 없다
+          title: w.chapter ? `${w.textbook || textbook} · ${w.chapter}` : (w.textbook || textbook),
           number: w.number,
           sentences: w.sentences,
           lineHeight,
@@ -155,7 +163,12 @@ export async function POST(request: NextRequest) {
             timeout: 0, // 30s 기본 타임아웃 해제
           });
           const numLabel = sanitizeFilename(w.number || String(idx));
-          const filename = uniqueFilename(used, `${numLabel}.pdf`);
+          const chapterLabel = w.chapter ? sanitizeFilename(w.chapter) : '';
+          // 각 조각은 sanitize 된 뒤라 '/' 가 없다. 아래에서 붙이는 '/' 만 zip 폴더 구분자다.
+          const base = folderByChapter && chapterLabel
+            ? `${chapterLabel}/${chapterLabel} ${numLabel}.pdf`
+            : `${numLabel}.pdf`;
+          const filename = uniqueFilename(used, base);
           zip.file(filename, pdfBuf);
         } finally {
           await page.close();

@@ -35,6 +35,7 @@ const MAX_PASSAGES = 100;
  *   passageIds?: string[],                  // ObjectId 배열. 미지정 시 textbook 전체.
  *   mode: 'parallel' | 'lineByLine' | 'writeEn' | 'writeKo',
  *   format: 'pdf' | 'zip',                  // pdf=단일 다 페이지, zip=지문별 PDF 묶음
+ *   folderByChapter?: boolean,              // zip 일 때 강별 하위 폴더로 저장 (기본 true)
  *   kicker?, lineHeight?, splitPct?, lineLayout?, enFont?, koFont?, enFontScale?, koFontScale?
  * }
  */
@@ -65,6 +66,9 @@ export async function POST(request: NextRequest) {
     typeof body.kicker === 'string' && body.kicker.trim()
       ? body.kicker.trim()
       : LESSON_MODE_LABELS[mode];
+  /* zip 을 강(chapter)별 폴더로 나눌지. 지문이 많은 교재를 한 번에 받을 때
+     한 폴더에 100개가 쏟아지면 찾기 어려워 기본으로 나눈다. */
+  const folderByChapter = body.folderByChapter !== false;
 
   // 1) 대상 지문 docs 조회
   const passageIdsRaw = Array.isArray(body.passageIds) ? body.passageIds : null;
@@ -102,7 +106,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '대상 지문이 없습니다.' }, { status: 404 });
   }
 
-  type Built = { number: string; textbook: string; sentences: LessonSentencePair[] };
+  type Built = { number: string; chapter: string; textbook: string; sentences: LessonSentencePair[] };
   const built: Built[] = [];
   for (const d of docs) {
     const doc = d as Record<string, unknown>;
@@ -117,7 +121,12 @@ export async function POST(request: NextRequest) {
       .filter((s) => s.en);
     if (sentences.length === 0) continue;
     const rawNumber = String(doc.number ?? '');
-    built.push({ number: deriveNumber(rawNumber) || rawNumber, textbook: String(doc.textbook ?? '').trim(), sentences });
+    built.push({
+      number: deriveNumber(rawNumber) || rawNumber,
+      chapter: String(doc.chapter ?? '').trim(),
+      textbook: String(doc.textbook ?? '').trim(),
+      sentences,
+    });
   }
   if (built.length === 0) {
     return NextResponse.json({ error: '본문이 있는 지문이 없습니다.' }, { status: 404 });
@@ -167,7 +176,8 @@ export async function POST(request: NextRequest) {
         idx += 1;
         const html = buildLessonMaterialHtml({
           kicker,
-          title: w.textbook || textbook,
+          // 헤더에 강을 함께 적는다 — 번호만 있으면 몇 강 자료인지 알 수 없다
+          title: w.chapter ? `${w.textbook || textbook} · ${w.chapter}` : (w.textbook || textbook),
           number: w.number,
           sentences: w.sentences,
           mode,
@@ -200,7 +210,14 @@ export async function POST(request: NextRequest) {
             timeout: 0, // 30s 기본 타임아웃 해제
           });
           const numLabel = sanitizeFilename(w.number || String(idx));
-          const filename = uniqueFilename(used, `${numLabel}.pdf`);
+          const chapterLabel = w.chapter ? sanitizeFilename(w.chapter) : '';
+          // 강별 폴더 + 파일명에도 강을 넣어 폴더 밖으로 꺼내도 구분된다
+          // chapterLabel·numLabel 은 각각 sanitize 된 뒤라 '/' 가 남지 않는다.
+          // 아래에서 붙이는 '/' 만 zip 안의 폴더 구분자로 쓰인다.
+          const base = folderByChapter && chapterLabel
+            ? `${chapterLabel}/${chapterLabel} ${numLabel}.pdf`
+            : `${numLabel}.pdf`;
+          const filename = uniqueFilename(used, base);
           zip.file(filename, pdfBuf);
         } finally {
           await page.close();
@@ -229,7 +246,11 @@ export async function POST(request: NextRequest) {
     const html = buildLessonMaterialMultiPageHtml({
       kicker,
       mode,
-      items: built.map((b) => ({ title: b.textbook || textbook, number: b.number, sentences: b.sentences })),
+      items: built.map((b) => ({
+        title: b.chapter ? `${b.textbook || textbook} · ${b.chapter}` : (b.textbook || textbook),
+        number: b.number,
+        sentences: b.sentences,
+      })),
       lineHeight,
       splitPct,
       lineLayout,

@@ -150,6 +150,8 @@ export default function LessonClient({
   const [manualQuery, setManualQuery] = useState('');
   const [bulkMode, setBulkMode] = useState<LessonMode>('parallel');
   const [bulkFormat, setBulkFormat] = useState<'pdf' | 'zip'>('pdf');
+  // ZIP 을 강(chapter)별 하위 폴더로 나눌지 — 110지문짜리 교재를 한 폴더에 쏟으면 찾기 어렵다
+  const [bulkFolderByChapter, setBulkFolderByChapter] = useState(true);
   /** 현재 교재 기준 저장된 프리셋 목록. 모달이 열릴 때마다 다시 로드. */
   const [bulkPresets, setBulkPresets] = useState<ClassKitDownloadPreset[]>([]);
   const [msg, setMsg] = useState('');
@@ -542,6 +544,7 @@ export default function LessonClient({
           passageIds: ids,
           mode: bulkMode,
           format: bulkFormat,
+          folderByChapter: bulkFolderByChapter,
           kicker,
           lineHeight,
           splitPct,
@@ -1195,6 +1198,17 @@ export default function LessonClient({
                     </button>
                   ))}
                 </div>
+                {bulkFormat === 'zip' && (
+                  <label className="mt-2 flex items-center gap-2 text-[12px] text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={bulkFolderByChapter}
+                      onChange={(e) => setBulkFolderByChapter(e.target.checked)}
+                      className="accent-emerald-500"
+                    />
+                    강별 폴더로 나누어 저장 (01강/01강 01번.pdf …)
+                  </label>
+                )}
                 {bulkScope === 'current' && (
                   <p className="mt-2 text-[11px] text-amber-300">현재 지문만 = 기존 1건 PDF 라우트로 처리 (형식 무관)</p>
                 )}

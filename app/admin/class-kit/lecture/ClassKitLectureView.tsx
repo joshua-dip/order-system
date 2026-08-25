@@ -93,6 +93,8 @@ export function ClassKitLectureView({
   const [manualLoading, setManualLoading] = useState(false);
   const [manualQuery, setManualQuery] = useState('');
   const [bulkFormat, setBulkFormat] = useState<'pdf' | 'zip'>('pdf');
+  // ZIP 을 강(chapter)별 하위 폴더로 나눌지 — 지문이 많은 교재는 한 폴더에 쏟으면 찾기 어렵다
+  const [bulkFolderByChapter, setBulkFolderByChapter] = useState(true);
   const [bulkPresets, setBulkPresets] = useState<ClassKitDownloadPreset[]>([]);
   const [msg, setMsg] = useState('');
   /** 저장된 디폴트 줄 간격 — 새 지문을 불러오면 이 값으로 적용. */
@@ -418,6 +420,7 @@ export function ClassKitLectureView({
           kicker,
           lineHeight,
           format: bulkFormat,
+          folderByChapter: bulkFolderByChapter,
         }),
       });
       if (!res.ok) {
@@ -857,6 +860,17 @@ export function ClassKitLectureView({
                     </button>
                   ))}
                 </div>
+                {bulkFormat === 'zip' && (
+                  <label className="mt-2 flex items-center gap-2 text-[12px] text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={bulkFolderByChapter}
+                      onChange={(e) => setBulkFolderByChapter(e.target.checked)}
+                      className="accent-emerald-500"
+                    />
+                    강별 폴더로 나누어 저장 (01강/01강 01번.pdf …)
+                  </label>
+                )}
                 {bulkScope === 'current' && (
                   <p className="mt-2 text-[11px] text-amber-300">현재 지문만 = 기존 1건 PDF 라우트로 처리 (형식 무관)</p>
                 )}
