@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { readMergedConvertedData } from '@/lib/converted-data-store';
 import { enrichTextbooksForVocabularyList } from '@/lib/vocabulary-textbooks-enrich';
+import { buildSchoolTextbooksData } from '@/lib/school-textbooks';
 import {
   buildMergedTextbookBranchFromPassages,
   convertedMergedHasTextbookLessonIndex,
@@ -81,6 +84,52 @@ async function reconcileTextbookTreesWithPassages(
 }
 
 /**
+ * 교과서(학교 교과서)를 교재 트리에 얹는다 — **`canOrderSchoolTextbook` 회원에게만**.
+ *
+ * 교과서는 `converted_textbook_json` 에 없고 `passages` 로만 존재해서, 지금까지 이 트리를
+ * 쓰는 화면(분석지·워크북)에서는 아무리 회원에게 열어 줘도 보이지 않았다.
+ * `filterTextbooksByAllowed` 가 순수 교집합이라 트리에 없는 키는 그대로 사라지기 때문이다.
+ *
+ * 그렇다고 트리에 영구 저장하면 허용목록이 「미설정=전체허용」인 회원(워크북 36명 등)에게
+ * 교과서 58권이 한꺼번에 노출된다. 그래서 저장하지 않고 **요청 단위로, 권한이 있을 때만**
+ * 합친다. 권한이 없거나 비로그인이면 이 함수는 원본을 그대로 돌려준다.
+ *
+ * 변형문제 주문서는 예전부터 `/api/textbooks/school` 을 따로 불러 왔고, 그쪽과 키가 같아
+ * 여기서 합쳐져도 결과는 같다(같은 키를 같은 트리로 덮어쓴다).
+ */
+async function mergeSchoolTextbooksIfPermitted(
+  request: NextRequest,
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  try {
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    if (!token) return data;
+    const payload = await verifyToken(token).catch(() => null);
+    if (!payload?.sub) return data;
+
+    const db = await getDb('gomijoshua');
+    const user = await db
+      .collection('users')
+      .findOne({ _id: new ObjectId(payload.sub) }, { projection: { canOrderSchoolTextbook: 1 } });
+    if (!user?.canOrderSchoolTextbook) return data;
+
+    const school = await buildSchoolTextbooksData(db);
+    if (school.keys.length === 0) return data;
+    /* 트리에 이미 있는 교재는 건드리지 않는다 — 관리자가 반영한 내용이 우선이다. */
+    const out = { ...data };
+    for (const k of school.keys) {
+      if (k in out) continue;
+      out[k] = school.data[k];
+    }
+    return out;
+  } catch (e) {
+    /* 교과서 병합 실패가 교재 목록 전체를 막으면 안 된다. */
+    console.error('교과서 트리 병합 실패:', e);
+    return data;
+  }
+}
+
+/**
  * 교재 병합 데이터를 API로 제공합니다.
  * — 관리자가 반영한 내용은 MongoDB `converted_textbook_json` 우선,
  * — 없으면 저장소의 converted_data.json (기본 번들).
@@ -93,6 +142,7 @@ export async function GET(request: NextRequest) {
   try {
     let data = await readMergedConvertedData();
     data = await reconcileTextbookTreesWithPassages(data);
+    data = await mergeSchoolTextbooksIfPermitted(request, data);
     if (request.nextUrl.searchParams.get('vocabularyEnrich') === '1') {
       data = await enrichTextbooksForVocabularyList(data);
     }

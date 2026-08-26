@@ -43,16 +43,29 @@ export async function buildSchoolTextbooksData(
   const keys = await getSchoolTextbookKeys(db);
   if (keys.length === 0) return { keys: [], data: {} };
 
+  /* 교재마다 따로 조회하면 59권 = 59왕복이다. /api/textbooks 는 화면마다 부르는
+     경로라 그 비용이 그대로 드러나므로 한 번에 읽고 교재별로 나눈다. */
+  const rows = (await db
+    .collection('passages')
+    .find({ textbook: { $in: keys } })
+    .project({ textbook: 1, chapter: 1, number: 1, order: 1 })
+    .toArray()) as (PassageRow & { textbook?: string })[];
+
+  const byTextbook = new Map<string, PassageRow[]>();
+  for (const r of rows) {
+    const tb = String(r.textbook ?? '').trim();
+    if (!tb) continue;
+    if (!byTextbook.has(tb)) byTextbook.set(tb, []);
+    byTextbook.get(tb)!.push(r);
+  }
+
   const data: Record<string, MergedTextbookBranch> = {};
   const outKeys: string[] = [];
+  /* keys 순서를 유지한다 — 주문 화면의 교재 나열 순서가 배정 순서를 따라간다. */
   for (const key of keys) {
-    const rows = (await db
-      .collection('passages')
-      .find({ textbook: key })
-      .project({ chapter: 1, number: 1, order: 1 })
-      .toArray()) as PassageRow[];
-    if (rows.length === 0) continue;
-    const built = buildMergedTextbookBranchFromPassages(key, rows);
+    const rs = byTextbook.get(key);
+    if (!rs || rs.length === 0) continue;
+    const built = buildMergedTextbookBranchFromPassages(key, rs);
     if (!built) continue;
     data[key] = built.branch;
     outKeys.push(key);
