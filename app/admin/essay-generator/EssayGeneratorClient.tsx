@@ -4084,7 +4084,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                   </span>
                 </div>
                 <pre className="text-[11px] text-slate-300 font-mono whitespace-pre-wrap leading-relaxed max-h-44 overflow-y-auto scrollbar-thin">
-                  {essayDifficultyAppendixTable(isMeaningType ? ESSAY_MEANING_EXAM_TYPE : undefined)[difficulty]}
+                  {essayDifficultyAppendixTable(examType === '배열형' ? undefined : examType)[difficulty]}
                 </pre>
               </div>
             </div>

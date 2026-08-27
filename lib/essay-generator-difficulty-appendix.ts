@@ -9,7 +9,7 @@
  *   최고난도  — 키워드 일체 없음, 한국어 해석만 보고 완전 영작
  */
 
-import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
+import { ESSAY_MEANING_EXAM_TYPE, ESSAY_MAIN_IDEA_EXAM_TYPE } from '@/app/data/essay-categories';
 
 export type EssayGeneratorDifficulty = '최고난도' | '고난도' | '중난도' | '기본난도';
 
@@ -500,6 +500,53 @@ export const ESSAY_DIFFICULTY_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, st
   최고난도: `${최고난도_추가}\n\n${공통_강화_추가}`,
 };
 
+// ── 요지 조건영작배열 (ESSAY_MAIN_IDEA_EXAM_TYPE) 전용 난이도 부록 ─────────────
+//
+// 학교 기출 서술형 5~6번 형태. 한 지문에 한 문항, 기본난도 하나로만 운영한다.
+// <보기> 단어를 **주어진 순서대로** 모두 한 번씩 써서 글의 요지를 한 문장으로 영작.
+
+const 요지_기본난도 = `[유형: 요지 조건영작배열 — 반드시 준수]
+
+■ 문항 구성
+- 한 지문에 **1문항**만 만든다. (배열형처럼 두 문장을 뽑지 않는다)
+- prompt 는 학교 기출 문구를 그대로 쓴다:
+  "다음 글의 요지를 <보기>에 주어진 단어만 모두 한 번씩 순서대로 사용하여
+   10단어 이상 20단어 이내의 완전한 형식의 영어 문장으로 영작하시오.
+   (단, 어형변화 금지, 철자 오류 시 오답 처리, 부분 점수 있음)"
+
+■ bogi (<보기>)
+- 정답 문장의 **뼈대 단어만** 5~12개. 슬래시로 구분한다. 예:
+  teachers / unconscious / bias / lowers / girls / math / scores
+- **정답에 등장하는 순서 그대로** 나열한다. (배열형과 반대다 — 여기서는 순서가 힌트다)
+- 관사·전치사·be동사 같은 보조어는 넣지 않는다. 학생이 채워 넣는 몫이다.
+- 지문에 있는 표현을 그대로 쓰되, 요지를 압축한 **주제어**를 고른다.
+
+■ answer.text
+- <보기> 단어가 **모두, 순서대로, 한 번씩** 들어간 영어 **한 문장**.
+- 보조어(관사·전치사·접속사·소유격)는 자유롭게 더한다. 소유격 아포스트로피는 허용
+  (teachers → Teachers'). 그 외 어형 변화는 금지 — 주어진 형태 그대로 쓴다.
+- 단어 수는 prompt 의 범위(기본 10~20) 안에 들어야 한다. word_count.total 과 일치시킨다.
+
+■ conditions
+- 네 줄이 표준이다:
+  ① <보기>의 단어를 모두 한 번씩, 주어진 순서대로 사용할 것
+  ② 어형 변화 금지 (주어진 형태 그대로 쓸 것)
+  ③ 10단어 이상 20단어 이내의 완전한 문장으로 쓸 것
+  ④ 철자 오류 시 오답 처리, 부분 점수 있음
+
+■ explanation
+- 글의 요지가 무엇인지 먼저 한 문장으로 밝히고, 지문의 어느 근거에서 나오는지 댄다.
+- 그 다음 <보기> 순서를 뼈대로 어떻게 문장을 세우는지 짚는다
+  (예: teachers → unconscious bias(주어) → lowers(동사) → girls math scores(목적어)).`;
+
+const ESSAY_MAIN_IDEA_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, string> = {
+  기본난도: 요지_기본난도,
+  /* 요지형은 난도를 나누지 않는다 — 어느 값이 와도 같은 규칙을 준다. */
+  중난도: 요지_기본난도,
+  고난도: 요지_기본난도,
+  최고난도: 요지_기본난도,
+};
+
 /**
  * 유형(examType)에 맞는 난이도 부록 테이블. examType 이 글의의미면 글의의미 전용,
  * 그 외(undefined 포함)는 기존 배열형 테이블. UI·CLI 양쪽에서 공유.
@@ -507,9 +554,10 @@ export const ESSAY_DIFFICULTY_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, st
 export function essayDifficultyAppendixTable(
   examType?: string,
 ): Record<EssayGeneratorDifficulty, string> {
-  return (examType ?? '').trim() === ESSAY_MEANING_EXAM_TYPE
-    ? ESSAY_MEANING_APPENDIX_TEXT
-    : ESSAY_DIFFICULTY_APPENDIX_TEXT;
+  const t = (examType ?? '').trim();
+  if (t === ESSAY_MEANING_EXAM_TYPE) return ESSAY_MEANING_APPENDIX_TEXT;
+  if (t === ESSAY_MAIN_IDEA_EXAM_TYPE) return ESSAY_MAIN_IDEA_APPENDIX_TEXT;
+  return ESSAY_DIFFICULTY_APPENDIX_TEXT;
 }
 
 /**

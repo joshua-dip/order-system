@@ -11,7 +11,7 @@
  */
 
 import type { ExamData, Question } from './essay-exam-html';
-import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
+import { ESSAY_MEANING_EXAM_TYPE, ESSAY_MAIN_IDEA_EXAM_TYPE } from '@/app/data/essay-categories';
 
 export interface ValidationResult {
   valid: boolean;
@@ -45,6 +45,24 @@ function normalizeForCompare(text: string): string {
     .trim();
 }
 
+/**
+ * 보기 단어 대조용 토큰. 구두점과 아포스트로피(소유격 '/'s)를 털고 소문자로.
+ *
+ * 「어형 변화 금지」지만 소유격 아포스트로피는 붙는다 — 샘플의
+ * teachers → Teachers' , girls → girls' 가 그렇다. 그래서 이것만 예외로 흡수한다.
+ */
+function tokenizeForBogiMatch(text: string): string[] {
+  return text
+    .replace(/[\u2018\u2019']s\b/gi, '')
+    .replace(/[\u2018\u2019']/g, '')
+    .replace(/[^A-Za-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter(Boolean);
+}
+
 function validateQuestion(
   q: Question,
   errors: string[],
@@ -58,6 +76,8 @@ function validateQuestion(
   const isMidDifficulty = difficulty === '중난도';
   /* 글의의미 서술형: 기본=우리말 서술 / 중·고=키워드 영작 / 최고=키워드 없는 영작 */
   const isMeaningType = (examType ?? '') === ESSAY_MEANING_EXAM_TYPE;
+  /* 요지 조건영작배열: <보기> 단어를 **주어진 순서대로** 모두 한 번씩 써서 요지를 한 문장으로. */
+  const isMainIdeaType = (examType ?? '') === ESSAY_MAIN_IDEA_EXAM_TYPE;
   const isBasicDifficulty = difficulty === '기본난도' || difficulty === '난이도하';
   const meaningBasic = isMeaningType && isBasicDifficulty;
 
@@ -108,7 +128,68 @@ function validateQuestion(
     }
   }
 
-  if (isMeaningType) {
+  if (isMainIdeaType) {
+    /* 요지형은 bogi 단어가 answer 안에 **순서대로** 들어 있어야 한다.
+       bogi 는 정답의 뼈대일 뿐이라 청크 합 = answer 검사(배열형 규칙)는 맞지 않다.
+       정답에는 관사·연결어 같은 보조 단어가 더 붙는다. */
+    if (!/[A-Za-z]{2,}/.test(answerText)) {
+      errors.push(`${qid}: 요지형 answer.text 는 영어 한 문장이어야 합니다. text="${answerText}"`);
+    }
+    const chunks = splitBogi(q.bogi);
+    if (chunks.length < 3) {
+      errors.push(`${qid}: <보기> 단어가 ${chunks.length}개입니다. 최소 3개 이상 주세요.`);
+    } else if (chunks.length < 5 || chunks.length > 12) {
+      warnings.push(`${qid}: <보기> 단어 개수(${chunks.length})가 권장 범위(5~12)를 벗어났습니다.`);
+    }
+
+    const answerTokens = tokenizeForBogiMatch(answerText);
+    let cursor = 0;
+    const missing: string[] = [];
+    const outOfOrder: string[] = [];
+    for (const chunk of chunks) {
+      const want = tokenizeForBogiMatch(chunk);
+      if (want.length === 0) continue;
+      /* 청크(한 단어가 원칙이지만 구 단위도 허용)를 cursor 이후에서 찾는다. */
+      let found = -1;
+      for (let i = cursor; i + want.length <= answerTokens.length; i++) {
+        if (want.every((w, k) => answerTokens[i + k] === w)) { found = i; break; }
+      }
+      if (found === -1) {
+        /* 순서를 무시하면 있는가 — 있으면 「순서 어긋남」, 없으면 「누락」 */
+        const anywhere = answerTokens.some((_, i) =>
+          i + want.length <= answerTokens.length && want.every((w, k) => answerTokens[i + k] === w));
+        (anywhere ? outOfOrder : missing).push(chunk);
+      } else {
+        cursor = found + want.length;
+      }
+    }
+    if (missing.length > 0) {
+      errors.push(`${qid}: <보기> 단어가 정답에 없습니다 — ${missing.map(m => `"${m}"`).join(', ')}. answer="${answerText}"`);
+    }
+    if (outOfOrder.length > 0) {
+      errors.push(`${qid}: <보기> 단어가 주어진 순서대로 쓰이지 않았습니다 — ${outOfOrder.map(m => `"${m}"`).join(', ')}. answer="${answerText}"`);
+    }
+    /* 「모두 한 번씩」 — 같은 보기 단어가 정답에 두 번 이상이면 채점이 흔들린다. */
+    for (const chunk of chunks) {
+      const want = tokenizeForBogiMatch(chunk);
+      if (want.length !== 1) continue;
+      const times = answerTokens.filter(t => t === want[0]).length;
+      if (times > 1) warnings.push(`${qid}: <보기> 단어 "${chunk}" 가 정답에 ${times}번 나옵니다(한 번씩이 원칙).`);
+    }
+
+    /* 조건문의 단어 수 범위와 실제 단어 수 대조 (예: "10단어 이상 20단어 이내") */
+    const rangeCond = (q.conditions ?? []).concat(q.prompt ?? '')
+      .find(c => /(\d+)\s*단어\s*이상[\s\S]*?(\d+)\s*단어\s*이(내|하)/.test(c));
+    if (rangeCond && typeof wc?.total === 'number') {
+      const m = rangeCond.match(/(\d+)\s*단어\s*이상[\s\S]*?(\d+)\s*단어\s*이(?:내|하)/);
+      if (m) {
+        const lo = parseInt(m[1], 10), hi = parseInt(m[2], 10);
+        if (wc.total < lo || wc.total > hi) {
+          errors.push(`${qid}: 정답 단어수(${wc.total})가 조건의 범위(${lo}~${hi})를 벗어났습니다.`);
+        }
+      }
+    }
+  } else if (isMeaningType) {
     // 글의의미: 기본=우리말 서술 / 중·고=키워드 영작 / 최고=키워드 없는 영작
     if (meaningBasic) {
       // 답은 우리말 서술, bogi = 밑줄 친 부분 영어 원문(참고용).
@@ -243,7 +324,8 @@ function validateQuestion(
 
   // 3) "N개의 단어" 조건 ↔ word_count.total
   //    글의의미 기본은 우리말 자수 기준이라 "N개의 단어" 관례를 적용하지 않는다.
-  if (!meaningBasic && Array.isArray(q.conditions) && wc?.total != null) {
+  /* 요지형은 「10단어 이상 20단어 이내」 범위로 쓰지, 배열형의 「N개의 단어」 관례를 쓰지 않는다. */
+  if (!meaningBasic && !isMainIdeaType && Array.isArray(q.conditions) && wc?.total != null) {
     const wordCountCond = q.conditions.find(c => /\d+\s*개의?\s*단어/.test(c));
     if (wordCountCond) {
       const m = wordCountCond.match(/(\d+)\s*개의?\s*단어/);
@@ -258,12 +340,14 @@ function validateQuestion(
     }
   }
 
-  // 4) conditions 길이 권장 (배열형 7~8 / 글의의미 기본은 3~5 우리말 서술)
+  // 4) conditions 길이 권장 (배열형 7~8 / 글의의미 기본 3~5 / 요지형 3~5)
   if (Array.isArray(q.conditions)) {
-    const [clo, chi] = meaningBasic ? [3, 9] : [6, 9];
+    /* 요지형은 학교 기출 그대로 「순서대로·어형변화 금지·단어수·철자」 네 줄이 표준이라 짧다. */
+    const [clo, chi] = meaningBasic || isMainIdeaType ? [3, 9] : [6, 9];
+    const label = meaningBasic || isMainIdeaType ? '3~5' : '7~8';
     if (q.conditions.length < clo || q.conditions.length > chi) {
       warnings.push(
-        `${qid}: conditions 개수(${q.conditions.length}) 가 권장 범위(${meaningBasic ? '3~5' : '7~8'}) 를 벗어났습니다.`,
+        `${qid}: conditions 개수(${q.conditions.length}) 가 권장 범위(${label}) 를 벗어났습니다.`,
       );
     }
   }

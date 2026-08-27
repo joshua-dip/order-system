@@ -15,7 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
+import { ESSAY_MEANING_EXAM_TYPE, ESSAY_MAIN_IDEA_EXAM_TYPE } from '@/app/data/essay-categories';
 
 // ── 타입 정의 ──────────────────────────────────────────────────────────────────
 
@@ -428,7 +428,16 @@ export function buildExamHtml(data: ExamData, css: string): string {
   const isMeaningBasic =
     data.meta.examType === ESSAY_MEANING_EXAM_TYPE &&
     (data.meta.difficulty === '기본난도' || data.meta.difficulty === '난이도하');
-  const bogiLabel = isMeaningBasic ? '밑줄 친 부분' : isMaxDifficulty ? '한국어 해석' : '보기';
+  /* 요지형은 <보기> 단어를 **주어진 순서대로** 써야 하는 게 핵심 규칙이라, 라벨에 못박는다.
+     학생이 순서를 바꿔도 되는 배열형과 헷갈리면 안 된다. */
+  const isMainIdeaType = data.meta.examType === ESSAY_MAIN_IDEA_EXAM_TYPE;
+  const bogiLabel = isMeaningBasic
+    ? '밑줄 친 부분'
+    : isMaxDifficulty
+      ? '한국어 해석'
+      : isMainIdeaType
+        ? '보기 (주어진 순서대로 사용)'
+        : '보기';
   const bogiClass = isMaxDifficulty ? 'bogi bogi-korean' : 'bogi';
 
   const questionsHtml = data.questions
