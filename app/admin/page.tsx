@@ -646,6 +646,13 @@ export default function AdminDashboardPage() {
   const [siteVisitsHistoryNote, setSiteVisitsHistoryNote] = useState<string | null>(null);
   const [siteVisitsHistoryError, setSiteVisitsHistoryError] = useState<string | null>(null);
 
+  /* apply* 는 응답을 화면 상태에 옮기는 부분만 떼어 낸 것.
+     첫 로딩은 /api/admin/dashboard 가 한 번에 받아 오고, 새로고침 버튼은 개별 API 를
+     그대로 쓴다. 두 경로가 같은 apply 를 거쳐야 화면에 들어가는 모양이 갈리지 않는다. */
+  const applyUsers = useCallback((data: { users?: ListUser[] } | null) => {
+    if (data?.users) setUsers(data.users);
+  }, []);
+
   const fetchUsers = useCallback(() => {
     setUsersLoading(true);
     setDataError(null);
@@ -654,9 +661,13 @@ export default function AdminDashboardPage() {
         if (!res.ok) return res.json().then((d) => { setDataError(d?.error || '회원 목록을 불러올 수 없습니다.'); return null; });
         return res.json();
       })
-      .then((data) => { if (data?.users) setUsers(data.users); })
+      .then(applyUsers)
       .catch(() => { setUsers([]); setDataError('네트워크 오류'); })
       .finally(() => setUsersLoading(false));
+  }, [applyUsers]);
+
+  const applyOrders = useCallback((d: { orders?: AdminOrder[] } | null) => {
+    if (d?.orders) setRecentOrders(d.orders);
   }, []);
 
   const fetchOrders = useCallback(() => {
@@ -666,29 +677,36 @@ export default function AdminDashboardPage() {
         if (!r.ok) return r.json().then((d) => { setDataError(d?.error || '주문 목록을 불러올 수 없습니다.'); return null; });
         return r.json();
       })
-      .then((d) => { if (d?.orders) setRecentOrders(d.orders); })
+      .then(applyOrders)
       .finally(() => setRecentOrdersLoading(false));
+  }, [applyOrders]);
+
+  const applyExamUploads = useCallback((d: { uploads?: PastExamUpload[] } | null) => {
+    setExamUploads(d?.uploads || []);
   }, []);
 
   const fetchExamUploads = useCallback(() => {
     setExamUploadsLoading(true);
     fetch('/api/admin/past-exam-uploads', { credentials: 'include' })
       .then((r) => r.json())
-      .then((d) => setExamUploads(d.uploads || []))
+      .then(applyExamUploads)
       .catch(() => setExamUploads([]))
       .finally(() => setExamUploadsLoading(false));
+  }, [applyExamUploads]);
+
+  const applyPendingApplications = useCallback((d: Record<string, unknown> | null) => {
+    const stats = d?.stats as { pending?: number } | undefined;
+    setPendingApplicationCount((d?.pendingCount as number) ?? stats?.pending ?? 0);
+    setPendingApplications(Array.isArray(d?.applications) ? (d.applications as PendingApplication[]) : []);
   }, []);
 
   const fetchPendingApplicationCount = useCallback(() => {
     // 최상단 인라인 승인 패널에서 바로 처리할 수 있게 대기 목록까지 받는다.
     fetch('/api/admin/membership-applications?status=pending&limit=20', { credentials: 'include' })
       .then((r) => r.json())
-      .then((d) => {
-        setPendingApplicationCount(d?.pendingCount ?? d?.stats?.pending ?? 0);
-        setPendingApplications(Array.isArray(d?.applications) ? d.applications : []);
-      })
+      .then(applyPendingApplications)
       .catch(() => {});
-  }, []);
+  }, [applyPendingApplications]);
 
   /** 가입 승인 = 전화번호로 사용자 계정 자동 생성(+선택적 환영 쿠폰) → 신청 완료 처리 */
   const approveSignupApplication = useCallback(
@@ -766,14 +784,24 @@ export default function AdminDashboardPage() {
   }, []);
 
   // fetchStats는 fetchPendingApplicationCount 아래에 정의되어야 deps 참조가 올바름
-  const fetchStats = useCallback(() => {
-    fetchPendingApplicationCount();
-    fetch('/api/admin/stats', { credentials: 'include' })
-      .then((r) => {
-        if (!r.ok) return r.json().then((d) => { setDataError(d?.error || '통계를 불러올 수 없습니다.'); return null; });
-        return r.json();
-      })
-      .then((d) => {
+  /** /api/admin/stats 응답 — 필드가 빠질 수 있어 전부 선택형으로 받는다. */
+  type AdminStatsResponse = Partial<{
+    orderCountByLoginId: Record<string, number>;
+    revenueByLoginId: unknown;
+    lastOrderDateByLoginId: Record<string, string>;
+    newMembersThisMonth: number;
+    newOrdersThisWeek: number;
+    dropboxConfigured: boolean;
+    revenueTotal: number;
+    revenueThisMonth: number;
+    pointRevenueTotal: number;
+    pointRevenueThisMonth: number;
+    siteVisitsTodayPageViews: number;
+    siteVisitsTodayUnique: number;
+    siteVisitsTodayKey: string;
+  }>;
+
+  const applyStats = useCallback((d: AdminStatsResponse | null) => {
         if (d && d.orderCountByLoginId != null)
           setStats({
             orderCountByLoginId: d.orderCountByLoginId || {},
@@ -793,9 +821,18 @@ export default function AdminDashboardPage() {
             siteVisitsTodayUnique: typeof d.siteVisitsTodayUnique === 'number' ? d.siteVisitsTodayUnique : 0,
             siteVisitsTodayKey: typeof d.siteVisitsTodayKey === 'string' ? d.siteVisitsTodayKey : undefined,
           });
+  }, []);
+
+  const fetchStats = useCallback(() => {
+    fetchPendingApplicationCount();
+    fetch('/api/admin/stats', { credentials: 'include' })
+      .then((r) => {
+        if (!r.ok) return r.json().then((d) => { setDataError(d?.error || '통계를 불러올 수 없습니다.'); return null; });
+        return r.json();
       })
+      .then(applyStats)
       .catch(() => setStats(null));
-  }, [fetchPendingApplicationCount]);
+  }, [fetchPendingApplicationCount, applyStats]);
 
   const openSiteVisitsHistoryModal = useCallback(() => {
     setSiteVisitsHistoryOpen(true);
@@ -875,17 +912,39 @@ export default function AdminDashboardPage() {
           return;
         }
 
-        // 여기부터는 관리자가 확인된 뒤 — 첫 화면(대시보드)에 실제로 보이는 것만 부른다.
-        fetchUsers();
-        fetchOrders();
-        fetchStats();
-        fetchExamUploads();
-        fetchEmailDrafts();
-        // Q&A 미답변 질문 수 — 놓치지 않게 대시보드 배너·사이드바 배지로 노출
-        fetch('/api/qna/admin/recent?status=open&limit=1', { credentials: 'include' })
-          .then((r) => r.json())
-          .then((d) => setQnaOpenCount(typeof d?.openCount === 'number' ? d.openCount : 0))
-          .catch(() => setQnaOpenCount(0));
+        /* 첫 화면 데이터는 /api/admin/dashboard 한 번으로 받는다.
+         * 예전엔 여기서 API 7개를 동시에 불렀는데, Amplify 는 라우트마다 따로 깨어나서
+         * 그만큼 인스턴스가 새로 뜨고 각각 콜드스타트를 겪었다(실측: 7개 병렬 0.74초 vs
+         * 순차 0.49초 — 병렬일수록 더 느려졌다). 합침 라우트 안에서는 DB 조회가
+         * 한 번의 실행 안에서 병렬로 돈다. */
+        setUsersLoading(true);
+        setRecentOrdersLoading(true);
+        setExamUploadsLoading(true);
+        fetch('/api/admin/dashboard', { credentials: 'include' })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (cancelled || !d) {
+              if (!cancelled) setDataError('대시보드 데이터를 불러올 수 없습니다.');
+              return;
+            }
+            applyUsers(d.users?.data ?? null);
+            applyOrders(d.orders?.data ?? null);
+            applyStats(d.stats?.data ?? null);
+            applyPendingApplications(d.applications?.data ?? null);
+            applyExamUploads(d.examUploads?.data ?? null);
+            setEmailDrafts(d.emailDrafts?.data?.items ?? []);
+            const open = d.qnaRecent?.data?.openCount;
+            setQnaOpenCount(typeof open === 'number' ? open : 0);
+          })
+          .catch(() => {
+            if (!cancelled) setDataError('네트워크 오류');
+          })
+          .finally(() => {
+            if (cancelled) return;
+            setUsersLoading(false);
+            setRecentOrdersLoading(false);
+            setExamUploadsLoading(false);
+          });
       })
       .catch(() => router.replace('/admin/login'))
       .finally(() => {
@@ -894,7 +953,7 @@ export default function AdminDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, fetchUsers, fetchOrders, fetchStats, fetchExamUploads]);
+  }, [router, applyUsers, applyOrders, applyStats, applyPendingApplications, applyExamUploads]);
 
   /* 설정 화면에서만 쓰는 값들 — 대시보드를 열 때 같이 부르면 라우트 2개를 괜히 더 깨운다. */
   useEffect(() => {
