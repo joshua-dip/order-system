@@ -21,6 +21,7 @@ import {
   FREE_VARIANT_TYPES,
   isFreeVariantType,
 } from '@/lib/variant-pricing';
+import { fetchAuthMe } from '@/lib/auth-me-cache';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -186,8 +187,7 @@ const QuestionSettings = ({
   }, []);
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then((r) => r.json())
+    fetchAuthMe()
       .then((d) => {
         const u = d?.user;
         setLoggedIn(!!u);

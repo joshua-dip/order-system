@@ -7,6 +7,7 @@ import HomeNoticeModal from './HomeNoticeModal';
 import HomeNoticeBar from './HomeNoticeBar';
 import { OrderHubCard, type OrderHubCardProps } from './OrderHubCard';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
+import { fetchAuthMe } from '@/lib/auth-me-cache';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
@@ -381,8 +382,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const [byokGateOpen, setByokGateOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then((res) => res.json())
+    fetchAuthMe()
       .then((data) => {
         if (data?.user) {
           setUser({

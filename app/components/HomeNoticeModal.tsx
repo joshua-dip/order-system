@@ -10,6 +10,7 @@ import {
   dismissHomeNoticeForTodayKst,
   type HomeNoticeAudience,
 } from '@/lib/home-notice-dismiss';
+import { fetchAuthMe } from '@/lib/auth-me-cache';
 
 /** 문의용 카카오톡 오픈채팅 (사이트 전역에서 쓰는 링크와 동일) */
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -38,8 +39,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
   // ② auth/me 로 보정 — 캐시가 없거나(첫 방문) 만료된 경우만 값이 달라진다.
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then((r) => r.json())
+    fetchAuthMe()
       .then((d) => {
         if (!cancelled) setAudience(d?.user ? 'member' : 'guest');
       })

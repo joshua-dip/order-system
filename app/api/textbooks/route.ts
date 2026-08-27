@@ -143,6 +143,15 @@ export async function GET(request: NextRequest) {
     let data = await readMergedConvertedData();
     data = await reconcileTextbookTreesWithPassages(data);
     data = await mergeSchoolTextbooksIfPermitted(request, data);
+
+    /* 교재 **목록** 화면은 이름만 있으면 된다. 강·번호 트리까지 통째로 내리면
+       124KB 인데 이름만 추리면 1KB 다(88배). 목록이 뜨기까지 이걸 기다리느라
+       느려서, 이름만 받는 모드를 둔다. 강·번호는 교재를 고른 뒤에 받으면 된다.
+       값은 자리만 채운다 — 호출부는 Object.keys 로만 쓴다. */
+    if (request.nextUrl.searchParams.get('namesOnly') === '1') {
+      const names = Object.fromEntries(Object.keys(data).map((k) => [k, 1]));
+      return NextResponse.json(names, { headers: { 'Cache-Control': 'no-store' } });
+    }
     if (request.nextUrl.searchParams.get('vocabularyEnrich') === '1') {
       data = await enrichTextbooksForVocabularyList(data);
     }

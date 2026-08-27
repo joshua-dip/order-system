@@ -11,6 +11,7 @@ import {
 import MembershipApplyModal from './MembershipApplyModal';
 import { MEMBERSHIP_APPLY_OPEN_EVENT } from '@/lib/membership-apply-event';
 import { getAuthUserCache, setAuthUserCache, clearAuthUserCache } from '@/lib/auth-user-cache';
+import { fetchAuthMe } from '@/lib/auth-me-cache';
 
 interface AppBarProps {
   title?: string;
@@ -44,8 +45,7 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
     // 세션 캐시가 있으면 auth/me 응답 전에도 즉시 로그인 상태로 표시(로그인 직후 깜빡임 방지).
     const cached = getAuthUserCache<AuthUser>();
     if (cached) setUser(cached);
-    fetch('/api/auth/me')
-      .then((res) => res.json())
+    fetchAuthMe()
       .then((data) => {
         if (data.user) {
           setUser(data.user);

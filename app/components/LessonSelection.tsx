@@ -8,6 +8,7 @@ import { useTextbookLinks } from '@/lib/useTextbookLinks';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS, isVariantMockExamTextbookKey } from '@/lib/variant-textbooks';
 import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
+import { fetchAuthMe } from '@/lib/auth-me-cache';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -147,7 +148,15 @@ interface TextbookStructure {
 }
 
 const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbookSelect, flow }: LessonSelectionProps) => {
-  const { data: textbooksData, loading: dataLoading, error: dataError } = useTextbooksData();
+  /* 목록 화면은 교재 **이름**만 있으면 된다(1KB). 강·번호 트리(124KB)는 교재를 고른
+     뒤에야 쓰므로 그때 받는다. 예전엔 목록을 그리려고 전체 트리를 기다려서,
+     동시 요청까지 겹치면 목록이 뜨기까지 1.9초가 걸렸다. */
+  const isListStep = selectedTextbook === '부교재_목록' || selectedTextbook === '교과서_목록' || !selectedTextbook;
+  const { data: namesData, loading: namesLoading, error: namesError } = useTextbooksData({ namesOnly: true });
+  const { data: fullData, loading: fullLoading, error: fullError } = useTextbooksData({ enabled: !isListStep });
+  const textbooksData = isListStep ? namesData : fullData;
+  const dataLoading = isListStep ? namesLoading : fullLoading;
+  const dataError = isListStep ? namesError : fullError;
   const { links: textbookLinks } = useTextbookLinks();
   const [defaultTextbooks, setDefaultTextbooks] = useState<string[]>([]);
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
@@ -177,8 +186,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [solbookLoaded, setSolbookLoaded] = useState(false);
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then((res) => res.json())
+    fetchAuthMe()
       .then((data) => {
         const u = data?.user;
         if (u?.role === 'admin') {
@@ -267,7 +275,10 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
 
         // 부교재 목록: 관리자가 설정한 기본 노출 교재만 표시 (비회원 포함). 미설정 시 전체 노출.
         if (selectedTextbook === '부교재_목록') {
-          if (!memberPrefsLoaded || !defaultTextbooksLoaded || !solbookLoaded) {
+          /* 쏠북(solbook)은 기다리지 않는다 — 목록에 배지용 키를 더하고 교과서를 빼는
+             보정일 뿐이라, 도착하면 이 effect 가 다시 돌아 목록을 고쳐 그린다.
+             예전엔 이것까지 기다리느라 목록이 1초 가까이 늦게 떴다. */
+          if (!memberPrefsLoaded || !defaultTextbooksLoaded) {
             setTextbooks([]);
             setFilteredTextbooks([]);
             setShowTextbookList(true);
@@ -450,7 +461,11 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     );
   };
 
-  const prefsReady = memberPrefsLoaded && defaultTextbooksLoaded && solbookLoaded;
+  /* 「불러오는 중」을 걷는 조건 — 쏠북은 빼 둔다. 목록을 그리는 데 꼭 필요한 건
+     회원설정과 기본 노출 교재뿐이고, 쏠북은 도착하면 목록이 다시 계산된다.
+     교과서 목록(flow=gyogwaseo)은 쏠북 구성 자체가 화면의 내용이라 계속 기다린다. */
+  const prefsReady =
+    memberPrefsLoaded && defaultTextbooksLoaded && (selectedTextbook !== '교과서_목록' || solbookLoaded);
   const listMode교과서 = showTextbookList && selectedTextbook === '교과서_목록';
   const gyogwaseoSolbookStep = flow === 'gyogwaseo' && listMode교과서 && gyogwaseoStep === 'checkSolbook' && Boolean(gyogwaseoChosenKey);
 

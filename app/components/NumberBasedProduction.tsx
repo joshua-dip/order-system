@@ -5,6 +5,7 @@ import AppBar from './AppBar';
 import mockExamsData from '../data/mock-exams.json';
 import type { OrderGenerateHandler } from './MockExamSettings';
 import { VARIANT_PRICE } from '@/lib/variant-pricing';
+import { fetchAuthMe } from '@/lib/auth-me-cache';
 
 interface NumberBasedProductionProps {
   onBack: () => void;
@@ -38,8 +39,7 @@ const NumberBasedProduction = ({ onBack, onOrderGenerate }: NumberBasedProductio
   const orderSubmittingRef = useRef(false);
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then((r) => r.json())
+    fetchAuthMe()
       .then((d) => setIsMember(!!d?.user && d.user.role !== 'admin'))
       .catch(() => setIsMember(false));
   }, []);
