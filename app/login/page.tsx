@@ -7,6 +7,7 @@ import MembershipApplyModal from '@/app/components/MembershipApplyModal';
 import { DEFAULT_APP_BAR_TITLE, SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 import { getSafeUserLoginRedirect } from '@/lib/post-login-redirect';
 import { setAuthUserCache, clearAuthUserCache } from '@/lib/auth-user-cache';
+import { normalizePhoneLoginId } from '@/lib/login-id';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -58,7 +59,9 @@ function LoginForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ loginId, password }),
+        /* 전화번호를 하이픈째 친 경우 숫자만 남겨 보낸다. 서버에도 같은 보정이 있지만
+           여기서 먼저 맞춰 두면 왕복 한 번을 아낀다. 글자가 든 아이디는 그대로 간다. */
+        body: JSON.stringify({ loginId: normalizePhoneLoginId(loginId) ?? loginId, password }),
       });
       const data = await res.json();
       if (!res.ok) {

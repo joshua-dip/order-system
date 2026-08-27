@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { comparePassword, createToken, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
+import { normalizePhoneLoginId } from '@/lib/login-id';
 import { buildAuthUserPayload } from '@/lib/auth-user-payload';
 
 export async function POST(request: NextRequest) {
@@ -28,7 +29,14 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getDb('gomijoshua');
-    const user = await db.collection('users').findOne({ loginId });
+    /* 입력 그대로 먼저 찾는다 — 글자가 든 아이디(admin 등)는 여기서 끝난다. */
+    let user = await db.collection('users').findOne({ loginId });
+    if (!user) {
+      /* 못 찾았을 때만, 전화번호를 하이픈째 친 경우를 숫자만 남겨 한 번 더 찾는다.
+         DB 아이디는 전부 하이픈 없이 저장돼 있어 이게 없으면 010-1234-5678 은 100% 실패한다. */
+      const digits = normalizePhoneLoginId(loginId);
+      if (digits) user = await db.collection('users').findOne({ loginId: digits });
+    }
     if (!user?.passwordHash) {
       return NextResponse.json(
         { error: '아이디 또는 비밀번호가 올바르지 않습니다.' },
