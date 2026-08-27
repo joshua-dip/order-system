@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import AdminSidebar from '../_components/AdminSidebar';
 import PassagePickerModal, { PassageItem } from '../_components/PassagePickerModal';
 import { essayDifficultyAppendixTable, ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED } from '@/lib/essay-generator-difficulty-appendix';
-import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
+import { ESSAY_MEANING_EXAM_TYPE, ESSAY_MAIN_IDEA_EXAM_TYPE } from '@/app/data/essay-categories';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 // ── 인쇄 보정 CSS (기존 HTML에 오래된 CSS가 있을 때 최신 규칙 덮어쓰기) ──────────
@@ -2503,19 +2503,74 @@ function CoveragePanel({
 
 // ── 메인 페이지 ────────────────────────────────────────────────────────────────
 
-export type EssayExamTypeKey = '배열형' | typeof ESSAY_MEANING_EXAM_TYPE;
+export type EssayExamTypeKey =
+  | '배열형'
+  | typeof ESSAY_MEANING_EXAM_TYPE
+  | typeof ESSAY_MAIN_IDEA_EXAM_TYPE;
+
+/**
+ * 유형별로 달라지는 것만 모아 둔 표.
+ *
+ * 예전엔 `isMeaningType ? A : B` 삼항이 화면 곳곳에 흩어져 있었다. 유형이 둘일 땐
+ * 그래도 됐지만 셋이 되는 순간 「글의의미가 아니면 전부 배열형」이 되어 새 유형이
+ * 배열형 문구·명령어를 물려받는다. 그래서 분기 대신 유형별 값을 여기서 찾아 쓴다.
+ */
+export type EssayExamTypeSpec = {
+  /** 화면에 쓰는 짧은 이름 */
+  label: string;
+  /** localStorage 키 접미사 — 유형별로 제목이 섞이지 않게 */
+  storageSuffix: string;
+  /** 이 유형이 운영하는 난도(하나뿐이면 그 하나로 고정) */
+  difficulties: ReadonlyArray<'최고난도' | '고난도' | '중난도' | '기본난도'>;
+  /** 작성 규칙 문서 (assets/exam_kit/) */
+  promptFile: string;
+  /** cc:essay 에 넘길 --examType 인자. 배열형은 인자 없음(기본값). */
+  cliExamType?: string;
+  /** 화면 설명 문구 — "…문제 자동 생성" 앞에 붙는 말 */
+  blurb: string;
+};
+
+export const ESSAY_EXAM_TYPE_SPECS: Record<EssayExamTypeKey, EssayExamTypeSpec> = {
+  배열형: {
+    label: '조건영작배열',
+    storageSuffix: '',
+    difficulties: ['기본난도', '중난도', '고난도', '최고난도'],
+    promptFile: 'generation_prompt.md',
+    blurb: '배열 쓰기(서·논술형)',
+  },
+  [ESSAY_MEANING_EXAM_TYPE]: {
+    label: '글의 의미 서술형',
+    storageSuffix: '_meaning',
+    /* 양상·영향 2문항·우리말 직역 — 기본난도 하나로만 운영한다. */
+    difficulties: ['기본난도'],
+    promptFile: 'generation_prompt_meaning.md',
+    cliExamType: ESSAY_MEANING_EXAM_TYPE,
+    blurb: '글의 의미(함의) 서술형',
+  },
+  [ESSAY_MAIN_IDEA_EXAM_TYPE]: {
+    label: '요지 조건영작배열',
+    storageSuffix: '_main_idea',
+    /* <보기> 단어를 순서대로 써서 요지를 한 문장으로 — 한 지문 1문항, 난도 하나. */
+    difficulties: ['기본난도'],
+    promptFile: 'generation_prompt_main_idea.md',
+    cliExamType: ESSAY_MAIN_IDEA_EXAM_TYPE,
+    blurb: '요지 한 문장 영작(<보기> 순서 배열)',
+  },
+};
 
 /**
  * 서술형 출제기 공용 클라이언트 — 유형(examType)은 라우트가 lockedExamType 으로 고정한다.
- *   /admin/essay-generator          → 배열·영작형 (page.tsx)
- *   /admin/essay-generator/meaning  → 글의의미서술형 (meaning/page.tsx)
+ *   /admin/essay-generator            → 배열·영작형 (page.tsx)
+ *   /admin/essay-generator/meaning    → 글의의미서술형 (meaning/page.tsx)
+ *   /admin/essay-generator/main-idea  → 일반요지요약형 (main-idea/page.tsx)
  */
 export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedExamType?: EssayExamTypeKey }) {
   const router = useRouter();
   const [adminLoginId, setAdminLoginId] = useState('');
 
   // 제목 persist 는 라우트(유형)별로 분리 — 배열형 제목이 글의의미 라우트로 새지 않게.
-  const EXAM_TITLE_KEY = `essay_generator_exam_title${lockedExamType === ESSAY_MEANING_EXAM_TYPE ? '_meaning' : ''}`;
+  const typeSpec = ESSAY_EXAM_TYPE_SPECS[lockedExamType];
+  const EXAM_TITLE_KEY = `essay_generator_exam_title${typeSpec.storageSuffix}`;
   const SAVE_FOLDER_KEY = 'essay_generator_save_folder';
   const SYSTEM_PROMPT_KEY = 'essay_generator_system_prompt';
   /** localStorage는 mount 후 복원 — 초기값은 서버·클라이언트 동일해야 hydration 일치 */
@@ -2528,11 +2583,18 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
   const [sentenceListExpanded, setSentenceListExpanded] = useState(false);
   // 글의 의미 서술형은 기본난도(양상·영향 2문항·우리말 직역) 하나로만 운영.
   const [difficulty, setDifficulty] = useState<'최고난도' | '고난도' | '중난도' | '기본난도'>(
-    lockedExamType === ESSAY_MEANING_EXAM_TYPE ? '기본난도' : '중난도',
+    /* 난도가 하나뿐인 유형은 그 하나로, 배열형은 종전대로 중난도에서 시작한다. */
+    ESSAY_EXAM_TYPE_SPECS[lockedExamType].difficulties.length === 1
+      ? ESSAY_EXAM_TYPE_SPECS[lockedExamType].difficulties[0]
+      : '중난도',
   );
   /** 출제 유형 — 라우트에서 고정('배열형' | '글의의미서술형'). 명령어·부록 분기에 사용. */
   const examType = lockedExamType;
   const isMeaningType = examType === ESSAY_MEANING_EXAM_TYPE;
+  /** 난도를 하나만 운영하는 유형 — 한 건만 만들고 save-all 대신 save 를 쓴다. */
+  const isSingleDraftType = typeSpec.difficulties.length === 1;
+  /** cc:essay 에 붙일 --examType 인자. 배열형은 기본값이라 인자가 없다. */
+  const cliExamTypeArg = typeSpec.cliExamType ? ` --examType "${typeSpec.cliExamType}"` : '';
   /** 글의의미 표준 형식: 「양상·영향 단서 문장 찾아 직역」(한 지문 2문항, 우리말 직역). 기본 ON. */
   const [meaningClueMode, setMeaningClueMode] = useState(true);
   const [questionNumber, setQuestionNumber] = useState('서·논술형');
@@ -3437,7 +3499,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                 {/* 1 */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-bold text-white">1. 부족 지문 확인 (선택)</h4>
-                  <CmdBlock label="shortage" cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}${isMeaningType ? ` --examType "${ESSAY_MEANING_EXAM_TYPE}"` : ''}`} />
+                  <CmdBlock label="shortage" cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}${cliExamTypeArg}`} />
                 </div>
 
                 {/* 2 */}
@@ -3612,7 +3674,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                   <div className="space-y-1.5">
                     <p className="text-xs font-semibold text-emerald-300">{isMeaningType ? '② draft 가 이미 있을 때 — save 단독 호출' : '② draft 4 개가 이미 있을 때 — save-all 단독 호출'}</p>
                     <CmdBlock
-                      label={isMeaningType ? 'save' : 'save-all'}
+                      label={isSingleDraftType ? 'save' : 'save-all'}
                       cmd={isMeaningType
                         ? `npm run cc:essay -- save --json ${selectedPassageInfo ? `.essay-drafts/${sk.replace(/[^A-Za-z0-9가-힣]/g, '_')}_basic.json` : '<basic.json>'} [--dry-run] [--force]`
                         : `npm run cc:essay -- save-all ${
@@ -3744,7 +3806,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     <p className="text-xs font-semibold text-sky-300">① shortage 실행 → 부족 지문 목록 확인</p>
                     <CmdBlock
                       label="batch-shortage"
-                      cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}${isMeaningType ? ` --examType "${ESSAY_MEANING_EXAM_TYPE}"` : ''}`}
+                      cmd={`npm run cc:essay -- shortage --textbook "${tb}" --required 1 --difficulty ${difficulty}${cliExamTypeArg}`}
                     />
                     <p className="text-xs text-slate-400 leading-relaxed">
                       출력의 <code className="text-slate-300">shortage[]</code> 배열에 처리해야 할 지문 목록(passage_id 포함)이 나옵니다.
@@ -3815,7 +3877,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
           <div className="shrink-0 px-6 pt-6 pb-4 border-b border-slate-700 space-y-3">
             <div className="min-w-0">
               <h2 className="text-xl font-bold text-white tracking-tight whitespace-nowrap">서술형 출제기</h2>
-              <p className="text-slate-400 text-sm mt-0.5">{isMeaningType ? '글의 의미(함의) 서술형 문제 자동 생성' : '배열 쓰기(서·논술형) 문제 자동 생성'}</p>
+              <p className="text-slate-400 text-sm mt-0.5">{`${typeSpec.blurb} 문제 자동 생성`}</p>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               <button
@@ -3974,7 +4036,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                     : 'bg-slate-700/40 text-slate-200 border-slate-600'
                 }`}
               >
-                {isMeaningType ? '글의 의미 서술형' : '배열·영작형'}
+                {typeSpec.label}
               </div>
               {isMeaningType && (
                 <p className="mt-1.5 text-[11px] text-sky-300/90 leading-snug">
@@ -3993,7 +4055,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
                   { key: '중난도' as const, label: '중난도', activeCls: 'bg-amber-600 text-white border-amber-600' },
                   { key: '고난도' as const, label: '고난도', activeCls: 'bg-red-700 text-white border-red-700' },
                   { key: '최고난도' as const, label: '최고난도', activeCls: 'bg-purple-700 text-white border-purple-700' },
-                ]).filter(({ key }) => !isMeaningType || key === '기본난도').map(({ key, label, activeCls }) => (
+                ]).filter(({ key }) => typeSpec.difficulties.includes(key)).map(({ key, label, activeCls }) => (
                   <button
                     key={key}
                     type="button"
@@ -4510,7 +4572,7 @@ export function EssayGeneratorClient({ lockedExamType = '배열형' }: { lockedE
             {!examData && !loading && (
               <div className="flex flex-col items-center justify-center h-full text-slate-500">
               <p className="text-base font-medium text-slate-400">지문을 입력하고 생성 버튼을 누르세요</p>
-                <p className="text-sm mt-1">{isMeaningType ? '글의 의미(함의) 서술형 문제와 해설이 자동 생성됩니다' : '배열 쓰기(서·논술형) 문제와 해설이 자동 생성됩니다'}</p>
+                <p className="text-sm mt-1">{`${typeSpec.blurb} 문제와 해설이 자동 생성됩니다`}</p>
               </div>
             )}
 

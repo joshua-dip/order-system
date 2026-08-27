@@ -1,19 +1,22 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
-import { ESSAY_MEANING_EXAM_TYPE } from '@/app/data/essay-categories';
+import { ESSAY_SPECIAL_EXAM_TYPES } from '@/app/data/essay-categories';
 
 const COL = 'essay_exams';
 
 /**
  * 유형(examType) 필터 — examType 은 data.meta.examType 에만 저장된다(별도 top-level 없음).
- * - '글의의미서술형': 글의의미만.
- * - 그 외(배열형 등): 글의의미 제외 ($ne 는 examType 누락 레거시 문서도 포함).
+ * - 전용 유형(ESSAY_SPECIAL_EXAM_TYPES): 그 유형만.
+ * - 배열형(기본): 전용 유형을 모두 제외 ($nin 은 examType 누락 레거시 문서도 포함한다).
  * - 미지정: 전체.
+ *
+ * 예전엔 「글의의미냐 아니냐」 이분법이었다. 유형이 셋이 되면서 배열형 목록에 새 유형이
+ * 섞여 들어가므로, 제외 목록을 명시적으로 든다.
  */
 export function examTypeMatch(examType?: string): Record<string, unknown> {
   if (!examType) return {};
-  if (examType === ESSAY_MEANING_EXAM_TYPE) return { 'data.meta.examType': ESSAY_MEANING_EXAM_TYPE };
-  return { 'data.meta.examType': { $ne: ESSAY_MEANING_EXAM_TYPE } };
+  if (ESSAY_SPECIAL_EXAM_TYPES.includes(examType)) return { 'data.meta.examType': examType };
+  return { 'data.meta.examType': { $nin: [...ESSAY_SPECIAL_EXAM_TYPES] } };
 }
 
 export interface EssayExamDoc {

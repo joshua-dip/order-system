@@ -19,6 +19,24 @@ export type EssayCategoryConfig = {
  */
 export const ESSAY_MEANING_EXAM_TYPE = '글의의미서술형';
 
+/**
+ * ExamData.meta.examType 식별값 — "요지 한 문장 영작(조건·배열)".
+ * <보기> 단어를 순서대로 모두 써서 글의 요지를 한 문장으로 영작하는 학교 기출 형태.
+ * 주문 카테고리 대분류와 같은 값을 쓴다(둘이 갈리면 주문과 출제가 어긋난다).
+ */
+export const ESSAY_MAIN_IDEA_EXAM_TYPE = '일반요지요약형';
+
+/**
+ * 기본 배열형이 **아닌**, examType 으로 구분되는 유형들.
+ *
+ * 목록 필터가 예전엔 「글의의미냐 아니냐」 이분법이라, 유형이 셋이 되면
+ * 배열형 목록에 요지형이 섞여 들어간다. 새 유형을 만들 때는 여기에 반드시 추가할 것.
+ */
+export const ESSAY_SPECIAL_EXAM_TYPES: readonly string[] = [
+  ESSAY_MEANING_EXAM_TYPE,
+  ESSAY_MAIN_IDEA_EXAM_TYPE,
+];
+
 export const ESSAY_CATEGORIES: EssayCategoryConfig[] = [
   {
     대분류: '빈칸재배열형',
