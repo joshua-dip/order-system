@@ -856,19 +856,49 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    // 대시보드 데이터는 auth/me 응답을 기다리지 않고 즉시 병렬 시작 —
-    // (기존엔 auth/me 이후에 시작해 대기 시간이 두 배로 늘었음. 각 API 는 서버에서
-    //  admin 을 재검증하므로 비관리자는 403 으로 무해하게 실패하고 아래 redirect 가 처리)
-    fetchUsers();
-    fetchOrders();
-    fetchStats();
-    fetchExamUploads();
-    fetchEmailDrafts();
-    // Q&A 미답변 질문 수 — 놓치지 않게 대시보드 배너·사이드바 배지로 노출
-    fetch('/api/qna/admin/recent?status=open&limit=1', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => setQnaOpenCount(typeof d?.openCount === 'number' ? d.openCount : 0))
-      .catch(() => setQnaOpenCount(0));
+    let cancelled = false;
+    /* 관리자 확인을 **먼저** 끝내고, 그 다음에 대시보드 데이터를 부른다.
+     *
+     * 예전엔 둘을 동시에 쐈다. 서버에 여력이 있을 땐 그게 빨랐지만 Amplify 는
+     * API 라우트마다 따로 깨어나서, 한 번에 여러 개를 처음 깨우면 서로 밀린다
+     * (실측: 서로 다른 15개 동시 호출이 차가울 때 16.2초, 데워진 뒤 0.8초).
+     * 게다가 비로그인·비관리자 방문자까지 8개를 깨우고 401 을 받고 있었다.
+     * 먼저 한 개만 깨우고 통과한 뒤에 나머지를 부르면 그 낭비가 사라진다.
+     */
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        setUser(data.user);
+        if (!data.user || data.user.role !== 'admin') {
+          router.replace('/admin/login');
+          return;
+        }
+
+        // 여기부터는 관리자가 확인된 뒤 — 첫 화면(대시보드)에 실제로 보이는 것만 부른다.
+        fetchUsers();
+        fetchOrders();
+        fetchStats();
+        fetchExamUploads();
+        fetchEmailDrafts();
+        // Q&A 미답변 질문 수 — 놓치지 않게 대시보드 배너·사이드바 배지로 노출
+        fetch('/api/qna/admin/recent?status=open&limit=1', { credentials: 'include' })
+          .then((r) => r.json())
+          .then((d) => setQnaOpenCount(typeof d?.openCount === 'number' ? d.openCount : 0))
+          .catch(() => setQnaOpenCount(0));
+      })
+      .catch(() => router.replace('/admin/login'))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router, fetchUsers, fetchOrders, fetchStats, fetchExamUploads]);
+
+  /* 설정 화면에서만 쓰는 값들 — 대시보드를 열 때 같이 부르면 라우트 2개를 괜히 더 깨운다. */
+  useEffect(() => {
+    if (section !== 'settings') return;
     fetch('/api/admin/settings/default-textbooks', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => setDefaultTextbooks(Array.isArray(d?.textbookKeys) ? d.textbookKeys : []))
@@ -888,23 +918,7 @@ export default function AdminDashboardPage() {
         );
       })
       .catch(() => {});
-
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => {
-        setUser(data.user);
-        if (!data.user) {
-          router.replace('/admin/login');
-          return;
-        }
-        if (data.user.role !== 'admin') {
-          router.replace('/admin/login');
-          return;
-        }
-      })
-      .catch(() => router.replace('/admin/login'))
-      .finally(() => setLoading(false));
-  }, [router, fetchUsers, fetchOrders, fetchStats, fetchExamUploads]);
+  }, [section]);
 
   useEffect(() => {
     if (section === 'essayTypes' || section === 'exams') fetchEssayTypes();
