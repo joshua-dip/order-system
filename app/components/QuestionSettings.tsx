@@ -661,9 +661,12 @@ const QuestionSettings = ({
                         : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
                   }`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  {/* 유형 이름이 길면 줄바꿈시키고, 「샘플」 버튼은 shrink-0 로 자리를 지킨다.
+                      예전엔 이름에 whitespace-nowrap 이 걸려 있어 3열로 좁아지면 글자가 카드 밖으로
+                      넘쳐 샘플 버튼 아래로 깔렸다(100% 배율에서 유형명이 안 보임). */}
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <label
-                      className={`flex items-center space-x-3 flex-1 min-w-0 ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      className={`flex items-center gap-x-3 min-w-0 ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <input
                         type="checkbox"
@@ -672,7 +675,7 @@ const QuestionSettings = ({
                         onChange={() => handleTypeChange(type)}
                         className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0 disabled:cursor-not-allowed"
                       />
-                      <span className={`font-medium whitespace-nowrap ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
+                      <span className={`font-medium break-keep ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
                       {isFreeVariantType(type) && !locked && (
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">무료</span>
                       )}
@@ -1205,7 +1208,7 @@ ${solbookRetailLine}
                     lg 에서 바깥 레이아웃이 2단(왼쪽 유형 / 오른쪽 미리보기)으로 갈라져 이 칸이 절반으로 좁아진다.
                     그 구간만 2열로 낮추고, xl 부터 다시 3열로 돌린다. 안 그러면 「무관한문장」이 줄바꿈된다. */}
                 {/* 유료 유형 */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
                   {paidStandardTypes.map(renderStandardTypeCard)}
                   {/* 남는 칸 — 원하는 유형이 없을 때 카톡으로 문의 */}
                   <a
@@ -1228,7 +1231,7 @@ ${solbookRetailLine}
                       {hasPaidType(selectedTypes) ? '추가 비용 없이 함께 드립니다' : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
                     {freeStandardTypes.map(renderStandardTypeCard)}
                   </div>
                 </div>
@@ -1239,7 +1242,7 @@ ${solbookRetailLine}
                     <span className="tier-badge-breathe text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">고난도</span>
                     <span className="text-xs text-gray-500">더 높은 변별력의 문항 유형</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
                     {advancedTypes.map((type) => (
                       <div
                         key={type}
@@ -1249,15 +1252,15 @@ ${solbookRetailLine}
                             : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <label className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                          <label className="flex items-center gap-x-3 cursor-pointer min-w-0">
                             <input
                               type="checkbox"
                               checked={selectedTypes.includes(type)}
                               onChange={() => handleTypeChange(type)}
                               className="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-400 shrink-0"
                             />
-                            <span className="font-medium text-black whitespace-nowrap">{type}</span>
+                            <span className="font-medium text-black break-keep">{type}</span>
                           </label>
                           <button
                             type="button"
