@@ -8,6 +8,14 @@ import {
   variantVolumeDiscountRate,
   VARIANT_PRICE,
 } from '@/lib/variant-pricing';
+import { isFreeVariantType } from '@/lib/variant-pricing';
+import {
+  HWP_STORAGE_OPTIONS,
+  DEFAULT_HWP_STORAGE_MODES_MOCK,
+  formatHwpStorageSummary,
+  sanitizeHwpStorageModes,
+  type HwpStorageModeKey,
+} from '@/lib/variant-order-options';
 export type OrderGenerateExtras = { orderMeta?: Record<string, unknown>; pointsUsed?: number };
 
 export type OrderGenerateHandler = (
@@ -34,6 +42,10 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [email, setEmail] = useState<string>('');
+  /* 저장 옵션·기납품 제외 — 부교재 주문서와 같은 값을 orderMeta 에 실어야
+     제작 job 이 「강별」로만 폴백하지 않는다. */
+  const [hwpStorageModes, setHwpStorageModes] = useState<HwpStorageModeKey[]>(DEFAULT_HWP_STORAGE_MODES_MOCK);
+  const [excludeDelivered, setExcludeDelivered] = useState<boolean>(false);
   const [mockExamsData, setMockExamsData] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [questionSamples, setQuestionSamples] = useState<Record<string, {blogUrl: string, description: string, sampleTitle: string}>>({});
@@ -138,6 +150,28 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   }, []);
 
   const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '어휘', '순서', '삽입', '무관한문장'];
+  /** 저장 옵션 기본값 — 이 브라우저에 기억해 두고 다음 주문에 그대로 쓴다. */
+  const MV_DEFAULTS_KEY = 'mv-detail-option-defaults-v1';
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(MV_DEFAULTS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { hwpStorageModes?: unknown; excludeDelivered?: unknown };
+      const saved = sanitizeHwpStorageModes(parsed.hwpStorageModes);
+      if (saved.length > 0) setHwpStorageModes(saved);
+      if (typeof parsed.excludeDelivered === 'boolean') setExcludeDelivered(parsed.excludeDelivered);
+    } catch {
+      /* 저장값이 깨졌으면 기본값 그대로 간다 */
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(MV_DEFAULTS_KEY, JSON.stringify({ hwpStorageModes, excludeDelivered }));
+    } catch {
+      /* 사파리 비공개 모드 등 — 저장 못 해도 주문에는 지장 없다 */
+    }
+  }, [hwpStorageModes, excludeDelivered]);
+
   const advancedTypes = ['삽입-고난도', '어법-고난도', '빈칸-고난도', '어휘-고난도', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도', '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도'];
   const advancedTypeDesc: Record<string, string> = {
     '삽입-고난도': '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항',
@@ -168,7 +202,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
           : type === '삽입'
             ? orderInsertExplanation.삽입
             : true;
-      basePrice += n * variantUnitPrice(type, { withExplanation });
+      basePrice += isFreeVariantType(type) ? 0 : n * variantUnitPrice(type, { withExplanation });
     }
     const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
     const discountRate = variantVolumeDiscountRate(totalQuestions);
@@ -241,12 +275,19 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     }
   };
 
+  /* 무료 7유형(주제·제목·주장·일치·불일치·순서·삽입)은 홍보용이라 단독 주문은 막는다.
+     유료 유형을 하나라도 골라야 열리고, 유료를 모두 빼면 무료도 함께 꺼진다.
+     부교재 주문서와 같은 규칙이다. */
+  const hasPaidType = (types: string[]) => types.some((t) => !isFreeVariantType(t));
+
   const handleTypeChange = (type: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
+    setSelectedTypes((prev) => {
+      const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
+      if (isFreeVariantType(type) && !prev.includes(type) && !hasPaidType(prev)) {
+        return prev; // 유료 유형이 아직 없으면 무료 유형은 켜지지 않는다
+      }
+      return hasPaidType(next) ? next : next.filter((t) => !isFreeVariantType(t));
+    });
   };
 
   const handleAllTypesToggle = () => {
@@ -350,6 +391,8 @@ ${examDetails}
       orderInsertExplanation,
       questionsPerType,
       email: email.trim(),
+      hwpStorageModes: [...hwpStorageModes],
+      excludeDelivered,
     };
     await Promise.resolve(
       onOrderGenerate(orderText, 'MV', { orderMeta, pointsUsed: pointsUsedAmount || undefined })
@@ -627,26 +670,36 @@ ${examDetails}
                       {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
-                  {/* 기본 유형 */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {standardTypes.map((type) => (
+                  {/* 기본 유형 — 무료 7유형은 유료를 하나 이상 고르기 전까지 잠긴다. */}
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
+                    {standardTypes.map((type) => {
+                      const locked =
+                        isFreeVariantType(type) && !hasPaidType(selectedTypes) && !selectedTypes.includes(type);
+                      return (
                       <div 
                         key={type} 
-                        className={`p-3 border-2 rounded-lg transition-all hover:shadow-md ${
-                          selectedTypes.includes(type)
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-300 hover:border-gray-400'
+                        title={locked ? '유료 유형을 하나 이상 고르면 선택할 수 있어요' : undefined}
+                        className={`p-3 border-2 rounded-lg transition-all ${
+                          locked
+                            ? 'border-gray-200 bg-gray-50 opacity-60'
+                            : selectedTypes.includes(type)
+                              ? 'border-blue-500 bg-blue-50 hover:shadow-md'
+                              : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <label className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                          <label className={`flex items-center gap-x-3 min-w-0 ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                             <input
                               type="checkbox"
                               checked={selectedTypes.includes(type)}
+                              disabled={locked}
                               onChange={() => handleTypeChange(type)}
-                              className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0"
+                              className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0 disabled:cursor-not-allowed"
                             />
-                            <span className="font-medium text-black">{type}</span>
+                            <span className={`font-medium break-keep ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
+                            {isFreeVariantType(type) && !locked && (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">무료</span>
+                            )}
                           </label>
                           {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
                             <div
@@ -706,7 +759,8 @@ ${examDetails}
                           </p>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* 고난도 유형 */}
@@ -793,6 +847,62 @@ ${examDetails}
                   <p className="text-xs text-gray-600 mt-2">
                     완성된 모의고사 자료를 받으실 이메일 주소를 입력해주세요
                   </p>
+                </div>
+
+                {/* 저장 방식 — 부교재 주문서와 같은 옵션.
+                    예전엔 이 항목이 없어 제작 job 이 늘 「강별」 하나로만 폴백했다.
+                    모의고사는 강 개념이 없어 기본값에서 「강별」을 빼고 「번호별」을 켠다. */}
+                <div className="mb-6">
+                  <h4 className="text-lg font-medium mb-1 text-black">파일 저장 방식</h4>
+                  <p className="text-xs text-gray-600 mb-3">
+                    여러 개를 고르면 각각 따로 만들어 드립니다. 현재: <b>{formatHwpStorageSummary(hwpStorageModes)}</b>
+                  </p>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2">
+                    {HWP_STORAGE_OPTIONS.filter((o) => o.key !== 'byChapter').map((o) => {
+                      const on = hwpStorageModes.includes(o.key);
+                      return (
+                        <label
+                          key={o.key}
+                          className={`flex items-start gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                            on ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={on}
+                            onChange={() =>
+                              setHwpStorageModes((prev) =>
+                                prev.includes(o.key) ? prev.filter((k) => k !== o.key) : [...prev, o.key],
+                              )
+                            }
+                            className="form-checkbox h-5 w-5 text-blue-600 rounded shrink-0 mt-0.5"
+                          />
+                          <span className="min-w-0">
+                            <span className="block font-medium text-black break-keep">{o.label}</span>
+                            <span className="block text-[11px] text-gray-500 break-keep">{o.hint}</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 기납품 제외 — 없으면 이미 받은 문항이 또 올 수 있다. */}
+                <div className="mb-6">
+                  <label className="flex items-start gap-2 p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={excludeDelivered}
+                      onChange={(e) => setExcludeDelivered(e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-blue-600 rounded shrink-0 mt-0.5"
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-medium text-black">이미 받은 문항 제외</span>
+                      <span className="block text-[11px] text-gray-500 break-keep">
+                        같은 이메일로 전에 납품된 문항은 빼고 새 문항으로만 채웁니다
+                      </span>
+                    </span>
+                  </label>
                 </div>
               </div>
             </div>

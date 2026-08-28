@@ -22,27 +22,17 @@ import {
   isFreeVariantType,
 } from '@/lib/variant-pricing';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
+export type { HwpStorageModeKey } from '@/lib/variant-order-options';
+import {
+  HWP_STORAGE_OPTIONS,
+  DEFAULT_HWP_STORAGE_MODES,
+  formatHwpStorageSummary,
+  sanitizeHwpStorageModes,
+  type HwpStorageModeKey,
+} from '@/lib/variant-order-options';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
-
-/** HWP 결과물 저장·분할 방식 (주문 미리보기에서 복수 선택) */
-export type HwpStorageModeKey = 'bySourceNumber' | 'byCategory' | 'byChapter' | 'byRound' | 'singleFull' | 'fullRandomPair';
-
-/* 「전문항랜덤」은 아래 「문항 순서 섞기」와 이름이 거의 같아 어느 쪽을 켠 건지 알 수 없었다.
-   여기는 *파일을 몇 벌 만드는가*, 아래는 *순서를 섞는가* 라서 이름을 그렇게 갈랐다. */
-const HWP_STORAGE_OPTIONS: readonly { key: HwpStorageModeKey; label: string; hint: string }[] = [
-  { key: 'bySourceNumber', label: '번호별', hint: '번호(Source)마다 파일 나눔' },
-  { key: 'byCategory', label: '카테고리별', hint: '문제 유형마다 파일 나눔' },
-  { key: 'byChapter', label: '강별', hint: '강(Chapter)마다 파일 나눔' },
-  { key: 'byRound', label: '회차별', hint: '회차마다 파일 나눔' },
-  { key: 'singleFull', label: '통합본', hint: '나눈 파일과 별도로 전체를 한 파일에 담아 드립니다' },
-  { key: 'fullRandomPair', label: '전체 1파일 + 랜덤본', hint: '기본 순서 1벌과 무작위 순서 1벌을 함께 드립니다' },
-] as const;
-
-/* 강별·카테고리별·통합본을 처음부터 켜 둔다. 선생님들이 대부분 이 세 벌을 함께 쓰셔서
-   매번 다시 고르는 수고를 덜기 위한 것이고, 필요 없으면 주문서에서 끄면 된다. */
-const DEFAULT_HWP_STORAGE_MODES: HwpStorageModeKey[] = ['byChapter', 'byCategory', 'singleFull'];
 
 /**
  * 결과 문서의 구성. 값은 제작기가 그대로 쓰는 문자열이라 바꾸면 안 된다
@@ -65,10 +55,6 @@ const DETAIL_DEFAULTS_KEY = 'bv-detail-option-defaults-v2';
 /** 옛 키 — 저장 방식 기본값이 강별 하나뿐이던 시절. 아래 useEffect 가 한 번만 이관한다. */
 const DETAIL_DEFAULTS_KEY_V1 = 'bv-detail-option-defaults-v1';
 
-function formatHwpStorageSummary(modes: HwpStorageModeKey[]): string {
-  if (modes.length === 0) return '1파일(기본)';
-  return modes.map((k) => HWP_STORAGE_OPTIONS.find((o) => o.key === k)?.label ?? k).join(' + ');
-}
 
 type VariantTypeSummary = {
   type: string;
