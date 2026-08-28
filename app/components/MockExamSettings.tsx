@@ -59,6 +59,14 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [tempGrade, setTempGrade] = useState<string>('');
   const [tempExam, setTempExam] = useState<string>('');
   const [tempNumbers, setTempNumbers] = useState<string[]>([]);
+  /* 번호별 지문 첫머리 — 「이 번호가 무슨 지문이더라」에서 막히지 않도록 마우스만 올리면 보여 준다.
+     키는 숫자만 남긴 값("41~42번"·"41-42번" → "4142")이라 표기가 흔들려도 맞는다. */
+  const [numberPreview, setNumberPreview] = useState<Record<string, string>>({});
+  /* 지문 검색 — 「이 지문이 몇 번이더라」를 되짚는 쪽. 번호를 몰라도 담을 수 있다. */
+  const [passageQuery, setPassageQuery] = useState<string>('');
+  const [passageHits, setPassageHits] = useState<{ exam: string; number: string; numberKey: string; snippet: string }[]>([]);
+  const [passageSearching, setPassageSearching] = useState<boolean>(false);
+  const [passageSearchMsg, setPassageSearchMsg] = useState<string>('');
   const [isMember, setIsMember] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
@@ -150,6 +158,31 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   }, []);
 
   const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '어휘', '순서', '삽입', '무관한문장'];
+  useEffect(() => {
+    if (!tempExam) {
+      setNumberPreview({});
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/mock-exam/passages?exam=${encodeURIComponent(tempExam)}`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d: { items?: { numberKey?: string; snippet?: string }[] }) => {
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        for (const it of d.items ?? []) {
+          if (it.numberKey) map[it.numberKey] = String(it.snippet ?? '');
+        }
+        setNumberPreview(map);
+      })
+      /* 미리보기는 거들 뿐이라 실패해도 주문에는 지장이 없다 — 조용히 넘어간다. */
+      .catch(() => {
+        if (!cancelled) setNumberPreview({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tempExam]);
+
   /** 저장 옵션 기본값 — 이 브라우저에 기억해 두고 다음 주문에 그대로 쓴다. */
   const MV_DEFAULTS_KEY = 'mv-detail-option-defaults-v1';
   useEffect(() => {
@@ -225,6 +258,52 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const grades = Object.keys(mockExamsData);
 
   // 모의고사 추가
+  const runPassageSearch = async () => {
+    const q = passageQuery.trim();
+    if (q.length < 2) {
+      setPassageSearchMsg('두 글자 이상 입력해 주세요.');
+      setPassageHits([]);
+      return;
+    }
+    setPassageSearching(true);
+    setPassageSearchMsg('');
+    try {
+      const res = await fetch(`/api/mock-exam/passages?q=${encodeURIComponent(q)}&limit=20`, { credentials: 'include' });
+      const d = (await res.json()) as { items?: typeof passageHits; error?: string };
+      if (!res.ok) {
+        setPassageHits([]);
+        setPassageSearchMsg(d.error || '검색에 실패했습니다.');
+        return;
+      }
+      setPassageHits(d.items ?? []);
+      if ((d.items ?? []).length === 0) setPassageSearchMsg('찾은 지문이 없습니다.');
+    } catch {
+      setPassageHits([]);
+      setPassageSearchMsg('네트워크 오류');
+    } finally {
+      setPassageSearching(false);
+    }
+  };
+
+  /** 검색 결과 한 줄을 그대로 주문에 담는다. 같은 회차가 이미 있으면 번호만 보탠다. */
+  const addPassageHit = (hit: { exam: string; number: string; numberKey: string }) => {
+    /* UI 번호 id 는 '18' · '41-42' 형태다. DB 의 "41~42번" 을 그 형태로 되돌린다. */
+    const digits = hit.numberKey;
+    const id = digits.length > 2 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : digits;
+    /* 학년은 목록에서 역으로 찾는다 — 회차명이 어느 학년에 속하는지 mockExamsData 가 안다. */
+    const grade = Object.keys(mockExamsData).find((g) => (mockExamsData[g] || []).includes(hit.exam)) || '';
+    setExamSelections((prev) => {
+      const at = prev.findIndex((e) => e.exam === hit.exam);
+      if (at >= 0) {
+        if (prev[at].numbers.includes(id)) return prev;   // 이미 담았다
+        const next = [...prev];
+        next[at] = { ...next[at], numbers: [...next[at].numbers, id] };
+        return next;
+      }
+      return [...prev, { id: `${Date.now()}-${id}`, grade, exam: hit.exam, numbers: [id] }];
+    });
+  };
+
   const handleAddExam = () => {
     if (!tempGrade) {
       alert('학년을 선택해주세요.');
@@ -528,6 +607,59 @@ ${examDetails}
                   학년·시험·번호를 고른 뒤 아래 초록 버튼으로 추가하고, 다른 시험도 같은 방식으로 계속 담은 다음 주문서를 만들면 됩니다.
                 </p>
 
+                {/* 지문 검색으로 담기 — 번호를 몰라도 내용으로 찾아 바로 담는다. */}
+                <div className="mb-5 rounded-lg border border-gray-200 p-3">
+                  <h4 className="text-sm font-semibold text-black mb-1">지문 내용으로 찾기</h4>
+                  <p className="text-xs text-gray-500 mb-2">
+                    기억나는 문장·단어를 넣으면 어느 회차 몇 번인지 찾아 바로 담을 수 있어요.
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={passageQuery}
+                      onChange={(e) => setPassageQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          void runPassageSearch();
+                        }
+                      }}
+                      placeholder="예) chocolate cake"
+                      className="flex-1 min-w-0 border-2 border-gray-300 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void runPassageSearch()}
+                      disabled={passageSearching}
+                      className="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 disabled:opacity-50 shrink-0"
+                    >
+                      {passageSearching ? '찾는 중…' : '찾기'}
+                    </button>
+                  </div>
+                  {passageSearchMsg && <p className="text-xs text-gray-500 mt-2">{passageSearchMsg}</p>}
+                  {passageHits.length > 0 && (
+                    <ul className="mt-3 max-h-56 overflow-y-auto divide-y divide-gray-100 border border-gray-100 rounded-lg">
+                      {passageHits.map((hit) => (
+                        <li key={`${hit.exam}-${hit.numberKey}`} className="p-2.5 flex items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-slate-800 break-keep">
+                              {hit.exam} <span className="text-blue-700">{hit.number}</span>
+                            </p>
+                            <p className="text-[11px] text-gray-600 mt-0.5 break-words">{hit.snippet}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => addPassageHit(hit)}
+                            className="px-2.5 py-1 rounded bg-emerald-600 text-white text-[11px] font-semibold hover:bg-emerald-700 shrink-0"
+                          >
+                            담기
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
                 {/* 학년 선택 */}
                 <div className="mb-4">
                   <h4 className="text-lg font-medium text-black mb-3">학년/유형 선택</h4>
@@ -589,6 +721,7 @@ ${examDetails}
                         {examNumbers.map((number) => (
                           <label 
                             key={number.id} 
+                            title={numberPreview[number.id.replace(/\D/g, '')] ?? undefined}
                             className={`flex items-center justify-center p-2 border rounded cursor-pointer transition-all hover:shadow-sm ${
                               tempNumbers.includes(number.id)
                                 ? 'border-blue-500 bg-blue-50 text-blue-800'
