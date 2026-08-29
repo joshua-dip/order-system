@@ -6,6 +6,11 @@ import Link from 'next/link';
 import AdminSidebar from '../../_components/AdminSidebar';
 import { isEbsTextbook } from '@/lib/textbookSort';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
+import {
+  DEFAULT_VARIANT_PRINT_FORMAT,
+  normalizeVariantPrintFormat,
+  type VariantPrintFormat,
+} from '@/lib/variant-print-html';
 
 /* ─── 타입 ─── */
 type TextbooksMode = 'analysis' | 'essay' | 'workbook' | 'variant';
@@ -22,6 +27,7 @@ interface DetailUser {
   canAccessEssay: boolean;
   canOrderSchoolTextbook: boolean;
   myFormatApproved: boolean;
+  variantPrintFormat?: Partial<VariantPrintFormat>;
   allowedTextbooks: string[];
   allowedTextbooksAnalysis?: string[];
   allowedTextbooksEssay?: string[];
@@ -312,6 +318,8 @@ export default function UserDetailPage() {
   const [grantingCoupon, setGrantingCoupon] = useState(false);
 
   /* Dropbox */
+  /* 회원별 인쇄 양식 — 변형문제 PDF 를 뽑을 때 이 값을 따른다. */
+  const [editPrintFormat, setEditPrintFormat] = useState<VariantPrintFormat>(DEFAULT_VARIANT_PRINT_FORMAT);
   const [editDropboxPath, setEditDropboxPath] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [dropboxMsg, setDropboxMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -380,6 +388,7 @@ export default function UserDetailPage() {
       setEditEssay(u.canAccessEssay);
       setEditSchoolTextbook(u.canOrderSchoolTextbook);
       setEditMyFormat(u.myFormatApproved);
+      setEditPrintFormat(normalizeVariantPrintFormat(u.variantPrintFormat));
       setEditDropboxPath(u.dropboxFolderPath);
     } catch {
       setError('불러오는 중 오류가 발생했습니다.');
@@ -801,6 +810,7 @@ export default function UserDetailPage() {
         canAccessEssay: editEssay,
         canOrderSchoolTextbook: editSchoolTextbook,
         myFormatApproved: editMyFormat,
+        variantPrintFormat: editPrintFormat,
         isVip: editIsVip,
         memberType: editMemberType,
         annualMemberSince: editAnnual || null,
@@ -1319,6 +1329,44 @@ export default function UserDetailPage() {
                   <Toggle checked={editEssay} onChange={setEditEssay} label="서술형 메뉴 허용" />
                   <Toggle checked={editSchoolTextbook} onChange={setEditSchoolTextbook} label="교과서 주문 허용" />
                   <Toggle checked={editMyFormat} onChange={setEditMyFormat} label="나만의 양식 승인" />
+                </div>
+              </div>
+
+              {/* 커스텀 양식 — 변형문제 PDF 를 뽑을 때 이 회원에게 적용할 모양 */}
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <SectionTitle>커스텀 양식 (변형문제 PDF)</SectionTitle>
+                <p className="text-xs text-slate-400 mb-3">
+                  이 선생님께 자료를 뽑을 때 쓰는 기본값입니다. 주문마다 다시 고르지 않아도 됩니다.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <Toggle
+                    checked={editPrintFormat.splitByType}
+                    onChange={(v) => setEditPrintFormat((p) => ({ ...p, splitByType: v }))}
+                    label="유형별로 파일 나누기 (글의 순서.pdf · 문장 삽입.pdf …)"
+                  />
+                  <Toggle
+                    checked={editPrintFormat.includeAnswers}
+                    onChange={(v) => setEditPrintFormat((p) => ({ ...p, includeAnswers: v }))}
+                    label="정답·해설을 뒤에 붙이기 (별도 장에서 시작)"
+                  />
+                  <Toggle
+                    checked={editPrintFormat.hardSuffix}
+                    onChange={(v) => setEditPrintFormat((p) => ({ ...p, hardSuffix: v }))}
+                    label="유형명에 「(고난도)」 표기"
+                  />
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">
+                      머리말 표기 — 비우면 아무것도 안 찍습니다 (학원 이름을 넣을 수 있어요)
+                    </label>
+                    <input
+                      type="text"
+                      value={editPrintFormat.brand}
+                      onChange={(e) => setEditPrintFormat((p) => ({ ...p, brand: e.target.value }))}
+                      placeholder="(표기 없음)"
+                      maxLength={60}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
                 </div>
               </div>
 

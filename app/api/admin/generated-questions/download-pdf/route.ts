@@ -81,15 +81,27 @@ async function queryDocs(sp: URLSearchParams) {
   const difficulty = sp.get('difficulty')?.trim() || '';
   const status = sp.get('status')?.trim() || '';
   const passageId = sp.get('passage_id')?.trim() || '';
+  /* 주문 한 건만 뽑을 때 쓴다. 교재 전체(수천 문항)가 아니라 그 주문의 번호만.
+     orderMeta.selectedLessons 값이 그대로 source 라 콤마로 이어 넘기면 된다. */
+  const sources = (sp.get('sources') || '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const types = (sp.get('types') || '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
   const freeRaw = sp.get('free')?.trim().toLowerCase() || '';
   const free: 'only' | 'paid' | '' = freeRaw === 'only' ? 'only' : freeRaw === 'paid' ? 'paid' : '';
 
   const filter: Record<string, unknown> = {};
   if (textbook) filter.textbook = textbook;
   if (type) filter.type = type;
+  else if (types.length > 0) filter.type = { $in: types };
   if (difficulty) filter.difficulty = difficulty;
   if (status) filter.status = status;
   if (passageId) filter.passage_id = passageId;
+  if (sources.length > 0) filter.source = { $in: sources };
   if (free === 'only') filter.isFree = true;
   else if (free === 'paid') filter.isFree = { $ne: true };
 
@@ -98,12 +110,13 @@ async function queryDocs(sp: URLSearchParams) {
     .collection('generated_questions')
     .find(filter)
     .sort({ textbook: 1, source: 1, type: 1, 'question_data.순서': 1 })
-    .limit(500)
+    .limit(sources.length > 0 ? 2000 : 500)
     .toArray();
 
   const filterDesc = [
     textbook || '전체 교재',
-    type ? `유형: ${type}` : '',
+    sources.length > 0 ? `범위: ${sources.length}개 번호` : '',
+    type ? `유형: ${type}` : types.length > 0 ? `유형 ${types.length}종` : '',
     difficulty ? `난이도: ${difficulty}` : '',
     status ? `상태: ${status}` : '',
     free === 'only' ? '무료만' : free === 'paid' ? '유료만' : '',

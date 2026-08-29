@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { recordPointLedger } from '@/lib/point-ledger';
+import { normalizeVariantPrintFormat } from '@/lib/variant-print-html';
 
 async function requireAdmin(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -129,6 +130,11 @@ export async function PATCH(
     const allowedTextbooksWorkbookRaw = hasAllowedTextbooksWorkbook ? body.allowedTextbooksWorkbook : undefined;
     const hasAllowedTextbooksVariant = 'allowedTextbooksVariant' in body;
     const allowedTextbooksVariantRaw = hasAllowedTextbooksVariant ? body.allowedTextbooksVariant : undefined;
+    /* 회원별 인쇄 양식 — 주문마다 다시 고르지 않게 회원 상세에 적어 둔다. */
+    const variantPrintFormat =
+      body && typeof body === 'object' && 'variantPrintFormat' in body
+        ? normalizeVariantPrintFormat((body as Record<string, unknown>).variantPrintFormat)
+        : undefined;
     const allowedEssayTypeIds = Array.isArray(body?.allowedEssayTypeIds) ? body.allowedEssayTypeIds.filter((id: unknown) => typeof id === 'string') : undefined;
     const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
     const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
@@ -157,6 +163,7 @@ export async function PATCH(
     if (canAccessEssay !== undefined) updates.canAccessEssay = canAccessEssay;
     if (canOrderSchoolTextbook !== undefined) updates.canOrderSchoolTextbook = canOrderSchoolTextbook;
     if (myFormatApproved !== undefined) updates.myFormatApproved = myFormatApproved;
+    if (variantPrintFormat !== undefined) updates.variantPrintFormat = variantPrintFormat;
     if (allowedTextbooks !== undefined) updates.allowedTextbooks = allowedTextbooks;
     if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;
     if (allowedTextbooksEssay !== undefined) updates.allowedTextbooksEssay = allowedTextbooksEssay;
