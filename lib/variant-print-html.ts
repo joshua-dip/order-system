@@ -111,13 +111,36 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** 본문의 줄바꿈을 문단으로. 빈 줄은 문단 경계로 본다. */
+/**
+ * 본문·해설용 이스케이프 — **`<u>` 만 살린다.**
+ *
+ * 함의·어법·빈칸 문항은 밑줄 위치를 `<u>…</u>` 로 표시한다(전체 13,882곳).
+ * 전부 이스케이프하면 학생 자료에 태그가 글자로 찍혀 나온다.
+ *
+ * 그렇다고 태그를 통째로 허용하면 안 된다 — 본문에 `<AARP>` 처럼 꺾쇠를 글자로 쓴
+ * 데가 있어서(113곳) 그건 그대로 보여야 하고, 임의 HTML 이 지면에 섞이는 것도 막아야 한다.
+ * 그래서 먼저 전부 이스케이프한 뒤 `<u>`·`</u>` 만 되돌린다.
+ */
+function escKeepUnderline(s: string): string {
+  return esc(s)
+    .replace(/&lt;u&gt;/g, '<u>')
+    .replace(/&lt;\/u&gt;/g, '</u>');
+}
+
+/**
+ * 본문의 줄바꿈을 문단으로. 빈 줄은 문단 경계로 본다.
+ *
+ * `###` 만 있는 줄은 **블록 구분자**라 지운다 — 순서는 (A)(B)(C) 사이,
+ * 삽입은 주어진 문장과 본문 사이를 이 표시로 나눈다. 그대로 두면 학생 자료에
+ * `###` 이 글자로 찍힌다. 문단이 이미 나뉘므로 따로 선을 긋지는 않는다
+ * (09회 자료도 구분선 없이 문단만으로 나뉘어 있었다).
+ */
 function paragraphHtml(text: string): string {
   return String(text ?? '')
     .split(/\n+/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => `<p>${esc(line)}</p>`)
+    .filter((line) => line !== '' && !/^#{2,}$/.test(line))
+    .map((line) => `<p>${escKeepUnderline(line)}</p>`)
     .join('\n');
 }
 
@@ -145,8 +168,10 @@ body{
 .q .passage{border:1px solid #ddd; border-radius:4px; padding:11px 13px; background:#fff}
 .q .passage p{margin:0 0 7px; text-align:justify}
 .q .passage p:last-child{margin-bottom:0}
+.q .passage u{text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1.2px}
 .q .opts{margin:9px 0 0; padding:0; list-style:none}
 .q .opts li{margin:2px 0}
+.q .opts-inline{margin:9px 0 0; letter-spacing:0.5px}
 
 /* 정답면은 문제면과 다른 장에서 시작한다 — 학생에게 문제만 먼저 주기 쉽다. */
 .ans-head{margin:0 0 12px; padding-bottom:6px; border-bottom:2px solid #111; font-size:13pt; font-weight:800}
@@ -166,11 +191,20 @@ export function buildVariantPrintHtml(input: VariantPrintInput): string {
   const body = qs
     .map((q, i) => {
       const opts = (q.options ?? []).filter((o) => String(o).trim() !== '');
+      /* 어법은 선택지가 번호뿐이다(지문 안의 ①~⑤ 를 고르는 형식). 세로로 늘어놓으면
+         빈 줄 다섯 개가 되어 잘못 만든 것처럼 보이므로 한 줄로 모은다. */
+      const numbersOnly = opts.length > 0 && opts.every((o) => /^[①②③④⑤⑥⑦⑧⑨⑩]$/.test(String(o).trim()));
       return `<div class="q">
   <div><span class="no">${i + 1}</span><span class="src">${esc(q.source)}</span></div>
   <div class="prompt">${esc(q.question)}</div>
   <div class="passage">${paragraphHtml(q.paragraph)}</div>
-  ${opts.length > 0 ? `<ul class="opts">${opts.map((o) => `<li>${esc(o)}</li>`).join('')}</ul>` : ''}
+  ${
+    opts.length === 0
+      ? ''
+      : numbersOnly
+        ? `<div class="opts-inline">${opts.map((o) => esc(o)).join('&nbsp;&nbsp;&nbsp;')}</div>`
+        : `<ul class="opts">${opts.map((o) => `<li>${esc(o)}</li>`).join('')}</ul>`
+  }
 </div>`;
     })
     .join('\n');
@@ -182,7 +216,7 @@ ${qs
   .map(
     (q, i) => `<div class="ans">
   <div class="k">${i + 1}. ${esc(q.source)}&nbsp;&nbsp;정답 <span class="a">${esc(q.correctAnswer ?? '')}</span></div>
-  ${q.explanation ? `<div class="e">${esc(q.explanation)}</div>` : ''}
+  ${q.explanation ? `<div class="e">${escKeepUnderline(q.explanation)}</div>` : ''}
 </div>`,
   )
   .join('\n')}
