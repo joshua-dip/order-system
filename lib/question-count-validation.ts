@@ -12,6 +12,11 @@ import {
 } from '@/lib/question-count-report';
 import { passagesForMockVariantOrder } from '@/lib/mock-variant-order';
 import { GENERATED_WORKBOOKS_COLLECTION } from '@/lib/generated-workbooks-types';
+import {
+  resolveTextbookCandidates,
+  buildPassageKeyIndex,
+  rescueMissingKeys,
+} from '@/lib/passage-key-match';
 
 /** 목록 API/화면에 기본으로 내려주는 최대 행 수 */
 export const QUESTION_COUNT_DEFAULT_LIST_ROWS = 12_000;
@@ -487,6 +492,37 @@ export async function runQuestionCountValidation(
           passageDocs.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : ''))
         );
         lessonsWithoutPassage = normalizedLessons.filter((l) => !matchedKeys.has(l));
+
+        /* 완전 일치로 못 찾은 게 있으면 표기 차이를 한 번 더 흡수한다.
+           「531 PROJECT 유형독해S」↔「531 PROJECT 유형독해 S(2020)」,
+           「유형 Practice 1번」↔「유형 Practice 01번」 같은 경우다. 이걸 놓치면
+           부족이 0 으로 나와 아무것도 안 만든 채 주문이 끝난 것처럼 보인다. */
+        if (lessonsWithoutPassage.length > 0) {
+          const allTextbooks = (await passagesCol.distinct('textbook')) as unknown[];
+          const candidates = resolveTextbookCandidates(
+            textbook,
+            allTextbooks.filter((t): t is string => typeof t === 'string'),
+          );
+          if (candidates.length > 0) {
+            const pool = (await passagesCol
+              .find({ textbook: { $in: candidates } })
+              .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
+              .toArray()) as PDoc[];
+            const index = buildPassageKeyIndex(
+              pool.map((p) => (typeof p.source_key === 'string' ? p.source_key.trim() : '')),
+            );
+            const { resolved, stillMissing } = rescueMissingKeys(lessonsWithoutPassage, index);
+            if (resolved.size > 0) {
+              const wanted = new Set(resolved.values());
+              const already = new Set(passageDocs.map((p) => String(p._id)));
+              for (const doc of pool) {
+                const key = typeof doc.source_key === 'string' ? doc.source_key.trim() : '';
+                if (wanted.has(key) && !already.has(String(doc._id))) passageDocs.push(doc);
+              }
+            }
+            lessonsWithoutPassage = stillMissing;
+          }
+        }
 
         typesToCheck =
           selectedTypesRaw.length > 0
