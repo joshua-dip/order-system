@@ -124,8 +124,13 @@ async function main() {
     if (base === '삽입') {
       const marks = P.match(/[①②③④⑤]/g) ?? [];
       if (marks.join('') !== '①②③④⑤') errs.push(`${tag} 마커 ${marks.length}개 / 순서 ${marks.join('')}`);
-      const given = (P.split('\n\n')[0] ?? '').trim();
-      const body = P.split('\n\n').slice(1).join(' ');
+      /* 주어진 문장과 본문을 가르는 표기가 DB 에 두 가지로 섞여 있다
+         (`\n###\n` 4,677건 / 빈 줄 4,196건). 한쪽만 보면 나머지 절반을
+         「본문에 원문 누락」으로 잘못 잡는다. 둘 다 받는다. */
+      const insSep = P.includes('\n###\n') ? '\n###\n' : '\n\n';
+      const insParts = P.split(insSep);
+      const given = (insParts[0] ?? '').trim();
+      const body = insParts.slice(1).join(' ');
       /* 주어진 문장은 보통 원문에서 빼낸 것이다. 다만 4문장짜리 지문은 하나를 빼면
          마커 자리가 4개뿐이라 5개를 만들 수 없어, 원문을 그대로 두고 새로 쓴 브릿지
          문장을 주어진 글로 삼는다. 그 경우 본문에 원문이 전부 남아 있어야 한다. */
