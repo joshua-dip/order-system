@@ -88,6 +88,12 @@ npm run cc:syntax -- save --json .syntax-drafts/<passageId>.json
 
 서술형 출제 (변형/요약/영작) 에 적합한 문장 인덱스. 보통 2~4 개. 문법 구조가 풍부한 문장 우선.
 
+> ⚠️ **`grammarSelectedWords` · `contextSelectedWords` 는 맨 단어가 아니라
+> `"문장idx:단어idx"` 키 배열이다.** (예: `["2:3", "3:7"]`) 편집기가
+> `wordKey(si, wi)` 로 대조하므로(`PassageAnalyzerEditor.tsx`) 맨 단어를 넣으면
+> 검증은 통과하지만 **화면에 아무것도 표시되지 않는다.** 아래 §3.5·§3.6 의
+> 옛 예시(`["pivotal", …]`)는 쓰지 말 것.
+
 ### 3.5 `grammarSelectedWords` (어법)
 
 본문에서 어법 학습용으로 다룰 만한 단어/구. 동사 활용 / 시제 / 수일치 / 분사 / 관계대명사 / 가정법 등 어법 포인트 표면 단어. 보통 5~12 개.
@@ -102,7 +108,14 @@ npm run cc:syntax -- save --json .syntax-drafts/<passageId>.json
 
 ### 3.8 `svocData` (S/V/O/C)
 
-각 문장의 주어·동사·(목적어)·(보어) 의 **문자 인덱스 범위** (character offset, sentence 문자열 안).
+각 문장의 주어·동사·(목적어)·(보어) 의 **단어 인덱스 범위** (공백 split 기준, inclusive).
+
+> ⚠️ 예전에 이 문서가 「문자 오프셋」이라고 적어 두었는데 **틀렸다.** 운영 분석기
+> (`app/api/admin/syntax-analyzer/analyze-svoc/route.ts`) 가 `findWordIndices` 로
+> **단어 인덱스**를 저장하고, 편집기(`PassageAnalyzerEditor.tsx`) 도 `wi >= start && wi <= end`
+> 로 칠한다. 문자 오프셋을 넣으면 화면에서 엉뚱한 곳이 칠해진다.
+> **검증기는 이걸 못 잡는다** — 범위가 `0 ~ 문장 문자수` 안이기만 하면 통과하는데
+> 단어 인덱스는 항상 그 안에 들어가기 때문이다.
 
 ```json
 "0": {
@@ -119,7 +132,7 @@ npm run cc:syntax -- save --json .syntax-drafts/<passageId>.json
 ```
 
 - 5 형식: S, S-V, S-V-O, S-V-O-C, S-V-Oi-Od 중 해당하는 필드만.
-- start/end 는 sentence 문자열의 `slice(start, end)` 가 해당 구문과 일치하도록.
+- start/end 는 `sentence.split(' ').slice(start, end + 1).join(' ')` 가 해당 구문과 일치하도록.
 - 모든 문장 채움 권장.
 
 ### 3.9 `syntaxPhrases` (구문)
