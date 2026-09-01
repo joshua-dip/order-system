@@ -96,7 +96,11 @@ body{
 .psg + .psg{break-before:page; page-break-before:always}
 .psg-name{font-size:12pt; font-weight:800; margin:0 0 10px; padding-bottom:4px; border-bottom:1px solid #333}
 
-.sec{margin:0 0 14px; break-inside:avoid; page-break-inside:avoid}
+/* 섹션 통째로 break-inside:avoid 를 걸었더니, 13문장짜리 본문이 한 장을 다 써서
+   앞 장이 절반 넘게 비었다. 끊기면 곤란한 최소 단위는 **표의 한 행**과 **문장 한 줄**
+   이므로 그 둘만 막고 섹션은 자유롭게 넘기도록 둔다. */
+.sec{margin:0 0 14px}
+.sec > table tr{break-inside:avoid; page-break-inside:avoid}
 .sec-t{display:inline-block; font-size:8.5pt; font-weight:800; color:#fff; background:#333;
   padding:2px 8px; border-radius:3px; margin-bottom:6px}
 

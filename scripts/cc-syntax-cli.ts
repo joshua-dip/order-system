@@ -193,8 +193,16 @@ async function cmdPassage(flags: Map<string, string>) {
     (typeof content.translation === 'string' && content.translation) ||
     (typeof pAsRec.translation === 'string' ? (pAsRec.translation as string) : '') ||
     '';
-  const sentencesEn = Array.isArray((content as { sentences?: unknown }).sentences)
-    ? ((content as { sentences: unknown[] }).sentences.filter((s): s is string => typeof s === 'string'))
+  /* 영문 문장 배열의 실제 필드는 `sentences_en` 이다. 예전엔 `sentences` 만 봐서
+     늘 못 찾고 parseSentences() 로 원문을 다시 쪼갰다. 한글은 `sentences_ko` 를
+     제대로 읽었기 때문에 **영문만 개수가 늘어 해석이 밀렸다**
+     (실측: 원본 영 9·한 9 인데 CLI 출력은 영 11·한 11 → 한글 두 칸 밀림, 끝 2줄 빈칸).
+     원본이 이미 1:1 로 맞으므로 그대로 쓰고, 없을 때만 쪼갠다. */
+  const rawEn =
+    (content as { sentences_en?: unknown }).sentences_en ??
+    (content as { sentences?: unknown }).sentences;
+  const sentencesEn = Array.isArray(rawEn)
+    ? (rawEn.filter((s): s is string => typeof s === 'string'))
     : parseSentences(original);
   const sentencesKo = Array.isArray((content as { sentences_ko?: unknown }).sentences_ko)
     ? ((content as { sentences_ko: unknown[] }).sentences_ko.filter((s): s is string => typeof s === 'string'))

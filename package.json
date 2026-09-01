@@ -31,7 +31,9 @@
     "claude": "tsx scripts/cc-variant-cli.ts",
     "passage-analyzer:cli": "tsx scripts/passage-analyzer-cli.ts",
     "ainca:migrate": "tsx scripts/migrate-ainca-pdf.ts",
-    "variant:auto-fill": "tsx scripts/variant-auto-fill.ts"
+    "variant:auto-fill": "tsx scripts/variant-auto-fill.ts",
+    "cc:analysis-resolve": "tsx scripts/cc-analysis-resolve.ts",
+    "cc:analysis-pdf": "tsx scripts/cc-analysis-pdf.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
