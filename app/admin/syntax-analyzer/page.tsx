@@ -178,8 +178,16 @@ export default function AdminSyntaxAnalyzerPage() {
     fetchLinkAssignments();
   }, [user, fetchTextbooks, fetchLinkFolders, fetchLinkAssignments]);
 
+  /* 지문 분석지 등에서 「분석 홈에서 열기」로 넘어올 때 교재를 물고 온다.
+     useSearchParams 는 Suspense 경계를 요구하므로 mount 시 location 으로 읽는다. */
   useEffect(() => {
-    if (!filterTextbook) return;
+    const t = new URLSearchParams(window.location.search).get('textbook')?.trim();
+    if (t) setFilterTextbook(t);
+  }, []);
+
+  useEffect(() => {
+    /* 교재 목록이 오기 전(빈 배열)에 검사하면 URL 프리필터가 즉시 지워진다. */
+    if (!filterTextbook || textbooks.length === 0) return;
     if (!textbooks.includes(filterTextbook)) {
       setFilterTextbook('');
       setSelectedPassage(null);

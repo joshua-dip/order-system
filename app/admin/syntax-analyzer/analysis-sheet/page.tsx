@@ -20,7 +20,7 @@ interface PassageItem {
 const MAX_PASSAGES = 30;
 
 export default function AnalysisSheetPage() {
-  const [textbooks, setTextbooks] = useState<string[]>([]);
+  const [textbooks, setTextbooks] = useState<{ name: string; count: number }[]>([]);
   const [textbook, setTextbook] = useState('');
   const [items, setItems] = useState<PassageItem[]>([]);
   const [listLoading, setListLoading] = useState(false);
@@ -31,7 +31,9 @@ export default function AnalysisSheetPage() {
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/passages/textbooks', { credentials: 'include' })
+    /* 전체 교재(300+)가 아니라 분석이 실제로 채워진 교재만 — 빈 교재를 골라
+       "0개 분석 있음"만 만나는 헛걸음을 없앤다. */
+    fetch('/api/admin/syntax-analyzer/analysis-sheet-textbooks', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => setTextbooks(Array.isArray(d.textbooks) ? d.textbooks : []))
       .catch(() => setTextbooks([]));
@@ -163,9 +165,9 @@ export default function AnalysisSheetPage() {
             onChange={(e) => setTextbook(e.target.value)}
             className="bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm min-w-64"
           >
-            <option value="">교재 선택…</option>
+            <option value="">교재 선택… (분석 있는 교재만)</option>
             {textbooks.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t.name} value={t.name}>{`${t.name} (${t.count})`}</option>
             ))}
           </select>
         </label>
@@ -205,6 +207,12 @@ export default function AnalysisSheetPage() {
           >
             ↻ 진행률 새로고침
           </button>
+          <a
+            href={`/admin/syntax-analyzer?textbook=${encodeURIComponent(textbook)}`}
+            className="text-sky-400 hover:text-sky-300"
+          >
+            이 교재를 분석 홈에서 열기 →
+          </a>
         </div>
       )}
 
