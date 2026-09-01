@@ -6,6 +6,7 @@ import { passageAnalysisFileNameForPassageId } from '@/lib/passage-analyzer-type
 import {
   buildAnalysisSheetHtml,
   QUESTION_EDITION_OPTIONS,
+  type SheetOptions,
 } from '@/lib/analysis-sheet-html';
 import { buildSheetPassages, type SheetPassageSource } from '@/lib/analysis-sheet-load';
 import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
@@ -48,7 +49,11 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  const edition = body.edition === '문제편' ? '문제편' : '해설편';
+  const edition = body.edition === '문제편' ? '문제편' : body.edition === '분석지' ? '분석지' : '해설편';
+  /* 화면 양식 패널에서 조합한 옵션이 오면 그것을 쓴다. 없으면 판 기본 프리셋. */
+  const customOptions = body.options && typeof body.options === 'object'
+    ? (body.options as Partial<SheetOptions>)
+    : null;
 
   const db = await getDb('gomijoshua');
   const passageDocs = await db
@@ -105,7 +110,7 @@ export async function POST(request: NextRequest) {
     brand,
     date,
     editionLabel: edition,
-    options: edition === '문제편' ? QUESTION_EDITION_OPTIONS : {},
+    options: customOptions ?? (edition === '문제편' ? QUESTION_EDITION_OPTIONS : {}),
   });
 
   const [{ default: chromium }, puppeteer] = await Promise.all([
@@ -151,7 +156,8 @@ export async function POST(request: NextRequest) {
         <span>${title} · ${edition}</span><span class="pageNumber"></span></div>`,
     });
 
-    const filename = `${sanitizeFilename(`${title} 분석지 · ${edition}`)}.pdf`;
+    /* 판 이름이 그냥 '분석지'(커스텀 양식)면 「분석지 · 분석지」로 겹치지 않게. */
+    const filename = `${sanitizeFilename(edition === '분석지' ? `${title} 분석지` : `${title} 분석지 · ${edition}`)}.pdf`;
     const bytes = new Uint8Array(pdfBuf);
     return new NextResponse(bytes, {
       status: 200,
