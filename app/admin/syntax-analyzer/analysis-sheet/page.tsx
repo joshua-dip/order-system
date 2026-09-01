@@ -27,6 +27,9 @@ export default function AnalysisSheetPage() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [title, setTitle] = useState('');
+  /* 판 구성 — 7월 실물이 문제편·해설편 두 벌이라 그 묶음을 기본으로 둔다. */
+  const [edition, setEdition] = useState<'해설편' | '문제편' | '둘 다'>('둘 다');
+  const [brand, setBrand] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -121,25 +124,36 @@ export default function AnalysisSheetPage() {
     try {
       /* 화면 나열 순서대로 보낸다 — 지면 차례가 곧 목록 차례. */
       const ordered = items.filter((p) => selected.has(p._id)).map((p) => p._id);
-      const res = await fetch('/api/admin/syntax-analyzer/analysis-sheet-pdf', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passageIds: ordered, title: title.trim() || undefined }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        setMsg(String(d.error || `다운로드 실패 (${res.status})`));
-        return;
+      const editions = edition === '둘 다' ? (['문제편', '해설편'] as const) : ([edition] as const);
+      const done: string[] = [];
+      for (const ed of editions) {
+        setMsg(`${ed} 생성 중… (지문 ${ordered.length}개)`);
+        const res = await fetch('/api/admin/syntax-analyzer/analysis-sheet-pdf', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            passageIds: ordered,
+            title: title.trim() || undefined,
+            edition: ed,
+            brand: brand.trim() || undefined,
+          }),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          setMsg(String(d.error || `${ed} 다운로드 실패 (${res.status})`));
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(title.trim() || textbook).replace(/[\\/:*?"<>|]+/g, '_')} 분석지 · ${ed}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        done.push(ed);
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `분석지_${(title.trim() || textbook).replace(/[\\/:*?"<>|]+/g, '_')}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setMsg(`✓ ${ordered.length}개 지문을 내려받았습니다.`);
+      setMsg(`✓ ${done.join(' · ')} — 지문 ${ordered.length}개를 내려받았습니다.`);
     } finally {
       setBusy(false);
     }
@@ -152,8 +166,8 @@ export default function AnalysisSheetPage() {
       <div>
         <h1 className="text-xl font-bold">지문 분석지</h1>
         <p className="text-sm text-slate-400 mt-1">
-          분석기에 저장된 데이터를 골라 A4 분석지 PDF 로 내립니다. 다운로드마다 저장소를
-          다시 읽으므로 <span className="text-slate-300">「편집」에서 고친 내용이 다음 다운로드에 바로 반영</span>됩니다.
+          분석기 데이터를 골라 <span className="text-slate-300">표지·목차·범례가 붙은 판매용 분석지</span>(문제편·해설편)로
+          내립니다. 다운로드마다 저장소를 다시 읽으므로 「편집」에서 고친 내용이 다음 다운로드에 바로 반영됩니다.
         </p>
       </div>
 
@@ -178,6 +192,27 @@ export default function AnalysisSheetPage() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder={textbook ? `${textbook} 지문 분석지` : ''}
             className="w-full bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs text-slate-500 block mb-1">판 구성</span>
+          <select
+            value={edition}
+            onChange={(e) => setEdition(e.target.value as typeof edition)}
+            className="bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm"
+          >
+            <option value="둘 다">문제편 + 해설편 (2파일)</option>
+            <option value="해설편">해설편만 (전체 표기)</option>
+            <option value="문제편">문제편만 (연습용)</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-xs text-slate-500 block mb-1">표지 하단 표기 (선택)</span>
+          <input
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            placeholder="예: 학원 이름"
+            className="w-40 bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm"
           />
         </label>
         <button
