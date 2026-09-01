@@ -368,7 +368,9 @@ export default function AnalysisSheetPage() {
       )}
 
       <div className="flex gap-4 items-start">
-        {/* 왼쪽: 지문 선택 */}
+        {/* 왼쪽: 지문 선택 — 교재를 고르기 전에는 칸 자체를 만들지 않는다.
+           빈 360px 이 통째로 남아 화면 왼쪽이 휑해 보였다. */}
+        {textbook && (
         <div className="w-[360px] shrink-0 space-y-2">
           {textbook && (
             <div className="text-xs text-slate-500 flex items-center gap-3 px-1">
@@ -443,6 +445,7 @@ export default function AnalysisSheetPage() {
             )}
           </div>
         </div>
+        )}
 
         {/* 가운데: 양식 */}
         <div className="w-[260px] shrink-0 space-y-2">
