@@ -62,6 +62,12 @@ interface Spec {
   points?: Record<string, { title: string; content: string }[]>;
   gwords?: Record<string, string[]>;
   cwords?: Record<string, string[]>;
+  /** 신규 지문용 — 기존 분석이 없으면 물려받을 것이 없어 직접 준다. */
+  comprehensive?: Record<string, string>;
+  vocab?: {
+    word: string; meaning: string; partOfSpeech?: string; cefr?: string;
+    synonym?: string; antonym?: string; wordType?: string;
+  }[];
 }
 
 /** "word" 또는 "word#2" → 문장 내 단어 인덱스 */
@@ -92,8 +98,11 @@ async function main() {
     .findOne({ fileName: passageAnalysisFileNameForPassageId(spec.passageId) }) as Record<string, any> | null;
   const prevMain = prev?.passageStates?.main ?? {};
 
-  /* 어휘 위치는 옛 인덱스라 새 문장에서 다시 찾는다. */
-  const vocabularyList = (prevMain.vocabularyList ?? []).map((v: Record<string, unknown>) => {
+  /* 어휘 위치는 옛 인덱스라 새 문장에서 다시 찾는다. spec.vocab 이 오면 그것이 우선. */
+  const vocabSource: Record<string, unknown>[] = spec.vocab?.length
+    ? spec.vocab.map((v) => ({ wordType: 'word', ...v }))
+    : (prevMain.vocabularyList ?? []);
+  const vocabularyList = vocabSource.map((v: Record<string, unknown>) => {
     const word = String(v.word ?? '');
     const stem = word.replace(/\s+/g, ' ').trim();
     const positions: { sentence: number; position: number }[] = [];
@@ -164,7 +173,9 @@ async function main() {
 
   const main = {
     sentences, koreanSentences,
-    analysisResults: prevMain.analysisResults ?? {},
+    analysisResults: spec.comprehensive
+      ? { comprehensive: spec.comprehensive }
+      : (prevMain.analysisResults ?? {}),
     comprehensiveSlotCount: prevMain.comprehensiveSlotCount ?? 5,
     topicHighlightedSentences: spec.topic ?? [],
     essayHighlightedSentences: spec.essay ?? [],
