@@ -7,6 +7,7 @@ import WorkbookMakerNav from './WorkbookMakerNav';
 import GeneratedQuestionsNav from './GeneratedQuestionsNav';
 import ClassKitNav from './ClassKitNav';
 import EssayGeneratorNav from './EssayGeneratorNav';
+import SyntaxAnalyzerNav from './SyntaxAnalyzerNav';
 import { clearAuthUserCache } from '@/lib/auth-user-cache';
 
 interface AdminSidebarProps {
@@ -118,9 +119,7 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <ClassKitNav />
         <EssayGeneratorNav />
         <WorkbookMakerNav />
-        <Link href="/admin/syntax-analyzer" className={linkCls('/admin/syntax-analyzer')}>
-          구문 분석기
-        </Link>
+        <SyntaxAnalyzerNav />
         <Link href="/admin/mcp" className={linkCls('/admin/mcp')}>
           Claude MCP
         </Link>

@@ -50,14 +50,32 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** 종합분석 슬롯 번호 → 이름. 스키마가 번호로만 저장해서 여기서 이름을 붙인다. */
+/**
+ * 종합분석 키 → 이름.
+ *
+ * 저장 관례가 두 갈래다. CLI(cc:syntax)로 만든 분석은 번호 키('1'~'5')에
+ * 주제·요지·요약·해석·함의를 한글로 담고(현재 84건 전부), 분석기 웹의 AI 경로는
+ * 명명 키(koreanTopic…)에 ①한글 주제 ②원문 주제문장 ③영문 요약 ④한글 번역
+ * ⑤함축적 표현을 담는다. 인쇄는 어느 쪽이 와도 제 이름을 붙인다 —
+ * 번호 키에 웹 라벨을 붙이면 내용과 라벨이 어긋난다(2번이 실제로는 요지문).
+ */
 const COMPREHENSIVE_LABEL: Record<string, string> = {
   '1': '주제',
   '2': '요지',
   '3': '요약',
   '4': '해석',
   '5': '함의',
+  koreanTopic: '한글 주제',
+  originalSentence: '원문 주제문장',
+  englishSummary: '영문 요약',
+  koreanTranslation: '한글 번역',
+  implicitMeaning: '함축적 표현',
 };
+
+const COMPREHENSIVE_ORDER = [
+  '1', '2', '3', '4', '5',
+  'koreanTopic', 'originalSentence', 'englishSummary', 'koreanTranslation', 'implicitMeaning',
+];
 
 /**
  * 끊어읽기 슬래시를 넣은 문장.
@@ -139,12 +157,21 @@ function passageHtml(p: AnalysisPrintPassage): string {
   const essay = new Set(p.essaySentences ?? []);
 
   const comp = p.comprehensive ?? {};
+  /* 알려진 키를 정한 순서대로, 나머지(추가 슬롯 item_6…)는 뒤에 이름순으로. */
   const compRows = Object.keys(comp)
-    .sort((a, b) => Number(a) - Number(b))
+    .filter((k) => k !== 'error')
+    .sort((a, b) => {
+      const ia = COMPREHENSIVE_ORDER.indexOf(a);
+      const ib = COMPREHENSIVE_ORDER.indexOf(b);
+      if (ia >= 0 && ib >= 0) return ia - ib;
+      if (ia >= 0) return -1;
+      if (ib >= 0) return 1;
+      return a.localeCompare(b);
+    })
     .filter((k) => String(comp[k] ?? '').trim() !== '')
     .map(
       (k) =>
-        `<tr><th>${esc(COMPREHENSIVE_LABEL[k] ?? k)}</th><td>${esc(comp[k])}</td></tr>`,
+        `<tr><th>${esc(COMPREHENSIVE_LABEL[k] ?? k.replace(/^item_(\d+)$/, '항목 $1'))}</th><td>${esc(comp[k])}</td></tr>`,
     )
     .join('');
 

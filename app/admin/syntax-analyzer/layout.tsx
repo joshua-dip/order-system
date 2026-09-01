@@ -12,6 +12,12 @@ export default function SyntaxAnalyzerLayout({ children }: { children: React.Rea
             지문분석기
           </Link>
           <Link
+            href="/admin/syntax-analyzer/analysis-sheet"
+            className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-800"
+          >
+            지문 분석지
+          </Link>
+          <Link
             href="/admin"
             className="text-xs ml-auto text-sky-400 hover:text-sky-300"
           >

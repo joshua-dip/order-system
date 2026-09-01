@@ -14,6 +14,7 @@ import WorkbookMakerNav from './_components/WorkbookMakerNav';
 import GeneratedQuestionsNav from './_components/GeneratedQuestionsNav';
 import ClassKitNav from './_components/ClassKitNav';
 import EssayGeneratorNav from './_components/EssayGeneratorNav';
+import SyntaxAnalyzerNav from './_components/SyntaxAnalyzerNav';
 import { clearAuthUserCache } from '@/lib/auth-user-cache';
 
 interface EssayTypeItem {
@@ -2907,12 +2908,9 @@ export default function AdminDashboardPage() {
           <div className="mt-1">
             <EssayGeneratorNav />
           </div>
-          <Link
-            href="/admin/syntax-analyzer"
-            className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
-          >
-            구문 분석기
-          </Link>
+          <div className="mt-1">
+            <SyntaxAnalyzerNav />
+          </div>
           <Link
             href="/admin/mcp"
             className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors"
