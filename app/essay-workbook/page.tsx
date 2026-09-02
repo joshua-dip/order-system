@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppBar from '../components/AppBar';
 import {
   ESSAY_WORKBOOK_PRICE_PER_SOURCE,
   quoteEssayWorkbook,
 } from '@/lib/essay-workbook-pricing';
 import { groupPassages, unitOf } from '@/lib/essay-workbook-grouping';
+import { saveOrderToDb } from '@/lib/orders';
+import { ORDER_PREFIX } from '@/lib/orderPrefix';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -95,6 +98,8 @@ export default function EssayWorkbookPage() {
   const [openSample, setOpenSample] = useState<Sample | null>(null);
 
   const [copied, setCopied] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetch('/api/essay-workbook/catalog')
@@ -251,6 +256,32 @@ export default function EssayWorkbookPage() {
       '※ 서술형 워크북은 PDF 로 제공됩니다.',
     ].join('\n');
   }, [selectedTextbook, selectedKeys, selectedByUnit, quote, kind, difficultyNote, toMakeCount]);
+
+  /**
+   * 주문 접수 — 다른 주문서(분석지·번들 등)와 같은 경로로 orders 에 저장한다.
+   * 예전에는 주문서를 복사해 카톡으로 보내야 해서 관리자 화면에 남지 않았다.
+   */
+  const submitOrder = async () => {
+    if (!orderText || submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await saveOrderToDb(orderText, ORDER_PREFIX.BOOK_ESSAY_WORKBOOK, 0, {
+        /* 나중에 제작 파이프라인이 읽을 수 있게 구조화해 둔다 */
+        flow: 'essayWorkbook',
+        textbook: selectedTextbook,
+        kind,
+        kindLabel: KIND_LABEL[kind],
+        sourceKeys: selectedKeys,
+        toMakeCount,
+        pricePerSource: ESSAY_WORKBOOK_PRICE_PER_SOURCE,
+        totalPrice: quote.finalPrice,
+      });
+      if (res.ok && res.id) router.push('/order/done?id=' + res.id);
+      else alert(res.error || '주문 저장에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const copyOrder = async () => {
     if (!orderText) return;
@@ -653,11 +684,18 @@ export default function EssayWorkbookPage() {
                 </p>
               </div>
 
-              {/* 복사·카톡 버튼은 아래 고정 바에 늘 떠 있다 — 여기서 또 두면 어느 쪽을
-                  눌러야 하는지 헷갈린다. 안내 문구만 남긴다. */}
+              {/* 주문 버튼은 아래 고정 바에 늘 떠 있다 — 여기서 또 두면 어느 쪽을
+                  눌러야 하는지 헷갈린다. 안내와 보조 동작(복사)만 남긴다. */}
               <p className="mt-3 text-[11px] text-gray-500">
-                아래 <b>주문서 복사</b> 를 누른 뒤 카톡으로 보내주시면 확인 후 PDF 를 보내드립니다.
+                아래 <b>주문하기</b> 를 누르시면 주문이 접수됩니다. 확인 후 PDF 를 보내드립니다.
               </p>
+              <button
+                type="button"
+                onClick={copyOrder}
+                className="mt-2 text-[11px] text-gray-500 underline hover:text-gray-700"
+              >
+                {copied ? '✓ 주문서를 복사했습니다' : '주문서 내용 복사하기'}
+              </button>
             </div>
           )}
         </div>
@@ -690,13 +728,6 @@ export default function EssayWorkbookPage() {
               <span className="hidden sm:inline">비우기</span>
               <span className="sm:hidden">✕</span>
             </button>
-            <button
-              type="button"
-              onClick={copyOrder}
-              className="shrink-0 whitespace-nowrap rounded-xl bg-blue-600 px-3 py-2.5 text-[13px] font-bold text-white hover:bg-blue-700 sm:px-4 sm:text-sm"
-            >
-              {copied ? '✓ 복사됨' : '📋 주문서 복사'}
-            </button>
             <a
               href={KAKAO_INQUIRY_URL}
               target="_blank"
@@ -704,8 +735,16 @@ export default function EssayWorkbookPage() {
               aria-label="카톡으로 문의"
               className="shrink-0 whitespace-nowrap rounded-xl bg-[#FEE500] px-3 py-2.5 text-[13px] font-bold text-[#3B1E1E] no-underline hover:brightness-95 sm:px-4 sm:text-sm"
             >
-              💬<span className="hidden sm:inline"> 카톡</span>
+              💬<span className="hidden sm:inline"> 문의</span>
             </a>
+            <button
+              type="button"
+              onClick={() => void submitOrder()}
+              disabled={submitting}
+              className="shrink-0 whitespace-nowrap rounded-xl bg-blue-600 px-3 py-2.5 text-[13px] font-bold text-white hover:bg-blue-700 disabled:opacity-50 sm:px-4 sm:text-sm"
+            >
+              {submitting ? '접수 중…' : '주문하기'}
+            </button>
           </div>
         </div>
       )}
