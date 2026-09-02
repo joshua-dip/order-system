@@ -64,7 +64,10 @@ function PassageChip({
     >
       <span className="block truncate">{text}</span>
       <span className="mt-0.5 block text-[10px] text-gray-500">
-        {`${diffsOf(p, kind).length}난도`}
+        {diffsOf(p, kind).length > 0
+          ? `${diffsOf(p, kind).length}난도`
+          : /* 아직 만들지 않은 지문 — 주문이 들어오면 제작한다 */
+            <span className="text-amber-700">제작</span>}
       </span>
     </button>
   );
@@ -154,21 +157,16 @@ export default function EssayWorkbookPage() {
     meaning: passages.filter((p) => (p.meaning ?? []).length > 0).length,
   }), [passages]);
 
-  /* 교재를 바꾸면 없는 유형이 선택돼 있을 수 있다 — 있는 쪽으로 되돌린다. */
-  useEffect(() => {
-    if (passages.length === 0) return;
-    if (kindCounts[kind] === 0) setKind(kindCounts.arrange > 0 ? 'arrange' : 'meaning');
-  }, [passages, kindCounts, kind]);
+  /* 재고가 없는 유형도 고를 수 있다 — 주문이 들어오면 제작하므로 되돌리지 않는다. */
 
-  /** 고른 유형을 가진 지문 중 검색어가 걸린 것만. */
+  /** 검색어가 걸린 지문. 재고 유무와 상관없이 모두 담을 수 있다. */
   const shownPassages = useMemo(() => {
     const k = pq.trim().toLowerCase();
-    return passages.filter(
-      (p) =>
-        diffsOf(p, kind).length > 0 &&
-        (!k || shortLabel(p.sourceKey, selectedTextbook).toLowerCase().includes(k)),
+    if (!k) return passages;
+    return passages.filter((p) =>
+      shortLabel(p.sourceKey, selectedTextbook).toLowerCase().includes(k),
     );
-  }, [passages, pq, kind, selectedTextbook]);
+  }, [passages, pq, selectedTextbook]);
 
   /** 단원별 묶음. 묶어도 의미 없는 교재(모의고사 등)는 null → 평면 격자로 그린다. */
   const groups = useMemo(
@@ -184,15 +182,8 @@ export default function EssayWorkbookPage() {
 
   const selectedSet = useMemo(() => new Set(selectedKeys), [selectedKeys]);
 
-  /** 유형 전환 — 담은 지문이 다른 유형에는 없을 수 있어 비우고 시작한다. */
-  const switchKind = (next: WorkbookKind) => {
-    if (next === kind) return;
-    if (selectedKeys.length > 0 &&
-        !window.confirm(`담아 둔 지문 ${selectedKeys.length}개가 사라집니다. 유형을 바꿀까요?`)) return;
-    setKind(next);
-    setSelectedKeys([]);
-    setPq('');
-  };
+  /* 유형이 달라도 지문 목록은 같으므로 담아 둔 것을 그대로 둔다. */
+  const switchKind = (next: WorkbookKind) => setKind(next);
 
   /** 단원 통째로 담기/빼기 — 담긴 게 하나라도 있으면 빼는 쪽으로 동작한다. */
   const toggleUnit = (keys: string[]) => {
@@ -208,12 +199,23 @@ export default function EssayWorkbookPage() {
    */
   const difficultyNote = useMemo(() => {
     const counts = new Set(
-      passages.filter((p) => selectedKeys.includes(p.sourceKey)).map((p) => diffsOf(p, kind).length),
+      passages
+        .filter((p) => selectedKeys.includes(p.sourceKey))
+        .map((p) => diffsOf(p, kind).length)
+        .filter((n) => n > 0),
     );
     if (counts.size === 0) return '';
     if (counts.size === 1) return `${[...counts][0]}종`;
     return `${Math.min(...counts)}~${Math.max(...counts)}종`;
   }, [passages, selectedKeys, kind]);
+
+  /** 담은 것 중 아직 만들지 않은 지문 — 주문서·요약에서 따로 알린다. */
+  const toMakeCount = useMemo(
+    () =>
+      passages.filter((p) => selectedKeys.includes(p.sourceKey) && diffsOf(p, kind).length === 0)
+        .length,
+    [passages, selectedKeys, kind],
+  );
 
   /** 담은 지문을 단원별로 — 카드 요약과 주문서 텍스트가 같은 기준을 쓴다. */
   const selectedByUnit = useMemo(() => {
@@ -235,7 +237,8 @@ export default function EssayWorkbookPage() {
       '=== 서술형 워크북 주문 ===',
       `교재: ${selectedTextbook}`,
       `유형: ${KIND_LABEL[kind]}`,
-      `지문 ${selectedKeys.length}개 (난도 ${difficultyNote} PDF 포함)`,
+      `지문 ${selectedKeys.length}개${difficultyNote ? ` (보유분 난도 ${difficultyNote} PDF)` : ''}`,
+      ...(toMakeCount > 0 ? [`※ 이 중 ${toMakeCount}개는 제작 요청입니다 (전달까지 시간이 걸립니다)`] : []),
       /* 20개를 20줄로 늘어놓으면 카톡에서 읽기 어렵다 — 단원별로 접어서 적는다. */
       ...selectedByUnit.map(([u, list]) => `  · ${u} — ${list.join(', ')}`),
       '',
@@ -247,7 +250,7 @@ export default function EssayWorkbookPage() {
       '',
       '※ 서술형 워크북은 PDF 로 제공됩니다.',
     ].join('\n');
-  }, [selectedTextbook, selectedKeys, selectedByUnit, quote, kind, difficultyNote]);
+  }, [selectedTextbook, selectedKeys, selectedByUnit, quote, kind, difficultyNote, toMakeCount]);
 
   const copyOrder = async () => {
     if (!orderText) return;
@@ -447,7 +450,7 @@ export default function EssayWorkbookPage() {
 
               {/* 유형 고르기 — 고르는 자리에서 바로 그 유형 샘플을 볼 수 있게 붙인다.
                   맨 위 소개 카드에도 샘플이 있지만 거기까지 올라갔다 와야 했다. */}
-              {kindCounts.arrange > 0 && kindCounts.meaning > 0 ? (
+              {(
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(['arrange', 'meaning'] as WorkbookKind[]).map((k) => {
                     const sample = samples.find((sp) => sp.key === k);
@@ -467,7 +470,7 @@ export default function EssayWorkbookPage() {
                         >
                           {KIND_LABEL[k]}
                           <span className="ml-1.5 text-[11px] font-normal text-gray-500">
-                            {kindCounts[k]}지문
+                            {kindCounts[k] > 0 ? `보유 ${kindCounts[k]}지문` : '주문 제작'}
                           </span>
                         </button>
                         {sample && (
@@ -487,21 +490,12 @@ export default function EssayWorkbookPage() {
                     );
                   })}
                 </div>
-              ) : (
-                <p className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-gray-500">
-                  <span>
-                    유형 <b className="text-gray-700">{KIND_LABEL[kind]}</b>
-                    <span className="ml-1.5">· 이 교재는 이 유형만 있습니다</span>
-                  </span>
-                  {samples.find((sp) => sp.key === kind) && (
-                    <button
-                      type="button"
-                      onClick={() => setOpenSample(samples.find((sp) => sp.key === kind)!)}
-                      className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-[11.5px] font-semibold text-gray-600 hover:bg-gray-50"
-                    >
-                      📄 샘플
-                    </button>
-                  )}
+              )}
+              {/* 재고가 없는 지문도 담을 수 있다는 것을 미리 알린다 */}
+              {shownPassages.some((p) => diffsOf(p, kind).length === 0) && (
+                <p className="mt-2 text-[11.5px] text-amber-700">
+                  <b className="text-amber-800">제작</b> 표시된 지문은 아직 만들어 두지 않았습니다 —
+                  주문해 주시면 제작해 드립니다(제작분은 전달까지 시간이 걸립니다).
                 </p>
               )}
 
@@ -623,7 +617,15 @@ export default function EssayWorkbookPage() {
               <div className="mt-3 space-y-1 text-[13px] text-gray-700">
                 <p><b>교재</b> {selectedTextbook}</p>
                 <p><b>유형</b> {KIND_LABEL[kind]}</p>
-                <p><b>선택 지문</b> {selectedKeys.length}개 · 난도 {difficultyNote} PDF 포함</p>
+                <p>
+                  <b>선택 지문</b> {selectedKeys.length}개
+                  {difficultyNote && ` · 보유분 난도 ${difficultyNote} PDF`}
+                </p>
+                {toMakeCount > 0 && (
+                  <p className="text-amber-700">
+                    이 중 <b>{toMakeCount}개는 제작 요청</b> — 전달까지 시간이 걸립니다
+                  </p>
+                )}
                 {/* 무엇을 담았는지 단원 단위로 — 20개를 20줄로 늘어놓으면 읽히지 않는다 */}
                 {selectedByUnit.length > 0 && (
                   <ul className="flex flex-wrap gap-1.5 pt-1">

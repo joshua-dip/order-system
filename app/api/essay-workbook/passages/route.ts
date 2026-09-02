@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { normalizePassageKey } from '@/lib/passage-key-match';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,11 @@ export const dynamic = 'force-dynamic';
  * 유형 판별은 샘플 API 와 같은 기준을 쓴다 — `data.meta.examType` 이 있으면
  * 「글의의미 서술형」, 없으면 「조건영작배열」. 최상위 examType 필드는 전 문서
  * null 이라 쓸 수 없고, meta.title 은 표시용 제목이라 유형과 1:1 이 아니다.
+ *
+ * 목록은 **이미 만든 것 ∪ 교재의 원문 지문**이다. 재고가 없어도 주문을 받아
+ * 제작하므로, 만든 것만 보여 주면 주문할 길이 막힌다(지금필수 「01강 수능기출」
+ * 7건이 그랬다). 두 출처의 키가 자릿수만 다른 경우가 있어(「6~8번」↔「06~08번」)
+ * 정규화 키로 맞춰 중복을 막는다.
  */
 export async function GET(request: NextRequest) {
   const textbook = (request.nextUrl.searchParams.get('textbook') ?? '').trim();
@@ -53,6 +59,15 @@ export async function GET(request: NextRequest) {
       if (id.meaning === true) cur.meaning = [...cur.meaning, ...diffs];
       else cur.arrange = [...cur.arrange, ...diffs];
       byKey.set(sourceKey, cur);
+    }
+
+    /* 아직 아무것도 만들지 않은 지문도 주문할 수 있게 원문 목록을 얹는다. */
+    const madeNorm = new Set([...byKey.keys()].map(normalizePassageKey));
+    const srcKeys = (await db.collection('passages').distinct('source_key', { textbook })) as unknown[];
+    for (const raw of srcKeys) {
+      const k = String(raw ?? '').trim();
+      if (!k || madeNorm.has(normalizePassageKey(k))) continue;
+      byKey.set(k, { sourceKey: k, arrange: [], meaning: [] });
     }
 
     const passages = [...byKey.values()]
