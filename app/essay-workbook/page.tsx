@@ -5,7 +5,6 @@ import Link from 'next/link';
 import AppBar from '../components/AppBar';
 import {
   ESSAY_WORKBOOK_PRICE_PER_SOURCE,
-  ESSAY_WORKBOOK_FREE_COUNT,
   quoteEssayWorkbook,
 } from '@/lib/essay-workbook-pricing';
 
@@ -94,7 +93,6 @@ export default function EssayWorkbookPage() {
       `지문 ${selectedKeys.length}개 (난도 4종 PDF 포함)`,
       ...selectedKeys.map((k) => `  · ${shortLabel(k, selectedTextbook)}`),
       '',
-      `무료 체험 ${quote.freeCount}개 / 유료 ${quote.paidCount}개`,
       `기본 금액: ${quote.basePrice.toLocaleString()}원`,
       ...(quote.discountPct > 0
         ? [`${quote.discountLabel} 할인 ${quote.discountPct}%: -${quote.discountAmount.toLocaleString()}원`]
@@ -164,7 +162,6 @@ export default function EssayWorkbookPage() {
             <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] leading-relaxed text-gray-700">
               <b>가격</b> — 지문 1개당 {ESSAY_WORKBOOK_PRICE_PER_SOURCE.toLocaleString()}원
               (기본·중·고·최고 <b>4난도 PDF 한 묶음</b>).
-              교재별 <b>앞 {ESSAY_WORKBOOK_FREE_COUNT}개 지문은 무료</b>로 체험하실 수 있습니다.
             </div>
 
             {/* 샘플 */}
@@ -290,9 +287,8 @@ export default function EssayWorkbookPage() {
                 <p className="py-8 text-center text-sm text-gray-400">불러오는 중…</p>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                  {passages.map((p, i) => {
+                  {passages.map((p) => {
                     const on = selectedKeys.includes(p.sourceKey);
-                    const free = i < ESSAY_WORKBOOK_FREE_COUNT;
                     return (
                       <button
                         key={p.sourceKey}
@@ -304,7 +300,7 @@ export default function EssayWorkbookPage() {
                       >
                         <span className="block truncate">{shortLabel(p.sourceKey, selectedTextbook)}</span>
                         <span className="mt-0.5 block text-[10px] text-gray-500">
-                          {free ? <b className="text-emerald-600">무료 체험</b> : `${p.difficulties.length}난도`}
+                          {`${p.difficulties.length}난도`}
                           {p.isMeaningType && ' · 글의의미'}
                         </span>
                       </button>
@@ -322,7 +318,6 @@ export default function EssayWorkbookPage() {
               <div className="mt-3 space-y-1 text-[13px] text-gray-700">
                 <p><b>교재</b> {selectedTextbook}</p>
                 <p><b>선택 지문</b> {selectedKeys.length}개 · 난도 4종 PDF 포함</p>
-                {quote.freeCount > 0 && <p className="text-emerald-700"><b>무료 체험</b> {quote.freeCount}개</p>}
                 <p className="border-t border-gray-200 pt-2">
                   기본 금액 {quote.basePrice.toLocaleString()}원
                 </p>
