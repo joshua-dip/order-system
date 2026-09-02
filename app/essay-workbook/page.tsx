@@ -7,6 +7,7 @@ import {
   ESSAY_WORKBOOK_PRICE_PER_SOURCE,
   quoteEssayWorkbook,
 } from '@/lib/essay-workbook-pricing';
+import { groupPassages, unitOf } from '@/lib/essay-workbook-grouping';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -25,6 +26,35 @@ function shortLabel(sourceKey: string, textbook: string): string {
   return t || sourceKey;
 }
 
+/**
+ * 지문 카드 — 단원 묶음과 평면 격자 양쪽에서 같은 모양으로 쓴다.
+ * 묶음 안에서는 단원명이 머리에 이미 있으므로 번호만 남겨 짧게 보인다.
+ */
+function PassageChip({
+  p, on, textbook, unit, onToggle,
+}: {
+  p: PassageRow; on: boolean; textbook: string; unit?: string; onToggle: (key: string) => void;
+}) {
+  const label = shortLabel(p.sourceKey, textbook);
+  const text = unit && label.startsWith(unit) ? (label.slice(unit.length).trim() || label) : label;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(p.sourceKey)}
+      aria-pressed={on}
+      className={`rounded-lg border px-3 py-2 text-left text-[12.5px] transition-colors ${
+        on ? 'border-blue-600 bg-blue-50 font-bold text-blue-800' : 'border-gray-200 bg-white hover:border-blue-300'
+      }`}
+    >
+      <span className="block truncate">{text}</span>
+      <span className="mt-0.5 block text-[10px] text-gray-500">
+        {`${p.difficulties.length}난도`}
+        {p.isMeaningType && ' · 글의의미'}
+      </span>
+    </button>
+  );
+}
+
 export default function EssayWorkbookPage() {
   const [textbooks, setTextbooks] = useState<TextbookRow[]>([]);
   const [needLogin, setNeedLogin] = useState(false);
@@ -34,6 +64,12 @@ export default function EssayWorkbookPage() {
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState('');
+  /** 지문 번호 검색 — 「12강」·「05번」 처럼 부분만 쳐도 걸린다 */
+  const [pq, setPq] = useState('');
+  /** 접어 둔 단원. 단원이 많으면 처음엔 모두 접어 목차처럼 보여 준다. */
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  /** 교재 목록 접기 — 고르고 나면 자리를 비켜 준다 */
+  const [pickerOpen, setPickerOpen] = useState(true);
 
   const [samples, setSamples] = useState<Sample[]>([]);
   const [openSample, setOpenSample] = useState<Sample | null>(null);
@@ -58,6 +94,7 @@ export default function EssayWorkbookPage() {
   const loadPassages = useCallback(async (textbook: string) => {
     setLoading(true);
     setSelectedKeys([]);
+    setPq('');
     try {
       const r = await fetch(`/api/essay-workbook/passages?textbook=${encodeURIComponent(textbook)}`);
       const d = await r.json();
@@ -66,6 +103,15 @@ export default function EssayWorkbookPage() {
       setLoading(false);
     }
   }, []);
+
+  /** 교재를 바꾸면 담아 둔 지문이 사라진다 — 실수로 날리지 않게 한 번 묻는다. */
+  const pickTextbook = (name: string) => {
+    if (name === selectedTextbook) { setPickerOpen(false); return; }
+    if (selectedKeys.length > 0 &&
+        !window.confirm(`담아 둔 지문 ${selectedKeys.length}개가 사라집니다. 교재를 바꿀까요?`)) return;
+    setSelectedTextbook(name);
+    setPickerOpen(false);
+  };
 
   useEffect(() => {
     if (selectedTextbook) loadPassages(selectedTextbook);
@@ -85,13 +131,57 @@ export default function EssayWorkbookPage() {
   const toggle = (key: string) =>
     setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
+  /** 검색어가 걸린 지문만. 교재명을 뗀 짧은 라벨 기준으로 찾는다. */
+  const shownPassages = useMemo(() => {
+    const k = pq.trim().toLowerCase();
+    if (!k) return passages;
+    return passages.filter((p) => shortLabel(p.sourceKey, selectedTextbook).toLowerCase().includes(k));
+  }, [passages, pq, selectedTextbook]);
+
+  /** 단원별 묶음. 묶어도 의미 없는 교재(모의고사 등)는 null → 평면 격자로 그린다. */
+  const groups = useMemo(
+    () => groupPassages(shownPassages, (p) => shortLabel(p.sourceKey, selectedTextbook)),
+    [shownPassages, selectedTextbook],
+  );
+
+  /* 단원이 여럿이면 처음엔 접어 둔다 — 목차부터 보이는 편이 고르기 쉽다. */
+  useEffect(() => {
+    if (!groups) { setCollapsed(new Set()); return; }
+    setCollapsed(groups.length > 5 ? new Set(groups.map((g) => g.unit)) : new Set());
+  }, [groups]);
+
+  const selectedSet = useMemo(() => new Set(selectedKeys), [selectedKeys]);
+
+  /** 단원 통째로 담기/빼기 — 담긴 게 하나라도 있으면 빼는 쪽으로 동작한다. */
+  const toggleUnit = (keys: string[]) => {
+    const allIn = keys.every((k) => selectedSet.has(k));
+    setSelectedKeys((prev) =>
+      allIn ? prev.filter((k) => !keys.includes(k)) : [...prev, ...keys.filter((k) => !prev.includes(k))],
+    );
+  };
+
+  /** 담은 지문을 단원별로 — 카드 요약과 주문서 텍스트가 같은 기준을 쓴다. */
+  const selectedByUnit = useMemo(() => {
+    const byUnit = new Map<string, string[]>();
+    for (const k of selectedKeys) {
+      const label = shortLabel(k, selectedTextbook);
+      const u = unitOf(label);
+      const rest = label.slice(u.length).trim() || label;
+      const arr = byUnit.get(u);
+      if (arr) arr.push(rest);
+      else byUnit.set(u, [rest]);
+    }
+    return [...byUnit.entries()];
+  }, [selectedKeys, selectedTextbook]);
+
   const orderText = useMemo(() => {
     if (!selectedTextbook || selectedKeys.length === 0) return '';
     return [
       '=== 서술형 워크북 주문 ===',
       `교재: ${selectedTextbook}`,
       `지문 ${selectedKeys.length}개 (난도 4종 PDF 포함)`,
-      ...selectedKeys.map((k) => `  · ${shortLabel(k, selectedTextbook)}`),
+      /* 20개를 20줄로 늘어놓으면 카톡에서 읽기 어렵다 — 단원별로 접어서 적는다. */
+      ...selectedByUnit.map(([u, list]) => `  · ${u} — ${list.join(', ')}`),
       '',
       `기본 금액: ${quote.basePrice.toLocaleString()}원`,
       ...(quote.discountPct > 0
@@ -101,7 +191,7 @@ export default function EssayWorkbookPage() {
       '',
       '※ 서술형 워크북은 PDF 로 제공됩니다.',
     ].join('\n');
-  }, [selectedTextbook, selectedKeys, quote]);
+  }, [selectedTextbook, selectedKeys, selectedByUnit, quote]);
 
   const copyOrder = async () => {
     if (!orderText) return;
@@ -200,7 +290,27 @@ export default function EssayWorkbookPage() {
 
           {/* 1. 교재 */}
           <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-gray-900">1. 교재 선택</h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-gray-900">1. 교재 선택</h2>
+              {/* 고른 뒤에는 목록이 자리만 차지한다 — 접어 두고 「변경」으로 다시 연다 */}
+              {selectedTextbook && !pickerOpen && (
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  className="rounded-lg border border-gray-300 px-2.5 py-1 text-[12px] text-gray-600 hover:bg-gray-50"
+                >
+                  교재 변경
+                </button>
+              )}
+            </div>
+
+            {selectedTextbook && !pickerOpen ? (
+              <p className="mt-2 flex items-center gap-2 text-[13px] font-bold text-blue-800">
+                <span className="rounded-md bg-blue-50 px-2 py-1">{selectedTextbook}</span>
+                <span className="text-[11px] font-normal text-gray-500">{passages.length}지문</span>
+              </p>
+            ) : (
+            <>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -212,7 +322,7 @@ export default function EssayWorkbookPage() {
                 <button
                   key={t.textbook}
                   type="button"
-                  onClick={() => setSelectedTextbook(t.textbook)}
+                  onClick={() => pickTextbook(t.textbook)}
                   className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-[13px] transition-colors ${
                     selectedTextbook === t.textbook
                       ? 'border-blue-600 bg-blue-50 font-bold text-blue-800'
@@ -258,6 +368,8 @@ export default function EssayWorkbookPage() {
                 )
               )}
             </div>
+            </>
+            )}
           </div>
 
           {/* 2. 지문 */}
@@ -268,7 +380,7 @@ export default function EssayWorkbookPage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedKeys(passages.map((p) => p.sourceKey))}
+                    onClick={() => setSelectedKeys(shownPassages.map((p) => p.sourceKey))}
                     className="rounded-lg border border-gray-300 px-2.5 py-1 text-[12px] text-gray-600 hover:bg-gray-50"
                   >
                     전체 선택
@@ -283,29 +395,110 @@ export default function EssayWorkbookPage() {
                 </div>
               </div>
 
+              {passages.length > 12 && (
+                <input
+                  value={pq}
+                  onChange={(e) => setPq(e.target.value)}
+                  placeholder="지문 찾기 (예: 12강, 05번)"
+                  className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              )}
+
               {loading ? (
                 <p className="py-8 text-center text-sm text-gray-400">불러오는 중…</p>
+              ) : shownPassages.length === 0 ? (
+                <p className="py-8 text-center text-sm text-gray-400">
+                  {pq.trim() ? '찾는 지문이 없습니다.' : '지문이 없습니다.'}
+                </p>
+              ) : groups ? (
+                <>
+                  {groups.length > 1 && (
+                    <div className="mt-3 flex gap-2 text-[12px]">
+                      <button
+                        type="button"
+                        onClick={() => setCollapsed(new Set())}
+                        className="text-blue-600 hover:underline"
+                      >
+                        모두 펼치기
+                      </button>
+                      <span className="text-gray-300">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setCollapsed(new Set(groups.map((g) => g.unit)))}
+                        className="text-blue-600 hover:underline"
+                      >
+                        모두 접기
+                      </button>
+                    </div>
+                  )}
+                  <div className="mt-2 space-y-2">
+                    {groups.map((g) => {
+                      const keys = g.items.map((it) => it.sourceKey);
+                      const picked = keys.filter((k) => selectedSet.has(k)).length;
+                      const isOpen = !collapsed.has(g.unit);
+                      return (
+                        <div key={g.unit} className="overflow-hidden rounded-xl border border-gray-200">
+                          <div
+                            className={`flex items-center gap-2 px-3 py-2 ${picked > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}
+                          >
+                            {/* 단원 통째로 담기 — 「3강만」 같은 선택이 한 번에 끝난다 */}
+                            <input
+                              type="checkbox"
+                              checked={picked === keys.length}
+                              ref={(el) => { if (el) el.indeterminate = picked > 0 && picked < keys.length; }}
+                              onChange={() => toggleUnit(keys)}
+                              className="h-4 w-4 accent-blue-600"
+                              aria-label={`${g.unit} 전체 선택`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setCollapsed((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(g.unit)) next.delete(g.unit);
+                                  else next.add(g.unit);
+                                  return next;
+                                })
+                              }
+                              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                            >
+                              <span className="truncate text-[13px] font-bold text-gray-800">{g.unit}</span>
+                              <span className="shrink-0 text-[11px] text-gray-500">
+                                {picked > 0 ? `${picked}/${keys.length}` : `${keys.length}지문`}
+                              </span>
+                              <span className="ml-auto shrink-0 text-[11px] text-gray-400">{isOpen ? '▲' : '▼'}</span>
+                            </button>
+                          </div>
+                          {isOpen && (
+                            <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 lg:grid-cols-4">
+                              {g.items.map((p) => (
+                                <PassageChip
+                                  key={p.sourceKey}
+                                  p={p}
+                                  unit={g.unit}
+                                  on={selectedSet.has(p.sourceKey)}
+                                  textbook={selectedTextbook}
+                                  onToggle={toggle}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                  {passages.map((p) => {
-                    const on = selectedKeys.includes(p.sourceKey);
-                    return (
-                      <button
-                        key={p.sourceKey}
-                        type="button"
-                        onClick={() => toggle(p.sourceKey)}
-                        className={`rounded-lg border px-3 py-2 text-left text-[12.5px] transition-colors ${
-                          on ? 'border-blue-600 bg-blue-50 font-bold text-blue-800' : 'border-gray-200 hover:border-blue-300'
-                        }`}
-                      >
-                        <span className="block truncate">{shortLabel(p.sourceKey, selectedTextbook)}</span>
-                        <span className="mt-0.5 block text-[10px] text-gray-500">
-                          {`${p.difficulties.length}난도`}
-                          {p.isMeaningType && ' · 글의의미'}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {shownPassages.map((p) => (
+                    <PassageChip
+                      key={p.sourceKey}
+                      p={p}
+                      on={selectedSet.has(p.sourceKey)}
+                      textbook={selectedTextbook}
+                      onToggle={toggle}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -318,6 +511,20 @@ export default function EssayWorkbookPage() {
               <div className="mt-3 space-y-1 text-[13px] text-gray-700">
                 <p><b>교재</b> {selectedTextbook}</p>
                 <p><b>선택 지문</b> {selectedKeys.length}개 · 난도 4종 PDF 포함</p>
+                {/* 무엇을 담았는지 단원 단위로 — 20개를 20줄로 늘어놓으면 읽히지 않는다 */}
+                {selectedByUnit.length > 0 && (
+                  <ul className="flex flex-wrap gap-1.5 pt-1">
+                    {selectedByUnit.map(([unit, list]) => (
+                      <li
+                        key={unit}
+                        className="rounded-md bg-blue-50 px-2 py-1 text-[11.5px] text-blue-800"
+                        title={list.join(', ')}
+                      >
+                        <b>{unit}</b> {list.length}개
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <p className="border-t border-gray-200 pt-2">
                   기본 금액 {quote.basePrice.toLocaleString()}원
                 </p>
@@ -331,30 +538,60 @@ export default function EssayWorkbookPage() {
                 </p>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={copyOrder}
-                  className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
-                >
-                  {copied ? '✓ 복사됨' : '📋 주문서 복사'}
-                </button>
-                <a
-                  href={KAKAO_INQUIRY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl bg-[#FEE500] px-4 py-2.5 text-sm font-bold text-[#3B1E1E] no-underline hover:brightness-95"
-                >
-                  💬 카톡으로 주문서 보내기
-                </a>
-              </div>
-              <p className="mt-2 text-[11px] text-gray-500">
-                주문서를 복사해 카톡으로 보내주시면 확인 후 PDF 를 보내드립니다.
+              {/* 복사·카톡 버튼은 아래 고정 바에 늘 떠 있다 — 여기서 또 두면 어느 쪽을
+                  눌러야 하는지 헷갈린다. 안내 문구만 남긴다. */}
+              <p className="mt-3 text-[11px] text-gray-500">
+                아래 <b>주문서 복사</b> 를 누른 뒤 카톡으로 보내주시면 확인 후 PDF 를 보내드립니다.
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* 담은 게 있으면 어디서 스크롤하든 금액·주문 버튼이 따라온다 —
+          예전에는 맨 아래 「3. 주문 내용」까지 내려가야 확인할 수 있었다. */}
+      {selectedKeys.length > 0 && (
+        <div className="sticky bottom-0 z-40 border-t border-gray-200 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur">
+          {/* 우하단 문의 위젯(fixed·z-50·64px)이 버튼 위에 떠서 가린다 — 그만큼 비운다.
+              또 줄바꿈을 막는다(flex-nowrap) — 폰에서 두 줄이 되면 아래 줄이 위젯에 깔린다. */}
+          <div className="container mx-auto flex max-w-5xl flex-nowrap items-center gap-2 py-2.5 pl-3 pr-[84px] sm:gap-3 sm:pl-4 sm:pr-[92px]">
+            <div className="min-w-0 flex-1">
+              <p className="hidden truncate text-[11px] text-gray-500 sm:block">{selectedTextbook}</p>
+              <p className="whitespace-nowrap text-[13px] font-bold text-gray-900">
+                지문 {selectedKeys.length}개
+                <span className="ml-1.5 text-[15px] font-extrabold text-blue-800">
+                  {quote.finalPrice.toLocaleString()}원
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedKeys([])}
+              aria-label="선택 비우기"
+              className="shrink-0 rounded-xl border border-gray-300 px-2.5 py-2 text-[12px] font-semibold text-gray-600 hover:bg-gray-50"
+            >
+              <span className="hidden sm:inline">비우기</span>
+              <span className="sm:hidden">✕</span>
+            </button>
+            <button
+              type="button"
+              onClick={copyOrder}
+              className="shrink-0 whitespace-nowrap rounded-xl bg-blue-600 px-3 py-2.5 text-[13px] font-bold text-white hover:bg-blue-700 sm:px-4 sm:text-sm"
+            >
+              {copied ? '✓ 복사됨' : '📋 주문서 복사'}
+            </button>
+            <a
+              href={KAKAO_INQUIRY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="카톡으로 문의"
+              className="shrink-0 whitespace-nowrap rounded-xl bg-[#FEE500] px-3 py-2.5 text-[13px] font-bold text-[#3B1E1E] no-underline hover:brightness-95 sm:px-4 sm:text-sm"
+            >
+              💬<span className="hidden sm:inline"> 카톡</span>
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* 샘플 모달 */}
       {openSample && (
