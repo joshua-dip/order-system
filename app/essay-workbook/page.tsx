@@ -307,29 +307,23 @@ export default function EssayWorkbookPage() {
 
             <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] leading-relaxed text-gray-700">
               <b>가격</b> — 지문 1개당 {ESSAY_WORKBOOK_PRICE_PER_SOURCE.toLocaleString()}원
-              (기본·중·고·최고 <b>4난도 PDF 한 묶음</b>).
+              (그 지문의 <b>난도 전부 한 묶음</b>). 조건영작배열은 기본·중·고·최고 4난도입니다.
             </div>
 
-            {/* 샘플 */}
+            {/* 샘플 — 화면으로 보는 미리보기는 유형을 고르는 자리(2. 지문 선택)에 있다.
+                여기는 교재를 고르기 전(로그인 전 포함)에도 자료를 확인할 수 있게
+                실제 PDF 내려받기만 남긴다. 난도 수는 유형마다 달라 라벨에 못박지 않는다. */}
             {samples.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-[12px] font-semibold text-gray-500">샘플 (기본·중·고·최고 4난도)</span>
+                <span className="text-[12px] font-semibold text-gray-500">샘플 PDF</span>
                 {samples.map((s) => (
-                  <span key={s.key} className="inline-flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setOpenSample(s)}
-                      className="rounded-full border border-[#4A72C0] bg-[#EAF0FB] px-3 py-1 text-[12px] font-semibold text-[#1B3F7A] hover:bg-[#D0DEFA]"
-                    >
-                      📄 {s.label} 미리보기
-                    </button>
-                    <a
-                      href={`/api/essay-workbook/sample-pdf?type=${s.key}`}
-                      className="rounded-full border border-emerald-500 bg-emerald-50 px-3 py-1 text-[12px] font-semibold text-emerald-800 no-underline hover:bg-emerald-100"
-                    >
-                      📥 {s.label} 4난도 PDF
-                    </a>
-                  </span>
+                  <a
+                    key={s.key}
+                    href={`/api/essay-workbook/sample-pdf?type=${s.key}`}
+                    className="rounded-full border border-emerald-500 bg-emerald-50 px-3 py-1 text-[12px] font-semibold text-emerald-800 no-underline hover:bg-emerald-100"
+                  >
+                    📥 {s.label}
+                  </a>
                 ))}
                 {/* 난도별 구성·실제 지면 예시는 블로그 글이 더 자세하다 */}
                 <a

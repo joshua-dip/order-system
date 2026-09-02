@@ -352,7 +352,7 @@ function useHubSections(
       {
         id: 'essay-workbook',
         title: '서술형 워크북 주문제작',
-        description: (<>조건영작배열·글의의미 서술형<br />지문 단위 4난도 PDF 묶음<br />부교재 (모의고사는 payperic)</>),
+        description: (<>조건영작배열·글의의미 서술형<br />지문 단위 난도 묶음 PDF<br />부교재 (모의고사는 payperic)</>),
         icon: <IconWorkbook /> as ReactNode,
         accentColor: '#C2410C',
         gridClassName: 'lg:col-span-4',
