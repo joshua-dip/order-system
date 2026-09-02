@@ -489,10 +489,10 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                   서술형 워크북
                 </span>
                 <p className="text-sm font-medium text-amber-50">
-                  조건영작배열 · 글의의미 서술형 — 이미 제작된 자료를 바로
+                  조건영작배열 · 글의의미 서술형 — 지문을 골라 주문제작
                 </p>
                 <p className="mt-0.5 text-xs text-amber-100/90">
-                  📄 PDF 제공 · 지문당 800원 · 앞 3지문 무료
+                  📄 PDF 제공 · 지문당 800원
                 </p>
               </div>
               <div className="ml-4 flex shrink-0 flex-col items-center gap-2 text-amber-50 sm:ml-6">

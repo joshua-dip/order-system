@@ -279,7 +279,7 @@ export default function EssayWorkbookPage() {
               <div className="min-w-0">
                 <h1 className="text-xl font-extrabold text-gray-900">서술형 워크북</h1>
                 <p className="mt-1 text-sm text-gray-600">
-                  이미 제작해 둔 서술형 연습 자료를 바로 받아 보실 수 있습니다.
+                  지문을 고르시면 서술형 연습 자료를 제작해 PDF 로 보내 드립니다.
                 </p>
               </div>
               {/* 모의고사 서술형은 payperic 에서 판다 — 여기서는 부교재만 취급 */}
@@ -297,7 +297,7 @@ export default function EssayWorkbookPage() {
             <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12px] leading-relaxed text-rose-800/90">
               <p className="text-[13px] font-extrabold text-rose-900">📄 서술형 워크북 vs ✍️ 서술형 변형문제</p>
               <p className="mt-1.5">
-                • <b>서술형 워크북</b> (이 메뉴) — 이미 제작해 둔 <b>4난도 자료</b>를 <b>PDF로만</b> 바로 제공합니다. <b>편집은 불가</b>합니다.
+                • <b>서술형 워크북</b> (이 메뉴) — 난도별로 짜 둔 <b>정해진 양식</b>의 자료를 <b>PDF로만</b> 드립니다. <b>편집은 불가</b>합니다.
               </p>
               <p className="mt-1">
                 • <b>서술형 변형문제</b> — 지문마다 문제를 <b>새로 제작</b>해 <b>한글파일(HWP)</b>로 드립니다. 직접 <b>편집·수정</b>이 가능합니다.{' '}
@@ -451,32 +451,63 @@ export default function EssayWorkbookPage() {
                 </div>
               </div>
 
-              {/* 유형 고르기 — 한 유형만 있는 교재에서는 굳이 묻지 않는다 */}
+              {/* 유형 고르기 — 고르는 자리에서 바로 그 유형 샘플을 볼 수 있게 붙인다.
+                  맨 위 소개 카드에도 샘플이 있지만 거기까지 올라갔다 와야 했다. */}
               {kindCounts.arrange > 0 && kindCounts.meaning > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {(['arrange', 'meaning'] as WorkbookKind[]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => switchKind(k)}
-                      aria-pressed={kind === k}
-                      className={`rounded-xl border px-3 py-2 text-[12.5px] font-bold transition-colors ${
-                        kind === k
-                          ? 'border-blue-600 bg-blue-50 text-blue-800'
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300'
-                      }`}
-                    >
-                      {KIND_LABEL[k]}
-                      <span className="ml-1.5 text-[11px] font-normal text-gray-500">
-                        {kindCounts[k]}지문
-                      </span>
-                    </button>
-                  ))}
+                  {(['arrange', 'meaning'] as WorkbookKind[]).map((k) => {
+                    const sample = samples.find((sp) => sp.key === k);
+                    return (
+                      <div key={k} className="flex items-stretch">
+                        <button
+                          type="button"
+                          onClick={() => switchKind(k)}
+                          aria-pressed={kind === k}
+                          className={`border px-3 py-2 text-[12.5px] font-bold transition-colors ${
+                            sample ? 'rounded-l-xl' : 'rounded-xl'
+                          } ${
+                            kind === k
+                              ? 'border-blue-600 bg-blue-50 text-blue-800'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300'
+                          }`}
+                        >
+                          {KIND_LABEL[k]}
+                          <span className="ml-1.5 text-[11px] font-normal text-gray-500">
+                            {kindCounts[k]}지문
+                          </span>
+                        </button>
+                        {sample && (
+                          <button
+                            type="button"
+                            onClick={() => setOpenSample(sample)}
+                            className={`rounded-r-xl border border-l-0 px-2.5 py-2 text-[11.5px] font-semibold transition-colors ${
+                              kind === k
+                                ? 'border-blue-600 bg-white text-blue-700 hover:bg-blue-50'
+                                : 'border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100'
+                            }`}
+                          >
+                            📄 샘플
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="mt-3 text-[12px] text-gray-500">
-                  유형 <b className="text-gray-700">{KIND_LABEL[kind]}</b>
-                  <span className="ml-1.5">· 이 교재는 이 유형만 있습니다</span>
+                <p className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-gray-500">
+                  <span>
+                    유형 <b className="text-gray-700">{KIND_LABEL[kind]}</b>
+                    <span className="ml-1.5">· 이 교재는 이 유형만 있습니다</span>
+                  </span>
+                  {samples.find((sp) => sp.key === kind) && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenSample(samples.find((sp) => sp.key === kind)!)}
+                      className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-[11.5px] font-semibold text-gray-600 hover:bg-gray-50"
+                    >
+                      📄 샘플
+                    </button>
+                  )}
                 </p>
               )}
 
