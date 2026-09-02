@@ -350,6 +350,16 @@ function useHubSections(
         interactive: true,
       },
       {
+        id: 'essay-workbook',
+        title: '서술형 워크북 주문제작',
+        description: (<>조건영작배열·글의의미 서술형<br />지문 단위 4난도 PDF 묶음<br />부교재 (모의고사는 payperic)</>),
+        icon: <IconWorkbook /> as ReactNode,
+        accentColor: '#C2410C',
+        gridClassName: 'lg:col-span-4',
+        href: '/essay-workbook',
+        interactive: true,
+      },
+      {
         id: 'bundle',
         title: '통합 주문',
         description: isMember

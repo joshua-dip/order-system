@@ -13,6 +13,11 @@ function clip(s: unknown, max: number): string {
   return t.length > max ? `${t.slice(0, max)}…` : t;
 }
 
+/** 샘플 미리보기용 — passage 의 marker/kr 등 인라인 HTML 태그를 걷어내 평문으로. */
+function stripHtml(s: unknown): string {
+  return typeof s === 'string' ? s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
+}
+
 export async function GET() {
   try {
     const db = await getDb('gomijoshua');
@@ -31,9 +36,19 @@ export async function GET() {
       },
     ];
 
+    // 쇼케이스는 모의고사 샘플이 낫다 — 모의고사 교재("…영어모의고사")를 우선 뽑고,
+    // 해당 유형의 모의고사 자료가 없으면 아무 교재로 fallback.
+    const pickSampleDoc = async (baseFilter: Record<string, unknown>) => {
+      const mockDoc = await col.findOne(
+        { ...baseFilter, textbook: { $regex: '영어모의고사' } },
+        { sort: { createdAt: -1 } },
+      );
+      return mockDoc ?? (await col.findOne(baseFilter, { sort: { createdAt: -1 } }));
+    };
+
     const samples = [];
     for (const p of picks) {
-      const doc = await col.findOne(p.filter, { sort: { createdAt: -1 } });
+      const doc = await pickSampleDoc(p.filter);
       if (!doc) continue;
       const data = (doc.data ?? {}) as Record<string, unknown>;
       const meta = (data.meta ?? {}) as Record<string, unknown>;
@@ -50,7 +65,7 @@ export async function GET() {
           )?.['value'],
           40,
         ),
-        passage: clip(data.passage, 800),
+        passage: clip(stripHtml(data.passage), 800),
         questions: questions.slice(0, 2).map((q) => ({
           prompt: clip(q.prompt, 200),
           points: typeof q.points === 'number' ? q.points : null,

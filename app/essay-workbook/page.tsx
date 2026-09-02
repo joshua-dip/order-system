@@ -149,36 +149,44 @@ export default function EssayWorkbookPage() {
               </a>
             </div>
 
-            {/* 제공 형식 안내 — 문제 주문(한글파일)과 다르다 */}
-            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-              <p className="text-[13px] font-extrabold text-rose-900">📄 PDF 로 제공됩니다</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-rose-800/90">
-                서술형 워크북은 <b>편집이 불가능한 PDF</b> 로 드립니다. 한글파일(HWP)로 받아 직접 편집하시려면{' '}
-                <Link href="/essay" className="font-bold text-rose-900 underline">서술형문제 주문제작</Link>
-                {' '}메뉴를 이용해 주세요.
+            {/* 제공 형식 안내 — 워크북(PDF 전용) vs 변형문제(HWP) 차이 */}
+            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12px] leading-relaxed text-rose-800/90">
+              <p className="text-[13px] font-extrabold text-rose-900">📄 서술형 워크북 vs ✍️ 서술형 변형문제</p>
+              <p className="mt-1.5">
+                • <b>서술형 워크북</b> (이 메뉴) — 이미 제작해 둔 <b>4난도 자료</b>를 <b>PDF로만</b> 바로 제공합니다. <b>편집은 불가</b>합니다.
+              </p>
+              <p className="mt-1">
+                • <b>서술형 변형문제</b> — 지문마다 문제를 <b>새로 제작</b>해 <b>한글파일(HWP)</b>로 드립니다. 직접 <b>편집·수정</b>이 가능합니다.{' '}
+                <Link href="/essay" className="font-bold text-rose-900 underline">서술형문제 주문제작 →</Link>
               </p>
             </div>
 
             <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] leading-relaxed text-gray-700">
               <b>가격</b> — 지문 1개당 {ESSAY_WORKBOOK_PRICE_PER_SOURCE.toLocaleString()}원
               (기본·중·고·최고 <b>4난도 PDF 한 묶음</b>).
-              교재별 <b>앞 {ESSAY_WORKBOOK_FREE_COUNT}개 지문은 무료</b>로 체험하실 수 있고,
-              한 교재의 절반 이상을 담으면 11%, 전부 담으면 20% 할인됩니다.
+              교재별 <b>앞 {ESSAY_WORKBOOK_FREE_COUNT}개 지문은 무료</b>로 체험하실 수 있습니다.
             </div>
 
             {/* 샘플 */}
             {samples.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-[12px] font-semibold text-gray-500">샘플 보기</span>
+                <span className="text-[12px] font-semibold text-gray-500">샘플 (기본·중·고·최고 4난도)</span>
                 {samples.map((s) => (
-                  <button
-                    key={s.key}
-                    type="button"
-                    onClick={() => setOpenSample(s)}
-                    className="rounded-full border border-[#4A72C0] bg-[#EAF0FB] px-3 py-1 text-[12px] font-semibold text-[#1B3F7A] hover:bg-[#D0DEFA]"
-                  >
-                    📄 {s.label} 샘플
-                  </button>
+                  <span key={s.key} className="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setOpenSample(s)}
+                      className="rounded-full border border-[#4A72C0] bg-[#EAF0FB] px-3 py-1 text-[12px] font-semibold text-[#1B3F7A] hover:bg-[#D0DEFA]"
+                    >
+                      📄 {s.label} 미리보기
+                    </button>
+                    <a
+                      href={`/api/essay-workbook/sample-pdf?type=${s.key}`}
+                      className="rounded-full border border-emerald-500 bg-emerald-50 px-3 py-1 text-[12px] font-semibold text-emerald-800 no-underline hover:bg-emerald-100"
+                    >
+                      📥 {s.label} 4난도 PDF
+                    </a>
+                  </span>
                 ))}
                 {/* 난도별 구성·실제 지면 예시는 블로그 글이 더 자세하다 */}
                 <a

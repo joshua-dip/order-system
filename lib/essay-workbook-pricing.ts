@@ -1,9 +1,7 @@
 /**
  * 서술형 워크북(이미 제작된 조건영작배열·글의의미서술형 자료) 판매가.
  *
- * payperic.com 의 조건영작배열 판매 정책을 그대로 따른다.
- *  · 번호(지문) 1개 = 4난도(기본·중·고·최고) PDF 한 묶음 = 800원
- *  · 한 교재의 지문을 많이 담을수록 할인 (난이도별 묶음 11% / 풀세트 20%)
+ *  · 번호(지문) 1개 = 4난도(기본·중·고·최고) PDF 한 묶음 = 800원 (지문당 정가, 볼륨 할인 없음)
  *  · 교재별 앞 3지문은 무료 체험
  *
  * 서술형 "문제 주문"(/essay)은 새로 제작하는 주문이라 단가 체계가 다르다(400~700원/문항).
@@ -16,17 +14,12 @@ export const ESSAY_WORKBOOK_PRICE_PER_SOURCE = 800;
 /** 교재별 무료 체험 지문 수 (앞에서부터) */
 export const ESSAY_WORKBOOK_FREE_COUNT = 3;
 
-/** 담은 지문 수가 그 교재 전체의 이 비율 이상이면 묶음 할인 */
-export const ESSAY_WORKBOOK_BULK = [
-  { minRatio: 1, discountPct: 20, label: '풀세트' },
-  { minRatio: 0.5, discountPct: 11, label: '묶음' },
-] as const;
-
 export interface EssayWorkbookQuote {
   /** 유료로 계산되는 지문 수 (무료 체험분 제외) */
   paidCount: number;
   freeCount: number;
   basePrice: number;
+  /** 볼륨 할인 폐지 — 항상 0. (기존 호출부 호환을 위해 필드는 유지) */
   discountPct: number;
   discountLabel: string;
   discountAmount: number;
@@ -35,12 +28,12 @@ export interface EssayWorkbookQuote {
 
 /**
  * @param selectedCount 담은 지문 수
- * @param totalInTextbook 그 교재의 전체 지문 수
+ * @param _totalInTextbook (미사용 — 볼륨 할인 폐지 전 비율 계산에 쓰였음. 호출부 시그니처 호환용)
  * @param alreadyOwnedFree 이미 무료로 받은 지문 수 (중복 무료 방지)
  */
 export function quoteEssayWorkbook(
   selectedCount: number,
-  totalInTextbook: number,
+  _totalInTextbook = 0,
   alreadyOwnedFree = 0,
 ): EssayWorkbookQuote {
   const freeLeft = Math.max(0, ESSAY_WORKBOOK_FREE_COUNT - alreadyOwnedFree);
@@ -48,18 +41,14 @@ export function quoteEssayWorkbook(
   const paidCount = Math.max(0, selectedCount - freeCount);
   const basePrice = paidCount * ESSAY_WORKBOOK_PRICE_PER_SOURCE;
 
-  const ratio = totalInTextbook > 0 ? selectedCount / totalInTextbook : 0;
-  const tier = ESSAY_WORKBOOK_BULK.find((t) => ratio >= t.minRatio);
-  const discountPct = tier?.discountPct ?? 0;
-  const discountAmount = Math.round((basePrice * discountPct) / 100);
-
+  // 볼륨 할인 폐지 — 지문당 정가(800원). 반환 구조는 기존 호출부 호환 위해 그대로 둔다.
   return {
     paidCount,
     freeCount,
     basePrice,
-    discountPct,
-    discountLabel: tier?.label ?? '',
-    discountAmount,
-    finalPrice: basePrice - discountAmount,
+    discountPct: 0,
+    discountLabel: '',
+    discountAmount: 0,
+    finalPrice: basePrice,
   };
 }
