@@ -93,10 +93,10 @@ export const QUESTION_EDITION_OPTIONS: Partial<SheetOptions> = {
  *   이쪽:    analysisResults.comprehensive['1'~'5'] = 주제·요지·요약·해석·함의 (전부 한글 산문)
  * koreanTopic(한 줄 요약·목차용)은 양쪽 다 "이 글의 주제 한 줄"이라 의미가 같다.
  */
-function compOf(st: Record<string, any>): { koreanTopic: string; implicitMeaning: string; rows: [string, unknown][] } {
+function compOf(st: Record<string, any>): { koreanTopic: string; implicitMeaning: string; named: boolean; rows: [string, unknown][] } {
   const raw = st.analysisResults ?? {};
   const comp = (raw.comprehensive && typeof raw.comprehensive === 'object') ? raw.comprehensive : raw;
-  const named = typeof comp.koreanTopic === 'string' && comp.koreanTopic.trim();
+  const named = !!(typeof comp.koreanTopic === 'string' && comp.koreanTopic.trim());
   const rows: [string, unknown][] = named
     ? [['주제', comp.koreanTopic], ['주제문', comp.originalSentence], ['영문 요약', comp.englishSummary],
        ['한글 요약', comp.koreanTranslation], ['출제 포인트', comp.implicitMeaning]]
@@ -104,6 +104,7 @@ function compOf(st: Record<string, any>): { koreanTopic: string; implicitMeaning
   return {
     koreanTopic: String(comp.koreanTopic ?? comp['1'] ?? '').trim(),
     implicitMeaning: String(comp.implicitMeaning ?? comp['5'] ?? '').trim(),
+    named,
     rows,
   };
 }
@@ -275,7 +276,10 @@ function passagePages(p: SheetPassage, no: number, o: SheetOptions) {
 
   // 헤더 배지 — 답이 아니라 '무엇을 연습할 지문인지'만 알려주므로 문제편에도 싣는다
   const pills: string[] = [];
-  if (o.headerPills) { const im = ar.implicitMeaning.split(/[—:·]/)[0].trim();
+  /* 원본과 다른 곳: 함의 배지는 명명 키(리체움) 데이터에만. 리체움은 implicitMeaning 이
+     "글의 목적 — …" 라벨로 시작하지만 이쪽 번호 키의 함의('5')는 산문이라, 우연히 짧은
+     첫 조각("spirits는 '영혼")이 배지로 새어 들어간다 — 전권 검수에서 4건 실측. */
+  if (o.headerPills) { const im = ar.named ? ar.implicitMeaning.split(/[—:·]/)[0].trim() : '';
   if (im && im.length <= 12) pills.push(`<span class="pill">${esc(im)}</span>`);
   const gCount = tags.filter((t) => !isVocabTag(t)).length;
   if (gCount) pills.push(`<span class="pill">어법 ${gCount}포인트</span>`); }
