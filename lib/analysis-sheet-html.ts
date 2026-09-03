@@ -390,7 +390,11 @@ body{margin:0;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;color:#111;f
 .ph .src{font-size:9pt;color:#4b5563;flex:1}
 .ph .pg{font-size:8.5pt;color:#9ca3af}
 .pill{font-size:7.4pt;font-weight:700;color:#334155;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:1px 7px;white-space:nowrap}
-.sent{margin:0 0 6px;padding:3px 4px;border-radius:3px;line-height:2.0;page-break-inside:avoid}
+/* 원본과 다른 곳: SVOC 마커(top:-11px)가 블록 상자 밖에 떠 있어, 문장 블록이
+   페이지 끝에 걸리면 마커 줄만 이전 페이지에 유령처럼 남았다(9월 고3 26번 실측).
+   첫 줄 위 11px 를 블록 안 여백으로 확보해 마커가 상자 안에 들어오게 한다 —
+   break-inside:avoid 가 이제 마커까지 통째로 지킨다. */
+.sent{margin:0 0 6px;padding:12px 4px 3px;border-radius:3px;line-height:2.0;page-break-inside:avoid}
 body.q .sent{line-height:1.8}
 .sent.topic{background:#fff7cc}
 .sent.essay{background:#fdf2f8}
