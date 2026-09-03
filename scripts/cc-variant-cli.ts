@@ -27,6 +27,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCliEnv } from './_cli-env';
 import { ObjectId } from 'mongodb';
+import { splitQuestionOptionSegments } from '@/lib/question-options-segments';
 import { getDb } from '@/lib/mongodb';
 import {
   runQuestionCountValidation,
@@ -51,6 +52,21 @@ const SAME_PARAGRAPH_TYPES = new Set<string>([
   '주제', '제목', '주장', '일치', '불일치',
   '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도',
 ]);
+
+/**
+ * 보기 묶음을 순서·번호와 무관한 지문(指紋)으로. 중복 판정에만 쓴다.
+ *
+ * 저장 시 보기가 섞이고 ①~⑤ 가 다시 매겨지므로, 같은 문항인지 보려면
+ * 번호를 떼고 정렬해 비교해야 한다.
+ */
+function optionSetKey(options: unknown): string {
+  const raw = Array.isArray(options) ? options.join(' ### ') : String(options ?? '');
+  return splitQuestionOptionSegments(raw)
+    .map((seg) => seg.replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/, '').trim())
+    .filter(Boolean)
+    .sort()
+    .join('\u0000');
+}
 
 function parseFlags(argv: string[]): { positional: string[]; flags: Map<string, string> } {
   const positional: string[] = [];
@@ -399,13 +415,26 @@ async function cmdSave(flags: Map<string, string>) {
       type,
       'question_data.Paragraph': String((qd as Record<string, unknown>).Paragraph ?? ''),
     };
+    /* SAME_PARAGRAPH_TYPES 는 Options 까지 봐야 하는데, Mongo 필터로 문자열을 그대로
+       비교하면 못 잡는다 — saveGeneratedQuestionToDb 가 저장할 때 보기를 섞고
+       ①~⑤ 번호를 다시 매기기 때문에, 같은 문항이라도 초안과 DB 의 Options 문자열이
+       다르다. 그래서 후보를 가져와 **번호를 뗀 보기 집합**으로 비교한다.
+       (이 결함으로 한 세션에서만 11건이 중복 저장돼 사후 삭제해야 했다.) */
+    const dupCol = (await getDb('gomijoshua')).collection('generated_questions');
+    let dup: { _id: unknown } | null = null;
     if (SAME_PARAGRAPH_TYPES.has(type)) {
-      dupFilter['question_data.Options'] = (qd as Record<string, unknown>).Options ?? '';
+      const wanted = optionSetKey((qd as Record<string, unknown>).Options);
+      const cands = await dupCol
+        .find(dupFilter, { projection: { _id: 1, 'question_data.Options': 1 } })
+        .toArray();
+      dup =
+        cands.find(
+          (c) =>
+            optionSetKey((c as Record<string, any>).question_data?.Options) === wanted,
+        ) ?? null;
+    } else {
+      dup = await dupCol.findOne(dupFilter, { projection: { _id: 1 } });
     }
-    const dup = await (await getDb('gomijoshua')).collection('generated_questions').findOne(
-      dupFilter,
-      { projection: { _id: 1 } },
-    );
     if (dup) {
       results.push({ index: i, ok: false, skipped_duplicate: true, existing_id: String(dup._id), error: '이미 같은 문항이 있습니다 (중복 저장 방지)' });
       if (items.length > 1) console.error(`  [${i + 1}/${items.length}] ${source} / ${type} → 건너뜀(중복)`);
