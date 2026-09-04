@@ -18,6 +18,9 @@ frontend:
         - env | grep -e DROPBOX_ >> .env.production || true
         # Resend 메일 발송(주문 안내 메일)
         - env | grep -e RESEND_ >> .env.production || true
+        # 페이퍼릭 상품 적재(ingest) — 이 줄이 없으면 콘솔에 값이 있어도 런타임에
+        # 전달되지 않아 paypericConfigured() 가 false 가 되고 503 이 난다.
+        - env | grep -e PAYPERIC_ >> .env.production || true
         # ANTHROPIC_API_KEY 는 의도적으로 제외한다 — 배포 서버에 키를 두지 않아야
         # 실수로 API 과금이 나가지 않는다(CLAUDE.md 의 Pro 전용 운영 방침).
         - npm run build
