@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getDb } from '@/lib/mongodb';
 import { POINT_LEDGER_COLLECTION } from '@/lib/point-ledger';
+import { loadMembershipRevenue, MEMBERSHIP_PLAN_LABEL } from '@/lib/membership-revenue';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -89,9 +90,44 @@ export async function GET(request: NextRequest) {
     ])
     .toArray();
 
+  /* 멤버십 결제도 같은 화면에서 확인한다 — 포인트 원장에는 남지 않는 현금 결제라
+     이 화면에서 보이지 않아 매출을 따로 확인할 길이 없었다.
+     원장(items)과 섞지 않고 별도 목록·합계로 내려, 포인트 잔액 대사를 흐리지 않는다. */
+  const membershipRows = await loadMembershipRevenue(db);
+  const memUserIds = [...new Set(membershipRows.map((m) => String(m.userId)))].filter((x) =>
+    ObjectId.isValid(x),
+  );
+  const memUsers = memUserIds.length
+    ? await db
+        .collection('users')
+        .find({ _id: { $in: memUserIds.map((x) => new ObjectId(x)) } })
+        .project({ name: 1, loginId: 1 })
+        .toArray()
+    : [];
+  const memUserMap = new Map(memUsers.map((u) => [String(u._id), u as { name?: string; loginId?: string }]));
+  const memberships = membershipRows
+    .sort((a, b) => b.paidAt.getTime() - a.paidAt.getTime())
+    .map((m) => {
+      const u = memUserMap.get(String(m.userId));
+      return {
+        id: `${String(m.userId)}-${m.paidAt.getTime()}`,
+        name: u?.name ?? '',
+        loginId: u?.loginId ?? '',
+        plan: m.plan,
+        planLabel: MEMBERSHIP_PLAN_LABEL[m.plan],
+        amountWon: m.amountWon,
+        paidAt: m.paidAt.toISOString(),
+      };
+    });
+
   return NextResponse.json({
     ok: true,
     items,
+    memberships,
+    membershipSummary: {
+      count: memberships.length,
+      amount: memberships.reduce((a, m) => a + m.amountWon, 0),
+    },
     total,
     page,
     totalPages: Math.max(1, Math.ceil(total / limit)),

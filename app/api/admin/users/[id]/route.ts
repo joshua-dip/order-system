@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { recordPointLedger } from '@/lib/point-ledger';
+import { sanitizeHwpStorageModes } from '@/lib/variant-order-options';
 import { normalizeVariantPrintFormat } from '@/lib/variant-print-html';
 
 async function requireAdmin(request: NextRequest) {
@@ -164,6 +165,12 @@ export async function PATCH(
     if (canOrderSchoolTextbook !== undefined) updates.canOrderSchoolTextbook = canOrderSchoolTextbook;
     if (myFormatApproved !== undefined) updates.myFormatApproved = myFormatApproved;
     if (variantPrintFormat !== undefined) updates.variantPrintFormat = variantPrintFormat;
+    /* 회원별 기본 HWP 저장 방식 — 빈 배열이면 「지정 없음」으로 두어 공통 기본값을 쓴다. */
+    if (body && typeof body === 'object' && 'defaultHwpStorageModes' in body) {
+      updates.defaultHwpStorageModes = sanitizeHwpStorageModes(
+        (body as Record<string, unknown>).defaultHwpStorageModes,
+      );
+    }
     if (allowedTextbooks !== undefined) updates.allowedTextbooks = allowedTextbooks;
     if (allowedTextbooksAnalysis !== undefined) updates.allowedTextbooksAnalysis = allowedTextbooksAnalysis;
     if (allowedTextbooksEssay !== undefined) updates.allowedTextbooksEssay = allowedTextbooksEssay;

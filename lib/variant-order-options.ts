@@ -49,6 +49,12 @@ export function formatHwpStorageSummary(modes: HwpStorageModeKey[]): string {
 }
 
 /** 저장한 기본값에서 읽어 온 값 중 실제 존재하는 키만 남긴다. */
+/**
+ * 회원별 기본 저장 방식(users.defaultHwpStorageModes).
+ *
+ * 선생님마다 늘 같은 조합으로 주문하시는데 매번 다시 고르셔야 했다. 관리자가
+ * 회원 상세에 적어 두면 그분 주문서가 그 조합으로 열린다. 비워 두면 공통 기본값.
+ */
 export function sanitizeHwpStorageModes(raw: unknown): HwpStorageModeKey[] {
   if (!Array.isArray(raw)) return [];
   const allowed = HWP_STORAGE_OPTIONS.map((o) => o.key) as string[];

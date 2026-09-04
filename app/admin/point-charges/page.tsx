@@ -22,6 +22,12 @@ interface ChargeRow {
   createdAt: string | null;
 }
 interface Summary { count: number; points: number; amount: number }
+/** 멤버십 결제 — 포인트 원장에는 남지 않는 현금 결제라 따로 받아 본다 */
+interface MembershipRow {
+  id: string; name: string; loginId: string;
+  plan: 'monthly' | 'annual'; planLabel: string;
+  amountWon: number; paidAt: string;
+}
 
 const won = (n: number | null) => (n == null ? '–' : `${n.toLocaleString()}원`);
 const pt = (n: number) => `${n.toLocaleString()}P`;
@@ -34,6 +40,8 @@ export default function AdminPointChargesPage() {
   const [adminLoginId, setAdminLoginId] = useState('');
   const [items, setItems] = useState<ChargeRow[]>([]);
   const [summary, setSummary] = useState<Summary>({ count: 0, points: 0, amount: 0 });
+  const [memberships, setMemberships] = useState<MembershipRow[]>([]);
+  const [memSummary, setMemSummary] = useState<{ count: number; amount: number }>({ count: 0, amount: 0 });
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
@@ -100,6 +108,8 @@ export default function AdminPointChargesPage() {
       if (d.ok) {
         setItems(d.items);
         setSummary(d.summary);
+        setMemberships(Array.isArray(d.memberships) ? d.memberships : []);
+        setMemSummary(d.membershipSummary ?? { count: 0, amount: 0 });
         setTotal(d.total);
         setTotalPages(d.totalPages);
         setPage(d.page);
@@ -128,7 +138,9 @@ export default function AdminPointChargesPage() {
         <div className="mb-6 flex items-end justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">💳 회원 포인트 구매내역</h1>
-            <p className="text-sm text-slate-400 mt-1">토스 결제로 충전한 포인트(point_charge) 전체 내역</p>
+            <p className="text-sm text-slate-400 mt-1">
+              결제로 충전한 포인트 전체 내역 · 아래에 <span className="text-amber-300">멤버십 결제(월·연회원)</span>도 함께 표시됩니다
+            </p>
           </div>
           <button
             type="button"
@@ -211,7 +223,7 @@ export default function AdminPointChargesPage() {
         </div>
 
         {/* 요약 카드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
             <p className="text-xs text-slate-400">구매 건수</p>
             <p className="text-2xl font-bold text-white mt-1 tabular-nums">{summary.count.toLocaleString()}건</p>
@@ -223,6 +235,12 @@ export default function AdminPointChargesPage() {
           <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
             <p className="text-xs text-slate-400">총 결제금액</p>
             <p className="text-2xl font-bold text-emerald-300 mt-1 tabular-nums">{won(summary.amount)}</p>
+          </div>
+          {/* 멤버십은 포인트가 아니라 현금 결제라 금액만 따로 센다 */}
+          <div className="bg-slate-800 rounded-xl border border-amber-700/60 p-4">
+            <p className="text-xs text-amber-300/90">멤버십 결제 (월·연회원)</p>
+            <p className="text-2xl font-bold text-amber-300 mt-1 tabular-nums">{won(memSummary.amount)}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{memSummary.count.toLocaleString()}건 · 포인트와 별개</p>
           </div>
         </div>
 
@@ -313,6 +331,46 @@ export default function AdminPointChargesPage() {
             </div>
           )}
         </div>
+
+        {/* 멤버십 결제 — 포인트 원장과 섞지 않고 따로 보인다.
+            포인트가 오가지 않는 현금 결제라 한 표에 넣으면 잔액 대사가 흐려진다. */}
+        {memberships.length > 0 && (
+          <div className="bg-slate-800 rounded-xl border border-amber-700/60 overflow-hidden mt-6">
+            <div className="px-4 py-3 border-b border-slate-700">
+              <h2 className="text-sm font-bold text-amber-300">👑 멤버십 결제 (월·연회원)</h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                포인트가 아닌 현금 결제입니다. 관리자 홈 매출에는 이 금액이 합산되어 있습니다.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700 text-slate-400 text-xs">
+                    <th className="text-left px-4 py-3 font-medium">회원</th>
+                    <th className="text-left px-3 py-3 font-medium">플랜</th>
+                    <th className="text-right px-3 py-3 font-medium">결제금액</th>
+                    <th className="text-left px-3 py-3 font-medium">결제일시</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memberships.map((m) => (
+                    <tr key={m.id} className="border-b border-slate-700/50 hover:bg-slate-700/40">
+                      <td className="px-4 py-2.5">
+                        <span className="text-white font-medium">{m.name || '(이름없음)'}</span>
+                        <span className="text-slate-500 text-xs ml-1.5">{m.loginId}</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-amber-300">{m.planLabel}</td>
+                      <td className="px-3 py-2.5 text-right text-emerald-300 font-semibold tabular-nums">
+                        {won(m.amountWon)}
+                      </td>
+                      <td className="px-3 py-2.5 text-slate-400 text-xs">{fmtDate(m.paidAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* 페이지 */}
         {totalPages > 1 && (

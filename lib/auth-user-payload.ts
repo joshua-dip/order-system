@@ -44,6 +44,10 @@ export function buildAuthUserPayload(
     allowedTextbooksEssay: Array.isArray(user.allowedTextbooksEssay) ? user.allowedTextbooksEssay : allowed,
     ...(Array.isArray(wb) ? { allowedTextbooksWorkbook: wb } : {}),
     ...(Array.isArray(vb) ? { allowedTextbooksVariant: vb } : {}),
+    /* 회원별 기본 HWP 저장 방식 — 주문서가 이 값으로 열린다(없으면 공통 기본값) */
+    ...(Array.isArray(user.defaultHwpStorageModes)
+      ? { defaultHwpStorageModes: user.defaultHwpStorageModes }
+      : {}),
     points,
     annualMemberSince: iso(annualSince),
     isAnnualMemberActive: isAnnualMemberActive(annualSince ?? null),

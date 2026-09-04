@@ -99,6 +99,9 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         );
         /* 자료 받을 주소를 미리 채운다 — 매번 손으로 적다 오타가 나면 자료가 엉뚱한 데로 간다.
            직전 주문 불러오기가 나중에 덮으므로 여기서는 계정 이메일만 넣는다. */
+        /* 관리자가 지정해 둔 회원별 기본 저장 방식(부교재와 같은 값을 쓴다) */
+        const memberDefaults = sanitizeHwpStorageModes(u?.defaultHwpStorageModes);
+        if (memberDefaults.length > 0) setHwpStorageModes(memberDefaults);
         const accountEmail = typeof u?.email === 'string' ? u.email.trim() : '';
         if (accountEmail) {
           setEmail((prev) => {

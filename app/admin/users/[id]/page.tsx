@@ -11,6 +11,11 @@ import {
   normalizeVariantPrintFormat,
   type VariantPrintFormat,
 } from '@/lib/variant-print-html';
+import {
+  HWP_STORAGE_OPTIONS,
+  sanitizeHwpStorageModes,
+  type HwpStorageModeKey,
+} from '@/lib/variant-order-options';
 
 /* ─── 타입 ─── */
 type TextbooksMode = 'analysis' | 'essay' | 'workbook' | 'variant';
@@ -320,6 +325,8 @@ export default function UserDetailPage() {
   /* Dropbox */
   /* 회원별 인쇄 양식 — 변형문제 PDF 를 뽑을 때 이 값을 따른다. */
   const [editPrintFormat, setEditPrintFormat] = useState<VariantPrintFormat>(DEFAULT_VARIANT_PRINT_FORMAT);
+  /** 이 회원의 주문서가 기본으로 열릴 HWP 저장 방식 (빈 배열이면 공통 기본값) */
+  const [editHwpModes, setEditHwpModes] = useState<HwpStorageModeKey[]>([]);
   const [editDropboxPath, setEditDropboxPath] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [dropboxMsg, setDropboxMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -389,6 +396,7 @@ export default function UserDetailPage() {
       setEditSchoolTextbook(u.canOrderSchoolTextbook);
       setEditMyFormat(u.myFormatApproved);
       setEditPrintFormat(normalizeVariantPrintFormat(u.variantPrintFormat));
+      setEditHwpModes(sanitizeHwpStorageModes((u as { defaultHwpStorageModes?: unknown }).defaultHwpStorageModes));
       setEditDropboxPath(u.dropboxFolderPath);
     } catch {
       setError('불러오는 중 오류가 발생했습니다.');
@@ -811,6 +819,7 @@ export default function UserDetailPage() {
         canOrderSchoolTextbook: editSchoolTextbook,
         myFormatApproved: editMyFormat,
         variantPrintFormat: editPrintFormat,
+        defaultHwpStorageModes: editHwpModes,
         isVip: editIsVip,
         memberType: editMemberType,
         annualMemberSince: editAnnual || null,
@@ -1329,6 +1338,35 @@ export default function UserDetailPage() {
                   <Toggle checked={editEssay} onChange={setEditEssay} label="서술형 메뉴 허용" />
                   <Toggle checked={editSchoolTextbook} onChange={setEditSchoolTextbook} label="교과서 주문 허용" />
                   <Toggle checked={editMyFormat} onChange={setEditMyFormat} label="나만의 양식 승인" />
+                </div>
+              </div>
+
+              {/* 주문서 기본값 — 이 회원이 주문서를 열었을 때 미리 켜져 있을 저장 방식 */}
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <SectionTitle>주문서 기본 저장 방식</SectionTitle>
+                <p className="text-xs text-slate-400 mb-3">
+                  이 선생님이 변형문제·모의고사 주문서를 열면 여기서 켠 항목이 미리 선택됩니다.
+                  아무것도 켜지 않으면 공통 기본값을 씁니다.
+                </p>
+                <div className="flex flex-col gap-2">
+                  {HWP_STORAGE_OPTIONS.map((o) => (
+                    <label key={o.key} className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editHwpModes.includes(o.key)}
+                        onChange={() =>
+                          setEditHwpModes((prev) =>
+                            prev.includes(o.key) ? prev.filter((k) => k !== o.key) : [...prev, o.key],
+                          )
+                        }
+                        className="mt-0.5 h-4 w-4 accent-sky-500"
+                      />
+                      <span className="text-sm text-slate-200">
+                        {o.label}
+                        <span className="ml-1.5 text-[11px] text-slate-500">{o.hint}</span>
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
 

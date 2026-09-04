@@ -195,6 +195,10 @@ const QuestionSettings = ({
             setBaseQuotaLimit(Number(q?.limit) || 0);
           })
           .catch(() => { setBaseQuotaRemaining(0); setBaseQuotaLimit(0); });
+        /* 관리자가 이 회원에게 지정해 둔 기본 저장 방식이 있으면 그것으로 연다.
+           localStorage 에 저장한 개인 설정이 있으면 그쪽이 나중에 덮는다. */
+        const memberDefaults = sanitizeHwpStorageModes(u?.defaultHwpStorageModes);
+        if (memberDefaults.length > 0) setHwpStorageModes(memberDefaults);
         setMyFormatApproved(!!u?.myFormatApproved);
         if (u?.myFormatApproved) refreshMyFormats();
         const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
