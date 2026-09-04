@@ -55,6 +55,8 @@ export default function AnalysisPage() {
   /** 자료 받을 이메일 — 계정 이메일을 미리 채워 둔다(오타로 엉뚱한 데 가는 것을 막는다) */
   const [email, setEmail] = useState('');
   const [emailAutoFilled, setEmailAutoFilled] = useState(false);
+  /** 사용할 포인트 — 다른 주문서(서술형·변형문제)와 같은 방식 */
+  const [pointsToUse, setPointsToUse] = useState(0);
 
   const allowedTextbooksAnalysis = currentUser?.allowedTextbooksAnalysis;
   const textbookList =
@@ -158,6 +160,16 @@ export default function AnalysisPage() {
       ? ORDER_PREFIX.MOCK_ANALYSIS
       : ORDER_PREFIX.BOOK_ANALYSIS;
 
+    const userPoints =
+      typeof currentUser?.points === 'number' && currentUser.points >= 0 ? currentUser.points : 0;
+    const effectivePointsUsed = Math.min(pointsToUse, userPoints, totalPrice);
+    const finalAmount = totalPrice - effectivePointsUsed;
+    /* 포인트를 쓰면 「입금하실 금액」을 명시한다 — 매출 집계도 이 줄을 읽는다. */
+    const pointLine =
+      effectivePointsUsed > 0
+        ? `\n5. 포인트 사용: ${effectivePointsUsed.toLocaleString()}원\n6. 입금하실 금액: ${finalAmount.toLocaleString()}원 (총 ${totalPrice.toLocaleString()}원 − 포인트 ${effectivePointsUsed.toLocaleString()}원)`
+        : '';
+
     const orderText = `분석지 주문서 (PDF 제공)
 
 교재: ${selectedTextbook}
@@ -169,13 +181,13 @@ export default function AnalysisPage() {
 
 2. 지문 수: ${selectedLessons.length}개
 3. 단가: 지문당 ${PRICE_PER_ITEM.toLocaleString()}원
-4. 금액: ${totalPrice.toLocaleString()}원
+4. 금액: ${totalPrice.toLocaleString()}원${pointLine}
 
 ※ 분석지는 PDF 파일로만 우선 제공합니다.`;
 
     setSubmitting(true);
     try {
-      const res = await saveOrderToDb(orderText, prefix);
+      const res = await saveOrderToDb(orderText, prefix, effectivePointsUsed || undefined);
       if (res.ok && res.id) {
         router.push('/order/done?id=' + res.id);
       } else {
@@ -351,6 +363,38 @@ export default function AnalysisPage() {
                           {(selectedLessons.length * PRICE_PER_ITEM).toLocaleString()}원
                         </span>
                       </p>
+                      {/* 포인트 사용 — 다른 주문서와 같은 방식(보유분·주문금액 안에서만) */}
+                      {(currentUser?.points ?? 0) > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <label className="block text-sm text-gray-700 font-medium mb-1">
+                            포인트 사용 (보유: {(currentUser?.points ?? 0).toLocaleString()} P)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={Math.min(currentUser?.points ?? 0, selectedLessons.length * PRICE_PER_ITEM)}
+                            value={pointsToUse || ''}
+                            onChange={(e) => setPointsToUse(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                            placeholder="0"
+                            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 text-sm"
+                          />
+                          <span className="ml-2 text-gray-500 text-sm">원</span>
+                          {pointsToUse > 0 && (
+                            <p className="mt-1.5 text-green-700 font-semibold text-sm">
+                              입금하실 금액:{' '}
+                              {(
+                                selectedLessons.length * PRICE_PER_ITEM -
+                                Math.min(
+                                  pointsToUse,
+                                  currentUser?.points ?? 0,
+                                  selectedLessons.length * PRICE_PER_ITEM,
+                                )
+                              ).toLocaleString()}
+                              원
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <div className="mt-3">
                         <label className="block text-sm font-medium text-gray-800 mb-1">
                           자료 받으실 이메일 <span className="text-red-500">*</span>
