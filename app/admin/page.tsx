@@ -596,7 +596,7 @@ export default function AdminDashboardPage() {
   const [monthlyRevenueOpen, setMonthlyRevenueOpen] = useState(false);
   const [monthlyRevenueLoading, setMonthlyRevenueLoading] = useState(false);
   const [monthlyRevenueRows, setMonthlyRevenueRows] = useState<
-    Array<{ key: string; label: string; totalWon: number; orderCount: number }>
+    Array<{ key: string; label: string; totalWon: number; orderCount: number; membershipWon?: number }>
   >([]);
   const [monthlyRevenueNote, setMonthlyRevenueNote] = useState<string | null>(null);
   const [monthlyRevenueError, setMonthlyRevenueError] = useState<string | null>(null);
@@ -5400,6 +5400,11 @@ export default function AdminDashboardPage() {
                           <td className="py-2 pr-3 text-right tabular-nums text-slate-300">{row.orderCount}</td>
                           <td className="py-2 text-right tabular-nums font-medium text-white">
                             {row.totalWon.toLocaleString()}
+                            {row.membershipWon ? (
+                              <span className="block text-[10px] font-normal text-emerald-400/90">
+                                멤버십 {row.membershipWon.toLocaleString()}
+                              </span>
+                            ) : null}
                           </td>
                         </tr>
                       ))}

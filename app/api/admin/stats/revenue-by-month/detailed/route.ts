@@ -4,6 +4,7 @@ import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { effectiveOrderNetRevenueWon } from '@/lib/order-revenue';
 import { revenueMonthKeyForOrder } from '@/lib/order-number';
+import { loadMembershipRevenue, MEMBERSHIP_PLAN_LABEL } from '@/lib/membership-revenue';
 import {
   parseMockExamSelections,
   mockExamNumberIdToLabel,
@@ -256,6 +257,32 @@ export async function GET(request: NextRequest) {
           항목: it.label,
           변형유형: it.variantTypes,
           단가추정_원: unitPrice,
+        });
+      }
+    }
+
+    /* 멤버십 결제도 한 줄씩 넣는다 — orders 에 없어 매출에서 빠져 있었다.
+       포인트 충전은 넣지 않는다(그 포인트로 결제한 주문이 이미 잡혀 이중 계상). */
+    const membership = await loadMembershipRevenue(db);
+    if (membership.length > 0) {
+      const ids = [...new Set(membership.map((m) => String(m.userId)))].filter(Boolean);
+      const { ObjectId } = await import('mongodb');
+      const users = await db
+        .collection('users')
+        .find({ _id: { $in: ids.filter((id) => ObjectId.isValid(id)).map((id) => new ObjectId(id)) } })
+        .project({ loginId: 1 })
+        .toArray();
+      const loginById = new Map(users.map((u) => [String(u._id), s(u.loginId)]));
+      for (const m of membership) {
+        orderRows.push({
+          월: m.monthKey,
+          완료일시: dateString(m.paidAt),
+          주문번호: '',              // 멤버십은 주문번호가 없다(결제 건)
+          회원ID: loginById.get(String(m.userId)) ?? '',
+          유형: `멤버십 ${MEMBERSHIP_PLAN_LABEL[m.plan]}`,
+          교재: '',
+          항목수: 1,
+          매출_원: m.amountWon,
         });
       }
     }
