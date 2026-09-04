@@ -52,6 +52,9 @@ export default function AnalysisPage() {
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  /** 자료 받을 이메일 — 계정 이메일을 미리 채워 둔다(오타로 엉뚱한 데 가는 것을 막는다) */
+  const [email, setEmail] = useState('');
+  const [emailAutoFilled, setEmailAutoFilled] = useState(false);
 
   const allowedTextbooksAnalysis = currentUser?.allowedTextbooksAnalysis;
   const textbookList =
@@ -66,6 +69,15 @@ export default function AnalysisPage() {
         const isMember = !!data?.user;
         setAuthorized(isMember);
         setHasAccess(isMember && !!data?.user?.canAccessAnalysis);
+        /* 변형문제 주문서와 같은 방식 — 계정 이메일을 넣어 두되, 이미 적었으면 두지 않는다. */
+        const accountEmail = typeof data?.user?.email === 'string' ? data.user.email.trim() : '';
+        if (accountEmail) {
+          setEmail((prev) => {
+            if (prev.trim()) return prev;
+            setEmailAutoFilled(true);
+            return accountEmail;
+          });
+        }
       })
       .catch(() => {
         setAuthorized(false);
@@ -136,6 +148,11 @@ export default function AnalysisPage() {
       alert('강과 번호를 1개 이상 선택해주세요.');
       return;
     }
+    /* 자료가 메일로 나가므로 주소가 없으면 주문을 받을 수 없다. */
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      alert('자료 받으실 이메일 주소를 정확히 입력해주세요.');
+      return;
+    }
     const totalPrice = selectedLessons.length * PRICE_PER_ITEM;
     const prefix = isMockExamTextbookKey(selectedTextbook)
       ? ORDER_PREFIX.MOCK_ANALYSIS
@@ -144,6 +161,8 @@ export default function AnalysisPage() {
     const orderText = `분석지 주문서 (PDF 제공)
 
 교재: ${selectedTextbook}
+
+자료 받으실 이메일 주소: ${email.trim()}
 
 1. 강과 번호
 : ${selectedLessons.join(', ')}
@@ -332,6 +351,27 @@ export default function AnalysisPage() {
                           {(selectedLessons.length * PRICE_PER_ITEM).toLocaleString()}원
                         </span>
                       </p>
+                      <div className="mt-3">
+                        <label className="block text-sm font-medium text-gray-800 mb-1">
+                          자료 받으실 이메일 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setEmailAutoFilled(false);   // 직접 고치기 시작하면 안내는 내린다
+                          }}
+                          placeholder="example@email.com"
+                          className="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-black focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                          required
+                        />
+                        {emailAutoFilled && email.trim() ? (
+                          <p className="text-[11px] text-blue-700 mt-1.5">
+                            가입하신 주소를 넣어뒀어요. 다른 주소로 받으시려면 고쳐 주세요.
+                          </p>
+                        ) : null}
+                      </div>
                       <button
                         type="button"
                         onClick={handleSubmitOrder}

@@ -82,6 +82,8 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [baseQuotaRemaining, setBaseQuotaRemaining] = useState(0);
   /** 이 계정에 적용되는 월 한도 — 유료 회원과 가입 체험이 다르다 */
   const [baseQuotaLimit, setBaseQuotaLimit] = useState(0);
+  /** 계정 이메일로 자동 채웠는지 — 사용자가 고치면 안내를 내린다 */
+  const [emailAutoFilled, setEmailAutoFilled] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -95,6 +97,16 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         setIsPremiumMembership(
           !!u?.isAnnualMemberActive || !!u?.isMonthlyMemberActive || !!u?.signupPremiumTrialActive,
         );
+        /* 자료 받을 주소를 미리 채운다 — 매번 손으로 적다 오타가 나면 자료가 엉뚱한 데로 간다.
+           직전 주문 불러오기가 나중에 덮으므로 여기서는 계정 이메일만 넣는다. */
+        const accountEmail = typeof u?.email === 'string' ? u.email.trim() : '';
+        if (accountEmail) {
+          setEmail((prev) => {
+            if (prev.trim()) return prev;
+            setEmailAutoFilled(true);
+            return accountEmail;
+          });
+        }
         /* 이번 달 남은 무료 한도 — 부교재 주문서와 같은 창구를 쓴다(BV·MV 합산). */
         fetch('/api/my/variant-base-quota', { credentials: 'include' })
           .then((r) => r.json())
@@ -1033,11 +1045,19 @@ ${examDetails}
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailAutoFilled(false);
+                    }}
                     placeholder="example@email.com"
                     className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-black focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
                     required
                   />
+                  {emailAutoFilled && email.trim() ? (
+                    <p className="text-[11px] text-blue-700 mt-1.5">
+                      가입하신 주소를 넣어뒀어요. 다른 주소로 받으시려면 고쳐 주세요.
+                    </p>
+                  ) : null}
                   <p className="text-xs text-gray-600 mt-2">
                     완성된 모의고사 자료를 받으실 이메일 주소를 입력해주세요
                   </p>
