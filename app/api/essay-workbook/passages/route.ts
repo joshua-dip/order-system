@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { normalizePassageKey } from '@/lib/passage-key-match';
+import { ESSAY_MEANING_EXAM_TYPE, ESSAY_MAIN_IDEA_EXAM_TYPE } from '@/app/data/essay-categories';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
             /* 지문 × 유형으로 갈라 담는다 — 한 지문이 두 유형을 다 가질 수 있다. */
             _id: {
               sourceKey: '$sourceKey',
-              meaning: { $eq: ['$data.meta.examType', '글의의미서술형'] },
+              examType: '$data.meta.examType',
             },
             difficulties: { $addToSet: '$difficulty' },
           },
@@ -47,16 +48,18 @@ export async function GET(request: NextRequest) {
       return m ? parseInt(m[1], 10) : 9999;
     };
     /* 갈라 담은 것을 지문 하나로 다시 합친다 — 화면은 지문 단위로 고르기 때문. */
-    const byKey = new Map<string, { sourceKey: string; arrange: string[]; meaning: string[] }>();
+    const byKey = new Map<string, { sourceKey: string; arrange: string[]; meaning: string[]; mainidea: string[] }>();
     for (const r of rows) {
-      const id = r._id as { sourceKey?: unknown; meaning?: unknown };
+      const id = r._id as { sourceKey?: unknown; examType?: unknown };
       const sourceKey = String(id.sourceKey ?? '');
       if (!sourceKey) continue;
       const diffs = (r.difficulties as unknown[]).filter(
         (d): d is string => typeof d === 'string' && d !== '',
       );
-      const cur = byKey.get(sourceKey) ?? { sourceKey, arrange: [], meaning: [] };
-      if (id.meaning === true) cur.meaning = [...cur.meaning, ...diffs];
+      const cur = byKey.get(sourceKey) ?? { sourceKey, arrange: [], meaning: [], mainidea: [] };
+      const et = String(id.examType ?? '');
+      if (et === ESSAY_MEANING_EXAM_TYPE) cur.meaning = [...cur.meaning, ...diffs];
+      else if (et === ESSAY_MAIN_IDEA_EXAM_TYPE) cur.mainidea = [...cur.mainidea, ...diffs];
       else cur.arrange = [...cur.arrange, ...diffs];
       byKey.set(sourceKey, cur);
     }
@@ -67,14 +70,14 @@ export async function GET(request: NextRequest) {
     for (const raw of srcKeys) {
       const k = String(raw ?? '').trim();
       if (!k || madeNorm.has(normalizePassageKey(k))) continue;
-      byKey.set(k, { sourceKey: k, arrange: [], meaning: [] });
+      byKey.set(k, { sourceKey: k, arrange: [], meaning: [], mainidea: [] });
     }
 
     const passages = [...byKey.values()]
       .map((p) => ({
         ...p,
         /* 옛 화면 호환 — 조건영작배열 난도를 기본 난도 목록으로 본다. */
-        difficulties: p.arrange.length > 0 ? p.arrange : p.meaning,
+        difficulties: p.arrange.length > 0 ? p.arrange : p.meaning.length > 0 ? p.meaning : p.mainidea,
         isMeaningType: p.meaning.length > 0,
       }))
       .sort((a, b) => num(a.sourceKey) - num(b.sourceKey) || a.sourceKey.localeCompare(b.sourceKey, 'ko'));

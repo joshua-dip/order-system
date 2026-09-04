@@ -16,22 +16,24 @@ const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
 interface TextbookRow { textbook: string; sourceCount: number }
-/** 워크북 유형 — 조건영작배열 / 글의의미 서술형. 지문마다 보유 난도가 다르다. */
-type WorkbookKind = 'arrange' | 'meaning';
+/** 워크북 유형 — 조건영작배열 / 글의의미 서술형 / 요지파악영작형. 지문마다 보유 난도가 다르다. */
+type WorkbookKind = 'arrange' | 'meaning' | 'mainidea';
 const KIND_LABEL: Record<WorkbookKind, string> = {
   arrange: '조건영작배열',
   meaning: '글의의미 서술형',
+  mainidea: '요지파악영작형',
 };
 interface PassageRow {
   sourceKey: string;
   /** 유형별 보유 난도. 비어 있으면 그 유형은 이 지문에 없다. */
   arrange: string[];
   meaning: string[];
+  mainidea: string[];
   difficulties: string[];
   isMeaningType: boolean;
 }
 const diffsOf = (p: PassageRow, kind: WorkbookKind) =>
-  (kind === 'meaning' ? p.meaning : p.arrange) ?? [];
+  (kind === 'meaning' ? p.meaning : kind === 'mainidea' ? p.mainidea : p.arrange) ?? [];
 interface SampleQuestion { prompt: string; points: number | null; conditions: string[]; bogi: string }
 interface Sample {
   key: string; label: string; textbook: string; sourceKey: string; difficulty: string;
@@ -160,7 +162,24 @@ export default function EssayWorkbookPage() {
   const kindCounts = useMemo(() => ({
     arrange: passages.filter((p) => (p.arrange ?? []).length > 0).length,
     meaning: passages.filter((p) => (p.meaning ?? []).length > 0).length,
+    mainidea: passages.filter((p) => (p.mainidea ?? []).length > 0).length,
   }), [passages]);
+
+  /* 교재를 열면 재고가 있는 유형으로 자동으로 맞춘다 (passages 로드 시 1회 — 이후 수동 선택은 존중). */
+  useEffect(() => {
+    if (passages.length === 0) return;
+    const counts: Record<WorkbookKind, number> = {
+      arrange: passages.filter((p) => (p.arrange ?? []).length > 0).length,
+      meaning: passages.filter((p) => (p.meaning ?? []).length > 0).length,
+      mainidea: passages.filter((p) => (p.mainidea ?? []).length > 0).length,
+    };
+    const best = (['arrange', 'meaning', 'mainidea'] as WorkbookKind[])
+      .filter((k) => counts[k] > 0)
+      .sort((a, b) => counts[b] - counts[a])[0];
+    if (best) setKind(best);
+    // passages 만 의존 — 유형을 바꿔도 재실행되지 않아 수동 선택과 충돌하지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [passages]);
 
   /* 재고가 없는 유형도 고를 수 있다 — 주문이 들어오면 제작하므로 되돌리지 않는다. */
 
@@ -483,7 +502,7 @@ export default function EssayWorkbookPage() {
                   맨 위 소개 카드에도 샘플이 있지만 거기까지 올라갔다 와야 했다. */}
               {(
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {(['arrange', 'meaning'] as WorkbookKind[]).map((k) => {
+                  {(['arrange', 'meaning', 'mainidea'] as WorkbookKind[]).map((k) => {
                     const sample = samples.find((sp) => sp.key === k);
                     return (
                       <div key={k} className="flex items-stretch">
