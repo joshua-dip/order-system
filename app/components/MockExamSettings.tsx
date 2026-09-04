@@ -8,7 +8,8 @@ import {
   variantVolumeDiscountRate,
   VARIANT_PRICE,
 } from '@/lib/variant-pricing';
-import { isFreeVariantType } from '@/lib/variant-pricing';
+import { isFreeVariantType, isAdvancedVariantType } from '@/lib/variant-pricing';
+import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import {
   HWP_STORAGE_OPTIONS,
   DEFAULT_HWP_STORAGE_MODES_MOCK,
@@ -76,6 +77,9 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   const [pointsToUse, setPointsToUse] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const orderSubmittingRef = useRef(false);
+  /** 멤버십(월·연·가입 체험) 여부와 이번 달 남은 기본난도 무료 한도 */
+  const [isPremiumMembership, setIsPremiumMembership] = useState(false);
+  const [baseQuotaRemaining, setBaseQuotaRemaining] = useState(0);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -86,10 +90,20 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         setIsMember(!!u && u.role !== 'admin');
         const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
         setUserPoints(pts);
+        setIsPremiumMembership(
+          !!u?.isAnnualMemberActive || !!u?.isMonthlyMemberActive || !!u?.signupPremiumTrialActive,
+        );
+        /* 이번 달 남은 무료 한도 — 부교재 주문서와 같은 창구를 쓴다(BV·MV 합산). */
+        fetch('/api/my/variant-base-quota', { credentials: 'include' })
+          .then((r) => r.json())
+          .then((q) => setBaseQuotaRemaining(Number(q?.remaining) || 0))
+          .catch(() => setBaseQuotaRemaining(0));
       })
       .catch(() => {
         setLoggedIn(false);
         setIsMember(false);
+        setIsPremiumMembership(false);
+        setBaseQuotaRemaining(0);
       });
   }, []);
 
@@ -226,6 +240,16 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 
   const computeMockExamPrice = () => {
     const totalNumberCount = examSelections.reduce((sum, exam) => sum + exam.numbers.length, 0);
+
+    /* 멤버십 회원은 기본난도를 월 한도까지 무료로 받는다(고난도는 정상가).
+       부교재 주문서(QuestionSettings)와 같은 규칙·같은 한도를 쓴다. */
+    const paidBaseTypes = selectedTypes.filter(
+      (t) => !isFreeVariantType(t) && !isAdvancedVariantType(t),
+    );
+    const baseQuestionCount = paidBaseTypes.length * totalNumberCount * questionsPerType;
+    const quotaSplit = splitByBaseQuota(baseQuestionCount, baseQuotaRemaining);
+    let quotaLeft = quotaSplit.freeCount;
+
     let basePrice = 0;
     for (const type of selectedTypes) {
       const n = totalNumberCount * questionsPerType;
@@ -235,13 +259,24 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
           : type === '삽입'
             ? orderInsertExplanation.삽입
             : true;
-      basePrice += isFreeVariantType(type) ? 0 : n * variantUnitPrice(type, { withExplanation });
+      if (isFreeVariantType(type)) continue;
+      let charged = n;
+      if (!isAdvancedVariantType(type) && quotaLeft > 0) {
+        const covered = Math.min(n, quotaLeft);
+        quotaLeft -= covered;
+        charged = n - covered;
+      }
+      basePrice += charged * variantUnitPrice(type, { withExplanation });
     }
     const totalQuestions = totalNumberCount * selectedTypes.length * questionsPerType;
     const discountRate = variantVolumeDiscountRate(totalQuestions);
     const discountAmount = basePrice * discountRate;
     const totalPrice = Math.round(basePrice - discountAmount);
-    return { basePrice, totalQuestions, discountRate, discountAmount, totalPrice, isDiscounted: totalQuestions >= 100, totalNumberCount };
+    return {
+      basePrice, totalQuestions, discountRate, discountAmount, totalPrice,
+      isDiscounted: totalQuestions >= 100, totalNumberCount,
+      quotaFreeCount: quotaSplit.freeCount,
+    };
   };
 
   // 모의고사 번호별 구성
@@ -410,7 +445,13 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       totalPrice,
       isDiscounted,
       totalNumberCount,
+      quotaFreeCount: quotaFree,
     } = computeMockExamPrice();
+
+    /* 관리자가 주문서만 보고도 왜 금액이 깎였는지 알 수 있게 남긴다. */
+    const quotaLine = quotaFree > 0
+      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 한도)`
+      : '';
 
     const examDetails = examSelections.map((exam, index) => {
       const selectedNumberNames = exam.numbers.map(numberId => 
@@ -460,7 +501,7 @@ ${examDetails}
 : ${totalQuestions}문항 (총 ${totalNumberCount}개 번호 × ${selectedTypes.length}개 유형 × ${questionsPerType}문항)
 
 5. 가격
-: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${pointLine}`;
+: ${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}${quotaLine}${pointLine}`;
 
     const orderMeta = {
       flow: 'mockVariant',
@@ -500,6 +541,7 @@ ${examDetails}
     totalPrice,
     isDiscounted,
     totalNumberCount,
+    quotaFreeCount,
   } = computeMockExamPrice();
 
   const maxPointUsable = Math.min(userPoints, totalPrice);
@@ -786,6 +828,20 @@ ${examDetails}
                     • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                     • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                   </div>
+                  {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다 */}
+                  {isPremiumMembership ? (
+                    <div className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                      👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료</b>
+                      {' · '}이번 달 남은 무료 <b>{baseQuotaRemaining.toLocaleString()}문항</b>
+                      <span className="block text-[12px] text-green-700/80 mt-0.5">
+                        고난도({VARIANT_PRICE.advanced}원)는 한도와 무관하게 정상 과금됩니다.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                      👑 <b>월·연회원</b>은 기본난도를 <b>월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항까지 무료</b>로 받습니다.
+                    </div>
+                  )}
                 </div>
 
                 {/* 문제 유형 선택 */}
@@ -1076,6 +1132,14 @@ ${examDetails}
                           {totalNumberCount}개 번호 × {selectedTypes.length}개 유형 × {questionsPerType}개 문항
                         </div>
                       </div>
+                      {quotaFreeCount > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-black">멤버십 기본난도 무료:</span>
+                          <span className="font-medium text-green-600 text-right">
+                            {quotaFreeCount.toLocaleString()}문항 (−{(quotaFreeCount * VARIANT_PRICE.base).toLocaleString()}원)
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-black">기본 가격:</span>
                         <span className="font-medium text-black text-right">

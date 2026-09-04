@@ -11,6 +11,7 @@ import {
 } from '@/lib/point-charge-packages';
 import { getTossPaymentsClientKeyPublic, isTossWidgetClientKey } from '@/lib/toss-payments-env';
 import { effectivePointChargeDiscount, type CouponView } from '@/lib/coupons-shared';
+import { MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import { MEMBERSHIP_MONTHLY_WON, MEMBERSHIP_ANNUAL_REFERENCE_WON } from '@/lib/membership-pricing';
 
 /** 토스 customerKey (회원당 고유, 2~50자) — app/my/page.tsx 와 동일 규칙. */
@@ -351,7 +352,8 @@ export default function PointChargePage() {
                       <p className="text-[12px] font-bold text-[#1d4ed8] mb-2">멤버십 회원은 이런 기능을 쓸 수 있어요</p>
                       <ul className="space-y-1.5">
                         {[
-                          { icon: '✏️', title: '변형문제 만들기', desc: '지문을 골라 변형문제를 직접 제작·다운로드' },
+                          { icon: '🎁', title: `변형문제 기본난도 월 ${MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료`, desc: '주문 시 기본난도가 한도까지 0원 (고난도는 정상가)' },
+                          { icon: '✏️', title: '변형문제 만들기', desc: '지문을 골라 직접 제작·다운로드 (본인 Claude API 키 필요)' },
                           { icon: '📝', title: '파이널 예비 모의고사', desc: '시험 범위로 예비 시험지를 바로 제작' },
                           { icon: '📖', title: '단어장', desc: '교재 단어장·단어시험지 편집·다운로드' },
                           { icon: '📥', title: '무료 공유자료', desc: '회원 전용 공유자료 다운로드' },
@@ -366,6 +368,13 @@ export default function PointChargePage() {
                           </li>
                         ))}
                       </ul>
+                      {/* 「멤버십이면 주문이 다 무료냐」는 문의가 실제로 있었다.
+                          한도를 넘는 분과 고난도는 유료라는 점을 못박는다. */}
+                      <p className="mt-2.5 border-t border-[#dbeafe] pt-2 text-[11.5px] text-[#64748b]">
+                        기본난도 <b className="text-[#475569]">월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항</b>을 넘는 분과{' '}
+                        <b className="text-[#475569]">고난도 유형</b>, 그리고 워크북·분석지·서술형 등 다른 주문제작은
+                        멤버십과 별개로 요금이 부과됩니다.
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
