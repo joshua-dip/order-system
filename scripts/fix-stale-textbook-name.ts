@@ -7,7 +7,7 @@
  *   npx tsx scripts/fix-stale-textbook-name.ts --from "..." --to "..." --apply
  *
  * 대상 필드(회원별 배열): allowedTextbooksVariant / allowedTextbooks /
- *   allowedTextbooksWorkbook / allowedTextbooksEssay.
+ *   allowedTextbooksWorkbook / allowedTextbooksEssay / allowedTextbooksAnalysis.
  * - from 만 있는 doc: 원소를 to 로 치환.
  * - from·to 둘 다 있는 doc: from 만 제거(중복 방지).
  */
@@ -29,11 +29,14 @@ function getFlag(name: string): string {
 }
 const hasFlag = (name: string) => process.argv.slice(2).includes(`--${name}`);
 
+/* 회원별 교재 허용목록은 제품마다 필드가 따로다 — 하나라도 빠지면 그 메뉴만
+   옛 이름으로 남아 조용히 「데이터 없음」이 된다(분석지가 실제로 그랬다). */
 const FIELDS = [
   'allowedTextbooksVariant',
   'allowedTextbooks',
   'allowedTextbooksWorkbook',
   'allowedTextbooksEssay',
+  'allowedTextbooksAnalysis',
 ];
 
 async function main() {
