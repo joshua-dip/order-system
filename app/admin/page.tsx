@@ -375,6 +375,9 @@ export default function AdminDashboardPage() {
     revenueThisMonth?: number;
     pointRevenueTotal?: number;
     pointRevenueThisMonth?: number;
+    membershipRevenueTotal?: number;
+    membershipRevenueThisMonth?: number;
+    membershipCountThisMonth?: number;
     siteVisitsTodayPageViews?: number;
     siteVisitsTodayUnique?: number;
     siteVisitsTodayKey?: string;
@@ -797,6 +800,9 @@ export default function AdminDashboardPage() {
     revenueThisMonth: number;
     pointRevenueTotal: number;
     pointRevenueThisMonth: number;
+    membershipRevenueTotal: number;
+    membershipRevenueThisMonth: number;
+    membershipCountThisMonth: number;
     siteVisitsTodayPageViews: number;
     siteVisitsTodayUnique: number;
     siteVisitsTodayKey: string;
@@ -818,6 +824,9 @@ export default function AdminDashboardPage() {
             revenueThisMonth: typeof d.revenueThisMonth === 'number' ? d.revenueThisMonth : 0,
             pointRevenueTotal: typeof d.pointRevenueTotal === 'number' ? d.pointRevenueTotal : 0,
             pointRevenueThisMonth: typeof d.pointRevenueThisMonth === 'number' ? d.pointRevenueThisMonth : 0,
+            membershipRevenueTotal: typeof d.membershipRevenueTotal === 'number' ? d.membershipRevenueTotal : 0,
+            membershipRevenueThisMonth: typeof d.membershipRevenueThisMonth === 'number' ? d.membershipRevenueThisMonth : 0,
+            membershipCountThisMonth: typeof d.membershipCountThisMonth === 'number' ? d.membershipCountThisMonth : 0,
             siteVisitsTodayPageViews: typeof d.siteVisitsTodayPageViews === 'number' ? d.siteVisitsTodayPageViews : 0,
             siteVisitsTodayUnique: typeof d.siteVisitsTodayUnique === 'number' ? d.siteVisitsTodayUnique : 0,
             siteVisitsTodayKey: typeof d.siteVisitsTodayKey === 'string' ? d.siteVisitsTodayKey : undefined,
@@ -3291,6 +3300,33 @@ export default function AdminDashboardPage() {
                 누적(충전) <span className="text-slate-400 tabular-nums">{typeof stats?.pointRevenueTotal === 'number' ? `${stats.pointRevenueTotal.toLocaleString()}원` : '—'}</span>
                 <span className="block text-slate-600 mt-0.5">
                   토스 결제 포인트 충전 합계 · 이번 달은 충전일(한국) 기준
+                </span>
+              </p>
+            </Link>
+            {/* 멤버십 매출 — 포인트와 나란히 둔다. 포인트 원장에 남지 않는 현금 결제라
+                포인트 매출 카드에 섞으면 충전 합계가 실제와 어긋난다. */}
+            <Link
+              href="/admin/point-charges"
+              className="bg-slate-800 rounded-xl border border-slate-700 p-5 block transition-colors hover:border-amber-500/60 hover:bg-slate-700/35"
+            >
+              <p className="text-slate-400 text-sm flex items-center justify-between gap-2">
+                멤버십 매출
+                <span className="text-[10px] font-medium text-amber-400/90">내역 →</span>
+              </p>
+              <p className="text-2xl font-bold text-amber-300 mt-1 tabular-nums">
+                {typeof stats?.membershipRevenueThisMonth === 'number'
+                  ? `${stats.membershipRevenueThisMonth.toLocaleString()}원`
+                  : '—'}
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                누적{' '}
+                <span className="text-slate-400 tabular-nums">
+                  {typeof stats?.membershipRevenueTotal === 'number'
+                    ? `${stats.membershipRevenueTotal.toLocaleString()}원`
+                    : '—'}
+                </span>
+                <span className="block text-slate-600 mt-0.5">
+                  월·연회원 결제 · 이번 달 {(stats?.membershipCountThisMonth ?? 0).toLocaleString()}건
                 </span>
               </p>
             </Link>

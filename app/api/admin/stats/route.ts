@@ -6,6 +6,7 @@ import { effectiveOrderNetRevenueWon } from '@/lib/order-revenue';
 import { koreaDateKey, koreaYearMonthKey } from '@/lib/korea-date-key';
 import { revenueMonthKeyForOrder } from '@/lib/order-number';
 import { POINT_LEDGER_COLLECTION } from '@/lib/point-ledger';
+import { loadMembershipRevenue } from '@/lib/membership-revenue';
 
 type SiteStatsDaily = {
   _id: string;
@@ -106,6 +107,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    /** 멤버십(월·연회원) 결제 매출 — 포인트 원장에 남지 않는 현금 결제라 따로 센다. */
+    let membershipRevenueTotal = 0;
+    let membershipRevenueThisMonth = 0;
+    let membershipCountThisMonth = 0;
+    for (const m of await loadMembershipRevenue(db)) {
+      membershipRevenueTotal += m.amountWon;
+      if (m.monthKey === thisYearMonth) {
+        membershipRevenueThisMonth += m.amountWon;
+        membershipCountThisMonth += 1;
+      }
+    }
+
     const lastOrderDateByLoginId: Record<string, string> = {};
     userLastOrderDates.forEach((row) => {
       if (row.lastAt) lastOrderDateByLoginId[row._id] = typeof row.lastAt === 'string' ? row.lastAt : (row.lastAt as Date).toISOString();
@@ -136,6 +149,9 @@ export async function GET(request: NextRequest) {
       pointRevenueTotal,
       /** 이번 달(한국 createdAt 기준) 포인트 충전 매출(원) */
       pointRevenueThisMonth,
+      membershipRevenueTotal,
+      membershipRevenueThisMonth,
+      membershipCountThisMonth,
     });
   } catch (err) {
     console.error('관리자 통계 조회 실패:', err);
