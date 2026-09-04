@@ -78,6 +78,8 @@ function validateQuestion(
   const isMeaningType = (examType ?? '') === ESSAY_MEANING_EXAM_TYPE;
   /* 요지 조건영작배열: <보기> 단어를 **주어진 순서대로** 모두 한 번씩 써서 요지를 한 문장으로. */
   const isMainIdeaType = (examType ?? '') === ESSAY_MAIN_IDEA_EXAM_TYPE;
+  /* 요지형 2문항 세트의 Q1(요지 파악) — 우리말 답, 보기 없음. Q2(영작)는 기존 규칙. */
+  const isMainIdeaComprehend = isMainIdeaType && q.role === 'comprehend';
   const isBasicDifficulty = difficulty === '기본난도' || difficulty === '난이도하';
   const meaningBasic = isMeaningType && isBasicDifficulty;
 
@@ -85,7 +87,8 @@ function validateQuestion(
     errors.push(`${qid}: answer 객체가 없습니다.`);
     return;
   }
-  if (!q.bogi || typeof q.bogi !== 'string') {
+  if (typeof q.bogi !== 'string' || (!q.bogi.trim() && !isMainIdeaComprehend)) {
+    /* 요지 파악(Q1, comprehend)은 보기가 없으므로 빈 문자열 허용. 그 외 유형은 비면 오류. */
     errors.push(`${qid}: bogi 가 없습니다.`);
     return;
   }
@@ -101,8 +104,8 @@ function validateQuestion(
   const tokens = tokenizeWords(answerText);
   if (!wc || typeof wc !== 'object') {
     errors.push(`${qid}: answer.word_count 가 없습니다.`);
-  } else if (meaningBasic) {
-    // 글의의미 기본: answer 가 우리말 서술이라 영어 단어수 엄격 일치는 생략.
+  } else if (meaningBasic || isMainIdeaComprehend) {
+    // 글의의미 기본 · 요지 파악(Q1): answer 가 우리말이라 영어 단어수 엄격 일치는 생략.
     // (HTML "단어 수" 칸 렌더용으로 words 배열·total 내부 정합만 확인)
     if (!Array.isArray(wc.words)) {
       errors.push(`${qid}: word_count.words 배열이 없습니다.`);
@@ -129,55 +132,85 @@ function validateQuestion(
   }
 
   if (isMainIdeaType) {
-    /* 요지형은 bogi 단어가 answer 안에 **순서대로** 들어 있어야 한다.
-       bogi 는 정답의 뼈대일 뿐이라 청크 합 = answer 검사(배열형 규칙)는 맞지 않다.
-       정답에는 관사·연결어 같은 보조 단어가 더 붙는다. */
-    if (!/[A-Za-z]{2,}/.test(answerText)) {
-      errors.push(`${qid}: 요지형 answer.text 는 영어 한 문장이어야 합니다. text="${answerText}"`);
-    }
-    const chunks = splitBogi(q.bogi);
-    if (chunks.length < 3) {
-      errors.push(`${qid}: <보기> 단어가 ${chunks.length}개입니다. 최소 3개 이상 주세요.`);
-    } else if (chunks.length < 5 || chunks.length > 12) {
-      warnings.push(`${qid}: <보기> 단어 개수(${chunks.length})가 권장 범위(5~12)를 벗어났습니다.`);
-    }
-
-    const answerTokens = tokenizeForBogiMatch(answerText);
-    let cursor = 0;
-    const missing: string[] = [];
-    const outOfOrder: string[] = [];
-    for (const chunk of chunks) {
-      const want = tokenizeForBogiMatch(chunk);
-      if (want.length === 0) continue;
-      /* 청크(한 단어가 원칙이지만 구 단위도 허용)를 cursor 이후에서 찾는다. */
-      let found = -1;
-      for (let i = cursor; i + want.length <= answerTokens.length; i++) {
-        if (want.every((w, k) => answerTokens[i + k] === w)) { found = i; break; }
+    /* 요지형: Q1(요지 파악)=우리말 답 / Q2(영작) 4난도=기본 순서·중 섞음·고 원형·최고 우리말 bogi. */
+    if (isMainIdeaComprehend) {
+      /* Q1 요지 파악 — 답이 우리말. 보기·영어·단어수 범위 검사 스킵. */
+      if (!/[가-힣]/.test(answerText)) {
+        errors.push(`${qid}: 요지 파악(Q1)은 answer.text 를 우리말로 써야 합니다. text="${answerText}"`);
       }
-      if (found === -1) {
-        /* 순서를 무시하면 있는가 — 있으면 「순서 어긋남」, 없으면 「누락」 */
-        const anywhere = answerTokens.some((_, i) =>
-          i + want.length <= answerTokens.length && want.every((w, k) => answerTokens[i + k] === w));
-        (anywhere ? outOfOrder : missing).push(chunk);
+    } else if (isMaxDifficulty) {
+      /* 최고: 보기 없음 — bogi 는 우리말 요지문 한 줄. 영어 토큰 매칭 검사 스킵. */
+      if (!/[가-힣]/.test(q.bogi)) {
+        errors.push(`${qid}: 요지형 최고난도는 bogi 에 우리말 요지문을 넣어야 합니다. bogi="${q.bogi}"`);
+      }
+      if (!/[A-Za-z]{2,}/.test(answerText)) {
+        errors.push(`${qid}: 요지형 answer.text 는 영어 한 문장이어야 합니다. text="${answerText}"`);
+      }
+    } else {
+      if (!/[A-Za-z]{2,}/.test(answerText)) {
+        errors.push(`${qid}: 요지형 answer.text 는 영어 한 문장이어야 합니다. text="${answerText}"`);
+      }
+      const chunks = splitBogi(q.bogi);
+      if (chunks.length < 3) {
+        errors.push(`${qid}: <보기> 단어가 ${chunks.length}개입니다. 최소 3개 이상 주세요.`);
+      } else if (chunks.length < 4 || chunks.length > 12) {
+        warnings.push(`${qid}: <보기> 단어 개수(${chunks.length})가 권장 범위(4~12)를 벗어났습니다.`);
+      }
+      if (isHardDifficulty) {
+        /* 고난도: 원형(lemma) 키워드 · 알파벳순 권장. 굴절형 차이로 answer 내 정확 매칭·순서 검사는 스킵. */
+        const sortedAsc = [...chunks].map(s => s.toLowerCase()).sort();
+        const givenLc = chunks.map(s => s.toLowerCase());
+        if (chunks.length > 0 && givenLc.join('|') !== sortedAsc.join('|')) {
+          warnings.push(`${qid}: 요지 고난도 키워드는 알파벳순(어순 노출 방지)이 권장됩니다. 현재="${chunks.join(' / ')}"`);
+        }
       } else {
-        cursor = found + want.length;
+        /* 기본·중: 보기 뼈대 단어가 answer 에 모두·한 번씩 있어야 한다. 기본=순서대로 / 중=순서 자유. */
+        const requireOrder = !isMidDifficulty;
+        const answerTokens = tokenizeForBogiMatch(answerText);
+        let cursor = 0;
+        const missing: string[] = [];
+        const outOfOrder: string[] = [];
+        for (const chunk of chunks) {
+          const want = tokenizeForBogiMatch(chunk);
+          if (want.length === 0) continue;
+          if (requireOrder) {
+            /* 청크(한 단어가 원칙이지만 구 단위도 허용)를 cursor 이후에서 찾는다. */
+            let found = -1;
+            for (let i = cursor; i + want.length <= answerTokens.length; i++) {
+              if (want.every((w, k) => answerTokens[i + k] === w)) { found = i; break; }
+            }
+            if (found === -1) {
+              /* 순서를 무시하면 있는가 — 있으면 「순서 어긋남」, 없으면 「누락」 */
+              const anywhere = answerTokens.some((_, i) =>
+                i + want.length <= answerTokens.length && want.every((w, k) => answerTokens[i + k] === w));
+              (anywhere ? outOfOrder : missing).push(chunk);
+            } else {
+              cursor = found + want.length;
+            }
+          } else {
+            /* 중난도: 순서 무관 — 어디든 있으면 통과. */
+            const anywhere = answerTokens.some((_, i) =>
+              i + want.length <= answerTokens.length && want.every((w, k) => answerTokens[i + k] === w));
+            if (!anywhere) missing.push(chunk);
+          }
+        }
+        if (missing.length > 0) {
+          errors.push(`${qid}: <보기> 단어가 정답에 없습니다 — ${missing.map(m => `"${m}"`).join(', ')}. answer="${answerText}"`);
+        }
+        if (outOfOrder.length > 0) {
+          errors.push(`${qid}: <보기> 단어가 주어진 순서대로 쓰이지 않았습니다 — ${outOfOrder.map(m => `"${m}"`).join(', ')}. answer="${answerText}"`);
+        }
+        /* 「모두 한 번씩」 — 같은 보기 단어가 정답에 두 번 이상이면 채점이 흔들린다. */
+        for (const chunk of chunks) {
+          const want = tokenizeForBogiMatch(chunk);
+          if (want.length !== 1) continue;
+          const times = answerTokens.filter(t => t === want[0]).length;
+          if (times > 1) warnings.push(`${qid}: <보기> 단어 "${chunk}" 가 정답에 ${times}번 나옵니다(한 번씩이 원칙).`);
+        }
       }
     }
-    if (missing.length > 0) {
-      errors.push(`${qid}: <보기> 단어가 정답에 없습니다 — ${missing.map(m => `"${m}"`).join(', ')}. answer="${answerText}"`);
-    }
-    if (outOfOrder.length > 0) {
-      errors.push(`${qid}: <보기> 단어가 주어진 순서대로 쓰이지 않았습니다 — ${outOfOrder.map(m => `"${m}"`).join(', ')}. answer="${answerText}"`);
-    }
-    /* 「모두 한 번씩」 — 같은 보기 단어가 정답에 두 번 이상이면 채점이 흔들린다. */
-    for (const chunk of chunks) {
-      const want = tokenizeForBogiMatch(chunk);
-      if (want.length !== 1) continue;
-      const times = answerTokens.filter(t => t === want[0]).length;
-      if (times > 1) warnings.push(`${qid}: <보기> 단어 "${chunk}" 가 정답에 ${times}번 나옵니다(한 번씩이 원칙).`);
-    }
 
-    /* 조건문의 단어 수 범위와 실제 단어 수 대조 (예: "10단어 이상 20단어 이내") */
+    /* 조건문의 단어 수 범위와 실제 단어 수 대조 (예: "10단어 이상 20단어 이내") — 모든 난도 공통 */
     const rangeCond = (q.conditions ?? []).concat(q.prompt ?? '')
       .find(c => /(\d+)\s*단어\s*이상[\s\S]*?(\d+)\s*단어\s*이(내|하)/.test(c));
     if (rangeCond && typeof wc?.total === 'number') {

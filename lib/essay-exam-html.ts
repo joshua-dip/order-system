@@ -57,6 +57,10 @@ export interface Question {
   bogi: string;
   answer_lines?: number;
   answer: QuestionAnswer;
+  /** 요지형 2문항 세트에서 문항 역할.
+   *  'comprehend' = 요지 파악(우리말 답, 보기 없음) / 'compose'(기본) = 요지 영작(영어 답).
+   *  미지정이면 'compose' 로 간주(기존 단일 영작 문항 하위호환). */
+  role?: 'comprehend' | 'compose';
 }
 
 export interface ExamData {
@@ -423,20 +427,27 @@ export function buildExamHtml(data: ExamData, css: string): string {
     .join('\n    ');
 
   const isMaxDifficulty = data.meta.difficulty === '최고난도';
+  const isMidDifficulty = data.meta.difficulty === '중난도';
+  const isHardDifficulty = data.meta.difficulty === '고난도';
   /* 글의의미 기본난도: bogi = 밑줄 친 부분 원문(영어, 참고용), 답은 우리말 서술.
      → 라벨을 "밑줄 친 부분" 으로. (중·고는 키워드 '보기', 최고는 우리말 의미 '한국어 해석') */
   const isMeaningBasic =
     data.meta.examType === ESSAY_MEANING_EXAM_TYPE &&
     (data.meta.difficulty === '기본난도' || data.meta.difficulty === '난이도하');
-  /* 요지형은 <보기> 단어를 **주어진 순서대로** 써야 하는 게 핵심 규칙이라, 라벨에 못박는다.
-     학생이 순서를 바꿔도 되는 배열형과 헷갈리면 안 된다. */
+  /* 요지형 4난도: 기본=<보기> 순서대로 / 중=순서 바로잡아 / 고=원형(어형 변환) / 최고=우리말 요지(아래 '한국어 해석' 라벨).
+     학생이 순서를 바꿔도 되는 배열형과 헷갈리면 안 되므로 라벨에 못박는다. */
   const isMainIdeaType = data.meta.examType === ESSAY_MAIN_IDEA_EXAM_TYPE;
+  const mainIdeaBogiLabel = isMidDifficulty
+    ? '보기 (순서를 바로잡아 사용)'
+    : isHardDifficulty
+      ? '보기 (원형 — 어형을 바꿔 사용)'
+      : '보기 (주어진 순서대로 사용)';
   const bogiLabel = isMeaningBasic
     ? '밑줄 친 부분'
     : isMaxDifficulty
       ? '한국어 해석'
       : isMainIdeaType
-        ? '보기 (주어진 순서대로 사용)'
+        ? mainIdeaBogiLabel
         : '보기';
   const bogiClass = isMaxDifficulty ? 'bogi bogi-korean' : 'bogi';
 
@@ -445,6 +456,10 @@ export function buildExamHtml(data: ExamData, css: string): string {
       const condList = q.conditions.map(c => `<li>${c}</li>`).join('\n      ');
       /* 학생용 Answer: 밑줄(작성 줄)은 항상 2줄만 */
       const writeRows = Array.from({ length: 2 }, () => '<div class="write-row"></div>').join('\n    ');
+      /* 요지 파악(Q1) 등 보기 없는 문항은 보기 블록 자체를 생략. */
+      const bogiBlock = q.bogi && q.bogi.trim()
+        ? `<div class="label">▸ ${bogiLabel}</div>\n    <div class="${bogiClass}">${q.bogi}</div>`
+        : '';
       return `<div class="sub-q">
   <div class="sub-q-title">${q.id}) ${q.prompt} <span class="points">[${q.points}점]</span></div>
   <div class="condition-box">
@@ -452,8 +467,7 @@ export function buildExamHtml(data: ExamData, css: string): string {
     <ul>
       ${condList}
     </ul>
-    <div class="label">▸ ${bogiLabel}</div>
-    <div class="${bogiClass}">${q.bogi}</div>
+    ${bogiBlock}
   </div>
   <div class="ans-area">
     <div class="lbl">Answer:</div>
