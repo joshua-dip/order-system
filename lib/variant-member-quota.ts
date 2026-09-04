@@ -9,8 +9,19 @@
  * 무제한으로 열면 대량 주문 고객이 월 8,900원으로 갈아타 매출이 통째로 사라진다.
  */
 
-/** 멤버십 회원 1인당 월 무료 기본난도 문항 수 */
+/** 유료 멤버십(월·연회원) 1인당 월 무료 기본난도 문항 수 */
 export const MEMBER_BASE_FREE_QUOTA = 1000;
+
+/**
+ * 가입 체험(7일) 중인 계정의 한도 — 결제 없이 쓰는 기간이라 낮게 잡는다.
+ * 체험만 받고 대량으로 뽑아 가는 것을 막기 위함이다.
+ */
+export const TRIAL_BASE_FREE_QUOTA = 300;
+
+/** 결제 여부에 따른 월 한도. 체험만 유효하면 체험 한도를 준다. */
+export function baseFreeQuotaFor(input: { paidMember: boolean }): number {
+  return input.paidMember ? MEMBER_BASE_FREE_QUOTA : TRIAL_BASE_FREE_QUOTA;
+}
 
 export interface BaseQuotaSplit {
   /** 한도 안에서 무료로 처리된 문항 수 */

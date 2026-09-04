@@ -9,7 +9,7 @@ import {
   VARIANT_PRICE,
 } from '@/lib/variant-pricing';
 import { isFreeVariantType, isAdvancedVariantType } from '@/lib/variant-pricing';
-import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
+import { splitByBaseQuota } from '@/lib/variant-member-quota';
 import {
   HWP_STORAGE_OPTIONS,
   DEFAULT_HWP_STORAGE_MODES_MOCK,
@@ -80,6 +80,8 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
   /** 멤버십(월·연·가입 체험) 여부와 이번 달 남은 기본난도 무료 한도 */
   const [isPremiumMembership, setIsPremiumMembership] = useState(false);
   const [baseQuotaRemaining, setBaseQuotaRemaining] = useState(0);
+  /** 이 계정에 적용되는 월 한도 — 유료 회원과 가입 체험이 다르다 */
+  const [baseQuotaLimit, setBaseQuotaLimit] = useState(0);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -96,8 +98,11 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
         /* 이번 달 남은 무료 한도 — 부교재 주문서와 같은 창구를 쓴다(BV·MV 합산). */
         fetch('/api/my/variant-base-quota', { credentials: 'include' })
           .then((r) => r.json())
-          .then((q) => setBaseQuotaRemaining(Number(q?.remaining) || 0))
-          .catch(() => setBaseQuotaRemaining(0));
+          .then((q) => {
+            setBaseQuotaRemaining(Number(q?.remaining) || 0);
+            setBaseQuotaLimit(Number(q?.limit) || 0);
+          })
+          .catch(() => { setBaseQuotaRemaining(0); setBaseQuotaLimit(0); });
       })
       .catch(() => {
         setLoggedIn(false);
@@ -450,7 +455,7 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
 
     /* 관리자가 주문서만 보고도 왜 금액이 깎였는지 알 수 있게 남긴다. */
     const quotaLine = quotaFree > 0
-      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 한도)`
+      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
       : '';
 
     const examDetails = examSelections.map((exam, index) => {
@@ -831,7 +836,7 @@ ${examDetails}
                   {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다 */}
                   {isPremiumMembership ? (
                     <div className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-                      👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료</b>
+                      👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {baseQuotaLimit.toLocaleString()}문항 무료</b>
                       {' · '}이번 달 남은 무료 <b>{baseQuotaRemaining.toLocaleString()}문항</b>
                       <span className="block text-[12px] text-green-700/80 mt-0.5">
                         고난도({VARIANT_PRICE.advanced}원)는 한도와 무관하게 정상 과금됩니다.
@@ -839,7 +844,7 @@ ${examDetails}
                     </div>
                   ) : (
                     <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                      👑 <b>월·연회원</b>은 기본난도를 <b>월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항까지 무료</b>로 받습니다.
+                      👑 <b>월·연회원</b>은 기본난도를 <b>월 1,000문항까지 무료</b>로 받습니다.
                     </div>
                   )}
                 </div>

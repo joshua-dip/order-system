@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { isPremiumMember } from '@/lib/premium-member';
+import { isPremiumMember, isMonthlyMemberActive } from '@/lib/premium-member';
+import { isAnnualMemberActive } from '@/lib/annual-member';
 import { isFreeVariantType, isAdvancedVariantType } from '@/lib/variant-pricing';
-import { MEMBER_BASE_FREE_QUOTA, kstMonthRange } from '@/lib/variant-member-quota';
+import { baseFreeQuotaFor, kstMonthRange } from '@/lib/variant-member-quota';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -64,6 +65,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: true, member: false, limit: 0, used: 0, remaining: 0 });
     }
 
+    /* 결제한 회원과 가입 체험(7일)은 한도가 다르다 — 체험은 낮게 잡는다.
+       관리자는 결제 회원과 같게 본다. */
+    const paidMember =
+      user?.role === 'admin' ||
+      isAnnualMemberActive((user?.annualMemberSince as Date | undefined) ?? null) ||
+      isMonthlyMemberActive((user?.monthlyMemberUntil as Date | undefined) ?? null);
+    const limit = baseFreeQuotaFor({ paidMember });
+
     const { start, end } = kstMonthRange();
     const orders = await db
       .collection('orders')
@@ -79,9 +88,9 @@ export async function GET(request: NextRequest) {
       (a, o) => a + paidBaseCountOf((o as Record<string, unknown>).orderMeta as Record<string, unknown>),
       0,
     );
-    const remaining = Math.max(0, MEMBER_BASE_FREE_QUOTA - used);
+    const remaining = Math.max(0, limit - used);
     return NextResponse.json(
-      { ok: true, member: true, limit: MEMBER_BASE_FREE_QUOTA, used, remaining },
+      { ok: true, member: true, trial: !paidMember, limit, used, remaining },
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (e) {

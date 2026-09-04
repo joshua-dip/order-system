@@ -22,7 +22,7 @@ import {
   isFreeVariantType,
   isAdvancedVariantType,
 } from '@/lib/variant-pricing';
-import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
+import { splitByBaseQuota } from '@/lib/variant-member-quota';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
 export type { HwpStorageModeKey } from '@/lib/variant-order-options';
 import {
@@ -105,6 +105,8 @@ const QuestionSettings = ({
   const [signupPremiumTrialActive, setSignupPremiumTrialActive] = useState(false);
   /** 멤버십 회원의 이번 달 남은 기본난도 무료 한도 (비회원 0) */
   const [baseQuotaRemaining, setBaseQuotaRemaining] = useState(0);
+  /** 이 계정에 적용되는 월 한도 — 유료 회원과 가입 체험이 다르다 */
+  const [baseQuotaLimit, setBaseQuotaLimit] = useState(0);
   const [myFormatApproved, setMyFormatApproved] = useState(false);
   const [useCustomHwp, setUseCustomHwp] = useState(false);
   const [formatCounts, setFormatCounts] = useState({ 강의용자료: 0, 수업용자료: 0, 변형문제: 0 });
@@ -188,8 +190,11 @@ const QuestionSettings = ({
         /* 이번 달 남은 무료 한도 — 서버가 이번 달 주문에서 되세어 준다 */
         fetch('/api/my/variant-base-quota', { credentials: 'include' })
           .then((r) => r.json())
-          .then((q) => setBaseQuotaRemaining(Number(q?.remaining) || 0))
-          .catch(() => setBaseQuotaRemaining(0));
+          .then((q) => {
+            setBaseQuotaRemaining(Number(q?.remaining) || 0);
+            setBaseQuotaLimit(Number(q?.limit) || 0);
+          })
+          .catch(() => { setBaseQuotaRemaining(0); setBaseQuotaLimit(0); });
         setMyFormatApproved(!!u?.myFormatApproved);
         if (u?.myFormatApproved) refreshMyFormats();
         const pts = typeof u?.points === 'number' && u.points >= 0 ? u.points : 0;
@@ -879,7 +884,7 @@ ${solbookRetailLine}
 
     /* 관리자가 주문서만 보고도 왜 금액이 깎였는지 알 수 있게 남긴다. */
     const quotaLine = quotaFree > 0
-      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 한도)`
+      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
       : '';
     const priceBreakdownLine = isSolbookOrder
       ? `\n   (이곳 입금: 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
@@ -1105,7 +1110,7 @@ ${solbookRetailLine}
                 {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다 */}
                 {isPremiumMembership ? (
                   <div className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-                    👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료</b>
+                    👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {baseQuotaLimit.toLocaleString()}문항 무료</b>
                     {' · '}이번 달 남은 무료 <b>{baseQuotaRemaining.toLocaleString()}문항</b>
                     <span className="block text-[12px] text-green-700/80 mt-0.5">
                       고난도({VARIANT_PRICE.advanced}원)는 한도와 무관하게 정상 과금됩니다.
@@ -1113,7 +1118,7 @@ ${solbookRetailLine}
                   </div>
                 ) : (
                   <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                    👑 <b>월·연회원</b>은 기본난도를 <b>월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항까지 무료</b>로 받습니다.
+                    👑 <b>월·연회원</b>은 기본난도를 <b>월 1,000문항까지 무료</b>로 받습니다.
                   </div>
                 )}
               </div>
