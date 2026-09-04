@@ -490,7 +490,7 @@ export const ESSAY_MEANING_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, strin
  * 난이도 부록 마지막 수정 시점 (수동 관리 — 부록 본문 고칠 때 함께 bump).
  * UI 에 「최종 수정」으로 표시되어, localStorage 캐시·번들 캐시로 인한 혼란을 줄인다.
  */
-export const ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED = '2026-09-01 (요지 조건영작배열 4난도 분화 — 기본=순서대로 / 중=순서 섞음 / 고=원형 키워드 / 최고=우리말 요지문)';
+export const ESSAY_DIFFICULTY_APPENDIX_LAST_UPDATED = '2026-09-02 (요지 파악·영작형 2문항 세트 — Q1 우리말 요지 파악 + Q2 4난도 영작, 난도별 다른 문장)';
 
 /** UI·문서용 — 난이도별 추가 지시 전문 */
 export const ESSAY_DIFFICULTY_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, string> = {
@@ -602,11 +602,20 @@ const 요지_최고난도 = `[유형: 요지 조건영작배열 · 최고난도 
 
 ■ explanation — 요지·근거 + 우리말 요지에서 영어 문장을 구성하는 골격(구조·시제·일치)을 설명.`;
 
+const 요지_2문항_공통 = `[요지 파악·영작형 — 2문항 세트 · 공통 (반드시 준수)]
+
+한 지문에 **두 문항**을 낸다 (questions 배열 길이 2):
+- **Q1 (요지 파악)**: \`id:"1"\`, \`role:"comprehend"\`, \`points:4\`. \`bogi\` 는 **빈 문자열("")**. \`answer.text\` 는 글의 요지를 압축한 **우리말 한 문장**(영어 토큰 금지·고유명사 예외). \`word_count\` 는 우리말 **어절** 기준(total=어절 수, words=어절 배열). prompt 예: "이 글의 요지를 한 줄의 우리말로 쓰시오." conditions 3개 안팎(맥락 근거·표면 소재 아닌 핵심 대조·간결).
+- **Q2 (요지 영작)**: \`id:"2"\`, \`role:"compose"\`, \`points:6\`. 아래 **난도별 규칙**대로 <보기>를 주고 영어 요지 문장을 영작하게 한다.
+
+★★ **4난도는 같은 요지를 「서로 다른 영어 문장」으로** 표현한다 (정답이 난도마다 달라야 함 — 한 난도의 답을 외워도 다른 난도엔 통하지 않게). Q1 의 우리말 요지도 난도별로 표현을 달리한다. 같은 문장을 4번 재사용 금지.
+`.trim();
+
 const ESSAY_MAIN_IDEA_APPENDIX_TEXT: Record<EssayGeneratorDifficulty, string> = {
-  기본난도: 요지_기본난도,
-  중난도: `${요지_중난도}\n\n${공통_강화_추가}`,
-  고난도: `${요지_고난도}\n\n${공통_강화_추가}`,
-  최고난도: `${요지_최고난도}\n\n${공통_강화_추가}`,
+  기본난도: `${요지_2문항_공통}\n\n${요지_기본난도}`,
+  중난도: `${요지_2문항_공통}\n\n${요지_중난도}\n\n${공통_강화_추가}`,
+  고난도: `${요지_2문항_공통}\n\n${요지_고난도}\n\n${공통_강화_추가}`,
+  최고난도: `${요지_2문항_공통}\n\n${요지_최고난도}\n\n${공통_강화_추가}`,
 };
 
 /**
