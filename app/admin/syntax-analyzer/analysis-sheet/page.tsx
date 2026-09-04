@@ -162,6 +162,41 @@ export default function AnalysisSheetPage() {
     [items, selected],
   );
 
+  /**
+   * 파일명에 붙일 강 이름 — 「01강」처럼 강을 통째로 고른 경우에만.
+   *
+   * 일부만 골랐는데 강 이름이 붙으면 그 강 전체인 줄 오해하게 되므로,
+   * 그 강의 (분석 있는) 지문이 모두 선택됐을 때만 붙인다. 여러 강이면 · 로 잇되
+   * 네 강 이상은 파일명이 길어지기만 해서 생략한다.
+   */
+  const chapterLabel = useMemo(() => {
+    if (selected.size === 0) return '';
+    const chosen = items.filter((p) => selected.has(p._id));
+    const chapters = [...new Set(chosen.map((p) => String(p.chapter ?? '').trim()))];
+    if (chapters.some((c) => !c) || chapters.length > 3) return '';
+    const whole = chapters.every((c) =>
+      items
+        .filter((p) => String(p.chapter ?? '').trim() === c && pct(p._id) > 0)
+        .every((p) => selected.has(p._id)),
+    );
+    if (!whole) return '';
+    /* 강 이름을 파일명에 쓸 수 있게 다듬는다. 실측한 세 가지 모양을 흡수:
+         「01강」            그대로
+         「26년 9월 고1 …」  chapter 가 교재명과 같다(모의고사) → 붙이면 중복이라 버린다
+         「Lesson 2. The Global Reach of Korea, …」 교과서 챕터 서술 → 앞 토막(Lesson 2)만 */
+    const short = (raw: string) => {
+      let t = raw.startsWith(textbook) ? raw.slice(textbook.length).trim() : raw;
+      if (!t || t === textbook) return '';
+      if (t.length > 20) {
+        const head = t.split(/[.:\-—]/)[0].trim();
+        t = head && head.length <= 20 ? head : '';
+      }
+      return t;
+    };
+    const parts = chapters.map(short).filter(Boolean);
+    return parts.length === chapters.length ? parts.join('·') : '';
+  }, [items, selected, pct, textbook]);
+
   /* 미리보기 대상 — 선택한 지문 앞 2편, 아무것도 안 골랐으면 분석 있는 앞 2편. */
   const previewIds = useMemo(() => {
     const base = orderedSelected.length
@@ -265,7 +300,9 @@ export default function AnalysisSheetPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const base = (title.trim() || textbook).replace(/[\\/:*?"<>|]+/g, '_');
+    /* 제목을 직접 적었으면 그대로 존중하고, 비웠을 때만 「교재명 + 강」으로 짓는다. */
+    const base = (title.trim() || [textbook, chapterLabel].filter(Boolean).join(' '))
+      .replace(/[\\/:*?"<>|]+/g, '_');
     a.download = edition === '분석지' ? `${base} 분석지.pdf` : `${base} 분석지 · ${edition}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
