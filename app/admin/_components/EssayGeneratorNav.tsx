@@ -21,7 +21,7 @@ export default function EssayGeneratorNav() {
         // 베이스 경로(배열·영작형) — exact 로 sub-route(/meaning) 활성 충돌 방지.
         { href: '/admin/essay-generator', label: '조건영작배열', exact: true },
         { href: '/admin/essay-generator/meaning', label: '글의 의미 서술형' },
-        { href: '/admin/essay-generator/main-idea', label: '요지 조건영작배열' },
+        { href: '/admin/essay-generator/main-idea', label: '요지파악영작형' },
         // 유형을 더 붙일 때: 여기에 형제로 추가 + ESSAY_SPECIAL_EXAM_TYPES 에 등록
         // (등록을 빠뜨리면 배열형 목록에 새 유형이 섞여 보인다)
       ]}

@@ -2548,13 +2548,13 @@ export const ESSAY_EXAM_TYPE_SPECS: Record<EssayExamTypeKey, EssayExamTypeSpec> 
     blurb: '글의 의미(함의) 서술형',
   },
   [ESSAY_MAIN_IDEA_EXAM_TYPE]: {
-    label: '요지 조건영작배열',
+    label: '요지파악영작형',
     storageSuffix: '_main_idea',
-    /* <보기> 단어를 순서대로 써서 요지를 한 문장으로 — 한 지문 1문항, 난도 하나. */
-    difficulties: ['기본난도'],
+    /* 2문항 세트(Q1 우리말 요지 파악 + Q2 요지 영작) · 4난도. 난도별로 다른 요지 문장. */
+    difficulties: ['기본난도', '중난도', '고난도', '최고난도'],
     promptFile: 'generation_prompt_main_idea.md',
     cliExamType: ESSAY_MAIN_IDEA_EXAM_TYPE,
-    blurb: '요지 한 문장 영작(<보기> 순서 배열)',
+    blurb: '요지 파악(우리말)+요지 영작(<보기> 4난도)',
   },
 };
 
