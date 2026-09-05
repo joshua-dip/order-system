@@ -685,6 +685,38 @@ export default function AdminDashboardPage() {
       .finally(() => setRecentOrdersLoading(false));
   }, [applyOrders]);
 
+  /** 진행 중인 포인트 결제 주문 id — 중복 클릭으로 두 번 깎이는 것을 막는다 */
+  const [payingPointsOrderId, setPayingPointsOrderId] = useState<string | null>(null);
+
+  /** 이 주문을 회원 포인트로 결제 처리 (관리자 대행) */
+  const payOrderWithPoints = useCallback(
+    async (orderId: string, orderNumber: string) => {
+      if (payingPointsOrderId) return;
+      if (!confirm(`${orderNumber || '이 주문'}을 회원 포인트로 결제 처리할까요?\n\n주문 금액만큼 회원 포인트가 차감되고, 포인트 내역에 「주문 사용」으로 남습니다.`)) return;
+      setPayingPointsOrderId(orderId);
+      try {
+        const r = await fetch(`/api/orders/${orderId}`, {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'payWithPoints' }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          alert(d?.error || '포인트 결제 처리에 실패했습니다.');
+          return;
+        }
+        alert(
+          `${d.name ?? ''} 님 포인트 ${Number(d.pointsUsed ?? 0).toLocaleString()}P 차감 완료\n남은 포인트 ${Number(d.balanceAfter ?? 0).toLocaleString()}P`,
+        );
+        fetchOrders();
+      } finally {
+        setPayingPointsOrderId(null);
+      }
+    },
+    [payingPointsOrderId, fetchOrders],
+  );
+
   const applyExamUploads = useCallback((d: { uploads?: PastExamUpload[] } | null) => {
     setExamUploads(d?.uploads || []);
   }, []);
@@ -3802,6 +3834,18 @@ export default function AdminDashboardPage() {
                         <td className="py-2.5 px-2 text-right text-slate-400 tabular-nums whitespace-nowrap align-top">
                           {(o.pointsUsed ?? 0) > 0 ? (
                             <span className={`text-sky-300/90 ${isCancelledRow ? 'line-through opacity-50' : ''}`}>{(o.pointsUsed ?? 0).toLocaleString()}</span>
+                          ) : o.loginId && !isCancelledRow ? (
+                            /* 「포인트로 해 주세요」 요청을 관리자가 여기서 바로 처리한다.
+                               예전에는 회원 포인트를 손으로 깎고 금액을 따로 적어야 했다. */
+                            <button
+                              type="button"
+                              onClick={() => void payOrderWithPoints(o.id, o.orderNumber ?? '')}
+                              disabled={payingPointsOrderId === o.id}
+                              className="rounded border border-sky-500/40 px-1.5 py-0.5 text-[10px] font-medium text-sky-300/90 hover:bg-sky-500/15 disabled:opacity-40"
+                              title="이 주문을 회원 포인트로 결제 처리"
+                            >
+                              {payingPointsOrderId === o.id ? '처리 중…' : '포인트 결제'}
+                            </button>
                           ) : (
                             <span className="text-slate-600">—</span>
                           )}

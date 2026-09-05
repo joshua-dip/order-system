@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { parseOrderRevenueFromOrderText, getBookVariantSolbookAccounting } from '@/lib/order-revenue';
+import { recordPointLedger } from '@/lib/point-ledger';
 import { tryRefundPointsAfterOrderCancelled } from '@/lib/refund-order-points-on-cancel';
 
 const COLLECTION = 'orders';
@@ -67,6 +68,91 @@ export async function PATCH(
         { $set: { fileUrl: body.fileUrl ?? '' } }
       );
       return NextResponse.json({ ok: true });
+    }
+
+    /**
+     * 관리자가 이 주문을 회원 포인트로 결제 처리한다.
+     *
+     * 주문 시점에 회원이 직접 포인트를 쓰는 길(orders POST)은 있었지만, 나중에
+     * 관리자가 대신 처리할 수단이 없었다 — 「포인트로 해 주세요」라는 요청이 오면
+     * 회원 포인트를 손으로 깎고 주문서 금액을 따로 적어야 했다.
+     *
+     * 차감·원장 기록·주문 반영을 한 번에 하고, 이미 처리된 주문은 다시 깎지 않는다.
+     */
+    if (body?.action === 'payWithPoints' && isAdmin) {
+      const db = await getDb('gomijoshua');
+      const col = db.collection(COLLECTION);
+      const existing = await col.findOne({ _id: new ObjectId(id) });
+      if (!existing) {
+        return NextResponse.json({ error: '주문을 찾을 수 없습니다.' }, { status: 404 });
+      }
+      /* 이메일로 추정해 붙인 회원에게는 차감하지 않는다 — 본인 확인이 된 주문만.
+         (주문 생성 때와 같은 규칙) */
+      const loginId = typeof existing.loginId === 'string' ? existing.loginId : '';
+      if (!loginId || existing.loginIdSource === 'email-match') {
+        return NextResponse.json(
+          { error: '로그인으로 확인된 회원 주문만 포인트로 처리할 수 있습니다.' },
+          { status: 400 },
+        );
+      }
+      const already = typeof existing.pointsUsed === 'number' ? existing.pointsUsed : 0;
+      if (already > 0) {
+        return NextResponse.json(
+          { error: `이미 포인트 ${already.toLocaleString()}원이 사용된 주문입니다.` },
+          { status: 409 },
+        );
+      }
+
+      const users = db.collection('users');
+      const userDoc = await users.findOne({ loginId }, { projection: { points: 1, name: 1 } });
+      if (!userDoc) {
+        return NextResponse.json({ error: '회원을 찾을 수 없습니다.' }, { status: 404 });
+      }
+      const balance = typeof userDoc.points === 'number' ? userDoc.points : 0;
+
+      /* 금액: 관리자가 지정하면 그 값, 아니면 주문서에서 읽은 금액 전액. */
+      const gross = parseOrderRevenueFromOrderText(
+        typeof existing.orderText === 'string' ? existing.orderText : '',
+        (existing as { orderMeta?: unknown }).orderMeta,
+      );
+      const requested = Number(body?.amount);
+      const amount = Number.isFinite(requested) && requested > 0
+        ? Math.floor(requested)
+        : (gross ?? 0);
+      if (amount <= 0) {
+        return NextResponse.json(
+          { error: '주문 금액을 읽지 못했습니다. 사용할 포인트를 직접 입력해 주세요.' },
+          { status: 400 },
+        );
+      }
+      if (amount > balance) {
+        return NextResponse.json(
+          { error: `보유 포인트가 부족합니다. (보유 ${balance.toLocaleString()}P · 필요 ${amount.toLocaleString()}P)` },
+          { status: 400 },
+        );
+      }
+
+      await users.updateOne({ _id: userDoc._id }, { $inc: { points: -amount } });
+      await col.updateOne({ _id: new ObjectId(id) }, { $set: { pointsUsed: amount } });
+      await recordPointLedger(db, {
+        userId: userDoc._id as ObjectId,
+        delta: -amount,
+        balanceAfter: balance - amount,
+        kind: 'order_spend',
+        meta: {
+          orderNumber: existing.orderNumber ?? '',
+          orderId: id,
+          /* 관리자가 대신 처리한 건임을 남긴다 — 회원이 직접 쓴 것과 구분된다. */
+          byAdmin: adminPayload?.loginId ?? 'admin',
+        },
+      }).catch((e) => console.error('point_ledger 기록 실패:', e));
+
+      return NextResponse.json({
+        ok: true,
+        pointsUsed: amount,
+        balanceAfter: balance - amount,
+        name: userDoc.name ?? loginId,
+      });
     }
 
     if (body?.action === 'setStatus' && isAdmin) {
