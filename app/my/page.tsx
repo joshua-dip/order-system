@@ -47,6 +47,8 @@ interface MyOrder {
   status: string;
   orderNumber: string | null;
   fileUrl: string | null;
+  /** 포인트로 결제한 금액 (0 이면 포인트 미사용) */
+  pointsUsed?: number;
 }
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
@@ -1121,6 +1123,12 @@ export default function MyPage() {
                                 {variant === 'making' && '⏳ '}
                                 {statusLabel}
                               </span>
+                              {/* 포인트로 결제한 주문임을 회원도 바로 알 수 있게 */}
+                              {(order.pointsUsed ?? 0) > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e0e7ff] text-[#4338ca]">
+                                  🪙 포인트 {(order.pointsUsed ?? 0).toLocaleString()}원 결제
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

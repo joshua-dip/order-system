@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
       status: o.status || 'pending',
       orderNumber: o.orderNumber ?? null,
       fileUrl: o.fileUrl ?? null,
+      /* 포인트로 결제한 주문임을 회원도 확인할 수 있어야 한다 —
+         관리자가 대신 처리한 건도 여기에 그대로 나타난다. */
+      pointsUsed: typeof o.pointsUsed === 'number' && o.pointsUsed > 0 ? o.pointsUsed : 0,
     }));
 
     return NextResponse.json({ orders: list });
