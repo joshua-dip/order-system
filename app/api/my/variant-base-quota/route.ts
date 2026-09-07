@@ -80,6 +80,9 @@ export async function GET(request: NextRequest) {
         loginId: payload.loginId,
         orderNumber: { $regex: '^(BV|MV|UV)-' },
         createdAt: { $gte: start, $lt: end },
+        /* 취소한 주문은 한도를 도로 돌려줘야 한다 — 빼지 않으면 취소해도
+           그 달 무료 문항이 묶인 채로 남는다. */
+        status: { $ne: 'cancelled' },
       })
       .project({ orderMeta: 1 })
       .toArray();
