@@ -45,6 +45,10 @@ export function buildAuthUserPayload(
     ...(Array.isArray(wb) ? { allowedTextbooksWorkbook: wb } : {}),
     ...(Array.isArray(vb) ? { allowedTextbooksVariant: vb } : {}),
     /* 회원별 기본 HWP 저장 방식 — 주문서가 이 값으로 열린다(없으면 공통 기본값) */
+    /** 「전문항 랜덤」 체크박스 기본값 — 저장 방식 fullRandomPair 와는 다른 옵션이다 */
+    ...(typeof user.defaultShuffleFullFile === 'boolean'
+      ? { defaultShuffleFullFile: user.defaultShuffleFullFile }
+      : {}),
     ...(Array.isArray(user.defaultHwpStorageModes)
       ? { defaultHwpStorageModes: user.defaultHwpStorageModes }
       : {}),

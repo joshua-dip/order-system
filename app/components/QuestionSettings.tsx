@@ -197,6 +197,8 @@ const QuestionSettings = ({
           .catch(() => { setBaseQuotaRemaining(0); setBaseQuotaLimit(0); });
         /* 관리자가 이 회원에게 지정해 둔 기본 저장 방식이 있으면 그것으로 연다.
            localStorage 에 저장한 개인 설정이 있으면 그쪽이 나중에 덮는다. */
+        /* 회원별 기본값 — 「전문항 랜덤」은 저장 방식과 별개 체크박스라 따로 켠다 */
+        if (u?.defaultShuffleFullFile === true) setShuffleFullFile(true);
         const memberDefaults = sanitizeHwpStorageModes(u?.defaultHwpStorageModes);
         if (memberDefaults.length > 0) setHwpStorageModes(memberDefaults);
         setMyFormatApproved(!!u?.myFormatApproved);

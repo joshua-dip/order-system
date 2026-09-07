@@ -327,6 +327,8 @@ export default function UserDetailPage() {
   const [editPrintFormat, setEditPrintFormat] = useState<VariantPrintFormat>(DEFAULT_VARIANT_PRINT_FORMAT);
   /** 이 회원의 주문서가 기본으로 열릴 HWP 저장 방식 (빈 배열이면 공통 기본값) */
   const [editHwpModes, setEditHwpModes] = useState<HwpStorageModeKey[]>([]);
+  /** 「전문항 랜덤」 체크박스 기본값 — 저장 방식 「전체 1파일 + 랜덤본」과 다른 옵션 */
+  const [editShuffleFull, setEditShuffleFull] = useState(false);
   const [editDropboxPath, setEditDropboxPath] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [dropboxMsg, setDropboxMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -397,6 +399,7 @@ export default function UserDetailPage() {
       setEditMyFormat(u.myFormatApproved);
       setEditPrintFormat(normalizeVariantPrintFormat(u.variantPrintFormat));
       setEditHwpModes(sanitizeHwpStorageModes((u as { defaultHwpStorageModes?: unknown }).defaultHwpStorageModes));
+      setEditShuffleFull((u as { defaultShuffleFullFile?: unknown }).defaultShuffleFullFile === true);
       setEditDropboxPath(u.dropboxFolderPath);
     } catch {
       setError('불러오는 중 오류가 발생했습니다.');
@@ -820,6 +823,7 @@ export default function UserDetailPage() {
         myFormatApproved: editMyFormat,
         variantPrintFormat: editPrintFormat,
         defaultHwpStorageModes: editHwpModes,
+        defaultShuffleFullFile: editShuffleFull,
         isVip: editIsVip,
         memberType: editMemberType,
         annualMemberSince: editAnnual || null,
@@ -1367,6 +1371,22 @@ export default function UserDetailPage() {
                       </span>
                     </label>
                   ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-700">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editShuffleFull}
+                      onChange={() => setEditShuffleFull((v) => !v)}
+                      className="mt-0.5 h-4 w-4 accent-sky-500"
+                    />
+                    <span className="text-sm text-slate-200">
+                      전문항 랜덤
+                      <span className="ml-1.5 text-[11px] text-slate-500">
+                        전체 파일에서 지문·유형 순서를 섞습니다 (부교재 주문서 · 위 「전체 1파일 + 랜덤본」과 다른 옵션)
+                      </span>
+                    </span>
+                  </label>
                 </div>
               </div>
 

@@ -61,6 +61,11 @@ function mapUser(u: Record<string, unknown>) {
     isVip: !!(u.isVip),
     vipSince: toDateStr(u.vipSince),
     signupPremiumTrialUntil: toDateStr(u.signupPremiumTrialUntil, true),
+    /* 주문서 기본값 — 내려주지 않으면 관리자 화면이 저장된 값을 못 보여준다 */
+    defaultHwpStorageModes: Array.isArray(u.defaultHwpStorageModes)
+      ? (u.defaultHwpStorageModes as unknown[]).filter((x): x is string => typeof x === 'string')
+      : [],
+    defaultShuffleFullFile: u.defaultShuffleFullFile === true,
     createdAt: u.createdAt,
   };
 }
@@ -166,6 +171,10 @@ export async function PATCH(
     if (myFormatApproved !== undefined) updates.myFormatApproved = myFormatApproved;
     if (variantPrintFormat !== undefined) updates.variantPrintFormat = variantPrintFormat;
     /* 회원별 기본 HWP 저장 방식 — 빈 배열이면 「지정 없음」으로 두어 공통 기본값을 쓴다. */
+    if (body && typeof body === 'object' && 'defaultShuffleFullFile' in body) {
+      updates.defaultShuffleFullFile =
+        (body as Record<string, unknown>).defaultShuffleFullFile === true;
+    }
     if (body && typeof body === 'object' && 'defaultHwpStorageModes' in body) {
       updates.defaultHwpStorageModes = sanitizeHwpStorageModes(
         (body as Record<string, unknown>).defaultHwpStorageModes,

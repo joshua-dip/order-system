@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
           canAccessEssay: 1,
           canOrderSchoolTextbook: 1,
           defaultHwpStorageModes: 1,
+          defaultShuffleFullFile: 1,
           myFormatApproved: 1,
           allowedTextbooks: 1,
           allowedTextbooksAnalysis: 1,
