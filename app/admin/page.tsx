@@ -104,6 +104,8 @@ interface AdminOrder {
   paymentDueWon?: number | null;
   /** 미완료(입금 대기·확인) 주문의 입금할 금액(주문서 파싱). 통장 매칭용. API 전용 */
   expectedAmountWon?: number | null;
+  /** 입금 없이 성립하는 주문 — 멤버십 무료 한도·포인트 전액 결제 */
+  noPaymentRequired?: boolean;
   /** 같은 고객의 다른 주문과 (지문×유형)이 겹치는 경우 그 주문번호들. 중복 의심 표시용 */
   duplicateOf?: string[] | null;
   /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
@@ -3911,6 +3913,17 @@ export default function AdminDashboardPage() {
                             ) : (
                               <span className="text-amber-400/90">미인식</span>
                             )
+                          ) : o.noPaymentRequired || o.expectedAmountWon === 0 ? (
+                            /* 낼 금액이 0원인 주문 — 통장에서 찾을 입금이 없다는 걸 사유까지 보여준다 */
+                            <div className="leading-tight">
+                              <span className="tabular-nums font-bold text-emerald-400">0원</span>
+                              <span
+                                className="block text-[11px] text-emerald-300/80 mt-0.5"
+                                title="멤버십 무료 한도 또는 포인트로 전액 처리되어 입금할 금액이 없습니다"
+                              >
+                                무료문항 적용
+                              </span>
+                            </div>
                           ) : o.expectedAmountWon != null && o.expectedAmountWon >= 0 ? (
                             (() => {
                               const paid = o.status === 'payment_confirmed' || o.status === 'in_progress';
@@ -5097,7 +5110,33 @@ export default function AdminDashboardPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <p className="font-bold text-white text-[15px] tracking-tight truncate">{u.name || u.loginId}</p>
+                              {/* 이름 자체에 등급색·점을 입힌다 — 배지는 아래 줄로 밀려 스캔이 느리다.
+                                  깜박이는 점은 「지금 유효한」 유료 회원에만 붙는다. */}
+                              <p
+                                className={`font-bold text-[15px] tracking-tight flex items-center gap-1.5 min-w-0 ${
+                                  u.isVip
+                                    ? 'text-amber-300'
+                                    : listUserAnnualActive(u)
+                                      ? 'text-violet-300'
+                                      : listUserMonthlyActive(u)
+                                        ? 'text-fuchsia-300'
+                                        : 'text-white'
+                                }`}
+                              >
+                                {(u.isVip || listUserAnnualActive(u) || listUserMonthlyActive(u)) && (
+                                  <span
+                                    className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 animate-pulse ${
+                                      u.isVip
+                                        ? 'bg-amber-400'
+                                        : listUserAnnualActive(u)
+                                          ? 'bg-violet-400'
+                                          : 'bg-fuchsia-400'
+                                    }`}
+                                    title={u.isVip ? 'VIP' : listUserAnnualActive(u) ? '연회원 (유효)' : '월구독 (유효)'}
+                                  />
+                                )}
+                                <span className="truncate">{u.name || u.loginId}</span>
+                              </p>
                               {memberTypeLabel(u.memberType) && (
                                 <span className={`inline-flex shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold ${MEMBER_TYPE_BADGE_CLASS[u.memberType ?? ''] || 'bg-slate-600/40 text-slate-300'}`}>{memberTypeLabel(u.memberType)}</span>
                               )}

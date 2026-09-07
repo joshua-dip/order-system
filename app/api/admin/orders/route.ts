@@ -3,6 +3,7 @@ import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import {
   parseOrderRevenueFromOrderText,
+  parseDepositDueFromOrderText,
   resolvePointOrderDisplayAmounts,
   getBookVariantSolbookAccounting,
 } from '@/lib/order-revenue';
@@ -104,7 +105,16 @@ export async function GET(request: NextRequest) {
       // 입금 대기·확인 단계에서도 「입금할 금액」을 표에 노출 (통장 입금 내역 매칭용).
       // 완료/취소/무료공유는 기존 revenueWon 표기를 쓰므로 제외.
       let expectedAmountWon: number | null = null;
+      /* 주문서가 「입금하실 금액: 0원」으로 못박은 건 — 멤버십 무료 한도·포인트 전액 결제.
+         매출 파서는 0원을 금액으로 인정하지 않아(0 은 미인식과 구분이 안 됨) 여기서 따로 읽는다. */
+      const declaredDue = parseDepositDueFromOrderText(orderTextStr);
+      const noPaymentRequired =
+        declaredDue === 0 ||
+        (meta && (meta as Record<string, unknown>).memberFree === true);
       if (status !== 'completed' && status !== 'cancelled' && status !== 'free_share') {
+        if (declaredDue === 0) {
+          expectedAmountWon = 0;
+        } else {
         const parsedDue = parseOrderRevenueFromOrderText(orderTextStr, meta ?? undefined);
         if (parsedDue != null && parsedDue >= 0) {
           if (pointsUsed > 0) {
@@ -117,6 +127,7 @@ export async function GET(request: NextRequest) {
           } else {
             expectedAmountWon = parsedDue;
           }
+        }
         }
       }
 
@@ -144,6 +155,8 @@ export async function GET(request: NextRequest) {
         paymentDueWon,
         /** 미완료(입금 대기·확인) 주문의 입금할 금액(주문서 파싱). 통장 매칭용 */
         expectedAmountWon,
+        /** 입금 없이 성립하는 주문(멤버십 무료 한도·포인트 전액) — 금액 0원 표시에 사유를 붙인다 */
+        noPaymentRequired: !!noPaymentRequired,
         /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
         solbookAccountingSplit,
         completedAt:

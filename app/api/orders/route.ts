@@ -7,6 +7,7 @@ import { createOrderFolder, uploadOrderTxt, isDropboxConfigured } from '@/lib/dr
 import { ORDER_FOOTER_MESSAGE } from '@/lib/orders';
 import { recordPointLedger } from '@/lib/point-ledger';
 import { extractOrderItemKeys, describeOverlapKey } from '@/lib/order-overlap';
+import { parseDepositDueFromOrderText } from '@/lib/order-revenue';
 
 const COLLECTION = 'orders';
 
@@ -229,11 +230,24 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
       }
     }
 
+    /* 입금할 금액이 0원인 주문 — 멤버십 무료 한도로 전액 면제됐거나 포인트로 전액
+       결제한 경우다. 기다릴 입금이 없는데도 「주문 접수」로 두면 관리자가 매번 손으로
+       입금 확인을 눌러야 하고, 회원도 입금 안내를 받는다. 바로 입금 확인으로 넣는다.
+       (쏠북 연계 주문은 이 줄을 찍지 않으므로 여기 걸리지 않는다.) */
+    const declaredDepositDue = parseDepositDueFromOrderText(finalOrderText);
+    const noPaymentRequired = declaredDepositDue === 0;
+
     const doc = {
       orderText: finalOrderText,
       createdAt: now,
       source: 'gomijoshua',
-      status: 'pending',
+      status: noPaymentRequired ? 'payment_confirmed' : 'pending',
+      ...(noPaymentRequired && {
+        paymentConfirmedAt: now,
+        /** 사람이 확인한 입금이 아니라 「낼 금액이 0원」이라 자동 처리된 건임을 남긴다 */
+        paymentAutoConfirmed: true,
+        expectedDepositWon: 0,
+      }),
       orderNumber,
       ...(loginId && { loginId }),
       // 로그인으로 확인된 회원인지, 이메일 이력으로 추정한 회원인지 구분해 둔다

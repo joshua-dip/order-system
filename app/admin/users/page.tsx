@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminSidebar from '../_components/AdminSidebar';
+import { isAnnualMemberActive } from '@/lib/annual-member';
 
 interface ListUser {
   id: string;
@@ -20,17 +21,66 @@ interface ListUser {
   createdAt: string;
 }
 
-function membershipLabel(u: ListUser): { text: string; cls: string } | null {
+/**
+ * 회원 등급.
+ *
+ * `nameCls` / `dot` 은 이름 칸에 바로 입히는 표시다 — 등급 배지 열은 좁은 화면에서
+ * 숨겨지는데(hidden lg:table-cell), 이름은 항상 보이므로 유료 회원을 한눈에 가른다.
+ * 유효한 월·연회원에만 점을 깜박여, 만료·일반 회원과 섞이지 않게 한다.
+ */
+function membershipLabel(
+  u: ListUser
+): { text: string; cls: string; nameCls: string; dot: string | null } | null {
   const now = new Date();
-  if (u.isVip) return { text: 'VIP', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
-  if (u.annualMemberSince) return { text: '연회원', cls: 'bg-violet-500/20 text-violet-300 border-violet-500/40' };
+  if (u.isVip) {
+    return {
+      text: 'VIP',
+      cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      nameCls: 'text-amber-300',
+      dot: 'bg-amber-400',
+    };
+  }
+  /* 연회원은 등록일 기준 1년만 유효하다 — 예전엔 필드만 있으면 계속 연회원으로 보였다. */
+  if (isAnnualMemberActive(u.annualMemberSince)) {
+    return {
+      text: '연회원',
+      cls: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+      nameCls: 'text-violet-300',
+      dot: 'bg-violet-400',
+    };
+  }
   if (u.monthlyMemberUntil) {
     const until = new Date(u.monthlyMemberUntil);
-    if (until > now) return { text: '월구독', cls: 'bg-sky-500/20 text-sky-300 border-sky-500/40' };
-    return { text: '구독만료', cls: 'bg-slate-600/40 text-slate-400 border-slate-600' };
+    if (until > now) {
+      return {
+        text: '월구독',
+        cls: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+        nameCls: 'text-sky-300',
+        dot: 'bg-sky-400',
+      };
+    }
+    return {
+      text: '구독만료',
+      cls: 'bg-slate-600/40 text-slate-400 border-slate-600',
+      nameCls: 'text-slate-400',
+      dot: null,
+    };
+  }
+  if (u.annualMemberSince) {
+    return {
+      text: '연회원만료',
+      cls: 'bg-slate-600/40 text-slate-400 border-slate-600',
+      nameCls: 'text-slate-400',
+      dot: null,
+    };
   }
   if (u.signupPremiumTrialUntil && new Date(u.signupPremiumTrialUntil) > now) {
-    return { text: '체험중', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+    return {
+      text: '체험중',
+      cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      nameCls: 'text-emerald-300',
+      dot: null,
+    };
   }
   return null;
 }
@@ -153,7 +203,15 @@ export default function AdminUsersPage() {
                           className="border-b border-slate-700/50 last:border-0 hover:bg-slate-700/40 cursor-pointer transition-colors"
                         >
                           <td className="px-5 py-3.5">
-                            <p className="font-semibold text-white">{u.name}</p>
+                            <p className={`font-semibold flex items-center gap-1.5 ${badge?.nameCls ?? 'text-white'}`}>
+                              {badge?.dot && (
+                                <span
+                                  className={`inline-block w-1.5 h-1.5 rounded-full animate-pulse ${badge.dot}`}
+                                  title={`${badge.text} (유효)`}
+                                />
+                              )}
+                              {u.name}
+                            </p>
                             <p className="text-slate-400 text-xs font-mono">{u.loginId}</p>
                           </td>
                           <td className="px-5 py-3.5 text-slate-300 truncate max-w-[180px]">
