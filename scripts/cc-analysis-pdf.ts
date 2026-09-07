@@ -6,6 +6,8 @@
  *   ⚠ 정규식만 쓰면 교재를 안 가린다 — "01강 01번" 같은 키는 여러 교재에 있어
  *   엉뚱한 지문이 섞인다(실제로 수능특강을 뽑는데 지금필수가 섞였다). 교재명을 붙일 것.
  *   판을 안 주면 해설편. "둘다"면 출력경로의 .pdf 앞에 " · 문제편"/" · 해설편"을 붙여 두 벌.
+ *   "양식:<이름>" 이면 관리자 화면의 저장 양식(analysis_sheet_presets)을 그대로 적용해
+ *   한 벌만 낸다 — 웹 「현재 양식으로 PDF」와 같은 결과 (예: 양식:문지현 선생님).
  */
 import { loadCliEnv } from './_cli-env';
 loadCliEnv(process.cwd());
@@ -25,11 +27,20 @@ async function main() {
     console.error('사용: cc:analysis-pdf -- "<source_key 정규식>" "<제목>" "<출력.pdf>" [문제편|해설편|둘다]');
     process.exit(1);
   }
-  const editions: ('문제편' | '해설편')[] =
-    editionArg === '둘다' ? ['문제편', '해설편'] : editionArg === '문제편' ? ['문제편'] : ['해설편'];
-
   const [tb, re] = pattern.includes('::') ? pattern.split('::', 2) : ['', pattern];
   const db = await getDb('gomijoshua');
+
+  /* 낼 판들 — 라벨과 양식 오버라이드 쌍. 양식:<이름> 은 저장 양식을 읽어 한 벌. */
+  let editions: { label: string; options: Record<string, unknown> }[];
+  if (editionArg?.startsWith('양식:')) {
+    const presetName = editionArg.slice('양식:'.length).trim();
+    const preset = await db.collection('analysis_sheet_presets').findOne({ name: presetName });
+    if (!preset) throw new Error(`저장 양식 「${presetName}」 이 없습니다.`);
+    editions = [{ label: '분석지', options: preset.options ?? {} }];
+  } else {
+    editions = (editionArg === '둘다' ? ['문제편', '해설편'] : editionArg === '문제편' ? ['문제편'] : ['해설편'])
+      .map((label) => ({ label, options: label === '문제편' ? QUESTION_EDITION_OPTIONS : {} }));
+  }
   const ps = await db.collection('passages')
     .find({ ...(tb ? { textbook: tb } : {}), source_key: { $regex: re } })
     .project({ source_key: 1, textbook: 1, page_label: 1, page: 1 })
@@ -68,11 +79,11 @@ async function main() {
   });
   const date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   try {
-    for (const edition of editions) {
+    for (const { label: edition, options } of editions) {
       const html = buildAnalysisSheetHtml({
         title, subtitle: '지문 분석지', passages, brand: '', date,
         editionLabel: edition,
-        options: edition === '문제편' ? QUESTION_EDITION_OPTIONS : {},
+        options,
       });
       const page = await browser.newPage();
       await page.setContent(
