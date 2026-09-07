@@ -7,6 +7,8 @@ import { useTextbooksData } from '@/lib/useTextbooksData';
 import type { OrderGenerateHandler } from './MockExamSettings';
 import type { WorkbookLessonPick } from './WorkbookLessonSelection';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
+import { isAnnualMemberActive } from '@/lib/annual-member';
+import { isMonthlyMemberActive } from '@/lib/premium-member';
 
 interface WorkbookTypeSelectionProps {
   selectedTextbook: string;
@@ -34,6 +36,8 @@ const WorkbookTypeSelection = ({
   const [totalTextCount, setTotalTextCount] = useState<number>(0);
   const [useCustomHwp, setUseCustomHwp] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  /** 유료 멤버십(월·연회원)·관리자 — 모의고사 워크북 전면 무료 대상 */
+  const [paidMember, setPaidMember] = useState(false);
   const [myFormatApproved, setMyFormatApproved] = useState(false);
   const [formatCounts, setFormatCounts] = useState({ 강의용자료: 0, 수업용자료: 0, 변형문제: 0 });
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
@@ -62,10 +66,20 @@ const WorkbookTypeSelection = ({
       .then((d) => {
         const u = d?.user;
         setIsMember(!!u && u.role !== 'admin');
+        /* 변형문제 무료 한도(app/api/my/variant-base-quota)와 같은 기준 —
+           결제 회원(월·연)과 관리자를 유료 회원으로 본다. 가입 체험은 제외. */
+        setPaidMember(
+          u?.role === 'admin' ||
+            isAnnualMemberActive(u?.annualMemberSince ?? null) ||
+            isMonthlyMemberActive(u?.monthlyMemberUntil ?? null)
+        );
         setMyFormatApproved(!!u?.myFormatApproved);
         if (u?.myFormatApproved) refreshMyFormats();
       })
-      .catch(() => setIsMember(false));
+      .catch(() => {
+        setIsMember(false);
+        setPaidMember(false);
+      });
   }, [refreshMyFormats]);
 
   const needsLectureHwp = selectedPackages.includes('lecture_material');
@@ -107,8 +121,12 @@ const WorkbookTypeSelection = ({
     }
   };
 
+  /* 모의고사 워크북은 유료 멤버십 회원에게 전면 무료 (2026-09-07 정책).
+     부교재 워크북(BW)은 그대로 유료다. */
+  const mockWorkbookFree = isMockExam && paidMember;
+
   // 워크북 패키지들
-  const workbookPackages = [
+  const workbookPackagesBase = [
     {
       id: 'blank_package',
       name: '워크북 빈칸쓰기 패키지',
@@ -167,6 +185,13 @@ const WorkbookTypeSelection = ({
       isFree: isMockExam
     }
   ];
+
+  /** 멤버십 무료가 걸리면 단가를 0으로 내리되, 정가(listPrice)는 주문서 표기용으로 남긴다. */
+  const workbookPackages = workbookPackagesBase.map((pkg) => ({
+    ...pkg,
+    listPrice: pkg.price,
+    price: mockWorkbookFree ? 0 : pkg.price,
+  }));
 
   useEffect(() => {
     if (!convertedData) return;
@@ -264,8 +289,9 @@ const WorkbookTypeSelection = ({
       workbookPackages.find(pkg => pkg.id === packageId)
     ).filter(Boolean);
 
-    // 무료 자료만 선택된 경우 체크 (모의고사일 때만)
-    if (isMockExam) {
+    /* 무료 자료만 선택된 경우 체크 (모의고사일 때만).
+       멤버십 전면 무료면 모든 항목이 0원이라 이 가드가 회원의 주문을 통째로 막는다. */
+    if (isMockExam && !mockWorkbookFree) {
       const hasOnlyFreeItems = selectedPackageDetails.every(pkg => pkg!.price === 0);
       if (hasOnlyFreeItems) {
         alert('무료 자료만으로는 주문서를 작성할 수 없습니다.\n유료 자료를 함께 선택해주세요.');
@@ -310,6 +336,11 @@ const WorkbookTypeSelection = ({
     const totalPrice = selectedPackageDetails.reduce((sum, pkg) => {
       return sum + (pkg!.price * totalTextCount);
     }, 0);
+
+    /** 멤버십 전면 무료로 빠진 정가 합계 — 주문서에 얼마가 면제됐는지 남긴다. */
+    const memberWaivedWon = mockWorkbookFree
+      ? selectedPackageDetails.reduce((sum, pkg) => sum + pkg!.listPrice * totalTextCount, 0)
+      : 0;
 
     // 할인 계산
     let discountRate = 0;
@@ -362,20 +393,25 @@ ${lessonPickLines}
 
 4. 패키지별 세부 내용
 ${selectedPackageDetails.map(pkg => 
-`   • ${pkg!.name} (지문당 ${pkg!.price}원)
+`   • ${pkg!.name} (지문당 ${pkg!.price}원${mockWorkbookFree && pkg!.listPrice > 0 ? ' — 멤버십 무료' : ''})
      - ${pkg!.description}
      - 포함 유형: ${pkg!.subTypes.join(', ')}`
 ).join('\n')}
 
 5. 가격 계산
 ${selectedPackageDetails.map(pkg => 
-`   • ${pkg!.name}: ${pkg!.price}원 × ${totalTextCount}지문 = ${(pkg!.price * totalTextCount).toLocaleString()}원`
+  mockWorkbookFree && pkg!.listPrice > 0
+    ? `   • ${pkg!.name}: 무료 (정가 ${pkg!.listPrice}원 × ${totalTextCount}지문 = ${(pkg!.listPrice * totalTextCount).toLocaleString()}원)`
+    : `   • ${pkg!.name}: ${pkg!.price}원 × ${totalTextCount}지문 = ${(pkg!.price * totalTextCount).toLocaleString()}원`
 ).join('\n')}
-   
+   ${mockWorkbookFree && memberWaivedWon > 0 ? `
+   (멤버십 회원 모의고사 워크북 전면 무료 — 정가 ${memberWaivedWon.toLocaleString()}원분 제외)` : ''}
    기본 금액: ${totalPrice.toLocaleString()}원${discountRate > 0 ? `
    할인 적용: ${discountRate}% 할인 (-${discountAmount.toLocaleString()}원)
    최종 금액: ${finalPrice.toLocaleString()}원` : `
    최종 금액: ${finalPrice.toLocaleString()}원`}
+
+입금하실 금액: ${finalPrice.toLocaleString()}원
 
 ${useCustomHwp ? `
 6. 커스텀 HWP 양식 사용
@@ -395,6 +431,9 @@ ${useCustomHwp ? `
       email: email.trim(),
       useCustomHwp,
       isMockExam,
+      /* 멤버십 전면 무료 주문 — 금액 0원이라 주문서 파싱만으로는
+         「무료 주문」과 「금액 파싱 실패」를 구분할 수 없어 표시로 남긴다. */
+      ...(mockWorkbookFree ? { memberFree: true, memberWaivedWon } : {}),
       // 강별 선택 번호 (부교재·교과서 번호별 주문). 강 전체 선택 시 전체 번호 목록.
       ...(hasNumberPicks
         ? {
@@ -422,6 +461,11 @@ ${useCustomHwp ? `
   const basePricePreview = selectedPackageDetailsPreview.reduce((sum, pkg) => {
     return sum + (pkg!.price * totalTextCount);
   }, 0);
+
+  /** 멤버십 전면 무료로 빠진 정가 합계 (화면 안내용) */
+  const memberWaivedWonPreview = mockWorkbookFree
+    ? selectedPackageDetailsPreview.reduce((sum, pkg) => sum + pkg!.listPrice * totalTextCount, 0)
+    : 0;
   
   // 할인 계산 (미리보기용)
   let discountRatePreview = 0;
@@ -879,7 +923,17 @@ ${useCustomHwp ? `
                           </div>
                         ))}
                       </div>
-                      
+
+                      {/* 회원이 왜 전부 0원인지 화면에서 바로 알 수 있게 */}
+                      {mockWorkbookFree && memberWaivedWonPreview > 0 && (
+                        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800">
+                          👑 멤버십 회원 혜택 — 모의고사 워크북 전면 무료
+                          <span className="ml-1 font-semibold">
+                            (정가 {memberWaivedWonPreview.toLocaleString()}원분 제외)
+                          </span>
+                        </div>
+                      )}
+
                       <hr className="my-3 border-gray-300" />
                       
                       <div className="flex flex-col space-y-1">
