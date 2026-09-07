@@ -881,14 +881,21 @@ ${solbookRetailLine}
         : '';
     const solbookBlock = solbookBlockPaid || solbookBlockMemberWaived;
 
-    const pointLine =
-      pointsUsedAmount > 0 && !isSolbookTextbook
-        ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n입금하실 금액(제작료): ${Math.max(0, totalPrice - pointsUsedAmount).toLocaleString()}원`
-        : '';
+    /* 포인트를 쓰지 않아도 입금액을 명시한다 — 무료 한도만 적용된 주문은
+       「5. 가격」이 곧 입금액인데 라벨이 없어 회원이 총액과 헷갈렸다.
+       쏠북 연계는 입금 대상이 다르므로(커스텀 수수료) 5-2·5-4 블록이 따로 안내한다.
+       라벨 뒤에 괄호를 붙이면 매출 파서가 금액을 못 읽으므로 「금액: N원」형태를 지킨다. */
+    const depositDueWon = Math.max(0, totalPrice - pointsUsedAmount);
+    const pointLine = isSolbookTextbook
+      ? ''
+      : `${
+          pointsUsedAmount > 0 ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n` : '\n\n'
+        }입금하실 금액: ${depositDueWon.toLocaleString()}원`;
 
-    /* 관리자가 주문서만 보고도 왜 금액이 깎였는지 알 수 있게 남긴다. */
+    /* 관리자·회원 모두 주문서만 보고 왜 금액이 깎였는지 알 수 있게 남긴다.
+       무료분은 할인율이 붙기 전 정가에서 빠지므로 「정가 N원분 제외」로 적는다. */
     const quotaLine = quotaFree > 0
-      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
+      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 정가 ${(quotaFree * VARIANT_PRICE.base).toLocaleString()}원분 제외 · 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
       : '';
     const priceBreakdownLine = isSolbookOrder
       ? `\n   (이곳 입금: 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`

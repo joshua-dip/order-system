@@ -468,9 +468,10 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       quotaFreeCount: quotaFree,
     } = computeMockExamPrice();
 
-    /* 관리자가 주문서만 보고도 왜 금액이 깎였는지 알 수 있게 남긴다. */
+    /* 관리자·회원 모두 주문서만 보고 왜 금액이 깎였는지 알 수 있게 남긴다.
+       무료분은 할인율이 붙기 전 정가에서 빠지므로 「정가 N원분 제외」로 적는다. */
     const quotaLine = quotaFree > 0
-      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
+      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 정가 ${(quotaFree * VARIANT_PRICE.base).toLocaleString()}원분 제외 · 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
       : '';
 
     const examDetails = examSelections.map((exam, index) => {
@@ -500,9 +501,12 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     }
     const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
 
-    const pointLine = pointsUsedAmount > 0
-      ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n입금하실 금액: ${Math.max(0, totalPrice - pointsUsedAmount).toLocaleString()}원`
-      : '';
+    /* 포인트를 쓰지 않아도 입금액을 명시한다 — 무료 한도만 적용된 주문은
+       「5. 가격」이 곧 입금액인데 라벨이 없어 회원이 총액과 헷갈렸다. */
+    const depositDueWon = Math.max(0, totalPrice - pointsUsedAmount);
+    const pointLine = `${
+      pointsUsedAmount > 0 ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n` : '\n\n'
+    }입금하실 금액: ${depositDueWon.toLocaleString()}원`;
 
     const orderText = `모의고사 주문서
 
