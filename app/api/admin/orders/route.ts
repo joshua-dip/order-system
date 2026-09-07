@@ -162,21 +162,49 @@ export async function GET(request: NextRequest) {
         solbookAccountingSplit,
         /* 메일 발송 이력 — 「이 주문 메일 나갔나」를 목록에서 바로 확인한다.
            emailLastId 로 Resend 대시보드에서 본문·전달 상태를 열어볼 수 있다. */
-        emailSentAt: (() => {
-          const v = (o as { emailSentAt?: unknown }).emailSentAt;
-          return v instanceof Date ? v.toISOString() : typeof v === 'string' ? v : null;
-        })(),
-        emailSentCount: (() => {
-          const v = (o as { emailSentCount?: unknown }).emailSentCount;
-          return typeof v === 'number' && Number.isFinite(v) ? v : 0;
-        })(),
-        emailLastId: (() => {
-          const v = (o as { emailLastId?: unknown }).emailLastId;
-          return typeof v === 'string' && v ? v : null;
-        })(),
-        emailLastTo: (() => {
-          const v = (o as { emailLastTo?: unknown }).emailLastTo;
-          return typeof v === 'string' && v ? v : null;
+        ...(() => {
+          /* 실제 자료 메일은 제작기(별도 컴퓨터)에서 나가고 Resend id 를
+             orders.delivery.emailIds 에 남긴다. 관리자 화면에서 보낸 건만 보면
+             거의 전부 「미발송」으로 보이므로, 없으면 delivery 쪽을 읽는다. */
+          const iso = (v: unknown) =>
+            v instanceof Date ? v.toISOString() : typeof v === 'string' && v ? v : null;
+          const own = iso((o as { emailSentAt?: unknown }).emailSentAt);
+          const ownCount = (o as { emailSentCount?: unknown }).emailSentCount;
+          const ownId = (o as { emailLastId?: unknown }).emailLastId;
+          const ownTo = (o as { emailLastTo?: unknown }).emailLastTo;
+          if (own) {
+            return {
+              emailSentAt: own,
+              emailSentCount:
+                typeof ownCount === 'number' && Number.isFinite(ownCount) ? ownCount : 1,
+              emailLastId: typeof ownId === 'string' && ownId ? ownId : null,
+              emailLastTo: typeof ownTo === 'string' && ownTo ? ownTo : null,
+              emailSource: 'admin' as const,
+            };
+          }
+          const d = (o as { delivery?: unknown }).delivery;
+          const dv = d && typeof d === 'object' && !Array.isArray(d) ? (d as Record<string, unknown>) : null;
+          const ids = Array.isArray(dv?.emailIds)
+            ? (dv!.emailIds as unknown[]).filter((x): x is string => typeof x === 'string' && !!x)
+            : [];
+          const sentAt = iso(dv?.sentAt);
+          if (!sentAt && ids.length === 0) {
+            return {
+              emailSentAt: null,
+              emailSentCount: 0,
+              emailLastId: null,
+              emailLastTo: null,
+              emailSource: null as null,
+            };
+          }
+          return {
+            emailSentAt: sentAt,
+            emailSentCount: ids.length || 1,
+            /* 가장 최근 발송을 대표로 — 제작기는 배열 끝에 덧붙인다 */
+            emailLastId: ids.length > 0 ? ids[ids.length - 1] : null,
+            emailLastTo: null,
+            emailSource: 'maker' as const,
+          };
         })(),
         completedAt:
           completedAt instanceof Date

@@ -111,6 +111,8 @@ interface AdminOrder {
   emailSentCount?: number;
   emailLastId?: string | null;
   emailLastTo?: string | null;
+  /** 'admin' = 관리자 화면 발송 · 'maker' = 제작기(별도 컴퓨터) 발송 기록 */
+  emailSource?: 'admin' | 'maker' | null;
   /** 같은 고객의 다른 주문과 (지문×유형)이 겹치는 경우 그 주문번호들. 중복 의심 표시용 */
   duplicateOf?: string[] | null;
   /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
@@ -4001,22 +4003,30 @@ export default function AdminDashboardPage() {
                         </td>
                         {/* 메일 발송 여부 — 보낸 건은 Resend 대시보드 링크로 언제든 원문 확인 */}
                         <td className="py-2.5 px-2 align-top leading-snug">
-                          {o.emailSentAt ? (
+                          {o.emailSentAt || o.emailLastId ? (
                             (() => {
-                              const { dateLine, timeLine } = formatOrderDateTwoLines(o.emailSentAt);
+                              /* 제작기 기록은 시각이 빠져 있을 수 있다 — 그래도 발송으로 본다 */
+                              const { dateLine, timeLine } = o.emailSentAt
+                                ? formatOrderDateTwoLines(o.emailSentAt)
+                                : { dateLine: '', timeLine: '' };
                               const count = o.emailSentCount ?? 1;
                               const label = (
                                 <>
                                   <span className="block text-emerald-400 text-[11px] font-semibold">
                                     ✉ 발송{count > 1 ? ` ×${count}` : ''}
+                                    {o.emailSource === 'maker' && (
+                                      <span className="ml-1 text-slate-500 font-normal">제작기</span>
+                                    )}
                                   </span>
                                   <span className="block text-slate-500 text-[10px] tabular-nums mt-0.5">
                                     {dateLine} {timeLine}
                                   </span>
                                 </>
                               );
-                              const tip = `${formatDateTime(o.emailSentAt)}${o.emailLastTo ? ` · ${o.emailLastTo}` : ''}${
-                                count > 1 ? ` · 총 ${count}회 발송` : ''
+                              const tip = `${o.emailSentAt ? formatDateTime(o.emailSentAt) : '발송 시각 기록 없음'}${
+                                o.emailLastTo ? ` · ${o.emailLastTo}` : ''
+                              }${count > 1 ? ` · 총 ${count}회 발송` : ''}${
+                                o.emailSource === 'maker' ? ' · 제작기 발송 기록' : ''
                               }`;
                               return o.emailLastId ? (
                                 <a
