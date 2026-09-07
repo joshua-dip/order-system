@@ -375,6 +375,29 @@ export default function AnalysisSheetPage() {
             className="w-36 bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm"
           />
         </label>
+        {presets.length > 0 && (
+          <div className="block">
+            <span className="text-xs text-slate-500 block mb-1">저장 양식 (클릭해 적용)</span>
+            <div className="flex flex-wrap gap-1.5">
+              {presets.map((p) => {
+                /* 옛 프리셋에 없는 키는 기본값으로 채워 비교·적용 모두 같은 모양을 쓴다. */
+                const merged = { ...DEFAULT_SHEET_OPTIONS, ...p.options };
+                const active = sameOptions(options, merged);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setOptions(merged); setMsg(`양식 「${p.name}」 적용`); }}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${active ? 'bg-sky-700' : 'bg-slate-800 hover:bg-slate-700 border border-slate-600'}`}
+                    title="이 양식의 옵션 조합으로 일괄 적용"
+                  >
+                    {p.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="flex gap-2 ml-auto items-center">
           {busy && <span className="text-xs text-sky-400">{busy}</span>}
           {!busy && msg && <span className="text-xs text-slate-400">{msg}</span>}
