@@ -184,6 +184,10 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   /** settings.textbookTypeMeta 기준 쏠북 분류 — 교과서 키만 목록 상단 섹션에 사용 */
   const [solbook교과서Keys, setSolbook교과서Keys] = useState<string[]>([]);
   const [solbookLoaded, setSolbookLoaded] = useState(false);
+  /** 학교 교과서(교과서 폴더 배정분) — canOrderSchoolTextbook 회원에게만 내려온다.
+      쏠북 설정(settings.textbookTypeMeta)과 별개 소스라, 이걸 합치지 않으면
+      권한이 있어도 「교과서 목록」에 쏠북 등록분 몇 권만 보인다. */
+  const [schoolTextbookKeys, setSchoolTextbookKeys] = useState<string[]>([]);
 
   useEffect(() => {
     fetchAuthMe()
@@ -235,6 +239,16 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   }, [flow, selectedTextbook]);
 
   useEffect(() => {
+    /* 비권한·비로그인이면 빈 배열이 오므로 조건 없이 부른다. */
+    fetch('/api/textbooks/school', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((d: Record<string, unknown>) =>
+        setSchoolTextbookKeys(Array.isArray(d?.keys) ? (d.keys as string[]) : []),
+      )
+      .catch(() => setSchoolTextbookKeys([]));
+  }, []);
+
+  useEffect(() => {
     fetch('/api/settings/variant-solbook', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data: Record<string, unknown>) => {
@@ -265,8 +279,12 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           }
           const allSorted = [...solbookKeys].sort((a, b) => a.localeCompare(b, 'ko'));
           const gyoSorted = [...solbook교과서Keys].sort((a, b) => a.localeCompare(b, 'ko'));
-          const textbookList =
+          const fromSolbook =
             gyoSorted.length > 0 ? gyoSorted.filter((k) => allSorted.includes(k)) : allSorted;
+          /* 쏠북 등록분 ∪ 학교 교과서(권한 회원). 합집합이라 기존에 보이던 교재는 그대로 남는다. */
+          const textbookList = [...new Set([...fromSolbook, ...schoolTextbookKeys])].sort((a, b) =>
+            a.localeCompare(b, 'ko'),
+          );
           setTextbooks(textbookList);
           setFilteredTextbooks(textbookList);
           setShowTextbookList(true);
@@ -417,6 +435,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     solbookKeys,
     solbook교과서Keys,
     solbookLoaded,
+    schoolTextbookKeys,
   ]);
 
   // 검색 필터링 로직

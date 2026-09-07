@@ -292,10 +292,19 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     const discountRate = variantVolumeDiscountRate(totalQuestions);
     const discountAmount = basePrice * discountRate;
     const totalPrice = Math.round(basePrice - discountAmount);
+
+    /* 「무료로 처리된 분」과 「실제 입금 대상」을 화면에서 갈라 보여주기 위한 값.
+       고난도는 한도와 무관하게 항상 유료, 기본난도는 한도를 넘은 만큼만 유료다. */
+    const advancedCount =
+      selectedTypes.filter((t) => isAdvancedVariantType(t)).length * totalNumberCount * questionsPerType;
+    const advancedWon = advancedCount * VARIANT_PRICE.advanced;
+
     return {
       basePrice, totalQuestions, discountRate, discountAmount, totalPrice,
       isDiscounted: totalQuestions >= 100, totalNumberCount,
       quotaFreeCount: quotaSplit.freeCount,
+      quotaPaidBaseCount: quotaSplit.paidCount,
+      advancedCount, advancedWon,
     };
   };
 
@@ -566,6 +575,8 @@ ${examDetails}
     isDiscounted,
     totalNumberCount,
     quotaFreeCount,
+    quotaPaidBaseCount,
+    advancedCount,
   } = computeMockExamPrice();
 
   const maxPointUsable = Math.min(userPoints, totalPrice);
@@ -1170,6 +1181,36 @@ ${examDetails}
                           <span className="font-medium text-green-600 text-right">
                             {quotaFreeCount.toLocaleString()}문항 (−{(quotaFreeCount * VARIANT_PRICE.base).toLocaleString()}원)
                           </span>
+                        </div>
+                      )}
+                      {/* 무료로 빠지는 분과 실제 입금 대상을 갈라 보여준다 —
+                          「고난도부터는 따로 입금」이 화면에서 바로 읽혀야 한다. */}
+                      {isPremiumMembership && (advancedCount > 0 || quotaPaidBaseCount > 0 || quotaFreeCount > 0) && (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 space-y-1">
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-emerald-800">무료 처리 (기본난도)</span>
+                            <span className="font-semibold text-emerald-700">
+                              {quotaFreeCount.toLocaleString()}문항
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-amber-800">
+                              유료 — 고난도{quotaPaidBaseCount > 0 ? ' + 한도 초과 기본난도' : ''}
+                            </span>
+                            <span className="font-semibold text-amber-700">
+                              {(advancedCount + quotaPaidBaseCount).toLocaleString()}문항 · 별도 입금
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-emerald-700/80 pt-0.5 border-t border-emerald-200">
+                            이번 주문 후 남은 무료 한도{' '}
+                            <b>{Math.max(0, baseQuotaRemaining - quotaFreeCount).toLocaleString()}문항</b>
+                            {' / 월 '}{baseQuotaLimit.toLocaleString()}문항
+                            {quotaPaidBaseCount > 0 && (
+                              <span className="block text-amber-700">
+                                이번 달 무료 한도를 넘어 기본난도 {quotaPaidBaseCount.toLocaleString()}문항이 유료로 계산됐습니다.
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                       <div className="flex justify-between items-center">

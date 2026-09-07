@@ -652,6 +652,9 @@ const QuestionSettings = ({
       /* 멤버십 한도로 무료 처리된 기본난도 문항 수 (0 이면 적용 없음) */
       quotaFreeCount: quotaSplit.freeCount,
       quotaPaidCount: quotaSplit.paidCount,
+      /* 고난도는 한도와 무관하게 항상 유료 — 화면에서 입금 대상으로 따로 보여준다 */
+      advancedCount:
+        selectedTypes.filter((t) => isAdvancedVariantType(t)).length * mult * questionsPerType,
     };
   };
 
@@ -990,6 +993,8 @@ ${solbookRetailLine}
     isSolbookTextbook,
     solbookCustomFeeWaived,
     quotaFreeCount,
+    quotaPaidCount,
+    advancedCount,
   } = computeBookVariantPrice();
 
   /* 멤버십(월·연·가입 체험) 여부 — 위 isMember 는 '로그인 회원'이라 뜻이 다르다.
@@ -1780,6 +1785,36 @@ ${solbookRetailLine}
                           <span className="font-medium text-green-600">
                             {quotaFreeCount.toLocaleString()}문항 (−{(quotaFreeCount * VARIANT_PRICE.base).toLocaleString()}원)
                           </span>
+                        </div>
+                      )}
+                      {/* 무료로 빠지는 분과 실제 입금 대상을 갈라 보여준다 —
+                          「고난도부터는 따로 입금」이 화면에서 바로 읽혀야 한다. */}
+                      {isPremiumMembership && (advancedCount > 0 || quotaPaidCount > 0 || quotaFreeCount > 0) && (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 space-y-1">
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-emerald-800">무료 처리 (기본난도)</span>
+                            <span className="font-semibold text-emerald-700">
+                              {quotaFreeCount.toLocaleString()}문항
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-amber-800">
+                              유료 — 고난도{quotaPaidCount > 0 ? ' + 한도 초과 기본난도' : ''}
+                            </span>
+                            <span className="font-semibold text-amber-700">
+                              {(advancedCount + quotaPaidCount).toLocaleString()}문항 · 별도 입금
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-emerald-700/80 pt-0.5 border-t border-emerald-200">
+                            이번 주문 후 남은 무료 한도{' '}
+                            <b>{Math.max(0, baseQuotaRemaining - quotaFreeCount).toLocaleString()}문항</b>
+                            {' / 월 '}{baseQuotaLimit.toLocaleString()}문항
+                            {quotaPaidCount > 0 && (
+                              <span className="block text-amber-700">
+                                이번 달 무료 한도를 넘어 기본난도 {quotaPaidCount.toLocaleString()}문항이 유료로 계산됐습니다.
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                       <div className="flex justify-between items-center">
