@@ -4,6 +4,7 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import {
   parseOrderRevenueFromOrderText,
   parseDepositDueFromOrderText,
+  isZeroPaymentOrderText,
   resolvePointOrderDisplayAmounts,
   getBookVariantSolbookAccounting,
 } from '@/lib/order-revenue';
@@ -108,11 +109,11 @@ export async function GET(request: NextRequest) {
       /* 주문서가 「입금하실 금액: 0원」으로 못박은 건 — 멤버십 무료 한도·포인트 전액 결제.
          매출 파서는 0원을 금액으로 인정하지 않아(0 은 미인식과 구분이 안 됨) 여기서 따로 읽는다. */
       const declaredDue = parseDepositDueFromOrderText(orderTextStr);
+      const zeroDue = declaredDue === 0 || isZeroPaymentOrderText(orderTextStr);
       const noPaymentRequired =
-        declaredDue === 0 ||
-        (meta && (meta as Record<string, unknown>).memberFree === true);
+        zeroDue || (meta && (meta as Record<string, unknown>).memberFree === true);
       if (status !== 'completed' && status !== 'cancelled' && status !== 'free_share') {
-        if (declaredDue === 0) {
+        if (zeroDue) {
           expectedAmountWon = 0;
         } else {
         const parsedDue = parseOrderRevenueFromOrderText(orderTextStr, meta ?? undefined);
@@ -159,6 +160,24 @@ export async function GET(request: NextRequest) {
         noPaymentRequired: !!noPaymentRequired,
         /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
         solbookAccountingSplit,
+        /* 메일 발송 이력 — 「이 주문 메일 나갔나」를 목록에서 바로 확인한다.
+           emailLastId 로 Resend 대시보드에서 본문·전달 상태를 열어볼 수 있다. */
+        emailSentAt: (() => {
+          const v = (o as { emailSentAt?: unknown }).emailSentAt;
+          return v instanceof Date ? v.toISOString() : typeof v === 'string' ? v : null;
+        })(),
+        emailSentCount: (() => {
+          const v = (o as { emailSentCount?: unknown }).emailSentCount;
+          return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+        })(),
+        emailLastId: (() => {
+          const v = (o as { emailLastId?: unknown }).emailLastId;
+          return typeof v === 'string' && v ? v : null;
+        })(),
+        emailLastTo: (() => {
+          const v = (o as { emailLastTo?: unknown }).emailLastTo;
+          return typeof v === 'string' && v ? v : null;
+        })(),
         completedAt:
           completedAt instanceof Date
             ? completedAt.toISOString()

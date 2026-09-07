@@ -7,7 +7,7 @@ import { createOrderFolder, uploadOrderTxt, isDropboxConfigured } from '@/lib/dr
 import { ORDER_FOOTER_MESSAGE } from '@/lib/orders';
 import { recordPointLedger } from '@/lib/point-ledger';
 import { extractOrderItemKeys, describeOverlapKey } from '@/lib/order-overlap';
-import { parseDepositDueFromOrderText } from '@/lib/order-revenue';
+import { parseDepositDueFromOrderText, isZeroPaymentOrderText } from '@/lib/order-revenue';
 
 const COLLECTION = 'orders';
 
@@ -235,7 +235,7 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
        입금 확인을 눌러야 하고, 회원도 입금 안내를 받는다. 바로 입금 확인으로 넣는다.
        (쏠북 연계 주문은 이 줄을 찍지 않으므로 여기 걸리지 않는다.) */
     const declaredDepositDue = parseDepositDueFromOrderText(finalOrderText);
-    const noPaymentRequired = declaredDepositDue === 0;
+    const noPaymentRequired = declaredDepositDue === 0 || isZeroPaymentOrderText(finalOrderText);
 
     const doc = {
       orderText: finalOrderText,

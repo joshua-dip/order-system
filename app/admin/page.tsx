@@ -106,6 +106,11 @@ interface AdminOrder {
   expectedAmountWon?: number | null;
   /** 입금 없이 성립하는 주문 — 멤버십 무료 한도·포인트 전액 결제 */
   noPaymentRequired?: boolean;
+  /** 메일 발송 이력 — emailLastId 로 Resend 대시보드에서 본문·전달 상태 확인 */
+  emailSentAt?: string | null;
+  emailSentCount?: number;
+  emailLastId?: string | null;
+  emailLastTo?: string | null;
   /** 같은 고객의 다른 주문과 (지문×유형)이 겹치는 경우 그 주문번호들. 중복 의심 표시용 */
   duplicateOf?: string[] | null;
   /** 완료·쏠북 연계 BV: 매출(revenueWon)은 커스텀만, 합계는 orderGrossWon */
@@ -3618,6 +3623,12 @@ export default function AdminDashboardPage() {
                         금액
                       </th>
                       <th className="text-left py-3 px-2 min-w-[5.5rem]">상태</th>
+                      <th
+                        className="text-left py-3 px-2 min-w-[5rem]"
+                        title="주문 메일 발송 여부 — 보낸 건은 Resend 대시보드로 열려 본문·전달 상태를 확인할 수 있습니다"
+                      >
+                        메일
+                      </th>
                       <th className="text-left py-3 px-2 min-w-[7.25rem]">완료일</th>
                       <th className="text-left py-3 px-2 min-w-[11rem]">드롭박스</th>
                     </tr>
@@ -3987,6 +3998,45 @@ export default function AdminDashboardPage() {
                               </>
                             )}
                           </div>
+                        </td>
+                        {/* 메일 발송 여부 — 보낸 건은 Resend 대시보드 링크로 언제든 원문 확인 */}
+                        <td className="py-2.5 px-2 align-top leading-snug">
+                          {o.emailSentAt ? (
+                            (() => {
+                              const { dateLine, timeLine } = formatOrderDateTwoLines(o.emailSentAt);
+                              const count = o.emailSentCount ?? 1;
+                              const label = (
+                                <>
+                                  <span className="block text-emerald-400 text-[11px] font-semibold">
+                                    ✉ 발송{count > 1 ? ` ×${count}` : ''}
+                                  </span>
+                                  <span className="block text-slate-500 text-[10px] tabular-nums mt-0.5">
+                                    {dateLine} {timeLine}
+                                  </span>
+                                </>
+                              );
+                              const tip = `${formatDateTime(o.emailSentAt)}${o.emailLastTo ? ` · ${o.emailLastTo}` : ''}${
+                                count > 1 ? ` · 총 ${count}회 발송` : ''
+                              }`;
+                              return o.emailLastId ? (
+                                <a
+                                  href={`https://resend.com/emails/${o.emailLastId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block hover:underline"
+                                  title={`${tip}\nResend 대시보드에서 본문·전달 상태 열기`}
+                                >
+                                  {label}
+                                </a>
+                              ) : (
+                                <span className="block" title={tip}>{label}</span>
+                              );
+                            })()
+                          ) : (
+                            <span className="text-slate-600 text-[11px]" title="아직 주문 메일을 보내지 않았습니다">
+                              미발송
+                            </span>
+                          )}
                         </td>
                         <td
                           className="py-2.5 px-2 text-slate-500 align-top leading-snug"

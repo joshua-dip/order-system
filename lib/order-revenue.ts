@@ -55,6 +55,28 @@ export function parseOrderRevenueFromOrderText(
   return null;
 }
 
+/**
+ * 주문서가 「낼 금액이 0원」이라고 못박았는지.
+ *
+ * `parseOrderRevenueFromOrderText` 는 0원을 금액으로 인정하지 않는다(미인식과 구분이
+ * 안 되기 때문). 그래서 멤버십 무료 한도로 전액 면제된 주문이 「금액 미인식」과 똑같이
+ * 보였고, 기다릴 입금이 없는데도 「주문 접수」로 남았다.
+ * 「입금하실 금액」 줄은 나중에 들어간 것이라 그 이전 주문서까지 잡으려면 총액 표기도 본다.
+ */
+export function isZeroPaymentOrderText(text: string | null | undefined): boolean {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.replace(/\r\n/g, '\n');
+  const zeroPatterns: RegExp[] = [
+    /입금하실\s*금액\s*[:：]?\s*0\s*원/i,
+    /최종\s*금액\s*[:：]?\s*0\s*원/,
+    /(?:^|\n)5\.\s*가격(?:[^\n]*)?\s*[:：]\s*0\s*원/m,
+    /(?:^|\n)4\.\s*금액(?:[^\n]*)?\s*[:：]\s*0\s*원/m,
+    /총\s*금액\s*[:：]?\s*0\s*원/,
+    /(?:^|\n)\s*입금액\s*[:：]?\s*0\s*원/m,
+  ];
+  return zeroPatterns.some((re) => re.test(t));
+}
+
 /** 주문서에만 있는 「입금하실 금액」(포인트 차감 후 실제 입금액) */
 export function parseDepositDueFromOrderText(text: string | null | undefined): number | null {
   if (!text || typeof text !== 'string') return null;

@@ -112,5 +112,29 @@ export async function POST(
     return NextResponse.json({ error: result.error.message }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true, emailId: result.data?.id });
+  /* 발송 기록을 주문에 남긴다 — 지금까지는 보냈는지 여부가 어디에도 안 남아,
+     관리자가 「이 주문 메일 나갔나」를 확인할 방법이 없었다.
+     emailId 로 Resend 대시보드(https://resend.com/emails/<id>)에서 본문·전달 상태를 볼 수 있다. */
+  const emailId = result.data?.id ?? null;
+  const sentAt = new Date();
+  const logEntry = {
+    at: sentAt,
+    to,
+    subject,
+    emailId,
+    attachmentCount: attachments.length,
+    hasFile: !!fileUrl,
+  };
+  await db
+    .collection('orders')
+    .updateOne({ _id: new ObjectId(id) }, {
+      $set: { emailSentAt: sentAt, emailLastId: emailId, emailLastTo: to },
+      $inc: { emailSentCount: 1 },
+      /* 최근 발송이 위로 오도록 앞에 넣고 10건까지만 남긴다 */
+      $push: { emailSends: { $each: [logEntry], $position: 0, $slice: 10 } },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+    .catch((e) => console.error('메일 발송 기록 저장 실패:', e));
+
+  return NextResponse.json({ ok: true, emailId });
 }
