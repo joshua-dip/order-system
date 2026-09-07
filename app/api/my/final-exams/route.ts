@@ -3,7 +3,7 @@ import type { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { requirePremiumMemberVariant } from '@/lib/member-variant-premium-auth';
 import { recordPointLedger } from '@/lib/point-ledger';
-import { variantUnitPrice, isOrderInsertType } from '@/lib/variant-pricing';
+import { variantChargedUnitPrice, isOrderInsertType } from '@/lib/variant-pricing';
 import { BOOK_VARIANT_OBJECTIVE_TYPES } from '@/lib/book-variant-types';
 import {
   createFinalExamShortageOrder,
@@ -229,7 +229,8 @@ export async function POST(request: NextRequest) {
       ? (t === '순서' ? explain.순서 : explain.삽입)
       : true;
     const qty = examTotal > 0 ? countsMap[t] : countsMap[t] * uniqueSources.length;
-    return sum + variantUnitPrice(t, { withExplanation }) * qty;
+    /* 무료 7유형은 0원 — 주문 화면과 서버 재계산이 어긋나면 결제 금액이 달라진다 */
+    return sum + variantChargedUnitPrice(t, { withExplanation }) * qty;
   }, 0);
 
   try {

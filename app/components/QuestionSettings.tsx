@@ -22,7 +22,7 @@ import {
   isFreeVariantType,
   isAdvancedVariantType,
 } from '@/lib/variant-pricing';
-import { splitByBaseQuota } from '@/lib/variant-member-quota';
+import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
 export type { HwpStorageModeKey } from '@/lib/variant-order-options';
 import {
@@ -833,12 +833,14 @@ const QuestionSettings = ({
     const orderInsertLines: string[] = [];
     if (selectedTypes.includes('순서')) {
       orderInsertLines.push(
-        `순서: ${orderInsertExplanation.순서 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
+        /* 순서 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
+        `순서: ${orderInsertExplanation.순서 ? '해설 포함' : '해설 미포함·문제·답만'} (무료 유형)`
       );
     }
     if (selectedTypes.includes('삽입')) {
       orderInsertLines.push(
-        `삽입: ${orderInsertExplanation.삽입 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
+        /* 삽입 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
+        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함' : '해설 미포함·문제·답만'} (무료 유형)`
       );
     }
     for (const advType of advancedTypes) {
@@ -1118,7 +1120,8 @@ ${solbookRetailLine}
                   <span className="text-blue-600 font-semibold">💰 할인 안내</span>
                 </div>
                 <div className="text-sm text-blue-700">
-                  • 기본: 문항당 {VARIANT_PRICE.base}원 (순서·삽입은 해설 추가하면 {VARIANT_PRICE.orderInsertWithExplanation}원, 문제·답만이면 {VARIANT_PRICE.orderInsertNoExplanation}원)<br/>
+                  • 기본난도: 문항당 {VARIANT_PRICE.base}원<br/>
+                  • <span className="font-medium text-sky-700">누구나 무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — 회원 여부·한도와 무관<br/>
                   • 삽입-고난도·어법-고난도: 문항당 {VARIANT_PRICE.advanced}원<br/>
                   • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                   • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
@@ -1261,10 +1264,20 @@ ${solbookRetailLine}
                   </span>
                 </p>
 
-                {/* 기본난도 구분 — 고난도 배지와 같은 모양으로 짝을 맞춘다 */}
-                <div className="mb-3 flex items-center justify-center gap-2">
+                {/* 기본난도 구분 — 고난도 배지와 같은 모양으로 짝을 맞춘다.
+                    「회원이라서 무료」와 「누구나 무료」를 색으로 갈라 준다(초록=멤버십, 파랑=상시). */}
+                <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
                   <span className="tier-badge-in text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">기본난도</span>
                   <span className="text-xs text-gray-500">수능·내신 표준 유형</span>
+                  {isPremiumMembership ? (
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                      👑 회원 무료 · 이번 달 {baseQuotaRemaining.toLocaleString()}문항 남음
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+                      문항당 {VARIANT_PRICE.base}원 · 회원은 월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료
+                    </span>
+                  )}
                 </div>
 
                 {/* 기본 유형 — 3열.
@@ -1289,9 +1302,11 @@ ${solbookRetailLine}
                 {/* 무료 유형 — 유료를 하나 이상 골라야 열린다 */}
                 <div className="mt-5 pt-4 border-t border-gray-200">
                   <div className="mb-3 flex items-center justify-center gap-2">
-                    <span className="tier-badge-in text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">무료</span>
+                    <span className="tier-badge-in text-xs font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded">누구나 무료</span>
                     <span className="text-xs text-gray-500">
-                      {hasPaidType(selectedTypes) ? '추가 비용 없이 함께 드립니다' : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
+                      {hasPaidType(selectedTypes)
+                        ? '회원 여부·한도와 무관하게 항상 0원입니다'
+                        : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
                     </span>
                   </div>
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">

@@ -79,6 +79,30 @@ export function variantUnitPrice(
 }
 
 /**
+ * **실제 청구 단가** — 무료 7유형(FREE_VARIANT_TYPES)은 0원.
+ *
+ * `variantUnitPrice` 는 「유형별 정가」라서 무료 여부를 모른다. 부교재·모의고사
+ * 주문서는 가격 루프에서 무료 유형을 건너뛰어 0원으로 처리해 왔는데, 통합 주문과
+ * 파이널은 그 분기 없이 정가를 그대로 더해 같은 유형이 화면마다 다른 값이었다.
+ * 청구 금액을 계산하는 곳은 이 함수를 쓴다.
+ */
+export function variantChargedUnitPrice(
+  type: string,
+  opts?: { withExplanation?: boolean },
+): number {
+  if (isFreeVariantType(type)) return 0;
+  return variantUnitPrice(type, opts);
+}
+
+/**
+ * 선택 유형에 유료가 하나라도 있는지.
+ * 무료 유형은 유료 주문에 덤으로 붙는 것이라, 무료만 담긴 주문은 막아야 한다.
+ */
+export function hasPaidVariantType(types: readonly string[]): boolean {
+  return types.some((t) => !isFreeVariantType(t));
+}
+
+/**
  * 볼륨 할인율. 200문항 이상 20%, 100문항 이상 10%.
  */
 export function variantVolumeDiscountRate(totalQuestions: number): number {

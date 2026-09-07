@@ -10,7 +10,7 @@ import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT, ORDER_FOOTER_MESSAGE } from '@/l
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 import { ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES } from '@/app/data/essay-categories';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
-import { variantUnitPrice, variantVolumeDiscountRate, VARIANT_PRICE } from '@/lib/variant-pricing';
+import { variantChargedUnitPrice, variantVolumeDiscountRate, VARIANT_PRICE, hasPaidVariantType } from '@/lib/variant-pricing';
 
 /* ────────── 타입 ────────── */
 
@@ -75,7 +75,8 @@ function computeVariantPrice(
     const withExplanation = ORDER_INSERT_TYPES.has(type)
       ? insertExpl[type as '순서' | '삽입']
       : true;
-    basePrice += n * variantUnitPrice(type, { withExplanation });
+    /* 무료 7유형(주제·제목·주장·일치·불일치·순서·삽입)은 0원 — 부교재·모의고사 주문서와 같은 규칙 */
+    basePrice += n * variantChargedUnitPrice(type, { withExplanation });
   }
   const totalQuestions = selectedTypes.length * questionsPerType * lessonCount;
   const discountRate = variantVolumeDiscountRate(totalQuestions);
@@ -337,6 +338,11 @@ export default function BundlePage() {
       alert('올바른 이메일 주소를 입력해주세요.'); return;
     }
     if (variantEnabled && variantTypes.length === 0) { alert('변형문제 유형을 선택해주세요.'); return; }
+    /* 무료 7유형은 유료 주문에 덤으로 붙는 것 — 무료만 담으면 0원 주문이 된다 */
+    if (variantEnabled && !hasPaidVariantType(variantTypes)) {
+      alert('무료 유형(주제·제목·주장·일치·불일치·순서·삽입)만으로는 주문할 수 없습니다.\n유료 유형을 하나 이상 함께 선택해주세요.');
+      return;
+    }
     if (workbookEnabled && wbPackages.length === 0) { alert('워크북 패키지를 선택해주세요.'); return; }
     if (essayEnabled && essayCategories.length === 0) { alert('서술형 유형을 선택해주세요.'); return; }
 

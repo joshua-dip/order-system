@@ -9,7 +9,7 @@ import {
   VARIANT_PRICE,
 } from '@/lib/variant-pricing';
 import { isFreeVariantType, isAdvancedVariantType } from '@/lib/variant-pricing';
-import { splitByBaseQuota } from '@/lib/variant-member-quota';
+import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import {
   HWP_STORAGE_OPTIONS,
   DEFAULT_HWP_STORAGE_MODES_MOCK,
@@ -495,12 +495,14 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
     const orderInsertLines: string[] = [];
     if (selectedTypes.includes('순서')) {
       orderInsertLines.push(
-        `순서: ${orderInsertExplanation.순서 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
+        /* 순서 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
+        `순서: ${orderInsertExplanation.순서 ? '해설 포함' : '해설 미포함·문제·답만'} (무료 유형)`
       );
     }
     if (selectedTypes.includes('삽입')) {
       orderInsertLines.push(
-        `삽입: ${orderInsertExplanation.삽입 ? `해설 포함 (${VARIANT_PRICE.orderInsertWithExplanation}원/문항)` : `해설 미포함·문제·답만 (${VARIANT_PRICE.orderInsertNoExplanation}원/문항)`}`
+        /* 삽입 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
+        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함' : '해설 미포함·문제·답만'} (무료 유형)`
       );
     }
     for (const advType of advancedTypes) {
@@ -858,7 +860,8 @@ ${examDetails}
                     <span className="text-blue-600 font-semibold">💰 할인 안내</span>
                   </div>
                   <div className="text-sm text-blue-700">
-                    • 기본: 문항당 {VARIANT_PRICE.base}원 (순서·삽입은 해설 추가하면 {VARIANT_PRICE.orderInsertWithExplanation}원, 문제·답만이면 {VARIANT_PRICE.orderInsertNoExplanation}원)<br/>
+                    • 기본난도: 문항당 {VARIANT_PRICE.base}원<br/>
+                    • <span className="font-medium text-sky-700">누구나 무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — 회원 여부·한도와 무관<br/>
                     • 삽입-고난도·어법-고난도: 문항당 {VARIANT_PRICE.advanced}원<br/>
                     • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                     • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
@@ -921,8 +924,19 @@ ${examDetails}
                               className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0 disabled:cursor-not-allowed"
                             />
                             <span className={`font-medium break-keep ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
+                            {/* 「누구나 무료(파랑)」와 「회원이라 무료(초록)」를 색으로 가른다 */}
                             {isFreeVariantType(type) && !locked && (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">무료</span>
+                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200 px-1.5 py-0.5 rounded shrink-0">
+                                누구나 무료
+                              </span>
+                            )}
+                            {isPremiumMembership && !isFreeVariantType(type) && !isAdvancedVariantType(type) && (
+                              <span
+                                className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded shrink-0"
+                                title={`멤버십 기본난도 무료 한도 안에서 0원 · 이번 달 ${baseQuotaRemaining.toLocaleString()}문항 남음`}
+                              >
+                                👑 회원 무료
+                              </span>
                             )}
                           </label>
                           {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (

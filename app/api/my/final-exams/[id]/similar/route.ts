@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { requirePremiumMemberVariant } from '@/lib/member-variant-premium-auth';
 import { recordPointLedger } from '@/lib/point-ledger';
-import { variantUnitPrice, isOrderInsertType } from '@/lib/variant-pricing';
+import { variantChargedUnitPrice, isOrderInsertType } from '@/lib/variant-pricing';
 import {
   getFinalExamJob,
   selectQuestionsForScope,
@@ -50,7 +50,8 @@ export async function POST(
     const explain = { 순서: true, 삽입: true };
     const price = selectedTypes.reduce((sum, t) => {
       const withExplanation = isOrderInsertType(t) ? (t === '순서' ? explain.순서 : explain.삽입) : true;
-      return sum + variantUnitPrice(t, { withExplanation }) * (countsMap[t] ?? 0) * sourceKeys.length;
+      /* 무료 7유형은 0원 — 주문 화면과 같은 규칙 */
+      return sum + variantChargedUnitPrice(t, { withExplanation }) * (countsMap[t] ?? 0) * sourceKeys.length;
     }, 0);
 
     // 겹치지 않는 새 문항 선택 (avoidDuplicates = 회원 기존 출제분 전체 제외 → 원본과 무겹침)
