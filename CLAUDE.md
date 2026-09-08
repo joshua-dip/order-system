@@ -18,6 +18,16 @@
 
 ---
 
+## 변형문제 작성·검수 가이드라인
+
+- **작성**: `docs/variant/AUTHORING.md` — 유형별 형식, CorrectAnswer·option_type 규칙, 고난도 13종, 저장 시 함정
+- **검수**: `docs/variant/REVIEW.md` — 사전검증 → 자동검수 → `cc:audit` 세 층과 층별 사각지대
+
+권위는 코드(`lib/admin-variant-draft-claude.ts` · `variant-draft-*-rules.ts`)이고,
+위 문서는 코드가 강제하지 못하는 실전 교정 규칙을 모은 것이다. 새 규칙이 생기면 여기에 추가한다.
+
+---
+
 ## 세션 간 인수인계
 
 다른 컴퓨터의 세션(제작기 `프로젝트9 - claude`, WSL)과 주고받은 합의 문서는
