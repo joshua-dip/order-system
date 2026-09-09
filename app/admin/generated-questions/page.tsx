@@ -4234,6 +4234,24 @@ export default function AdminGeneratedQuestionsPage() {
               {fmt.toUpperCase()} 다운로드
             </button>
           ))}
+          <button
+            type="button"
+            disabled={total === 0}
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (filterTextbook) params.set('textbook', filterTextbook);
+              if (filterType) params.set('type', filterType);
+              if (filterDifficulty) params.set('difficulty', filterDifficulty);
+              if (filterStatus) params.set('status', filterStatus);
+              if (filterFree) params.set('free', filterFree);
+              if (filterPassageId.trim()) params.set('passage_id', filterPassageId.trim());
+              window.open(`/api/admin/generated-questions/print?${params}`, '_blank');
+            }}
+            className="bg-amber-700 hover:bg-amber-600 disabled:opacity-40 px-4 py-2 rounded-lg text-sm font-medium"
+            title="코드로 고정한 인쇄 양식(밑줄 유지·문항 페이지 안 끊김·정답 별지). 유형별 1파일 — 유형이 여럿이면 목록이 먼저 뜹니다. 브라우저 인쇄로 PDF 저장. 회원 저장 양식은 ?loginId= 로 적용"
+          >
+            인쇄 양식
+          </button>
         </div>
 
         <div className="mb-3">
