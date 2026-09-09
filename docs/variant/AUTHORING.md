@@ -120,19 +120,20 @@ Pro 플랜만 쓰는 운영이라 초안 생성 API(`variant_generate_draft` 등
 `Paragraph` = (1) 주어진 문장 한 줄, (2) `(A)`/`(B)`/`(C)` 세 블록.
 **블록 구분은 `\n###\n` 또는 빈 줄** — 단일 `\n` 이면 `parseOrderParagraph` 가 실패해 자동 정답검증이 안 된다.
 
-Options 는 **아래 5순열 고정**이며 **줄바꿈으로 구분**한다.
+Options 는 **아래 5순열 고정**이며 **`###` 로 구분**한다.
 
 ```
-① (A)-(C)-(B)
-② (B)-(A)-(C)
-③ (B)-(C)-(A)
-④ (C)-(A)-(B)
-⑤ (C)-(B)-(A)
+① (A)-(C)-(B) ### ② (B)-(A)-(C) ### ③ (B)-(C)-(A) ### ④ (C)-(A)-(B) ### ⑤ (C)-(B)-(A)
 ```
 
-> 관리자 검증기(`app/api/admin/generated-questions/validate/order-options`)가 Options 를
-> `\n` 으로만 split 해 길이 5를 본다. `###` 한 줄로 넣으면 길이 1로 읽혀 「수정 대상」이 된다.
-> JSON 에서는 `"① (A)-(C)-(B)\n② (B)-(A)-(C)\n…"`.
+> **왜 `###` 인가** — 저장 전 필수 관문인 [`scripts/prevalidate-variants.ts`](../../scripts/prevalidate-variants.ts)
+> 가 Options 를 `###` 로만 split 한다(`split('###')`). 줄바꿈으로 넣으면 길이 1 로 읽혀
+> 「고정 5세트 불일치」로 막힌다.
+>
+> 읽는 쪽(관리자 검증기 `validate/order-options`, 인쇄·출고 렌더러)은 모두
+> `splitQuestionOptionSegments`(`###` 우선, 줄바꿈 호환)를 쓰므로 **양쪽 다 읽힌다**.
+> 레거시 데이터에 줄바꿈 구분이 많은 것은 그 때문이고, 새로 쓰는 것은 `###` 로 통일한다.
+> JSON 에서는 `"① (A)-(C)-(B) ### ② (B)-(A)-(C) ### …"`.
 
 ### 삽입
 
@@ -154,6 +155,18 @@ cross-question 항목은 `cc:audit` 에만 있으니 배치 뒤에는 audit 을 
 
 원문 사이에 무관한 문장 하나를 끼운다. 첫 문장은 번호 없이, 두 번째부터 ①②③④⑤.
 Options `① ### ② ### ③ ### ④ ### ⑤`.
+
+### 함의
+
+`Paragraph` 안에서 함축 표현을 `<u>…</u>` 로 감싸고, **`Question` 에 그 표현을
+곧은 큰따옴표로 그대로 되풀이**한다 — `밑줄 친 "…"가 의미하는 바로 가장 적절한 것은?`
+
+[`prevalidate-variants.ts`](../../scripts/prevalidate-variants.ts) 가 `Question` 에서
+`"…"` 안을 뽑아 본문의 `<u>…</u>` 와 **문자열이 같은지** 대조한다. 따옴표를 빼거나
+`‘ ’`·`“ ”` 같은 굽은 따옴표를 쓰면 「Question 에 밑줄 표현 없음」으로 막히고,
+표현이 한 글자라도 다르면 「본문에 `<u>` 밑줄 없음」이 된다.
+
+보기 5개는 영문, 번호 접두사 필수.
 
 ### 어법
 
