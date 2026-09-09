@@ -33,7 +33,8 @@
     "ainca:migrate": "tsx scripts/migrate-ainca-pdf.ts",
     "variant:auto-fill": "tsx scripts/variant-auto-fill.ts",
     "cc:analysis-resolve": "tsx scripts/cc-analysis-resolve.ts",
-    "cc:analysis-pdf": "tsx scripts/cc-analysis-pdf.ts"
+    "cc:analysis-pdf": "tsx scripts/cc-analysis-pdf.ts",
+    "check:analysis-sheet": "tsx scripts/check-analysis-sheet-render.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

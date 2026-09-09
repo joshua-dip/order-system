@@ -179,6 +179,9 @@ const GROUPS: { title: string; items: { key: keyof SheetOptions; label: string; 
 ];
 
 const QUESTION_FULL: SheetOptions = { ...DEFAULT_SHEET_OPTIONS, ...QUESTION_EDITION_OPTIONS };
+/* 간편 — 해설편 표기 그대로, 앞뒤 페이지만 뺀다. 한두 지문 나눠 줄 때 표지·목차·판권이
+   본문보다 길어지는 것을 막는다(인수인계 2026-09-09 "소량 배부는 간편 출력"). */
+const SIMPLE_FULL: SheetOptions = { ...DEFAULT_SHEET_OPTIONS, cover: false, toc: false, guide: false, colophon: false };
 
 function sameOptions(a: SheetOptions, b: SheetOptions): boolean {
   return (Object.keys(DEFAULT_SHEET_OPTIONS) as (keyof SheetOptions)[])
@@ -624,6 +627,14 @@ export default function AnalysisSheetPage() {
                 className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${sameOptions(options, QUESTION_FULL) ? 'bg-sky-700' : 'bg-slate-800 hover:bg-slate-700'}`}
               >
                 문제편
+              </button>
+              <button
+                type="button"
+                onClick={() => setOptions(SIMPLE_FULL)}
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${sameOptions(options, SIMPLE_FULL) ? 'bg-sky-700' : 'bg-slate-800 hover:bg-slate-700'}`}
+                title="해설편 표기 그대로, 표지·목차·안내·판권 없이 — 한두 지문 나눠 줄 때"
+              >
+                간편
               </button>
             </div>
           </div>

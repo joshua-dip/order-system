@@ -154,7 +154,10 @@ function connectiveLen(words: string[]): number {
 }
 
 /** 한 문장을 표기 붙여 그린다 */
-function renderSentence(si: number, sentence: string, st: Record<string, any>, o: SheetOptions, gloss?: Map<string, string>) {
+function renderSentence(
+  si: number, sentence: string, st: Record<string, any>, o: SheetOptions,
+  gloss?: Map<string, string>, phraseGloss?: Map<string, { len: number; text: string }>,
+) {
   const words = String(sentence).split(/\s+/);
   const breaks: number[] = o.breaks ? (st.sentenceBreaks?.[si] ?? []) : [];
   const phrases: any[] = o.brackets
@@ -198,6 +201,35 @@ function renderSentence(si: number, sentence: string, st: Record<string, any>, o
     (clash ? crossed : accepted).push(p);
   }
 
+  const wordHtml = (wi: number, withGloss: boolean) => {
+    const tag = svocTag(wi);
+    const cls = [
+      gWords.has(`${si}-${wi}`) || inRange(wi) ? 'g' : '',
+      cWords.has(`${si}-${wi}`) ? 'c' : '',
+      wi < connLen ? 'conn' : '',
+    ].filter(Boolean).join(' ');
+    const tagHtml = tag?.start
+      ? `<span class="svoc" style="color:${SVOC_COLOR[tag.tag]}">${tag.tag}</span>`
+      : '';
+    // 직독직해 글로스 — 핵심 어휘의 뜻을 단어 바로 아래에(Supreme 분석지 방식, 해설편만)
+    const g = withGloss ? gloss?.get(`${si}-${wi}`) : undefined;
+    const glossHtml = g ? `<span class="gl">${esc(g)}</span>` : '';
+    return `<span class="w${cls ? ' ' + cls : ''}">${tagHtml}${esc(words[wi])}${glossHtml}</span>`;
+  };
+
+  /* 다단어 어휘(field trip·sing along)는 구 전체 아래 뜻 하나 — 첫 단어 밑에만 달면 그 칸이
+     뜻 너비만큼 벌어져 "field   trip" 이 된다(인수인계 P1 실측). 구 안쪽에 괄호 경계나
+     끊어읽기가 끼면 묶지 않고 첫 단어에 단다(글로스 맵에 첫 단어 항목이 따로 있다). */
+  const phraseAt = (wi: number): { len: number; text: string } | null => {
+    const ph = phraseGloss?.get(`${si}-${wi}`);
+    if (!ph || ph.len < 2 || wi + ph.len > words.length) return null;
+    const last = wi + ph.len - 1;
+    const boundaryInside = accepted.some((p) =>
+      (p.startIndex > wi && p.startIndex <= last) || (p.endIndex >= wi && p.endIndex < last));
+    const breakInside = breaks.some((b) => b >= wi && b < last);
+    return boundaryInside || breakInside ? null : ph;
+  };
+
   let out = '';
   for (let wi = 0; wi < words.length; wi += 1) {
     for (const p of accepted) {
@@ -211,19 +243,14 @@ function renderSentence(si: number, sentence: string, st: Record<string, any>, o
       }
     }
 
-    const tag = svocTag(wi);
-    const cls = [
-      gWords.has(`${si}-${wi}`) || inRange(wi) ? 'g' : '',
-      cWords.has(`${si}-${wi}`) ? 'c' : '',
-      wi < connLen ? 'conn' : '',
-    ].filter(Boolean).join(' ');
-    const tagHtml = tag?.start
-      ? `<span class="svoc" style="color:${SVOC_COLOR[tag.tag]}">${tag.tag}</span>`
-      : '';
-    // 직독직해 글로스 — 핵심 어휘의 뜻을 단어 바로 아래에(Supreme 분석지 방식, 해설편만)
-    const g = gloss?.get(`${si}-${wi}`);
-    const glossHtml = g ? `<span class="gl">${esc(g)}</span>` : '';
-    out += `<span class="w${cls ? ' ' + cls : ''}">${tagHtml}${esc(words[wi])}${glossHtml}</span>`;
+    const ph = phraseAt(wi);
+    if (ph) {
+      const inner = Array.from({ length: ph.len }, (_, k) => wordHtml(wi + k, false)).join(' ');
+      out += `<span class="pw">${inner}<span class="gl">${esc(ph.text)}</span></span>`;
+      wi += ph.len - 1; // 닫는 괄호·끊어읽기는 구의 마지막 단어 자리에서 처리
+    } else {
+      out += wordHtml(wi, true);
+    }
 
     /* 닫기는 여는 순서의 역순 — 같은 끝점에 겹친 구문은 안쪽부터 닫아야
        `[ … ( … ) ]`가 되고, 라벨도 제 괄호 뒤에 붙는다. 여는 순서(시작 오름차순,
@@ -298,13 +325,18 @@ function passagePages(p: SheetPassage, no: number, o: SheetOptions) {
 
   // 핵심 어휘 글로스 맵 — "문장-단어" 위치에 뜻을 단다(해설편만)
   const gloss = new Map<string, string>();
+  const phraseGloss = new Map<string, { len: number; text: string }>();
   if (o.gloss) {
     for (const v of vocab) {
       // 첫 뜻만, 괄호 보충은 떼고 — "(팔을) 끼다, 접다" → "끼다".
       // 긴 글로스는 단어 칸을 벌려 문장 사이에 어색한 공백을 만든다.
       const m = String(v.meaning ?? '').replace(/\([^)]*\)/g, '').split(/[,·]/)[0].trim();
       if (!m) continue;
-      for (const pos of v.positions ?? []) gloss.set(`${pos.sentence}-${pos.position}`, m);
+      const len = String(v.word ?? '').trim().split(/\s+/).filter(Boolean).length;
+      for (const pos of v.positions ?? []) {
+        gloss.set(`${pos.sentence}-${pos.position}`, m);
+        if (len >= 2) phraseGloss.set(`${pos.sentence}-${pos.position}`, { len, text: m });
+      }
     }
   }
 
@@ -347,12 +379,15 @@ function passagePages(p: SheetPassage, no: number, o: SheetOptions) {
       `<div><b>${esc(t.tagName)}</b> <i>${esc(t.selectedText)}</i> — ${esc(t.explanation)}</div>`).join('')}</div>`;
   };
 
+  /* 문장·해석·어법 상자를 .sb 하나로 묶는다 — 따로 두면 문장은 이 쪽, 상자는 다음 쪽
+     첫 줄로 갈라진다(기존 60쪽 PDF 4→5쪽 실측, 인수인계 P1). 한 묶음이 한 쪽을 넘으면
+     Chromium 이 알아서 가르므로 긴 문장도 막히지 않는다. */
   const sentBlock = (s: string, si: number) => `
-    <div class="sent${topic.has(si) ? ' topic' : essay.has(si) ? ' essay' : ''}">
+    <div class="sb"><div class="sent${topic.has(si) ? ' topic' : essay.has(si) ? ' essay' : ''}">
       <span class="si">${si + 1}</span>${roleBadge(si)}
-      <span class="en">${renderSentence(si, s, st, o, gloss)}</span>
+      <span class="en">${renderSentence(si, s, st, o, gloss, phraseGloss)}</span>
       ${o.koPlacement === 'inline' && kors[si] ? `<div class="ko">${esc(kors[si])}</div>` : ''}
-    </div>${callout(si)}`;
+    </div>${callout(si)}</div>`;
   const body = sents.map(sentBlock).join('');
 
   // 해석 모음(문제편 기본) — 문장 밑에 바로 있으면 해석 연습이 스포일된다
@@ -435,6 +470,8 @@ body.q .sent{line-height:1.8}
 .si{display:inline-block;min-width:15px;font-size:8pt;color:#9ca3af;font-weight:700;vertical-align:top}
 .en{font-family:'Times New Roman',serif;font-size:11pt}
 .w{position:relative;display:inline-block;vertical-align:top;text-align:center}
+.pw{display:inline-block;vertical-align:top;text-align:center}
+.sb{page-break-inside:avoid;break-inside:avoid}
 .br,.brk,.lab{vertical-align:top}
 .gl{display:block;font-size:6.4pt;color:#0e7490;font-weight:400;line-height:1.15;margin-top:1.5px;white-space:nowrap;font-family:'Noto Sans KR','Malgun Gothic',sans-serif}
 .badge{display:inline-block;font-size:6.8pt;font-weight:800;border-radius:3px;padding:1px 4px;margin-right:4px;vertical-align:2px}
