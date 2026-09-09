@@ -22,6 +22,110 @@ interface PassageItem {
   source_key?: string;
   chapter?: string;
 }
+
+/**
+ * 교재 고르기 — 목록이 계속 길어져 `select` 로는 찾기가 어렵다(2026-09-09 요청).
+ * 입력으로 걸러 고른다. 「26년9월고2」처럼 붙여 써도 걸리게 공백은 무시하고 비교한다.
+ */
+function TextbookPicker({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: { name: string; count: number }[];
+  onChange: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const [active, setActive] = useState(0);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const squash = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  const filtered = useMemo(() => {
+    const needle = squash(q);
+    return needle ? options.filter((t) => squash(t.name).includes(needle)) : options;
+  }, [options, q]);
+
+  useEffect(() => { setActive(0); }, [q, open]);
+
+  /* 화살표로 내려갈 때 목록 밖으로 나가지 않게 */
+  useEffect(() => {
+    (listRef.current?.children[active] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
+  }, [active]);
+
+  useEffect(() => {
+    if (!open) return;
+    inputRef.current?.focus();
+    const onDown = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const pick = (name: string) => { onChange(name); setOpen(false); setQ(''); };
+  const selected = options.find((t) => t.name === value);
+
+  return (
+    <div className="relative" ref={boxRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="min-w-64 w-64 text-left bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm flex items-center gap-2"
+      >
+        <span className={`flex-1 truncate ${value ? '' : 'text-slate-500'}`}>
+          {selected ? `${selected.name} (${selected.count})` : value || '교재 선택…'}
+        </span>
+        <span className="text-slate-500 text-[10px]">▼</span>
+      </button>
+      {open && (
+        <div className="absolute z-30 mt-1 w-[24rem] max-w-[80vw] bg-slate-900 border border-slate-600 rounded-md shadow-xl overflow-hidden">
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') { setOpen(false); return; }
+              if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => Math.min(i + 1, filtered.length - 1)); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); }
+              else if (e.key === 'Enter') { e.preventDefault(); if (filtered[active]) pick(filtered[active].name); }
+            }}
+            placeholder="교재 이름 검색 (예: 9월 고2)"
+            className="w-full bg-slate-950 border-b border-slate-700 px-3 py-2 text-sm placeholder:text-slate-600 focus:outline-none"
+          />
+          <div ref={listRef} className="max-h-72 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-3 text-xs text-slate-500">해당하는 교재가 없습니다</div>
+            ) : (
+              filtered.map((t, i) => (
+                <button
+                  key={t.name}
+                  type="button"
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => pick(t.name)}
+                  className={`w-full text-left px-3 py-1.5 text-sm flex items-center gap-2 ${
+                    i === active ? 'bg-slate-700' : ''
+                  } ${t.name === value ? 'text-sky-300 font-semibold' : ''}`}
+                >
+                  <span className="flex-1 truncate">{t.name}</span>
+                  <span className="text-xs text-slate-500">{t.count}</span>
+                </button>
+              ))
+            )}
+          </div>
+          {q.trim() !== '' && (
+            <div className="px-3 py-1.5 text-[11px] text-slate-500 border-t border-slate-700">
+              {`${filtered.length} / ${options.length}개 · Enter 로 첫 항목 선택`}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 interface Preset { id: string; name: string; options: SheetOptions }
 
 /* PDF API 의 상한과 같은 값 — 넘겨 보내 400 받는 대신 화면에서 먼저 막는다. */
@@ -345,19 +449,11 @@ export default function AnalysisSheetPage() {
             「편집」에서 고친 내용은 다음 미리보기·다운로드에 바로 반영됩니다
           </p>
         </div>
-        <label className="block">
+        {/* label 로 감싸면 펼친 목록 안 클릭이 label→button 으로 전달돼 바로 닫힌다 */}
+        <div className="block">
           <span className="text-xs text-slate-500 block mb-1">교재 (분석 있는 것만)</span>
-          <select
-            value={textbook}
-            onChange={(e) => setTextbook(e.target.value)}
-            className="bg-slate-950 border border-slate-600 rounded-md px-3 py-2 text-sm min-w-64"
-          >
-            <option value="">교재 선택…</option>
-            {textbooks.map((t) => (
-              <option key={t.name} value={t.name}>{`${t.name} (${t.count})`}</option>
-            ))}
-          </select>
-        </label>
+          <TextbookPicker value={textbook} options={textbooks} onChange={setTextbook} />
+        </div>
         <label className="block">
           <span className="text-xs text-slate-500 block mb-1">문서 제목 (비우면 교재명)</span>
           <input
