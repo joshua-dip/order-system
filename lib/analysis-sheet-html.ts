@@ -97,10 +97,17 @@ function compOf(st: Record<string, any>): { koreanTopic: string; implicitMeaning
   const raw = st.analysisResults ?? {};
   const comp = (raw.comprehensive && typeof raw.comprehensive === 'object') ? raw.comprehensive : raw;
   const named = !!(typeof comp.koreanTopic === 'string' && comp.koreanTopic.trim());
+  /* 번호 키 4·5 라벨은 내용을 보고 고른다 — 시대에 따라 4에 실제 해석이 든 문서(33건)와
+     구조 해설이 든 문서(351건)가 섞여 있어, 이름을 일괄 교체하면 한쪽 의미가 훼손된다
+     (docs/handoff/2026-09-09-지문분석지-개선.md P0 "표의 제목과 내용이 불일치"). */
+  const four = String(comp['4'] ?? '');
+  const five = String(comp['5'] ?? '');
+  const label4 = /구조|전개|신호어|출제|유형|두괄|미괄|문답|반박|담화|흐름|→/.test(four) ? '글의 흐름' : '해석';
+  const label5 = /함정|오답|출제|주의|직역|선지|헷갈|포인트/.test(five) ? '출제 포인트' : '함의';
   const rows: [string, unknown][] = named
     ? [['주제', comp.koreanTopic], ['주제문', comp.originalSentence], ['영문 요약', comp.englishSummary],
        ['한글 요약', comp.koreanTranslation], ['출제 포인트', comp.implicitMeaning]]
-    : [['주제', comp['1']], ['요지', comp['2']], ['요약', comp['3']], ['해석', comp['4']], ['함의', comp['5']]];
+    : [['주제', comp['1']], ['요지', comp['2']], ['요약', comp['3']], [label4, comp['4']], [label5, comp['5']]];
   return {
     koreanTopic: String(comp.koreanTopic ?? comp['1'] ?? '').trim(),
     implicitMeaning: String(comp.implicitMeaning ?? comp['5'] ?? '').trim(),
@@ -180,11 +187,27 @@ function renderSentence(si: number, sentence: string, st: Record<string, any>, o
 
   const inRange = (wi: number) => gRanges.some((r) => wi >= r.startWordIndex && wi <= r.endWordIndex);
 
+  /* 교차 범위 검증 — a 안에서 시작해 a 밖에서 끝나는 구문은 괄호로 그릴 수 없다.
+     조용히 어긋난 중첩을 찍는 대신 그 구문만 빼고, 라벨 자리에 경고를 남긴다
+     (진짜 교차는 저장 데이터 결함 — 재저장으로 고칠 일이지 조판이 삼킬 일이 아니다). */
+  const accepted: any[] = [];
+  const crossed: any[] = [];
+  for (const p of phrases) {
+    const clash = accepted.some((q) =>
+      (q.startIndex < p.startIndex && p.startIndex <= q.endIndex && q.endIndex < p.endIndex));
+    (clash ? crossed : accepted).push(p);
+  }
+
   let out = '';
   for (let wi = 0; wi < words.length; wi += 1) {
-    for (const p of phrases) {
+    for (const p of accepted) {
       if (p.startIndex === wi) {
         out += `<span class="br" style="color:${esc(p.color || '#455a64')}">${p.type === 'clause' ? '[' : '('}</span>`;
+      }
+    }
+    for (const p of crossed) {
+      if (p.startIndex === wi && o.bracketLabels) {
+        out += `<sup class="lab" style="color:#dc2626">⚠${esc(p.label || '구문')} 범위 교차</sup>`;
       }
     }
 
@@ -202,7 +225,12 @@ function renderSentence(si: number, sentence: string, st: Record<string, any>, o
     const glossHtml = g ? `<span class="gl">${esc(g)}</span>` : '';
     out += `<span class="w${cls ? ' ' + cls : ''}">${tagHtml}${esc(words[wi])}${glossHtml}</span>`;
 
-    for (const p of phrases) {
+    /* 닫기는 여는 순서의 역순 — 같은 끝점에 겹친 구문은 안쪽부터 닫아야
+       `[ … ( … ) ]`가 되고, 라벨도 제 괄호 뒤에 붙는다. 여는 순서(시작 오름차순,
+       같은 시작이면 긴 것 먼저)대로 닫으면 `[ … ( … ] )`로 교차돼 보인다
+       (19번 2문장 시간절+to부정사 실측 — 인수인계 P0). */
+    for (let pi = accepted.length - 1; pi >= 0; pi -= 1) {
+      const p = accepted[pi];
       if (p.endIndex === wi) {
         out += `<span class="br" style="color:${esc(p.color || '#455a64')}">${p.type === 'clause' ? ']' : ')'}</span>`;
         if (o.bracketLabels && p.label) out += `<sup class="lab" style="color:${esc(p.color || '#455a64')}">${esc(p.label)}</sup>`;
@@ -220,12 +248,18 @@ function vocabTables(vocab: any[], o: SheetOptions) {
   if (!vocab.length || !o.vocab) return '';
   const half = Math.ceil(vocab.length / 2);
   const cols = [vocab.slice(0, half), vocab.slice(half)].filter((c) => c.length);
-  const row = (v: any) => `<tr>${o.vocabCheckbox ? '<td class="ckb"><span class="ck"></span></td>' : ''}
+  /* 동의어 '='·반의어 '↔' — antonym 은 반의어 필드다(501개 문서 실측: unsafe↔safe,
+     calm↔nervous). 예전 코드는 antonym 에 '=' 를 붙여 반의어가 동의어처럼 찍혔고
+     (인수인계 P0 1번), synonym 은 옵션과 무관하게 항상 남았다. 둘 다 옵션에 묶는다. */
+  const row = (v: any) => {
+    const parts = o.vocabSynAnt
+      ? [v.synonym ? `= ${esc(v.synonym)}` : '', v.antonym ? `↔ ${esc(v.antonym)}` : '', v.opposite ? `↔ ${esc(v.opposite)}` : '']
+          .filter(Boolean)
+      : [];
+    return `<tr>${o.vocabCheckbox ? '<td class="ckb"><span class="ck"></span></td>' : ''}
     <td class="vw">${esc(v.word)}</td><td class="vp">${esc(v.partOfSpeech)}</td>
-    <td>${esc(v.meaning)}${v.synonym ? ` <span class="ex">${esc(v.synonym)}</span>` : ''}${
-      o.vocabSynAnt && (v.antonym || v.opposite)
-        ? `<div class="syn">${v.antonym ? `= ${esc(v.antonym)}` : ''}${v.antonym && v.opposite ? ' · ' : ''}${v.opposite ? `↔ ${esc(v.opposite)}` : ''}</div>`
-        : ''}</td></tr>`;
+    <td>${esc(v.meaning)}${parts.length ? `<div class="syn">${parts.join(' · ')}</div>` : ''}</td></tr>`;
+  };
   const table = (list: any[]) => `<table class="vc">
     <thead><tr>${o.vocabCheckbox ? '<th class="ckb">✓</th>' : ''}<th>단어</th><th>품사</th><th>뜻${o.vocabSynAnt ? ' · = 동의어 ↔ 반의어' : ''}</th></tr></thead>
     <tbody>${list.map(row).join('')}</tbody></table>`;

@@ -37,3 +37,9 @@ npm run cc:syntax -- export <passageId>
 ```
 
 마지막 줄: `검토 N지문 · 발견 M건 (높음 x·중간 y) · 이상 없음 K지문`
+
+## 번호·표기 검수 (2026-09-09 추가)
+
+- comprehensive 산문의 문장 번호가 **1-기반**(지면 표기와 동일)인지 — "(0~3)" 류는 교정.
+- vocab 의 synonym 은 동의어, antonym/opposite 는 반의어가 맞는지(자리 바뀐 항목 교정).
+- syntaxPhrases 범위가 서로 교차하지 않는지 — 교차분은 지면에서 ⚠로 표시되므로 재저장으로 고친다.
