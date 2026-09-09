@@ -127,7 +127,10 @@ const SVOC_COLOR: Record<string, string> = {
   S: '#b45309', V: '#1d4ed8', Oi: '#047857', Od: '#15803d', Cs: '#7e22ce', Co: '#be185d',
 };
 
-const circ = (n: number) => (n >= 1 && n <= 20 ? String.fromCharCode(0x2460 + n - 1) : `(${n})`);
+/* ①~⑩ 은 글리프, 11 이상은 CSS 원 — 임베드 폰트(NanumGothic+CircledFallback)에 ⑪ 이후 글리프가
+   없어 Lambda PDF 에서 빈칸이 됐다(19번 어법 집계의 ⑪ 누락, 2차 리뷰). 로컬 Chrome 은 시스템 폰트로
+   ⑪ 을 찍어 재현이 안 되니 주의. */
+const circ = (n: number) => (n >= 1 && n <= 10 ? String.fromCharCode(0x2460 + n - 1) : `<span class="cn">${n}</span>`);
 
 /** 담화 표지(연결어) 사전 — 문두에서만 감지한다. 색이 곧 '순서·삽입 출제 예고'가 된다. */
 const CONN_PHRASES: string[][] = [
@@ -259,8 +262,12 @@ function renderSentence(
     for (let pi = accepted.length - 1; pi >= 0; pi -= 1) {
       const p = accepted[pi];
       if (p.endIndex === wi) {
-        out += `<span class="br" style="color:${esc(p.color || '#455a64')}">${p.type === 'clause' ? ']' : ')'}</span>`;
+        /* 닫는 괄호와 라벨은 한 덩어리(.cl, nowrap) — 「전치사구」가 줄 끝에서 「전치」/「사구」로
+           갈라지거나 라벨만 다음 줄에 남던 것(2차 리뷰 4·6쪽). 단어 뒤에 공백 없이 붙으므로
+           단어+괄호+라벨이 함께 넘어간다. */
+        out += `<span class="cl"><span class="br" style="color:${esc(p.color || '#455a64')}">${p.type === 'clause' ? ']' : ')'}</span>`;
         if (o.bracketLabels && p.label) out += `<sup class="lab" style="color:${esc(p.color || '#455a64')}">${esc(p.label)}</sup>`;
+        out += '</span>';
       }
     }
     // 끊어읽기 슬래시는 word[i] 뒤 간격에(앱·PDF 규약)
@@ -353,7 +360,7 @@ function passagePages(p: SheetPassage, no: number, o: SheetOptions) {
   const head = `<div class="ph"><span class="no">${no}</span>
     <span class="src">${esc(p.교재명 ?? '')} ${esc(p.강 ?? '')} ${esc(p.번호 ?? '')}</span>
     ${pills.join('')}
-    ${p.페이지 ? `<span class="pg">${esc(p.페이지)}</span>` : ''}</div>`;
+    ${p.페이지 ? `<span class="pg">${esc(/^p\d+$/.test(p.페이지) ? `원문 p.${p.페이지.slice(1)}` : `원문 ${p.페이지}`)}</span>` : ''}</div>`;
 
   // 지문 머리 한 줄 요약(아잉카 방식) — 훑어볼 때 주제가 바로 잡히게(해설편만)
   const tline = o.topicLine && ar.koreanTopic
@@ -467,13 +474,13 @@ body{margin:0;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;color:#111;f
 body.q .sent{line-height:1.8}
 .sent.topic{background:#fff7cc}
 .sent.essay{background:#fdf2f8}
-.si{display:inline-block;min-width:15px;font-size:8pt;color:#9ca3af;font-weight:700;vertical-align:top}
+.si{display:inline-block;min-width:15px;font-size:8pt;color:#6b7280;font-weight:700;vertical-align:top}
 .en{font-family:'Times New Roman',serif;font-size:11pt}
 .w{position:relative;display:inline-block;vertical-align:top;text-align:center}
 .pw{display:inline-block;vertical-align:top;text-align:center}
 .sb{page-break-inside:avoid;break-inside:avoid}
 .br,.brk,.lab{vertical-align:top}
-.gl{display:block;font-size:6.4pt;color:#0e7490;font-weight:400;line-height:1.15;margin-top:1.5px;white-space:nowrap;font-family:'Noto Sans KR','Malgun Gothic',sans-serif}
+.gl{display:block;font-size:7pt;color:#0e7490;font-weight:400;line-height:1.15;margin-top:1.5px;white-space:nowrap;font-family:'Noto Sans KR','Malgun Gothic',sans-serif}
 .badge{display:inline-block;font-size:6.8pt;font-weight:800;border-radius:3px;padding:1px 4px;margin-right:4px;vertical-align:2px}
 .b-t{background:#fde047;color:#713f12}
 .b-e{background:#bfdbfe;color:#1e3a8a}
@@ -481,10 +488,13 @@ body.q .sent{line-height:1.8}
 .w.g{border-bottom:1.6px solid #dc2626}
 .w.c{background:#d9f2e0;border-radius:2px}
 .w.conn{background:#fce7f3;border-radius:2px}
-.svoc{position:absolute;top:-11px;left:0;font-size:6.5pt;font-weight:800;letter-spacing:-.2px}
+.svoc{position:absolute;top:-12px;left:0;font-size:7pt;font-weight:800;letter-spacing:-.2px}
 .br{font-weight:800}
 .brk{color:#2563eb;font-weight:800}
-.lab{font-size:6pt;margin-left:1px}
+/* 주석류는 6~6.5pt 에서 7pt 로 — 실제 A4 에서 읽기 어렵다는 2차 리뷰. 라벨은 절대 낱글자로 안 갈라지게. */
+.lab{font-size:7pt;margin-left:1px;white-space:nowrap}
+.cl{white-space:nowrap}
+.cn{display:inline-block;width:1.3em;height:1.3em;line-height:1.25em;border:1px solid currentColor;border-radius:50%;font-size:.75em;text-align:center;vertical-align:-.1em;font-weight:700}
 .ko{font-size:9pt;color:#4b5563;margin:1px 0 0 15px;line-height:1.5}
 .gp{font-size:8.2pt;color:#7c2d12;background:#fff7ed;border-left:3px solid #f97316;border-radius:0 3px 3px 0;padding:3px 7px;margin:-2px 0 7px 15px;line-height:1.55;page-break-inside:avoid}
 .gp b{color:#c2410c} .gp i{font-family:'Times New Roman',serif;font-style:normal;color:#9a3412}
@@ -510,7 +520,8 @@ tr{page-break-inside:avoid}
 .tgs b{color:#b45309}
 .vwrap{display:flex;gap:4mm;align-items:flex-start}
 .vwrap table{width:50%}
-.vc th{background:#f3f4f6;padding:3px 5px;border:1px solid #e5e7eb;font-size:7.8pt;text-align:left}
+.vc th{background:#f3f4f6;padding:3px 5px;border:1px solid #e5e7eb;font-size:7.8pt;text-align:left;white-space:nowrap}
+.vc td.vp{white-space:nowrap}
 .vc td{padding:2.5px 5px;border:1px solid #e5e7eb}
 .vc .vw{font-family:'Times New Roman',serif;font-weight:700;width:80px}
 .vc .vp{width:30px;color:#6b7280;font-size:8pt}
@@ -545,8 +556,24 @@ export function buildAnalysisSheetHtml(opts: {
   options?: Partial<SheetOptions>;
   /** 표지·판권에 찍히는 판 이름(예: '분석지', '해설편') */
   editionLabel?: string;
+  /**
+   * 쪽마다 아래 왼쪽에 찍을 꼬리말(예: "26년 9월 고1 · 해설편"). 오른쪽엔 쪽번호.
+   *
+   * puppeteer 의 footerTemplate 은 본문과 다른 문서라 임베드 @font-face 가 닿지 않아
+   * Lambda 에서 한글이 빠지고 「26 9 1 ·」만 남았다(2차 리뷰). CSS `@page` 여백 상자
+   * (Chrome 131+, Lambda Chromium 147·로컬 153)는 본문 문서의 폰트를 그대로 쓴다.
+   * 호출자는 displayHeaderFooter 를 끄고 이 값을 준다.
+   */
+  footer?: string;
 }) {
   const { title, subtitle = '', passages, brand = 'LYCEUM', date = '' } = opts;
+  /* CSS 문자열 이스케이프 — 따옴표·역슬래시·줄바꿈만 막으면 된다 */
+  const cssStr = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ');
+  const footerCss = opts.footer
+    ? `@page{margin:12mm 11mm;
+  @bottom-left{content:"${cssStr(opts.footer)}";font-size:8px;color:#9ca3af;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;vertical-align:top;padding-top:3mm}
+  @bottom-right{content:counter(page);font-size:8px;color:#9ca3af;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;vertical-align:top;padding-top:3mm}}`
+    : '';
   const o: SheetOptions = { ...DEFAULT_SHEET_OPTIONS, ...(opts.options ?? {}) };
   const kind = opts.editionLabel ?? '분석지';
 
@@ -598,6 +625,6 @@ export function buildAnalysisSheetHtml(opts: {
       본 자료는 학습 목적으로 제작되었습니다. 무단 복제·배포를 금합니다.
     </div></section>`;
 
-  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>${CSS}</style></head>
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>${CSS}${footerCss}</style></head>
     <body class="${o.gloss || o.svoc ? 'a' : 'q'}">${cover}${toc}${o.guide ? guidePage() : ''}${bodyPages}${colophon}</body></html>`;
 }

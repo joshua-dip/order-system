@@ -84,6 +84,7 @@ async function main() {
         title, subtitle: '지문 분석지', passages, brand: '', date,
         editionLabel: edition,
         options,
+        footer: `${title} · ${edition}`,   // 웹 라우트와 같은 @page 꼬리말
       });
       const page = await browser.newPage();
       await page.setContent(
@@ -96,10 +97,7 @@ async function main() {
       const buf = await page.pdf({
         format: 'A4', printBackground: true,
         margin: { top: '12mm', right: '11mm', bottom: '12mm', left: '11mm' },
-        displayHeaderFooter: true,
-        headerTemplate: '<div></div>',
-        footerTemplate: `<div style="width:100%;font-size:8px;color:#9ca3af;padding:0 12mm;display:flex;justify-content:space-between">
-          <span>${title} · ${edition}</span><span class="pageNumber"></span></div>`,
+        displayHeaderFooter: false,   // 꼬리말은 @page 여백 상자(buildAnalysisSheetHtml footer)
       });
       await page.close();
       const out = editions.length > 1 ? outPath.replace(/\.pdf$/i, ` · ${edition}.pdf`) : outPath;

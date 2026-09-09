@@ -111,6 +111,9 @@ export async function POST(request: NextRequest) {
     date,
     editionLabel: edition,
     options: customOptions ?? (edition === '문제편' ? QUESTION_EDITION_OPTIONS : {}),
+    /* 꼬리말은 본문 CSS(@page 여백 상자)로 — footerTemplate 은 임베드 폰트가 닿지 않아
+       Lambda 에서 한글이 빠졌다(2차 리뷰 "각 쪽 하단 한글 누락"). */
+    footer: `${title} · ${edition}`,
   });
 
   const [{ default: chromium }, puppeteer] = await Promise.all([
@@ -145,15 +148,13 @@ export async function POST(request: NextRequest) {
     await page.evaluate(async () => {
       try { await (document as Document & { fonts?: { ready?: Promise<unknown> } }).fonts?.ready; } catch { /* ignore */ }
     });
-    /* 여백·꼬리말은 7월 실물과 동일 — 꼬리말에 「제목 · 판」과 쪽번호. */
+    /* 여백은 7월 실물과 동일. 꼬리말(「제목 · 판」+쪽번호)은 HTML 의 @page 여백 상자가 그린다 —
+       displayHeaderFooter 를 켜면 그 위에 빈 템플릿이 겹쳐 지워지므로 끈다. */
     const pdfBuf = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '12mm', right: '11mm', bottom: '12mm', left: '11mm' },
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: `<div style="width:100%;font-size:8px;color:#9ca3af;padding:0 12mm;display:flex;justify-content:space-between">
-        <span>${title} · ${edition}</span><span class="pageNumber"></span></div>`,
+      displayHeaderFooter: false,
     });
 
     /* 판 이름이 그냥 '분석지'(커스텀 양식)면 「분석지 · 분석지」로 겹치지 않게. */
