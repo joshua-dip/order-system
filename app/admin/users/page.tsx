@@ -19,6 +19,8 @@ interface ListUser {
   signupPremiumTrialUntil: string | null;
   isVip: boolean;
   createdAt: string;
+  /** 멤버십 회원의 이번 달 기본난도 무료 한도. 일반 회원은 null. */
+  baseFreeQuota: { limit: number; used: number; remaining: number; trial: boolean } | null;
 }
 
 /**
@@ -28,6 +30,16 @@ interface ListUser {
  * 숨겨지는데(hidden lg:table-cell), 이름은 항상 보이므로 유료 회원을 한눈에 가른다.
  * 유효한 월·연회원에만 점을 깜박여, 만료·일반 회원과 섞이지 않게 한다.
  */
+/**
+ * 무료 문항 잔량 색 — 다 쓴 회원(빨강)과 얼마 안 남은 회원(주황)만 눈에 띄게 한다.
+ * 넉넉하면 굳이 강조하지 않는다(회원 목록은 이미 색이 많다).
+ */
+function quotaCls(q: { limit: number; remaining: number }): string {
+  if (q.remaining <= 0) return 'text-red-400 font-semibold';
+  if (q.remaining <= q.limit * 0.2) return 'text-amber-300 font-semibold';
+  return 'text-slate-200';
+}
+
 function membershipLabel(
   u: ListUser
 ): { text: string; cls: string; nameCls: string; dot: string | null } | null {
@@ -182,6 +194,7 @@ export default function AdminUsersPage() {
                     <th className="text-left px-5 py-3 font-medium">이메일</th>
                     <th className="text-left px-5 py-3 font-medium hidden md:table-cell">전화</th>
                     <th className="text-left px-5 py-3 font-medium hidden lg:table-cell">멤버십</th>
+                    <th className="text-right px-5 py-3 font-medium hidden lg:table-cell">무료 문항</th>
                     <th className="text-right px-5 py-3 font-medium hidden lg:table-cell">포인트</th>
                     <th className="text-left px-5 py-3 font-medium hidden xl:table-cell">가입일</th>
                   </tr>
@@ -189,7 +202,7 @@ export default function AdminUsersPage() {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-10 text-slate-500">
+                      <td colSpan={7} className="text-center py-10 text-slate-500">
                         {search ? '검색 결과가 없습니다.' : '회원이 없습니다.'}
                       </td>
                     </tr>
@@ -227,6 +240,20 @@ export default function AdminUsersPage() {
                               </span>
                             ) : (
                               <span className="text-slate-600 text-xs">일반</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 text-right hidden lg:table-cell tabular-nums">
+                            {u.baseFreeQuota ? (
+                              <span
+                                title={`이번 달 ${u.baseFreeQuota.used.toLocaleString()}문항 사용 / 한도 ${u.baseFreeQuota.limit.toLocaleString()}${u.baseFreeQuota.trial ? ' (가입 체험)' : ''}`}
+                              >
+                                <span className={quotaCls(u.baseFreeQuota)}>
+                                  {u.baseFreeQuota.remaining.toLocaleString()}
+                                </span>
+                                <span className="text-slate-600 text-xs"> / {u.baseFreeQuota.limit.toLocaleString()}</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-600">—</span>
                             )}
                           </td>
                           <td className="px-5 py-3.5 text-right text-slate-300 hidden lg:table-cell">

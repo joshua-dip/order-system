@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
-import { SIGNUP_PREMIUM_TRIAL_DAYS } from '@/lib/premium-member';
+import { SIGNUP_PREMIUM_TRIAL_DAYS, isPremiumMember, isMonthlyMemberActive } from '@/lib/premium-member';
+import { isAnnualMemberActive } from '@/lib/annual-member';
+import { baseFreeQuotaFor, kstMonthRange, paidBaseCountOfOrder } from '@/lib/variant-member-quota';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +22,30 @@ export async function GET(request: NextRequest) {
       .find({ role: 'user' }, { projection: { passwordHash: 0 } })
       .sort({ createdAt: -1 })
       .toArray();
+
+    /* 멤버십 회원의 이번 달 무료 문항 잔량 — 회원 화면(/api/my/variant-base-quota)과
+       같은 계산을 쓴다. 장부가 없으므로 이번 달 주문에서 되센다. 취소분은 제외.
+       목록마다 회원 수만큼 조회하면 느리므로 이번 달 주문을 한 번에 읽어 loginId 로 묶는다. */
+    const { start, end } = kstMonthRange();
+    const monthOrders = await db
+      .collection('orders')
+      .find({
+        orderNumber: { $regex: '^(BV|MV|UV)-' },
+        createdAt: { $gte: start, $lt: end },
+        status: { $ne: 'cancelled' },
+      })
+      .project({ loginId: 1, orderMeta: 1, delivery: 1 })
+      .toArray();
+    const usedByLoginId = new Map<string, number>();
+    for (const o of monthOrders) {
+      const lid = typeof o.loginId === 'string' ? o.loginId : '';
+      if (!lid) continue;
+      const n = paidBaseCountOfOrder(
+        (o as Record<string, unknown>).orderMeta as Record<string, unknown>,
+        (o as Record<string, unknown>).delivery as Record<string, unknown> | null,
+      );
+      if (n > 0) usedByLoginId.set(lid, (usedByLoginId.get(lid) ?? 0) + n);
+    }
 
     const users = list.map((u) => ({
       id: u._id.toString(),
@@ -79,6 +105,23 @@ export async function GET(request: NextRequest) {
         return Number.isNaN(date.getTime()) ? null : date.toISOString();
       })(),
       createdAt: u.createdAt,
+      /* 월·연회원(및 가입 체험)만 한도가 있다. 일반 회원은 null 로 내려 화면에서 감춘다. */
+      baseFreeQuota: (() => {
+        const annualSince = (u as { annualMemberSince?: Date }).annualMemberSince ?? null;
+        const monthlyUntil = (u as { monthlyMemberUntil?: Date }).monthlyMemberUntil ?? null;
+        const trialUntil = (u as { signupPremiumTrialUntil?: Date }).signupPremiumTrialUntil ?? null;
+        const member = isPremiumMember({
+          role: u.role as string | undefined,
+          annualSince,
+          monthlyUntil,
+          signupPremiumTrialUntil: trialUntil,
+        });
+        if (!member) return null;
+        const paidMember = isAnnualMemberActive(annualSince) || isMonthlyMemberActive(monthlyUntil);
+        const limit = baseFreeQuotaFor({ paidMember });
+        const used = usedByLoginId.get(String(u.loginId ?? '')) ?? 0;
+        return { limit, used, remaining: Math.max(0, limit - used), trial: !paidMember };
+      })(),
     }));
 
     return NextResponse.json({ users });
