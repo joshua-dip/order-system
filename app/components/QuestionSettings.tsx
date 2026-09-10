@@ -148,6 +148,17 @@ const QuestionSettings = ({
 
   /** 쏠북 교재(변형문제) — 공개 설정 */
   const [solbookKeys, setSolbookKeys] = useState<string[]>([]);
+  /* 쏠북 연계 교재는 무료 유형(주제·제목·주장·일치·불일치·순서·삽입)을 고를 수 없다.
+     변형 제작비를 쏠북에서 결제하는 교재라, 0원 유형을 열어 두면 쏠북 쪽 결제가 0원이 된다.
+     2026-09-10 부터 — 그 전 주문은 그대로 둔다. */
+  const freeTypesBlocked = solbookKeys.includes(selectedTextbook);
+  /* 쏠북 교재로 바꾸거나, 저장된 옵션을 불러와 무료 유형이 딸려 들어온 경우 걷어낸다 */
+  useEffect(() => {
+    if (!freeTypesBlocked) return;
+    setSelectedTypes((prev) =>
+      prev.some((t) => isFreeVariantType(t)) ? prev.filter((t) => !isFreeVariantType(t)) : prev,
+    );
+  }, [freeTypesBlocked]);
   const [solbookPurchaseUrl, setSolbookPurchaseUrl] = useState('');
   const [solbookExtraFeeWon, setSolbookExtraFeeWon] = useState(DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON);
   const [solbookRetailGuideText, setSolbookRetailGuideText] = useState('');
@@ -608,7 +619,12 @@ const QuestionSettings = ({
       (t) => !isFreeVariantType(t) && !isAdvancedVariantType(t),
     );
     const baseQuestionCount = paidBaseTypes.length * mult * questionsPerType;
-    const quotaSplit = splitByBaseQuota(baseQuestionCount, baseQuotaRemaining);
+    /* 쏠북 연계 교재는 제외한다 — 변형 제작비를 쏠북에서 결제하므로 우리 한도로 깎을 몫이
+       없다. 적용하면 한도만 소진되고 회원에게 돌아가는 것은 없다(2026-09-10 방침). */
+    const isSolbookTextbook = solbookKeys.includes(selectedTextbook);
+    const quotaSplit = isSolbookTextbook
+      ? { freeCount: 0, paidCount: baseQuestionCount }
+      : splitByBaseQuota(baseQuestionCount, baseQuotaRemaining);
     /* 무료로 처리할 문항 수를 채워 가며 유형별로 소진한다. */
     let quotaLeft = quotaSplit.freeCount;
 
@@ -634,7 +650,6 @@ const QuestionSettings = ({
     const discountRate = variantVolumeDiscountRate(totalQuestions);
     const discountAmount = basePrice * discountRate;
     const variantSubtotal = Math.round(basePrice - discountAmount);
-    const isSolbookTextbook = solbookKeys.includes(selectedTextbook);
     const solbookCustomFeeWaived =
       isAnnualMemberActive || isMonthlyMemberActive || signupPremiumTrialActive;
     const solbookFee =
@@ -669,6 +684,7 @@ const QuestionSettings = ({
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes((prev) => {
+      if (freeTypesBlocked && isFreeVariantType(type) && !prev.includes(type)) return prev;
       const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
       if (isFreeVariantType(type) && !prev.includes(type) && !hasPaidType(prev)) {
         return prev; // 유료 유형이 아직 없으면 무료 유형은 켜지지 않는다
@@ -679,11 +695,19 @@ const QuestionSettings = ({
 
   /** 기본난도 카드 1장 — 무료·유료 두 섹션에서 같은 모양을 쓴다 */
   const renderStandardTypeCard = (type: string) => {
-    const locked = isFreeVariantType(type) && !hasPaidType(selectedTypes) && !selectedTypes.includes(type);
+    const blockedFree = freeTypesBlocked && isFreeVariantType(type);
+    const locked =
+      blockedFree || (isFreeVariantType(type) && !hasPaidType(selectedTypes) && !selectedTypes.includes(type));
     return (
                 <div
                   key={type}
-                  title={locked ? '유료 유형을 하나 이상 고르면 선택할 수 있어요' : undefined}
+                  title={
+                    blockedFree
+                      ? '쏠북 교재는 변형문제 금액을 쏠북에서 결제해 무료 유형이 없어요'
+                      : locked
+                        ? '유료 유형을 하나 이상 고르면 선택할 수 있어요'
+                        : undefined
+                  }
                   className={`p-3 border-2 rounded-lg transition-all ${
                     locked
                       ? 'border-gray-200 bg-gray-50 opacity-60'
@@ -771,11 +795,16 @@ const QuestionSettings = ({
   };
 
 
+  /** 「전체 선택」이 켤 수 있는 유형 — 쏠북 교재면 무료 유형은 빠진다 */
+  const selectableTypes = freeTypesBlocked
+    ? questionTypes.filter((t) => !isFreeVariantType(t))
+    : questionTypes;
+
   const handleAllTypesToggle = () => {
-    if (selectedTypes.length === questionTypes.length) {
+    if (selectedTypes.length === selectableTypes.length) {
       setSelectedTypes([]);
     } else {
-      setSelectedTypes([...questionTypes]);
+      setSelectedTypes([...selectableTypes]);
     }
   };
 
@@ -926,7 +955,7 @@ ${solbookRetailLine}
 5. 가격
 : ${isSolbookTextbook
     ? `${solbookFee.toLocaleString()}원 (이곳 입금 — 쏠북 커스텀 수수료${solbookCustomFeeWaived ? ' · 연·월 회원 면제' : ''})`
-    : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${quotaLine}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제하시며, 포인트 사용은 적용되지 않습니다.' : ''}
+    : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${quotaLine}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제하시며, 포인트·멤버십 무료 문항은 적용되지 않습니다.' : ''}
 
 5-1. HWP 저장 방식
 : ${formatHwpStorageSummary(hwpStorageModes)}${hwpStorageModes.includes('byRound') ? `\n   회차 수: ${roundCount}회차` : ''}
@@ -955,6 +984,9 @@ ${solbookRetailLine}
       ...(hwpStorageModes.includes('byRound') ? { roundCount } : {}),
       ...(isSolbookTextbook
         ? {
+            /* 쏠북 주문은 멤버십 무료 한도를 쓰지 않는다 — 집계(paidBaseCountOfOrder)에서 뺀다.
+               표시가 없는 옛 쏠북 주문은 그때 한도를 실제로 썼으므로 그대로 센다. */
+            memberQuotaExempt: true,
             solbook: {
               textbookKey: selectedTextbook,
               extraFeeWon: solbookExtraFeeWon,
@@ -1005,6 +1037,8 @@ ${solbookRetailLine}
      쏠북 커스텀 면제와 같은 기준을 쓴다. */
   const isPremiumMembership =
     isAnnualMemberActive || isMonthlyMemberActive || signupPremiumTrialActive;
+  /** 멤버십 무료 한도가 이 주문에 적용되는지 — 쏠북 교재는 제외한다(가격 계산과 같은 기준). */
+  const membershipQuotaApplies = isPremiumMembership && !isSolbookTextbook;
 
   const maxPointUsable = isSolbookTextbook ? 0 : Math.min(userPoints, totalPrice);
   const pointsAppliedPreview =
@@ -1128,8 +1162,19 @@ ${solbookRetailLine}
                   • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                   • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                 </div>
-                {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다 */}
-                {isPremiumMembership ? (
+                {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다.
+                    쏠북 교재는 주문을 막는 게 아니라 결제처가 둘로 나뉜다는 점을 먼저 알린다 —
+                    「적용되지 않습니다」만 보이면 주문이 안 되는 줄 안다(2026-09-10). */}
+                {isSolbookTextbook ? (
+                  <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    📗 <b>쏠북 연계 교재</b> — 주문서는 이곳에서 그대로 넣으시면 됩니다.
+                    {' '}이곳에는 <b>커스텀 비용 {solbookExtraFeeWon.toLocaleString()}원</b>만 입금하시고
+                    (월·연회원 면제), <b>변형문제 금액은 쏠북에서 교재와 함께 구매</b>하시면 됩니다.
+                    <span className="block text-[12px] text-slate-500 mt-0.5">
+                      변형문제 금액을 쏠북에서 결제하므로 무료 유형·멤버십 무료 문항·포인트는 적용되지 않습니다.
+                    </span>
+                  </div>
+                ) : isPremiumMembership ? (
                   <div className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
                     👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {baseQuotaLimit.toLocaleString()}문항 무료</b>
                     {' · '}이번 달 남은 무료 <b>{baseQuotaRemaining.toLocaleString()}문항</b>
@@ -1241,12 +1286,12 @@ ${solbookRetailLine}
                     <button
                       onClick={handleAllTypesToggle}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        selectedTypes.length === questionTypes.length
+                        selectedTypes.length === selectableTypes.length
                           ? 'bg-red-100 text-black hover:bg-red-200'
                           : 'bg-blue-100 text-black hover:bg-blue-200'
                       }`}
                     >
-                      {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
+                      {selectedTypes.length === selectableTypes.length ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
                 </div>
@@ -1271,9 +1316,13 @@ ${solbookRetailLine}
                 <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
                   <span className="tier-badge-in text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">기본난도</span>
                   <span className="text-xs text-gray-500">수능·내신 표준 유형</span>
-                  {isPremiumMembership ? (
+                  {membershipQuotaApplies ? (
                     <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
                       👑 회원 무료 · 이번 달 {baseQuotaRemaining.toLocaleString()}문항 남음
+                    </span>
+                  ) : isSolbookTextbook ? (
+                    <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+                      문항당 {VARIANT_PRICE.base}원 · 쏠북에서 결제
                     </span>
                   ) : (
                     <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
@@ -1306,9 +1355,11 @@ ${solbookRetailLine}
                   <div className="mb-3 flex items-center justify-center gap-2">
                     <span className="tier-badge-in text-xs font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded">누구나 무료</span>
                     <span className="text-xs text-gray-500">
-                      {hasPaidType(selectedTypes)
-                        ? '회원 여부·한도와 무관하게 항상 0원입니다'
-                        : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
+                      {freeTypesBlocked
+                        ? '쏠북 교재는 변형문제 금액을 쏠북에서 결제하므로 무료 유형이 없습니다'
+                        : hasPaidType(selectedTypes)
+                          ? '회원 여부·한도와 무관하게 항상 0원입니다'
+                          : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
                     </span>
                   </div>
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
@@ -1806,7 +1857,7 @@ ${solbookRetailLine}
                       )}
                       {/* 무료로 빠지는 분과 실제 입금 대상을 갈라 보여준다 —
                           「고난도부터는 따로 입금」이 화면에서 바로 읽혀야 한다. */}
-                      {isPremiumMembership && (advancedCount > 0 || quotaPaidCount > 0 || quotaFreeCount > 0) && (
+                      {membershipQuotaApplies && (advancedCount > 0 || quotaPaidCount > 0 || quotaFreeCount > 0) && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 space-y-1">
                           <div className="flex justify-between text-[12px]">
                             <span className="text-emerald-800">무료 처리 (기본난도)</span>

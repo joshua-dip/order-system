@@ -74,6 +74,11 @@ export function paidBaseCountOfOrder(
   delivery?: Record<string, unknown> | null,
 ): number {
   if (!meta) return 0;
+  /* 쏠북 연계 주문은 한도를 쓰지 않는다 — 변형 제작비를 쏠북에서 결제해 우리 한도로
+     깎아 준 몫이 없기 때문이다. 세면 혜택 없이 한도만 줄어든다(2026-09-10 방침).
+     주문 화면이 그날부터 `memberQuotaExempt` 를 찍는다. 표시가 없는 옛 쏠북 주문은
+     그때 실제로 한도를 썼으므로 그대로 센다 — 소급해 돌려주지 않는다. */
+  if (meta.memberQuotaExempt === true) return 0;
   const types = Array.isArray(meta.selectedTypes)
     ? (meta.selectedTypes as unknown[]).filter((t): t is string => typeof t === 'string')
     : [];
