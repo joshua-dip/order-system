@@ -43,6 +43,13 @@ const WorkbookTypeSelection = ({
   const [loadingLatestOptions, setLoadingLatestOptions] = useState(false);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const orderSubmittingRef = useRef(false);
+  /* 포인트 결제 — 변형문제 주문서(QuestionSettings·MockExamSettings)와 같은 방식이다.
+     주문 저장(saveOrderToDb)과 서버 차감은 원래 포인트를 받게 되어 있었는데
+     워크북 화면에만 입력 칸이 없어 쓸 수가 없었다(2026-09-10). */
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [userPoints, setUserPoints] = useState(0);
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
 
   const isMockExam = isMockExamTextbookKey(selectedTextbook);
 
@@ -66,6 +73,8 @@ const WorkbookTypeSelection = ({
       .then((d) => {
         const u = d?.user;
         setIsMember(!!u && u.role !== 'admin');
+        setLoggedIn(!!u);
+        setUserPoints(typeof u?.points === 'number' && u.points > 0 ? Math.floor(u.points) : 0);
         /* 변형문제 무료 한도(app/api/my/variant-base-quota)와 같은 기준 —
            결제 회원(월·연)과 관리자를 유료 회원으로 본다. 가입 체험은 제외. */
         setPaidMember(
@@ -79,6 +88,8 @@ const WorkbookTypeSelection = ({
       .catch(() => {
         setIsMember(false);
         setPaidMember(false);
+        setLoggedIn(false);
+        setUserPoints(0);
       });
   }, [refreshMyFormats]);
 
@@ -357,6 +368,13 @@ const WorkbookTypeSelection = ({
     }
     
     const finalPrice = totalPrice - discountAmount;
+    /* 포인트는 최종 금액까지만 쓸 수 있다 — 서버는 잔액만 확인하므로 상한은 여기서 건다 */
+    const pointsUsedAmount =
+      loggedIn && usePoints && userPoints > 0
+        ? Math.min(Math.max(0, Math.floor(pointsToUse)), Math.min(userPoints, finalPrice))
+        : 0;
+    /* 「입금하실 금액」은 포인트를 뺀 실입금액 — 매출 파서·0원 자동 입금확인이 이 줄을 읽는다 */
+    const depositDueWon = Math.max(0, finalPrice - pointsUsedAmount);
 
     // 부교재·교과서: 강별 선택 번호 내역 (전체 선택 강은 「전체」로 표기)
     const hasNumberPicks = !isMockExam && Array.isArray(selectedLessonPicks) && selectedLessonPicks.length > 0;
@@ -411,7 +429,8 @@ ${selectedPackageDetails.map(pkg =>
    최종 금액: ${finalPrice.toLocaleString()}원` : `
    최종 금액: ${finalPrice.toLocaleString()}원`}
 
-입금하실 금액: ${finalPrice.toLocaleString()}원
+${pointsUsedAmount > 0 ? `포인트 사용: ${pointsUsedAmount.toLocaleString()}P
+` : ''}입금하실 금액: ${depositDueWon.toLocaleString()}원
 
 ${useCustomHwp ? `
 6. 커스텀 HWP 양식 사용
@@ -446,7 +465,12 @@ ${useCustomHwp ? `
           }
         : {}),
     };
-    await Promise.resolve(onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW', { orderMeta }));
+    await Promise.resolve(
+      onOrderGenerate(orderText, isMockExam ? 'MW' : 'BW', {
+        orderMeta,
+        ...(pointsUsedAmount > 0 ? { pointsUsed: pointsUsedAmount } : {}),
+      }),
+    );
     } finally {
       orderSubmittingRef.current = false;
       setOrderSubmitting(false);
@@ -482,6 +506,17 @@ ${useCustomHwp ? `
   }
   
   const totalPricePreview = basePricePreview - discountAmountPreview;
+
+  /* 포인트 미리보기 — 최종 금액까지만 쓸 수 있다 */
+  const maxPointUsable = Math.min(userPoints, totalPricePreview);
+  const pointsAppliedPreview =
+    loggedIn && usePoints ? Math.min(Math.max(0, pointsToUse), maxPointUsable) : 0;
+  const depositAfterPoints = Math.max(0, totalPricePreview - pointsAppliedPreview);
+  /* 패키지·지문 수를 바꿔 금액이 줄면 쓰려던 포인트도 같이 줄인다 */
+  useEffect(() => {
+    if (!usePoints) return;
+    setPointsToUse((p) => Math.min(Math.max(0, p), maxPointUsable));
+  }, [usePoints, maxPointUsable]);
 
   if (dataLoading) {
     return (
@@ -985,6 +1020,100 @@ ${useCustomHwp ? `
                       </div>
                     </div>
                   </div>
+
+                  {/* 포인트 결제 — 변형문제 주문서와 같은 모양. 낼 금액이 없으면(멤버십 모의고사 워크북 등) 감춘다. */}
+                  {totalPricePreview > 0 && (
+                    <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-800 font-medium">내 포인트</span>
+                        <span className="font-bold text-indigo-700 tabular-nums">
+                          {loggedIn ? `${userPoints.toLocaleString()}P` : '—'}
+                        </span>
+                      </div>
+                      {!loggedIn && (
+                        <p className="text-xs text-gray-500 leading-snug">
+                          로그인하면 보유 포인트로 결제 금액을 줄일 수 있어요.
+                        </p>
+                      )}
+                      {loggedIn && userPoints === 0 && (
+                        <p className="text-xs text-gray-500">사용 가능한 포인트가 없습니다.</p>
+                      )}
+                      {loggedIn && userPoints > 0 && (
+                        <>
+                          <label className="flex items-start gap-2.5 cursor-pointer pt-0.5">
+                            <input
+                              type="checkbox"
+                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                              checked={usePoints}
+                              onChange={(e) => {
+                                const on = e.target.checked;
+                                setUsePoints(on);
+                                setPointsToUse(on ? maxPointUsable : 0);
+                              }}
+                            />
+                            <span className="text-gray-800 leading-snug">
+                              포인트로 결제 금액 차감 <span className="text-gray-500">(1P = 1원)</span>
+                            </span>
+                          </label>
+                          {usePoints && (
+                            <div className="space-y-2 border-t border-slate-200 pt-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs text-gray-600">사용할 포인트</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setPointsToUse(maxPointUsable)}
+                                  className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                                >
+                                  전액
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={maxPointUsable}
+                                  value={pointsToUse}
+                                  onChange={(e) =>
+                                    setPointsToUse(
+                                      Math.max(0, Math.min(maxPointUsable, Math.floor(Number(e.target.value) || 0))),
+                                    )
+                                  }
+                                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-right text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <span className="text-gray-500 text-xs shrink-0">P</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={0}
+                                max={maxPointUsable}
+                                value={Math.min(pointsToUse, maxPointUsable)}
+                                onChange={(e) => setPointsToUse(Number(e.target.value))}
+                                className="w-full accent-blue-600"
+                              />
+                              <div className="flex justify-between text-[11px] text-gray-400">
+                                <span>0P</span>
+                                <span>{maxPointUsable.toLocaleString()}P</span>
+                              </div>
+                              {pointsAppliedPreview > 0 && (
+                                <div className="flex justify-between items-center text-xs pt-1">
+                                  <span className="text-green-700">포인트 차감</span>
+                                  <span className="font-bold text-green-700">
+                                    -{pointsAppliedPreview.toLocaleString()}P
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <div className="flex justify-between items-center border-t border-slate-200 pt-2">
+                        <span className="text-gray-800 font-medium">입금 예정</span>
+                        <span className="font-bold text-lg text-black tabular-nums">
+                          {depositAfterPoints.toLocaleString()}원
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 주문서 생성 버튼 */}
                   <button
