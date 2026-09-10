@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -68,6 +68,10 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
    *  (변형문제 화면의 「교과서」 카드와 같은 풀을 워크북에도 노출). */
   const [gyogwaseoKeys, setGyogwaseoKeys] = useState<string[]>([]);
   const [gyogwaseoLoaded, setGyogwaseoLoaded] = useState(false);
+  /* 학교 교과서(관리자 「교과서」 폴더 배정분) — 교과서 주문 권한 회원에게만 내려온다.
+     쏠북 교과서Keys 가 비어 있으면 교과서 섹션이 통째로 안 뜨는데, 실제로 비어 있어서
+     교과서 워크북을 아무도 주문할 수 없었다(2026-09-10). 변형문제 화면과 같이 합집합으로 쓴다. */
+  const [schoolTextbookKeys, setSchoolTextbookKeys] = useState<string[]>([]);
 
   useEffect(() => {
     fetch('/api/settings/default-textbooks')
@@ -91,6 +95,24 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
   }, []);
 
   useEffect(() => {
+    fetch('/api/textbooks/school')
+      .then((res) => res.json())
+      .then((d) => {
+        const keys = Array.isArray(d?.keys)
+          ? (d.keys as unknown[]).filter((k): k is string => typeof k === 'string' && k.trim() !== '')
+          : [];
+        setSchoolTextbookKeys(keys);
+      })
+      .catch(() => setSchoolTextbookKeys([]));
+  }, []);
+
+  /** 교과서 섹션에 보일 전체 — 쏠북 등록분 ∪ 학교 교과서(권한 회원) */
+  const gyogwaseoAllKeys = useMemo(
+    () => [...new Set([...gyogwaseoKeys, ...schoolTextbookKeys])],
+    [gyogwaseoKeys, schoolTextbookKeys],
+  );
+
+  useEffect(() => {
     if (!convertedData || !defaultTextbooksLoaded || !gyogwaseoLoaded) return;
     const allKeys = Object.keys(convertedData as Record<string, unknown>);
     const textbookNames = filterWorkbookSupplementaryTextbookKeys(allKeys, {
@@ -100,11 +122,11 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
       isGuest: !currentUser,
     });
     /** 교과서 set 은 부교재 목록에서 제외 (교과서 전용 섹션에서 따로 노출) */
-    const gyoSet = new Set(gyogwaseoKeys);
+    const gyoSet = new Set(gyogwaseoAllKeys);
     const supplementaryOnly = textbookNames.filter((k) => !gyoSet.has(k));
     setWorkbookTextbooks(supplementaryOnly);
     setFilteredTextbooks(supplementaryOnly);
-  }, [convertedData, defaultTextbooksLoaded, defaultTextbooks, gyogwaseoLoaded, gyogwaseoKeys, currentUser]);
+  }, [convertedData, defaultTextbooksLoaded, defaultTextbooks, gyogwaseoLoaded, gyogwaseoAllKeys, currentUser]);
 
   // 검색 필터링 로직
   useEffect(() => {
@@ -426,8 +448,8 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
             </div>
           ) : null}
 
-          {/* 교과서 섹션 — 변형문제 화면과 동일한 「교과서」 풀 (settings.variant-solbook 의 교과서Keys) */}
-          {showGyogwaseo && !dataLoading && !dataError && convertedData && gyogwaseoKeys.length > 0 && (
+          {/* 교과서 섹션 — 쏠북 교과서Keys ∪ 학교 교과서(권한 회원). 변형문제 화면과 같은 풀. */}
+          {showGyogwaseo && !dataLoading && !dataError && convertedData && gyogwaseoAllKeys.length > 0 && (
             <div className={category ? '' : 'mt-16'}>
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-3 mb-2">
@@ -455,7 +477,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
 
               {isGyogwaseoExpanded && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[...gyogwaseoKeys]
+                  {[...gyogwaseoAllKeys]
                     .sort((a, b) => a.localeCompare(b, 'ko'))
                     .map((textbook) => (
                       <div
