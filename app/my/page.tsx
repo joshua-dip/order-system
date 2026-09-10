@@ -114,6 +114,12 @@ function pointHistoryKindLabel(kind: string): string {
       return '출석 보상';
     case 'past_exam_reward':
       return '기출문제 보상';
+    case 'admin_recall':
+      return '포인트 회수';
+    case 'admin_spend':
+      return '포인트 사용';
+    case 'vip_menu_unlock':
+      return 'VIP 메뉴';
     default:
       return kind;
   }
@@ -1988,7 +1994,9 @@ export default function MyPage() {
                                       ? (typeof row.meta?.type === 'string' && row.meta.type.trim()
                                           ? `${row.meta.type.trim()} 초안 생성`
                                           : '고난도 초안 생성')
-                                      : '';
+                                      : typeof row.meta?.note === 'string' && row.meta.note.trim()
+                                        ? row.meta.note.trim()
+                                        : '';
                             const deltaStr =
                               row.delta > 0
                                 ? `+${row.delta.toLocaleString()}`

@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, hashPassword, COOKIE_NAME, DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { recordPointLedger } from '@/lib/point-ledger';
+import { adminSpendPoints } from '@/lib/admin-point-spend';
 import { sanitizeHwpStorageModes } from '@/lib/variant-order-options';
 import { normalizeVariantPrintFormat } from '@/lib/variant-print-html';
 
@@ -145,6 +146,9 @@ export async function PATCH(
     const points = typeof body?.points === 'number' && body.points >= 0 ? body.points : undefined;
     const addPoints = typeof body?.addPoints === 'number' ? body.addPoints : undefined;
     const deductPoints = typeof body?.deductPoints === 'number' ? body.deductPoints : undefined;
+    const spendPoints = typeof body?.spendPoints === 'number' ? Math.floor(body.spendPoints) : undefined;
+    /** 지급·회수·사용 처리 사유 — 회원 포인트 내역 「비고」에 그대로 보인다 */
+    const pointsNote = typeof body?.pointsNote === 'string' ? body.pointsNote.trim().slice(0, 100) : '';
     const supplementaryNote = typeof body?.supplementaryNote === 'string' ? body.supplementaryNote.trim() : undefined;
     const hasAnnualMemberSince = 'annualMemberSince' in body;
     let annualMemberSinceValue: Date | null | undefined = undefined;
@@ -259,6 +263,19 @@ export async function PATCH(
       updates.passwordHash = await hashPassword(DEFAULT_MEMBER_INITIAL_PASSWORD);
     }
 
+    /* 사용 처리 — 회원 대신 포인트를 「사용」으로 차감하고 사유를 남긴다.
+       회수와 달리 잔액을 넘으면 거절한다(0으로 깎지 않는다). */
+    if (spendPoints !== undefined) {
+      const r = await adminSpendPoints(db, {
+        userId: new ObjectId(id),
+        amount: spendPoints,
+        note: pointsNote,
+        adminUserId: payload?.sub,
+      });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+      return NextResponse.json({ ok: true, balanceAfter: r.balanceAfter });
+    }
+
     const mongoOp: Record<string, unknown> = {};
     if (Object.keys(updates).length > 0) mongoOp.$set = updates;
     if (Object.keys(unsetDoc).length > 0) mongoOp.$unset = unsetDoc;
@@ -304,6 +321,7 @@ export async function PATCH(
           adminUserId: payload?.sub,
           ...(addPoints !== undefined && addPoints > 0 ? { addPoints } : {}),
           ...(deductPoints !== undefined && deductPoints > 0 ? { deductPoints } : {}),
+          ...(pointsNote ? { note: pointsNote } : {}),
         },
       }).catch((e) => console.error('point_ledger 기록 실패:', e));
     }

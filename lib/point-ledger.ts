@@ -8,6 +8,8 @@ export type PointLedgerKind =
   | 'admin_grant'
   /** 관리자 직접 회수(차감) */
   | 'admin_recall'
+  /** 관리자가 회원 대신 「사용」으로 차감 — meta.note 에 사유(회원 포인트 내역에 보임) */
+  | 'admin_spend'
   | 'admin_adjust'
   | 'point_charge'
   /** 변형문제 만들기 — 고난도 초안 생성(삽입-고난도·어법-고난도 등 차감) */

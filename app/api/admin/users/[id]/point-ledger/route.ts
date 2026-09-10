@@ -8,6 +8,7 @@ const KIND_LABELS: Record<string, string> = {
   order_spend: '주문 사용',
   admin_grant: '관리자 지급',
   admin_recall: '관리자 회수',
+  admin_spend: '관리자 사용 처리',
   admin_adjust: '관리자 조정',
   point_charge: '포인트 충전',
   member_variant_hard: '변형문제 생성',

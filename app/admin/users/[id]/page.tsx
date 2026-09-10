@@ -315,6 +315,10 @@ export default function UserDetailPage() {
   const [addingPoints, setAddingPoints] = useState(false);
   const [deductPointsInput, setDeductPointsInput] = useState('');
   const [deductingPoints, setDeductingPoints] = useState(false);
+  /* 사용 처리 — 회원 대신 포인트를 「사용」으로 차감하고 내용을 남긴다 */
+  const [spendPointsInput, setSpendPointsInput] = useState('');
+  const [spendNoteInput, setSpendNoteInput] = useState('');
+  const [spendingPoints, setSpendingPoints] = useState(false);
 
   /* 포인트 할인 쿠폰 */
   const [coupons, setCoupons] = useState<CouponRow[]>([]);
@@ -956,6 +960,37 @@ export default function UserDetailPage() {
       }
     } finally {
       setDeductingPoints(false);
+    }
+  }
+
+  /* ─── 포인트 사용 처리 ─── */
+  async function handleSpendPoints() {
+    const n = parseInt(spendPointsInput, 10);
+    const note = spendNoteInput.trim();
+    if (!n || n <= 0) { alert('사용 처리할 포인트를 입력하세요.'); return; }
+    if (!note) { alert('사용 내용을 입력하세요. 회원 포인트 내역에 그대로 보입니다.'); return; }
+    const current = user?.points ?? 0;
+    if (n > current) { alert(`보유 포인트(${current.toLocaleString()}P)보다 많이 사용 처리할 수 없습니다.`); return; }
+    if (!confirm(`${n.toLocaleString()}P를 「${note}」(으)로 사용 처리할까요?\n회원 포인트 내역에 「포인트 사용 · ${note}」로 남습니다. (처리 후 잔액 ${(current - n).toLocaleString()}P)`)) return;
+    setSpendingPoints(true);
+    try {
+      const r = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spendPoints: n, pointsNote: note }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        setSpendPointsInput('');
+        setSpendNoteInput('');
+        await loadUser();
+        await loadPoints();
+      } else {
+        alert(d.error ?? '포인트 사용 처리 실패');
+      }
+    } finally {
+      setSpendingPoints(false);
     }
   }
 
@@ -2028,7 +2063,7 @@ export default function UserDetailPage() {
               {/* 포인트 지급 / 회수 */}
               <div className="bg-slate-800 rounded-2xl border border-slate-700 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <SectionTitle>포인트 지급 / 회수</SectionTitle>
+                  <SectionTitle>포인트 지급 / 회수 / 사용 처리</SectionTitle>
                   <p className="text-slate-400 text-sm">현재 잔액: <span className="text-white font-bold">{user.points.toLocaleString()}P</span></p>
                 </div>
                 <div className="flex flex-wrap gap-3 items-end">
@@ -2071,6 +2106,43 @@ export default function UserDetailPage() {
                   </button>
                 </div>
                 <p className="text-slate-500 text-[12px] mt-2">회수 포인트가 현재 잔액을 초과하면 잔액은 0이 됩니다.</p>
+
+                {/* 사용 처리 — 이미 받은 주문을 포인트로 정산하는 등, 회원 대신 「사용」으로 차감한다 */}
+                <div className="mt-4 pt-4 border-t border-slate-700">
+                  <div className="flex flex-wrap gap-3 items-end">
+                    <Field label="사용 처리 포인트">
+                      <input
+                        type="number"
+                        value={spendPointsInput}
+                        onChange={(e) => setSpendPointsInput(e.target.value)}
+                        placeholder="0"
+                        min={1}
+                        className="w-36 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
+                      />
+                    </Field>
+                    <Field label="사용 내용 (회원에게 보임)">
+                      <input
+                        type="text"
+                        value={spendNoteInput}
+                        onChange={(e) => setSpendNoteInput(e.target.value)}
+                        placeholder="예: 이전 주문들 정산"
+                        maxLength={100}
+                        className="w-64 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-400"
+                      />
+                    </Field>
+                    <button
+                      type="button"
+                      onClick={handleSpendPoints}
+                      disabled={spendingPoints}
+                      className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      {spendingPoints ? '처리 중...' : '사용 처리'}
+                    </button>
+                  </div>
+                  <p className="text-slate-500 text-[12px] mt-2">
+                    회원 포인트 내역에 「포인트 사용」과 입력한 내용이 남습니다. 잔액보다 많이는 처리할 수 없습니다.
+                  </p>
+                </div>
               </div>
 
               {/* 포인트 할인 쿠폰 */}
@@ -2167,6 +2239,7 @@ export default function UserDetailPage() {
                         <th className="text-left px-5 py-3 font-medium">종류</th>
                         <th className="text-right px-5 py-3 font-medium">변동</th>
                         <th className="text-right px-5 py-3 font-medium">잔액</th>
+                        <th className="text-left px-5 py-3 font-medium">비고</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2181,6 +2254,13 @@ export default function UserDetailPage() {
                           </td>
                           <td className="px-5 py-3 text-right text-slate-300 font-mono text-xs">
                             {p.balanceAfter.toLocaleString()}P
+                          </td>
+                          <td className="px-5 py-3 text-slate-400 text-xs">
+                            {typeof p.meta?.note === 'string' && p.meta.note
+                              ? p.meta.note
+                              : typeof p.meta?.orderNumber === 'string'
+                                ? p.meta.orderNumber
+                                : '—'}
                           </td>
                         </tr>
                       ))}
