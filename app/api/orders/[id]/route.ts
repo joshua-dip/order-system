@@ -5,11 +5,12 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { parseOrderRevenueFromOrderText, getBookVariantSolbookAccounting } from '@/lib/order-revenue';
 import { recordPointLedger } from '@/lib/point-ledger';
 import { tryRefundPointsAfterOrderCancelled } from '@/lib/refund-order-points-on-cancel';
+import { isMemberCancellableOrder, memberCancelUpdateFilter } from '@/lib/order-cancellable';
 
 const COLLECTION = 'orders';
 
-/** 취소 가능한 상태: 관리자 수락(제작 수락) 전까지만 */
-const CANCELLABLE_STATUS = 'pending';
+/* 취소 가능 여부는 lib/order-cancellable 이 정한다 — 관리자 수락 전까지,
+   그리고 0원이라 자동 확인된 건. 목록 API 와 같은 규칙을 써야 버튼과 결과가 어긋나지 않는다. */
 
 export async function GET(
   request: NextRequest,
@@ -237,7 +238,7 @@ export async function PATCH(
     }
 
     const status = order.status || 'pending';
-    if (status !== CANCELLABLE_STATUS) {
+    if (!isMemberCancellableOrder(order)) {
       return NextResponse.json(
         { error: '관리자 수락 이후에는 주문 취소가 불가능합니다.' },
         { status: 403 }
@@ -254,8 +255,8 @@ export async function PATCH(
     }
 
     const cancelRes = await collection.updateOne(
-      { _id: new ObjectId(id), status: 'pending' },
-      { $set: { status: 'cancelled' } }
+      { _id: new ObjectId(id), ...memberCancelUpdateFilter(status) },
+      { $set: { status: 'cancelled', cancelledAt: new Date() } }
     );
     if (cancelRes.matchedCount === 0) {
       const again = await collection.findOne({ _id: new ObjectId(id) }, { projection: { status: 1 } });

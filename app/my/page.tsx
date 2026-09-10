@@ -49,6 +49,8 @@ interface MyOrder {
   fileUrl: string | null;
   /** 포인트로 결제한 금액 (0 이면 포인트 미사용) */
   pointsUsed?: number;
+  /** 본인이 취소할 수 있는 주문인지 — 서버(lib/order-cancellable)가 판단해 내려준다 */
+  cancellable?: boolean;
 }
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
@@ -743,7 +745,7 @@ export default function MyPage() {
       const data = await res.json();
       if (res.ok && data.ok) {
         setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status: 'cancelled' } : o))
+          prev.map((o) => (o.id === orderId ? { ...o, status: 'cancelled', cancellable: false } : o))
         );
       } else {
         alert(data.error || '취소에 실패했습니다.');
@@ -1153,7 +1155,7 @@ export default function MyPage() {
                               자료 준비 중
                             </span>
                           )}
-                          {order.status === 'pending' && (
+                          {(order.cancellable ?? order.status === 'pending') && (
                             <button
                               type="button"
                               onClick={() => handleCancelOrder(order.id)}
