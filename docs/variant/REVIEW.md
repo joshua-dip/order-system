@@ -169,6 +169,8 @@ npm run cc:answer-seq -- shuffled <주문번호> [--apply]                      
 | 삽입 | **마커 자리만** 옮김 | 주어진 문장·본문 글자·문장이 들어갈 자리 |
 | 셔플형 | 정답 보기와 목표 자리 보기 **두 개만** 맞바꿈 | 보기 문장·해설 논리 |
 
+- **유형당 2문항 이상 주문은 같은 지문 문항끼리도 이웃이다.** 인쇄는 지문마다 N문항씩 붙여 내므로
+  한 지문의 두 순서 문항이 같은 순열이면 곧바로 「bca bca」가 된다. 도구는 주문 수량(questionsPerType)만큼 읽어 이것까지 본다.
 - **순서는 미리 배정한다.** 병렬 샤드는 서로의 이웃 문항을 모른다(split 은 지문을 라운드로빈으로 나눈다).
   조율자가 인쇄 순서 전체를 보고 지문별 순서 정답을 정해 에이전트에 넘기면 사후 교정이 거의 필요 없다.
 - **교정은 검수 전(status 대기)에 한다.** 검수 뒤에 고치면 검수 기록과 본문이 어긋난다.
@@ -194,4 +196,4 @@ dry-run 의 `[전]/[후]` 문맥을 읽고 판단한다.
 | `npx tsx scripts/dump-order-questions.ts <주문번호> <유형> "08회 36번"` | 모호하다고 표시된 문항 전문 보기 |
 | `npx tsx scripts/patch-question-data.ts --serial <번호> --json <draft.json>` | prevalidate 한 draft 로 한 문항만 패치 |
 | `npx tsx scripts/fix-passage-typo.ts --fix "<pid>\|<틀린 문자열>\|<고친 문자열>"` | 원문 오탈자를 지문과 파생 문항에서 함께 교정 |
-| `npm run cc:order-pdf -- <주문번호> [--zip]` | 회원 인쇄 양식 PDF(주문번호 폴더) + UTF-8 파일명 zip |
+| `npm run cc:order-pdf -- <주문번호> [--by round] [--zip]` | 회원 인쇄 양식 PDF(주문번호 폴더) + UTF-8 파일명 zip. `--by round` 는 회차별 통합본 |

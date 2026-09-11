@@ -194,8 +194,12 @@ export const ANY_TARGET: TargetCosts = new Map(CIRCLED.map((c): [string, number]
 export const NO_TARGET: TargetCosts = new Map();
 
 /**
- * 이웃 중복·xyxy 반복을 최소 변경으로 없애는 정답열 계획.
- * 겹친 쌍마다 뒤·앞 문항 중 비용이 낮은 쪽을 옮긴다(두 칸 떨어진 같은 번호·많이 쓰인 번호는 조금 더 비싸게).
+ * 이웃 중복·xyxy 반복을 없애는 정답열 계획 — 열 전체를 한 번에 본다(동적 계획법).
+ * 비용: 이웃 같은 번호 1000 · xyxy 10 · 옮김 1 + 옮김 비용(targetsOf) · 두 칸 떨어진 같은 번호 0.5 · 많이 쓰인 번호 0.01×개수.
+ * 그래서 이웃 중복(선생님이 지적한 패턴)을 무엇보다 먼저 없애고, 그다음 xyxy, 그중 옮기는 문항이 가장 적은 안을 고른다.
+ * 옮길 수 있는 번호가 ①②뿐인 문항이 이어지면 xyxy 는 남을 수 있다. 한 문항씩 차례로 고치면
+ * 앞에서 한 선택이 뒤 문항의 길을 막는 경우가 있어(삽입처럼 옮길 수 있는 번호가 제한될 때) 전체를 본다.
+ * 옮길 수 없는 문항(빈 targets)은 그대로 둔다.
  * balanceCap 을 주면 한 번호가 그 수를 넘지 않게 더 옮긴다 — 아무 번호로나 옮길 수 있는 셔플형 용.
  */
 export function planAnswerSequence(
@@ -203,28 +207,59 @@ export function planAnswerSequence(
   targetsOf: (i: number) => TargetCosts,
   balanceCap?: number,
 ): string[] {
-  const out = [...seq];
-  const count = (v: string) => out.filter((x) => x === v).length;
-  const moved = new Set<number>();
-  const bad = (i: number) =>
-    out[i] === out[i - 1] || (i >= 3 && out[i] === out[i - 2] && out[i - 1] === out[i - 3]);
-  for (let i = 1; i < out.length; i += 1) {
-    if (!bad(i)) continue;
-    let best: { j: number; v: string; cost: number } | null = null;
-    for (const j of [i, i - 1]) {
-      if (j !== i && moved.has(j)) continue;
-      for (const [v, base] of targetsOf(j)) {
-        if (v === out[j] || v === out[j - 1] || v === out[j + 1]) continue;
-        const soft = (v === out[j - 2] ? 1 : 0) + (v === out[j + 2] ? 1 : 0);
-        const cost = base + soft + count(v) * 0.05;
-        if (!best || cost < best.cost) best = { j, v, cost };
+  const n = seq.length;
+  if (!n) return [];
+  const used = new Map<string, number>();
+  for (const v of seq) used.set(v, (used.get(v) ?? 0) + 1);
+  const choices = (i: number): [string, number][] => {
+    const m = new Map<string, number>([[seq[i], 0]]);
+    for (const [v, c] of targetsOf(i)) if (v !== seq[i]) m.set(v, 1 + c + 0.01 * (used.get(v) ?? 0));
+    return [...m];
+  };
+  /* 상태 = 직전 세 문항의 번호 「p|q|r」(번호에 '|' 가 없어 키로 안전). */
+  interface Step {
+    cost: number;
+    prev: string | null;
+    value: string;
+  }
+  const layers: Map<string, Step>[] = [];
+  let layer = new Map<string, Step>();
+  for (const [v, c] of choices(0)) layer.set(`||${v}`, { cost: c, prev: null, value: v });
+  layers.push(layer);
+  for (let i = 1; i < n; i += 1) {
+    const next = new Map<string, Step>();
+    const options = choices(i);
+    for (const [key, step] of layer) {
+      const [p, q, r] = key.split('|');
+      for (const [s, c] of options) {
+        let cost = step.cost + c;
+        if (s === r) cost += 1000;
+        if (p && p === r && q === s) cost += 10;
+        if (q && q === s) cost += 0.5;
+        const nk = `${q}|${r}|${s}`;
+        const cur = next.get(nk);
+        if (!cur || cost < cur.cost) next.set(nk, { cost, prev: key, value: s });
       }
     }
-    if (best) {
-      out[best.j] = best.v;
-      moved.add(best.j);
+    layer = next;
+    layers.push(layer);
+  }
+  let key: string | null = null;
+  let bestCost = Infinity;
+  for (const [k, step] of layer) {
+    if (step.cost < bestCost) {
+      bestCost = step.cost;
+      key = k;
     }
   }
+  const out: string[] = [...seq];
+  for (let i = n - 1; i >= 0 && key !== null; i -= 1) {
+    const step: Step | undefined = layers[i].get(key);
+    if (!step) break;
+    out[i] = step.value;
+    key = step.prev;
+  }
+  const count = (v: string) => out.filter((x) => x === v).length;
   if (balanceCap !== undefined) {
     for (let guard = 0; guard < out.length; guard += 1) {
       const over = CIRCLED.filter((c) => count(c) > balanceCap).sort((a, b) => count(b) - count(a))[0];
@@ -353,6 +388,9 @@ export function relabelOrderQuestion(qd: Doc, original: string, target: string):
 export interface InsertionLayout {
   given: string;
   sep: string;
+  /** 마커 표기 — 「①」 그대로인지 「( ① )」처럼 괄호로 감쌌는지. 다시 찍을 때 같은 모양을 쓴다. */
+  markerOpen: string;
+  markerClose: string;
   /** 마커를 걷어 낸 본문 */
   body: string;
   /** 현재 ①~⑤ 마커 자리(body 오프셋) */
@@ -418,18 +456,24 @@ export function parseInsertionParagraph(paragraph: string, sentences: string[]):
   const at = paragraph.indexOf(sep);
   if (at < 0) return null;
   const given = paragraph.slice(0, at);
-  const { body, marks } = stripInsertionMarkers(paragraph.slice(at + sep.length).replace(/^\s+/, ''));
+  const raw = paragraph.slice(at + sep.length).replace(/^\s+/, '');
+  /* 「( ① )」 괄호 표기 — 괄호째 걷어 내야 빈 「( )」가 본문에 남지 않는다. 모양은 기억했다가 그대로 다시 찍는다. */
+  const paren = raw.match(/\(([ \t]*)[①②③④⑤]([ \t]*)\)/);
+  const markerOpen = paren ? `(${paren[1]}` : '';
+  const markerClose = paren ? `${paren[2]})` : '';
+  const bare = paren ? raw.replace(/\([ \t]*([①②③④⑤])[ \t]*\)/g, '$1') : raw;
+  const { body, marks } = stripInsertionMarkers(bare);
   if (marks.length !== 5) return null;
   const starts = sentenceStartsFromPassage(body, sentences, given) ?? sentenceStartsByPunctuation(body);
   const gaps = [...new Set([0, ...starts, ...marks, body.length])].sort((a, b) => a - b);
-  return { given, sep, body, marks, gaps };
+  return { given, sep, markerOpen, markerClose, body, marks, gaps };
 }
 
 function renderInsertionParagraph(layout: InsertionLayout, markers: number[]): string {
   const asc = [...markers].sort((a, b) => a - b);
   let body = layout.body;
   for (const o of [...asc].reverse()) {
-    const mk = CIRCLED[asc.indexOf(o)];
+    const mk = `${layout.markerOpen}${CIRCLED[asc.indexOf(o)]}${layout.markerClose}`;
     body = o >= body.length ? `${body} ${mk}` : `${body.slice(0, o)}${mk} ${body.slice(o)}`;
   }
   return `${layout.given}${layout.sep}${body}`;

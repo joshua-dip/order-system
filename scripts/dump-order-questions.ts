@@ -25,12 +25,15 @@ async function main(): Promise<void> {
   if (!order) throw new Error(`${orderNumber}: 주문 없음`);
   const scope = resolveOrderQuestionScope(order);
   for (const target of scope.targets) {
-    const rows = await fetchOrderQuestions(db, target, type);
+    /* 주문 수량(유형당 N문항)만큼 — 인쇄·정답열 교정과 같은 순서로 번호를 매긴다. */
+    const rows = await fetchOrderQuestions(db, target, type, { perSource: scope.perType(type) });
     console.log(`═══ ${orderNumber} | ${target.textbook} | ${type} ${rows.length}문항`);
     rows.forEach((r, i) => {
       const hit = wanted.some((w) => r.source.includes(w));
       if (wanted.length && !hit) return;
-      console.log(`#${i} ${r.source} 정답=${r.answer} serial=${str(r.doc.serialNo)} status=${str(r.doc.status)}`);
+      console.log(
+        `#${i} ${r.source} 정답=${r.answer} serial=${str(r.doc.serialNo)} status=${str(r.doc.status)} passage=${str(r.doc.passage_id)}`,
+      );
       if (!hit) return;
       console.log(`  [Q] ${str(r.qd.Question)}`);
       console.log(`  [P] ${JSON.stringify(str(r.qd.Paragraph))}`);

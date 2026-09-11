@@ -101,11 +101,11 @@ async function runCheck(ctx: Ctx): Promise<void> {
   for (const t of ctx.scope.targets) {
     console.log(`\n═══ ${ctx.orderNumber} | ${t.textbook} | ${t.label} | 지문 ${t.sources.length}`);
     for (const type of ctx.scope.types) {
-      const rows = await fetchOrderQuestions(ctx.db, t, type);
+      const rows = await fetchOrderQuestions(ctx.db, t, type, { perSource: ctx.scope.perType(type) });
       const seq = rows.map((r) => r.answer);
       const statuses = [...new Set(rows.map((r) => str(r.doc.status)))].join('/') || '-';
       const tail = isSingleAnswerSequence(seq) ? describeSequence(seq) : '복수 정답·서술형 — 정답열 점검 제외';
-      console.log(`  ${type}: ${rows.length}/${t.sources.length} (${statuses})  ${tail}`);
+      console.log(`  ${type}: ${rows.length}/${t.sources.length * ctx.scope.perType(type)} (${statuses})  ${tail}`);
     }
   }
 }
@@ -115,7 +115,7 @@ async function runOrder(ctx: Ctx): Promise<void> {
   const updates: Update[] = [];
   for (const t of ctx.scope.targets) {
     for (const type of ctx.scope.types.filter((x) => /^순서/.test(x))) {
-      const rows = await fetchOrderQuestions(ctx.db, t, type);
+      const rows = await fetchOrderQuestions(ctx.db, t, type, { perSource: ctx.scope.perType(type) });
       const originals = await passageContent(ctx.db, rows, 'original');
       const originalOf = (r: OrderQuestionRow) => str(originals.get(str(r.doc.passage_id)));
       const derived = rows.map((r) => orderAnswerFromText(str(r.qd.Paragraph), originalOf(r)));
@@ -169,7 +169,7 @@ async function runInsert(ctx: Ctx): Promise<void> {
   const flagged: Doc[] = [];
   for (const t of ctx.scope.targets) {
     for (const type of ctx.scope.types.filter((x) => /^삽입/.test(x))) {
-      const rows = await fetchOrderQuestions(ctx.db, t, type);
+      const rows = await fetchOrderQuestions(ctx.db, t, type, { perSource: ctx.scope.perType(type) });
       const sentenceMap = await passageContent(ctx.db, rows, 'sentences_en');
       const sentencesOf = (r: OrderQuestionRow) => asStrings(sentenceMap.get(str(r.doc.passage_id)));
       const layouts: (InsertionLayout | null)[] = rows.map((r) => parseInsertionParagraph(str(r.qd.Paragraph), sentencesOf(r)));
@@ -245,7 +245,7 @@ async function runShuffled(ctx: Ctx): Promise<void> {
   const updates: Update[] = [];
   for (const t of ctx.scope.targets) {
     for (const type of types) {
-      const rows = await fetchOrderQuestions(ctx.db, t, type);
+      const rows = await fetchOrderQuestions(ctx.db, t, type, { perSource: ctx.scope.perType(type) });
       const seq = rows.map((r) => r.answer);
       console.log(`\n═══ ${ctx.orderNumber} | ${t.textbook} | ${type} ${rows.length}문항`);
       if (!isSingleAnswerSequence(seq)) {
