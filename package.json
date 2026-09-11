@@ -34,6 +34,8 @@
     "variant:auto-fill": "tsx scripts/variant-auto-fill.ts",
     "cc:analysis-resolve": "tsx scripts/cc-analysis-resolve.ts",
     "cc:analysis-pdf": "tsx scripts/cc-analysis-pdf.ts",
+    "cc:answer-seq": "tsx scripts/cc-answer-seq.ts",
+    "cc:order-pdf": "tsx scripts/order-member-pdf.ts",
     "check:analysis-sheet": "tsx scripts/check-analysis-sheet-render.ts"
   },
   "dependencies": {

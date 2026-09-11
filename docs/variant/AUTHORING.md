@@ -78,6 +78,9 @@ Pro 플랜만 쓰는 운영이라 초안 생성 API(`variant_generate_draft` 등
 
 주문 단위 진단: `npx tsx scripts/diagnose-order-answer-distribution.ts <주문번호>`
 
+분포와 별개로, **인쇄 순서로 이웃한 문항이 같은 번호를 연달아 갖는지**도 본다(학생이 패턴으로 푼다).
+점검·교정은 `npm run cc:answer-seq -- check <주문번호>` — [REVIEW.md](REVIEW.md) §7.
+
 ---
 
 ## option_type

@@ -128,7 +128,8 @@ npm run cc:variant -- pipeline:BV-20260907-001
 `status` 를 대기로 되돌려 pipeline 재검수를 태우면 이력도 남는다.
 
 주문 하나만 다시 보려면 교재 전체(`cc:audit`)는 너무 넓다 —
-주문 범위 read-only 도구를 따로 쓴다.
+주문 범위 read-only 도구를 따로 쓴다(§7 표의 `audit-order-grammar-underlines`·`dump-order-questions`).
+prevalidate 를 통과한 draft 로 한 문항만 바꿀 때는 `patch-question-data` 를 쓴다.
 
 ---
 
@@ -145,3 +146,52 @@ npm run cc:variant -- pipeline:BV-20260907-001
 
 레거시(엑셀 임포트) 문항은 신규 주문 audit 에서 함께 노출된다.
 **신규 결함과 섞어 보지 말고 분리해서** 판단한다.
+
+---
+
+## 7. 정답열 패턴 — 이웃 문항의 연속 정답
+
+유형별 PDF 로 나가는 주문은 **인쇄 순서(출처 순)로 같은 정답이 연달아 나오거나(③③)
+두 문항씩 같은 패턴으로 반복되면(③④③④)** 학생이 번호 패턴으로 푼다 — 실제로 선생님 항의가 있었다("bca bca - cab cab").
+형식 검증은 이것을 전혀 보지 않으므로 **납품 전에 따로 본다.** 대상은 정답이 ①~⑤ 한 개인 유형 전부
+(순서·삽입·빈칸·주제 등). 어법-고난도처럼 복수 정답인 유형은 뺀다.
+
+```bash
+npm run cc:answer-seq -- check    <주문번호>                                   # 유형별 정답열·분포·연속 반복
+npm run cc:answer-seq -- order    <주문번호> [--apply]                         # 순서
+npm run cc:answer-seq -- insert   <주문번호> [--lock "…"] [--relaxed] [--apply] # 삽입
+npm run cc:answer-seq -- shuffled <주문번호> [--apply]                         # 빈칸·주제 등 셔플형
+```
+
+| 유형 | 고치는 방법 | 그대로인 것 |
+|---|---|---|
+| 순서 | (A)(B)(C) **라벨만** 치환 — 해설의 라벨·보기 인용·번호도 같이 | 본문 덩이·해설 논리. 원문 복원으로 검증 |
+| 삽입 | **마커 자리만** 옮김 | 주어진 문장·본문 글자·문장이 들어갈 자리 |
+| 셔플형 | 정답 보기와 목표 자리 보기 **두 개만** 맞바꿈 | 보기 문장·해설 논리 |
+
+- **순서는 미리 배정한다.** 병렬 샤드는 서로의 이웃 문항을 모른다(split 은 지문을 라운드로빈으로 나눈다).
+  조율자가 인쇄 순서 전체를 보고 지문별 순서 정답을 정해 에이전트에 넘기면 사후 교정이 거의 필요 없다.
+- **교정은 검수 전(status 대기)에 한다.** 검수 뒤에 고치면 검수 기록과 본문이 어긋난다.
+- 번호가 바뀌면 해설의 조사도 따라간다 — ①이 ②가 ③이 ④가 ⑤가.
+- `--apply` 하면 원본이 `.variant-drafts/backups/` 에 남는다.
+
+### 삽입은 사람이 한 번 본다
+
+마커를 옮기면 **새 오답 자리**가 생긴다. 도구는 정답 바로 옆 경계(모호해지기 쉽다)와 글 첫머리(어색하다)를 피하지만,
+dry-run 의 `[전]/[후]` 문맥을 읽고 판단한다.
+
+- 작성자가 **모호한 자리를 일부러 비워 둔 문항**(에이전트 보고서에 적힌다)은 `--lock "09회 25번,08회 38번"` 으로 고정한다.
+- 해설이 **번호로 언급한 자리가 없어지는 안**은 적용하지 않는다. `--relaxed` 로 돌리면 해설 수기 수정용 초안이
+  `.variant-drafts/answer-seq/` 에 떨어진다 → 해설을 고쳐 prevalidate → `patch-question-data` 로 적용.
+- 5문장 이하 지문처럼 **모든 경계에 이미 마커가 있으면 옮길 수 없다.** 그래도 겹치면 빼는 문장을 바꿔 문항을 새로 쓴다.
+- 적용 전에 dry-run 이 쓴 `.variant-drafts/answer-seq/<주문번호>-insert-*.json` 을 `prevalidate-variants.ts` 로 0 에러 확인한다.
+
+### 함께 쓰는 도구
+
+| 도구 | 용도 |
+|---|---|
+| `npx tsx scripts/audit-order-grammar-underlines.ts <주문번호>` | 어법: 비정답 밑줄·밑줄 밖 본문이 원문 그대로인지 (read-only) |
+| `npx tsx scripts/dump-order-questions.ts <주문번호> <유형> "08회 36번"` | 모호하다고 표시된 문항 전문 보기 |
+| `npx tsx scripts/patch-question-data.ts --serial <번호> --json <draft.json>` | prevalidate 한 draft 로 한 문항만 패치 |
+| `npx tsx scripts/fix-passage-typo.ts --fix "<pid>\|<틀린 문자열>\|<고친 문자열>"` | 원문 오탈자를 지문과 파생 문항에서 함께 교정 |
+| `npm run cc:order-pdf -- <주문번호> [--zip]` | 회원 인쇄 양식 PDF(주문번호 폴더) + UTF-8 파일명 zip |

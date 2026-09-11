@@ -21,7 +21,7 @@ const IRRELEVANT_OPTIONS_FIXED = '① ### ② ### ③ ### ④ ### ⑤';
  * Paragraph 내 위치·순열에 정답이 묶여 있지 않아 보기 순서를 무작위로 섞어도 의미가 유지되는 유형만 포함.
  * (어법·삽입·삽입-고난도·무관한문장·순서는 보기 번호가 본문 구조에 묶여 있어 제외)
  */
-const SHUFFLABLE_TYPES = new Set([
+export const SHUFFLABLE_TYPES = new Set([
   '주제',
   '제목',
   '주장',

@@ -22,6 +22,7 @@
 
 - **작성**: `docs/variant/AUTHORING.md` — 유형별 형식, CorrectAnswer·option_type 규칙, 고난도 13종, 저장 시 함정
 - **검수**: `docs/variant/REVIEW.md` — 사전검증 → 자동검수 → `cc:audit` 세 층과 층별 사각지대
+- **정답열 패턴**: 유형별 PDF 로 나가는 주문은 검수 전에 `npm run cc:answer-seq -- check <주문번호>` — 이웃 문항 연속 정답·xyxy 는 `order`·`insert`·`shuffled` 로 교정(REVIEW.md §7). 회원 인쇄 양식 PDF 는 `npm run cc:order-pdf -- <주문번호> --zip`.
 
 권위는 코드(`lib/admin-variant-draft-claude.ts` · `variant-draft-*-rules.ts`)이고,
 위 문서는 코드가 강제하지 못하는 실전 교정 규칙을 모은 것이다. 새 규칙이 생기면 여기에 추가한다.
