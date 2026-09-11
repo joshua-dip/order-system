@@ -1,33 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { invalidatePassageSourceCache } from '@/lib/passage-source-detect';
+import { externalTextbookKey } from '@/lib/external-variant';
 import {
-  EXTERNAL_MIN_ENGLISH_RATIO,
-  EXTERNAL_PASSAGE_LIMITS,
-  englishLetterRatio,
-  externalTextbookKey,
-} from '@/lib/external-variant';
+  externalPassageProblem,
+  normalizePassageText,
+  registerExternalPassages,
+} from '@/lib/external-passages-store';
 
 export const dynamic = 'force-dynamic';
 
-/** 붙여넣은 글을 지문으로 저장할 모양으로 — 줄 끝 공백·보이지 않는 문자·3줄 이상 빈 줄을 정리 */
-function normalizePassageText(raw: string): string {
-  return raw
-    .replace(/\r\n?/g, '\n')
-    .replace(/[​-‍﻿]/g, '')
-    .split('\n')
-    .map((l) => l.trim())
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+async function loginIdOf(request: NextRequest): Promise<string> {
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  const payload = token ? await verifyToken(token).catch(() => null) : null;
+  return typeof payload?.loginId === 'string' ? payload.loginId.trim() : '';
 }
 
-/** KST 기준 YYMMDD */
-function kstYymmdd(d = new Date()): string {
-  const k = new Date(d.getTime() + 9 * 3600_000);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${String(k.getUTCFullYear()).slice(2)}${p(k.getUTCMonth() + 1)}${p(k.getUTCDate())}`;
+const DERIVED_CONTENT_RESET = {
+  'content.translation': '',
+  'content.sentences_en': [],
+  'content.sentences_ko': [],
+  'content.tokenized_en': '',
+  'content.tokenized_ko': '',
+  'content.mixed': '',
+};
+
+/**
+ * GET — 이 회원이 등록한 외부지문을 자료(강)별로 돌려준다(최근 자료부터).
+ * 지문마다 이미 만들어진 문제 수를 함께 준다 — 문제가 있으면 본문을 잠근다(PATCH 참고).
+ */
+export async function GET(request: NextRequest) {
+  const loginId = await loginIdOf(request);
+  if (!loginId) return NextResponse.json({ error: '로그인 후 이용해 주세요.' }, { status: 401 });
+
+  try {
+    const db = await getDb('gomijoshua');
+    const textbook = externalTextbookKey(loginId);
+    const rows = await db
+      .collection('passages')
+      .find({ textbook })
+      .project({ chapter: 1, number: 1, source_key: 1, order: 1, external_title: 1, 'content.original': 1, created_at: 1, edited_at: 1 })
+      .sort({ created_at: -1, order: 1 })
+      .limit(2000)
+      .toArray();
+    /* 문제는 교재+출처로 센다 — passage_id 는 문자열/ObjectId 가 섞여 있어 이쪽이 확실하다 */
+    const counts = await db
+      .collection('generated_questions')
+      .aggregate([{ $match: { textbook } }, { $group: { _id: '$source', n: { $sum: 1 } } }])
+      .toArray();
+    const countBy = new Map(counts.map((c) => [String(c._id), Number(c.n) || 0]));
+
+    const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : null);
+    const batches: { chapter: string; createdAt: string | null; passages: Record<string, unknown>[] }[] = [];
+    const byChapter = new Map<string, (typeof batches)[number]>();
+    for (const r of rows as Record<string, any>[]) {
+      const chapter = String(r.chapter ?? '');
+      let b = byChapter.get(chapter);
+      if (!b) {
+        b = { chapter, createdAt: iso(r.created_at), passages: [] };
+        byChapter.set(chapter, b);
+        batches.push(b);
+      }
+      const sourceKey = String(r.source_key ?? '');
+      b.passages.push({
+        id: String(r._id),
+        number: String(r.number ?? ''),
+        sourceKey,
+        order: typeof r.order === 'number' ? r.order : 0,
+        title: typeof r.external_title === 'string' ? r.external_title : '',
+        text: String(r.content?.original ?? ''),
+        questionCount: countBy.get(sourceKey) ?? 0,
+        editedAt: iso(r.edited_at),
+      });
+    }
+    for (const b of batches) b.passages.sort((a, c) => Number(a.order) - Number(c.order));
+    return NextResponse.json({ ok: true, textbook, batches: batches.slice(0, 100) });
+  } catch (e) {
+    console.error('external-passages GET:', e);
+    return NextResponse.json({ error: '등록한 지문을 불러오지 못했습니다.' }, { status: 500 });
+  }
 }
 
 /**
@@ -38,95 +91,104 @@ function kstYymmdd(d = new Date()): string {
  * 이어지는 주문서·제작 job·cc:variant pipeline 이 손대지 않고 그대로 동작한다.
  */
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  const payload = token ? await verifyToken(token).catch(() => null) : null;
-  const loginId = typeof payload?.loginId === 'string' ? payload.loginId.trim() : '';
-  if (!loginId) {
-    return NextResponse.json({ error: '로그인 후 이용해 주세요.' }, { status: 401 });
-  }
+  const loginId = await loginIdOf(request);
+  if (!loginId) return NextResponse.json({ error: '로그인 후 이용해 주세요.' }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
   const rawList: unknown[] = Array.isArray(body?.passages) ? body.passages : [];
-  const items = rawList
-    .map((p) => {
-      const o = (p && typeof p === 'object' ? p : {}) as { title?: unknown; text?: unknown };
-      return {
-        title: typeof o.title === 'string' ? o.title.trim().slice(0, 60) : '',
-        text: normalizePassageText(typeof o.text === 'string' ? o.text : ''),
-      };
-    })
-    .filter((p) => p.text !== '');
+  const passages = rawList.map((p) => {
+    const o = (p && typeof p === 'object' ? p : {}) as { title?: unknown; text?: unknown };
+    return {
+      title: typeof o.title === 'string' ? o.title : '',
+      text: typeof o.text === 'string' ? o.text : '',
+    };
+  });
 
-  const { maxPassages, minChars, maxChars } = EXTERNAL_PASSAGE_LIMITS;
-  if (items.length === 0) {
-    return NextResponse.json({ error: '지문을 하나 이상 붙여넣어 주세요.' }, { status: 400 });
+  try {
+    const db = await getDb('gomijoshua');
+    const r = await registerExternalPassages(db, {
+      loginId,
+      batchTitle: typeof body?.batchTitle === 'string' ? body.batchTitle : '',
+      passages,
+    });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+    return NextResponse.json({
+      ok: true,
+      textbook: r.textbook,
+      chapter: r.chapter,
+      lessons: r.lessons,
+      count: r.lessons.length,
+    });
+  } catch (e) {
+    console.error('external-passages POST:', e);
+    return NextResponse.json({ error: '지문을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 });
   }
-  if (items.length > maxPassages) {
-    return NextResponse.json({ error: `한 번에 ${maxPassages}개 지문까지 올릴 수 있습니다.` }, { status: 400 });
-  }
-  for (let i = 0; i < items.length; i++) {
-    const t = items[i].text;
-    if (t.length < minChars) {
-      return NextResponse.json({ error: `지문 ${i + 1}이 너무 짧습니다 (${minChars}자 이상).` }, { status: 400 });
-    }
-    if (t.length > maxChars) {
-      return NextResponse.json({ error: `지문 ${i + 1}이 너무 깁니다 (${maxChars}자 이하).` }, { status: 400 });
-    }
-    if (englishLetterRatio(t) < EXTERNAL_MIN_ENGLISH_RATIO) {
-      return NextResponse.json({ error: `지문 ${i + 1}: 영어 지문만 받을 수 있습니다.` }, { status: 400 });
-    }
-  }
+}
+
+/**
+ * PATCH — 등록한 지문 한 개의 제목·본문을 고친다. body: `{ id, title?, text? }`
+ *
+ * 그 지문으로 **이미 문제가 만들어졌으면 본문은 고칠 수 없다**(409). 문제와 지문이 어긋나기
+ * 때문이다 — 본문을 바꾸려면 새 지문으로 등록한다. 제목은 문제와 무관해 언제든 고칠 수 있다.
+ * 본문을 고치면 문장 분리·번역 등 파생 필드는 비운다(옛 본문 기준이라 틀린 값이 된다).
+ */
+export async function PATCH(request: NextRequest) {
+  const loginId = await loginIdOf(request);
+  if (!loginId) return NextResponse.json({ error: '로그인 후 이용해 주세요.' }, { status: 401 });
+
+  const body = await request.json().catch(() => ({}));
+  const id = typeof body?.id === 'string' ? body.id : '';
+  if (!ObjectId.isValid(id)) return NextResponse.json({ error: '잘못된 지문입니다.' }, { status: 400 });
 
   try {
     const db = await getDb('gomijoshua');
     const col = db.collection('passages');
     const textbook = externalTextbookKey(loginId);
-
-    /* 같은 이름의 자료가 이미 있으면 (2)·(3) 을 붙인다 — 번호가 겹치면 지문이 섞인다 */
-    const titleIn = typeof body?.batchTitle === 'string' ? body.batchTitle.trim().slice(0, 40) : '';
-    const baseChapter = titleIn || `${kstYymmdd()} 외부지문`;
-    let chapter = baseChapter;
-    for (let n = 2; await col.findOne({ textbook, chapter }, { projection: { _id: 1 } }); n++) {
-      chapter = `${baseChapter} (${n})`;
-    }
+    /* 교재 키로 소유를 확인한다 — 다른 회원의 지문 id 를 넣어도 찾지 못한다 */
+    const p = await col.findOne({ _id: new ObjectId(id), textbook });
+    if (!p) return NextResponse.json({ error: '지문을 찾을 수 없습니다.' }, { status: 404 });
 
     const now = new Date();
-    const docs = items.map((p, i) => {
-      const number = `${String(i + 1).padStart(2, '0')}번`;
-      return {
-        textbook,
-        chapter,
-        number,
-        source_key: `${chapter} ${number}`,
-        order: i + 1,
-        content: {
-          original: p.text,
-          translation: '',
-          sentences_en: [],
-          sentences_ko: [],
-          tokenized_en: '',
-          tokenized_ko: '',
-          mixed: '',
-        },
-        created_at: now,
-        updated_at: now,
-        created_from: 'member_external',
-        owner_login_id: loginId,
-        ...(p.title ? { external_title: p.title } : {}),
-      };
-    });
-    await col.insertMany(docs);
-    invalidatePassageSourceCache();
+    const $set: Record<string, unknown> = {};
+    const $unset: Record<string, ''> = {};
 
-    return NextResponse.json({
-      ok: true,
-      textbook,
-      chapter,
-      lessons: docs.map((d) => d.source_key),
-      count: docs.length,
-    });
+    if (typeof body?.title === 'string') {
+      const t = body.title.trim().slice(0, 60);
+      if (t) $set.external_title = t;
+      else $unset.external_title = '';
+    }
+
+    if (typeof body?.text === 'string') {
+      const text = normalizePassageText(body.text);
+      const current = String((p.content as { original?: unknown } | undefined)?.original ?? '');
+      if (text !== current) {
+        const used = await db.collection('generated_questions').countDocuments({ textbook, source: p.source_key });
+        if (used > 0) {
+          return NextResponse.json(
+            { error: `이 지문으로 이미 문제가 ${used}개 만들어져 본문을 고칠 수 없습니다. 새 지문으로 등록해 주세요.` },
+            { status: 409 },
+          );
+        }
+        const problem = externalPassageProblem(text, String(p.number ?? '지문'));
+        if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+        $set['content.original'] = text;
+        Object.assign($set, DERIVED_CONTENT_RESET);
+        $set.edited_at = now;
+      }
+    }
+
+    if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
+      return NextResponse.json({ ok: true, unchanged: true });
+    }
+    $set.updated_at = now;
+    await col.updateOne(
+      { _id: p._id },
+      { $set, ...(Object.keys($unset).length > 0 ? { $unset } : {}) },
+    );
+    invalidatePassageSourceCache();
+    return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('external-passages POST:', e);
-    return NextResponse.json({ error: '지문을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 });
+    console.error('external-passages PATCH:', e);
+    return NextResponse.json({ error: '지문을 저장하지 못했습니다.' }, { status: 500 });
   }
 }
