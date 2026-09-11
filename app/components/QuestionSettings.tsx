@@ -7,6 +7,7 @@ import SampleDrawer from './SampleDrawer';
 import SolbookLessonLinksModal from './SolbookLessonLinksModal';
 import type { OrderGenerateExtras, OrderGenerateHandler } from './MockExamSettings';
 import { DEFAULT_VARIANT_SOLBOOK_EXTRA_FEE_WON } from '@/lib/variant-solbook-settings';
+import { EXTERNAL_PRICE_MULTIPLIER, externalVariantUnitPrice, externalizeListPrice } from '@/lib/external-variant';
 import {
   loadBookVariantPresets,
   saveBookVariantPreset,
@@ -73,8 +74,8 @@ interface QuestionSettingsProps {
   onOrderGenerate: OrderGenerateHandler;
   onBack: () => void;
   onBackToTextbook: () => void;
-  /** /gyogwaseo 에서만 전달 — 쏠북 우선·통합 주문 안내 */
-  orderFlow?: 'gyogwaseo';
+  /** /gyogwaseo — 쏠북 우선·통합 주문 안내 / /external — 외부지문 변형문제 주문(무료 없음·인상 단가·XV) */
+  orderFlow?: 'gyogwaseo' | 'external';
 }
 
 const QuestionSettings = ({
@@ -85,6 +86,25 @@ const QuestionSettings = ({
   onBackToTextbook,
   orderFlow,
 }: QuestionSettingsProps) => {
+  /* 외부지문 변형문제 주문(/external) — 회원이 방금 붙여넣어 등록한 지문. 재고로 다시 쓸 수 없어
+     무료 유형·멤버십 무료 문항 없이 인상 단가(정가 ×1.3, 10원 단위)로 받는다(2026-09-11).
+     제작 쪽에는 부교재 변형(bookVariant)과 같은 모양으로 넘기고 주문번호 접두사만 XV 로 나눈다. */
+  const isExternal = orderFlow === 'external';
+  /** 이 주문에서 0원인 유형인지 — 외부지문엔 무료 유형이 없다 */
+  const isFreeType = (t: string) => !isExternal && isFreeVariantType(t);
+  /** 이 주문의 문항 단가 */
+  const unitPriceOf = (t: string, opts?: { withExplanation?: boolean }) =>
+    isExternal ? externalVariantUnitPrice(t, opts) : variantUnitPrice(t, opts);
+  /** 화면·주문서에 쓰는 단가표 — 외부지문이면 인상가 */
+  const PRICE = isExternal
+    ? {
+        base: externalizeListPrice(VARIANT_PRICE.base),
+        advanced: externalizeListPrice(VARIANT_PRICE.advanced),
+        orderInsertWithExplanation: externalizeListPrice(VARIANT_PRICE.orderInsertWithExplanation),
+        orderInsertNoExplanation: externalizeListPrice(VARIANT_PRICE.orderInsertNoExplanation),
+      }
+    : VARIANT_PRICE;
+  /* ── 외부지문 모드 끝 ── */
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [questionsPerType, setQuestionsPerType] = useState<number>(3);
   const [email, setEmail] = useState<string>('');
@@ -156,7 +176,7 @@ const QuestionSettings = ({
   useEffect(() => {
     if (!freeTypesBlocked) return;
     setSelectedTypes((prev) =>
-      prev.some((t) => isFreeVariantType(t)) ? prev.filter((t) => !isFreeVariantType(t)) : prev,
+      prev.some((t) => isFreeType(t)) ? prev.filter((t) => !isFreeType(t)) : prev,
     );
   }, [freeTypesBlocked]);
   const [solbookPurchaseUrl, setSolbookPurchaseUrl] = useState('');
@@ -346,8 +366,8 @@ const QuestionSettings = ({
   }, []);
 
   const standardTypes = ['주제', '제목', '주장', '일치', '불일치', '함의', '빈칸', '요약', '어법', '어휘', '순서', '삽입', '무관한문장'];
-  const freeStandardTypes = standardTypes.filter(isFreeVariantType);
-  const paidStandardTypes = standardTypes.filter((t) => !isFreeVariantType(t));
+  const freeStandardTypes = standardTypes.filter(isFreeType);
+  const paidStandardTypes = standardTypes.filter((t) => !isFreeType(t));
   const advancedTypes = ['삽입-고난도', '어법-고난도', '빈칸-고난도', '어휘-고난도', '순서-고난도', '요약-고난도', '무관한문장-고난도', '함의-고난도', '주제-고난도', '제목-고난도', '주장-고난도', '일치-고난도', '불일치-고난도'];
   const advancedTypeDesc: Record<string, string> = {
     '삽입-고난도': '새 문장을 생성하여 삽입 위치를 찾는 고난도 문항',
@@ -516,7 +536,8 @@ const QuestionSettings = ({
   }, [savePresetOpen]);
 
   useEffect(() => {
-    if (selectedLessons.length === 0 || selectedTypes.length === 0) {
+    /* 외부지문은 전부 새로 만드는 주문이라 재고 조회가 의미 없다 */
+    if (isExternal || selectedLessons.length === 0 || selectedTypes.length === 0) {
       avSeq.current += 1;
       setAvData(null);
       setAvErr(null);
@@ -562,7 +583,7 @@ const QuestionSettings = ({
       window.clearTimeout(t);
       avSeq.current += 1;
     };
-  }, [selectedTextbook, selectedLessons, selectedTypes, questionsPerType]);
+  }, [isExternal, selectedTextbook, selectedLessons, selectedTypes, questionsPerType]);
 
   /** 기본값에서 바뀐 세부 옵션만 모은다 — 접힌 상태의 요약 줄과 뱃지에 쓴다. */
   const detailOptionChanges: string[] = [];
@@ -616,13 +637,13 @@ const QuestionSettings = ({
        한도를 넘는 만큼만 과금하므로, 먼저 이번 주문의 기본난도 문항 수를 세어
        무료분·유료분을 가른다. */
     const paidBaseTypes = selectedTypes.filter(
-      (t) => !isFreeVariantType(t) && !isAdvancedVariantType(t),
+      (t) => !isFreeType(t) && !isAdvancedVariantType(t),
     );
     const baseQuestionCount = paidBaseTypes.length * mult * questionsPerType;
     /* 쏠북 연계 교재는 제외한다 — 변형 제작비를 쏠북에서 결제하므로 우리 한도로 깎을 몫이
        없다. 적용하면 한도만 소진되고 회원에게 돌아가는 것은 없다(2026-09-10 방침). */
     const isSolbookTextbook = solbookKeys.includes(selectedTextbook);
-    const quotaSplit = isSolbookTextbook
+    const quotaSplit = isSolbookTextbook || isExternal
       ? { freeCount: 0, paidCount: baseQuestionCount }
       : splitByBaseQuota(baseQuestionCount, baseQuotaRemaining);
     /* 무료로 처리할 문항 수를 채워 가며 유형별로 소진한다. */
@@ -637,14 +658,14 @@ const QuestionSettings = ({
           : type === '삽입'
             ? orderInsertExplanation.삽입
             : true;
-      if (isFreeVariantType(type)) continue;
+      if (isFreeType(type)) continue;
       let charged = n;
       if (!isAdvancedVariantType(type) && quotaLeft > 0) {
         const covered = Math.min(n, quotaLeft);
         quotaLeft -= covered;
         charged = n - covered;
       }
-      basePrice += charged * variantUnitPrice(type, { withExplanation });
+      basePrice += charged * unitPriceOf(type, { withExplanation });
     }
     const totalQuestions = selectedTypes.length * questionsPerType * mult;
     const discountRate = variantVolumeDiscountRate(totalQuestions);
@@ -680,24 +701,24 @@ const QuestionSettings = ({
    * 마지막 유료 유형을 끄면 딸려 있던 무료 유형도 같이 빠진다 — 안 그러면
    * 「무료만 담긴 주문」이 만들어져 결제 금액이 0원이 된다.
    */
-  const hasPaidType = (types: string[]) => types.some((t) => !isFreeVariantType(t));
+  const hasPaidType = (types: string[]) => types.some((t) => !isFreeType(t));
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes((prev) => {
-      if (freeTypesBlocked && isFreeVariantType(type) && !prev.includes(type)) return prev;
+      if (freeTypesBlocked && isFreeType(type) && !prev.includes(type)) return prev;
       const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
-      if (isFreeVariantType(type) && !prev.includes(type) && !hasPaidType(prev)) {
+      if (isFreeType(type) && !prev.includes(type) && !hasPaidType(prev)) {
         return prev; // 유료 유형이 아직 없으면 무료 유형은 켜지지 않는다
       }
-      return hasPaidType(next) ? next : next.filter((t) => !isFreeVariantType(t));
+      return hasPaidType(next) ? next : next.filter((t) => !isFreeType(t));
     });
   };
 
   /** 기본난도 카드 1장 — 무료·유료 두 섹션에서 같은 모양을 쓴다 */
   const renderStandardTypeCard = (type: string) => {
-    const blockedFree = freeTypesBlocked && isFreeVariantType(type);
+    const blockedFree = freeTypesBlocked && isFreeType(type);
     const locked =
-      blockedFree || (isFreeVariantType(type) && !hasPaidType(selectedTypes) && !selectedTypes.includes(type));
+      blockedFree || (isFreeType(type) && !hasPaidType(selectedTypes) && !selectedTypes.includes(type));
     return (
                 <div
                   key={type}
@@ -731,7 +752,7 @@ const QuestionSettings = ({
                         className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0 disabled:cursor-not-allowed"
                       />
                       <span className={`font-medium break-keep ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
-                      {isFreeVariantType(type) && !locked && (
+                      {isFreeType(type) && !locked && (
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">무료</span>
                       )}
                     </label>
@@ -788,7 +809,7 @@ const QuestionSettings = ({
                     </button>
                   </div>
                   {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
-                    <p className="text-[10px] text-gray-500 mt-1.5 pl-8">미포함 {VARIANT_PRICE.orderInsertNoExplanation}원 · 해설 {VARIANT_PRICE.orderInsertWithExplanation}원/문항</p>
+                    <p className="text-[10px] text-gray-500 mt-1.5 pl-8">미포함 {PRICE.orderInsertNoExplanation}원 · 해설 {PRICE.orderInsertWithExplanation}원/문항</p>
                   )}
                 </div>
     );
@@ -797,7 +818,7 @@ const QuestionSettings = ({
 
   /** 「전체 선택」이 켤 수 있는 유형 — 쏠북 교재면 무료 유형은 빠진다 */
   const selectableTypes = freeTypesBlocked
-    ? questionTypes.filter((t) => !isFreeVariantType(t))
+    ? questionTypes.filter((t) => !isFreeType(t))
     : questionTypes;
 
   const handleAllTypesToggle = () => {
@@ -865,18 +886,18 @@ const QuestionSettings = ({
     if (selectedTypes.includes('순서')) {
       orderInsertLines.push(
         /* 순서 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
-        `순서: ${orderInsertExplanation.순서 ? '해설 포함' : '해설 미포함·문제·답만'} (무료 유형)`
+        `순서: ${orderInsertExplanation.순서 ? '해설 포함' : '해설 미포함·문제·답만'} ${isExternal ? `(${unitPriceOf('순서', { withExplanation: orderInsertExplanation.순서 })}원/문항)` : '(무료 유형)'}`
       );
     }
     if (selectedTypes.includes('삽입')) {
       orderInsertLines.push(
         /* 삽입 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
-        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함' : '해설 미포함·문제·답만'} (무료 유형)`
+        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함' : '해설 미포함·문제·답만'} ${isExternal ? `(${unitPriceOf('삽입', { withExplanation: orderInsertExplanation.삽입 })}원/문항)` : '(무료 유형)'}`
       );
     }
     for (const advType of advancedTypes) {
       if (selectedTypes.includes(advType)) {
-        orderInsertLines.push(`${advType}: ${VARIANT_PRICE.advanced}원/문항`);
+        orderInsertLines.push(`${advType}: ${PRICE.advanced}원/문항`);
       }
     }
     const orderInsertNote = orderInsertLines.length ? `\n2-1. ${orderInsertLines.join(' / ')}` : '';
@@ -931,7 +952,7 @@ ${solbookRetailLine}
     /* 관리자·회원 모두 주문서만 보고 왜 금액이 깎였는지 알 수 있게 남긴다.
        무료분은 할인율이 붙기 전 정가에서 빠지므로 「정가 N원분 제외」로 적는다. */
     const quotaLine = quotaFree > 0
-      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 정가 ${(quotaFree * VARIANT_PRICE.base).toLocaleString()}원분 제외 · 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
+      ? `\n   (멤버십 기본난도 무료 ${quotaFree.toLocaleString()}문항 적용 — 정가 ${(quotaFree * PRICE.base).toLocaleString()}원분 제외 · 월 ${baseQuotaLimit.toLocaleString()}문항 한도)`
       : '';
     const priceBreakdownLine = isSolbookOrder
       ? `\n   (이곳 입금: 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
@@ -939,7 +960,7 @@ ${solbookRetailLine}
         ? `\n   (이곳 입금: 0원 — 연·월 회원 쏠북 커스텀 면제 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
         : '';
 
-    const orderText = `교재: ${selectedTextbook}
+    const orderText = `교재: ${isExternal ? '외부지문 변형문제 주문 (선생님이 등록한 지문)' : selectedTextbook}
 
 자료 받으실 이메일 주소: ${email.trim()}
 
@@ -982,6 +1003,14 @@ ${solbookRetailLine}
       optionType,
       // 회차 수는 「회차별」을 켰을 때만 의미가 있다 — 아니면 job 에 안 실린다
       ...(hwpStorageModes.includes('byRound') ? { roundCount } : {}),
+      ...(isExternal
+        ? {
+            /* 외부지문 변형문제 주문 — 제작은 부교재 변형과 같지만 무료·멤버십 한도 없이 인상 단가 */
+            external: true,
+            memberQuotaExempt: true,
+            externalPricing: { multiplier: EXTERNAL_PRICE_MULTIPLIER },
+          }
+        : {}),
       ...(isSolbookTextbook
         ? {
             /* 쏠북 주문은 멤버십 무료 한도를 쓰지 않는다 — 집계(paidBaseCountOfOrder)에서 뺀다.
@@ -1000,7 +1029,7 @@ ${solbookRetailLine}
         : {}),
     };
     await Promise.resolve(
-      onOrderGenerate(orderText, 'BV', { orderMeta, pointsUsed: pointsUsedAmount || undefined })
+      onOrderGenerate(orderText, isExternal ? 'XV' : 'BV', { orderMeta, pointsUsed: pointsUsedAmount || undefined })
     );
     } finally {
       orderSubmittingRef.current = false;
@@ -1038,7 +1067,7 @@ ${solbookRetailLine}
   const isPremiumMembership =
     isAnnualMemberActive || isMonthlyMemberActive || signupPremiumTrialActive;
   /** 멤버십 무료 한도가 이 주문에 적용되는지 — 쏠북 교재는 제외한다(가격 계산과 같은 기준). */
-  const membershipQuotaApplies = isPremiumMembership && !isSolbookTextbook;
+  const membershipQuotaApplies = isPremiumMembership && !isSolbookTextbook && !isExternal;
 
   const maxPointUsable = isSolbookTextbook ? 0 : Math.min(userPoints, totalPrice);
   const pointsAppliedPreview =
@@ -1145,7 +1174,7 @@ ${solbookRetailLine}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold text-black mb-2">선택 요약</h3>
                 <div className="text-sm text-black space-y-1">
-                  <p><strong>교재:</strong> {selectedTextbook}</p>
+                  <p><strong>교재:</strong> {isExternal ? '외부지문 변형문제 주문' : selectedTextbook}</p>
                   <p><strong>선택된 지문수:</strong> {selectedLessons.length}개</p>
                 </div>
               </div>
@@ -1156,16 +1185,23 @@ ${solbookRetailLine}
                   <span className="text-blue-600 font-semibold">💰 할인 안내</span>
                 </div>
                 <div className="text-sm text-blue-700">
-                  • 기본난도: 문항당 {VARIANT_PRICE.base}원<br/>
-                  • <span className="font-medium text-sky-700">누구나 무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — 회원 여부·한도와 무관<br/>
-                  • 삽입-고난도·어법-고난도: 문항당 {VARIANT_PRICE.advanced}원<br/>
+                  • 기본난도: 문항당 {PRICE.base}원<br/>
+                  {!isExternal && (<>• <span className="font-medium text-sky-700">누구나 무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — 회원 여부·한도와 무관<br/></>)}
+                  • 삽입-고난도·어법-고난도: 문항당 {PRICE.advanced}원<br/>
+                  {isExternal && (<>• 순서·삽입: 해설 포함 {PRICE.orderInsertWithExplanation}원 · 문제·답만 {PRICE.orderInsertNoExplanation}원<br/></>)}
                   • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                   • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                 </div>
                 {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다.
                     쏠북 교재는 주문을 막는 게 아니라 결제처가 둘로 나뉜다는 점을 먼저 알린다 —
                     「적용되지 않습니다」만 보이면 주문이 안 되는 줄 안다(2026-09-10). */}
-                {isSolbookTextbook ? (
+                {isExternal ? (
+                  <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    📄 <b>외부지문 변형문제 주문</b> — 선생님이 등록한 지문으로 새로 만드는 주문이라
+                    {' '}<b>무료 유형·멤버십 무료 문항이 없고 단가가 부교재 변형의 1.3배</b>입니다
+                    (기본 {PRICE.base}원 · 고난도 {PRICE.advanced}원). 포인트 결제·대량 할인은 그대로 됩니다.
+                  </div>
+                ) : isSolbookTextbook ? (
                   <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                     📗 <b>쏠북 연계 교재</b> — 주문서는 이곳에서 그대로 넣으시면 됩니다.
                     {' '}이곳에는 <b>커스텀 비용 {solbookExtraFeeWon.toLocaleString()}원</b>만 입금하시고
@@ -1179,7 +1215,7 @@ ${solbookRetailLine}
                     👑 <b>멤버십 혜택</b> — 기본난도 <b>월 {baseQuotaLimit.toLocaleString()}문항 무료</b>
                     {' · '}이번 달 남은 무료 <b>{baseQuotaRemaining.toLocaleString()}문항</b>
                     <span className="block text-[12px] text-green-700/80 mt-0.5">
-                      고난도({VARIANT_PRICE.advanced}원)는 한도와 무관하게 정상 과금됩니다.
+                      고난도({PRICE.advanced}원)는 한도와 무관하게 정상 과금됩니다.
                     </span>
                   </div>
                 ) : (
@@ -1320,13 +1356,17 @@ ${solbookRetailLine}
                     <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
                       👑 회원 무료 · 이번 달 {baseQuotaRemaining.toLocaleString()}문항 남음
                     </span>
+                  ) : isExternal ? (
+                    <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+                      문항당 {PRICE.base}원 · 외부지문 단가
+                    </span>
                   ) : isSolbookTextbook ? (
                     <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                      문항당 {VARIANT_PRICE.base}원 · 쏠북에서 결제
+                      문항당 {PRICE.base}원 · 쏠북에서 결제
                     </span>
                   ) : (
                     <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                      문항당 {VARIANT_PRICE.base}원 · 회원은 월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료
+                      문항당 {PRICE.base}원 · 회원은 월 {MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료
                     </span>
                   )}
                 </div>
@@ -1350,7 +1390,8 @@ ${solbookRetailLine}
                   </a>
                 </div>
 
-                {/* 무료 유형 — 유료를 하나 이상 골라야 열린다 */}
+                {/* 무료 유형 — 유료를 하나 이상 골라야 열린다. 외부지문엔 무료 유형이 없어 감춘다 */}
+                {freeStandardTypes.length > 0 && (
                 <div className="mt-5 pt-4 border-t border-gray-200">
                   <div className="mb-3 flex items-center justify-center gap-2">
                     <span className="tier-badge-in text-xs font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded">누구나 무료</span>
@@ -1366,6 +1407,7 @@ ${solbookRetailLine}
                     {freeStandardTypes.map(renderStandardTypeCard)}
                   </div>
                 </div>
+                )}
 
                 {/* 고난도 유형 */}
                 <div className="mt-5 pt-4 border-t border-gray-200">
@@ -1406,7 +1448,7 @@ ${solbookRetailLine}
                           </button>
                         </div>
                         <p className="text-[10px] text-gray-500 mt-1.5 pl-8">
-                          {VARIANT_PRICE.advanced}원/문항 ·{' '}
+                          {PRICE.advanced}원/문항 ·{' '}
                           {advancedTypeDesc[type] ?? '높은 변별력의 고난도 문항'}
                         </p>
                       </div>
@@ -1851,7 +1893,7 @@ ${solbookRetailLine}
                         <div className="flex justify-between items-center">
                           <span className="text-black">멤버십 기본난도 무료:</span>
                           <span className="font-medium text-green-600">
-                            {quotaFreeCount.toLocaleString()}문항 (−{(quotaFreeCount * VARIANT_PRICE.base).toLocaleString()}원)
+                            {quotaFreeCount.toLocaleString()}문항 (−{(quotaFreeCount * PRICE.base).toLocaleString()}원)
                           </span>
                         </div>
                       )}

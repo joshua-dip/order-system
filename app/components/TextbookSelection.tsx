@@ -237,6 +237,16 @@ function useHubSections(
       href: '/gyogwaseo',
       interactive: true,
     };
+    const external: HubEntry = {
+      id: 'external',
+      title: '외부지문 변형문제 주문',
+      description: (<>자체 지문·타 출판사 지문을<br />붙여넣어 변형문제 주문</>),
+      icon: <IconTextbook /> as ReactNode,
+      accentColor: '#475569',
+      gridClassName: 'lg:col-span-2',
+      href: '/external',
+      interactive: true,
+    };
     const finalMock: HubEntry = {
       id: 'final-mock',
       title: '파이널 예비 모의고사',
@@ -380,7 +390,7 @@ function useHubSections(
         ),
       },
     ];
-    return { vocabulary, classkit, finalMock, primary: [mock, textbook, gyogwaseo], workbook, more };
+    return { vocabulary, classkit, finalMock, primary: [mock, textbook, gyogwaseo, external], workbook, more };
   }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
 
@@ -417,8 +427,9 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
     openFinalGate,
   );
 
-  const renderHubGrid = (items: HubEntry[]) => (
-    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-6" role="list">
+  /* 주요 주문 줄은 4장(모의고사·부교재·교과서·외부지문)이라 8칸 격자로 한 줄에 놓는다 */
+  const renderHubGrid = (items: HubEntry[], lgCols: 'lg:grid-cols-6' | 'lg:grid-cols-8' = 'lg:grid-cols-6') => (
+    <div className={`grid grid-cols-1 gap-5 md:grid-cols-2 ${lgCols}`} role="list">
       {items.map(
         ({
           id,
@@ -798,7 +809,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
                 </a>
               </p>
             </div>
-            {renderHubGrid(hubPrimary)}
+            {renderHubGrid(hubPrimary, 'lg:grid-cols-8')}
           </section>
 
           <section className="mt-12 border-t border-slate-200/90 pt-10" aria-labelledby="hub-workbook-heading">

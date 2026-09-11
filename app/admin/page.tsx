@@ -3703,7 +3703,7 @@ export default function AdminDashboardPage() {
                         <td className="py-2.5 px-2 align-top" title={o.orderMetaFlow ? `flow: ${o.orderMetaFlow}` : undefined}>
                           <div className="flex flex-col gap-0.5 min-w-0">
                             <span className="text-[11px] text-slate-200 font-medium leading-snug">
-                              {orderFlowLabel(o.orderMetaFlow)}
+                              {o.orderNumber?.startsWith('XV-') ? '외부지문 변형' : orderFlowLabel(o.orderMetaFlow)}
                             </span>
                             {o.orderMetaFlow && !ORDER_FLOW_LABELS[o.orderMetaFlow] ? (
                               <span className="text-[9px] text-amber-200/85 font-mono truncate" title="라벨 미등록 플로우">

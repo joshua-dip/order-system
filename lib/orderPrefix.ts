@@ -1,6 +1,6 @@
 /**
  * 주문번호 접두어 2글자 정의
- * 1글자: 재료 유형 (M=모의고사, B=부교재, E=EBS)
+ * 1글자: 재료 유형 (M=모의고사, B=부교재, E=EBS, X=외부지문)
  * 2글자: 제품 유형 (V=변형문제, D=서술형, W=워크북, A=분석지, S=서술형 워크북)
  */
 export const ORDER_PREFIX = {
@@ -35,4 +35,10 @@ export const ORDER_PREFIX = {
   BOOK_VOCABULARY: 'BL',
   /** 통합 변형문제 (부교재+모의고사 혼합, 파이널 예비 모의고사) */
   UNIFIED_VARIANT: 'UV',
+  /**
+   * 외부지문(회원이 붙여넣은 자체·타 출판사 지문) + 변형문제 — /external.
+   * 제작은 부교재 변형과 같은 모양(flow=bookVariant)이고, 무료 유형·멤버십 한도 없이 인상 단가다.
+   * EV 는 EBS 용으로 잡혀 있어 X 를 쓴다.
+   */
+  EXTERNAL_VARIANT: 'XV',
 } as const;
