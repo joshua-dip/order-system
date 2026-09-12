@@ -162,14 +162,36 @@ export default function AdminMembershipApplicationsPage() {
 
   const doAction = async (id: string, action: string, extra?: Record<string, unknown>) => {
     setActionId(id);
-    await fetch(`/api/admin/membership-applications/${id}`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...extra }),
-    });
-    setActionId(null);
-    load();
+    /* 연락완료는 서버에서 계정 생성까지 한다 — 쿠폰 토글도 함께 넘기고, 생성 결과를
+       계정 생성 버튼과 같은 모달로 보여 준다(초기 비밀번호를 안내해야 하므로). */
+    const withCoupon =
+      action === 'markContacted' && grantWelcomeCoupon ? { grantCouponPct: WELCOME_COUPON_PCT } : {};
+    try {
+      const r = await fetch(`/api/admin/membership-applications/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...withCoupon, ...extra }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (action === 'markContacted' && j?.account) {
+        const acc = j.account;
+        setAccountResult(
+          acc.ok
+            ? {
+                ok: true,
+                loginId: acc.loginId,
+                name: acc.name,
+                initialPassword: acc.initialPassword,
+                couponGrantedPct: acc.couponGrantedPct ?? null,
+              }
+            : { ok: false, error: `연락완료로 기록했지만 계정은 만들지 못했습니다 — ${acc.message}` },
+        );
+      }
+    } finally {
+      setActionId(null);
+      load();
+    }
   };
 
   const doDelete = async (id: string) => {
@@ -550,8 +572,9 @@ export default function AdminMembershipApplicationsPage() {
                       disabled={actionId === app.id}
                       onClick={() => doAction(app.id, 'markContacted')}
                       className="px-3 py-1.5 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-500 disabled:opacity-60 transition"
+                      title="연락을 기록하고 전화번호로 계정까지 자동 생성합니다."
                     >
-                      연락완료
+                      연락완료 + 계정 생성
                     </button>
                   )}
                   {app.status !== 'completed' && (

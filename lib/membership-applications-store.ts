@@ -213,19 +213,26 @@ export async function getApplicationStats(): Promise<MembershipApplicationStats>
 }
 
 export async function listApplications(opts: {
-  status?: MembershipApplicationStatus;
+  /** 한 상태, 또는 여러 상태(예: 미처리 = pending + contacted) */
+  status?: MembershipApplicationStatus | MembershipApplicationStatus[];
   search?: string;
   limit?: number;
 }): Promise<{
   applications: MembershipApplicationRow[];
   pendingCount: number;
+  /** 아직 사람 손이 필요한 건수 = 대기 + 연락완료. 대시보드 배지는 이 값을 써야 한다. */
+  unhandledCount: number;
   stats: MembershipApplicationStats;
 }> {
   const db = await getDb('gomijoshua');
   const col = db.collection<MembershipApplicationDoc>(MEMBERSHIP_APPLICATIONS_COLLECTION);
 
   const filter: Record<string, unknown> = {};
-  if (opts.status) filter.status = opts.status;
+  if (Array.isArray(opts.status)) {
+    if (opts.status.length > 0) filter.status = { $in: opts.status };
+  } else if (opts.status) {
+    filter.status = opts.status;
+  }
   if (opts.search) {
     const re = { $regex: opts.search, $options: 'i' };
     filter.$or = [{ name: re }, { phone: re }];
@@ -240,6 +247,7 @@ export async function listApplications(opts: {
   return {
     applications: docs.map((d) => toRow(d as MembershipApplicationDoc & { _id: ObjectId })),
     pendingCount: stats.pending,
+    unhandledCount: stats.pending + stats.contacted,
     stats,
   };
 }

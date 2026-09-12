@@ -740,14 +740,20 @@ export default function AdminDashboardPage() {
   }, [applyExamUploads]);
 
   const applyPendingApplications = useCallback((d: Record<string, unknown> | null) => {
-    const stats = d?.stats as { pending?: number } | undefined;
-    setPendingApplicationCount((d?.pendingCount as number) ?? stats?.pending ?? 0);
+    const stats = d?.stats as { pending?: number; contacted?: number } | undefined;
+    const unhandled =
+      (d?.unhandledCount as number) ?? (stats?.pending ?? 0) + (stats?.contacted ?? 0);
+    setPendingApplicationCount(unhandled);
     setPendingApplications(Array.isArray(d?.applications) ? (d.applications as PendingApplication[]) : []);
   }, []);
 
   const fetchPendingApplicationCount = useCallback(() => {
-    // 최상단 인라인 승인 패널에서 바로 처리할 수 있게 대기 목록까지 받는다.
-    fetch('/api/admin/membership-applications?status=pending&limit=20', { credentials: 'include' })
+    /* 최상단 인라인 승인 패널에서 바로 처리할 수 있게 목록까지 받는다.
+       **연락완료(contacted)까지 함께 받는다** — 예전엔 pending 만 받아서, 연락완료를 누르면
+       신청서가 이 패널에서 사라지고 계정 생성 버튼도 같이 사라졌다. */
+    fetch('/api/admin/membership-applications?status=pending,contacted&limit=20', {
+      credentials: 'include',
+    })
       .then((r) => r.json())
       .then(applyPendingApplications)
       .catch(() => {});
@@ -3204,6 +3210,14 @@ export default function AdminDashboardPage() {
                       {SIGNUP_TYPE_LABELS[app.applicantType] ?? app.applicantType}
                     </span>
                     <span className="font-semibold text-white">{app.name}</span>
+                    {app.status === 'contacted' && (
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border bg-sky-500/15 text-sky-300 border-sky-500/40"
+                        title="연락은 끝났고 계정 생성만 남은 신청서입니다."
+                      >
+                        연락완료
+                      </span>
+                    )}
                     <a
                       href={`tel:${(app.phone || '').replace(/-/g, '')}`}
                       className="text-sm font-mono text-slate-300 hover:text-white"
