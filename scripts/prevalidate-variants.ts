@@ -10,10 +10,11 @@
  * 저장 전에 이걸로 0 에러를 확인한다.
  *
  * 유형별로 보는 것:
- *   삽입-고난도  마커 ①~⑤ 정확히 5개·순서 · 주어진 문장이 원문에 있고 본문엔 없을 것 ·
- *                마커를 걷어내면 나머지 원문 문장이 모두 남아 있을 것
+ *   삽입-고난도  마커 ①~⑤ 정확히 5개·순서 · 본문에 원문이 다 남아 있을 것 ·
+ *                주어진 문장은 **새로 쓴 브릿지여도 된다**(고난도의 정상 형태)
  *   빈칸-고난도  빈칸 표식 · 보기 5개·①~⑤ 접두사·중복 없음 · 정답 문구가 본문에 노출되지 않을 것
- *   순서-고난도  고정 5세트 · 블록 (A)(B)(C) · **정답 순열대로 이으면 원문이 복원될 것**
+ *   순서-고난도  고정 5세트 · 블록 (A)(B)(C) · **각 블록의 원문 위치 순서가 정답과 맞을 것**
+ *                (바이트 단위 복원이 아니다 — 고난도는 연결어를 지워 단서를 약화하므로)
  *   함의-고난도  Question 의 밑줄 표현이 본문에 <u>…</u> 로 있을 것 · 보기 5개
  *   어법-고난도  마커·<u> 각 5개 · 복수 정답 · 해설이 각 정답 번호를 설명할 것
  */
@@ -25,10 +26,27 @@ import { loadCliEnv } from './_cli-env';
 loadCliEnv(path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 
 import { getDb } from '@/lib/mongodb';
+import { findPositionInOriginal, parseOrderParagraph } from '@/lib/order-variant-validation';
 import { ObjectId } from 'mongodb';
 
 const CIRCLED = ['①', '②', '③', '④', '⑤'] as const;
 const norm = (s: string) => String(s).replace(/\s+/g, ' ').trim();
+
+/**
+ * 「번호만 나열」하는 Options(어법·무관한문장)인지.
+ *
+ * 구분자 주변 공백이 DB 에 두 가지로 섞여 있다 — 저장 상수는 무관한문장이
+ * `'① ### ② ### ③ ### ④ ### ⑤'`(공백 O, `lib/variant-save-generated-question.ts`),
+ * 어법이 `'①###②###③###④###⑤'`(공백 X, `lib/variant-draft-grammar-rules.ts`) 다.
+ * 예전엔 여기서 공백 없는 한 형태만 문자열로 비교해, 규격대로 저장된 무관한문장이
+ * 전부 「Options 형식 이상」으로 잡혔다. **공백을 지우고 본다.**
+ */
+function isNumberOnlyOptions(raw: unknown): boolean {
+  return String(raw ?? '')
+    .split('###')
+    .map((s) => s.trim())
+    .join('###') === '①###②###③###④###⑤';
+}
 
 interface Draft {
   passage_id: string;
@@ -68,7 +86,11 @@ async function main() {
     if (!String(q.Question ?? '').trim()) errs.push(`${tag} Question 없음`);
     if (!String(q.Explanation ?? '').trim()) errs.push(`${tag} Explanation 없음`);
     if (/\bnan\b|undefined|null/i.test(String(q.Explanation ?? ''))) errs.push(`${tag} Explanation 이상값`);
-    if (base !== '어법' && !CIRCLED.includes(String(q.CorrectAnswer) as typeof CIRCLED[number])) {
+    /* 복수 정답이 **규격인** 유형 — 어법 계열과 어휘-고난도.
+       저장 경로(`saveGeneratedQuestionToDb`)가 어휘-고난도에 복수 동그라미(예: ②⑤)를
+       강제하는데, 예전엔 어법만 예외로 둬서 정상 문항이 「CorrectAnswer 형식」으로 잡혔다. */
+    const isMultiAnswerType = base === '어법' || it.type === '어휘-고난도';
+    if (!isMultiAnswerType && !CIRCLED.includes(String(q.CorrectAnswer) as typeof CIRCLED[number])) {
       errs.push(`${tag} CorrectAnswer 형식: ${q.CorrectAnswer}`);
     }
 
@@ -91,7 +113,9 @@ async function main() {
       if (!P.includes('(A)') || !P.includes('(B)')) errs.push(`${tag} 요약문에 (A)/(B) 빈칸 없음`);
       for (const o of opts) {
         const bare = o.replace(/^[①②③④⑤]\s*/, '');
-        if (!/\.{3}|…|\s-\s|\/|,/.test(bare)) errs.push(`${tag} 보기가 (A)/(B) 쌍이 아님: ${bare.slice(0, 30)}`);
+        /* 두 낱말을 가르는 자리에 하이픈 말고 **en dash(–)·em dash(—)** 를 쓴 문항이 많다.
+           ASCII 하이픈만 보던 탓에 `(A) novelty – (B) responsiveness` 가 전부 불량으로 잡혔다. */
+        if (!/\.{3}|…|\s[-–—]\s|\/|,/.test(bare)) errs.push(`${tag} 보기가 (A)/(B) 쌍이 아님: ${bare.slice(0, 30)}`);
       }
     }
 
@@ -105,11 +129,22 @@ async function main() {
       for (const o of opts) if (!/^[①②③④⑤]\s+\S/.test(o)) errs.push(`${tag} 보기 번호 접두사 없음: ${o.slice(0, 30)}`);
     }
 
+    /* 어휘-고난도 — 어법-고난도와 같은 「모두 고르기」다. 정답이 2개 이상이고 해설이 각 번호를 설명해야 한다. */
+    if (it.type === '어휘-고난도') {
+      const ans = String(q.CorrectAnswer ?? '');
+      if (!ans || ![...ans].every((c) => (CIRCLED as readonly string[]).includes(c))) {
+        errs.push(`${tag} CorrectAnswer 형식: ${ans}`);
+      } else {
+        if ([...ans].length < 2) errs.push(`${tag} 복수 정답이어야 함 (현재 ${ans})`);
+        for (const c of [...ans]) if (!String(q.Explanation ?? '').includes(c)) errs.push(`${tag} 해설에 ${c} 설명 없음`);
+      }
+    }
+
     /* 무관한문장 — 번호 붙은 문장 ①~⑤ + 끼워 넣은 문장이 원문에 없어야 한다. */
     if (base === '무관한문장') {
       const marks = P.match(/[①②③④⑤]/g) ?? [];
       if (marks.join('') !== '①②③④⑤') errs.push(`${tag} 마커 ${marks.length}개 / 순서 ${marks.join('')}`);
-      if (String(q.Options ?? '') !== '①###②###③###④###⑤') errs.push(`${tag} Options 형식 이상`);
+      if (!isNumberOnlyOptions(q.Options)) errs.push(`${tag} Options 형식 이상: ${String(q.Options ?? '').slice(0, 40)}`);
     }
 
     /* 일치·불일치 — 보기 5개가 모두 영어 진술문 (한글 보기 금지) */
@@ -131,11 +166,18 @@ async function main() {
       const insParts = P.split(insSep);
       const given = (insParts[0] ?? '').trim();
       const body = insParts.slice(1).join(' ');
-      /* 주어진 문장은 보통 원문에서 빼낸 것이다. 다만 4문장짜리 지문은 하나를 빼면
-         마커 자리가 4개뿐이라 5개를 만들 수 없어, 원문을 그대로 두고 새로 쓴 브릿지
-         문장을 주어진 글로 삼는다. 그 경우 본문에 원문이 전부 남아 있어야 한다. */
+      /* 주어진 문장을 원문에서 빼낼지(추출형), 새로 쓸지(브릿지형)는 **난도에 따라 다르다.**
+         DB 실물 기준 기본 삽입은 85%가 추출형, 삽입-고난도는 71%가 브릿지형이다
+         (`lib/hard-insertion-generator.ts` 의 HARD_INSERTION_PROMPT 가 새 문장 생성을 지시한다).
+
+         - 삽입-고난도: 브릿지형이 정상. 막지 않는다.
+           (예전엔 여기서 막아, 에이전트가 고난도를 추출형으로 만들고 "사실상 base 급"이 됐다.)
+         - 기본 삽입: 추출형이 규격이다. 다만 원문이 6문장 미만이면 한 문장을 빼는 순간
+           본문이 5문장이 안 돼 마커 5개를 만들 수 없으므로 브릿지가 유일한 방법이다. */
       const isBridge = !SENT.some((s) => norm(s) === norm(given));
-      if (isBridge && SENT.length > 4) errs.push(`${tag} 주어진 문장이 원문에 없음`);
+      if (isBridge && !isAdvanced && SENT.length >= 6) {
+        errs.push(`${tag} 기본 삽입은 추출형이어야 함 (주어진 문장이 원문에 없음, 원문 ${SENT.length}문장)`);
+      }
       if (norm(body).includes(norm(given))) errs.push(`${tag} 주어진 문장이 본문에도 남아있음(유출)`);
       const restored = norm(body.replace(/[①②③④⑤]/g, ' '));
       for (const s of SENT) {
@@ -149,16 +191,33 @@ async function main() {
     if (base === '순서') {
       const expect = ['① (A)-(C)-(B)', '② (B)-(A)-(C)', '③ (B)-(C)-(A)', '④ (C)-(A)-(B)', '⑤ (C)-(B)-(A)'];
       if (opts.join('|') !== expect.join('|')) errs.push(`${tag} 고정 5세트 불일치`);
-      const blocks = P.split('###').map((s) => s.trim());
-      if (blocks.length !== 4) errs.push(`${tag} 블록 ${blocks.length}개`);
-      const label = (b: string) => (b.match(/^\((A|B|C)\)/) ?? [])[1];
-      if (blocks.slice(1).map(label).join('') !== 'ABC') errs.push(`${tag} 블록 라벨 순서 이상`);
-      const byLabel: Record<string, string> = {};
-      for (const b of blocks.slice(1)) { const l = label(b); if (l) byLabel[l] = b.replace(/^\([ABC]\)\s*/, ''); }
-      const perm = (expect[CIRCLED.indexOf(String(q.CorrectAnswer) as typeof CIRCLED[number])] ?? '')
-        .replace(/^[①②③④⑤]\s*/, '').split('-').map((s) => s.replace(/[()]/g, ''));
-      const rebuilt = norm([blocks[0], ...perm.map((l) => byLabel[l] ?? '')].join(' '));
-      if (rebuilt !== norm(SENT.join(' '))) errs.push(`${tag} 정답 순서로 원문 복원 실패`);
+
+      /* 블록 구분자는 `\n###\n` 과 빈 줄 두 가지가 DB 에 섞여 있다(순서 8,693건 중 61% : 39%).
+         둘 다 렌더러가 처리하므로 `parseOrderParagraph` 로 함께 받는다.
+         예전엔 `###` 로만 잘라서, 빈 줄로 쓴 정상 문항이 「블록 1개」로 잡혔다. */
+      const parts = parseOrderParagraph(P);
+      if (!parts) { errs.push(`${tag} 블록 (A)(B)(C) 파싱 실패`); continue; }
+
+      /* 정답 검증은 **원문 위치 순서**로 한다(cc:audit 의 orderUnified 와 같은 방식).
+         바이트 단위 복원을 요구하면 순서-고난도의 단서 약화(덩이 안 연결어 삭제)가
+         전부 불량으로 잡힌다 — 실제로 그래서 고난도가 base 급으로 만들어진 적이 있다. */
+      const original = SENT.join(' ');
+      const pos: Record<'A' | 'B' | 'C', number> = {
+        A: findPositionInOriginal(original, parts.A),
+        B: findPositionInOriginal(original, parts.B),
+        C: findPositionInOriginal(original, parts.C),
+      };
+      if ((['A', 'B', 'C'] as const).some((l) => pos[l] < 0)) {
+        errs.push(`${tag} 블록을 원문에서 못 찾음 (A:${pos.A} B:${pos.B} C:${pos.C}) — 덩이 첫 문장은 원문 그대로 두어야 한다`);
+      } else {
+        const reading = (['A', 'B', 'C'] as const).slice().sort((x, y) => pos[x] - pos[y]);
+        const want = `(${reading[0]})-(${reading[1]})-(${reading[2]})`;
+        if (want === '(A)-(B)-(C)') errs.push(`${tag} 미셔플 — 원문 순서 그대로다`);
+        const wantAnswer = expect.find((o) => o.endsWith(want))?.[0] ?? '?';
+        if (wantAnswer !== String(q.CorrectAnswer ?? '')) {
+          errs.push(`${tag} 정답 불일치: 저장=${q.CorrectAnswer} 원문대조=${wantAnswer} ${want}`);
+        }
+      }
     }
 
     if (base === '함의') {
@@ -177,7 +236,7 @@ async function main() {
       // 복수 정답은 고난도만. 기본 어법은 1개.
       if (isAdvanced && [...ans].length < 2) errs.push(`${tag} 복수 정답이어야 함 (현재 ${ans})`);
       if (!isAdvanced && [...ans].length !== 1) errs.push(`${tag} 기본 어법은 정답 1개여야 함 (현재 ${ans})`);
-      if (String(q.Options ?? '') !== '①###②###③###④###⑤') errs.push(`${tag} Options 형식 이상`);
+      if (!isNumberOnlyOptions(q.Options)) errs.push(`${tag} Options 형식 이상: ${String(q.Options ?? '').slice(0, 40)}`);
       for (const c of [...ans]) if (!String(q.Explanation ?? '').includes(c)) errs.push(`${tag} 해설에 ${c} 설명 없음`);
     }
   }
