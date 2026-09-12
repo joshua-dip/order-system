@@ -116,6 +116,15 @@ export type SaveGeneratedQuestionInput = {
   status?: string;
   option_type?: string;
   difficulty?: string;
+  /**
+   * 저장할 컬렉션. 기본은 판매 재고인 `generated_questions`.
+   *
+   * 공개 무료 배포용 문항은 `public_free_questions` 로 **따로** 넣는다
+   * (`lib/public-free-questions.ts`). 같은 컬렉션에 플래그로 섞으면
+   * 파이널·시험지·문제은행 등 `status='완료'` 로 뽑아 쓰는 경로 전부가
+   * 무료 배포분을 팔아 버릴 위험이 있어서다.
+   */
+  collection?: string;
 };
 
 export type SaveGeneratedQuestionResult =
@@ -230,7 +239,8 @@ export async function saveGeneratedQuestionToDb(
 
   const db = await getDb('gomijoshua');
   const serialNo = await nextGeneratedSerial(db);
-  const r = await db.collection('generated_questions').insertOne({ ...doc, serialNo });
+  const targetCollection = (input.collection ?? 'generated_questions').trim() || 'generated_questions';
+  const r = await db.collection(targetCollection).insertOne({ ...doc, serialNo });
   return {
     ok: true,
     inserted_id: String(r.insertedId),

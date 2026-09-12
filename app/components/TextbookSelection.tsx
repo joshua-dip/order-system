@@ -247,6 +247,18 @@ function useHubSections(
       href: '/external',
       interactive: true,
     };
+    /* 무료 변형문제 — 로그인 없이 바로 PDF 로 받는 홍보용 입구.
+       비회원에게는 맨 앞에 보여 주고, 회원에게는 주문 카드 뒤로 보낸다(이미 유료로 받는 쪽이 먼저다). */
+    const freeVariant: HubEntry = {
+      id: 'free-variant',
+      title: '무료 변형문제',
+      description: (<>모의고사 지문 변형문제를<br />가입 없이 PDF 로 바로 받기</>),
+      icon: <IconMock /> as ReactNode,
+      accentColor: '#0369A1',
+      gridClassName: 'lg:col-span-2',
+      href: '/free',
+      interactive: true,
+    };
     const finalMock: HubEntry = {
       id: 'final-mock',
       title: '파이널 예비 모의고사',
@@ -390,7 +402,16 @@ function useHubSections(
         ),
       },
     ];
-    return { vocabulary, classkit, finalMock, primary: [mock, textbook, gyogwaseo, external], workbook, more };
+    return {
+      vocabulary,
+      classkit,
+      finalMock,
+      primary: isMember
+        ? [mock, textbook, gyogwaseo, external, freeVariant]
+        : [freeVariant, mock, textbook, gyogwaseo, external],
+      workbook,
+      more,
+    };
   }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
 

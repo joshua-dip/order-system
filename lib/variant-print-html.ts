@@ -101,6 +101,18 @@ export interface VariantPrintInput {
   questions: VariantPrintQuestion[];
   /** 정답·해설을 뒤에 붙일지 */
   includeAnswers?: boolean;
+  /**
+   * 본문이 **똑같은** 이웃 문항을 한 묶음으로 묶어 지문을 한 번만 싣는다.
+   *
+   * 한 지문의 여러 유형을 한 부에 담을 때 쓴다 — 주제·제목·주장·일치·불일치는
+   * `Paragraph` 가 원문 그대로여서, 묶지 않으면 같은 지문이 다섯 번 인쇄된다
+   * (43~45번 장문은 2,000자짜리가 다섯 번 — 2026-09-12 무료 세트에서 드러났다).
+   * 본문을 건드리는 유형(순서·삽입·어법·어휘·무관한문장)은 본문이 서로 달라
+   * 자동으로 묶이지 않으니 그대로 한 문항씩 나온다.
+   *
+   * 문항 번호는 묶음과 무관하게 1부터 이어진다(정답지와 맞아야 한다).
+   */
+  groupIdenticalPassages?: boolean;
 }
 
 function esc(s: string): string {
@@ -125,6 +137,11 @@ function escKeepUnderline(s: string): string {
   return esc(s)
     .replace(/&lt;u&gt;/g, '<u>')
     .replace(/&lt;\/u&gt;/g, '</u>');
+}
+
+/** 본문이 사실상 같은지 보려고 공백만 죽인 형태 */
+function norm(text: string): string {
+  return String(text ?? '').replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -172,6 +189,26 @@ body{
 .q .opts{margin:9px 0 0; padding:0; list-style:none}
 .q .opts li{margin:2px 0}
 .q .opts-inline{margin:9px 0 0; letter-spacing:0.5px}
+/* 본문이 같은 문항 묶음 — 지문을 한 번만 싣는다(groupIdenticalPassages)
+   ⚠️ 묶음 전체에 break-inside:avoid 를 걸면 안 된다. 지문 + 문항 5개는 한 장에 가까워서
+   Chrome 이 묶음을 통째로 다음 장으로 밀고 앞 장을 비워 버린다(2026-09-12 실제로 첫 장이 비었다).
+   묶음은 쪼개지게 두고 **지문과 문항 하나하나만** 끊기지 않게 한다. */
+.qg{margin:0 0 18px; padding-bottom:14px; border-bottom:1px solid #eee}
+.qg:last-child{border-bottom:0}
+.qg .qg-head{font-size:8.5pt; color:#666; margin-bottom:6px}
+.qg .passage{border:1px solid #ddd; border-radius:4px; padding:11px 13px; background:#fff;
+  break-inside:avoid; page-break-inside:avoid}
+.qg .passage p{margin:0 0 7px; text-align:justify}
+.qg .passage p:last-child{margin-bottom:0}
+.qg .passage u{text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1.2px}
+.qg .qg-item{margin-top:12px; break-inside:avoid; page-break-inside:avoid}
+.qg .qg-item .no{display:inline-block; min-width:18px; padding:1px 5px; margin-right:7px;
+  background:#222; color:#fff; border-radius:3px; font-size:9pt; text-align:center; font-weight:700}
+.qg .qg-item .src{font-size:8.5pt; color:#666}
+.qg .qg-item .prompt{margin:6px 0 8px; font-weight:700}
+.qg .qg-item .opts{margin:9px 0 0; padding:0; list-style:none}
+.qg .qg-item .opts li{margin:2px 0}
+.qg .qg-item .opts-inline{margin:9px 0 0; letter-spacing:0.5px}
 
 /* 정답면은 문제면과 다른 장에서 시작한다 — 학생에게 문제만 먼저 주기 쉽다. */
 .ans-head{margin:0 0 12px; padding-bottom:6px; border-bottom:2px solid #111; font-size:13pt; font-weight:800}
@@ -188,23 +225,58 @@ export function buildVariantPrintHtml(input: VariantPrintInput): string {
   const qs = input.questions ?? [];
   const brand = (input.brand ?? '').trim();
 
-  const body = qs
-    .map((q, i) => {
-      const opts = (q.options ?? []).filter((o) => String(o).trim() !== '');
-      /* 어법은 선택지가 번호뿐이다(지문 안의 ①~⑤ 를 고르는 형식). 세로로 늘어놓으면
-         빈 줄 다섯 개가 되어 잘못 만든 것처럼 보이므로 한 줄로 모은다. */
-      const numbersOnly = opts.length > 0 && opts.every((o) => /^[①②③④⑤⑥⑦⑧⑨⑩]$/.test(String(o).trim()));
-      return `<div class="q">
-  <div><span class="no">${i + 1}</span><span class="src">${esc(q.source)}</span></div>
+  /** 선택지 블록 — 어법처럼 번호뿐인 보기는 한 줄로 모은다 */
+  const optionsHtml = (q: VariantPrintQuestion): string => {
+    const opts = (q.options ?? []).filter((o) => String(o).trim() !== '');
+    if (opts.length === 0) return '';
+    /* 어법은 선택지가 번호뿐이다(지문 안의 ①~⑤ 를 고르는 형식). 세로로 늘어놓으면
+       빈 줄 다섯 개가 되어 잘못 만든 것처럼 보이므로 한 줄로 모은다. */
+    const numbersOnly = opts.every((o) => /^[①②③④⑤⑥⑦⑧⑨⑩]$/.test(String(o).trim()));
+    return numbersOnly
+      ? `<div class="opts-inline">${opts.map((o) => esc(o)).join('&nbsp;&nbsp;&nbsp;')}</div>`
+      : `<ul class="opts">${opts.map((o) => `<li>${esc(o)}</li>`).join('')}</ul>`;
+  };
+
+  const oneQuestionHtml = (q: VariantPrintQuestion, no: number): string => `<div class="q">
+  <div><span class="no">${no}</span><span class="src">${esc(q.source)}</span></div>
   <div class="prompt">${esc(q.question)}</div>
   <div class="passage">${paragraphHtml(q.paragraph)}</div>
-  ${
-    opts.length === 0
-      ? ''
-      : numbersOnly
-        ? `<div class="opts-inline">${opts.map((o) => esc(o)).join('&nbsp;&nbsp;&nbsp;')}</div>`
-        : `<ul class="opts">${opts.map((o) => `<li>${esc(o)}</li>`).join('')}</ul>`
+  ${optionsHtml(q)}
+</div>`;
+
+  /** 본문이 같은 이웃 문항끼리 잘라 낸 묶음 (묶기를 끄면 전부 길이 1) */
+  const groups: VariantPrintQuestion[][] = [];
+  for (const q of qs) {
+    const prev = groups[groups.length - 1];
+    const sameAsPrev =
+      input.groupIdenticalPassages === true &&
+      prev !== undefined &&
+      norm(prev[0].paragraph) === norm(q.paragraph) &&
+      norm(prev[0].paragraph) !== '';
+    if (sameAsPrev) prev.push(q);
+    else groups.push([q]);
   }
+
+  let running = 0;
+  const body = groups
+    .map((group) => {
+      const first = running + 1;
+      if (group.length === 1) {
+        running += 1;
+        return oneQuestionHtml(group[0], first);
+      }
+      const items = group
+        .map((q, k) => `  <div class="qg-item">
+    <div><span class="no">${first + k}</span><span class="src">${esc(q.source)}</span></div>
+    <div class="prompt">${esc(q.question)}</div>
+    ${optionsHtml(q)}
+  </div>`)
+        .join('\n');
+      running += group.length;
+      return `<div class="qg">
+  <div class="qg-head">${esc(group[0].source.replace(/\s*·.*$/, ''))} · ${group.length}문항</div>
+  <div class="passage">${paragraphHtml(group[0].paragraph)}</div>
+${items}
 </div>`;
     })
     .join('\n');
