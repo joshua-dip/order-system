@@ -36,7 +36,7 @@ import {
  *   npm run cc:answer-seq -- order    <주문번호> [--list] [--apply]     # 순서: (A)(B)(C) 라벨 치환
  *   npm run cc:answer-seq -- insert   <주문번호> [--lock "09회 25번,08회 38번"] [--relaxed] [--apply]
  *                                                                      # 삽입: 마커 자리 이동
- *   npm run cc:answer-seq -- shuffled <주문번호> [--types 빈칸-고난도,주제-고난도] [--apply]
+ *   npm run cc:answer-seq -- shuffled <주문번호> [--types 빈칸-고난도,주제-고난도] [--cap 2] [--apply]
  *                                                                      # 셔플형: 정답 보기와 목표 보기 맞바꿈
  *
  * 교정은 검수 전(status 대기)에 한다 — 검수 뒤 고치면 검수 기록과 본문이 어긋난다.
@@ -242,6 +242,12 @@ async function runInsert(ctx: Ctx): Promise<void> {
 async function runShuffled(ctx: Ctx): Promise<void> {
   const typeArg = listArg(ctx.args, '--types');
   const types = (typeArg.length ? typeArg : ctx.scope.types).filter((x) => SHUFFLABLE_TYPES.has(x));
+  /* 같은 번호를 열에서 몇 개까지 허용할지. 기본은 balanceCapFor — 6문항이면 3 이라
+     「③④③②③④」처럼 한 번호가 셋인 열이 상한에 걸치지 않아 그대로 남는다.
+     더 촘촘히 흩어야 할 때 `--cap 2` 로 낮춘다(2026-09-12 요청). */
+  const capIdx = ctx.args.indexOf('--cap');
+  const capRaw = capIdx >= 0 ? Number(ctx.args[capIdx + 1]) : NaN;
+  const capOverride = Number.isFinite(capRaw) && capRaw >= 1 ? Math.floor(capRaw) : null;
   const updates: Update[] = [];
   for (const t of ctx.scope.targets) {
     for (const type of types) {
@@ -252,7 +258,7 @@ async function runShuffled(ctx: Ctx): Promise<void> {
         console.log('  정답이 ①~⑤ 한 개가 아닌 문항이 있어 건너뜀');
         continue;
       }
-      const plan = planAnswerSequence(seq, () => ANY_TARGET, balanceCapFor(seq.length));
+      const plan = planAnswerSequence(seq, () => ANY_TARGET, capOverride ?? balanceCapFor(seq.length));
       console.log(`  현재 ${describeSequence(seq)}`);
       console.log(`  교정 ${describeSequence(plan)}`);
       rows.forEach((r, i) => {
@@ -298,7 +304,7 @@ async function main(): Promise<void> {
         '  npm run cc:answer-seq -- check    <주문번호>',
         '  npm run cc:answer-seq -- order    <주문번호> [--list] [--apply]',
         '  npm run cc:answer-seq -- insert   <주문번호> [--lock "09회 25번,08회 38번"] [--relaxed] [--apply]',
-        '  npm run cc:answer-seq -- shuffled <주문번호> [--types 빈칸-고난도,주제-고난도] [--apply]',
+        '  npm run cc:answer-seq -- shuffled <주문번호> [--types 빈칸-고난도,주제-고난도] [--cap 2] [--apply]',
       ].join('\n'),
     );
     process.exit(1);
