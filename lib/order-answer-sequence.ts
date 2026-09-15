@@ -139,7 +139,69 @@ export async function fetchOrderQuestions(
     });
 }
 
+/** 출처의 회차 토큰(「07회」). 모의고사처럼 회차가 없으면 빈 문자열 */
+export function roundOfSource(source: string): string {
+  return source.split(' ').find((w) => /회$/.test(w)) ?? '';
+}
+
+/* 통합본에서 한 지문의 유형을 늘어놓는 순서 — 수능 문항 번호 순. 연도별 통합본 여러 개가 같은 순서로 읽힌다. */
+const EXAM_POSITION: Record<string, number> = {
+  목적: 18, 심경: 19, 주장: 20, 함의: 21, 요지: 22, 주제: 23, 제목: 24, 도표: 25, 일치: 26, 불일치: 27,
+  어법: 29, 어휘: 30, 빈칸: 31, 무관한문장: 35, 순서: 36, 삽입: 38, 요약: 40,
+};
+
+export type BundleTypeOrder = 'exam' | 'order';
+
+/** 통합본의 유형 순서 — exam: 수능 문항 번호 순(같은 유형이면 기본 → 고난도), order: 주문서에서 고른 순서 */
+export function bundleTypeOrder(types: readonly string[], mode: BundleTypeOrder): string[] {
+  if (mode === 'order') return [...types];
+  const pos = (t: string) => EXAM_POSITION[t.replace(/-고난도$/, '')] ?? 99;
+  const hard = (t: string) => Number(/-고난도$/.test(t));
+  return [...types].sort((a, b) => pos(a) - pos(b) || hard(a) - hard(b) || types.indexOf(a) - types.indexOf(b));
+}
+
+export interface BundleRow extends OrderQuestionRow {
+  type: string;
+}
+
+export interface OrderBundle {
+  /** 회차(「07회」). 회차가 없는 교재(모의고사)는 빈 문자열 — 교재 하나가 통합본 하나 */
+  round: string;
+  sources: string[];
+  rows: BundleRow[];
+}
+
+/**
+ * 통합본 인쇄 순서 — 회차별로 묶고, 안에서 번호 → 유형 순.
+ * 인쇄(cc:order-pdf --by round)와 정답열 교정(cc:answer-seq bundle)이 같은 순서를 봐야 이웃 판정이 맞는다.
+ */
+export async function fetchOrderBundles(
+  db: Db,
+  target: OrderScopeTarget,
+  scope: Pick<OrderQuestionScope, 'types' | 'perType'>,
+  opts: { statuses?: string[]; typeOrder?: BundleTypeOrder } = {},
+): Promise<OrderBundle[]> {
+  const types = bundleTypeOrder(scope.types, opts.typeOrder ?? 'exam');
+  const rows: BundleRow[] = [];
+  for (const type of types) {
+    const got = await fetchOrderQuestions(db, target, type, { statuses: opts.statuses, perSource: scope.perType(type) });
+    rows.push(...got.map((r) => ({ ...r, type })));
+  }
+  const rounds = [...new Set(target.sources.map(roundOfSource))].sort(compareSourceLabel);
+  return rounds.map((round) => ({
+    round,
+    sources: target.sources.filter((s) => roundOfSource(s) === round),
+    rows: rows
+      .filter((r) => roundOfSource(r.source) === round)
+      .sort((a, b) => compareSourceLabel(a.source, b.source) || types.indexOf(a.type) - types.indexOf(b.type)),
+  }));
+}
+
 /* ─────────────── 정답열 ─────────────── */
+
+export function isSingleAnswer(answer: string): boolean {
+  return CIRCLED_LIST.includes(answer);
+}
 
 export function isSingleAnswerSequence(seq: readonly string[]): boolean {
   return seq.length > 0 && seq.every((a) => CIRCLED_LIST.includes(a));
@@ -201,18 +263,20 @@ export const NO_TARGET: TargetCosts = new Map();
  * 앞에서 한 선택이 뒤 문항의 길을 막는 경우가 있어(삽입처럼 옮길 수 있는 번호가 제한될 때) 전체를 본다.
  * 옮길 수 없는 문항(빈 targets)은 그대로 둔다.
  * balanceCap 을 주면 한 번호가 그 수를 넘지 않게 더 옮긴다 — 아무 번호로나 옮길 수 있는 셔플형 용.
+ * stayCostOf 는 지금 번호를 그대로 둘 때의 비용 — 규칙상 피해야 할 번호(삽입-고난도의 ①)면 크게 줘서 옮기게 한다.
  */
 export function planAnswerSequence(
   seq: readonly string[],
   targetsOf: (i: number) => TargetCosts,
   balanceCap?: number,
+  stayCostOf?: (i: number) => number,
 ): string[] {
   const n = seq.length;
   if (!n) return [];
   const used = new Map<string, number>();
   for (const v of seq) used.set(v, (used.get(v) ?? 0) + 1);
   const choices = (i: number): [string, number][] => {
-    const m = new Map<string, number>([[seq[i], 0]]);
+    const m = new Map<string, number>([[seq[i], stayCostOf?.(i) ?? 0]]);
     for (const [v, c] of targetsOf(i)) if (v !== seq[i]) m.set(v, 1 + c + 0.01 * (used.get(v) ?? 0));
     return [...m];
   };
