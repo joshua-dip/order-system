@@ -701,7 +701,7 @@ export default function AdminDashboardPage() {
   const payOrderWithPoints = useCallback(
     async (orderId: string, orderNumber: string) => {
       if (payingPointsOrderId) return;
-      if (!confirm(`${orderNumber || '이 주문'}을 회원 포인트로 결제 처리할까요?\n\n주문 금액만큼 회원 포인트가 차감되고, 포인트 내역에 「주문 사용」으로 남습니다.`)) return;
+      if (!confirm(`${orderNumber || '이 주문'}을 회원 포인트로 결제 처리할까요?\n\n입금하실 금액만큼 회원 포인트가 차감되고, 포인트 내역에 「주문 사용」으로 남습니다.\n낼 금액이 남지 않으면 주문이 「입금 확인」으로 바뀝니다.`)) return;
       setPayingPointsOrderId(orderId);
       try {
         const r = await fetch(`/api/orders/${orderId}`, {
@@ -716,7 +716,9 @@ export default function AdminDashboardPage() {
           return;
         }
         alert(
-          `${d.name ?? ''} 님 포인트 ${Number(d.pointsUsed ?? 0).toLocaleString()}P 차감 완료\n남은 포인트 ${Number(d.balanceAfter ?? 0).toLocaleString()}P`,
+          `${d.name ?? ''} 님 포인트 ${Number(d.pointsUsed ?? 0).toLocaleString()}P 차감 완료\n남은 포인트 ${Number(d.balanceAfter ?? 0).toLocaleString()}P${
+            d.paymentConfirmed ? '\n주문 상태를 「입금 확인」으로 바꿨습니다.' : ''
+          }`,
         );
         fetchOrders();
       } finally {

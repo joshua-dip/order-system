@@ -6,6 +6,11 @@ import { parseOrderRevenueFromOrderText, getBookVariantSolbookAccounting } from 
 import { recordPointLedger } from '@/lib/point-ledger';
 import { tryRefundPointsAfterOrderCancelled } from '@/lib/refund-order-points-on-cancel';
 import { isMemberCancellableOrder, memberCancelUpdateFilter } from '@/lib/order-cancellable';
+import {
+  applyPointsToOrderText,
+  orderAmountDueBeforePoints,
+  shouldConfirmPaymentAfterPoints,
+} from '@/lib/order-point-payment';
 
 const COLLECTION = 'orders';
 
@@ -111,18 +116,20 @@ export async function PATCH(
       }
       const balance = typeof userDoc.points === 'number' ? userDoc.points : 0;
 
-      /* 금액: 관리자가 지정하면 그 값, 아니면 주문서에서 읽은 금액 전액. */
-      const gross = parseOrderRevenueFromOrderText(
-        typeof existing.orderText === 'string' ? existing.orderText : '',
-        (existing as { orderMeta?: unknown }).orderMeta,
-      );
+      /* 금액: 관리자가 지정하면 그 값, 아니면 주문서의 「입금하실 금액」(없으면 주문서 금액) 전액. */
+      const orderText = typeof existing.orderText === 'string' ? existing.orderText : '';
+      const dueBefore = orderAmountDueBeforePoints(orderText, (existing as { orderMeta?: unknown }).orderMeta);
       const requested = Number(body?.amount);
       const amount = Number.isFinite(requested) && requested > 0
         ? Math.floor(requested)
-        : (gross ?? 0);
+        : (dueBefore ?? 0);
       if (amount <= 0) {
         return NextResponse.json(
-          { error: '주문 금액을 읽지 못했습니다. 사용할 포인트를 직접 입력해 주세요.' },
+          {
+            error: dueBefore === 0
+              ? '입금하실 금액이 0원인 주문이라 포인트로 낼 금액이 없습니다.'
+              : '주문 금액을 읽지 못했습니다. 사용할 포인트를 직접 입력해 주세요.',
+          },
           { status: 400 },
         );
       }
@@ -133,8 +140,22 @@ export async function PATCH(
         );
       }
 
+      /* 주문서를 회원이 직접 포인트를 쓴 것과 같은 모양(포인트 사용·차감 후 입금액)으로 고치고,
+         낼 금액이 남지 않으면 입금 전 단계의 주문을 「입금 확인」으로 올린다 — lib/order-point-payment.
+         예전에는 포인트만 깎여 「주문 접수」에 머물고, 입금액·실입금 매출도 전액으로 잡혔다. */
+      const applied = dueBefore != null ? applyPointsToOrderText(orderText, amount, dueBefore) : null;
+      const paymentConfirmed = applied != null && shouldConfirmPaymentAfterPoints(existing.status, applied.dueAfter);
       await users.updateOne({ _id: userDoc._id }, { $inc: { points: -amount } });
-      await col.updateOne({ _id: new ObjectId(id) }, { $set: { pointsUsed: amount } });
+      await col.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            pointsUsed: amount,
+            ...(applied && { orderText: applied.text }),
+            ...(paymentConfirmed && { status: 'payment_confirmed', paymentConfirmedAt: new Date() }),
+          },
+        },
+      );
       await recordPointLedger(db, {
         userId: userDoc._id as ObjectId,
         delta: -amount,
@@ -153,6 +174,8 @@ export async function PATCH(
         pointsUsed: amount,
         balanceAfter: balance - amount,
         name: userDoc.name ?? loginId,
+        depositDueWon: applied?.dueAfter ?? null,
+        paymentConfirmed,
       });
     }
 
