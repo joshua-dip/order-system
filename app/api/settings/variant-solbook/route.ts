@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { normalizeVariantSolbookValue } from '@/lib/variant-solbook-settings';
+import { getSchoolTextbookKeys } from '@/lib/school-textbooks';
 
 const SETTINGS_ID = 'variantSolbook' as const;
 const TEXTBOOK_TYPE_META_ID = 'textbookTypeMeta' as const;
@@ -16,7 +17,9 @@ const NO_STORE_HEADERS = {
 /**
  * 변형문제 쏠북 교재·구매 안내 (비인증). /textbook · 주문 화면에서 사용.
  *
- * 쏠북 여부: passages.publisher 또는 settings.textbookTypeMeta에 등록된 교재.
+ * 쏠북 여부: passages.publisher 또는 settings.textbookTypeMeta에 등록된 교재,
+ *   그리고 **admin 「교과서」 링크 폴더에 배정된 교과서 전부**(2026-09-19 방침 — 교과서는 모두
+ *   쏠북 교재로 본다: 무료 7유형·멤버십 무료 한도 없이, 변형 금액은 쏠북에서 결제).
  * 교과서/부교재 구분: settings.textbookTypeMeta._id='textbookTypeMeta'.value 맵.
  *   → 지문이 없는 교재도 설정 가능.
  * purchaseUrl / extraFeeWon: settings.variantSolbook.
@@ -25,7 +28,7 @@ export async function GET() {
   try {
     const db = await getDb('gomijoshua');
 
-    const [doc, passageRows, typeMetaDoc] = await Promise.all([
+    const [doc, passageRows, typeMetaDoc, schoolKeys] = await Promise.all([
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       db.collection('settings').findOne({ _id: SETTINGS_ID } as any),
       // passages에 publisher가 설정된 교재 목록 (지문 존재하는 경우)
@@ -40,12 +43,14 @@ export async function GET() {
       // textbookType 메타: settings 컬렉션에 저장된 맵
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       db.collection('settings').findOne({ _id: TEXTBOOK_TYPE_META_ID } as any),
+      getSchoolTextbookKeys(db),
     ]);
+    const schoolSet = new Set(schoolKeys);
 
     const normalized = normalizeVariantSolbookValue(doc?.value);
     const typeMap = (typeMetaDoc?.value ?? {}) as Record<string, string>;
 
-    // 쏠북 교재 = passages publisher + textbookTypeMeta + 관리자가 variantSolbook에 넣은 textbookKeys (합집합)
+    // 쏠북 교재 = passages publisher + textbookTypeMeta + 관리자가 variantSolbook에 넣은 textbookKeys + 교과서 폴더 (합집합)
     const solbookKeySet = new Set<string>();
     for (const row of passageRows) {
       const key = String(row.textbook || '');
@@ -57,13 +62,17 @@ export async function GET() {
     for (const key of normalized.textbookKeys) {
       if (key) solbookKeySet.add(key);
     }
+    for (const key of schoolKeys) {
+      if (key) solbookKeySet.add(key);
+    }
 
     const textbookKeys = [...solbookKeySet];
     const 교과서Keys: string[] = [];
     const 부교재Keys: string[] = [];
 
     for (const key of textbookKeys) {
-      const t = typeMap[key];
+      /* 교재 구분을 따로 정하지 않은 교과서 폴더 교재는 교과서로 — 부교재 목록에 섞이지 않게 */
+      const t = typeMap[key] ?? (schoolSet.has(key) ? '교과서' : undefined);
       if (t === '교과서') 교과서Keys.push(key);
       else if (t === '부교재') 부교재Keys.push(key);
     }

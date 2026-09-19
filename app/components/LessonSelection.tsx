@@ -79,8 +79,16 @@ const SUBJECT_ORDER = [
   '진로영어', '실용영어', '직무영어', '심화영어',
 ];
 function subjectOrderIdx(s: string): number {
+  if (s === '기타') return 1000; // 「기타」는 항상 맨 뒤
   const i = SUBJECT_ORDER.indexOf(s);
   return i === -1 ? 999 : i;
+}
+
+/** 과목 칩·섹션에서 「기타」로 모을 과목 — 카드 배지는 원래 과목명 그대로 둔다(2026-09-19 요청). */
+const ETC_SUBJECTS = new Set(['미디어영어']);
+function gyogwaseoSectionOf(key: string): string {
+  const s = parseGyogwaseoKey(key).subject;
+  return ETC_SUBJECTS.has(s) ? '기타' : s;
 }
 
 /** 교과서 목록: 쏠북·구매 안내 링크 우선(extra → kyobo → 쏠북 매장) */
@@ -843,7 +851,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
 
                     if (listMode교과서) {
                       const subjects = Array.from(
-                        new Set(filteredTextbooks.map((k) => parseGyogwaseoKey(k).subject))
+                        new Set(filteredTextbooks.map((k) => gyogwaseoSectionOf(k)))
                       ).sort((a, b) => {
                         const oa = subjectOrderIdx(a);
                         const ob = subjectOrderIdx(b);
@@ -853,13 +861,13 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
 
                       const visibleTextbooks = gyogwaseoSubjectFilter
                         ? filteredTextbooks.filter(
-                            (k) => parseGyogwaseoKey(k).subject === gyogwaseoSubjectFilter
+                            (k) => gyogwaseoSectionOf(k) === gyogwaseoSubjectFilter
                           )
                         : filteredTextbooks;
 
                       const grouped = new Map<string, string[]>();
                       visibleTextbooks.forEach((k) => {
-                        const s = parseGyogwaseoKey(k).subject;
+                        const s = gyogwaseoSectionOf(k);
                         if (!grouped.has(s)) grouped.set(s, []);
                         grouped.get(s)!.push(k);
                       });
@@ -1009,7 +1017,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                                 전체 <span className="ml-0.5 opacity-70">{filteredTextbooks.length}</span>
                               </button>
                               {subjects.map((s) => {
-                                const count = filteredTextbooks.filter((k) => parseGyogwaseoKey(k).subject === s).length;
+                                const count = filteredTextbooks.filter((k) => gyogwaseoSectionOf(k) === s).length;
                                 const active = gyogwaseoSubjectFilter === s;
                                 return (
                                   <button

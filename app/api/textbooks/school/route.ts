@@ -13,8 +13,9 @@ import { buildSchoolTextbooksData, getSchoolTextbookKeysWithPassages } from '@/l
  * 단원 목록은 교재를 고른 뒤 /api/textbooks/lesson-index 가 같은 지문으로 만들어 준다
  * (59권 전부 이 라우트의 트리와 항목이 같음을 확인).
  *
- * 워크북·분석지 화면의 교재 트리(/api/textbooks)는 여전히 권한 회원에게만 교과서를 얹는다 —
- * 허용목록 「미설정=전체」 회원에게 교과서가 한꺼번에 쏟아지지 않게 하려는 것으로, 이 방침과 별개다.
+ * 교재 트리(/api/textbooks)는 여전히 권한 회원에게만 교과서를 얹는다 — 분석지·서술형·단어장처럼
+ * 허용목록 「미설정=전체」로 트리를 통째로 쓰는 화면에 교과서가 쏟아지지 않게. 워크북 단원 화면은
+ * 트리에 없으면 lesson-index 로 폴백하므로 교과서 워크북은 모두 주문할 수 있다.
  */
 export async function GET(request: NextRequest) {
   const empty = { keys: [] as string[], data: {} as Record<string, unknown> };

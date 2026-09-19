@@ -31,6 +31,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
 
   useEffect(() => {
     if (!convertedData) return;
+    let alive = true;
     /** Sheet1.{branch}, {branch}, '지문 데이터'.{branch} 순으로 검색해 강 데이터를 찾는다.
      *  교과서 키도 같은 흐름(부교재 → 교과서 fallback)으로 처리. */
     const pickFromBranch = (
@@ -61,20 +62,45 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
       return null;
     };
 
+    /* 교재 트리에 없는 교재(교과서 등)는 지문으로 강·번호를 만든다 — 변형문제 화면과 같은 폴백.
+       교과서는 권한과 무관하게 모두에게 보이는데(2026-09-19), 트리(/api/textbooks)는 권한 회원에게만
+       교과서를 얹어서, 권한 없는 회원은 교과서를 골라도 강이 비어 주문을 못 했다. */
+    const loadFromPassages = async () => {
+      try {
+        const res = await fetch(`/api/textbooks/lesson-index?textbook=${encodeURIComponent(selectedTextbook)}`);
+        const j = (await res.json().catch(() => ({}))) as { ok?: boolean; groups?: Record<string, string[]> };
+        const groups = res.ok && j.ok && j.groups && typeof j.groups === 'object' ? j.groups : {};
+        const lessonNames = Object.keys(groups);
+        const numbersMap: Record<string, string[]> = {};
+        for (const lessonName of lessonNames) {
+          /* lesson-index 항목은 「강 번호」 — 번호만 남긴다(트리의 번호 라벨과 같은 값) */
+          numbersMap[lessonName] = (groups[lessonName] ?? []).map((item) =>
+            String(item).startsWith(`${lessonName} `) ? String(item).slice(lessonName.length + 1) : String(item),
+          );
+        }
+        if (!alive) return;
+        setAvailableLessons(lessonNames);
+        setLessonNumbers(numbersMap);
+      } catch (error) {
+        console.error('강 데이터(지문 폴백) 로드 실패:', error);
+        if (!alive) return;
+        setAvailableLessons([]);
+        setLessonNumbers({});
+      }
+    };
+
     const loadLessonsForTextbook = () => {
       try {
         const textbookData = (convertedData as Record<string, unknown>)[selectedTextbook];
         if (!textbookData || typeof textbookData !== 'object') {
-          setAvailableLessons([]);
-          setLessonNumbers({});
+          void loadFromPassages();
           return;
         }
         const data = textbookData as Record<string, unknown>;
         // 부교재 우선, 없으면 교과서 fallback (교과서 워크북 신규 카테고리)
         const textbookInfo = pickFromBranch(data, '부교재') ?? pickFromBranch(data, '교과서');
         if (!textbookInfo) {
-          setAvailableLessons([]);
-          setLessonNumbers({});
+          void loadFromPassages();
           return;
         }
         const lessonNames = Object.keys(textbookInfo);
@@ -105,6 +131,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
     if (selectedTextbook) {
       loadLessonsForTextbook();
     }
+    return () => { alive = false; };
   }, [selectedTextbook, convertedData]);
 
   const selectedCount = (lesson: string) => selectedByLesson[lesson]?.length ?? 0;
