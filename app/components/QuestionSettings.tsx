@@ -1186,7 +1186,6 @@ ${solbookRetailLine}
                 </div>
                 <div className="text-sm text-blue-700">
                   • 기본난도: 문항당 {PRICE.base}원<br/>
-                  {!isExternal && (<>• <span className="font-medium text-sky-700">누구나 무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — 회원 여부·한도와 무관<br/></>)}
                   • 삽입-고난도·어법-고난도: 문항당 {PRICE.advanced}원<br/>
                   {isExternal && (<>• 순서·삽입: 해설 포함 {PRICE.orderInsertWithExplanation}원 · 문제·답만 {PRICE.orderInsertNoExplanation}원<br/></>)}
                   • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
