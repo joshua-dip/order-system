@@ -9,6 +9,7 @@ import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KEYS, isVariantMockExamTextbookKey } from '@/lib/variant-textbooks';
 import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
+import { filterTextbooksBySearch } from '@/lib/textbook-search';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -184,9 +185,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   /** settings.textbookTypeMeta 기준 쏠북 분류 — 교과서 키만 목록 상단 섹션에 사용 */
   const [solbook교과서Keys, setSolbook교과서Keys] = useState<string[]>([]);
   const [solbookLoaded, setSolbookLoaded] = useState(false);
-  /** 학교 교과서(교과서 폴더 배정분) — canOrderSchoolTextbook 회원에게만 내려온다.
+  /** 학교 교과서(교과서 폴더 배정분) — 모든 계정에 내려온다(2026-09-19 전원 공개).
       쏠북 설정(settings.textbookTypeMeta)과 별개 소스라, 이걸 합치지 않으면
-      권한이 있어도 「교과서 목록」에 쏠북 등록분 몇 권만 보인다. */
+      「교과서 목록」에 쏠북 등록분 몇 권만 보인다. */
   const [schoolTextbookKeys, setSchoolTextbookKeys] = useState<string[]>([]);
 
   useEffect(() => {
@@ -239,8 +240,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   }, [flow, selectedTextbook]);
 
   useEffect(() => {
-    /* 비권한·비로그인이면 빈 배열이 오므로 조건 없이 부른다. */
-    fetch('/api/textbooks/school', { credentials: 'include' })
+    /* 교과서는 권한과 무관하게 모두에게 보인다(2026-09-19). 목록엔 이름만 필요해 keysOnly. */
+    fetch('/api/textbooks/school?keysOnly=1', { credentials: 'include' })
       .then((res) => res.json())
       .then((d: Record<string, unknown>) =>
         setSchoolTextbookKeys(Array.isArray(d?.keys) ? (d.keys as string[]) : []),
@@ -443,10 +444,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
     if (searchTerm.trim() === '') {
       setFilteredTextbooks(textbooks);
     } else {
-      const filtered = textbooks.filter(textbook =>
-        textbook.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredTextbooks(filtered);
+      /* 「영어2」는 영어II 를, 「공통영어2」는 공통영어2 만 — lib/textbook-search */
+      setFilteredTextbooks(filterTextbooksBySearch(textbooks, searchTerm));
     }
   }, [searchTerm, textbooks]);
 

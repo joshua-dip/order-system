@@ -9,6 +9,7 @@ import { filterWorkbookSupplementaryTextbookKeys, WORKBOOK_SUPPLEMENTARY_COMMON_
 import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { parseMockExamKey } from '@/lib/mock-exam-key';
+import { filterTextbooksBySearch } from '@/lib/textbook-search';
 
 /** 워크북 주문 진입 카테고리. 미지정 시 부교재·교과서·모의고사 3섹션을 모두 노출. */
 export type WorkbookCategory = 'textbook' | 'gyogwaseo' | 'mockexam';
@@ -133,10 +134,7 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
     if (searchTerm.trim() === '') {
       setFilteredTextbooks(workbookTextbooks);
     } else {
-      const filtered = workbookTextbooks.filter(textbook =>
-        textbook.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredTextbooks(filtered);
+      setFilteredTextbooks(filterTextbooksBySearch(workbookTextbooks, searchTerm));
     }
   }, [searchTerm, workbookTextbooks]);
 

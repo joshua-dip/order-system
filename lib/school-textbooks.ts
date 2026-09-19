@@ -34,6 +34,19 @@ export async function getSchoolTextbookKeys(db: Db): Promise<string[]> {
 }
 
 /**
+ * 교과서 교재 이름만 — 지문이 있는(주문 가능한) 것만, 배정 순서대로.
+ * 목록 화면은 이름만 쓰므로 트리를 만드는 buildSchoolTextbooksData 대신 이걸 쓴다.
+ */
+export async function getSchoolTextbookKeysWithPassages(db: Db): Promise<string[]> {
+  const keys = await getSchoolTextbookKeys(db);
+  if (keys.length === 0) return [];
+  const withPassages = new Set(
+    (await db.collection('passages').distinct('textbook', { textbook: { $in: keys } })).map(String),
+  );
+  return keys.filter((k) => withPassages.has(k));
+}
+
+/**
  * 교과서 교재 + passages 기반 트리. passages 가 있는 교재만 포함(주문 가능해야 노출).
  * 반환 data 는 `{ [교재명]: { Sheet1: { 부교재: ... } } }` — UnifiedOrder 의 extractLessonGroups 입력 형태.
  */

@@ -1375,7 +1375,12 @@ export default function UserDetailPage() {
                 <div className="flex flex-col gap-3">
                   <Toggle checked={editAnalysis} onChange={setEditAnalysis} label="분석지 메뉴 허용" />
                   <Toggle checked={editEssay} onChange={setEditEssay} label="서술형 메뉴 허용" />
-                  <Toggle checked={editSchoolTextbook} onChange={setEditSchoolTextbook} label="교과서 주문 허용" />
+                  <div>
+                    <Toggle checked={editSchoolTextbook} onChange={setEditSchoolTextbook} label="교과서 워크북·분석지 노출" />
+                    <p className="text-[11px] text-slate-500 mt-1 ml-1">
+                      교과서 변형문제 주문(/gyogwaseo·파이널)은 이 설정과 무관하게 모든 회원에게 열려 있습니다.
+                    </p>
+                  </div>
                   <Toggle checked={editMyFormat} onChange={setEditMyFormat} label="나만의 양식 승인" />
                 </div>
               </div>

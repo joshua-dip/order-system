@@ -20,6 +20,7 @@ import {
   upsertGuestVocabularies,
   type GuestVocabularySerialized,
 } from '@/lib/guest-vocabulary';
+import { filterTextbooksBySearch } from '@/lib/textbook-search';
 
 /* ────────── 타입 ────────── */
 
@@ -239,9 +240,7 @@ export default function VocabularyOrderPage() {
   }, [lessonLabelsWithVocab]);
 
   const filteredTextbooks = useMemo(() => {
-    const q = textbookQuery.trim().toLowerCase();
-    if (!q) return textbookList;
-    return textbookList.filter((k) => k.toLowerCase().includes(q));
+    return filterTextbooksBySearch(textbookList, textbookQuery);
   }, [textbookList, textbookQuery]);
 
   /** 목록 UI: 모의고사 / EBS·부교재 구분 (검색 필터 유지) */

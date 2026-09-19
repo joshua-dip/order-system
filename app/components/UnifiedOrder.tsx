@@ -12,6 +12,7 @@ import { mockExamDisplayLabel } from '@/lib/mock-exam-key';
 import { variantChargedUnitPrice, isOrderInsertType, VARIANT_PRICE, hasPaidVariantType } from '@/lib/variant-pricing';
 import AppBar from './AppBar';
 import SampleDrawer from './SampleDrawer';
+import { filterTextbooksBySearch } from '@/lib/textbook-search';
 
 /* ────────────────────────────────────────────────────────── */
 /*  상수 / 유틸                                               */
@@ -283,7 +284,6 @@ export default function UnifiedOrder() {
   const [showAddSchool, setShowAddSchool] = useState(false);
   const [showAddMock, setShowAddMock] = useState(false);
   /** 교과서 주문 허용 계정 여부 (/api/auth/me) — 교과서 카테고리 노출 게이트 */
-  const [canSchool, setCanSchool] = useState(false);
   /** 교과서 교재 트리 ({ 교재명: { Sheet1: 부교재 ... } }) — 권한 계정만 /api/textbooks/school 로 로드 */
   const [schoolData, setSchoolData] = useState<Record<string, unknown>>({});
   /** 회원별 허용 부교재 목록 (/api/auth/me allowedTextbooksVariant) — '부교재' 카테고리 노출 게이트 */
@@ -447,7 +447,6 @@ export default function UnifiedOrder() {
         setPremiumOk(!!u && u.isPremiumMember === true);
         setIsMember(!!u && u.role !== 'admin');
         setUserPoints(typeof u?.points === 'number' && u.points >= 0 ? u.points : 0);
-        setCanSchool(!!u && u.canOrderSchoolTextbook === true);
         setSupplementAllowed(
           Array.isArray(u?.allowedTextbooksVariant)
             ? u.allowedTextbooksVariant.filter((x: unknown): x is string => typeof x === 'string')
@@ -462,16 +461,15 @@ export default function UnifiedOrder() {
       .finally(() => setAuthChecked(true));
   }, []);
 
-  /* ── 교과서 교재 로드 (권한 계정만) ── */
+  /* ── 교과서 교재 로드 — 권한과 무관하게 모두(2026-09-19). 목록이 비면 버튼도 숨는다. ── */
   useEffect(() => {
-    if (!canSchool) { setSchoolData({}); return; }
     let alive = true;
     fetch('/api/textbooks/school', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => { if (alive) setSchoolData(d?.data && typeof d.data === 'object' ? d.data : {}); })
       .catch(() => { if (alive) setSchoolData({}); });
     return () => { alive = false; };
-  }, [canSchool]);
+  }, []);
 
   useEffect(() => {
     if (!premiumOk) return;
@@ -1145,18 +1143,18 @@ export default function UnifiedOrder() {
   const tbKeys = textbooksData ? Object.keys(textbooksData) : [];
   const ebsKeys = tbKeys.filter((k) => isEbsTextbook(k));
   const filteredEbsKeys = tbSearch
-    ? ebsKeys.filter((k) => k.toLowerCase().includes(tbSearch.toLowerCase()))
+    ? filterTextbooksBySearch(ebsKeys, tbSearch)
     : ebsKeys;
   const schoolKeys = Object.keys(schoolData);
   const filteredSchoolKeys = tbSearch
-    ? schoolKeys.filter((k) => k.toLowerCase().includes(tbSearch.toLowerCase()))
+    ? filterTextbooksBySearch(schoolKeys, tbSearch)
     : schoolKeys;
   // 부교재: 회원별 허용목록 중 교재 트리가 있는 것(EBS·교과서는 각자 버튼에 있으니 제외)
   const supplementKeys = [...new Set(supplementAllowed)].filter(
     (k) => tbKeys.includes(k) && !isEbsTextbook(k) && !schoolKeys.includes(k),
   );
   const filteredSupplementKeys = tbSearch
-    ? supplementKeys.filter((k) => k.toLowerCase().includes(tbSearch.toLowerCase()))
+    ? filterTextbooksBySearch(supplementKeys, tbSearch)
     : supplementKeys;
 
   if (phase === 1) {
@@ -1393,7 +1391,7 @@ export default function UnifiedOrder() {
                     <span className="text-base">+</span> 부교재
                   </button>
                 )}
-                {canSchool && (
+                {Object.keys(schoolData).length > 0 && (
                   <button
                     onClick={() => {
                       setShowAddSchool((v) => !v);
@@ -1473,8 +1471,8 @@ export default function UnifiedOrder() {
                 </div>
               )}
 
-              {/* 교과서 드롭다운 (교과서 주문 허용 계정만) */}
-              {showAddSchool && canSchool && (
+              {/* 교과서 드롭다운 — 모든 계정 (2026-09-19 전원 공개) */}
+              {showAddSchool && Object.keys(schoolData).length > 0 && (
                 <div className="mt-4">
                   <input
                     type="text"
