@@ -628,6 +628,15 @@ export default function AdminDashboardPage() {
   const orderStockFetchKeyRef = useRef('');
   /** 주문 목록 새로고침 시 동일 id여도 재고를 다시 집계 */
   const [orderStockRefreshTick, setOrderStockRefreshTick] = useState(0);
+  /** 주문 PDF ZIP 다운로드 중 */
+  const [orderPdfDownloadingId, setOrderPdfDownloadingId] = useState<string | null>(null);
+  /** PDF 분할 모드 선택 팝오버가 열린 주문 id */
+  const [orderPdfMenuOrderId, setOrderPdfMenuOrderId] = useState<string | null>(null);
+  const [orderPdfModes, setOrderPdfModes] = useState<string[]>([
+    'byCategory',
+    'byRound',
+    'bySourceNumber',
+  ]);
   const [orderFilter, setOrderFilter] = useState<AdminOrderListFilter>('all');
   const [orderSearch, setOrderSearch] = useState('');
   const [orderDetailModal, setOrderDetailModal] = useState<AdminOrder | null>(null);
@@ -795,7 +804,7 @@ export default function AdminDashboardPage() {
   const payOrderWithPoints = useCallback(
     async (orderId: string, orderNumber: string) => {
       if (payingPointsOrderId) return;
-      if (!confirm(`${orderNumber || '이 주문'}을 회원 포인트로 결제 처리할까요?\n\n입금하실 금액만큼 회원 포인트가 차감되고, 포인트 내역에 「주문 사용」으로 남습니다.\n낼 금액이 남지 않으면 주문이 「입금 확인」으로 바뀝니다.`)) return;
+      if (!confirm(`${orderNumber || '이 주문'}을 회원 포인트로 결제 처리할까요?\n\n· 일반 주문: 입금하실 금액을 포인트로 차감\n· 쏠북 연계(입금 0원): 변형 제작비를 포인트로 차감\n\n포인트 내역에 「주문 사용」으로 남습니다.`)) return;
       setPayingPointsOrderId(orderId);
       try {
         const r = await fetch(`/api/orders/${orderId}`, {
@@ -809,8 +818,9 @@ export default function AdminDashboardPage() {
           alert(d?.error || '포인트 결제 처리에 실패했습니다.');
           return;
         }
+        const kindLabel = d.kind === 'solbook_variant' ? ' (쏠북 변형 제작비)' : '';
         alert(
-          `${d.name ?? ''} 님 포인트 ${Number(d.pointsUsed ?? 0).toLocaleString()}P 차감 완료\n남은 포인트 ${Number(d.balanceAfter ?? 0).toLocaleString()}P${
+          `${d.name ?? ''} 님 포인트 ${Number(d.pointsUsed ?? 0).toLocaleString()}P 차감 완료${kindLabel}\n남은 포인트 ${Number(d.balanceAfter ?? 0).toLocaleString()}P${
             d.paymentConfirmed ? '\n주문 상태를 「입금 확인」으로 바꿨습니다.' : ''
           }`,
         );
@@ -821,6 +831,70 @@ export default function AdminDashboardPage() {
     },
     [payingPointsOrderId, fetchOrders],
   );
+
+  /** 변형 주문 → 회원 인쇄 양식 PDF ZIP (회차·번호·카테고리 등 분할) */
+  const downloadOrderPdf = useCallback(
+    async (orderId: string, orderNumber: string | null, modes?: string[]) => {
+      if (orderPdfDownloadingId) return;
+      const selected = (modes && modes.length > 0 ? modes : orderPdfModes).filter(Boolean);
+      if (selected.length === 0) {
+        setMessage({ type: 'error', text: 'PDF 분할 방식을 하나 이상 골라 주세요.' });
+        return;
+      }
+      setOrderPdfDownloadingId(orderId);
+      setOrderPdfMenuOrderId(null);
+      try {
+        const qs = new URLSearchParams({ modes: selected.join(',') });
+        const res = await fetch(
+          `/api/admin/orders/${encodeURIComponent(orderId)}/pdf?${qs.toString()}`,
+          { credentials: 'include' },
+        );
+        if (!res.ok) {
+          const d = (await res.json().catch(() => ({}))) as { error?: string };
+          setMessage({ type: 'error', text: d?.error || 'PDF 다운로드에 실패했습니다.' });
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(orderNumber || orderId).replace(/[\\/:*?"<>|]+/g, '_')}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        const missing = Number(res.headers.get('X-Order-Pdf-Missing') || '0');
+        const files = Number(res.headers.get('X-Order-Pdf-Files') || '0');
+        const modeLabel = res.headers.get('X-Order-Pdf-Modes') || selected.join(',');
+        setMessage({
+          type: 'success',
+          text:
+            missing > 0
+              ? `PDF ZIP 저장 (${files}파일 · ${modeLabel}) · 부족 슬롯 ${missing}건은 빠졌을 수 있습니다`
+              : `PDF ZIP 저장 완료 (${files}파일 · ${modeLabel})`,
+        });
+      } catch {
+        setMessage({ type: 'error', text: 'PDF 다운로드 중 오류가 발생했습니다.' });
+      } finally {
+        setOrderPdfDownloadingId(null);
+      }
+    },
+    [orderPdfDownloadingId, orderPdfModes],
+  );
+
+  const ORDER_PDF_MODE_OPTIONS: { key: string; label: string }[] = [
+    { key: 'byCategory', label: '카테고리별' },
+    { key: 'byRound', label: '회차별' },
+    { key: 'bySourceNumber', label: '번호별' },
+    { key: 'singleFull', label: '통합본' },
+    { key: 'byRoundCategory', label: '회차×유형' },
+  ];
+
+  const toggleOrderPdfMode = (key: string) => {
+    setOrderPdfModes((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
 
   const applyExamUploads = useCallback((d: { uploads?: PastExamUpload[] } | null) => {
     setExamUploads(d?.uploads || []);
@@ -4054,7 +4128,7 @@ export default function AdminDashboardPage() {
                               onClick={() => void payOrderWithPoints(o.id, o.orderNumber ?? '')}
                               disabled={payingPointsOrderId === o.id}
                               className="rounded border border-sky-500/40 px-1.5 py-0.5 text-[10px] font-medium text-sky-300/90 hover:bg-sky-500/15 disabled:opacity-40"
-                              title="이 주문을 회원 포인트로 결제 처리"
+                              title="입금액 또는 쏠북 변형 제작비를 회원 포인트로 결제"
                             >
                               {payingPointsOrderId === o.id ? '처리 중…' : '포인트 결제'}
                             </button>
@@ -4168,14 +4242,62 @@ export default function AdminDashboardPage() {
                                 >
                                   {badge.label}
                                 </span>
-                                <Link
-                                  href={`/admin/generated-questions?qCountOrderId=${encodeURIComponent(o.id)}`}
-                                  className="text-[10px] text-cyan-400/90 hover:text-cyan-300 underline-offset-2 hover:underline"
-                                  title="문제수 검증 화면에서 주문 범위 상세 보기"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  상세
-                                </Link>
+                                <div className="flex flex-wrap items-center gap-1 relative">
+                                  <Link
+                                    href={`/admin/generated-questions?qCountOrderId=${encodeURIComponent(o.id)}`}
+                                    className="text-[10px] text-cyan-400/90 hover:text-cyan-300 underline-offset-2 hover:underline"
+                                    title="문제수 검증 화면에서 주문 범위 상세 보기"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    상세
+                                  </Link>
+                                  <div className="relative">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOrderPdfMenuOrderId((cur) => (cur === o.id ? null : o.id));
+                                    }}
+                                    disabled={!!orderPdfDownloadingId}
+                                    className="inline-flex items-center px-1.5 py-0.5 rounded border border-violet-500/50 bg-violet-950/40 text-violet-200 hover:bg-violet-900/50 text-[10px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="회차별·번호별·카테고리별 PDF ZIP"
+                                  >
+                                    {orderPdfDownloadingId === o.id ? '생성 중…' : 'PDF'}
+                                  </button>
+                                  {orderPdfMenuOrderId === o.id && (
+                                    <div
+                                      className="absolute z-20 mt-1 left-0 w-52 rounded-lg border border-slate-600 bg-slate-800 shadow-xl p-2 text-[11px]"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <p className="text-slate-400 mb-1.5 px-0.5">분할 방식 (복수 선택)</p>
+                                      <div className="space-y-1 mb-2">
+                                        {ORDER_PDF_MODE_OPTIONS.map((opt) => (
+                                          <label
+                                            key={opt.key}
+                                            className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-slate-700/60 cursor-pointer text-slate-200"
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              className="rounded border-slate-500 text-violet-500 focus:ring-violet-500/40"
+                                              checked={orderPdfModes.includes(opt.key)}
+                                              onChange={() => toggleOrderPdfMode(opt.key)}
+                                            />
+                                            {opt.label}
+                                          </label>
+                                        ))}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => void downloadOrderPdf(o.id, o.orderNumber)}
+                                        disabled={orderPdfModes.length === 0 || !!orderPdfDownloadingId}
+                                        className="w-full px-2 py-1.5 rounded-md bg-violet-600 hover:bg-violet-500 text-white font-semibold disabled:opacity-40"
+                                      >
+                                        ZIP 다운로드
+                                      </button>
+                                    </div>
+                                  )}
+                                  </div>
+                                </div>
                               </div>
                             );
                           })()}
@@ -5992,7 +6114,43 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-700">
             <h3 className="font-bold text-white mb-1">주문 관리</h3>
-            <p className="text-slate-400 text-sm mb-3 font-mono break-all">{orderDetailModal.orderNumber} · {orderDetailModal.loginId || '비회원'}</p>
+            <p className="text-slate-400 text-sm mb-2 font-mono break-all">{orderDetailModal.orderNumber} · {orderDetailModal.loginId || '비회원'}</p>
+            {isVariantStockFlow(orderDetailModal.orderMetaFlow) && (
+              <div className="mb-3 space-y-2">
+                <p className="text-[11px] text-slate-400">PDF 분할 (복수 선택 후 다운로드)</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ORDER_PDF_MODE_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.key}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] cursor-pointer ${
+                        orderPdfModes.includes(opt.key)
+                          ? 'border-violet-500/60 bg-violet-950/50 text-violet-100'
+                          : 'border-slate-600 text-slate-400 hover:border-slate-500'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={orderPdfModes.includes(opt.key)}
+                        onChange={() => toggleOrderPdfMode(opt.key)}
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void downloadOrderPdf(orderDetailModal.id, orderDetailModal.orderNumber)}
+                  disabled={!!orderPdfDownloadingId || orderPdfModes.length === 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-500/50 bg-violet-950/50 text-violet-100 text-xs font-semibold hover:bg-violet-900/60 disabled:opacity-50"
+                  title="선택한 방식으로 PDF ZIP 받기"
+                >
+                  {orderPdfDownloadingId === orderDetailModal.id
+                    ? 'PDF 생성 중…'
+                    : `⬇ PDF 다운로드 (${orderPdfModes.length}방식)`}
+                </button>
+              </div>
+            )}
 
             <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-4 p-0.5 bg-slate-900/40" role="tablist">
               <button

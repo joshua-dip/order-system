@@ -927,10 +927,19 @@ ${solbookRetailLine}
       : '';
     const solbookBlockMemberWaived =
       isSolbookTextbook && solbookCustomFeeWaived && solbookFee === 0
-        ? `
+        ? pointsUsedAmount > 0 && pointsUsedAmount >= variantSubtotal
+          ? `
 
 5-2. 쏠북 교재 (연·월 회원)
-: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 수수료가 면제되어, 고미조슈아로 별도 입금하실 금액이 없습니다. 변형 문항 제작 합계(${variantSubtotal.toLocaleString()}원)와 교재 본체 대금은 쏠북에서 결제해 주세요.
+: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 수수료가 면제되어, 고미조슈아로 별도 입금하실 금액이 없습니다. 변형 문항 제작 합계(${variantSubtotal.toLocaleString()}원)는 포인트로 결제 완료되었습니다. 교재 본체 대금만 쏠북에서 결제해 주세요.
+5-3. 교재 본체(쏠북) 안내
+${solbookPurchaseLine}
+${solbookRetailLine}
+변형문제 제작과 별도로, 교재 본체는 쏠북(또는 안내드리는 링크)을 통해 구매하시면 됩니다.`
+          : `
+
+5-2. 쏠북 교재 (연·월 회원)
+: 쏠북 지정 교재 주문입니다. 연회원·월구독 회원은 쏠북 커스텀 수수료가 면제되어, 고미조슈아로 별도 입금하실 금액이 없습니다. 변형 문항 제작 합계(${variantSubtotal.toLocaleString()}원)${pointsUsedAmount > 0 ? ` 중 ${pointsUsedAmount.toLocaleString()}P는 포인트로 결제하고, 잔액 ${Math.max(0, variantSubtotal - pointsUsedAmount).toLocaleString()}원과` : '와'} 교재 본체 대금은 쏠북에서 결제해 주세요.
 5-3. 교재 본체(쏠북) 안내
 ${solbookPurchaseLine}
 ${solbookRetailLine}
@@ -942,9 +951,17 @@ ${solbookRetailLine}
        「5. 가격」이 곧 입금액인데 라벨이 없어 회원이 총액과 헷갈렸다.
        쏠북 연계는 입금 대상이 다르므로(커스텀 수수료) 5-2·5-4 블록이 따로 안내한다.
        라벨 뒤에 괄호를 붙이면 매출 파서가 금액을 못 읽으므로 「금액: N원」형태를 지킨다. */
-    const depositDueWon = Math.max(0, totalPrice - pointsUsedAmount);
+    const depositDueWon = isSolbookTextbook
+      ? solbookFee
+      : Math.max(0, totalPrice - pointsUsedAmount);
     const pointLine = isSolbookTextbook
-      ? ''
+      ? pointsUsedAmount > 0
+        ? `\n\n포인트 사용(변형 제작비): ${pointsUsedAmount.toLocaleString()}P${
+            pointsUsedAmount >= variantSubtotal
+              ? ' — 변형 제작비는 포인트로 결제 완료. 쏠북에서는 교재 본체만 결제해 주세요.'
+              : ` — 쏠북 변형 제작 잔액 ${Math.max(0, variantSubtotal - pointsUsedAmount).toLocaleString()}원 + 교재 본체`
+          }\n`
+        : '\n\n'
       : `${
           pointsUsedAmount > 0 ? `\n\n포인트 사용: ${pointsUsedAmount.toLocaleString()}P\n` : '\n\n'
         }입금하실 금액: ${depositDueWon.toLocaleString()}원`;
@@ -957,8 +974,20 @@ ${solbookRetailLine}
     const priceBreakdownLine = isSolbookOrder
       ? `\n   (이곳 입금: 쏠북 커스텀 ${solbookExtraFeeWon.toLocaleString()}원 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
       : isSolbookTextbook && solbookCustomFeeWaived
-        ? `\n   (이곳 입금: 0원 — 연·월 회원 쏠북 커스텀 면제 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
+        ? pointsUsedAmount > 0 && pointsUsedAmount >= variantSubtotal
+          ? `\n   (이곳 입금: 0원 — 연·월 회원 쏠북 커스텀 면제 · 변형 제작 ${variantSubtotal.toLocaleString()}원은 포인트 결제 · 쏠북: 교재 본체)`
+          : pointsUsedAmount > 0
+            ? `\n   (이곳 입금: 0원 — 연·월 회원 쏠북 커스텀 면제 · 포인트 ${pointsUsedAmount.toLocaleString()}P · 쏠북 결제: 변형 잔액 ${Math.max(0, variantSubtotal - pointsUsedAmount).toLocaleString()}원 + 교재 본체)`
+            : `\n   (이곳 입금: 0원 — 연·월 회원 쏠북 커스텀 면제 · 쏠북 결제: 변형 제작 ${variantSubtotal.toLocaleString()}원 + 교재 본체)`
         : '';
+
+    const solbookDisclaimer = !isSolbookTextbook
+      ? ''
+      : pointsUsedAmount > 0 && pointsUsedAmount >= variantSubtotal
+        ? '\n   ※ 쏠북 연계 교재: 변형 제작비는 포인트로 결제되었습니다. 교재 본체만 쏠북에서 결제해 주세요.'
+        : pointsUsedAmount > 0
+          ? `\n   ※ 쏠북 연계 교재: 변형 제작비 중 ${pointsUsedAmount.toLocaleString()}원은 포인트, 잔액 ${Math.max(0, variantSubtotal - pointsUsedAmount).toLocaleString()}원과 교재 본체는 쏠북에서 결제해 주세요.`
+          : '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제합니다. 원하시면 변형 제작비를 포인트로 결제할 수 있습니다.';
 
     const orderText = `교재: ${isExternal ? '외부지문 변형문제 주문 (선생님이 등록한 지문)' : selectedTextbook}
 
@@ -976,7 +1005,7 @@ ${solbookRetailLine}
 5. 가격
 : ${isSolbookTextbook
     ? `${solbookFee.toLocaleString()}원 (이곳 입금 — 쏠북 커스텀 수수료${solbookCustomFeeWaived ? ' · 연·월 회원 면제' : ''})`
-    : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${quotaLine}${priceBreakdownLine}${pointLine}${isSolbookTextbook ? '\n   ※ 쏠북 연계 교재: 변형 제작비와 교재 본체는 쏠북에서 결제하시며, 포인트·멤버십 무료 문항은 적용되지 않습니다.' : ''}
+    : `${totalPrice.toLocaleString()}원${isDiscounted ? ` (${(discountRate * 100)}% 할인 적용: -${Math.round(discountAmount).toLocaleString()}원)` : ''}`}${quotaLine}${priceBreakdownLine}${pointLine}${solbookDisclaimer}
 
 5-1. HWP 저장 방식
 : ${formatHwpStorageSummary(hwpStorageModes)}${hwpStorageModes.includes('byRound') ? `\n   회차 수: ${roundCount}회차` : ''}
@@ -1023,7 +1052,10 @@ ${solbookRetailLine}
               purchaseUrl: solbookPurchaseUrl.trim(),
               retailPriceGuideText: solbookRetailGuideText.trim(),
               customFeeWaivedMember: solbookCustomFeeWaived && solbookFee === 0,
-              pointsDisabled: true,
+              variantFeeWon: variantSubtotal,
+              ...(pointsUsedAmount > 0
+                ? { variantPointsUsed: pointsUsedAmount, pointsDisabled: false }
+                : { pointsDisabled: false }),
             },
           }
         : {}),
@@ -1040,10 +1072,11 @@ ${solbookRetailLine}
   const generateOrder = () => {
     if (orderSubmittingRef.current) return;
     if (!validateOrder()) return;
-    const { totalPrice: tp, isSolbookTextbook: sb } = computeBookVariantPrice();
-    const maxUsable = Math.min(userPoints, tp);
+    const { totalPrice: tp, isSolbookTextbook: sb, variantSubtotal: vs } = computeBookVariantPrice();
+    /* 쏠북: 이곳 입금(커스텀)이 아니라 변형 제작비에 포인트를 쓴다 */
+    const maxUsable = Math.min(userPoints, sb ? vs : tp);
     const effective =
-      loggedIn && usePoints && userPoints > 0 && !sb ? Math.min(Math.max(0, pointsToUse), maxUsable) : 0;
+      loggedIn && usePoints && userPoints > 0 ? Math.min(Math.max(0, pointsToUse), maxUsable) : 0;
     void submitOrder(effective);
   };
 
@@ -1057,6 +1090,7 @@ ${solbookRetailLine}
     isDiscounted,
     isSolbookTextbook,
     solbookCustomFeeWaived,
+    variantSubtotal,
     quotaFreeCount,
     quotaPaidCount,
     advancedCount,
@@ -1069,23 +1103,21 @@ ${solbookRetailLine}
   /** 멤버십 무료 한도가 이 주문에 적용되는지 — 쏠북 교재는 제외한다(가격 계산과 같은 기준). */
   const membershipQuotaApplies = isPremiumMembership && !isSolbookTextbook && !isExternal;
 
-  const maxPointUsable = isSolbookTextbook ? 0 : Math.min(userPoints, totalPrice);
+  /* 쏠북: 변형 제작비(variantSubtotal)만 포인트로 낼 수 있다. 커스텀 입금은 그대로. */
+  const maxPointUsable = Math.min(userPoints, isSolbookTextbook ? variantSubtotal : totalPrice);
   const pointsAppliedPreview =
-    loggedIn && usePoints && userPoints > 0 && !isSolbookTextbook
+    loggedIn && usePoints && userPoints > 0
       ? Math.min(Math.max(0, pointsToUse), maxPointUsable)
       : 0;
-  const depositAfterPoints = Math.max(0, totalPrice - pointsAppliedPreview);
+  const depositAfterPoints = isSolbookTextbook
+    ? solbookFee
+    : Math.max(0, totalPrice - pointsAppliedPreview);
+  const solbookVariantRemainAfterPoints = Math.max(0, variantSubtotal - pointsAppliedPreview);
 
   useEffect(() => {
-    if (!isSolbookTextbook) return;
-    setUsePoints(false);
-    setPointsToUse(0);
-  }, [isSolbookTextbook]);
-
-  useEffect(() => {
-    if (!usePoints || userPoints <= 0 || isSolbookTextbook) return;
+    if (!usePoints || userPoints <= 0) return;
     setPointsToUse((p) => Math.min(Math.max(0, p), maxPointUsable));
-  }, [usePoints, userPoints, maxPointUsable, isSolbookTextbook]);
+  }, [usePoints, userPoints, maxPointUsable]);
 
   const _solbookLessonLinksData = solbookLessonLinksMap[selectedTextbook];
 
@@ -2114,8 +2146,92 @@ ${solbookRetailLine}
                             </div>
 
                             <p className="text-[11px] text-slate-500 leading-snug px-1">
-                              ※ 쏠북 가격 정책과의 혼선 방지를 위해 쏠북 연계 주문은 포인트 사용이 불가합니다.
+                              변형 제작비는 보통 쏠북에서 결제합니다. 보유 포인트로 변형 제작비를 대신 낼 수도 있습니다.
                             </p>
+                            {loggedIn && userPoints > 0 && variantSubtotal > 0 && (
+                              <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3.5 py-3 space-y-2">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-800 font-medium">내 포인트</span>
+                                  <span className="font-bold text-indigo-700 tabular-nums">
+                                    {userPoints.toLocaleString()}P
+                                  </span>
+                                </div>
+                                <label className="flex items-start gap-2.5 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                                    checked={usePoints}
+                                    onChange={(e) => {
+                                      const on = e.target.checked;
+                                      setUsePoints(on);
+                                      if (on) {
+                                        setPointsToUse(Math.min(userPoints, variantSubtotal));
+                                      } else {
+                                        setPointsToUse(0);
+                                      }
+                                    }}
+                                  />
+                                  <span className="text-gray-800 leading-snug text-sm">
+                                    변형 제작비를 포인트로 결제{' '}
+                                    <span className="text-gray-500">(최대 {variantSubtotal.toLocaleString()}P)</span>
+                                  </span>
+                                </label>
+                                {usePoints && (
+                                  <div className="space-y-2 border-t border-indigo-100 pt-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-xs text-gray-600">사용할 포인트</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setPointsToUse(maxPointUsable)}
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                                      >
+                                        전액
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={maxPointUsable}
+                                        value={pointsToUse}
+                                        onChange={(e) => {
+                                          const v = Math.max(
+                                            0,
+                                            Math.min(maxPointUsable, Math.floor(Number(e.target.value) || 0)),
+                                          );
+                                          setPointsToUse(v);
+                                        }}
+                                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-right text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                      />
+                                      <span className="text-gray-500 text-xs shrink-0">P</span>
+                                    </div>
+                                    {pointsAppliedPreview > 0 && (
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-green-700">포인트 차감</span>
+                                        <span className="font-bold text-green-700">
+                                          -{pointsAppliedPreview.toLocaleString()}P
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between text-xs border-t border-indigo-100 pt-2">
+                                      <span className="text-amber-900">쏠북 변형 제작 잔액</span>
+                                      <span className="font-bold text-amber-950 tabular-nums">
+                                        {solbookVariantRemainAfterPoints.toLocaleString()}원
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-violet-900">이곳 입금(커스텀)</span>
+                                      <span className="font-bold text-violet-950 tabular-nums">
+                                        {depositAfterPoints.toLocaleString()}원
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {loggedIn && userPoints === 0 && (
+                              <p className="text-[11px] text-slate-500 px-1">사용 가능한 포인트가 없습니다.</p>
+                            )}
                           </div>
                         ) : (
                           <>

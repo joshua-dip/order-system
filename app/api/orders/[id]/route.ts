@@ -8,8 +8,10 @@ import { tryRefundPointsAfterOrderCancelled } from '@/lib/refund-order-points-on
 import { isMemberCancellableOrder, memberCancelUpdateFilter } from '@/lib/order-cancellable';
 import {
   applyPointsToOrderText,
-  orderAmountDueBeforePoints,
+  applySolbookVariantPointsToOrderText,
+  resolveOrderPointsPayable,
   shouldConfirmPaymentAfterPoints,
+  withSolbookVariantPointsMeta,
 } from '@/lib/order-point-payment';
 
 const COLLECTION = 'orders';
@@ -116,19 +118,29 @@ export async function PATCH(
       }
       const balance = typeof userDoc.points === 'number' ? userDoc.points : 0;
 
-      /* 금액: 관리자가 지정하면 그 값, 아니면 주문서의 「입금하실 금액」(없으면 주문서 금액) 전액. */
+      /* 금액: 관리자가 지정하면 그 값, 아니면
+         ① 이곳 입금 잔액 또는 ② 쏠북 변형 제작비(입금 0원인 쏠북 주문). */
       const orderText = typeof existing.orderText === 'string' ? existing.orderText : '';
-      const dueBefore = orderAmountDueBeforePoints(orderText, (existing as { orderMeta?: unknown }).orderMeta);
+      const orderMeta = (existing as { orderMeta?: unknown }).orderMeta;
+      const payable = resolveOrderPointsPayable(orderText, orderMeta, already);
       const requested = Number(body?.amount);
-      const amount = Number.isFinite(requested) && requested > 0
-        ? Math.floor(requested)
-        : (dueBefore ?? 0);
+      const defaultAmount = payable?.amount ?? 0;
+      const amount =
+        Number.isFinite(requested) && requested > 0 ? Math.floor(requested) : defaultAmount;
       if (amount <= 0) {
         return NextResponse.json(
           {
-            error: dueBefore === 0
-              ? '입금하실 금액이 0원인 주문이라 포인트로 낼 금액이 없습니다.'
-              : '주문 금액을 읽지 못했습니다. 사용할 포인트를 직접 입력해 주세요.',
+            error: payable
+              ? '주문 금액을 읽지 못했습니다. 사용할 포인트를 직접 입력해 주세요.'
+              : '포인트로 낼 금액이 없습니다. (입금 0원·쏠북 변형 제작비도 없거나 이미 처리됨)',
+          },
+          { status: 400 },
+        );
+      }
+      if (payable && amount > payable.amount) {
+        return NextResponse.json(
+          {
+            error: `요청 금액(${amount.toLocaleString()}P)이 잔액(${payable.amount.toLocaleString()}P)보다 큽니다.`,
           },
           { status: 400 },
         );
@@ -140,18 +152,34 @@ export async function PATCH(
         );
       }
 
-      /* 주문서를 회원이 직접 포인트를 쓴 것과 같은 모양(포인트 사용·차감 후 입금액)으로 고치고,
-         낼 금액이 남지 않으면 입금 전 단계의 주문을 「입금 확인」으로 올린다 — lib/order-point-payment.
-         예전에는 포인트만 깎여 「주문 접수」에 머물고, 입금액·실입금 매출도 전액으로 잡혔다. */
-      const applied = dueBefore != null ? applyPointsToOrderText(orderText, amount, dueBefore) : null;
-      const paymentConfirmed = applied != null && shouldConfirmPaymentAfterPoints(existing.status, applied.dueAfter);
+      const kind = payable?.kind ?? 'deposit';
+      let nextText = orderText;
+      let paymentConfirmed = false;
+      let nextMeta: Record<string, unknown> | null = null;
+      let depositDueWon: number | null = null;
+
+      if (kind === 'solbook_variant' && payable?.kind === 'solbook_variant') {
+        nextText = applySolbookVariantPointsToOrderText(orderText, amount, payable.variantFeeWon);
+        nextMeta = withSolbookVariantPointsMeta(orderMeta, amount, payable.variantFeeWon);
+        /* 변형 제작비만 포인트로 낸 경우 — 이곳 입금이 원래 0원이면 입금 전 단계를 확인으로 올린다 */
+        paymentConfirmed = shouldConfirmPaymentAfterPoints(existing.status, 0);
+        depositDueWon = 0;
+      } else {
+        const dueBefore = payable?.kind === 'deposit' ? payable.amount : amount;
+        const applied = applyPointsToOrderText(orderText, amount, dueBefore);
+        nextText = applied.text;
+        paymentConfirmed = shouldConfirmPaymentAfterPoints(existing.status, applied.dueAfter);
+        depositDueWon = applied.dueAfter;
+      }
+
       await users.updateOne({ _id: userDoc._id }, { $inc: { points: -amount } });
       await col.updateOne(
         { _id: new ObjectId(id) },
         {
           $set: {
             pointsUsed: amount,
-            ...(applied && { orderText: applied.text }),
+            orderText: nextText,
+            ...(nextMeta && { orderMeta: nextMeta }),
             ...(paymentConfirmed && { status: 'payment_confirmed', paymentConfirmedAt: new Date() }),
           },
         },
@@ -164,8 +192,8 @@ export async function PATCH(
         meta: {
           orderNumber: existing.orderNumber ?? '',
           orderId: id,
-          /* 관리자가 대신 처리한 건임을 남긴다 — 회원이 직접 쓴 것과 구분된다. */
           byAdmin: adminPayload?.loginId ?? 'admin',
+          ...(kind === 'solbook_variant' ? { solbookVariant: true } : {}),
         },
       }).catch((e) => console.error('point_ledger 기록 실패:', e));
 
@@ -174,7 +202,8 @@ export async function PATCH(
         pointsUsed: amount,
         balanceAfter: balance - amount,
         name: userDoc.name ?? loginId,
-        depositDueWon: applied?.dueAfter ?? null,
+        kind,
+        depositDueWon,
         paymentConfirmed,
       });
     }
