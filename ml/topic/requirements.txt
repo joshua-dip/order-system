@@ -1,0 +1,2 @@
+# Apple Silicon MLX — 주제 LoRA 학습/추론
+mlx-lm>=0.22.0

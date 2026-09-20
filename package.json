@@ -17,6 +17,8 @@
     "mcp-bridge:dev": "node scripts/mcp-bridge-dev.cjs",
     "mcp:variant": "tsx scripts/mcp-next-order-variant.ts",
     "mcp:vip": "tsx scripts/mcp-next-order-vip.ts",
+    "cc:topic-export": "tsx scripts/export-topic-finetune-jsonl.ts",
+    "cc:topic-local": "tsx scripts/cc-topic-local.ts",
     "cc:variant": "tsx scripts/cc-variant-cli.ts",
     "cc:narrative": "tsx scripts/cc-narrative-cli.ts",
     "cc:essay": "tsx scripts/cc-essay-cli.ts",
