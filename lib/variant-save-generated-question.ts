@@ -117,6 +117,12 @@ export type SaveGeneratedQuestionInput = {
   option_type?: string;
   difficulty?: string;
   /**
+   * 문항을 만든 AI 출처 (예: 'claude', 'kimi', 'gpt').
+   * Kimi 등 Claude 외 AI가 작성한 문항은 반드시 기록해 생성 주체를 추적한다.
+   * 미지정 시 null.
+   */
+  ai_source?: string;
+  /**
    * 저장할 컬렉션. 기본은 판매 재고인 `generated_questions`.
    *
    * 공개 무료 배포용 문항은 `public_free_questions` 로 **따로** 넣는다
@@ -136,6 +142,7 @@ export type SaveGeneratedQuestionResult =
       source: string;
       type: string;
       status: string;
+      ai_source: string | null;
     }
   | { ok: false; error: string };
 
@@ -223,6 +230,8 @@ export async function saveGeneratedQuestionToDb(
     ? '상'
     : ((input.difficulty ?? input.question_data?.DifficultyLevel as string | undefined ?? '중').trim() || '중');
 
+  const aiSource = (input.ai_source ?? '').trim() || null;
+
   const doc = {
     textbook,
     passage_id: new ObjectId(passageIdStr),
@@ -232,6 +241,7 @@ export async function saveGeneratedQuestionToDb(
     difficulty,
     question_data,
     status: docStatus,
+    ai_source: aiSource,
     error_msg: null as string | null,
     created_at: now,
     updated_at: now,
@@ -249,5 +259,6 @@ export async function saveGeneratedQuestionToDb(
     source,
     type,
     status: docStatus,
+    ai_source: aiSource,
   };
 }

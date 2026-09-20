@@ -47,6 +47,9 @@ import {
  *                                                                      # 통합본: 인쇄 순서(지문 → 유형) 그대로 본다
  *                                                                      #   --insert 면 삽입도 옮기고, 삽입-고난도 정답 ①은 옮긴다
  *
+ * 모든 명령에 공통 [--round "07회"] — 그 회차 지문만으로 좁혀서 본다. 회차별·유형별 낱장 파일
+ * (cc:order-pdf --by round --split-type)은 회차마다 이웃 구조가 다시 달라지므로 회차 하나씩 돌린다.
+ *
  * 유형별 PDF 는 check·order·insert·shuffled 로, 통합본(cc:order-pdf --by round)은 bundle 로 본다 —
  * 통합본에서는 한 지문의 여러 유형이 이어서 나오므로 이웃이 유형별 열과 다르다.
  * 교정은 검수 전(status 대기)에 한다 — 검수 뒤 고치면 검수 기록과 본문이 어긋난다.
@@ -465,8 +468,21 @@ async function main(): Promise<void> {
   const db = await getDb('gomijoshua');
   const order = (await db.collection('orders').findOne({ orderNumber })) as Doc | null;
   if (!order) throw new Error(`${orderNumber}: 주문 없음`);
-  const scope = resolveOrderQuestionScope(order);
+  let scope = resolveOrderQuestionScope(order);
   if (!scope.targets.length) throw new Error(`${orderNumber}: 주문 범위(교재·지문)를 읽지 못했습니다`);
+  /* --round "07회" 면 그 회차 지문만 남긴다 — 회차별·유형별 파일(cc:order-pdf --by round --split-type)의
+     낱장 정답열은 75~125개짜리 통합 열과 이웃 구조가 달라 따로 봐야 한다. */
+  const roundIdx = args.indexOf('--round');
+  const roundFilter = roundIdx >= 0 ? args[roundIdx + 1] : undefined;
+  if (roundFilter) {
+    scope = {
+      ...scope,
+      targets: scope.targets
+        .map((t) => ({ ...t, sources: t.sources.filter((s) => s.includes(roundFilter)), label: roundFilter }))
+        .filter((t) => t.sources.length > 0),
+    };
+    if (!scope.targets.length) throw new Error(`${orderNumber}: --round "${roundFilter}" 에 해당하는 지문이 없습니다`);
+  }
   await run({ db, orderNumber, scope, apply: args.includes('--apply'), args });
   process.exit(0);
 }

@@ -33,7 +33,7 @@ import {
 /**
  * 주문 → 회원 인쇄 양식(users.variantPrintFormat) PDF. 관리자 인쇄 라우트와 같은 조판기(buildVariantPrintHtml)를 쓴다.
  *
- *   npm run cc:order-pdf -- <주문번호…> [--check] [--by type|round] [--type-order exam|order] [--zip] [--login <loginId>] [--out <폴더>]
+ *   npm run cc:order-pdf -- <주문번호…> [--check] [--by type|round|round-type] [--type-order exam|order] [--zip] [--login <loginId>] [--out <폴더>]
  *
  *  - 회원은 주문의 loginId 로 찾는다(--login 으로 덮어쓰기). 기본 출력: ~/Downloads/<이름> 선생님 자료/<주문번호>/
  *  - --by type(기본): 유형별 파일 「<범위> <유형>.pdf」.
@@ -41,6 +41,10 @@ import {
  *    「<교재> 통합본.pdf」(연도별 통합본). 한 지문의 유형이 붙어 나오게 번호 → 유형 순으로 묶고,
  *    유형은 수능 문항 번호 순(함의→어법→어휘→빈칸→순서→삽입→요약)이다. --type-order order 면 주문서에서 고른 순서.
  *    통합본은 인쇄 순서가 유형별 열과 다르므로 이웃 정답은 npm run cc:answer-seq -- bundle 로 본다.
+ *  - --by round-type: 회차별 **+** 유형별 낱장(통합·유형별 둘 다와 다른 셋째 형태) — 「07회 글의 순서.pdf」처럼
+ *    회차 하나·유형 하나씩 파일이 나뉜다. 회차마다 그 회차 지문만의 유형별 열이라 통합본과도, 전체 유형별
+ *    열과도 이웃이 다르므로 이웃 정답은 npm run cc:answer-seq -- check/order/insert/shuffled 를 **회차별로**
+ *    (`--round "07회"`) 따로 본다.
  *  - status 완료 문항만, (출처, 유형)당 주문 수량만 낸다 — 지문에 쌓인 재고를 전부 내면 안 된다.
  *  - --check: PDF 없이 수량·부족·정답열만. --zip: ~/Downloads/<주문번호>.zip(--out 을 주면 그 폴더 안),
  *    UTF-8 파일명·NFC 라 윈도우에서 한글이 안 깨진다.
@@ -176,6 +180,18 @@ async function renderByType(job: Job, target: OrderScopeTarget, title: string): 
   return missing;
 }
 
+/** 회차별로 나눈 뒤, 그 안에서 다시 유형별로 낸다 — 「07회 글의 순서.pdf」처럼 회차×유형 낱장. */
+async function renderByRoundType(job: Job, target: OrderScopeTarget): Promise<number> {
+  let missing = 0;
+  for (const b of await fetchOrderBundles(job.db, target, job.scope, { statuses: ['완료'], typeOrder: job.typeOrder })) {
+    const roundTarget: OrderScopeTarget = { textbook: target.textbook, sources: b.sources, label: b.round ?? target.label };
+    const title = b.round ? `${target.textbook} ${b.round}` : target.textbook;
+    console.log(`    [${title}] 지문 ${b.sources.length}`);
+    missing += await renderByType(job, roundTarget, title);
+  }
+  return missing;
+}
+
 async function renderByRound(job: Job, target: OrderScopeTarget): Promise<number> {
   const types = bundleTypeOrder(job.scope.types, job.typeOrder);
   const kinds = types.every((t) => /-고난도$/.test(t)) ? `고난도 ${types.length}유형` : `${types.length}유형`;
@@ -211,12 +227,14 @@ async function renderByRound(job: Job, target: OrderScopeTarget): Promise<number
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const checkOnly = args.includes('--check');
-  const byRound = argValue(args, '--by') === 'round';
+  const byArg = argValue(args, '--by');
+  const byRound = byArg === 'round';
+  const byRoundType = byArg === 'round-type';
   const typeOrder: BundleTypeOrder = argValue(args, '--type-order') === 'order' ? 'order' : 'exam';
   const orderNumbers = args.filter((a) => /^[A-Z]{2}-\d{8}-\d{3,}$/.test(a));
   if (!orderNumbers.length) {
     console.log(
-      '사용법: npm run cc:order-pdf -- <주문번호…> [--check] [--by type|round] [--type-order exam|order] [--zip] [--login <loginId>] [--out <폴더>]',
+      '사용법: npm run cc:order-pdf -- <주문번호…> [--check] [--by type|round|round-type] [--type-order exam|order] [--zip] [--login <loginId>] [--out <폴더>]',
     );
     process.exit(1);
   }
@@ -238,7 +256,12 @@ async function main(): Promise<void> {
       const member = str(user?.name).trim() || loginId || '회원';
       const root = argValue(args, '--out') ?? path.join(os.homedir(), 'Downloads', `${member} 선생님 자료`);
       const job: Job = { db, scope, format, checkOnly, typeOrder, outDir: path.join(root, on), getBrowser };
-      console.log(`\n═══ ${on} | 회원 ${member} | ${byRound ? `통합본(유형 ${typeOrder === 'exam' ? '수능 번호 순' : '주문서 순'})` : '유형별'} | 양식 ${JSON.stringify(format)}`);
+      const modeLabel = byRound
+        ? `통합본(유형 ${typeOrder === 'exam' ? '수능 번호 순' : '주문서 순'})`
+        : byRoundType
+          ? '회차별 · 유형별'
+          : '유형별';
+      console.log(`\n═══ ${on} | 회원 ${member} | ${modeLabel} | 양식 ${JSON.stringify(format)}`);
       if (!scope.targets.length) {
         console.log('  ⚠ 주문 범위(교재·지문)를 읽지 못했습니다');
         continue;
@@ -246,7 +269,11 @@ async function main(): Promise<void> {
       for (const target of scope.targets) {
         const title = target.label === target.textbook ? target.textbook : `${target.textbook} ${target.label}`;
         console.log(`  ▸ ${title} | 지문 ${target.sources.length} | 유형 ${scope.types.join(',')}`);
-        missingTotal += byRound ? await renderByRound(job, target) : await renderByType(job, target, title);
+        missingTotal += byRound
+          ? await renderByRound(job, target)
+          : byRoundType
+            ? await renderByRoundType(job, target)
+            : await renderByType(job, target, title);
       }
       if (!checkOnly && args.includes('--zip') && fs.existsSync(job.outDir)) {
         const dest = path.join(argValue(args, '--out') ?? path.join(os.homedir(), 'Downloads'), `${on}.zip`);

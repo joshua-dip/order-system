@@ -151,6 +151,7 @@ async function runSave(args: {
   status?: string;
   option_type?: string;
   difficulty?: string;
+  ai_source?: string;
 }) {
   const passageIdStr = args.passage_id.trim();
   const textbook = args.textbook.trim();
@@ -213,6 +214,7 @@ async function runSave(args: {
     status: docStatus,
     option_type,
     difficulty,
+    ai_source: args.ai_source,
   });
   if (!saved.ok) {
     return textError(saved.error);
@@ -225,6 +227,7 @@ async function runSave(args: {
     source: saved.source,
     type: saved.type,
     status: saved.status,
+    ai_source: saved.ai_source,
   });
 }
 
@@ -436,7 +439,8 @@ async function main() {
     'variant_save_generated_question',
     {
       description:
-        'variant_generate_draft로 받은 question_data를 generated_questions에 저장합니다. 기본 status는 대기(검수 전).',
+        'variant_generate_draft로 받은 question_data를 generated_questions에 저장합니다. 기본 status는 대기(검수 전). ' +
+        '문항을 만든 AI가 Claude가 아니면(예: Kimi) ai_source에 해당 AI 이름을 반드시 넣으세요.',
       inputSchema: {
         passage_id: z.string(),
         textbook: z.string(),
@@ -448,6 +452,10 @@ async function main() {
         status: z.string().optional().describe('기본: 대기'),
         option_type: z.string().optional().describe('기본: English'),
         difficulty: z.string().optional().describe("난이도: '하', '중', '상' (기본: question_data.DifficultyLevel 또는 '중')"),
+        ai_source: z
+          .string()
+          .optional()
+          .describe("문항을 만든 AI 출처 (예: 'claude', 'kimi', 'gpt'). Kimi가 작성·저장하면 'kimi'로 기록. 미지정 시 null"),
       },
     },
     async (args) => runSave(args)
@@ -486,6 +494,8 @@ async function main() {
         type: args.type,
         question_data_json: JSON.stringify(parsed.question_data),
         status: args.status,
+        // 이 도구는 Anthropic API(Claude)로 초안을 만들므로 출처를 claude로 고정 기록
+        ai_source: 'claude',
       });
     }
   );
