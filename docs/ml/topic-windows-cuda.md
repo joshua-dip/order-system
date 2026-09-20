@@ -181,6 +181,16 @@ set TOPIC_BACKEND=cuda
 npm run cc:topic-local -- --passage-id <ObjectId>
 ```
 
+**원클릭 (PowerShell, 저장소 루트):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1
+# 빠른 스모크 학습만
+powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -MaxSteps 100
+# export 이미 했으면
+powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -SkipExport
+```
+
 ---
 
 ## 9. 관련 문서
