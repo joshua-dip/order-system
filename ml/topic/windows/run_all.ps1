@@ -1,7 +1,5 @@
-# 주제 LoRA — Windows 원클릭 (setup → export → train)
-#   powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1
+# Topic LoRA Windows one-shot: setup -> export -> train
 #   powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -LowVram
-#   powershell -ExecutionPolicy Bypass -File run_all.ps1 -SkipExport -MaxSteps 100
 
 param(
   [string]$Model = "Qwen/Qwen2.5-7B-Instruct",
@@ -30,14 +28,14 @@ if (-not (Test-Path ".\.venv\Scripts\python.exe")) {
 & .\.venv\Scripts\python.exe smoke_check.py
 if ($LASTEXITCODE -ne 0) { throw "smoke_check failed" }
 if ($SmokeOnly) {
-  Write-Host "SmokeOnly — 종료"
+  Write-Host "SmokeOnly done"
   exit 0
 }
 
 if (-not $SkipExport) {
   Set-Location $Root
   if (-not (Test-Path ".\.env") -and -not (Test-Path ".\.env.local")) {
-    throw ".env 또는 .env.local 에 MONGODB_URI 가 필요합니다."
+    throw "Need .env or .env.local with MONGODB_URI"
   }
   Write-Host "== npm run cc:topic-export"
   npm run cc:topic-export
@@ -47,11 +45,8 @@ if (-not $SkipExport) {
 
 if (-not $SkipTrain) {
   if ($LowVram) {
-    Write-Host "== train LOW-VRAM (0.5B, no 4bit) — GTX 1050 Ti 등"
-    $trainArgs = @(
-      "train.py",
-      "--low-vram"
-    )
+    Write-Host "== train LOW-VRAM (0.5B, no 4bit) for GTX 1050 Ti"
+    $trainArgs = @("train.py", "--low-vram")
     if ($Model -ne "Qwen/Qwen2.5-7B-Instruct") {
       $trainArgs += @("--model", $Model)
     }
@@ -71,5 +66,5 @@ if (-not $SkipTrain) {
 }
 
 Write-Host ""
-Write-Host "완료. 추론: ask.bat"
-Write-Host "또는 루트에서: set TOPIC_BACKEND=cuda && npm run cc:topic-local -- --passage-id <id>"
+Write-Host "Done. Infer: ask.bat"
+Write-Host "Or from repo root: npm run cc:topic-local -- --backend cuda --passage-id PASSAGE_ID"

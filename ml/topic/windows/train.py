@@ -210,18 +210,55 @@ def main() -> int:
         "packing": False,
         "gradient_checkpointing": True,
         "gradient_checkpointing_kwargs": {"use_reentrant": False},
+        "max_seq_length": args.max_seq_len,
     }
-    sft_kwargs["max_seq_length"] = args.max_seq_len
     if has_eval:
         sft_kwargs["eval_strategy"] = "steps"
         sft_kwargs["eval_steps"] = 200
 
-    try:
-        sft_args = SFTConfig(**sft_kwargs)
-    except TypeError:
-        sft_kwargs.pop("max_seq_length", None)
-        sft_kwargs["max_length"] = args.max_seq_len
-        sft_args = SFTConfig(**sft_kwargs)
+    # TRL / transformers 버전마다 인자 이름이 다름 — 모르는 키는 빼고 재시도
+    alias = {
+        "max_seq_length": "max_length",
+        "warmup_ratio": "warmup_steps",
+    }
+    sft_args = None
+    last_err: Exception | None = None
+    for _ in range(12):
+        try:
+            sft_args = SFTConfig(**sft_kwargs)
+            break
+        except TypeError as e:
+            last_err = e
+            msg = str(e)
+            # unexpected keyword argument 'foo'
+            key = None
+            if "unexpected keyword argument" in msg:
+                key = msg.rsplit("'", 2)[-2] if "'" in msg else None
+            if not key:
+                # try aliases once
+                changed = False
+                for old, new in list(alias.items()):
+                    if old in sft_kwargs:
+                        val = sft_kwargs.pop(old)
+                        if new == "warmup_steps" and isinstance(val, float) and val < 1:
+                            # ratio -> rough step count
+                            sft_kwargs[new] = max(1, int(100 * val)) if max_steps < 0 else max(1, int(max_steps * val))
+                        else:
+                            sft_kwargs[new] = val
+                        changed = True
+                if changed:
+                    continue
+                raise
+            sft_kwargs.pop(key, None)
+            if key == "max_seq_length":
+                sft_kwargs.setdefault("max_length", args.max_seq_len)
+            if key == "warmup_ratio":
+                sft_kwargs.setdefault(
+                    "warmup_steps",
+                    max(1, int(max_steps * 0.03)) if max_steps > 0 else 10,
+                )
+    if sft_args is None:
+        raise last_err or RuntimeError("SFTConfig failed")
 
     trainer_kwargs: dict = {
         "model": model,
