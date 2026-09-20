@@ -398,6 +398,7 @@ async function cmdSave(flags: Map<string, string>) {
     if (!qd || typeof qd !== 'object' || Array.isArray(qd)) { results.push({ index: i, ok: false, error: 'question_data 객체가 필요합니다' }); continue; }
     const status = o.status != null ? String(o.status) : undefined;
     const option_type = o.option_type != null ? String(o.option_type) : undefined;
+    const ai_source = o.ai_source != null ? String(o.ai_source) : undefined;
 
     /* 같은 파일을 두 번 저장해 문항이 통째로 복제되는 사고를 막는다.
        판별 기준은 지문·유형·본문(Paragraph) — 발문은 유형마다 정형이라 같은 지문·같은 유형이면
@@ -449,6 +450,7 @@ async function cmdSave(flags: Map<string, string>) {
       question_data: qd as Record<string, unknown>,
       status,
       option_type,
+      ai_source,
     });
     results.push({ index: i, ...saved });
     if (items.length > 1) console.error(`  [${i + 1}/${items.length}] ${source} / ${type} → ${saved.ok ? 'OK' : saved.error}`);

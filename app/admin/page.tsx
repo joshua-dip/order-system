@@ -228,6 +228,89 @@ function isInstantUseFlow(flow: string | null | undefined): boolean {
   return !!flow && INSTANT_USE_FLOWS.has(String(flow).trim());
 }
 
+/** 변형 문항 재고(문제수 검증) 대상 flow — /api/admin/orders/stock 과 동일 */
+const VARIANT_STOCK_FLOWS = new Set(['bookVariant', 'mockVariant', 'unifiedVariant']);
+function isVariantStockFlow(flow: string | null | undefined): boolean {
+  return !!flow && VARIANT_STOCK_FLOWS.has(String(flow).trim());
+}
+
+type OrderStockSummary = {
+  orderId: string;
+  applicable: boolean;
+  flow?: string | null;
+  orderNumber?: string | null;
+  ok?: boolean;
+  error?: string;
+  needCreateGrandTotal?: number;
+  pendingReviewTotal?: number;
+  passageCount?: number;
+  requiredPerType?: number;
+  typesCheckedCount?: number;
+  lessonsWithoutPassageCount?: number;
+  message?: string;
+};
+
+function orderStockBadge(stock: OrderStockSummary | undefined, loading: boolean): {
+  label: string;
+  className: string;
+  title: string;
+} {
+  if (loading && !stock) {
+    return {
+      label: '확인 중…',
+      className: 'bg-slate-700/80 text-slate-400 border-slate-600',
+      title: '주문 범위 변형 문항 재고를 집계하는 중',
+    };
+  }
+  if (!stock || !stock.applicable) {
+    return {
+      label: '—',
+      className: 'bg-transparent text-slate-600 border-transparent',
+      title: '변형 재고 집계 대상이 아닌 주문(단어장·워크북 등)',
+    };
+  }
+  if (!stock.ok) {
+    return {
+      label: '확인불가',
+      className: 'bg-slate-700/80 text-slate-300 border-slate-500/80',
+      title: stock.error || '재고를 확인할 수 없습니다',
+    };
+  }
+  const need = stock.needCreateGrandTotal ?? 0;
+  const pending = stock.pendingReviewTotal ?? 0;
+  const missingLessons = stock.lessonsWithoutPassageCount ?? 0;
+  const bits: string[] = [];
+  if (stock.passageCount != null) bits.push(`지문 ${stock.passageCount}개`);
+  if (stock.typesCheckedCount != null && stock.requiredPerType != null) {
+    bits.push(`유형×${stock.typesCheckedCount} · 유형당 ${stock.requiredPerType}문항`);
+  }
+  if (missingLessons > 0) bits.push(`미매칭 지문 ${missingLessons}`);
+  if (need > 0) bits.push(`신규 제작 필요 ${need}문항`);
+  if (pending > 0) bits.push(`검수 대기 ${pending}문항`);
+  if (need === 0 && pending === 0) bits.push('주문 범위 재고 충분');
+  const title = bits.join(' · ');
+
+  if (need > 0) {
+    return {
+      label: `부족 ${need.toLocaleString()}`,
+      className: 'bg-rose-500/20 text-rose-200 border-rose-400/50',
+      title,
+    };
+  }
+  if (pending > 0) {
+    return {
+      label: `충분·검수 ${pending.toLocaleString()}`,
+      className: 'bg-amber-500/15 text-amber-200 border-amber-400/45',
+      title,
+    };
+  }
+  return {
+    label: '충분',
+    className: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/45',
+    title,
+  };
+}
+
 // ── 신규 가입 신청 (대시보드 인라인 승인) ─────────────────────────────────────
 /** 가입 승인(계정 자동 생성) 시 함께 지급하는 포인트 구매 할인 쿠폰 기본 할인율(%) */
 const SIGNUP_WELCOME_COUPON_PCT = 10;
@@ -539,6 +622,12 @@ export default function AdminDashboardPage() {
 
   const [recentOrders, setRecentOrders] = useState<AdminOrder[]>([]);
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(false);
+  /** 주문별 변형 문항 재고 요약 (BV/MV/통합만) */
+  const [orderStockById, setOrderStockById] = useState<Record<string, OrderStockSummary>>({});
+  const [orderStockLoading, setOrderStockLoading] = useState(false);
+  const orderStockFetchKeyRef = useRef('');
+  /** 주문 목록 새로고침 시 동일 id여도 재고를 다시 집계 */
+  const [orderStockRefreshTick, setOrderStockRefreshTick] = useState(0);
   const [orderFilter, setOrderFilter] = useState<AdminOrderListFilter>('all');
   const [orderSearch, setOrderSearch] = useState('');
   const [orderDetailModal, setOrderDetailModal] = useState<AdminOrder | null>(null);
@@ -680,7 +769,12 @@ export default function AdminDashboardPage() {
   }, [applyUsers]);
 
   const applyOrders = useCallback((d: { orders?: AdminOrder[] } | null) => {
-    if (d?.orders) setRecentOrders(d.orders);
+    if (d?.orders) {
+      /* 주문 목록이 갱신되면 재고도 다시 본다(제작 후 새로고침 등) */
+      orderStockFetchKeyRef.current = '';
+      setOrderStockRefreshTick((t) => t + 1);
+      setRecentOrders(d.orders);
+    }
   }, []);
 
   const fetchOrders = useCallback(() => {
@@ -2782,6 +2876,12 @@ export default function AdminDashboardPage() {
 
   const today = new Date().toDateString();
   const todayOrders = recentOrders.filter((o) => new Date(o.createdAt).toDateString() === today);
+  /** 총 회원 카드용 구분별 집계 — memberType 미지정(과거 가입 등)은 「미분류」로 묶는다. */
+  const memberTypeCounts = users.reduce<Record<string, number>>((acc, u) => {
+    const key = u.memberType && MEMBER_TYPE_LABELS[u.memberType] ? u.memberType : 'unknown';
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
   /**
    * 취소 아님 + 드롭박스 공유 링크(fileUrl) 없음 = 대시보드에서 말하는 「미처리」.
    * 단, 단어장 등 즉시 사용 상품(flow=vocabulary)은 fulfillment 대상이 아니라 제외.
@@ -2854,6 +2954,53 @@ export default function AdminDashboardPage() {
       return next;
     });
   }, [displayOrderIdsKey]);
+
+  /** 표시 중인 변형 주문의 문항 재고(충분/부족)를 배치 조회 */
+  useEffect(() => {
+    const targets = displayOrders.filter((o) => isVariantStockFlow(o.orderMetaFlow));
+    const key = targets.map((o) => o.id).join('|');
+    if (key === orderStockFetchKeyRef.current) return;
+    orderStockFetchKeyRef.current = key;
+    if (targets.length === 0) {
+      setOrderStockById({});
+      setOrderStockLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setOrderStockLoading(true);
+    fetch('/api/admin/orders/stock', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderIds: targets.map((o) => o.id) }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d?.error || '재고 조회 실패');
+        return d as { byId?: Record<string, OrderStockSummary> };
+      })
+      .then((d) => {
+        if (cancelled) return;
+        setOrderStockById(d.byId && typeof d.byId === 'object' ? d.byId : {});
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setOrderStockById({});
+      })
+      .finally(() => {
+        if (!cancelled) setOrderStockLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // displayOrders는 displayOrderIdsKey로 대표 — 동일 주문 집합이면 재요청하지 않음
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayOrderIdsKey, orderStockRefreshTick]);
+
+  const orderStockShortageCount = displayOrders.filter((o) => {
+    const s = orderStockById[o.id];
+    return s?.applicable && s.ok && (s.needCreateGrandTotal ?? 0) > 0;
+  }).length;
 
   const allVisibleOrdersSelected =
     displayOrders.length > 0 && displayOrders.every((o) => orderBulkSelectedIds.has(o.id));
@@ -3304,6 +3451,23 @@ export default function AdminDashboardPage() {
               <p className="text-slate-400 text-sm">총 회원</p>
               <p className="text-2xl font-bold text-white mt-1">{users.length}명</p>
               <p className="text-slate-500 text-xs mt-1">+{stats?.newMembersThisMonth ?? 0}명 이번 달</p>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {(['student', 'parent', 'teacher'] as const)
+                  .filter((t) => memberTypeCounts[t] > 0)
+                  .map((t) => (
+                    <span
+                      key={t}
+                      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${MEMBER_TYPE_BADGE_CLASS[t]}`}
+                    >
+                      {MEMBER_TYPE_LABELS[t]} {memberTypeCounts[t]}
+                    </span>
+                  ))}
+                {memberTypeCounts.unknown > 0 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-600/40 text-slate-300 ring-1 ring-slate-500/40">
+                    미분류 {memberTypeCounts.unknown}
+                  </span>
+                )}
+              </div>
             </div>
             <button
               type="button"
@@ -3577,6 +3741,17 @@ export default function AdminDashboardPage() {
                       <strong className="text-sky-300 tabular-nums">{orderAnalytics.pointsUsedTotal.toLocaleString()}P</strong>
                     </span>
                   ) : null}
+                  {orderStockLoading ? (
+                    <span className="text-slate-500">변형 재고 확인 중…</span>
+                  ) : orderStockShortageCount > 0 ? (
+                    <span title="표시 목록 중 BV·MV·통합변형에서 신규 제작이 필요한 주문">
+                      재고 부족 주문:{' '}
+                      <strong className="text-rose-300 tabular-nums">{orderStockShortageCount}</strong>
+                      <span className="text-slate-600"> (변형 문항 미비)</span>
+                    </span>
+                  ) : displayOrders.some((o) => isVariantStockFlow(o.orderMetaFlow)) ? (
+                    <span className="text-emerald-400/90">표시 중 변형 주문 재고 충분</span>
+                  ) : null}
                 </div>
                 {orderAnalytics.byFlow.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-slate-700/80">
@@ -3639,6 +3814,12 @@ export default function AdminDashboardPage() {
                         title="일반: 인식된 입금액. 쏠북 연계 BV: 위=쏠북 커스텀만 집계, 아래=주문 합계(변형 제작 포함)"
                       >
                         금액
+                      </th>
+                      <th
+                        className="text-left py-3 px-2 min-w-[6.5rem]"
+                        title="부교재·모의고사·통합 변형: 주문 범위 문항 재고. 부족=신규 제작 필요, 충분·검수=문항은 있으나 대기 검수"
+                      >
+                        재고
                       </th>
                       <th className="text-left py-3 px-2 min-w-[5.5rem]">상태</th>
                       <th
@@ -3968,6 +4149,36 @@ export default function AdminDashboardPage() {
                           ) : (
                             <span className="text-slate-600">—</span>
                           )}
+                        </td>
+                        <td className="py-2.5 px-2 align-top">
+                          {(() => {
+                            const stock = orderStockById[o.id];
+                            const badge = orderStockBadge(
+                              stock,
+                              orderStockLoading && isVariantStockFlow(o.orderMetaFlow),
+                            );
+                            if (!isVariantStockFlow(o.orderMetaFlow)) {
+                              return <span className="text-slate-600 text-[11px]">—</span>;
+                            }
+                            return (
+                              <div className="flex flex-col items-start gap-1">
+                                <span
+                                  className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold tabular-nums whitespace-nowrap ${badge.className}`}
+                                  title={badge.title}
+                                >
+                                  {badge.label}
+                                </span>
+                                <Link
+                                  href={`/admin/generated-questions?qCountOrderId=${encodeURIComponent(o.id)}`}
+                                  className="text-[10px] text-cyan-400/90 hover:text-cyan-300 underline-offset-2 hover:underline"
+                                  title="문제수 검증 화면에서 주문 범위 상세 보기"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  상세
+                                </Link>
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="py-2.5 px-2 align-top">
                           <div className="flex flex-col items-start gap-1.5">

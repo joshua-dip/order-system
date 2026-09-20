@@ -1,6 +1,29 @@
 # 작업 인수인계
 
-## 최신: 지문 분석지 PDF UI 재검토 · 2026-09-09
+## 최신: BV-20260915-004 변형문제 제작 완료 · 2026-09-16
+
+**[BV-20260915-004 변형제작 인수인계](docs/handoff/2026-09-16-BV-20260915-004-변형제작.md)**에 제작 절차·규칙이 남아 있습니다.
+
+- 장훈 선생님 주문(수능유형 PICK 독해 실력, 39지문 × 11유형 × 3문항 = **1,287문항**) 전량 작성·저장 완료. 1지문은 메인 세션, 나머지 38지문은 7개 wave의 병렬 에이전트(샤드 s02~s39)로 제작. 전 문항 `ai_source: "kimi"`.
+- 마감 검증 전부 통과: pipeline 자동 검수 1,287/1,287 완료(검수불일치 0) → `cc:answer-seq check` 11유형 전부 117/117 → 교재 단위 `cc:audit` error 0·contentIntegrity 0·중복 보기 0·순서 유형 skewed false.
+- 주문 상태(payment_confirmed)는 아직 변경하지 않음 — 완료 처리는 사용자 확인 후 진행.
+
+---
+
+## 이전: 변형문제 AI 출처(ai_source) 기록 규칙 · 2026-09-16
+
+AI가 만든 변형문제를 MongoDB `generated_questions`에 넣을 때 **어떤 AI가 만들었는지 `ai_source` 필드로 함께 기록**합니다.
+
+- 필드: 문서 최상위 `ai_source` (문자열, 예: `'claude'`, `'kimi'`, `'gpt'`). 미지정 시 `null`.
+- 저장 경로: `lib/variant-save-generated-question.ts`의 `saveGeneratedQuestionToDb`가 `input.ai_source`를 trim해 문서에 넣고, 반환값에도 포함합니다.
+- MCP 도구:
+  - `variant_save_generated_question` — `ai_source` 선택 인자 추가. **Kimi 등 Claude 외 AI가 작성·저장하면 반드시 해당 이름(예: `kimi`)을 넣을 것.**
+  - `variant_generate_and_save` — Anthropic API로 초안을 만들므로 `ai_source: 'claude'`로 자동 고정.
+- 주의: 실행 중인 MCP 서버는 재시작해야 새 `ai_source` 인자가 도구 스키마에 반영됩니다.
+
+---
+
+## 이전: 지문 분석지 PDF UI 재검토 · 2026-09-09
 
 **[최신 PDF UI 재검토 및 Mac 작업 안내](docs/handoff/2026-09-09-분석지-PDF-UI-재검토.md)**를 먼저 읽어주세요.
 
