@@ -1,6 +1,9 @@
 # 주제 유형 — Windows CUDA QLoRA (짧은 치트시트)
 
 ```bat
+REM 0) (선택) GPU 없이 파일·JSON 복구만 확인
+python smoke_check.py
+
 REM 1) 최초 1회
 setup.bat
 

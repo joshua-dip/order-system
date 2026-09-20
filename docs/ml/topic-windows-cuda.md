@@ -153,6 +153,7 @@ npm run cc:topic-local -- --backend cuda --passage-id <ObjectId> --save
 
 ## 7. 권장 진행 순서
 
+0. [ ] (선택) GPU 없이 골격만: `python smoke_check.py`  
 1. [ ] `setup.bat` → `cuda=True` 확인  
 2. [ ] `npm run cc:topic-export`  
 3. [ ] `train.bat … 100` 스모크 → `ask.bat` 로 JSON 골격 확인  

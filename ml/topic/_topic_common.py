@@ -32,25 +32,58 @@ def extract_json_object(text: str) -> dict | None:
             return obj
     except json.JSONDecodeError:
         pass
-    m = re.search(r"\{[\s\S]*", text)
-    if not m:
+
+    start = text.find("{")
+    if start < 0:
         return None
-    chunk = m.group(0)
-    try:
-        obj = json.loads(chunk)
-        return obj if isinstance(obj, dict) else None
-    except json.JSONDecodeError:
-        pass
-    # 생성 길이 한도로 잘린 JSON — 문자열·중괄호만 닫아서 복구 시도
-    repaired = chunk
-    if repaired.count('"') % 2 == 1:
-        repaired += '"'
-    repaired += "}" * max(0, repaired.count("{") - repaired.count("}"))
-    try:
-        obj = json.loads(repaired)
-        return obj if isinstance(obj, dict) else None
-    except json.JSONDecodeError:
-        return None
+
+    # 중괄호 균형으로 첫 객체만 잘라낸다 (뒤에 잡텍스트가 있어도)
+    depth = 0
+    in_str = False
+    esc = False
+    end = -1
+    for i, ch in enumerate(text[start:], start):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i
+                break
+
+    candidates: list[str] = []
+    if end >= 0:
+        candidates.append(text[start : end + 1])
+    candidates.append(text[start:])  # 잘린 JSON 복구용
+
+    for chunk in candidates:
+        try:
+            obj = json.loads(chunk)
+            if isinstance(obj, dict):
+                return obj
+        except json.JSONDecodeError:
+            pass
+        repaired = chunk
+        if repaired.count('"') % 2 == 1:
+            repaired += '"'
+        repaired += "}" * max(0, repaired.count("{") - repaired.count("}"))
+        try:
+            obj = json.loads(repaired)
+            if isinstance(obj, dict):
+                return obj
+        except json.JSONDecodeError:
+            continue
+    return None
 
 
 def split_options(raw: object) -> list[str]:

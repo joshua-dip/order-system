@@ -148,40 +148,55 @@ def main() -> int:
 
     args.adapter.mkdir(parents=True, exist_ok=True)
     max_steps = args.max_steps if args.max_steps > 0 else -1
-
-    sft_args = SFTConfig(
-        output_dir=str(args.adapter / "checkpoints"),
-        num_train_epochs=args.epochs if max_steps < 0 else 1.0,
-        max_steps=max_steps,
-        per_device_train_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.grad_accum,
-        learning_rate=args.lr,
-        logging_steps=10,
-        save_steps=200,
-        save_total_limit=2,
-        bf16=torch.cuda.is_bf16_supported(),
-        fp16=not torch.cuda.is_bf16_supported(),
-        optim="paged_adamw_8bit",
-        lr_scheduler_type="cosine",
-        warmup_ratio=0.03,
-        report_to="none",
-        seed=args.seed,
-        max_seq_length=args.max_seq_len,
-        dataset_text_field="text",
-        packing=False,
-        gradient_checkpointing=True,
-        gradient_checkpointing_kwargs={"use_reentrant": False},
-    )
-
     eval_ds = ds.get("validation")
-    trainer = SFTTrainer(
-        model=model,
-        args=sft_args,
-        train_dataset=ds["train"],
-        eval_dataset=eval_ds,
-        processing_class=tokenizer,
-        peft_config=peft_config,
-    )
+    has_eval = eval_ds is not None and len(eval_ds) > 0
+
+    sft_kwargs: dict = {
+        "output_dir": str(args.adapter / "checkpoints"),
+        "num_train_epochs": args.epochs if max_steps < 0 else 1.0,
+        "max_steps": max_steps,
+        "per_device_train_batch_size": args.batch_size,
+        "gradient_accumulation_steps": args.grad_accum,
+        "learning_rate": args.lr,
+        "logging_steps": 10,
+        "save_steps": 200,
+        "save_total_limit": 2,
+        "bf16": torch.cuda.is_bf16_supported(),
+        "fp16": not torch.cuda.is_bf16_supported(),
+        "optim": "paged_adamw_8bit",
+        "lr_scheduler_type": "cosine",
+        "warmup_ratio": 0.03,
+        "report_to": "none",
+        "seed": args.seed,
+        "dataset_text_field": "text",
+        "packing": False,
+        "gradient_checkpointing": True,
+        "gradient_checkpointing_kwargs": {"use_reentrant": False},
+    }
+    # TRL 버전에 따라 max_seq_length / max_length 키 이름이 다름
+    sft_kwargs["max_seq_length"] = args.max_seq_len
+    if has_eval:
+        sft_kwargs["eval_strategy"] = "steps"
+        sft_kwargs["eval_steps"] = 200
+
+    try:
+        sft_args = SFTConfig(**sft_kwargs)
+    except TypeError:
+        sft_kwargs.pop("max_seq_length", None)
+        sft_kwargs["max_length"] = args.max_seq_len
+        sft_args = SFTConfig(**sft_kwargs)
+
+    trainer_kwargs: dict = {
+        "model": model,
+        "args": sft_args,
+        "train_dataset": ds["train"],
+        "eval_dataset": eval_ds if has_eval else None,
+        "peft_config": peft_config,
+    }
+    try:
+        trainer = SFTTrainer(processing_class=tokenizer, **trainer_kwargs)
+    except TypeError:
+        trainer = SFTTrainer(tokenizer=tokenizer, **trainer_kwargs)
 
     trainer.train()
     trainer.model.save_pretrained(str(args.adapter))
