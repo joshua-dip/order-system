@@ -1,6 +1,6 @@
-# 주제 LoRA — Windows 원클릭 (setup → export → train → smoke)
-# 저장소 루트 또는 ml\topic\windows 에서:
+# 주제 LoRA — Windows 원클릭 (setup → export → train)
 #   powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1
+#   powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -LowVram
 #   powershell -ExecutionPolicy Bypass -File run_all.ps1 -SkipExport -MaxSteps 100
 
 param(
@@ -8,7 +8,8 @@ param(
   [int]$MaxSteps = 0,
   [switch]$SkipExport,
   [switch]$SkipTrain,
-  [switch]$SmokeOnly
+  [switch]$SmokeOnly,
+  [switch]$LowVram
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,11 +46,26 @@ if (-not $SkipExport) {
 }
 
 if (-not $SkipTrain) {
-  Write-Host "== train model=$Model maxSteps=$MaxSteps"
-  if ($MaxSteps -gt 0) {
-    & cmd /c "train.bat `"$Model`" $MaxSteps"
+  if ($LowVram) {
+    Write-Host "== train LOW-VRAM (0.5B, no 4bit) — GTX 1050 Ti 등"
+    $trainArgs = @(
+      "train.py",
+      "--low-vram"
+    )
+    if ($Model -ne "Qwen/Qwen2.5-7B-Instruct") {
+      $trainArgs += @("--model", $Model)
+    }
+    if ($MaxSteps -gt 0) {
+      $trainArgs += @("--max-steps", "$MaxSteps")
+    }
+    & .\.venv\Scripts\python.exe @trainArgs
   } else {
-    & cmd /c "train.bat `"$Model`""
+    Write-Host "== train model=$Model maxSteps=$MaxSteps"
+    if ($MaxSteps -gt 0) {
+      & cmd /c "train.bat `"$Model`" $MaxSteps"
+    } else {
+      & cmd /c "train.bat `"$Model`""
+    }
   }
   if ($LASTEXITCODE -ne 0) { throw "train failed" }
 }

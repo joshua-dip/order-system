@@ -66,6 +66,11 @@ def main() -> int:
         action="store_true",
         help="기계 파싱용 — JSON 한 줄만 출력",
     )
+    ap.add_argument(
+        "--no-4bit",
+        action="store_true",
+        help="4bit 끄기 (GTX 1050 Ti 등 Pascal / 저용량 VRAM)",
+    )
     args = ap.parse_args()
 
     if args.passage_file:
@@ -88,11 +93,21 @@ def main() -> int:
         adapter_path if has_adapter else Path("."), DEFAULT_MODEL
     )
 
-    print(f"지문 {len(passage)}자 — CUDA 모델 로딩·생성 중…", file=sys.stderr)
+    # train_meta 에 no_4bit 있으면 추론도 맞춤
+    use_4bit = not args.no_4bit
+    if has_adapter and (adapter_path / "train_meta.json").is_file():
+        try:
+            meta = json.loads((adapter_path / "train_meta.json").read_text(encoding="utf-8"))
+            if meta.get("no_4bit"):
+                use_4bit = False
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    print(f"지문 {len(passage)}자 — CUDA 모델 로딩·생성 중… (4bit={use_4bit})", file=sys.stderr)
     try:
         import torch
         from peft import PeftModel
-        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+        from transformers import AutoModelForCausalLM, AutoTokenizer
     except ImportError:
         print(
             "transformers/peft 없음. ml\\topic\\windows\\setup.bat 을 실행하세요.",
@@ -104,25 +119,27 @@ def main() -> int:
         print("CUDA GPU 없음 — nvidia-smi 확인.", file=sys.stderr)
         return 1
 
-    bnb = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
-        if torch.cuda.is_bf16_supported()
-        else torch.float16,
-        bnb_4bit_use_double_quant=True,
-    )
+    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    load_kwargs: dict = {
+        "trust_remote_code": True,
+        "torch_dtype": dtype,
+        "device_map": "auto",
+    }
+    if use_4bit:
+        from transformers import BitsAndBytesConfig
+
+        load_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=dtype,
+            bnb_4bit_use_double_quant=True,
+        )
+
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        quantization_config=bnb,
-        device_map="auto",
-        trust_remote_code=True,
-        torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
-    )
+    model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
     if has_adapter:
         model = PeftModel.from_pretrained(model, str(adapter_path))
     else:

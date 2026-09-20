@@ -26,7 +26,8 @@ infer.py → prevalidate → (옵션) DB 저장  (ai_source=local-topic-lora)
 | Node | 기존 next-order 와 동일 (`npm` 로 export·cc-topic-local) |
 | 디스크 | 모델 캐시 ~15–20GB (Hugging Face `~/.cache/huggingface`) |
 
-VRAM이 부족하면 기본 7B 대신 **`Qwen/Qwen2.5-3B-Instruct`** 로 학습한다.
+VRAM이 부족하면 기본 7B 대신 **`Qwen/Qwen2.5-3B-Instruct`** 로 학습한다.  
+**GTX 1050 Ti (4GB)** 처럼 더 작으면 **`-LowVram`** (0.5B + 4bit 끔) 을 쓴다.
 
 ---
 
@@ -185,10 +186,12 @@ npm run cc:topic-local -- --passage-id <ObjectId>
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1
+# GTX 1050 Ti / 4GB
+powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -LowVram
 # 빠른 스모크 학습만
 powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -MaxSteps 100
 # export 이미 했으면
-powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -SkipExport
+powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -SkipExport -LowVram
 ```
 
 ---

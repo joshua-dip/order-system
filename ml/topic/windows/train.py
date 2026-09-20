@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Windows NVIDIA CUDA — 주제 유형 QLoRA 학습.
+"""Windows NVIDIA CUDA — 주제 유형 LoRA/QLoRA 학습.
 
 Mac MLX 와 같은 data/topic-finetune/{train,valid}.jsonl (chat messages) 를 쓴다.
 Claude/Anthropic API 없음.
 
   python train.py
   python train.py --model Qwen/Qwen2.5-7B-Instruct --epochs 1
-  python train.py --model Qwen/Qwen2.5-3B-Instruct --max-steps 600
+  python train.py --model Qwen/Qwen2.5-0.5B-Instruct --no-4bit --max-steps 400 --max-seq-len 1024
 """
 from __future__ import annotations
 
@@ -21,11 +21,11 @@ DEFAULT_ADAPTER = Path(__file__).resolve().parent.parent / "adapters" / "topic-l
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Topic variant QLoRA train (Windows CUDA)")
+    ap = argparse.ArgumentParser(description="Topic variant LoRA train (Windows CUDA)")
     ap.add_argument(
         "--model",
         default="Qwen/Qwen2.5-7B-Instruct",
-        help="HF 베이스 모델 (VRAM 24GB면 7B 4bit 권장, 12GB면 3B)",
+        help="HF 베이스 (24GB→7B 4bit, 12GB→3B, 4GB→0.5B --no-4bit)",
     )
     ap.add_argument("--data", type=Path, default=DATA_DIR)
     ap.add_argument("--adapter", type=Path, default=DEFAULT_ADAPTER)
@@ -43,7 +43,29 @@ def main() -> int:
     ap.add_argument("--lora-alpha", type=int, default=32)
     ap.add_argument("--max-seq-len", type=int, default=2048)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--no-4bit",
+        action="store_true",
+        help="bitsandbytes 4bit 끄기 (Pascal/4GB GPU: GTX 1050 Ti 등)",
+    )
+    ap.add_argument(
+        "--low-vram",
+        action="store_true",
+        help="4GB급 프리셋: 0.5B + --no-4bit + seq 1024 (모델 미지정 시)",
+    )
     args = ap.parse_args()
+
+    if args.low_vram:
+        if args.model == "Qwen/Qwen2.5-7B-Instruct":
+            args.model = "Qwen/Qwen2.5-0.5B-Instruct"
+        args.no_4bit = True
+        if args.max_seq_len >= 2048:
+            args.max_seq_len = 1024
+        if args.max_steps <= 0:
+            args.max_steps = 400
+        if args.lora_r > 8:
+            args.lora_r = 8
+            args.lora_alpha = 16
 
     train_path = args.data / "train.jsonl"
     valid_path = args.data / "valid.jsonl"
@@ -63,7 +85,7 @@ def main() -> int:
         import torch
         from datasets import load_dataset
         from peft import LoraConfig
-        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+        from transformers import AutoModelForCausalLM, AutoTokenizer
         from trl import SFTConfig, SFTTrainer
     except ImportError as e:
         print(
@@ -81,36 +103,50 @@ def main() -> int:
         )
         return 1
 
+    props = torch.cuda.get_device_properties(0)
+    vram_gb = props.total_memory / 1e9
+    cc = f"{props.major}.{props.minor}"
+    print(f"GPU={torch.cuda.get_device_name(0)} VRAM≈{vram_gb:.1f}GB CC={cc}")
     print(
-        f"GPU={torch.cuda.get_device_name(0)} "
-        f"VRAM≈{torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB"
+        f"model={args.model} train_n={train_n} adapter={args.adapter} "
+        f"4bit={not args.no_4bit} seq={args.max_seq_len}"
     )
-    print(f"model={args.model} train_n={train_n} adapter={args.adapter}")
 
-    bnb = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
-        if torch.cuda.is_bf16_supported()
-        else torch.float16,
-        bnb_4bit_use_double_quant=True,
-    )
+    if vram_gb < 6 and not args.no_4bit and "0.5B" not in args.model and "1.5B" not in args.model:
+        print(
+            "경고: VRAM이 매우 작습니다. Ctrl+C 후 "
+            "`python train.py --low-vram` 또는 run_all.ps1 -LowVram 을 권장합니다.",
+            file=sys.stderr,
+        )
+
+    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    load_kwargs: dict = {
+        "trust_remote_code": True,
+        "torch_dtype": dtype,
+        "device_map": "auto",
+    }
+
+    if not args.no_4bit:
+        try:
+            from transformers import BitsAndBytesConfig
+        except ImportError:
+            print("BitsAndBytesConfig 없음 — --no-4bit 로 재시도하세요.", file=sys.stderr)
+            return 1
+        load_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=dtype,
+            bnb_4bit_use_double_quant=True,
+        )
 
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model,
-        quantization_config=bnb,
-        device_map="auto",
-        trust_remote_code=True,
-        torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
-    )
+    model = AutoModelForCausalLM.from_pretrained(args.model, **load_kwargs)
     model.config.use_cache = False
 
-    # Qwen / Llama 공통으로 자주 쓰는 모듈
     target_modules = [
         "q_proj",
         "k_proj",
@@ -136,7 +172,6 @@ def main() -> int:
 
     def to_text(example: dict) -> dict:
         messages = example["messages"]
-        # assistant 응답에만 손실 — chat template + generation prompt 로 train text 구성
         text = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
@@ -151,6 +186,9 @@ def main() -> int:
     eval_ds = ds.get("validation")
     has_eval = eval_ds is not None and len(eval_ds) > 0
 
+    # 4bit+bnb 없으면 일반 adamw
+    optim = "adamw_torch" if args.no_4bit else "paged_adamw_8bit"
+
     sft_kwargs: dict = {
         "output_dir": str(args.adapter / "checkpoints"),
         "num_train_epochs": args.epochs if max_steps < 0 else 1.0,
@@ -163,7 +201,7 @@ def main() -> int:
         "save_total_limit": 2,
         "bf16": torch.cuda.is_bf16_supported(),
         "fp16": not torch.cuda.is_bf16_supported(),
-        "optim": "paged_adamw_8bit",
+        "optim": optim,
         "lr_scheduler_type": "cosine",
         "warmup_ratio": 0.03,
         "report_to": "none",
@@ -173,7 +211,6 @@ def main() -> int:
         "gradient_checkpointing": True,
         "gradient_checkpointing_kwargs": {"use_reentrant": False},
     }
-    # TRL 버전에 따라 max_seq_length / max_length 키 이름이 다름
     sft_kwargs["max_seq_length"] = args.max_seq_len
     if has_eval:
         sft_kwargs["eval_strategy"] = "steps"
@@ -209,7 +246,9 @@ def main() -> int:
         "max_steps": args.max_steps,
         "lora_r": args.lora_r,
         "lora_alpha": args.lora_alpha,
-        "backend": "windows-cuda-qlora",
+        "no_4bit": args.no_4bit,
+        "max_seq_len": args.max_seq_len,
+        "backend": "windows-cuda-lora" if args.no_4bit else "windows-cuda-qlora",
     }
     (args.adapter / "train_meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
