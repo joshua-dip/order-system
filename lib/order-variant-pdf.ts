@@ -55,7 +55,7 @@ export const ORDER_PDF_SPLIT_OPTIONS: readonly {
   { key: 'byRound', label: '회차별', folder: '회차별', hint: '회차마다 통합본 파일' },
   { key: 'bySourceNumber', label: '번호별', folder: '번호별', hint: '지문 번호마다 파일' },
   { key: 'singleFull', label: '통합본', folder: '통합본', hint: '주문 전체를 한 파일' },
-  { key: 'byRoundCategory', label: '회차×유형', folder: '회차별_유형별', hint: '회차마다 유형별 낱장' },
+  { key: 'byRoundCategory', label: '회차×유형', folder: '회차별_유형별', hint: '유형마다 회차 파일(예: 순서 1회차.pdf → 18·19·20 → 18-2·…)' },
 ] as const;
 
 const HWP_TO_PDF: Partial<Record<HwpStorageModeKey, OrderPdfSplitMode>> = {
@@ -274,6 +274,64 @@ async function buildSingleFullEntries(
   };
 }
 
+/** 「09회 18번」→「18번」, 「09회 41~42번」→「41~42번」 — 마지막 번호 토큰을 쓴다 */
+function numberLabelOfSource(source: string): string {
+  const matches = [...source.matchAll(/(\d+(?:\s*[~～\-]\s*\d+)?\s*번)/g)];
+  if (matches.length === 0) return source;
+  return matches[matches.length - 1][1].replace(/\s+/g, '');
+}
+
+/** 「09회」→「9회차」, 「1회」→「1회차」 */
+function roundDisplayLabel(round: string): string {
+  const t = round.trim();
+  if (!t) return '';
+  const bare = t.replace(/^0+(?=\d)/, '').replace(/회$/, '');
+  return bare ? `${bare}회차` : t;
+}
+
+/**
+ * 같은 지문(source)에 문항이 여러 개일 때 인쇄 순서를 지문 묶음이 아니라
+ * 「1세트: 18·19·20 → 2세트: 18·19·20」처럼 번호 순으로 돌린다.
+ * (안 그러면 20번·20번·20번이 이어져 나온다 — 유형당 N문항 주문)
+ */
+function interleaveBySourceOccurrence<T extends { source: string }>(rows: T[]): T[] {
+  if (rows.length <= 1) return rows;
+  const bySource = new Map<string, T[]>();
+  for (const r of rows) {
+    const list = bySource.get(r.source) ?? [];
+    list.push(r);
+    bySource.set(r.source, list);
+  }
+  const sources = [...bySource.keys()].sort(compareSourceLabel);
+  const maxLen = Math.max(0, ...sources.map((s) => bySource.get(s)!.length));
+  const out: T[] = [];
+  for (let i = 0; i < maxLen; i++) {
+    for (const s of sources) {
+      const list = bySource.get(s)!;
+      if (i < list.length) out.push(list[i]);
+    }
+  }
+  return out;
+}
+
+/** 인쇄 머리 라벨 — 같은 번호가 여러 세트면 「20번」「20번-2」「20번-3」 */
+function labeledPrintQuestions(
+  rows: OrderQuestionRow[],
+): VariantPrintQuestion[] {
+  const occ = new Map<string, number>();
+  return rows.map((r) => {
+    const base = numberLabelOfSource(r.source);
+    const n = (occ.get(r.source) ?? 0) + 1;
+    occ.set(r.source, n);
+    const label = n === 1 ? base : `${base}-${n}`;
+    return toPrintQuestion(r, label);
+  });
+}
+
+/**
+ * 회차별_유형별 — 유형을 바깥, 회차를 안으로.
+ * 예) 「글의 순서 1회차.pdf」 안에 18번 · 19번 · 20번 순(세트가 있으면 그다음 18-2·19-2·20-2).
+ */
 async function buildRoundTypeEntries(
   db: Db,
   scope: OrderQuestionScope,
@@ -282,21 +340,45 @@ async function buildRoundTypeEntries(
   typeOrder: BundleTypeOrder,
   prefix: string,
 ): Promise<{ entries: { fileName: string; html: string }[]; missing: number; questions: number }> {
+  const types = bundleTypeOrder(scope.types, typeOrder);
+  const bundles = await fetchOrderBundles(db, target, scope, { statuses: ['완료'], typeOrder });
+  const entries: { fileName: string; html: string }[] = [];
   let missing = 0;
   let questions = 0;
-  const entries: { fileName: string; html: string }[] = [];
-  for (const b of await fetchOrderBundles(db, target, scope, { statuses: ['완료'], typeOrder })) {
-    const roundTarget: OrderScopeTarget = {
-      textbook: target.textbook,
-      sources: b.sources,
-      label: b.round || target.label,
-    };
-    const title = b.round ? `${target.textbook} ${b.round}` : target.textbook;
-    const part = await buildCategoryEntries(db, scope, format, roundTarget, title, prefix);
-    missing += part.missing;
-    questions += part.questions;
-    entries.push(...part.entries);
+
+  for (const type of types) {
+    const typeName = variantTypePrintName(type, format.hardSuffix);
+    const per = scope.perType(type);
+
+    for (const b of bundles) {
+      const roundSources = b.sources;
+      const rowsRaw = b.rows
+        .filter((r) => r.type === type)
+        .sort((a, b2) => compareSourceLabel(a.source, b2.source));
+
+      const have = new Map<string, number>();
+      for (const r of rowsRaw) have.set(r.source, (have.get(r.source) ?? 0) + 1);
+      missing += roundSources.filter((s) => (have.get(s) ?? 0) < per).length;
+
+      if (!rowsRaw.length) continue;
+
+      /* 지문마다 N문항을 붙여 내지 않고, 번호 순으로 한 바퀴씩 돌린다 */
+      const rows = interleaveBySourceOccurrence(rowsRaw);
+      const roundLabel = b.round ? roundDisplayLabel(b.round) : target.label;
+      const fileTitle = roundLabel ? `${typeName} ${roundLabel}` : typeName;
+      questions += rows.length;
+      entries.push({
+        fileName: `${prefix}${fileTitle}.pdf`,
+        html: entryHtml(
+          format,
+          fileTitle,
+          `${fileTitle} · 총 ${rows.length}문항`,
+          labeledPrintQuestions(rows),
+        ),
+      });
+    }
   }
+
   return { entries, missing, questions };
 }
 

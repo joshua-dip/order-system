@@ -18,6 +18,7 @@ import { splitQuestionOptionSegments } from '@/lib/question-options-segments';
 import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 import {
   bundleTypeOrder,
+  compareSourceLabel,
   fetchOrderBundles,
   fetchOrderQuestions,
   isSingleAnswer,
@@ -41,9 +42,9 @@ import {
  *    「<교재> 통합본.pdf」(연도별 통합본). 한 지문의 유형이 붙어 나오게 번호 → 유형 순으로 묶고,
  *    유형은 수능 문항 번호 순(함의→어법→어휘→빈칸→순서→삽입→요약)이다. --type-order order 면 주문서에서 고른 순서.
  *    통합본은 인쇄 순서가 유형별 열과 다르므로 이웃 정답은 npm run cc:answer-seq -- bundle 로 본다.
- *  - --by round-type: 회차별 **+** 유형별 낱장(통합·유형별 둘 다와 다른 셋째 형태) — 「07회 글의 순서.pdf」처럼
- *    회차 하나·유형 하나씩 파일이 나뉜다. 회차마다 그 회차 지문만의 유형별 열이라 통합본과도, 전체 유형별
- *    열과도 이웃이 다르므로 이웃 정답은 npm run cc:answer-seq -- check/order/insert/shuffled 를 **회차별로**
+ *  - --by round-type: 회차별 **+** 유형별 — 유형이 바깥, 회차가 안.
+ *    「글의 순서 1회차.pdf」처럼 파일이 나고, 문항은 18·19·20 → 18-2·19-2·20-2 순(같은 번호 연속 방지).
+ *    이웃 정답은 npm run cc:answer-seq -- check/order/insert/shuffled 를 **회차별로**
  *    (`--round "07회"`) 따로 본다.
  *  - status 완료 문항만, (출처, 유형)당 주문 수량만 낸다 — 지문에 쌓인 재고를 전부 내면 안 된다.
  *  - --check: PDF 없이 수량·부족·정답열만. --zip: ~/Downloads/<주문번호>.zip(--out 을 주면 그 폴더 안),
@@ -180,14 +181,70 @@ async function renderByType(job: Job, target: OrderScopeTarget, title: string): 
   return missing;
 }
 
-/** 회차별로 나눈 뒤, 그 안에서 다시 유형별로 낸다 — 「07회 글의 순서.pdf」처럼 회차×유형 낱장. */
+/** 같은 지문 N문항을 붙여 내지 않고 번호 순으로 한 바퀴씩 (18·19·20 → 18-2·…) */
+function interleaveBySourceOccurrence<T extends { source: string }>(rows: T[]): T[] {
+  if (rows.length <= 1) return rows;
+  const bySource = new Map<string, T[]>();
+  for (const r of rows) {
+    const list = bySource.get(r.source) ?? [];
+    list.push(r);
+    bySource.set(r.source, list);
+  }
+  const sources = [...bySource.keys()].sort(compareSourceLabel);
+  const maxLen = Math.max(0, ...sources.map((s) => bySource.get(s)!.length));
+  const out: T[] = [];
+  for (let i = 0; i < maxLen; i++) {
+    for (const s of sources) {
+      const list = bySource.get(s)!;
+      if (i < list.length) out.push(list[i]);
+    }
+  }
+  return out;
+}
+
+/** 회차×유형 — 유형 바깥·회차 안. 「글의 순서 1회차.pdf」에 18·19·20 → 18-2·… 순. */
 async function renderByRoundType(job: Job, target: OrderScopeTarget): Promise<number> {
+  const types = bundleTypeOrder(job.scope.types, job.typeOrder);
+  const bundles = await fetchOrderBundles(job.db, target, job.scope, { statuses: ['완료'], typeOrder: job.typeOrder });
   let missing = 0;
-  for (const b of await fetchOrderBundles(job.db, target, job.scope, { statuses: ['완료'], typeOrder: job.typeOrder })) {
-    const roundTarget: OrderScopeTarget = { textbook: target.textbook, sources: b.sources, label: b.round ?? target.label };
-    const title = b.round ? `${target.textbook} ${b.round}` : target.textbook;
-    console.log(`    [${title}] 지문 ${b.sources.length}`);
-    missing += await renderByType(job, roundTarget, title);
+
+  const numberLabel = (source: string): string => {
+    const matches = [...source.matchAll(/(\d+(?:\s*[~～\-]\s*\d+)?\s*번)/g)];
+    if (matches.length === 0) return source;
+    return matches[matches.length - 1][1].replace(/\s+/g, '');
+  };
+  const roundLabel = (round: string): string => {
+    const t = round.trim();
+    if (!t) return '';
+    const bare = t.replace(/^0+(?=\d)/, '').replace(/회$/, '');
+    return bare ? `${bare}회차` : t;
+  };
+
+  for (const type of types) {
+    const typeName = variantTypePrintName(type, job.format.hardSuffix);
+    const per = job.scope.perType(type);
+    for (const b of bundles) {
+      const rowsRaw = b.rows
+        .filter((r) => r.type === type)
+        .sort((a, c) => compareSourceLabel(a.source, c.source));
+      const have = new Map<string, number>();
+      for (const r of rowsRaw) have.set(r.source, (have.get(r.source) ?? 0) + 1);
+      const lacking = b.sources.filter((s) => (have.get(s) ?? 0) < per);
+      missing += lacking.length;
+      const rows = interleaveBySourceOccurrence(rowsRaw);
+      const rl = b.round ? roundLabel(b.round) : target.label;
+      const fileTitle = rl ? `${typeName} ${rl}` : typeName;
+      console.log(`    [${fileTitle}] ${rows.length}문항${lacking.length ? `  ⚠ 부족 ${lacking.length}` : ''}`);
+      if (job.checkOnly || !rows.length) continue;
+      const occ = new Map<string, number>();
+      const labeled = rows.map((r) => {
+        const base = numberLabel(r.source);
+        const n = (occ.get(r.source) ?? 0) + 1;
+        occ.set(r.source, n);
+        return toPrintQuestion(r, n === 1 ? base : `${base}-${n}`);
+      });
+      await writePdf(job, fileTitle, `${fileTitle} · 총 ${rows.length}문항`, labeled, `${fileTitle}.pdf`);
+    }
   }
   return missing;
 }
