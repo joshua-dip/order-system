@@ -81,11 +81,14 @@ watch.log
 .essay-audit-logs/
 .variant-drafts/
 
-# 주제 자체모델 (Mac MLX) — 데이터·어댑터·venv 는 로컬만
+# 주제 자체모델 (Mac MLX / Windows CUDA) — 데이터·어댑터·venv 는 로컬만
 /data/topic-finetune/
 /ml/topic/.venv/
+/ml/topic/windows/.venv/
 /ml/topic/adapters/
 /ml/topic/__pycache__/
+/ml/topic/windows/__pycache__/
+/ml/topic/**/checkpoints/
 .essay-audit-reports/
 .grammar-drafts/
 .syntax-drafts/
