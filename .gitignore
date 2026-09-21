@@ -83,6 +83,7 @@ watch.log
 
 # 주제 자체모델 (Mac MLX / Windows CUDA) — 데이터·어댑터·venv 는 로컬만
 /data/topic-finetune/
+/data/topic-pipeline-failures/
 /ml/topic/.venv/
 /ml/topic/windows/.venv/
 /ml/topic/adapters/

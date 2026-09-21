@@ -5,6 +5,7 @@
  *   Mac MLX:     npm run cc:topic-local -- --passage-id <ObjectId>
  *   Windows CUDA: npm run cc:topic-local -- --backend cuda --passage-id <ObjectId>
  *                 set TOPIC_BACKEND=cuda
+ *   Pipeline:     npm run cc:topic-local -- --backend cuda --pipeline --passage-id <ObjectId>
  *
  *   npm run cc:topic-local -- --passage-id <ObjectId> --save
  *   npm run cc:topic-local -- --passage-file p.txt --textbook "..." --source "..."
@@ -27,6 +28,7 @@ loadCliEnv(PROJECT_ROOT);
 const DRAFTS_DIR = path.join(PROJECT_ROOT, '.variant-drafts');
 const INFER_MLX = path.join(PROJECT_ROOT, 'ml/topic/infer.py');
 const INFER_CUDA = path.join(PROJECT_ROOT, 'ml/topic/windows/infer.py');
+const PIPELINE_CUDA = path.join(PROJECT_ROOT, 'ml/topic/windows/pipeline_topic.py');
 const ADAPTER_MLX = path.join(PROJECT_ROOT, 'ml/topic/adapters/topic-lora');
 const ADAPTER_CUDA = path.join(PROJECT_ROOT, 'ml/topic/adapters/topic-lora-cuda');
 
@@ -108,12 +110,21 @@ function runInfer(
   passage: string,
   backend: Backend,
   model?: string,
-  adapter?: string
+  adapter?: string,
+  usePipeline = false
 ): Record<string, unknown> {
-  const inferPy = backend === 'cuda' ? INFER_CUDA : INFER_MLX;
+  if (usePipeline && backend !== 'cuda') {
+    throw new Error('--pipeline 은 Windows CUDA 백엔드에서만 지원합니다 (--backend cuda)');
+  }
+  const inferPy =
+    usePipeline && backend === 'cuda'
+      ? PIPELINE_CUDA
+      : backend === 'cuda'
+        ? INFER_CUDA
+        : INFER_MLX;
   const defaultAdapter = backend === 'cuda' ? ADAPTER_CUDA : ADAPTER_MLX;
   if (!fs.existsSync(inferPy)) {
-    throw new Error(`infer.py 없음: ${inferPy}`);
+    throw new Error(`infer script 없음: ${inferPy}`);
   }
   const tmp = path.join(DRAFTS_DIR, `_topic-passage-${Date.now()}.txt`);
   fs.mkdirSync(DRAFTS_DIR, { recursive: true });
@@ -125,6 +136,9 @@ function runInfer(
       args.push('--adapter', adapterPath);
     }
     if (model) args.push('--model', model);
+    if (usePipeline) {
+      args.push('--json-only');
+    }
 
     const r = spawnSync(pythonBin(backend), args, {
       encoding: 'utf8',
@@ -182,6 +196,7 @@ async function main() {
   const doSave = flags.get('save') === 'true';
   const model = flags.get('model');
   const adapter = flags.get('adapter');
+  const usePipeline = flags.get('pipeline') === 'true';
   const backend = resolveBackend(flags);
 
   let paragraph = '';
@@ -216,13 +231,14 @@ async function main() {
   } else {
     console.error(`사용법:
   npm run cc:topic-local -- --passage-id <ObjectId> [--save]
-  npm run cc:topic-local -- --backend cuda --passage-id <ObjectId> [--save]
+  npm run cc:topic-local -- --backend cuda --pipeline --passage-id <ObjectId> [--save]
   npm run cc:topic-local -- --passage-file p.txt --textbook "교재" --source "출처" [--save]
 
 사전:
   npm run cc:topic-export
   Mac:    ml/topic/train.sh
   Windows: ml/topic/windows/setup.bat && train.bat
+  Pipeline(CUDA): ml/topic/windows/ask_pipeline.bat
 Claude/Anthropic 는 사용하지 않습니다. (backend=${backend}, platform=${process.platform})`);
     process.exit(1);
   }
@@ -242,8 +258,10 @@ Claude/Anthropic 는 사용하지 않습니다. (backend=${backend}, platform=${
     );
   }
 
-  console.error(`infer 중… backend=${backend} host=${os.hostname()}`);
-  const question_data = runInfer(paragraph, backend, model, adapter);
+  console.error(
+    `infer 중… backend=${backend} pipeline=${usePipeline} host=${os.hostname()}`
+  );
+  const question_data = runInfer(paragraph, backend, model, adapter, usePipeline);
   question_data.Paragraph = paragraph;
   question_data.OptionType = 'English';
   if (typeof question_data.Category !== 'string') question_data.Category = '주제';
@@ -295,11 +313,13 @@ Claude/Anthropic 는 사용하지 않습니다. (backend=${backend}, platform=${
       option_type: 'English',
       ai_source: 'local-topic-lora',
     });
-    console.log(JSON.stringify({ draft: draftPath, backend, save: saved }, null, 2));
+    console.log(JSON.stringify({ draft: draftPath, backend, pipeline: usePipeline, save: saved }, null, 2));
     process.exit(saved.ok ? 0 : 1);
   }
 
-  console.log(JSON.stringify({ ok: true, backend, draft: draftPath, question_data }, null, 2));
+  console.log(
+    JSON.stringify({ ok: true, backend, pipeline: usePipeline, draft: draftPath, question_data }, null, 2)
+  );
 }
 
 main().catch((e) => {

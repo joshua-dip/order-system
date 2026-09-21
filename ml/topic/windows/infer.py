@@ -11,65 +11,49 @@ import json
 import sys
 from pathlib import Path
 
-# 상위 ml/topic 을 import path 에
 _TOPIC_DIR = Path(__file__).resolve().parent.parent
-if str(_TOPIC_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOPIC_DIR))
+_WIN_DIR = Path(__file__).resolve().parent
+for p in (_TOPIC_DIR, _WIN_DIR):
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
 
 from _topic_common import (  # noqa: E402
     SYSTEM_PROMPT,
-    extract_json_object,
     format_exam_view,
     read_passage_interactive,
 )
-
-DEFAULT_ADAPTER = _TOPIC_DIR / "adapters" / "topic-lora-cuda"
-DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"
-
-
-def load_base_model_name(adapter: Path, fallback: str) -> str:
-    meta = adapter / "train_meta.json"
-    if meta.is_file():
-        try:
-            data = json.loads(meta.read_text(encoding="utf-8"))
-            name = data.get("base_model")
-            if isinstance(name, str) and name.strip():
-                return name.strip()
-        except (json.JSONDecodeError, OSError):
-            pass
-    cfg = adapter / "adapter_config.json"
-    if cfg.is_file():
-        try:
-            data = json.loads(cfg.read_text(encoding="utf-8"))
-            name = data.get("base_model_name_or_path")
-            if isinstance(name, str) and name.strip():
-                return name.strip()
-        except (json.JSONDecodeError, OSError):
-            pass
-    return fallback
+from _cuda_runtime import (  # noqa: E402
+    DEFAULT_ADAPTER,
+    DEFAULT_MODEL,
+    adapter_exists,
+    chat_json,
+    load_base_model_name,
+    load_model,
+    resolve_use_4bit,
+)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Local topic-variant infer (Windows CUDA LoRA)")
-    ap.add_argument("--model", default="", help="비우면 adapter train_meta / 기본 Qwen 7B")
+    ap.add_argument("--model", default="", help="empty => adapter train_meta / default Qwen")
     ap.add_argument("--adapter", default=str(DEFAULT_ADAPTER))
-    ap.add_argument("--passage-file", help="지문 텍스트 파일")
+    ap.add_argument("--passage-file", help="passage text file")
     ap.add_argument(
         "--paste",
         action="store_true",
-        help="터미널에 지문 붙여넣기 (끝: Ctrl-Z Enter 또는 END)",
+        help="paste passage in terminal (end: Ctrl-Z Enter or END)",
     )
     ap.add_argument("--max-tokens", type=int, default=4096)
     ap.add_argument("--temp", type=float, default=0.3)
     ap.add_argument(
         "--json-only",
         action="store_true",
-        help="기계 파싱용 — JSON 한 줄만 출력",
+        help="machine parse — one JSON line only",
     )
     ap.add_argument(
         "--no-4bit",
         action="store_true",
-        help="4bit 끄기 (GTX 1050 Ti 등 Pascal / 저용량 VRAM)",
+        help="disable 4bit (GTX 1050 Ti / Pascal / low VRAM)",
     )
     args = ap.parse_args()
 
@@ -80,100 +64,42 @@ def main() -> int:
     else:
         passage = sys.stdin.read().strip()
     if not passage:
-        print("지문이 비어 있습니다.", file=sys.stderr)
+        print("empty passage", file=sys.stderr)
         return 1
 
     adapter_path = Path(args.adapter)
-    has_adapter = adapter_path.is_dir() and (
-        (adapter_path / "adapter_config.json").is_file()
-        or (adapter_path / "adapter_model.safetensors").is_file()
-        or any(adapter_path.glob("adapter_model*.safetensors"))
-    )
+    has_adapter = adapter_exists(adapter_path)
     model_name = (args.model or "").strip() or load_base_model_name(
         adapter_path if has_adapter else Path("."), DEFAULT_MODEL
     )
+    use_4bit = resolve_use_4bit(adapter_path, args.no_4bit)
 
-    # train_meta 에 no_4bit 있으면 추론도 맞춤
-    use_4bit = not args.no_4bit
-    if has_adapter and (adapter_path / "train_meta.json").is_file():
-        try:
-            meta = json.loads((adapter_path / "train_meta.json").read_text(encoding="utf-8"))
-            if meta.get("no_4bit"):
-                use_4bit = False
-        except (json.JSONDecodeError, OSError):
-            pass
-
-    print(f"지문 {len(passage)}자 — CUDA 모델 로딩·생성 중… (4bit={use_4bit})", file=sys.stderr)
-    try:
-        import torch
-        from peft import PeftModel
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-    except ImportError:
-        print(
-            "transformers/peft 없음. ml\\topic\\windows\\setup.bat 을 실행하세요.",
-            file=sys.stderr,
-        )
-        return 1
-
-    if not torch.cuda.is_available():
-        print("CUDA GPU 없음 — nvidia-smi 확인.", file=sys.stderr)
-        return 1
-
-    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-    load_kwargs: dict = {
-        "trust_remote_code": True,
-        "torch_dtype": dtype,
-        "device_map": "auto",
-    }
-    if use_4bit:
-        from transformers import BitsAndBytesConfig
-
-        load_kwargs["quantization_config"] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=dtype,
-            bnb_4bit_use_double_quant=True,
-        )
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
-    model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
-    if has_adapter:
-        model = PeftModel.from_pretrained(model, str(adapter_path))
-    else:
-        print(f"경고: adapter 없음 ({adapter_path}) — 베이스 모델만 사용", file=sys.stderr)
-
-    model.eval()
-
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"[지문 Paragraph]\n{passage}"},
-    ]
-    prompt = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
+    print(
+        f"passage {len(passage)} chars — loading CUDA model (4bit={use_4bit})",
+        file=sys.stderr,
     )
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-
-    with torch.no_grad():
-        out = model.generate(
-            **inputs,
-            max_new_tokens=args.max_tokens,
-            do_sample=args.temp > 0,
-            temperature=max(args.temp, 1e-5) if args.temp > 0 else None,
-            top_p=0.9 if args.temp > 0 else None,
-            pad_token_id=tokenizer.pad_token_id,
-            eos_token_id=tokenizer.eos_token_id,
+    try:
+        model, tokenizer = load_model(
+            model_name,
+            adapter_path if has_adapter else None,
+            use_4bit,
         )
-    gen = out[0][inputs["input_ids"].shape[-1] :]
-    text = tokenizer.decode(gen, skip_special_tokens=True)
+    except RuntimeError as e:
+        print(str(e), file=sys.stderr)
+        return 1
 
-    parsed = extract_json_object(text)
+    parsed = chat_json(
+        model,
+        tokenizer,
+        SYSTEM_PROMPT,
+        f"[지문 Paragraph]\n{passage}",
+        max_tokens=args.max_tokens,
+        temp=args.temp,
+    )
     if not parsed:
         print(
             json.dumps(
-                {"ok": False, "error": "JSON 파싱 실패", "raw": text[:2000]},
+                {"ok": False, "error": "JSON parse failed"},
                 ensure_ascii=False,
             )
         )

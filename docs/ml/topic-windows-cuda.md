@@ -105,7 +105,7 @@ python train.py --model Qwen/Qwen2.5-3B-Instruct --max-steps 600 --batch-size 1 
 
 ## 5. 추론
 
-### 터미널에 지문 붙여넣기
+### 원샷 (한 번에 문항 전체 생성)
 
 ```bat
 cd ml\topic\windows
@@ -121,12 +121,34 @@ ask.bat --json-only
 .venv\Scripts\python.exe infer.py --passage-file C:\temp\p.txt
 ```
 
+### 파이프라인 (권장 — 0.5B)
+
+작은 모델은 한 방 생성보다 **핵심주장 → 선지 → 정답검증 → 오답검증 → 해설**이 안정적이다.
+
+```bat
+cd ml\topic\windows
+ask_pipeline.bat
+.venv\Scripts\python.exe pipeline_topic.py --passage-file C:\temp\p.txt --json-only
+```
+
+실패·수정 힌트는 `data/topic-pipeline-failures/failures.jsonl` 에 쌓인다 (gitignore).
+
+| | 원샷 `infer.py` | 파이프라인 `pipeline_topic.py` |
+|--|----------------|-------------------------------|
+| 호출 횟수 | 1 | 여러 단계 (모델은 1회 로드) |
+| 정답 과장/환각 | 막기 어려움 | verify → revise 로 완화 |
+| 속도 | 빠름 | 느림 (단계만큼) |
+| 0.5B 권장 | 형식 스모크 | **품질 실험은 이쪽** |
+
 ### 앱 CLI (prevalidate / 저장)
 
 ```bat
 REM 저장소 루트 — Windows 어댑터 자동 선택
 set TOPIC_BACKEND=cuda
 npm run cc:topic-local -- --passage-id <ObjectId>
+
+REM 파이프라인
+npm run cc:topic-local -- --backend cuda --pipeline --passage-id <ObjectId>
 
 npm run cc:topic-local -- --backend cuda --passage-id <ObjectId> --save
 ```
@@ -176,10 +198,12 @@ npm run cc:topic-export
 cd ml\topic\windows
 train.bat Qwen/Qwen2.5-7B-Instruct 600
 ask.bat
+ask_pipeline.bat
 
 cd ..\..\..
 set TOPIC_BACKEND=cuda
 npm run cc:topic-local -- --passage-id <ObjectId>
+npm run cc:topic-local -- --backend cuda --pipeline --passage-id <ObjectId>
 ```
 
 **원클릭 (PowerShell, 저장소 루트):**

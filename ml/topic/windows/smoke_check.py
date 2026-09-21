@@ -42,9 +42,12 @@ def main() -> int:
     for rel in (
         "train.py",
         "infer.py",
+        "pipeline_topic.py",
+        "_cuda_runtime.py",
         "setup.bat",
         "train.bat",
         "ask.bat",
+        "ask_pipeline.bat",
         "requirements.txt",
         "README.md",
     ):
@@ -60,7 +63,7 @@ def main() -> int:
 
     import ast
 
-    for name in ("train.py", "infer.py"):
+    for name in ("train.py", "infer.py", "pipeline_topic.py", "_cuda_runtime.py"):
         src = (_WINDOWS / name).read_text(encoding="utf-8")
         try:
             ast.parse(src)
