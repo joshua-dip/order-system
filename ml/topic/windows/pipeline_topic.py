@@ -28,12 +28,14 @@ from _topic_common import (  # noqa: E402
 )
 from _cuda_runtime import (  # noqa: E402
     DEFAULT_ADAPTER,
+    DEFAULT_EXPLAIN_ADAPTER,
     DEFAULT_MODEL,
     adapter_exists,
     chat_json,
     load_base_model_name,
     load_model,
     resolve_use_4bit,
+    set_adapter,
 )
 
 FAILURE_DIR = _ROOT / "data" / "topic-pipeline-failures"
@@ -71,10 +73,17 @@ Output ONLY one JSON object. No markdown.
 Keys: options (array of exactly 4 English noun phrases, 8-15 words).
 Distractors must be wrong relative to the claim, distinct, and passage-related."""
 
-EXPLAIN_SYS = """You write a short Korean explanation for a CSAT topic question.
-Output ONLY one JSON object. No markdown.
-Keys: Explanation (Korean, <=450 chars).
-State why the correct option matches the claim and briefly why one or two distractors fail. One conclusion only."""
+EXPLAIN_SYS = """당신은 한국 수능 영어 「주제」 문항의 한국어 해설만 작성합니다.
+반드시 아래 키만 갖는 JSON 한 개만 출력하세요. 마크다운·설명 금지.
+
+키: Explanation
+
+규칙:
+1) Explanation = 한국어만, 450자 이하.
+2) 정답(CorrectAnswer)이 왜 주제인지 한 결론으로 밝힌다.
+3) 오답 1~2개를 짧게 왜 아닌지 말할 수 있다.
+4) 지문에 없는 내용을 지어내지 않는다.
+5) 영어 문장으로만 된 해설 금지."""
 
 
 def _strip_circled(opt: str) -> str:
@@ -234,6 +243,7 @@ def run_pipeline(
     *,
     max_retries: int = 2,
     temp: float = 0.3,
+    has_explain_adapter: bool = False,
 ) -> dict[str, Any]:
     trace: list[dict[str, Any]] = []
 
@@ -447,14 +457,24 @@ def run_pipeline(
             continue
 
         # 5) explanation
-        expl = call(
-            EXPLAIN_SYS,
-            f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en} / {claim_ko}\n\n"
-            f"[Options]\n{_format_options(options)}\n\n"
-            f"[CorrectAnswer]\n{CIRCLED[correct_index]}\n\n"
-            "Return Explanation JSON with a full Korean paragraph (>=40 chars).",
-            max_tokens=400,
-        )
+        # 5) explanation (optional dedicated explain LoRA)
+        if has_explain_adapter:
+            set_adapter(model, "explain")
+            print("[pipeline] explain adapter active", file=sys.stderr)
+        try:
+            expl = call(
+                EXPLAIN_SYS,
+                f"[지문 Paragraph]\n{passage}\n\n"
+                f"[Question]\n다음 글의 주제로 가장 적절한 것은?\n\n"
+                f"[Options]\n{_format_options(options)}\n\n"
+                f"[CorrectAnswer]\n{CIRCLED[correct_index]}\n\n"
+                f"[Core claim]\n{claim_en} / {claim_ko}\n\n"
+                "위 정답에 대한 한국어 Explanation JSON만 출력하세요.",
+                max_tokens=400,
+            )
+        finally:
+            if has_explain_adapter:
+                set_adapter(model, "default")
         explanation = str((expl or {}).get("Explanation") or "").strip()
         if len(explanation) > 450:
             explanation = explanation[:450].rstrip() + "…"
@@ -463,7 +483,7 @@ def run_pipeline(
                 f"정답은 {CIRCLED[correct_index]}. 글의 핵심은 「{claim_ko or claim_en}」이므로 "
                 f"이를 담은 선지가 주제이다. 다른 선지는 재능만 강조하거나 지문에 없는 내용이다."
             )[:450]
-        trace.append({"stage": "explain", "out": expl})
+        trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
         # Ensure every option has enough words
         fillers = _fallback_distractors(claim_en, claim_en)
@@ -510,6 +530,7 @@ def run_pipeline(
                 "correct_index": correct_index,
                 "draft_try": draft_try,
                 "trace_len": len(trace),
+                "explain_adapter": has_explain_adapter,
             },
         }
 
@@ -530,6 +551,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Topic pipeline infer (claim/verify/revise)")
     ap.add_argument("--model", default="")
     ap.add_argument("--adapter", default=str(DEFAULT_ADAPTER))
+    ap.add_argument(
+        "--explain-adapter",
+        default=str(DEFAULT_EXPLAIN_ADAPTER),
+        help="optional explanation-only LoRA (topic-explain-lora-cuda)",
+    )
     ap.add_argument("--passage-file")
     ap.add_argument("--paste", action="store_true")
     ap.add_argument("--max-tokens", type=int, default=512, help="per-stage max tokens")
@@ -561,15 +587,17 @@ def main() -> int:
     )
     use_4bit = resolve_use_4bit(adapter_path, args.no_4bit)
 
+    explain_path = Path(args.explain_adapter)
     print(
         f"[pipeline] passage={len(passage)} chars load model 4bit={use_4bit}",
         file=sys.stderr,
     )
     try:
-        model, tokenizer = load_model(
+        model, tokenizer, flags = load_model(
             model_name,
             adapter_path if has_adapter else None,
             use_4bit,
+            explain_adapter=explain_path if adapter_exists(explain_path) else None,
         )
     except RuntimeError as e:
         print(str(e), file=sys.stderr)
@@ -581,6 +609,7 @@ def main() -> int:
         passage,
         max_retries=max(0, args.max_retries),
         temp=args.temp,
+        has_explain_adapter=bool(flags.get("explain_adapter")),
     )
     if not result.get("ok"):
         out = {

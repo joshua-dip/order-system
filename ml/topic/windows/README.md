@@ -21,10 +21,16 @@ ask.bat
 
 REM 4b) 권장: claim → verify → regenerate 파이프라인
 ask_pipeline.bat
+
+REM 5) 해설 전용 LoRA (DB Explanation 학습)
+REM    저장소 루트: npm run cc:topic-explain-export
+train_explain.bat
+train_explain.bat 600
 ```
 
 자세한 가이드: **[docs/ml/topic-windows-cuda.md](../../../docs/ml/topic-windows-cuda.md)**
 
 Mac MLX 실험과 **같은 JSONL** (`data/topic-finetune/`) 을 씁니다.  
 어댑터는 `ml/topic/adapters/topic-lora-cuda/` 에 저장됩니다.  
+해설 전용 어댑터: `ml/topic/adapters/topic-explain-lora-cuda/`  
 실패 로그(학습 재료): `data/topic-pipeline-failures/failures.jsonl`

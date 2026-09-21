@@ -133,10 +133,28 @@ ask_pipeline.bat
 
 실패·수정 힌트는 `data/topic-pipeline-failures/failures.jsonl` 에 쌓인다 (gitignore).
 
+### 해설 전용 LoRA (DB Explanation)
+
+MongoDB 주제 문항의 한국어 해설만 모아 학습한다. 파이프라인의 explain 단계에서 자동으로 붙는다.
+
+```bat
+REM 저장소 루트
+npm run cc:topic-explain-export
+
+cd ml\topic\windows
+train_explain.bat
+REM 또는 steps 지정
+train_explain.bat 600
+```
+
+산출물: `ml/topic/adapters/topic-explain-lora-cuda/`  
+`ask_pipeline.bat` 실행 시 이 폴더가 있으면 explain 단계에만 해당 어댑터를 켠다.
+
 | | 원샷 `infer.py` | 파이프라인 `pipeline_topic.py` |
 |--|----------------|-------------------------------|
 | 호출 횟수 | 1 | 여러 단계 (모델은 1회 로드) |
 | 정답 과장/환각 | 막기 어려움 | verify → revise 로 완화 |
+| 해설 | 본 어댑터에 섞임 | **해설 LoRA 분리 가능** |
 | 속도 | 빠름 | 느림 (단계만큼) |
 | 0.5B 권장 | 형식 스모크 | **품질 실험은 이쪽** |
 

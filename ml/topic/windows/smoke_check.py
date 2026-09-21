@@ -48,6 +48,7 @@ def main() -> int:
         "train.bat",
         "ask.bat",
         "ask_pipeline.bat",
+        "train_explain.bat",
         "requirements.txt",
         "README.md",
     ):

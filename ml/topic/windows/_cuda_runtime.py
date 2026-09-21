@@ -13,6 +13,7 @@ if str(_TOPIC_DIR) not in sys.path:
 from _topic_common import extract_json_object  # noqa: E402
 
 DEFAULT_ADAPTER = _TOPIC_DIR / "adapters" / "topic-lora-cuda"
+DEFAULT_EXPLAIN_ADAPTER = _TOPIC_DIR / "adapters" / "topic-explain-lora-cuda"
 DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 
 
@@ -66,8 +67,9 @@ def load_model(
     model_name: str,
     adapter: Path | None,
     use_4bit: bool,
-) -> tuple[Any, Any]:
-    """Load HF causal LM (+ optional PEFT). Returns (model, tokenizer)."""
+    explain_adapter: Path | None = None,
+) -> tuple[Any, Any, dict[str, bool]]:
+    """Load HF causal LM (+ optional PEFT). Returns (model, tokenizer, flags)."""
     try:
         import torch
         from peft import PeftModel
@@ -101,13 +103,37 @@ def load_model(
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
+    flags = {"main_adapter": False, "explain_adapter": False}
+
     if adapter is not None and adapter_exists(adapter):
         model = PeftModel.from_pretrained(model, str(adapter))
+        flags["main_adapter"] = True
     elif adapter is not None:
         print(f"warn: adapter missing ({adapter}) — base model only", file=sys.stderr)
 
+    if explain_adapter is not None and adapter_exists(explain_adapter):
+        try:
+            if flags["main_adapter"]:
+                model.load_adapter(str(explain_adapter), adapter_name="explain")
+            else:
+                model = PeftModel.from_pretrained(
+                    model, str(explain_adapter), adapter_name="explain"
+                )
+            flags["explain_adapter"] = True
+            print(f"loaded explain adapter: {explain_adapter}", file=sys.stderr)
+        except Exception as e:
+            print(f"warn: explain adapter load failed: {e}", file=sys.stderr)
+
     model.eval()
-    return model, tokenizer
+    return model, tokenizer, flags
+
+
+def set_adapter(model: Any, name: str) -> None:
+    if hasattr(model, "set_adapter"):
+        try:
+            model.set_adapter(name)
+        except Exception as e:
+            print(f"warn: set_adapter({name}) failed: {e}", file=sys.stderr)
 
 
 def chat_text(

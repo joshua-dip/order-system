@@ -79,7 +79,7 @@ def main() -> int:
         file=sys.stderr,
     )
     try:
-        model, tokenizer = load_model(
+        model, tokenizer, _flags = load_model(
             model_name,
             adapter_path if has_adapter else None,
             use_4bit,
