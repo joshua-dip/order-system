@@ -1,0 +1,6 @@
+[mcp_servers.next-order-variant]
+command = "npm"
+args = [
+    "run",
+    "mcp:variant",
+]

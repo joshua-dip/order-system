@@ -13,6 +13,7 @@ import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 import WorkbookMakerNav from './_components/WorkbookMakerNav';
 import GeneratedQuestionsNav from './_components/GeneratedQuestionsNav';
 import ClassKitNav from './_components/ClassKitNav';
+import WorkbookKitNav from './_components/WorkbookKitNav';
 import EssayGeneratorNav from './_components/EssayGeneratorNav';
 import SyntaxAnalyzerNav from './_components/SyntaxAnalyzerNav';
 import { clearAuthUserCache } from '@/lib/auth-user-cache';
@@ -3183,6 +3184,9 @@ export default function AdminDashboardPage() {
           <GeneratedQuestionsNav />
           <div className="mt-1">
             <ClassKitNav />
+          </div>
+          <div className="mt-1">
+            <WorkbookKitNav />
           </div>
           <div className="mt-1">
             <EssayGeneratorNav />

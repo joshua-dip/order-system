@@ -6,6 +6,7 @@ import { useState } from 'react';
 import WorkbookMakerNav from './WorkbookMakerNav';
 import GeneratedQuestionsNav from './GeneratedQuestionsNav';
 import ClassKitNav from './ClassKitNav';
+import WorkbookKitNav from './WorkbookKitNav';
 import EssayGeneratorNav from './EssayGeneratorNav';
 import SyntaxAnalyzerNav from './SyntaxAnalyzerNav';
 import { clearAuthUserCache } from '@/lib/auth-user-cache';
@@ -117,6 +118,7 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         </Link>
         <GeneratedQuestionsNav />
         <ClassKitNav />
+        <WorkbookKitNav />
         <EssayGeneratorNav />
         <WorkbookMakerNav />
         <SyntaxAnalyzerNav />
