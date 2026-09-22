@@ -27,6 +27,7 @@
     "node_modules",
     "assets",
     "mcp-bridge",
-    "scripts/patch-essay-*.ts"
+    "scripts/patch-essay-*.ts",
+    "scripts/_tmp-*.ts"
   ]
 }

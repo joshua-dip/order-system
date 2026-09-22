@@ -72,7 +72,7 @@ npm run cc:variant -- next-empty --order-number "BV-20260601-001"
 - `OptionType`: 정식 변형은 `"English"` (shortage 집계 대상). 영어 전용 유형(주제·제목·일치·불일치·함의·빈칸·요약·어휘)은 보기를 **영어로** 작성하고 `English`. 주장 등 한글 허용 유형은 한글 보기여도 `English`. 의도적 한글 버전을 따로 만들 때만 `Korean` (memory: feedback_option_type_always_english.md).
 - `CorrectAnswer`: `①②③④⑤` **동그라미 번호 하나만** (어법-고난도만 `①③` 같은 2~3개 연속). 아라비아 숫자 금지 (memory: feedback_correct_answer_circled_numbers.md).
 - 정답 위치는 ① 한 자리에 치우치지 말 것 (memory: feedback_correct_answer_distribution.md).
-- `Explanation`: 한국어 450자 이하, 결론 하나만 명확히.
+- `Explanation`: 한국어 **180~450자**(한 줄 해설 금지). `"③가 정답입니다."`로 시작 → 지문 요지·근거(원문 구 인용 권장) → 정답 대응 → 오답 1~2개 배제. 제목·주제 목표는 ~210자(DB 검수분 평균). 상세: `docs/variant/AUTHORING.md` 「해설 밀도」·`lib/admin-variant-draft-claude.ts` 규칙 5).
 
 유형별 핵심:
 
