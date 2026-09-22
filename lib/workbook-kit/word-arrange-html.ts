@@ -1,4 +1,4 @@
-/** 낱말배열 HTML — KO + 셔플 보기, 뒤쪽에 정답 */
+/** 낱말배열 HTML — KO + 셔플 보기 + 필기란, 뒤쪽에 정답 */
 
 import type { WordArrangePassageResult } from './types';
 
@@ -18,15 +18,29 @@ const CSS = `
   .wk-brand { font-weight: 800; letter-spacing: 0.08em; color: #1e3a5f; }
   .wk-kind { font-weight: 700; }
   .wk-prompt { margin: 0 0 14px; font-size: 10.5pt; color: #334155; }
-  .wk-pass { margin: 0 0 22px; page-break-inside: avoid; }
-  .wk-src { font-weight: 800; margin: 0 0 8px; }
-  .wk-item { margin: 0 0 12px; }
+  .wk-pass { margin: 0 0 20px; }
+  .wk-src { font-weight: 800; margin: 0 0 8px; page-break-after: avoid; }
+  .wk-item { margin: 0 0 22px; page-break-inside: avoid; }
   .wk-ko { margin: 0 0 4px; }
-  .wk-words { color: #0f172a; font-family: "Times New Roman", "Malgun Gothic", serif; }
+  .wk-words { color: #0f172a; font-family: "Times New Roman", "Malgun Gothic", serif; margin: 0 0 6px; }
+  /* 필기란 — 보기 아래 줄 공간 */
+  .wk-write {
+    margin: 6px 0 0;
+    min-height: 1.85em;
+    border-bottom: 1.5px solid #94a3b8;
+  }
+  .wk-write + .wk-write { margin-top: 14px; }
   .wk-ans-title { font-weight: 800; margin: 28px 0 10px; border-top: 1px dashed #94a3b8; padding-top: 14px; page-break-before: always; }
   .wk-ans-block { margin: 0 0 12px; font-size: 10pt; }
   .wk-ans-h { font-weight: 700; }
 `;
+
+/** 문항당 필기 줄 수 — 단어가 많을수록 한 줄 더 */
+function writeLineCount(wordCount: number): number {
+  if (wordCount >= 14) return 3;
+  if (wordCount >= 8) return 2;
+  return 2;
+}
 
 export function buildWordArrangeHtml(
   results: WordArrangePassageResult[],
@@ -37,7 +51,10 @@ export function buildWordArrangeHtml(
     const items = r.items
       .map((it) => {
         const words = it.shuffled.join(' / ');
-        return `<div class="wk-item"><div class="wk-ko">(${it.n}) ${esc(it.ko)}</div><div class="wk-words">${esc(words)}</div></div>`;
+        const lines = Array.from({ length: writeLineCount(it.shuffled.length) }, () =>
+          '<div class="wk-write"></div>',
+        ).join('');
+        return `<div class="wk-item"><div class="wk-ko">(${it.n}) ${esc(it.ko)}</div><div class="wk-words">${esc(words)}</div>${lines}</div>`;
       })
       .join('');
     body.push(
