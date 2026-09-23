@@ -105,8 +105,9 @@ watch.log
 /ml/claim/windows/.venv/
 /ml/claim/adapters/
 /ml/claim/__pycache__/
-# 로컬 LoRA 워커 — PC 당 하나만 뜨게 잡는 잠금 파일
+# 로컬 LoRA 워커 — PC 당 하나만 뜨게 잡는 잠금 파일, 창 없이 돌 때의 로그
 /ml/worker/.worker.lock
+/ml/worker/logs/
 /ml/topic/windows/__pycache__/
 /ml/topic/**/checkpoints/
 .essay-audit-reports/

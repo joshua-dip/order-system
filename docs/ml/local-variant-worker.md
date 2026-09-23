@@ -19,20 +19,33 @@
 
 ## 실행
 
-```bat
-ml\worker\start_worker.bat           REM 상주 — 창을 닫거나 Ctrl+C 로 멈춤
-ml\worker\start_worker.bat --fake    REM GPU 없이 큐·화면 연결만 시험(고정 결과, 저장 금지 표시)
-ml\worker\start_worker.bat --once    REM 한 건만 처리하고 끝
-```
-
-로그인할 때 자동으로 띄우려면(작업 스케줄러, 비정상 종료 시 1분 뒤 재시작):
+로그인할 때 **창 없이** 자동으로 띄운다(권장, 한 번만 등록):
 
 ```bat
 powershell -ExecutionPolicy Bypass -File ml\worker\register_worker_task.ps1
 ```
 
+| 하려는 것 | 명령 (PowerShell) |
+|---|---|
+| 지금 시작 | `Start-ScheduledTask -TaskName gomijoshua-local-variant-worker` |
+| 멈춤 | `Stop-ScheduledTask -TaskName gomijoshua-local-variant-worker` — 다시 시작하거나 다음 로그인 때까지 꺼져 있다 |
+| 돌고 있나 | 관리자 화면 「GPU 워커 온라인」, 또는 `Get-ScheduledTask -TaskName gomijoshua-local-variant-worker` 의 State 가 `Running` |
+| 로그 | `ml\worker\logs\worker.log` (시작할 때 5MB 넘으면 `worker.1.log` 로 넘김) |
+| 등록 해제 | `Unregister-ScheduledTask -TaskName gomijoshua-local-variant-worker -Confirm:$false` |
+
+- 창이 없어서 실수로 닫아 멈출 일이 없다. 로그인 직후 네트워크가 아직 없거나 도중에 끊겨도 끝나지 않고 계속 다시 시도한다.
+- **작업 스케줄러는 끝난 워커를 다시 띄우지 않는다** — 재시작 설정은 실행 자체가 실패했을 때만 적용된다.
+
+콘솔 창에서 직접 돌리기(시험·문제 확인용 — 창을 닫거나 Ctrl+C 로 멈춘다). 자동 시작 워커가 돌고 있으면 먼저 멈춘다:
+
+```bat
+ml\worker\start_worker.bat           REM 창에서 상주
+ml\worker\start_worker.bat --fake    REM GPU 없이 큐·화면 연결만 시험(고정 결과, 저장 금지 표시)
+ml\worker\start_worker.bat --once    REM 한 건만 처리하고 끝
+```
+
 절전 모드에서는 워커도 멈춘다 — 이 PC 의 절전 설정은 따로 꺼 둔다.
-워커는 PC 마다 하나만 뜬다(`ml/worker/.worker.lock`).
+워커는 PC 마다 하나만 뜬다(`ml/worker/.worker.lock`) — 이미 돌고 있으면 나중에 띄운 쪽이 바로 끝난다.
 
 ## GPU 를 학습과 나눠 쓰는 규칙 (4GB)
 
@@ -41,14 +54,14 @@ powershell -ExecutionPolicy Bypass -File ml\worker\register_worker_task.ps1
 - 모델은 **자식 프로세스**에 올린다. 작업이 없으면 10분 뒤(`--idle-unload-min`) 자식을 끝내 CUDA 메모리를
   통째로 돌려준다 — 그다음에 학습을 시작하면 된다. 하트비트의 `model_loaded` 로 확인.
 - 학습 도중 워커가 모델을 올릴 일은 없지만, **모델을 올려 둔 채 학습을 시작하면 학습이 메모리 부족으로 죽을 수 있다.**
-  학습 전엔 워커를 멈추거나 모델이 내려간 상태인지 본다.
+  학습 전엔 워커를 멈추거나(`Stop-ScheduledTask …`) 모델이 내려간 상태인지 본다.
 - CLI(`npm run cc:local-variant …`)는 워커를 거치지 않고 파이썬을 직접 띄운다 — 워커가 모델을 올려 둔 상태면 쓰지 않는다.
 
 ## 상태 보기
 
 화면 버튼 옆에 「GPU 워커 온라인」·「오프라인(마지막 신호 n분 전)」·「주제 미학습」이 뜬다.
 작업을 넣은 뒤에는 「대기 · 앞에 n건」 → 「<PC 이름>에서 생성 중」 → 편집창 채움(검증 경고가 있으면 노란 상자).
-워커 콘솔에는 작업 시작·완료·실패와 파이프라인 진행(`| [pipeline] …`)이 찍힌다.
+워커 로그(`ml\worker\logs\worker.log`, 콘솔로 돌렸으면 그 창)에는 작업 시작·완료·실패와 파이프라인 진행(`| [pipeline] …`)이 찍힌다.
 
 ## 옵션
 
