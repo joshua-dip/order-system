@@ -24,6 +24,7 @@ for p in (_TOPIC_DIR, _WIN_DIR):
 from _topic_common import (  # noqa: E402
     CIRCLED,
     SYSTEM_PROMPT,
+    extract_json_object,
     format_exam_view,
     read_passage_interactive,
 )
@@ -32,7 +33,7 @@ from _cuda_runtime import (  # noqa: E402
     DEFAULT_EXPLAIN_ADAPTER,
     DEFAULT_MODEL,
     adapter_exists,
-    chat_json,
+    chat_text,
     load_base_model_name,
     load_model,
     resolve_use_4bit,
@@ -134,27 +135,6 @@ def _parse_draft(obj: dict | None) -> tuple[list[str], int] | None:
     return None
 
 
-def _fallback_distractors(claim_en: str, correct: str) -> list[str]:
-    """Rule-ish fillers when the tiny model returns too few options."""
-    base = [
-        f"reasons why talent alone guarantees success without {claim_en.split()[0] if claim_en else 'practice'}",
-        "how long it usually takes to memorize vocabulary lists",
-        "advantages of avoiding practice and relying only on natural ability",
-        "ways to measure classroom seating arrangements for language learners",
-        "benefits of ignoring feedback when learning a foreign language",
-    ]
-    out = []
-    for b in base:
-        if _strip_circled(b).lower() == _strip_circled(correct).lower():
-            continue
-        out.append(b)
-        if len(out) == 4:
-            break
-    while len(out) < 4:
-        out.append(f"unrelated claim about language learning factor {len(out)+1}")
-    return out[:4]
-
-
 def _format_options(phrases: list[str]) -> str:
     parts = []
     for i, p in enumerate(phrases[:5]):
@@ -228,11 +208,6 @@ def _has_hangul(s: str) -> bool:
 
 def _as_noun_phrase(claim_en: str) -> str:
     s = claim_en.strip().rstrip(".")
-    if _has_hangul(s):
-        return (
-            "importance of consistent practice and effective strategies "
-            "over natural talent in language learning"
-        )
     words = s.split()
     if len(words) >= 8 and words[0][:1].isupper() and " " in s:
         lower = s[0].lower() + s[1:] if s else s
@@ -261,28 +236,34 @@ def run_pipeline(
     if main_adapter:
         set_adapter(model, main_adapter)
 
-    def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
-        return chat_json(
-            model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp
-        )
+    raw_out = [""]  # 마지막 모델 출력 원문 — JSON 이 깨졌을 때 실패 기록에 남긴다
 
-    # 1) claim
-    claim = call(
-        CLAIM_SYS,
-        f"[Passage]\n{passage}\n\nReturn claim_en and claim_ko JSON.",
-        max_tokens=256,
-    )
-    if not claim or not str(claim.get("claim_en") or "").strip():
+    def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
+        raw_out[0] = chat_text(model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp)
+        return extract_json_object(raw_out[0])
+
+    # 1) claim — 작은 모델이라 JSON 이 가끔 깨진다. 몇 번 다시 묻고, 비었거나 한국어면 버린다
+    claim_en = claim_ko = ""
+    for _ in range(max_retries + 1):
+        claim = call(
+            CLAIM_SYS,
+            f"[Passage]\n{passage}\n\nReturn claim_en and claim_ko JSON.",
+            max_tokens=256,
+        )
+        cand = str((claim or {}).get("claim_en") or "").strip()
+        if cand and not _has_hangul(cand):
+            claim_en, claim_ko = cand, str(claim.get("claim_ko") or "").strip()
+            break
         _log_failure(
             passage=passage,
             stage="claim",
-            bad_output=claim,
+            bad_output=claim if claim is not None else {"raw": raw_out[0][:800]},
             problem="claim extraction failed",
             claim=None,
         )
+    if not claim_en:
         return {"ok": False, "error": "claim stage failed", "trace": trace}
-    claim_en = _as_noun_phrase(str(claim.get("claim_en")).strip())
-    claim_ko = str(claim.get("claim_ko") or "").strip()
+    claim_en = _as_noun_phrase(claim_en)
     claim_obj = {"claim_en": claim_en, "claim_ko": claim_ko}
     trace.append({"stage": "claim", "out": claim_obj})
     print(f"[pipeline] claim: {claim_en[:120]}", file=sys.stderr)
@@ -309,35 +290,25 @@ def run_pipeline(
             parsed_draft = _parse_draft(full)
             draft = full
         if parsed_draft is None:
-            # last resort: claim as correct + fillers
-            correct = claim_en if len(claim_en.split()) >= 4 else (
-                "importance of consistent practice and effective strategies in language learning"
-            )
-            distractors = _fallback_distractors(claim_en, correct)
-            options = [correct] + distractors
-            # put correct at index 1 sometimes for variety
-            correct_index = 0
+            # 선지를 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 오답으로 채웠다)
             _log_failure(
                 passage=passage,
                 stage="draft",
-                bad_output=draft,
-                problem="draft options invalid; used claim+filler distractors",
+                bad_output=draft if draft is not None else {"raw": raw_out[0][:800]},
+                problem="draft options invalid",
                 claim=claim_obj,
-                improved_hint=correct,
             )
-            trace.append({"stage": "draft", "ok": False, "fallback": True, "out": draft})
-        else:
-            options, correct_index = parsed_draft
-            trace.append(
-                {
-                    "stage": "draft",
-                    "ok": True,
-                    "correct_index": correct_index,
-                    "options": options,
-                }
-            )
-        if len(options) != 5:
+            trace.append({"stage": "draft", "ok": False, "out": draft})
             continue
+        options, correct_index = parsed_draft
+        trace.append(
+            {
+                "stage": "draft",
+                "ok": True,
+                "correct_index": correct_index,
+                "options": options,
+            }
+        )
         print(
             f"[pipeline] draft try={draft_try} answer={options[correct_index][:80]}",
             file=sys.stderr,
@@ -496,26 +467,16 @@ def run_pipeline(
         if len(explanation) < 40 or not _has_hangul(explanation):
             explanation = (
                 f"정답은 {CIRCLED[correct_index]}. 글의 핵심은 「{claim_ko or claim_en}」이므로 "
-                f"이를 담은 선지가 주제이다. 다른 선지는 재능만 강조하거나 지문에 없는 내용이다."
+                f"이를 담은 선지가 주제이다. 다른 선지는 글의 일부 소재만 다루거나 지문에 없는 내용이다."
             )[:450]
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
-        # Ensure every option has enough words
-        fillers = _fallback_distractors(claim_en, claim_en)
-        fixed_opts = []
-        fi = 0
-        for i, o in enumerate(options[:5]):
-            if len(o.split()) < 5:
-                if i == correct_index:
-                    fixed_opts.append(claim_en)
-                else:
-                    fixed_opts.append(fillers[fi % 4])
-                    fi += 1
-            else:
-                fixed_opts.append(o)
-        while len(fixed_opts) < 5:
-            fixed_opts.append(fillers[len(fixed_opts) % 4])
-        options = fixed_opts[:5]
+        # 정답 선지가 너무 짧게 망가졌으면 핵심 주장으로 바꾼다. 오답은 지어내지 않는다 —
+        # 짧은 오답은 아래 형식 검사에서 걸러 다시 시도한다
+        options = [
+            claim_en if i == correct_index and len(o.split()) < 5 else o
+            for i, o in enumerate(options[:5])
+        ]
 
         qd = {
             "Question": "다음 글의 주제로 가장 적절한 것은?",
