@@ -177,6 +177,8 @@ export default function MyPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [orders, setOrders] = useState<MyOrder[]>([]);
+  /** 이번 달 기본난도 무료 한도 잔량 — 멤버십 회원에게 주문 내역 상단에 보여 준다. 비회원/일반 회원이면 member:false. */
+  const [baseQuota, setBaseQuota] = useState<{ member: boolean; trial?: boolean; limit: number; used: number; remaining: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [editEmail, setEditEmail] = useState('');
@@ -356,6 +358,14 @@ export default function MyPage() {
       .then((res) => res.json())
       .then((data) => setOrders(data.orders || []))
       .catch(() => setOrders([]));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/my/variant-base-quota', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => setBaseQuota(data?.ok ? data : null))
+      .catch(() => setBaseQuota(null));
   }, [user]);
 
   const fetchPastExamUploads = () => {
@@ -1095,6 +1105,25 @@ export default function MyPage() {
           {/* ━━ 주문 내역 탭 ━━ */}
           {activeTab === 'orders' && (
             <div>
+              {baseQuota?.member && (
+                <div className="flex items-center justify-between gap-3 mb-4 px-4 py-3 bg-white rounded-2xl border border-[#e2e8f0]">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#0f172a]">
+                      👑 이번 달 기본난도 무료 {baseQuota.remaining.toLocaleString()}문항 남음
+                    </p>
+                    <p className="text-[11px] text-[#94a3b8] mt-0.5">
+                      {baseQuota.trial ? '가입 체험' : '멤버십'} 월 한도 {baseQuota.limit.toLocaleString()}문항 중 {baseQuota.used.toLocaleString()}문항 사용
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      baseQuota.remaining > 0 ? 'bg-[#dcfce7] text-[#16a34a]' : 'bg-[#fee2e2] text-[#dc2626]'
+                    }`}
+                  >
+                    {baseQuota.remaining > 0 ? `${baseQuota.remaining}문항` : '소진'}
+                  </span>
+                </div>
+              )}
               {orders.length === 0 ? (
                 <div className="py-20 text-center">
                   <div className="text-5xl mb-3 opacity-40">📋</div>
