@@ -46,7 +46,15 @@ FAILURE_DIR = _ROOT / "data" / "topic-pipeline-failures"
 CLAIM_SYS = """You extract the single core topic claim of an English passage for a Korean CSAT-style topic question.
 Output ONLY one JSON object. No markdown.
 Keys: claim_en (one English noun phrase or short sentence, facts from the passage only), claim_ko (one Korean sentence).
+The claim is the AUTHOR's own main point. Many passages first describe a common belief, an old view, or an example,
+and then turn against it with words like however, but, yet, though, the problem, in fact — the claim is what comes
+after that turn, NOT the opening belief. Never use a single example, a person's name, or a date as the claim.
 Do NOT add ideas that are not in the passage. Do NOT write advice or prescriptions as the claim unless the passage itself argues for them."""
+
+PHRASE_SYS = """You rewrite a passage's core claim as ONE answer option for a Korean CSAT 「주제」 question.
+Output ONLY one JSON object. No markdown.
+Keys: option (one English noun phrase, 8-15 words, e.g. "the need to ...", "the limits of ...", "why ...", "how ...").
+Keep the claim's meaning exactly; do not add ideas; not a full sentence."""
 
 DRAFT_SYS = """You write five English noun-phrase options for a Korean CSAT 「주제」 question.
 Output ONLY one JSON object. No markdown.
@@ -56,15 +64,6 @@ Rules:
 - distractors must be plausible but wrong relative to the claim.
 - no duplicate meanings among options.
 - topic = what the passage is ABOUT, not what one should do (unless the passage's topic is advice)."""
-
-VERIFY_ANS_SYS = """You check whether a correct topic option matches a core claim without adding unsupported info.
-Output ONLY one JSON object. No markdown.
-Keys: match (bool), unsupported (bool), issue (short English string or empty), better_option (English noun phrase if revise needed else empty string).
-unsupported=true if the option adds claims not in the claim/passage."""
-
-REVISE_ANS_SYS = """You revise ONLY the correct topic option so it matches the claim without unsupported additions.
-Output ONLY one JSON object. No markdown.
-Keys: correct_option (one English noun phrase, 8-15 words)."""
 
 VERIFY_DIST_SYS = """You check four distractor options for a topic MCQ.
 Output ONLY one JSON object. No markdown.
@@ -231,6 +230,46 @@ def _has_hangul(s: str) -> bool:
     return any("\uac00" <= ch <= "\ud7a3" for ch in s)
 
 
+# 통념 → 반박 글에서 필자의 말이 시작되는 전환어. 첫 문장(도입)의 것은 보지 않는다.
+_TURN_RE = re.compile(
+    r"\b(however|but|yet|though|although|instead|in fact|actually|nevertheless|nonetheless|"
+    r"the problem|the point is|the truth is|on the contrary)\b",
+    re.IGNORECASE,
+)
+
+
+def _turn_hint(passage: str) -> str:
+    """필자의 주장이 나오기 쉬운 곳 — 둘째 문장부터 찾은 첫 전환어 문장과 그 뒤 두 문장. 없으면 빈 문자열."""
+    sents = [s for s in re.split(r"(?<=[.!?])\s+", passage.strip()) if s]
+    for i in range(1, len(sents)):
+        if _TURN_RE.search(sents[i]):
+            return " ".join(sents[i : i + 3])
+    return ""
+
+
+_STOP = frozenset(
+    "the a an of to in on for and or with from that this these those their there they them its it is are was were "
+    "be been being as at by about into than then more most very much many some such not no can could would should "
+    "may might must will just also only even how why what which who whose when where while importance idea role "
+    "need ways way reasons reason effect effects benefit benefits value".split()
+)
+
+
+def _content(s: str) -> set[str]:
+    """선지·주제문 비교용 내용어 — 앞 5글자만 봐서 어형 차이(move/moving)를 흡수한다."""
+    return {w[:5] for w in re.findall(r"[a-z]+", s.lower()) if len(w) > 2 and w not in _STOP}
+
+
+def _agrees(option: str, claim: str) -> bool:
+    """초안 정답이 주제문과 같은 말을 하는지 — 짧은 쪽 내용어의 3할 이상이 겹치면 같다고 본다."""
+    a, b = _content(option), _content(claim)
+    return bool(a and b) and len(a & b) / min(len(a), len(b)) >= 0.3
+
+
+_LOWER_FIRST = {"The", "A", "An", "How", "Why", "What", "Ways", "Reasons", "Importance", "Effects", "Benefits",
+                "Need", "Role", "Limits", "Difficulty", "Dangers", "Value", "Impact", "Influence"}
+
+
 def _as_noun_phrase(claim_en: str) -> str:
     s = claim_en.strip().rstrip(".")
     words = s.split()
@@ -290,14 +329,29 @@ def run_pipeline(
         full = call(SYSTEM_PROMPT, f"[지문 Paragraph]\n{passage}", max_tokens=1200, adapter=True)
         return full, _parse_draft(full)
 
+    def topic_phrase(claim_text: str) -> str:
+        """주제문을 수능 주제 선지 모양(8~15단어 명사구)으로 — 안 되면 기계적 변환(_as_noun_phrase)."""
+        out = call(PHRASE_SYS, f"[Claim]\n{claim_text}\n\nReturn option JSON.", max_tokens=80, t=0.0)
+        s = _strip_circled(_pick_str(out, "option", "phrase", "topic")).rstrip(".")
+        if s and not _has_hangul(s) and 5 <= len(s.split()) <= 18:
+            first = s.split()[0]
+            return first.lower() + s[len(first) :] if first in _LOWER_FIRST else s
+        return _as_noun_phrase(claim_text)
+
     # 1) claim — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
     # 베이스 0.5B 는 claim_en 에 한국어를 넣기도 한다 — 영어가 아니면 버리고 다시 묻는다.
+    # 통념 → 반박 글에서 첫 문장(통념)을 주제문으로 잡는 일이 잦아, 전환어 문장을 함께 준다.
+    turn = _turn_hint(passage)
+    claim_user = f"[Passage]\n{passage}\n\n"
+    if turn:
+        claim_user += f"[Where the author turns]\n{turn}\n\n"
+    claim_user += "Return claim_en and claim_ko JSON."
     claim: dict | None = None
     claim_raw = ""
     for c_try in range(2):
         claim = call(
             CLAIM_SYS,
-            f"[Passage]\n{passage}\n\nReturn claim_en and claim_ko JSON.",
+            claim_user,
             max_tokens=256,
             t=temp if c_try == 0 else 0.0,
         )
@@ -372,68 +426,17 @@ def run_pipeline(
             file=sys.stderr,
         )
 
-        # 3) verify answer (+ revise)
-        ans_ok = False
-        for v_try in range(max_retries + 1):
-            correct = options[correct_index]
-            ver = call(
-                VERIFY_ANS_SYS,
-                f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
-                f"[Correct option]\n{correct}\n\n"
-                "Return match, unsupported, issue, better_option JSON.",
-                max_tokens=256,
-            )
-            match = bool((ver or {}).get("match"))
-            unsupported = bool((ver or {}).get("unsupported"))
-            better = str((ver or {}).get("better_option") or "").strip()
-            issue = str((ver or {}).get("issue") or "").strip()
-            # Tiny models often omit keys — if JSON missing, keep option and continue
-            if ver is None:
-                print("[pipeline] answer verify skipped (null JSON)", file=sys.stderr)
-                ans_ok = True
-                break
-            trace.append({"stage": "verify_answer", "out": ver})
-            if match and not unsupported:
-                ans_ok = True
-                break
-            if better and (unsupported or not match):
-                bo = _strip_circled(better)
-                if len(bo.split()) >= 5:
-                    options[correct_index] = bo
-                    if v_try >= 1:
-                        ans_ok = True
-                        break
-            print(f"[pipeline] answer verify fail: {issue or 'mismatch'}", file=sys.stderr)
-            _log_failure(
-                passage=passage,
-                stage="verify_answer",
-                bad_output={"option": correct, "verify": ver},
-                problem=issue or "answer does not match claim",
-                claim=claim_obj,
-                improved_hint=better,
-            )
-            if v_try >= max_retries:
-                # Soft-pass with noun-phrase claim, never a 1-word stub
-                options[correct_index] = claim_en
-                print("[pipeline] answer verify soft-pass on last retry", file=sys.stderr)
-                ans_ok = True
-                break
-            rev = call(
-                REVISE_ANS_SYS,
-                f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
-                f"[Bad correct option]\n{correct}\n\n"
-                f"[Issue]\n{issue}\n\n"
-                f"[Hint]\n{better}\n\n"
-                "Return corrected correct_option JSON.",
-                max_tokens=128,
-            )
-            new_opt = _strip_circled(str((rev or {}).get("correct_option") or ""))
-            trace.append({"stage": "revise_answer", "out": rev})
-            if new_opt:
-                options[correct_index] = new_opt
-
-        if not ans_ok:
-            continue
+        # 3) 정답 확인 — 0.5B 검증 모델의 판정은 믿기 어렵다(거의 모두 불합격을 내 주제문이 정답 자리로
+        #    들어가고, 좋은 초안을 「1579」 같은 수정안으로 망쳤다). 대신 LoRA 초안의 정답이 주제문과
+        #    같은 말을 하는지 내용어 겹침으로 본다. 안 맞으면 초안을 다시 받고, 끝까지 안 맞으면
+        #    주제문을 선지 모양으로 다듬어 정답 자리에 넣는다.
+        if not _agrees(options[correct_index], claim_raw):
+            print(f"[pipeline] answer disagrees with claim: {options[correct_index][:80]}", file=sys.stderr)
+            trace.append({"stage": "answer_check", "agrees": False, "option": options[correct_index]})
+            if draft_try < max_retries:
+                continue
+            options[correct_index] = topic_phrase(claim_raw)
+            trace.append({"stage": "answer_check", "fallback": "claim_phrase", "option": options[correct_index]})
 
         # 4) verify distractors (+ revise)
         dist_ok = False
@@ -501,6 +504,13 @@ def run_pipeline(
 
         options, correct_index = _shuffle_answer(options, correct_index)
 
+        # 정답 선지가 너무 짧게 망가졌으면 핵심 주장으로 바꾼다(해설이 최종 선지를 인용하도록 해설보다 먼저).
+        # 오답은 지어내지 않는다 — 짧거나 겹치는 오답은 아래 형식 검사에서 걸러 다시 시도한다
+        options = [
+            claim_en if i == correct_index and len(o.split()) < 5 else o
+            for i, o in enumerate(options[:5])
+        ]
+
         # 5) explanation (optional dedicated explain LoRA)
         if has_explain_adapter:
             set_adapter(model, explain_adapter)
@@ -524,18 +534,13 @@ def run_pipeline(
         if len(explanation) > 450:
             explanation = explanation[:450].rstrip() + "…"
         if len(explanation) < 40 or not _has_hangul(explanation):
+            # 베이스 모델의 한국어 주제문(claim_ko)은 자주 깨지거나 틀린다(「아시아의 아티스트」) — 쓰지 않고
+            # 최종 정답 선지를 그대로 인용한다
             explanation = (
-                f"정답은 {CIRCLED[correct_index]}. 글의 핵심은 「{claim_ko or claim_en}」이므로 "
-                f"이를 담은 선지가 주제이다. 다른 선지는 글의 일부 소재만 다루거나 지문에 없는 내용이다."
+                f"정답은 {CIRCLED[correct_index]}({options[correct_index]}). 이 선지가 글 전체의 요지를 담고 있어 "
+                f"주제로 가장 적절하다. 다른 선지는 글의 일부 소재만 다루거나 지문에 없는 내용이다."
             )[:450]
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
-
-        # 정답 선지가 너무 짧게 망가졌으면 핵심 주장으로 바꾼다. 오답은 지어내지 않는다 —
-        # 짧거나 겹치는 오답은 아래 형식 검사에서 걸러 다시 시도한다
-        options = [
-            claim_en if i == correct_index and len(o.split()) < 5 else o
-            for i, o in enumerate(options[:5])
-        ]
 
         qd = {
             "Question": "다음 글의 주제로 가장 적절한 것은?",

@@ -181,6 +181,24 @@ CLI 구현은 주제·제목·주장 공용(`scripts/_local-variant-runner.ts`) 
 「로컬 LoRA로 초안」 버튼은 이 CLI 가 아니라 **GPU PC 워커**가 처리한다(작업은 MongoDB 큐로 전달).
 실행·GPU 공유 규칙: [`local-variant-worker.md`](./local-variant-worker.md)
 
+### 품질 시험 — 개선 루프
+
+파이프라인이나 어댑터를 바꿨으면 **같은 시험 세트로 전후를 비교**한다. 지문 하나를 한 번 돌린 결과로는 잡음과 구별이 안 된다.
+
+```bat
+REM 지금 코드·어댑터로: test.jsonl 의 서로 다른 지문 5개 + eval_extra.jsonl, 지문마다 2회
+ml\topic\windows\.venv\Scripts\python.exe ml\topic\windows\eval_pipeline.py --k 5 --n 2 --out eval.jsonl
+REM 다른 어댑터(예: 1.5B) — 베이스·4bit 여부는 그 어댑터의 train_meta.json 에서
+ml\topic\windows\.venv\Scripts\python.exe ml\topic\windows\eval_pipeline.py --adapter ml\topic\adapters\topic-lora-cuda-1.5b
+REM 다른 버전의 파이프라인 코드와 비교(예: main 체크아웃)
+ml\topic\windows\.venv\Scripts\python.exe ml\topic\windows\eval_pipeline.py --code-root <그 체크아웃>\ml
+```
+
+- 추가 지문: `data/topic-finetune/eval_extra.jsonl` — 한 줄에 `{"source","paragraph","gold"}`, 로컬 전용(gitignore).
+  라이브에서 틀린 지문을 여기에 넣어 두면 다음 수정이 그 약점을 고쳤는지 바로 보인다.
+- 채점(맞음·부분·틀림)은 사람이 한다. `overlap` 은 기출 정답과 내용어가 얼마나 겹치는지일 뿐이다.
+- GPU 를 쓰므로 워커가 모델을 올려 둔 동안(작업 뒤 10분)은 돌리지 않는다.
+
 ---
 
 ## 6. Mac MLX 와의 차이
