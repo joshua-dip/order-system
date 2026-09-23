@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,6 +29,7 @@ for p in (_TYPE_DIR, _WIN_DIR):
 from _claim_common import (  # noqa: E402
     CIRCLED,
     SYSTEM_PROMPT,
+    extract_json_object,
     format_exam_view,
     read_passage_interactive,
 )
@@ -36,7 +38,7 @@ from _cuda_runtime import (  # noqa: E402
     DEFAULT_EXPLAIN_ADAPTER,
     DEFAULT_MODEL,
     adapter_exists,
-    chat_json,
+    chat_text,
     load_base_model_name,
     load_model,
     resolve_use_4bit,
@@ -183,24 +185,16 @@ def _parse_lora_qd(obj: dict | None) -> tuple[list[str], int] | None:
     return None
 
 
-def _fallback_distractors(thesis_en: str, correct: str) -> list[str]:
-    base = [
-        "Learners should copy any method that produced quick results once.",
-        "It is unnecessary to track progress once a routine feels comfortable.",
-        "Teachers must prioritize natural ability over structured feedback in class.",
-        "Programs ought to shorten practice time whenever learners report boredom.",
-        "It is essential to reward talent rather than consistent effort.",
-    ]
-    out = []
-    for b in base:
-        if _strip_circled(b).lower() == _strip_circled(correct).lower():
-            continue
-        out.append(b)
-        if len(out) == 4:
-            break
-    while len(out) < 4:
-        out.append(f"Programs should adopt an unrelated practice change {len(out) + 1}.")
-    return out[:4]
+def _dup_option_errors(opts: list[str]) -> list[str]:
+    """같은 선지가 두 번 나오면 복수정답이 된다(검증 단계가 정답을 오답 자리에 베껴 넣은 적이 있다)."""
+    errs: list[str] = []
+    seen: set[str] = set()
+    for i, o in enumerate(opts):
+        key = re.sub(r"[^a-z0-9]+", " ", o.lower()).strip()
+        if key in seen:
+            errs.append(f"option {i+1} duplicates another option")
+        seen.add(key)
+    return errs
 
 
 def _format_options(phrases: list[str]) -> str:
@@ -260,6 +254,7 @@ def _format_ok(qd: dict, passage: str) -> list[str]:
             errs.append(f"option {i+1} must not start with You/He/She")
         if not _has_modal_or_adj(o):
             errs.append(f"option {i+1} missing modal verb or key adjective")
+    errs += _dup_option_errors(opts)
     ans = str(qd.get("CorrectAnswer") or "").strip()
     if ans not in CIRCLED:
         errs.append("CorrectAnswer must be ①-⑤")
@@ -294,6 +289,8 @@ def run_pipeline(
 
     # 주장 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. 다른 단계에 켜 두면 시스템 프롬프트를
     # 무시하고 문항 JSON 을 뱉어 단계가 실패한다. 기본은 어댑터를 끈 베이스, 초안·해설 어댑터만 adapter=True.
+    raw_out = [""]  # 마지막 모델 출력 원문 — JSON 이 깨졌을 때 실패 기록에 남긴다
+
     def call(
         sys_p: str,
         user: str,
@@ -302,7 +299,7 @@ def run_pipeline(
         adapter: bool = False,
         t: float | None = None,
     ) -> dict | None:
-        return chat_json(
+        raw_out[0] = chat_text(
             model,
             tokenizer,
             sys_p,
@@ -311,6 +308,7 @@ def run_pipeline(
             temp=temp if t is None else t,
             use_adapter=adapter,
         )
+        return extract_json_object(raw_out[0])
 
     def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
         """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
@@ -318,6 +316,7 @@ def run_pipeline(
         return full, _parse_lora_qd(full)
 
     # 1) thesis — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    # 베이스 0.5B 는 thesis_en 에 한국어를 넣기도 한다 — 영어가 아니면 버리고 다시 묻는다.
     thesis: dict | None = None
     thesis_raw = ""
     for t_try in range(2):
@@ -328,21 +327,24 @@ def run_pipeline(
             t=temp if t_try == 0 else 0.0,
         )
         thesis_raw = _pick_str(thesis, "thesis_en", "thesis", "claim_en", "claim", "main_idea")
-        if thesis_raw:
+        if thesis_raw and not _has_hangul(thesis_raw):
             break
+        _log_failure(
+            passage=passage, stage="thesis",
+            bad_output=thesis if thesis is not None else {"raw": raw_out[0][:800]},
+            problem="thesis extraction failed" if not thesis_raw else "thesis_en is not English", thesis=None,
+        )
+        thesis_raw = ""
     lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
     if not thesis_raw:
         # 마지막 수단: LoRA 초안의 정답 주장문을 논지로(오답 초안 단계에서 그대로 재사용).
         lora_first = lora_draft()
         if lora_first[1] is not None:
             opts, idx = lora_first[1]
-            thesis_raw = opts[idx]
-            trace.append({"stage": "thesis", "fallback": "lora_draft_answer"})
+            if not _has_hangul(opts[idx]):
+                thesis_raw = opts[idx]
+                trace.append({"stage": "thesis", "fallback": "lora_draft_answer"})
     if not thesis_raw:
-        _log_failure(
-            passage=passage, stage="thesis", bad_output=thesis,
-            problem="thesis extraction failed", thesis=None,
-        )
         return {"ok": False, "error": "thesis stage failed", "trace": trace}
     thesis_en = thesis_raw
     thesis_ko = _pick_str(thesis, "thesis_ko", "thesis_korean", "ko")
@@ -360,7 +362,7 @@ def run_pipeline(
         )
         cand = str((prac or {}).get("practical_en") or "").strip()
         trace.append({"stage": "practical", "out": prac})
-        if not cand:
+        if not cand or _has_hangul(cand):  # 선지가 될 문장 — 한국어면 버린다
             continue
         pver = call(
             VERIFY_PRACTICAL_SYS,
@@ -381,7 +383,7 @@ def run_pipeline(
             problem=str(pver.get("issue") or "thesis+modal / missing modal-adjective"), thesis=thesis_obj,
             improved_hint=better,
         )
-        if better and _has_modal_or_adj(better) and not _starts_bad_subject(better):
+        if better and not _has_hangul(better) and _has_modal_or_adj(better) and not _starts_bad_subject(better):
             practical_en = better
             if p_try >= 1:
                 break
@@ -408,14 +410,15 @@ def run_pipeline(
             )
             distractors = _normalize_options((draft or {}).get("options"))
         if len(distractors) != 4:
-            distractors = _fallback_distractors(thesis_en, practical_en)
+            # 오답을 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 오답으로 채웠다)
             _log_failure(
-                passage=passage, stage="draft", bad_output=draft,
-                problem="draft distractors invalid; used fillers", thesis=thesis_obj,
+                passage=passage, stage="draft",
+                bad_output=draft if draft is not None else {"raw": raw_out[0][:800]},
+                problem="draft distractors invalid", thesis=thesis_obj,
             )
-            trace.append({"stage": "draft", "ok": False, "fallback": True, "out": draft})
-        else:
-            trace.append({"stage": "draft", "ok": True, "options": distractors})
+            trace.append({"stage": "draft", "ok": False, "out": draft})
+            continue
+        trace.append({"stage": "draft", "ok": True, "options": distractors})
 
         # 정답 자리는 해설 직전에 _shuffle_answer 로 무작위로 섞는다 — 여기서는 맨 앞에 둔다
         correct_index = 0
@@ -511,24 +514,8 @@ def run_pipeline(
             )[:450]
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
-        # Ensure every option is a valid sentence
-        fillers = _fallback_distractors(thesis_en, practical_en)
-        fixed_opts = []
-        fi = 0
-        for i, o in enumerate(options[:5]):
-            bad = len(o.split()) < 5 or _starts_bad_subject(o) or not _has_modal_or_adj(o)
-            if bad:
-                if i == correct_index:
-                    fixed_opts.append(practical_en)
-                else:
-                    fixed_opts.append(fillers[fi % 4])
-                    fi += 1
-            else:
-                fixed_opts.append(o)
-        while len(fixed_opts) < 5:
-            fixed_opts.append(fillers[len(fixed_opts) % 4])
-        options = fixed_opts[:5]
-
+        # 형식에 안 맞거나 겹치는 오답(짧음·You 로 시작·조동사/핵심 형용사 없음)은 지어내 채우지 않는다 —
+        # 아래 형식 검사에서 걸러 다시 시도한다
         qd = {
             "Question": "이 글에서 글쓴이가 주장하는 바로 가장 적절한 것은?",
             "Paragraph": passage,

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,6 +25,7 @@ for p in (_TYPE_DIR, _WIN_DIR):
 from _title_common import (  # noqa: E402
     CIRCLED,
     SYSTEM_PROMPT,
+    extract_json_object,
     format_exam_view,
     read_passage_interactive,
 )
@@ -32,7 +34,7 @@ from _cuda_runtime import (  # noqa: E402
     DEFAULT_EXPLAIN_ADAPTER,
     DEFAULT_MODEL,
     adapter_exists,
-    chat_json,
+    chat_text,
     load_base_model_name,
     load_model,
     resolve_use_4bit,
@@ -162,25 +164,16 @@ def _parse_lora_qd(obj: dict | None) -> tuple[list[str], int] | None:
     return None
 
 
-def _fallback_distractors(message_en: str, correct: str) -> list[str]:
-    """Rule-ish fillers when the tiny model returns too few options."""
-    base = [
-        "A Short History of Vocabulary Lists in the Classroom",
-        "How Seating Charts Changed Modern Language Teaching",
-        "The Case for Ignoring Feedback in Skill Building",
-        "Why Natural Talent Beats Practice, According to Critics",
-        "Measuring Progress Without Setting Any Goals",
-    ]
-    out = []
-    for b in base:
-        if _strip_circled(b).lower() == _strip_circled(correct).lower():
-            continue
-        out.append(b)
-        if len(out) == 4:
-            break
-    while len(out) < 4:
-        out.append(f"An Unrelated Headline About Language Learning {len(out) + 1}")
-    return out[:4]
+def _dup_option_errors(opts: list[str]) -> list[str]:
+    """같은 선지가 두 번 나오면 복수정답이 된다(검증 단계가 정답을 오답 자리에 베껴 넣은 적이 있다)."""
+    errs: list[str] = []
+    seen: set[str] = set()
+    for i, o in enumerate(opts):
+        key = re.sub(r"[^a-z0-9]+", " ", o.lower()).strip()
+        if key in seen:
+            errs.append(f"option {i+1} duplicates another option")
+        seen.add(key)
+    return errs
 
 
 def _format_options(phrases: list[str]) -> str:
@@ -238,6 +231,7 @@ def _format_ok(qd: dict, passage: str) -> list[str]:
             errs.append(f"option {i+1} too long ({wc} words)")
         if o[:1] and not o[:1].isupper():
             errs.append(f"option {i+1} must start with a capital letter")
+    errs += _dup_option_errors(opts)
     ans = str(qd.get("CorrectAnswer") or "").strip()
     if ans not in CIRCLED:
         errs.append("CorrectAnswer must be ①-⑤")
@@ -275,6 +269,8 @@ def run_pipeline(
 
     # 제목 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. 다른 단계에 켜 두면 시스템 프롬프트를
     # 무시하고 문항 JSON 을 뱉어 단계가 실패한다. 기본은 어댑터를 끈 베이스, 초안·해설 어댑터만 adapter=True.
+    raw_out = [""]  # 마지막 모델 출력 원문 — JSON 이 깨졌을 때 실패 기록에 남긴다
+
     def call(
         sys_p: str,
         user: str,
@@ -283,7 +279,7 @@ def run_pipeline(
         adapter: bool = False,
         t: float | None = None,
     ) -> dict | None:
-        return chat_json(
+        raw_out[0] = chat_text(
             model,
             tokenizer,
             sys_p,
@@ -292,6 +288,7 @@ def run_pipeline(
             temp=temp if t is None else t,
             use_adapter=adapter,
         )
+        return extract_json_object(raw_out[0])
 
     def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
         """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
@@ -299,6 +296,7 @@ def run_pipeline(
         return full, _parse_lora_qd(full)
 
     # 1) core message — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    # 베이스 0.5B 는 message_en 에 한국어를 넣기도 한다 — 영어가 아니면 버리고 다시 묻는다.
     msg: dict | None = None
     message_raw = ""
     for m_try in range(2):
@@ -309,24 +307,26 @@ def run_pipeline(
             t=temp if m_try == 0 else 0.0,
         )
         message_raw = _pick_str(msg, "message_en", "message", "main_idea", "core_message", "claim_en")
-        if message_raw:
+        if message_raw and not _has_hangul(message_raw):
             break
+        _log_failure(
+            passage=passage,
+            stage="message",
+            bad_output=msg if msg is not None else {"raw": raw_out[0][:800]},
+            problem="core message extraction failed" if not message_raw else "message_en is not English",
+            message=None,
+        )
+        message_raw = ""
     lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
     if not message_raw:
         # 마지막 수단: LoRA 초안의 정답 제목을 핵심 메시지로(초안 단계에서 그대로 재사용).
         lora_first = lora_draft()
         if lora_first[1] is not None:
             opts, idx = lora_first[1]
-            message_raw = opts[idx]
-            trace.append({"stage": "message", "fallback": "lora_draft_answer"})
+            if not _has_hangul(opts[idx]):
+                message_raw = opts[idx]
+                trace.append({"stage": "message", "fallback": "lora_draft_answer"})
     if not message_raw:
-        _log_failure(
-            passage=passage,
-            stage="message",
-            bad_output=msg,
-            problem="core message extraction failed",
-            message=None,
-        )
         return {"ok": False, "error": "message stage failed", "trace": trace}
     message_en = message_raw
     message_ko = _pick_str(msg, "message_ko", "message_korean", "ko")
@@ -353,33 +353,25 @@ def run_pipeline(
             )
             parsed_draft = _parse_draft(draft)
         if parsed_draft is None:
-            correct = _titlecase_start(message_en) if len(message_en.split()) >= 4 else (
-                "The Hidden Cost of Skipping Consistent Practice"
-            )
-            distractors = _fallback_distractors(message_en, correct)
-            options = [correct] + distractors
-            correct_index = 0
+            # 선지를 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 헤드라인으로 채웠다)
             _log_failure(
                 passage=passage,
                 stage="draft",
-                bad_output=draft,
-                problem="draft options invalid; used message+filler distractors",
+                bad_output=draft if draft is not None else {"raw": raw_out[0][:800]},
+                problem="draft options invalid",
                 message=message_obj,
-                improved_hint=correct,
             )
-            trace.append({"stage": "draft", "ok": False, "fallback": True, "out": draft})
-        else:
-            options, correct_index = parsed_draft
-            trace.append(
-                {
-                    "stage": "draft",
-                    "ok": True,
-                    "correct_index": correct_index,
-                    "options": options,
-                }
-            )
-        if len(options) != 5:
+            trace.append({"stage": "draft", "ok": False, "out": draft})
             continue
+        options, correct_index = parsed_draft
+        trace.append(
+            {
+                "stage": "draft",
+                "ok": True,
+                "correct_index": correct_index,
+                "options": options,
+            }
+        )
         print(
             f"[pipeline] draft try={draft_try} answer={options[correct_index][:80]}",
             file=sys.stderr,
@@ -540,22 +532,12 @@ def run_pipeline(
             )[:450]
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
-        # Ensure every option has enough words and a capital start
-        fillers = _fallback_distractors(message_en, message_en)
-        fixed_opts = []
-        fi = 0
-        for i, o in enumerate(options[:5]):
-            if len(o.split()) < 4:
-                if i == correct_index:
-                    fixed_opts.append(_titlecase_start(message_en))
-                else:
-                    fixed_opts.append(fillers[fi % 4])
-                    fi += 1
-            else:
-                fixed_opts.append(_titlecase_start(o))
-        while len(fixed_opts) < 5:
-            fixed_opts.append(fillers[len(fixed_opts) % 4])
-        options = fixed_opts[:5]
+        # 대문자로 시작하게 맞추고, 정답 선지가 너무 짧게 망가졌으면 핵심 메시지로 바꾼다.
+        # 오답은 지어내지 않는다 — 짧거나 겹치는 오답은 아래 형식 검사에서 걸러 다시 시도한다
+        options = [
+            _titlecase_start(message_en if i == correct_index and len(o.split()) < 4 else o)
+            for i, o in enumerate(options[:5])
+        ]
 
         qd = {
             "Question": "이 글의 제목으로 가장 적절한 것은?",

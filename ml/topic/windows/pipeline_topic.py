@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,6 +25,7 @@ for p in (_TOPIC_DIR, _WIN_DIR):
 from _topic_common import (  # noqa: E402
     CIRCLED,
     SYSTEM_PROMPT,
+    extract_json_object,
     format_exam_view,
     read_passage_interactive,
 )
@@ -32,7 +34,7 @@ from _cuda_runtime import (  # noqa: E402
     DEFAULT_EXPLAIN_ADAPTER,
     DEFAULT_MODEL,
     adapter_exists,
-    chat_json,
+    chat_text,
     load_base_model_name,
     load_model,
     resolve_use_4bit,
@@ -145,25 +147,16 @@ def _parse_draft(obj: dict | None) -> tuple[list[str], int] | None:
     return None
 
 
-def _fallback_distractors(claim_en: str, correct: str) -> list[str]:
-    """Rule-ish fillers when the tiny model returns too few options."""
-    base = [
-        f"reasons why talent alone guarantees success without {claim_en.split()[0] if claim_en else 'practice'}",
-        "how long it usually takes to memorize vocabulary lists",
-        "advantages of avoiding practice and relying only on natural ability",
-        "ways to measure classroom seating arrangements for language learners",
-        "benefits of ignoring feedback when learning a foreign language",
-    ]
-    out = []
-    for b in base:
-        if _strip_circled(b).lower() == _strip_circled(correct).lower():
-            continue
-        out.append(b)
-        if len(out) == 4:
-            break
-    while len(out) < 4:
-        out.append(f"unrelated claim about language learning factor {len(out)+1}")
-    return out[:4]
+def _dup_option_errors(opts: list[str]) -> list[str]:
+    """같은 선지가 두 번 나오면 복수정답이 된다(검증 단계가 정답을 오답 자리에 베껴 넣은 적이 있다)."""
+    errs: list[str] = []
+    seen: set[str] = set()
+    for i, o in enumerate(opts):
+        key = re.sub(r"[^a-z0-9]+", " ", o.lower()).strip()
+        if key in seen:
+            errs.append(f"option {i+1} duplicates another option")
+        seen.add(key)
+    return errs
 
 
 def _format_options(phrases: list[str]) -> str:
@@ -219,6 +212,7 @@ def _format_ok(qd: dict, passage: str) -> list[str]:
             errs.append(f"option {i+1} too short ({wc} words)")
         if wc > 22:
             errs.append(f"option {i+1} too long ({wc} words)")
+    errs += _dup_option_errors(opts)
     ans = str(qd.get("CorrectAnswer") or "").strip()
     if ans not in CIRCLED:
         errs.append("CorrectAnswer must be ①-⑤")
@@ -239,11 +233,6 @@ def _has_hangul(s: str) -> bool:
 
 def _as_noun_phrase(claim_en: str) -> str:
     s = claim_en.strip().rstrip(".")
-    if _has_hangul(s):
-        return (
-            "importance of consistent practice and effective strategies "
-            "over natural talent in language learning"
-        )
     words = s.split()
     if len(words) >= 8 and words[0][:1].isupper() and " " in s:
         lower = s[0].lower() + s[1:] if s else s
@@ -275,6 +264,8 @@ def run_pipeline(
     # 주제 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. claim·verify·revise 에 켜 두면
     # 시스템 프롬프트를 무시하고 문항 JSON 을 뱉어 claim_en 이 비고 「claim stage failed」가 난다.
     # 그래서 기본은 어댑터를 끈 베이스 모델, 학습한 일(초안)·해설 어댑터일 때만 adapter=True.
+    raw_out = [""]  # 마지막 모델 출력 원문 — JSON 이 깨졌을 때 실패 기록에 남긴다
+
     def call(
         sys_p: str,
         user: str,
@@ -283,7 +274,7 @@ def run_pipeline(
         adapter: bool = False,
         t: float | None = None,
     ) -> dict | None:
-        return chat_json(
+        raw_out[0] = chat_text(
             model,
             tokenizer,
             sys_p,
@@ -292,6 +283,7 @@ def run_pipeline(
             temp=temp if t is None else t,
             use_adapter=adapter,
         )
+        return extract_json_object(raw_out[0])
 
     def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
         """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
@@ -299,6 +291,7 @@ def run_pipeline(
         return full, _parse_draft(full)
 
     # 1) claim — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    # 베이스 0.5B 는 claim_en 에 한국어를 넣기도 한다 — 영어가 아니면 버리고 다시 묻는다.
     claim: dict | None = None
     claim_raw = ""
     for c_try in range(2):
@@ -309,24 +302,26 @@ def run_pipeline(
             t=temp if c_try == 0 else 0.0,
         )
         claim_raw = _pick_str(claim, "claim_en", "claim", "topic", "main_idea", "core_claim")
-        if claim_raw:
+        if claim_raw and not _has_hangul(claim_raw):
             break
+        _log_failure(
+            passage=passage,
+            stage="claim",
+            bad_output=claim if claim is not None else {"raw": raw_out[0][:800]},
+            problem="claim extraction failed" if not claim_raw else "claim_en is not English",
+            claim=None,
+        )
+        claim_raw = ""
     lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
     if not claim_raw:
         # 마지막 수단: LoRA 초안의 정답 선지를 핵심 주장으로 쓴다(초안 단계에서 그대로 재사용).
         lora_first = lora_draft()
         if lora_first[1] is not None:
             opts, idx = lora_first[1]
-            claim_raw = opts[idx]
-            trace.append({"stage": "claim", "fallback": "lora_draft_answer"})
+            if not _has_hangul(opts[idx]):
+                claim_raw = opts[idx]
+                trace.append({"stage": "claim", "fallback": "lora_draft_answer"})
     if not claim_raw:
-        _log_failure(
-            passage=passage,
-            stage="claim",
-            bad_output=claim,
-            problem="claim extraction failed",
-            claim=None,
-        )
         return {"ok": False, "error": "claim stage failed", "trace": trace}
     claim_en = _as_noun_phrase(claim_raw)
     claim_ko = _pick_str(claim, "claim_ko", "claim_korean", "ko")
@@ -353,35 +348,25 @@ def run_pipeline(
             )
             parsed_draft = _parse_draft(draft)
         if parsed_draft is None:
-            # last resort: claim as correct + fillers
-            correct = claim_en if len(claim_en.split()) >= 4 else (
-                "importance of consistent practice and effective strategies in language learning"
-            )
-            distractors = _fallback_distractors(claim_en, correct)
-            options = [correct] + distractors
-            # put correct at index 1 sometimes for variety
-            correct_index = 0
+            # 선지를 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 오답으로 채웠다)
             _log_failure(
                 passage=passage,
                 stage="draft",
-                bad_output=draft,
-                problem="draft options invalid; used claim+filler distractors",
+                bad_output=draft if draft is not None else {"raw": raw_out[0][:800]},
+                problem="draft options invalid",
                 claim=claim_obj,
-                improved_hint=correct,
             )
-            trace.append({"stage": "draft", "ok": False, "fallback": True, "out": draft})
-        else:
-            options, correct_index = parsed_draft
-            trace.append(
-                {
-                    "stage": "draft",
-                    "ok": True,
-                    "correct_index": correct_index,
-                    "options": options,
-                }
-            )
-        if len(options) != 5:
+            trace.append({"stage": "draft", "ok": False, "out": draft})
             continue
+        options, correct_index = parsed_draft
+        trace.append(
+            {
+                "stage": "draft",
+                "ok": True,
+                "correct_index": correct_index,
+                "options": options,
+            }
+        )
         print(
             f"[pipeline] draft try={draft_try} answer={options[correct_index][:80]}",
             file=sys.stderr,
@@ -541,26 +526,16 @@ def run_pipeline(
         if len(explanation) < 40 or not _has_hangul(explanation):
             explanation = (
                 f"정답은 {CIRCLED[correct_index]}. 글의 핵심은 「{claim_ko or claim_en}」이므로 "
-                f"이를 담은 선지가 주제이다. 다른 선지는 재능만 강조하거나 지문에 없는 내용이다."
+                f"이를 담은 선지가 주제이다. 다른 선지는 글의 일부 소재만 다루거나 지문에 없는 내용이다."
             )[:450]
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
-        # Ensure every option has enough words
-        fillers = _fallback_distractors(claim_en, claim_en)
-        fixed_opts = []
-        fi = 0
-        for i, o in enumerate(options[:5]):
-            if len(o.split()) < 5:
-                if i == correct_index:
-                    fixed_opts.append(claim_en)
-                else:
-                    fixed_opts.append(fillers[fi % 4])
-                    fi += 1
-            else:
-                fixed_opts.append(o)
-        while len(fixed_opts) < 5:
-            fixed_opts.append(fillers[len(fixed_opts) % 4])
-        options = fixed_opts[:5]
+        # 정답 선지가 너무 짧게 망가졌으면 핵심 주장으로 바꾼다. 오답은 지어내지 않는다 —
+        # 짧거나 겹치는 오답은 아래 형식 검사에서 걸러 다시 시도한다
+        options = [
+            claim_en if i == correct_index and len(o.split()) < 5 else o
+            for i, o in enumerate(options[:5])
+        ]
 
         qd = {
             "Question": "다음 글의 주제로 가장 적절한 것은?",
