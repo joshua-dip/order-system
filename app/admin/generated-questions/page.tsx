@@ -17,6 +17,36 @@ import { PageModeFromQuery, type GqPageMode } from './PageModeFromQuery';
 import { QuestionStatsModal } from './QuestionStatsModal';
 import { MEMBER_ESSAY_QUESTION_TYPES } from '@/lib/member-essay-draft-claude';
 import { VALIDATION_CATALOG } from '@/lib/variant-review-catalog';
+import {
+  LOCAL_VARIANT_TYPES,
+  isLocalVariantType,
+  type LocalVariantJobStatus,
+  type LocalVariantJobView,
+  type LocalVariantType,
+  type LocalWorkerView,
+} from '@/lib/local-variant-types';
+
+/** 로컬 LoRA 작업 상태 폴링 — GPU PC 워커가 처리하는 동안 화면이 기다리는 한도 */
+const LOCAL_JOB_POLL_MS = 3000;
+const LOCAL_JOB_POLL_LIMIT_MS = 20 * 60 * 1000;
+
+type LocalJobState = {
+  id: string;
+  type: LocalVariantType;
+  passageId: string;
+  status: LocalVariantJobStatus;
+  queuedAhead: number;
+  claimedBy: string | null;
+};
+
+function formatAgo(iso: string | null): string {
+  if (!iso) return '기록 없음';
+  const sec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (sec < 60) return `${sec}초 전`;
+  if (sec < 3600) return `${Math.round(sec / 60)}분 전`;
+  if (sec < 86400) return `${Math.round(sec / 3600)}시간 전`;
+  return `${Math.round(sec / 86400)}일 전`;
+}
 
 const ESSAY_TYPE_SET = new Set<string>(MEMBER_ESSAY_QUESTION_TYPES as readonly string[]);
 const isEssayType = (t: string) => ESSAY_TYPE_SET.has(t);
@@ -504,10 +534,20 @@ export default function AdminGeneratedQuestionsPage() {
   const [narrativeReadOnly, setNarrativeReadOnly] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
+  /** 로컬 LoRA 작업(GPU PC 워커가 처리) — 등록부터 완료까지 폴링한다. 주제·제목·주장만 */
+  const [localJob, setLocalJob] = useState<LocalJobState | null>(null);
+  /** setInterval 콜백이 최신 작업·폼을 보도록 ref 로도 들고 있다 */
+  const localJobRef = useRef<LocalJobState | null>(null);
+  const localJobPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [localWorker, setLocalWorker] = useState<{ online: boolean; workers: LocalWorkerView[] } | null>(null);
+  /** 로컬 작업 결과의 검증 경고·시험 모드 표시 등(오류는 draftError) */
+  const [localJobNotice, setLocalJobNotice] = useState<string | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [draftUserHint, setDraftUserHint] = useState('');
   /** Claude 초안 생성 성공 후 true → "생성됨" 표시 및 추가 수정 버튼 노출 */
   const [draftGenerated, setDraftGenerated] = useState(false);
+  /** 편집창의 초안이 로컬 LoRA 에서 왔으면 그 ai_source — 저장 요청에 실어 보낸다 */
+  const [localDraftAiSource, setLocalDraftAiSource] = useState<string | null>(null);
   /** Claude로 해설(Explanation)만 생성 중 */
   const [explanationOnlyLoading, setExplanationOnlyLoading] = useState(false);
   /** 해당 교재 passage_id의 원문(원문 미리보기) */
@@ -531,6 +571,9 @@ export default function AdminGeneratedQuestionsPage() {
     status: '완료',
     error_msg: '',
   });
+  /** 로컬 작업이 끝났을 때 그사이 지문·유형이 바뀌었는지 보려고 최신 폼을 들고 있다 */
+  const formRef = useRef(form);
+  formRef.current = form;
   const [questionJson, setQuestionJson] = useState(DEFAULT_QUESTION_JSON);
   /** 저장 직후 해당 문제 행으로 스크롤하기 위한 id (문제보러가기 버튼 표시) */
   const [goToRowId, setGoToRowId] = useState<string | null>(null);
@@ -1500,6 +1543,7 @@ export default function AdminGeneratedQuestionsPage() {
         setQuestionJson(JSON.stringify(qd, null, 2));
         setForm((f) => ({ ...f, status: '대기' }));
         setDraftGenerated(true);
+        setLocalDraftAiSource(null);
       }
     } catch {
       setDraftError('네트워크 오류');
@@ -1507,6 +1551,196 @@ export default function AdminGeneratedQuestionsPage() {
       setDraftLoading(false);
     }
   };
+
+  const updateLocalJob = (next: LocalJobState | null) => {
+    localJobRef.current = next;
+    setLocalJob(next);
+  };
+
+  const stopLocalJobPolling = () => {
+    if (localJobPollRef.current) {
+      clearInterval(localJobPollRef.current);
+      localJobPollRef.current = null;
+    }
+  };
+
+  const refreshLocalWorker = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/generated-questions/local-worker', { credentials: 'include' });
+      const d = await res.json();
+      if (res.ok) setLocalWorker({ online: d.online === true, workers: Array.isArray(d.workers) ? d.workers : [] });
+    } catch {
+      /* 상태 표시만 못 할 뿐 — 작업 등록은 막지 않는다 */
+    }
+  }, []);
+
+  /** setInterval 에서 호출 — 최신 값은 전부 ref 로 읽는다(콜백이 만들어질 때의 state 에 묶이지 않게) */
+  const pollLocalJob = async (jobId: string, startedAt: number) => {
+    const current = localJobRef.current;
+    if (!current || current.id !== jobId) {
+      stopLocalJobPolling();
+      return;
+    }
+    if (Date.now() - startedAt > LOCAL_JOB_POLL_LIMIT_MS) {
+      stopLocalJobPolling();
+      updateLocalJob(null);
+      setDraftError(
+        '로컬 작업이 20분 넘게 끝나지 않아 화면 대기를 멈췄습니다. 작업은 큐에 남아 있으니 GPU PC 워커 상태를 확인해 주세요.'
+      );
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/generated-questions/local-jobs/${jobId}`, { credentials: 'include' });
+      if (!res.ok) return; // 일시 오류 — 다음 폴링에서 다시
+      const d = await res.json();
+      const item = d.item as LocalVariantJobView;
+      if (localJobRef.current?.id !== jobId) return;
+      if (d.worker && Array.isArray(d.worker.workers)) {
+        setLocalWorker({ online: d.worker.online === true, workers: d.worker.workers });
+      }
+      if (item.status === 'queued' || item.status === 'running') {
+        updateLocalJob({ ...current, status: item.status, queuedAhead: item.queued_ahead, claimedBy: item.claimed_by });
+        return;
+      }
+      stopLocalJobPolling();
+      updateLocalJob(null);
+      if (item.status === 'cancelled') return;
+      if (item.status === 'failed') {
+        setDraftError(`로컬 LoRA 생성 실패: ${item.error || '원인 미상'}`);
+        return;
+      }
+      const qd = item.result?.question_data;
+      if (!qd) {
+        setDraftError('로컬 작업은 끝났지만 결과가 비어 있습니다.');
+        return;
+      }
+      const f = formRef.current;
+      if (f.passage_id.trim() !== current.passageId || f.type.trim() !== current.type) {
+        setLocalJobNotice('로컬 작업이 끝났지만 그사이 지문·유형이 바뀌어 편집창에 넣지 않았습니다.');
+        return;
+      }
+      setQuestionJson(JSON.stringify(qd, null, 2));
+      setForm((prev) => ({ ...prev, status: '대기' }));
+      setDraftGenerated(true);
+      // 워커 시험 모드(--fake) 결과는 출처를 남기지 않는다 — 실수로 저장돼도 로컬 LoRA 문항으로 잡히지 않게
+      setLocalDraftAiSource(item.result?.fake ? null : LOCAL_VARIANT_TYPES[current.type].aiSource);
+      const notes: string[] = [];
+      if (item.result?.fake) notes.push('워커 시험 모드(--fake) 결과입니다 — 저장하지 마세요.');
+      if (item.validation?.errors.length) notes.push(`검증 오류: ${item.validation.errors.join(' / ')}`);
+      if (item.validation?.warnings.length) notes.push(`검증 경고: ${item.validation.warnings.join(' / ')}`);
+      if (item.result?.elapsed_ms != null) notes.push(`GPU 생성 ${Math.round(item.result.elapsed_ms / 1000)}초`);
+      setLocalJobNotice(notes.length ? notes.join('\n') : null);
+    } catch {
+      /* 네트워크 일시 오류 — 다음 폴링에서 다시 */
+    }
+  };
+
+  /** 로컬 LoRA 초안 — 작업을 큐에 넣고 GPU PC 워커가 끝낼 때까지 폴링한다. Anthropic 호출 없음. */
+  const runGenerateDraftLocal = async () => {
+    const type = form.type.trim();
+    if (!form.textbook.trim() || !form.passage_id.trim() || !form.source.trim() || !type) {
+      setDraftError('교재·원문 지문(출처)·유형을 모두 선택·입력한 뒤 실행해 주세요.');
+      return;
+    }
+    if (!isLocalVariantType(type)) {
+      setDraftError('로컬 LoRA는 주제·제목·주장 유형만 지원합니다.');
+      return;
+    }
+    const pid = form.passage_id.trim();
+    if (!/^[a-f0-9]{24}$/i.test(pid)) {
+      setDraftError('passage_id가 올바른 ObjectId(24자 hex)인지 확인해 주세요.');
+      return;
+    }
+    if (localJobRef.current) return;
+    setDraftError(null);
+    setLocalJobNotice(null);
+    try {
+      const res = await fetch('/api/admin/generated-questions/local-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ passage_id: pid, textbook: form.textbook.trim(), source: form.source.trim(), type }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setDraftError(typeof d.error === 'string' ? d.error : '로컬 작업 등록 실패');
+        return;
+      }
+      const jobId = String(d.job_id);
+      updateLocalJob({
+        id: jobId,
+        type,
+        passageId: pid,
+        status: 'queued',
+        queuedAhead: Number(d.queued_ahead) || 0,
+        claimedBy: null,
+      });
+      void refreshLocalWorker();
+      const startedAt = Date.now();
+      stopLocalJobPolling();
+      localJobPollRef.current = setInterval(() => void pollLocalJob(jobId, startedAt), LOCAL_JOB_POLL_MS);
+    } catch {
+      setDraftError('네트워크 오류');
+    }
+  };
+
+  const cancelLocalJob = async () => {
+    const job = localJobRef.current;
+    if (!job) return;
+    stopLocalJobPolling();
+    updateLocalJob(null);
+    try {
+      await fetch(`/api/admin/generated-questions/local-jobs/${job.id}`, { method: 'DELETE', credentials: 'include' });
+    } catch {
+      /* 이미 끝났을 수 있다 */
+    }
+  };
+
+  // 초안이 비워질 때(새로 열기·편집 열기·이어 만들기 등) 로컬 출처도 함께 비운다
+  useEffect(() => {
+    if (!draftGenerated) setLocalDraftAiSource(null);
+  }, [draftGenerated]);
+
+  // 모달을 닫으면 화면 대기를 멈춘다. 워커가 아직 집지 않은 작업은 쓸 곳이 없으니 취소하고,
+  // 이미 생성 중이면 끝까지 두게 둔다(결과는 큐에 30일 남는다).
+  useEffect(() => {
+    if (modalOpen) return;
+    const job = localJobRef.current;
+    if (localJobPollRef.current) {
+      clearInterval(localJobPollRef.current);
+      localJobPollRef.current = null;
+    }
+    if (job?.status === 'queued') {
+      void fetch(`/api/admin/generated-questions/local-jobs/${job.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      }).catch(() => {});
+    }
+    localJobRef.current = null;
+    setLocalJob(null);
+    setLocalJobNotice(null);
+  }, [modalOpen]);
+
+  // 로컬 유형으로 모달이 열리면 워커 상태(온라인·유형별 학습 여부)를 읽는다
+  useEffect(() => {
+    if (modalOpen && isLocalVariantType(form.type.trim())) void refreshLocalWorker();
+  }, [modalOpen, form.type, refreshLocalWorker]);
+
+  useEffect(
+    () => () => {
+      if (localJobPollRef.current) clearInterval(localJobPollRef.current);
+    },
+    []
+  );
+
+  const localWorkerLatest = localWorker?.workers[0] ?? null;
+  /** 가장 최근 워커 신호 기준으로 이 유형 어댑터가 학습됐는지 — 신호가 없으면 null(모름) */
+  const localTypeTrained: boolean | null = (() => {
+    const t = form.type.trim();
+    if (!isLocalVariantType(t) || !localWorkerLatest) return null;
+    if (localWorkerLatest.fake) return true;
+    return localWorkerLatest.types[t]?.trained === true;
+  })();
 
   /** Claude로 Explanation(해설)만 생성해 question_data.Explanation만 덮어쓰기 */
   const runGenerateExplanationOnly = async () => {
@@ -1804,6 +2038,7 @@ export default function AdminGeneratedQuestionsPage() {
             status: form.status.trim(),
             error_msg: form.error_msg.trim() || null,
             question_data,
+            ...(localDraftAiSource ? { ai_source: localDraftAiSource } : {}),
           }
         : {
             textbook: form.textbook.trim(),
@@ -1815,6 +2050,7 @@ export default function AdminGeneratedQuestionsPage() {
             status: form.status.trim(),
             error_msg: form.error_msg.trim() || null,
             question_data,
+            ...(localDraftAiSource ? { ai_source: localDraftAiSource } : {}),
           };
 
       const res = await fetch(url, {
@@ -9928,8 +10164,15 @@ export default function AdminGeneratedQuestionsPage() {
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {draftGenerated && (
                       <>
-                        <span className="text-xs px-2 py-1 rounded-md bg-emerald-900/60 text-emerald-300 font-medium">
-                          생성됨
+                        <span
+                          className={
+                            localDraftAiSource
+                              ? 'text-xs px-2 py-1 rounded-md bg-cyan-900/60 text-cyan-300 font-medium'
+                              : 'text-xs px-2 py-1 rounded-md bg-emerald-900/60 text-emerald-300 font-medium'
+                          }
+                          title={localDraftAiSource ? `저장 시 ai_source: ${localDraftAiSource}` : undefined}
+                        >
+                          {localDraftAiSource ? '생성됨 (로컬 LoRA)' : '생성됨'}
                         </span>
                         <button
                           type="button"
@@ -9956,6 +10199,60 @@ export default function AdminGeneratedQuestionsPage() {
                       )}
                       {draftLoading ? 'Claude 작성 중…' : editingId ? 'Claude로 초안 다시 생성' : 'Claude로 초안 생성'}
                     </button>
+                    {isLocalVariantType(form.type.trim()) && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={!!localJob || saving || localTypeTrained === false}
+                          onClick={() => void runGenerateDraftLocal()}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-700 hover:from-emerald-500 hover:to-cyan-600 text-white font-bold disabled:opacity-50 shadow-md inline-flex items-center gap-2"
+                          title={
+                            localTypeTrained === false
+                              ? `${form.type} 어댑터가 아직 학습되지 않았습니다 (GPU PC).`
+                              : 'GPU PC 워커가 로컬 LoRA로 초안을 만듭니다 — Anthropic 미사용, API 키 불필요.'
+                          }
+                        >
+                          {localJob && (
+                            <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                          )}
+                          {localJob
+                            ? localJob.status === 'running'
+                              ? '로컬 LoRA 생성 중…'
+                              : '로컬 LoRA 대기 중…'
+                            : '로컬 LoRA로 초안'}
+                        </button>
+                        {localJob && (
+                          <button
+                            type="button"
+                            onClick={() => void cancelLocalJob()}
+                            className="text-xs px-2 py-1 rounded-md border border-slate-600 text-slate-300 hover:bg-slate-800"
+                          >
+                            취소
+                          </button>
+                        )}
+                        <span className="text-[11px] text-slate-400">
+                          {localJob
+                            ? localJob.status === 'running'
+                              ? `${localJob.claimedBy ?? 'GPU PC'}에서 생성 중`
+                              : `대기${localJob.queuedAhead ? ` · 앞에 ${localJob.queuedAhead}건` : ''}${
+                                  localWorker && !localWorker.online
+                                    ? ' · 워커 오프라인 — PC가 켜지면 처리'
+                                    : localWorkerLatest?.state === 'gpu_busy'
+                                      ? ' · GPU 사용 중(학습 중?) — 비면 처리'
+                                      : ''
+                                }`
+                            : localWorker?.online
+                              ? `GPU 워커 온라인${localWorkerLatest?.fake ? ' (시험 모드)' : ''}${
+                                  localTypeTrained === false ? ` · ${form.type} 미학습` : ''
+                                }`
+                              : localWorkerLatest
+                                ? `GPU 워커 오프라인 (마지막 신호 ${formatAgo(localWorkerLatest.last_seen)})${
+                                    localTypeTrained === false ? ` · ${form.type} 미학습` : ''
+                                  }`
+                                : 'GPU 워커 기록 없음'}
+                        </span>
+                      </>
+                    )}
                     {form.difficulty === '상' && form.type === '삽입' && (
                       <>
                       <button
@@ -10067,6 +10364,11 @@ export default function AdminGeneratedQuestionsPage() {
                 {draftError && (
                   <div className="mb-2 p-2 rounded-lg bg-red-950/50 border border-red-800/40 text-red-300 text-xs whitespace-pre-wrap">
                     {draftError}
+                  </div>
+                )}
+                {localJobNotice && (
+                  <div className="mb-2 p-2 rounded-lg bg-amber-950/40 border border-amber-800/40 text-amber-200 text-xs whitespace-pre-wrap">
+                    {localJobNotice}
                   </div>
                 )}
                 <p className="text-[11px] text-slate-500 mb-1">

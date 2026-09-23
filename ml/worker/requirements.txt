@@ -1,0 +1,3 @@
+# 로컬 LoRA 워커 — ml/topic/windows/.venv(세 유형 공용 venv)에 추가로 설치한다.
+#   ml\topic\windows\.venv\Scripts\python.exe -m pip install -r ml\worker\requirements.txt
+pymongo>=4.6

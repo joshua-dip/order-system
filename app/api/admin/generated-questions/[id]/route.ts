@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
+import { acceptedLocalAiSource } from '@/lib/local-variant-types';
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, passage_id, ...rest } = doc;
@@ -75,6 +76,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (typeof body.passage_id === 'string' && body.passage_id.trim() && ObjectId.isValid(body.passage_id.trim())) {
       $set.passage_id = new ObjectId(body.passage_id.trim());
     }
+    // 기존 문항을 로컬 LoRA 로 다시 만든 경우에만 출처를 바꾼다(허용 목록 밖 값은 무시)
+    const aiSource = acceptedLocalAiSource(body.ai_source);
+    if (aiSource) $set.ai_source = aiSource;
 
     if (body.question_data !== undefined) {
       if (body.question_data !== null && typeof body.question_data === 'object' && !Array.isArray(body.question_data)) {

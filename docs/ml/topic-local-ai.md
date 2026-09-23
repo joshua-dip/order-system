@@ -324,8 +324,9 @@ npm run cc:topic-local -- --passage-file /tmp/p.txt --textbook "교재" --source
 1. [ ] `./ml/topic/train.sh … 600` (또는 1000) 으로 더 길게 학습  
 2. [ ] valid 지문 20개에 `infer.py` → JSON parse율 / prevalidate 통과율 기록  
 3. [ ] 사람이 보기 품질(주제 vs 주장 혼동, 보기 길이) 샘플 검수  
-4. [ ] 만족 못 하면 **Windows + 더 큰 GPU**로 같은 JSONL 가져와 7B LoRA  
-5. [ ] 윈도우에서도 `ai_source`·prevalidate·save 계약은 동일하게 유지
+4. [x] **Windows + NVIDIA CUDA** 파이프라인 — [`topic-windows-cuda.md`](./topic-windows-cuda.md)  
+5. [ ] Windows에서 같은 JSONL로 7B QLoRA 학습 → parse율 / prevalidate 기록  
+6. [ ] 윈도우에서도 `ai_source`·prevalidate·save 계약은 동일하게 유지 (`--backend cuda`)
 
 ---
 
@@ -352,5 +353,6 @@ npm run cc:topic-local -- --passage-id <ObjectId>
 ## 12. 관련 문서
 
 - 짧은 README: [`ml/topic/README.md`](../../ml/topic/README.md)  
+- **Windows CUDA**: [`topic-windows-cuda.md`](./topic-windows-cuda.md) · [`ml/topic/windows/README.md`](../../ml/topic/windows/README.md)  
 - 주제 출제 규칙: [`docs/variant/AUTHORING.md`](../variant/AUTHORING.md)  
 - 검수 층: [`docs/variant/REVIEW.md`](../variant/REVIEW.md)
