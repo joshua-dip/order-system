@@ -5,7 +5,8 @@
 PC 에서 Atlas 로 나가는 연결만 쓴다 — 포트를 열거나 터널을 둘 필요가 없다.
 필드·상태 규약: docs/handoff/2026-09-23-로컬-LoRA-작업큐.md · 사용법: docs/ml/local-variant-worker.md
 
-  start_worker.bat                           # 상주(권장 실행 방법)
+  register_worker_task.ps1                   # 로그인 때 창 없이 상주(권장) — 로그 ml/worker/logs/worker.log
+  start_worker.bat                           # 콘솔 창에서 직접 돌리기(창을 닫으면 멈춤)
   python local_variant_worker.py --fake      # GPU 없이 큐·화면 연결만 시험(고정 결과)
   python local_variant_worker.py --once      # 한 건만 처리하고 끝
 
@@ -44,6 +45,8 @@ TYPES = {"주제": "topic", "제목": "title", "주장": "claim"}
 MAX_ATTEMPTS = 3
 HEARTBEAT_SEC = 15
 MARK = "@@RESULT@@ "
+# 창 없이 뜬 워커(pythonw — 작업 스케줄러)에서 nvidia-smi·자식 프로세스가 콘솔 창을 띄우지 않게
+_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 def utcnow() -> datetime:
@@ -51,7 +54,14 @@ def utcnow() -> datetime:
 
 
 def log(msg: str) -> None:
-    print(f"[{datetime.now():%H:%M:%S}] {msg}", flush=True)
+    print(f"[{datetime.now():%m-%d %H:%M:%S}] {msg}", flush=True)
+
+
+def brief(e: BaseException) -> str:
+    """오류 한 줄 — MongoDB 오류는 이름만 적는다(메시지에 클러스터 호스트가 들어 있다)."""
+    if type(e).__module__.startswith("pymongo"):
+        return type(e).__name__
+    return f"{type(e).__name__}: {e}"[:300]
 
 
 def load_env() -> dict[str, str]:
@@ -82,6 +92,7 @@ def gpu_memory() -> dict | None:
             text=True,
             timeout=10,
             check=True,
+            creationflags=_NO_WINDOW,
         ).stdout.strip().splitlines()[0]
         name, free, total = [x.strip() for x in out.split(",")]
         return {"name": name, "free_mb": int(free), "total_mb": int(total)}
@@ -171,6 +182,7 @@ class InferenceChild:
             errors="replace",
             env=env,
             cwd=str(_ROOT),
+            creationflags=_NO_WINDOW,
         )
         threading.Thread(target=self._pump_stdout, daemon=True).start()
         threading.Thread(target=self._pump_stderr, daemon=True).start()
@@ -287,11 +299,19 @@ class Worker:
             )
 
     def heartbeat_loop(self) -> None:
+        failing, last_log = False, 0.0
         while not self.stop_event.wait(HEARTBEAT_SEC):
             try:
                 self.heartbeat()
+                if failing:
+                    log("하트비트 복구")
+                failing = False
             except Exception as e:  # noqa: BLE001
-                log(f"하트비트 실패: {e}")
+                # 네트워크가 끊긴 동안 15초마다 같은 줄을 쌓지 않게 10분에 한 번만 적는다
+                if not failing or time.time() - last_log > 600:
+                    log(f"하트비트 실패 — 계속 다시 시도합니다: {brief(e)}")
+                    last_log = time.time()
+                failing = True
 
     # ---- 큐 ----
     def _claimable(self) -> dict[str, Any]:
@@ -466,7 +486,11 @@ class Worker:
                 self.state = "idle"
 
     def run(self) -> None:
-        self.heartbeat()
+        try:
+            self.heartbeat()
+        except Exception as e:  # noqa: BLE001
+            # 로그인 직후처럼 네트워크가 아직 없을 수 있다 — 끝내지 않고 루프에서 다시 시도한다
+            log(f"MongoDB 에 아직 닿지 않습니다 — 계속 다시 시도합니다: {brief(e)}")
         threading.Thread(target=self.heartbeat_loop, daemon=True).start()
         trained = [ko for ko, i in self.types_info.items() if i["trained"]]
         log(
@@ -474,33 +498,46 @@ class Worker:
             f"(GPU 여유 {self.args.min_free_mb}MB 이상일 때만 모델을 올림)"
         )
         last_busy_log = 0.0
+        errors = 0
         try:
             while True:
-                self.types_info = discover_types(self.only)
-                self.sweep_stale()
-                if self.child is not None and not self.child.alive():
-                    self.child = None
-                if self.child is not None and time.time() - self.child.last_used > self.args.idle_unload_min * 60:
-                    log("작업이 없어 모델을 내려놓습니다(GPU 메모리 반환)")
-                    self.drop_child()
-                need_gpu = not self.args.fake and any(i["trained"] for i in self.types_info.values())
-                # 할 일이 있을 때만 GPU 를 확인한다(쉬는 동안 nvidia-smi 를 계속 부르지 않게)
-                if need_gpu and self.child is None and self.has_work() and not self.gpu_ok():
-                    # 학습 등으로 GPU 가 차 있으면 작업을 집지 않는다 — 화면에는 「대기」로 남는다
-                    if self.state != "gpu_busy" or time.time() - last_busy_log > 600:
-                        log("GPU 여유 메모리가 모자라 대기합니다(학습 중?)")
-                        last_busy_log = time.time()
-                    self.state = "gpu_busy"
-                    time.sleep(15)
-                    continue
-                job = self.claim()
-                if job is None:
-                    self.state = "idle"
-                    time.sleep(self.args.poll_sec)
-                    continue
-                self.process(job)
-                if self.args.once:
-                    break
+                try:
+                    self.types_info = discover_types(self.only)
+                    self.sweep_stale()
+                    if errors:
+                        log("복구됨 — 다시 작업을 받습니다")
+                        errors = 0
+                    if self.child is not None and not self.child.alive():
+                        self.child = None
+                    if self.child is not None and time.time() - self.child.last_used > self.args.idle_unload_min * 60:
+                        log("작업이 없어 모델을 내려놓습니다(GPU 메모리 반환)")
+                        self.drop_child()
+                    need_gpu = not self.args.fake and any(i["trained"] for i in self.types_info.values())
+                    # 할 일이 있을 때만 GPU 를 확인한다(쉬는 동안 nvidia-smi 를 계속 부르지 않게)
+                    if need_gpu and self.child is None and self.has_work() and not self.gpu_ok():
+                        # 학습 등으로 GPU 가 차 있으면 작업을 집지 않는다 — 화면에는 「대기」로 남는다
+                        if self.state != "gpu_busy" or time.time() - last_busy_log > 600:
+                            log("GPU 여유 메모리가 모자라 대기합니다(학습 중?)")
+                            last_busy_log = time.time()
+                        self.state = "gpu_busy"
+                        time.sleep(15)
+                        continue
+                    job = self.claim()
+                    if job is None:
+                        self.state = "idle"
+                        time.sleep(self.args.poll_sec)
+                        continue
+                    self.process(job)
+                    if self.args.once:
+                        break
+                except Exception as e:  # noqa: BLE001
+                    # 네트워크 끊김·학습이 어댑터를 쓰는 중 등으로 워커가 통째로 끝나지 않게 — 쉬었다 다시 돈다(최대 1분)
+                    errors += 1
+                    if errors == 1 or errors % 10 == 0:
+                        if not type(e).__module__.startswith("pymongo"):
+                            traceback.print_exc()
+                        log(f"오류 {errors}회째 — 잠시 뒤 다시 시도합니다: {brief(e)}")
+                    time.sleep(min(60, 5 * errors))
         except KeyboardInterrupt:
             log("중지합니다")
         finally:
@@ -534,6 +571,18 @@ def acquire_lock() -> Any:
     return fh
 
 
+def redirect_output(path: Path) -> None:
+    """창 없이(pythonw) 뜨면 출력이 버려진다 — 파일에 덧붙인다. 자식 출력도 log() 를 거쳐 여기 남는다."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if path.stat().st_size > 5_000_000:
+            path.replace(path.with_suffix(".1.log"))  # worker.log → worker.1.log (직전 것 하나만 남김)
+    except OSError:
+        pass
+    fh = open(path, "a", encoding="utf-8", errors="replace", buffering=1)
+    sys.stdout = sys.stderr = fh
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -551,7 +600,10 @@ def main() -> int:
     ap.add_argument("--min-free-mb", type=int, default=2600, help="모델을 올리기 전에 필요한 GPU 여유 메모리")
     ap.add_argument("--load-timeout-sec", type=float, default=900)
     ap.add_argument("--gen-timeout-sec", type=float, default=900)
+    ap.add_argument("--log-file", default="", help="출력을 이 파일에 덧붙임 — 창 없이 띄울 때(register_worker_task.ps1)")
     args = ap.parse_args()
+    if args.log_file:
+        redirect_output(Path(args.log_file))
 
     uri = load_env().get("MONGODB_URI")
     if not uri:
