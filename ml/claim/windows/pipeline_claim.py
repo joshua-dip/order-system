@@ -125,6 +125,17 @@ EXPLAIN_SYS = """당신은 한국 수능 영어 「주장」 문항의 한국어
 5) 영어 문장으로만 된 해설 금지."""
 
 
+def _pick_str(obj: dict | None, *keys: str) -> str:
+    """0.5B 모델이 키 이름을 조금씩 바꿔 내는 일이 잦다 — 후보 키 중 처음 채워진 문자열."""
+    if not isinstance(obj, dict):
+        return ""
+    for k in keys:
+        v = obj.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
 def _strip_circled(opt: str) -> str:
     s = opt.strip()
     for c in CIRCLED:
@@ -159,6 +170,17 @@ def _has_modal_or_adj(s: str) -> bool:
 def _starts_bad_subject(s: str) -> bool:
     first = s.strip().split()[0].lower().rstrip(".,") if s.strip() else ""
     return first in ("you", "your", "he", "his", "she", "her")
+
+
+def _parse_lora_qd(obj: dict | None) -> tuple[list[str], int] | None:
+    """LoRA 가 학습한 문항 JSON(Options ### 5개 + CorrectAnswer ①~⑤)에서 선지·정답 위치."""
+    if not isinstance(obj, dict):
+        return None
+    opts = _normalize_options(obj.get("Options") or obj.get("options"))
+    ans = str(obj.get("CorrectAnswer") or "").strip()
+    if len(opts) == 5 and ans in CIRCLED:
+        return opts, CIRCLED.index(ans)
+    return None
 
 
 def _fallback_distractors(thesis_en: str, correct: str) -> list[str]:
@@ -270,23 +292,60 @@ def run_pipeline(
     if main_adapter:
         set_adapter(model, main_adapter)
 
-    def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
-        return chat_json(model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp)
+    # 주장 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. 다른 단계에 켜 두면 시스템 프롬프트를
+    # 무시하고 문항 JSON 을 뱉어 단계가 실패한다. 기본은 어댑터를 끈 베이스, 초안·해설 어댑터만 adapter=True.
+    def call(
+        sys_p: str,
+        user: str,
+        max_tokens: int = 400,
+        *,
+        adapter: bool = False,
+        t: float | None = None,
+    ) -> dict | None:
+        return chat_json(
+            model,
+            tokenizer,
+            sys_p,
+            user,
+            max_tokens=max_tokens,
+            temp=temp if t is None else t,
+            use_adapter=adapter,
+        )
 
-    # 1) thesis
-    thesis = call(
-        THESIS_SYS,
-        f"[Passage]\n{passage}\n\nReturn thesis_en and thesis_ko JSON.",
-        max_tokens=256,
-    )
-    if not thesis or not str(thesis.get("thesis_en") or "").strip():
+    def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
+        """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
+        full = call(SYSTEM_PROMPT, f"[지문 Paragraph]\n{passage}", max_tokens=1200, adapter=True)
+        return full, _parse_lora_qd(full)
+
+    # 1) thesis — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    thesis: dict | None = None
+    thesis_raw = ""
+    for t_try in range(2):
+        thesis = call(
+            THESIS_SYS,
+            f"[Passage]\n{passage}\n\nReturn thesis_en and thesis_ko JSON.",
+            max_tokens=256,
+            t=temp if t_try == 0 else 0.0,
+        )
+        thesis_raw = _pick_str(thesis, "thesis_en", "thesis", "claim_en", "claim", "main_idea")
+        if thesis_raw:
+            break
+    lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
+    if not thesis_raw:
+        # 마지막 수단: LoRA 초안의 정답 주장문을 논지로(오답 초안 단계에서 그대로 재사용).
+        lora_first = lora_draft()
+        if lora_first[1] is not None:
+            opts, idx = lora_first[1]
+            thesis_raw = opts[idx]
+            trace.append({"stage": "thesis", "fallback": "lora_draft_answer"})
+    if not thesis_raw:
         _log_failure(
             passage=passage, stage="thesis", bad_output=thesis,
             problem="thesis extraction failed", thesis=None,
         )
         return {"ok": False, "error": "thesis stage failed", "trace": trace}
-    thesis_en = str(thesis.get("thesis_en")).strip()
-    thesis_ko = str(thesis.get("thesis_ko") or "").strip()
+    thesis_en = thesis_raw
+    thesis_ko = _pick_str(thesis, "thesis_ko", "thesis_korean", "ko")
     thesis_obj = {"thesis_en": thesis_en, "thesis_ko": thesis_ko}
     trace.append({"stage": "thesis", "out": thesis_obj})
     print(f"[pipeline] thesis: {thesis_en[:120]}", file=sys.stderr)
@@ -334,14 +393,20 @@ def run_pipeline(
     correct_index = 0
 
     for draft_try in range(max_retries + 1):
-        # 3) draft distractors
-        draft = call(
-            DRAFT_DIST_SYS,
-            f"[Passage]\n{passage}\n\n[Thesis]\n{thesis_en}\n\n[Correct claim]\n{practical_en}\n\n"
-            "Return JSON with key options (array of 4 English distractor sentences).",
-            max_tokens=600,
-        )
-        distractors = _normalize_options((draft or {}).get("options"))
+        # 3) draft distractors — LoRA 가 학습한 문항 JSON 의 오답 4개를 먼저, 안 되면 베이스 + 작은 스키마
+        if draft_try == 0 and lora_first is not None:
+            draft, lora_qd = lora_first
+        else:
+            draft, lora_qd = lora_draft()
+        distractors = [o for i, o in enumerate(lora_qd[0]) if i != lora_qd[1]] if lora_qd else []
+        if len(distractors) != 4:
+            draft = call(
+                DRAFT_DIST_SYS,
+                f"[Passage]\n{passage}\n\n[Thesis]\n{thesis_en}\n\n[Correct claim]\n{practical_en}\n\n"
+                "Return JSON with key options (array of 4 English distractor sentences).",
+                max_tokens=600,
+            )
+            distractors = _normalize_options((draft or {}).get("options"))
         if len(distractors) != 4:
             distractors = _fallback_distractors(thesis_en, practical_en)
             _log_failure(
@@ -430,6 +495,7 @@ def run_pipeline(
                 f"[Thesis]\n{thesis_en} / {thesis_ko}\n\n"
                 "위 정답에 대한 한국어 Explanation JSON만 출력하세요.",
                 max_tokens=400,
+                adapter=has_explain_adapter,
             )
         finally:
             if has_explain_adapter:

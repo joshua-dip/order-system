@@ -167,6 +167,20 @@ def is_cuda_oom(exc: BaseException) -> bool:
     return "out of memory" in str(exc).lower()
 
 
+def adapter_off(model: Any) -> Any:
+    """LoRA 를 잠시 끄고 베이스 모델로 생성하는 컨텍스트.
+
+    유형 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 한 가지 일만 학습했다. 그 어댑터를 켠 채
+    claim·verify·revise 같은 다른 JSON 을 시키면 0.5B 모델은 시스템 프롬프트를 무시하고
+    학습된 문항 JSON 을 그대로 뱉는다(claim_en 등 키가 없어 단계가 실패). 그런 단계는 끄고 돌린다.
+    어댑터가 없는 모델이면 아무것도 하지 않는다."""
+    import contextlib
+
+    if hasattr(model, "disable_adapter"):
+        return model.disable_adapter()
+    return contextlib.nullcontext()
+
+
 def chat_text(
     model: Any,
     tokenizer: Any,
@@ -175,7 +189,10 @@ def chat_text(
     *,
     max_tokens: int = 512,
     temp: float = 0.3,
+    use_adapter: bool = True,
 ) -> str:
+    import contextlib
+
     import torch
 
     messages = [
@@ -184,7 +201,8 @@ def chat_text(
     ]
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    with torch.no_grad():
+    ctx = contextlib.nullcontext() if use_adapter else adapter_off(model)
+    with torch.no_grad(), ctx:
         out = model.generate(
             **inputs,
             max_new_tokens=max_tokens,
@@ -206,5 +224,8 @@ def chat_json(
     *,
     max_tokens: int = 512,
     temp: float = 0.3,
+    use_adapter: bool = True,
 ) -> dict | None:
-    return extract_json_object(chat_text(model, tokenizer, system, user, max_tokens=max_tokens, temp=temp))
+    return extract_json_object(
+        chat_text(model, tokenizer, system, user, max_tokens=max_tokens, temp=temp, use_adapter=use_adapter)
+    )

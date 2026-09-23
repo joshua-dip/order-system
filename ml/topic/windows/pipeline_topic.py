@@ -87,6 +87,17 @@ EXPLAIN_SYS = """당신은 한국 수능 영어 「주제」 문항의 한국어
 5) 영어 문장으로만 된 해설 금지."""
 
 
+def _pick_str(obj: dict | None, *keys: str) -> str:
+    """0.5B 모델이 키 이름을 조금씩 바꿔 내는 일이 잦다 — 후보 키 중 처음 채워진 문자열."""
+    if not isinstance(obj, dict):
+        return ""
+    for k in keys:
+        v = obj.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
 def _strip_circled(opt: str) -> str:
     s = opt.strip()
     for c in CIRCLED:
@@ -261,18 +272,54 @@ def run_pipeline(
     if main_adapter:
         set_adapter(model, main_adapter)
 
-    def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
+    # 주제 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. claim·verify·revise 에 켜 두면
+    # 시스템 프롬프트를 무시하고 문항 JSON 을 뱉어 claim_en 이 비고 「claim stage failed」가 난다.
+    # 그래서 기본은 어댑터를 끈 베이스 모델, 학습한 일(초안)·해설 어댑터일 때만 adapter=True.
+    def call(
+        sys_p: str,
+        user: str,
+        max_tokens: int = 400,
+        *,
+        adapter: bool = False,
+        t: float | None = None,
+    ) -> dict | None:
         return chat_json(
-            model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp
+            model,
+            tokenizer,
+            sys_p,
+            user,
+            max_tokens=max_tokens,
+            temp=temp if t is None else t,
+            use_adapter=adapter,
         )
 
-    # 1) claim
-    claim = call(
-        CLAIM_SYS,
-        f"[Passage]\n{passage}\n\nReturn claim_en and claim_ko JSON.",
-        max_tokens=256,
-    )
-    if not claim or not str(claim.get("claim_en") or "").strip():
+    def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
+        """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
+        full = call(SYSTEM_PROMPT, f"[지문 Paragraph]\n{passage}", max_tokens=1200, adapter=True)
+        return full, _parse_draft(full)
+
+    # 1) claim — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    claim: dict | None = None
+    claim_raw = ""
+    for c_try in range(2):
+        claim = call(
+            CLAIM_SYS,
+            f"[Passage]\n{passage}\n\nReturn claim_en and claim_ko JSON.",
+            max_tokens=256,
+            t=temp if c_try == 0 else 0.0,
+        )
+        claim_raw = _pick_str(claim, "claim_en", "claim", "topic", "main_idea", "core_claim")
+        if claim_raw:
+            break
+    lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
+    if not claim_raw:
+        # 마지막 수단: LoRA 초안의 정답 선지를 핵심 주장으로 쓴다(초안 단계에서 그대로 재사용).
+        lora_first = lora_draft()
+        if lora_first[1] is not None:
+            opts, idx = lora_first[1]
+            claim_raw = opts[idx]
+            trace.append({"stage": "claim", "fallback": "lora_draft_answer"})
+    if not claim_raw:
         _log_failure(
             passage=passage,
             stage="claim",
@@ -281,8 +328,8 @@ def run_pipeline(
             claim=None,
         )
         return {"ok": False, "error": "claim stage failed", "trace": trace}
-    claim_en = _as_noun_phrase(str(claim.get("claim_en")).strip())
-    claim_ko = str(claim.get("claim_ko") or "").strip()
+    claim_en = _as_noun_phrase(claim_raw)
+    claim_ko = _pick_str(claim, "claim_ko", "claim_korean", "ko")
     claim_obj = {"claim_en": claim_en, "claim_ko": claim_ko}
     trace.append({"stage": "claim", "out": claim_obj})
     print(f"[pipeline] claim: {claim_en[:120]}", file=sys.stderr)
@@ -291,23 +338,20 @@ def run_pipeline(
     correct_index = 0
 
     for draft_try in range(max_retries + 1):
-        # 2) draft — prefer small schema; fall back to full question_data (LoRA habit)
-        draft = call(
-            DRAFT_SYS,
-            f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
-            "Return JSON with keys options (array of 5 English noun phrases) "
-            "and correct_index (0-4). Do not wrap in markdown.",
-            max_tokens=700,
-        )
-        parsed_draft = _parse_draft(draft)
+        # 2) draft — LoRA 가 학습한 형식(SYSTEM_PROMPT → 문항 JSON)을 먼저, 안 되면 베이스 + 작은 스키마
+        if draft_try == 0 and lora_first is not None:
+            draft, parsed_draft = lora_first
+        else:
+            draft, parsed_draft = lora_draft()
         if parsed_draft is None:
-            full = call(
-                SYSTEM_PROMPT,
-                f"[지문 Paragraph]\n{passage}",
-                max_tokens=1200,
+            draft = call(
+                DRAFT_SYS,
+                f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
+                "Return JSON with keys options (array of 5 English noun phrases) "
+                "and correct_index (0-4). Do not wrap in markdown.",
+                max_tokens=700,
             )
-            parsed_draft = _parse_draft(full)
-            draft = full
+            parsed_draft = _parse_draft(draft)
         if parsed_draft is None:
             # last resort: claim as correct + fillers
             correct = claim_en if len(claim_en.split()) >= 4 else (
@@ -486,6 +530,7 @@ def run_pipeline(
                 f"[Core claim]\n{claim_en} / {claim_ko}\n\n"
                 "위 정답에 대한 한국어 Explanation JSON만 출력하세요.",
                 max_tokens=400,
+                adapter=has_explain_adapter,
             )
         finally:
             if has_explain_adapter:
