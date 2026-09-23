@@ -504,10 +504,14 @@ export default function AdminGeneratedQuestionsPage() {
   const [narrativeReadOnly, setNarrativeReadOnly] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
+  /** 로컬 LoRA(Windows CUDA, Anthropic 미사용)로 초안 생성 중 — 주제·제목·주장만 지원 */
+  const [draftLocalLoading, setDraftLocalLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [draftUserHint, setDraftUserHint] = useState('');
   /** Claude 초안 생성 성공 후 true → "생성됨" 표시 및 추가 수정 버튼 노출 */
   const [draftGenerated, setDraftGenerated] = useState(false);
+  /** 방금 생성한 초안이 로컬 LoRA(ai_source=local-*-lora) 출처인지 — 뱃지 표시용 */
+  const [draftGeneratedLocally, setDraftGeneratedLocally] = useState(false);
   /** Claude로 해설(Explanation)만 생성 중 */
   const [explanationOnlyLoading, setExplanationOnlyLoading] = useState(false);
   /** 해당 교재 passage_id의 원문(원문 미리보기) */
@@ -1500,11 +1504,65 @@ export default function AdminGeneratedQuestionsPage() {
         setQuestionJson(JSON.stringify(qd, null, 2));
         setForm((f) => ({ ...f, status: '대기' }));
         setDraftGenerated(true);
+        setDraftGeneratedLocally(false);
       }
     } catch {
       setDraftError('네트워크 오류');
     } finally {
       setDraftLoading(false);
+    }
+  };
+
+  const LOCAL_LORA_TYPES = ['주제', '제목', '주장'];
+
+  /** 로컬 LoRA(Windows CUDA, 같은 GPU PC)로 초안 생성 — Anthropic/Claude 호출 없음. 주제·제목·주장만. */
+  const runGenerateDraftLocal = async () => {
+    if (!form.textbook.trim() || !form.passage_id.trim() || !form.source.trim() || !form.type.trim()) {
+      setDraftError('교재·원문 지문(출처)·유형을 모두 선택·입력한 뒤 실행해 주세요.');
+      return;
+    }
+    if (!LOCAL_LORA_TYPES.includes(form.type.trim())) {
+      setDraftError('로컬 LoRA는 주제·제목·주장 유형만 지원합니다.');
+      return;
+    }
+    const pid = form.passage_id.trim();
+    if (!/^[a-f0-9]{24}$/i.test(pid)) {
+      setDraftError('passage_id가 올바른 ObjectId(24자 hex)인지 확인해 주세요.');
+      return;
+    }
+    setDraftLocalLoading(true);
+    setDraftGeneratedLocally(false);
+    setDraftError(null);
+    try {
+      const res = await fetch('/api/admin/generated-questions/generate-draft-local', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          passage_id: pid,
+          textbook: form.textbook.trim(),
+          source: form.source.trim(),
+          type: form.type.trim(),
+          pipeline: true,
+          backend: 'cuda',
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setDraftError(typeof d.error === 'string' ? d.error : '로컬 초안 생성 실패');
+        return;
+      }
+      const qd = d.question_data;
+      if (qd && typeof qd === 'object' && !Array.isArray(qd)) {
+        setQuestionJson(JSON.stringify(qd, null, 2));
+        setForm((f) => ({ ...f, status: '대기' }));
+        setDraftGenerated(true);
+        setDraftGeneratedLocally(true);
+      }
+    } catch {
+      setDraftError('네트워크 오류');
+    } finally {
+      setDraftLocalLoading(false);
     }
   };
 
@@ -9928,8 +9986,15 @@ export default function AdminGeneratedQuestionsPage() {
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {draftGenerated && (
                       <>
-                        <span className="text-xs px-2 py-1 rounded-md bg-emerald-900/60 text-emerald-300 font-medium">
-                          생성됨
+                        <span
+                          className={
+                            draftGeneratedLocally
+                              ? 'text-xs px-2 py-1 rounded-md bg-cyan-900/60 text-cyan-300 font-medium'
+                              : 'text-xs px-2 py-1 rounded-md bg-emerald-900/60 text-emerald-300 font-medium'
+                          }
+                          title={draftGeneratedLocally ? 'ai_source: local-*-lora' : undefined}
+                        >
+                          {draftGeneratedLocally ? '생성됨 (로컬 LoRA)' : '생성됨'}
                         </span>
                         <button
                           type="button"
@@ -9956,6 +10021,20 @@ export default function AdminGeneratedQuestionsPage() {
                       )}
                       {draftLoading ? 'Claude 작성 중…' : editingId ? 'Claude로 초안 다시 생성' : 'Claude로 초안 생성'}
                     </button>
+                    {LOCAL_LORA_TYPES.includes(form.type) && (
+                      <button
+                        type="button"
+                        disabled={draftLocalLoading || saving}
+                        onClick={() => void runGenerateDraftLocal()}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-700 hover:from-emerald-500 hover:to-cyan-600 text-white font-bold disabled:opacity-50 shadow-md inline-flex items-center gap-2"
+                        title="로컬 LoRA(Windows GPU PC, Anthropic 미사용)로 초안 작성. 이 GPU PC에서 학습된 어댑터가 있어야 합니다."
+                      >
+                        {draftLocalLoading && (
+                          <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                        )}
+                        {draftLocalLoading ? '로컬 LoRA 작성 중…' : '로컬 LoRA로 초안'}
+                      </button>
+                    )}
                     {form.difficulty === '상' && form.type === '삽입' && (
                       <>
                       <button

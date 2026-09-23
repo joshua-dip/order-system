@@ -89,6 +89,22 @@ watch.log
 /ml/topic/windows/.venv/
 /ml/topic/adapters/
 /ml/topic/__pycache__/
+
+# 제목·주장 자체모델 (주제 파이프라인 복제, Windows CUDA) — 데이터·어댑터·venv 는 로컬만
+/data/title-finetune/
+/data/title-explain-finetune/
+/data/title-pipeline-failures/
+/ml/title/.venv/
+/ml/title/windows/.venv/
+/ml/title/adapters/
+/ml/title/__pycache__/
+/data/claim-finetune/
+/data/claim-explain-finetune/
+/data/claim-pipeline-failures/
+/ml/claim/.venv/
+/ml/claim/windows/.venv/
+/ml/claim/adapters/
+/ml/claim/__pycache__/
 /ml/topic/windows/__pycache__/
 /ml/topic/**/checkpoints/
 .essay-audit-reports/

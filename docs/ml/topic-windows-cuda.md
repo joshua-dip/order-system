@@ -243,3 +243,5 @@ powershell -ExecutionPolicy Bypass -File ml\topic\windows\run_all.ps1 -SkipExpor
 - Mac 실험 노트: [`topic-local-ai.md`](./topic-local-ai.md)  
 - Windows 치트시트: [`ml/topic/windows/README.md`](../../ml/topic/windows/README.md)  
 - 주제 출제 규칙: [`docs/variant/AUTHORING.md`](../variant/AUTHORING.md)
+- 같은 구조로 복제한 다른 무료 5종: [제목](./title-windows-cuda.md) · [주장](./claim-windows-cuda.md)(파이프라인 단계가 다름, §6 참고)
+- 세 유형 공용 진입점: `npm run cc:local-variant -- --type <주제|제목|주장> …`
