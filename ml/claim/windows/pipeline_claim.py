@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -187,6 +188,13 @@ def _format_options(phrases: list[str]) -> str:
     return " ### ".join(parts)
 
 
+def _shuffle_answer(options: list[str], correct_index: int) -> tuple[list[str], int]:
+    """정답 위치를 ①~⑤ 중 무작위로 — 해설을 쓰기 전에 섞어 해설이 최종 번호를 그대로 쓰게 한다."""
+    order = list(range(len(options)))
+    random.shuffle(order)
+    return [options[i] for i in order], order.index(correct_index)
+
+
 def _log_failure(
     *,
     passage: str,
@@ -253,8 +261,14 @@ def run_pipeline(
     max_retries: int = 2,
     temp: float = 0.3,
     has_explain_adapter: bool = False,
+    main_adapter: str | None = None,
+    explain_adapter: str = "explain",
 ) -> dict[str, Any]:
+    """main_adapter/explain_adapter: 어댑터 여러 개를 붙여 둔 모델(워커)에서 쓸 이름.
+    단독 실행(main_adapter=None)은 주 어댑터 "default", 해설 "explain" 그대로."""
     trace: list[dict[str, Any]] = []
+    if main_adapter:
+        set_adapter(model, main_adapter)
 
     def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
         return chat_json(model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp)
@@ -338,11 +352,9 @@ def run_pipeline(
         else:
             trace.append({"stage": "draft", "ok": True, "options": distractors})
 
-        # place correct option at a randomized-ish position: rotate by draft_try so repeated
-        # retries don't all land on ①
-        correct_index = draft_try % 5
-        options = distractors[:correct_index] + [practical_en] + distractors[correct_index:]
-        options = options[:5]
+        # 정답 자리는 해설 직전에 _shuffle_answer 로 무작위로 섞는다 — 여기서는 맨 앞에 둔다
+        correct_index = 0
+        options = ([practical_en] + distractors)[:5]
         if len(options) != 5:
             continue
 
@@ -402,9 +414,11 @@ def run_pipeline(
         if not dist_ok:
             continue
 
+        options, correct_index = _shuffle_answer(options, correct_index)
+
         # 5) explanation (optional dedicated explain LoRA)
         if has_explain_adapter:
-            set_adapter(model, "explain")
+            set_adapter(model, explain_adapter)
             print("[pipeline] explain adapter active", file=sys.stderr)
         try:
             expl = call(
@@ -419,7 +433,7 @@ def run_pipeline(
             )
         finally:
             if has_explain_adapter:
-                set_adapter(model, "default")
+                set_adapter(model, main_adapter or "default")
         explanation = str((expl or {}).get("Explanation") or "").strip()
         if len(explanation) > 450:
             explanation = explanation[:450].rstrip() + "…"

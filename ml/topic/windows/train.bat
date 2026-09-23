@@ -11,6 +11,9 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
+REM 학습 loss 가 끝날 때가 아니라 그때그때 찍히게
+set PYTHONUNBUFFERED=1
+
 set MODEL=%~1
 if "%MODEL%"=="" set MODEL=Qwen/Qwen2.5-7B-Instruct
 set STEPS=%~2

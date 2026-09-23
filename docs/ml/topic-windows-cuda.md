@@ -174,6 +174,12 @@ npm run cc:topic-local -- --backend cuda --passage-id <ObjectId> --save
 `ai_source` 는 Mac과 같이 **`local-topic-lora`**.
 
 `TOPIC_CUDA_VENV` 로 venv 경로를 지정할 수 있다 (기본: `ml/topic/windows/.venv`).
+CLI 구현은 주제·제목·주장 공용(`scripts/_local-variant-runner.ts`) — `npm run cc:local-variant -- --type 주제 …` 와 같다.
+
+### 관리자 화면(배포 사이트 포함)
+
+「로컬 LoRA로 초안」 버튼은 이 CLI 가 아니라 **GPU PC 워커**가 처리한다(작업은 MongoDB 큐로 전달).
+실행·GPU 공유 규칙: [`local-variant-worker.md`](./local-variant-worker.md)
 
 ---
 

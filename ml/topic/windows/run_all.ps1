@@ -25,6 +25,8 @@ if (-not (Test-Path ".\.venv\Scripts\python.exe")) {
   if ($LASTEXITCODE -ne 0) { throw "setup.bat failed" }
 }
 
+$env:PYTHONUNBUFFERED = "1"  # show training loss lines as they happen
+
 & .\.venv\Scripts\python.exe smoke_check.py
 if ($LASTEXITCODE -ne 0) { throw "smoke_check failed" }
 if ($SmokeOnly) {

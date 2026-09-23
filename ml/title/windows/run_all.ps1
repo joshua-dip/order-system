@@ -19,13 +19,21 @@ Write-Host "== repo root: $Root"
 
 Set-Location $Here
 
-if (-not (Test-Path ".\.venv\Scripts\python.exe")) {
-  Write-Host "== setup.bat"
-  & cmd /c setup.bat
-  if ($LASTEXITCODE -ne 0) { throw "setup.bat failed" }
+# venv: this folder's .venv, else the shared ml\topic\windows\.venv (same deps for all three types)
+$Py = Join-Path $Here ".venv\Scripts\python.exe"
+if (-not (Test-Path $Py)) {
+  $Shared = Join-Path $Here "..\..\topic\windows\.venv\Scripts\python.exe"
+  if (Test-Path $Shared) {
+    $Py = $Shared
+  } else {
+    Write-Host "== setup.bat"
+    & cmd /c setup.bat
+    if ($LASTEXITCODE -ne 0) { throw "setup.bat failed" }
+  }
 }
+$env:PYTHONUNBUFFERED = "1"
 
-& .\.venv\Scripts\python.exe smoke_check.py
+& $Py smoke_check.py
 if ($LASTEXITCODE -ne 0) { throw "smoke_check failed" }
 if ($SmokeOnly) {
   Write-Host "SmokeOnly done"
@@ -53,7 +61,7 @@ if (-not $SkipTrain) {
     if ($MaxSteps -gt 0) {
       $trainArgs += @("--max-steps", "$MaxSteps")
     }
-    & .\.venv\Scripts\python.exe @trainArgs
+    & $Py @trainArgs
   } else {
     Write-Host "== train model=$Model maxSteps=$MaxSteps"
     if ($MaxSteps -gt 0) {

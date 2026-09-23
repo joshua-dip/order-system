@@ -12,6 +12,7 @@
 
 | 날짜 | 문서 | 방향 | 내용 |
 |---|---|---|---|
+| 2026-09-23 | [로컬 LoRA 작업 큐](handoff/2026-09-23-로컬-LoRA-작업큐.md) | 웹앱 → GPU PC 워커 | 「로컬 LoRA로 초안」은 `local_variant_jobs` 에 넣고 GPU PC 워커가 처리, 하트비트 `local_variant_workers`, 저장 시 `ai_source=local-*-lora` |
 | 2026-09-11 | [외부지문 변형문제 주문 (XV)](handoff/2026-09-11-외부지문-주문제작.md) | 웹앱 → 제작기 | 새 주문번호 `XV`(flow=bookVariant), 회원 전용 교재 `외부지문_<loginId>`, 인상 단가 |
 | 2026-09-09 | [분석지 PDF UI 재검토 — 최신](handoff/2026-09-09-분석지-PDF-UI-재검토.md) | Windows 실물 검토 → Mac 개선 | 18·19번 8쪽 실측, 개선 확인·잔여 오류·UI 우선순위·재출력 기준 |
 | 2026-09-09 | [지문 분석지 개선](handoff/2026-09-09-지문분석지-개선.md) | Windows 평가 → Mac 구현 | PDF 표본 비교, P0 표기 오류, 관련 코드·재현 지문·검증 기준 |

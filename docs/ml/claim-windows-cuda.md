@@ -28,9 +28,9 @@ infer.py → prevalidate → (옵션) DB 저장  (ai_source=local-claim-lora)
 
 VRAM이 부족하면 **`Qwen/Qwen2.5-3B-Instruct`**, **GTX 1050 Ti (4GB)** 는 **`-LowVram`** (0.5B + 4bit 끔).
 
-**venv 는 `ml/topic/windows/.venv` 를 재사용해도 된다** — 세 파이프라인의 Python 의존성이 같다.
-`CLAIM_CUDA_VENV=<repo>\ml\topic\windows\.venv` 로 지정하면 이 폴더에서 다시 `setup.bat` 을
-돌릴 필요가 없다.
+**venv 는 `ml/topic/windows/.venv` 를 같이 쓴다** — 세 파이프라인의 Python 의존성이 같다.
+이 폴더에 `.venv` 가 없으면 `train.bat`·`ask*.bat`·`run_all.ps1`·CLI 가 주제 venv 를 찾아 쓰므로
+`setup.bat` 을 다시 돌릴 필요가 없다(따로 두고 싶을 때만 아래 §2).
 
 ---
 
@@ -108,7 +108,13 @@ REM 통합 진입점
 npm run cc:local-variant -- --type 주장 --backend cuda --pipeline --passage-id <ObjectId> --save
 ```
 
-`ai_source` 는 **`local-claim-lora`**. `CLAIM_CUDA_VENV` 로 venv 경로 지정 가능.
+`ai_source` 는 **`local-claim-lora`**. `CLAIM_CUDA_VENV` 로 venv 경로 지정 가능
+(기본: 이 폴더 `.venv` → 없으면 `ml/topic/windows/.venv`).
+
+### 관리자 화면(배포 사이트 포함)
+
+「로컬 LoRA로 초안」 버튼은 이 CLI 가 아니라 **GPU PC 워커**가 처리한다(작업은 MongoDB 큐로 전달).
+실행·GPU 공유 규칙: [`local-variant-worker.md`](./local-variant-worker.md)
 
 ---
 

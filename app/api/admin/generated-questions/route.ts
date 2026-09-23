@@ -10,6 +10,7 @@ import { buildNarrativeQuestionsFilter, mapNarrativeDocToListRow } from '@/lib/a
 import { buildVariantQFilter } from '@/lib/admin-generated-questions-q-filter';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { nextGeneratedSerial } from '@/lib/generated-question-serial';
+import { acceptedLocalAiSource } from '@/lib/local-variant-types';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -504,6 +505,9 @@ export async function POST(request: NextRequest) {
     const enriched = enrichQuestionDataWithExplanationIfEmpty(question_data, type);
     if (enriched) question_data = enriched;
 
+    // 로컬 LoRA 초안에서 온 문항만 출처를 남긴다(허용 목록 밖 값은 무시)
+    const aiSource = acceptedLocalAiSource(body.ai_source);
+
     const now = new Date();
     const doc = {
       textbook,
@@ -515,6 +519,7 @@ export async function POST(request: NextRequest) {
       question_data,
       status: docStatus,
       error_msg,
+      ...(aiSource ? { ai_source: aiSource } : {}),
       created_at: now,
       updated_at: now,
     };

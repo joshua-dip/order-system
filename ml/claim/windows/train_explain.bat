@@ -5,10 +5,14 @@ REM   train_explain.bat 400
 setlocal
 cd /d "%~dp0"
 
-if not exist ".venv\Scripts\python.exe" (
-  echo .venv missing. Run setup.bat first.
+REM venv: this folder's .venv, else the shared ml\topic\windows\.venv
+set VENV=%~dp0.venv
+if not exist "%VENV%\Scripts\python.exe" set VENV=%~dp0..\..\topic\windows\.venv
+if not exist "%VENV%\Scripts\python.exe" (
+  echo .venv missing. Run ml\topic\windows\setup.bat first - shared by all three types.
   exit /b 1
 )
+set PYTHONUNBUFFERED=1
 
 set ROOT=%~dp0..\..\..
 set DATA=%ROOT%\data\claim-explain-finetune
@@ -22,7 +26,7 @@ if not exist "%DATA%\train.jsonl" (
   exit /b 1
 )
 
-call .venv\Scripts\activate.bat
+call "%VENV%\Scripts\activate.bat"
 echo == explain LoRA low-vram steps=%STEPS%
 python train.py --low-vram --data "%DATA%" --adapter "%ADAPTER%" --max-steps %STEPS%
 endlocal

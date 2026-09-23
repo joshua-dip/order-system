@@ -10,6 +10,9 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
+REM show training loss lines as they happen
+set PYTHONUNBUFFERED=1
+
 set ROOT=%~dp0..\..\..
 set DATA=%ROOT%\data\topic-explain-finetune
 set ADAPTER=%~dp0..\adapters\topic-explain-lora-cuda

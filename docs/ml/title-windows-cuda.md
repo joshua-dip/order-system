@@ -30,10 +30,9 @@ infer.py → prevalidate → (옵션) DB 저장  (ai_source=local-title-lora)
 VRAM이 부족하면 기본 7B 대신 **`Qwen/Qwen2.5-3B-Instruct`** 로 학습한다.
 **GTX 1050 Ti (4GB)** 처럼 더 작으면 **`-LowVram`** (0.5B + 4bit 끔) 을 쓴다.
 
-**venv 는 `ml/topic/windows/.venv` 를 재사용해도 된다** — 주제·제목·주장 세 파이프라인의 Python
-의존성(torch/transformers/peft/trl/bitsandbytes)이 완전히 같다. 디스크·설치 시간을 아끼려면
-`setup.bat` 을 새로 돌리지 말고 `TITLE_CUDA_VENV=<repo>\ml\topic\windows\.venv` 를 지정한다.
-따로 두고 싶으면 아래처럼 이 폴더에서 그대로 `setup.bat` 을 돌려도 된다(완전히 독립적으로 동작).
+**venv 는 `ml/topic/windows/.venv` 를 같이 쓴다** — 세 파이프라인의 Python 의존성(torch/transformers/peft/
+trl/bitsandbytes)이 같다. 이 폴더에 `.venv` 가 없으면 `train.bat`·`ask*.bat`·`run_all.ps1`·CLI 가 주제 venv 를
+찾아 쓰므로 `setup.bat` 을 다시 돌릴 필요가 없다(따로 두고 싶을 때만 아래 §2).
 
 ---
 
@@ -130,7 +129,12 @@ npm run cc:local-variant -- --type 제목 --backend cuda --pipeline --passage-id
 ```
 
 `ai_source` 는 **`local-title-lora`**. `TITLE_CUDA_VENV` 로 venv 경로를 지정할 수 있다
-(기본: `ml/title/windows/.venv`).
+(기본: 이 폴더 `.venv` → 없으면 `ml/topic/windows/.venv`).
+
+### 관리자 화면(배포 사이트 포함)
+
+「로컬 LoRA로 초안」 버튼은 이 CLI 가 아니라 **GPU PC 워커**가 처리한다(작업은 MongoDB 큐로 전달).
+실행·GPU 공유 규칙: [`local-variant-worker.md`](./local-variant-worker.md)
 
 ---
 

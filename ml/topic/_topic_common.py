@@ -1,9 +1,14 @@
 """주제 LoRA 공용: 프롬프트·JSON 복구·시험지 미리보기 (Mac MLX / Windows CUDA 공통)."""
 from __future__ import annotations
 
-import json
-import re
 import sys
+from pathlib import Path
+
+_COMMON = Path(__file__).resolve().parent.parent / "common"
+if str(_COMMON) not in sys.path:
+    sys.path.insert(0, str(_COMMON))
+
+from json_extract import extract_json_object  # noqa: E402,F401  (Mac·Windows·워커 공용 구현)
 
 SYSTEM_PROMPT = """당신은 한국 수능 영어 변형문제 출제자입니다. 주어진 영어 지문으로 「주제」 객관식 1문항을 만듭니다.
 반드시 아래 키만 갖는 JSON 한 개만 출력하세요. 마크다운·설명 금지.
@@ -19,71 +24,6 @@ SYSTEM_PROMPT = """당신은 한국 수능 영어 변형문제 출제자입니�
 6) Explanation = 한국어 해설, 450자 이하, CorrectAnswer와 하나의 결론만."""
 
 CIRCLED = ("①", "②", "③", "④", "⑤")
-
-
-def extract_json_object(text: str) -> dict | None:
-    text = text.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
-    try:
-        obj = json.loads(text)
-        if isinstance(obj, dict):
-            return obj
-    except json.JSONDecodeError:
-        pass
-
-    start = text.find("{")
-    if start < 0:
-        return None
-
-    # 중괄호 균형으로 첫 객체만 잘라낸다 (뒤에 잡텍스트가 있어도)
-    depth = 0
-    in_str = False
-    esc = False
-    end = -1
-    for i, ch in enumerate(text[start:], start):
-        if in_str:
-            if esc:
-                esc = False
-            elif ch == "\\":
-                esc = True
-            elif ch == '"':
-                in_str = False
-            continue
-        if ch == '"':
-            in_str = True
-        elif ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                end = i
-                break
-
-    candidates: list[str] = []
-    if end >= 0:
-        candidates.append(text[start : end + 1])
-    candidates.append(text[start:])  # 잘린 JSON 복구용
-
-    for chunk in candidates:
-        try:
-            obj = json.loads(chunk)
-            if isinstance(obj, dict):
-                return obj
-        except json.JSONDecodeError:
-            pass
-        repaired = chunk
-        if repaired.count('"') % 2 == 1:
-            repaired += '"'
-        repaired += "}" * max(0, repaired.count("{") - repaired.count("}"))
-        try:
-            obj = json.loads(repaired)
-            if isinstance(obj, dict):
-                return obj
-        except json.JSONDecodeError:
-            continue
-    return None
 
 
 def split_options(raw: object) -> list[str]:
