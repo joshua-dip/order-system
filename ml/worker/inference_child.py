@@ -22,6 +22,7 @@ _ML = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ML / "common"))
 
 import cuda_runtime as rt  # noqa: E402
+from win_qos import opt_out_power_throttling  # noqa: E402
 
 MARK = "@@RESULT@@ "
 _PIPELINES: dict[str, Any] = {}
@@ -51,6 +52,8 @@ def main() -> int:
         except Exception:
             pass
 
+    # 작업 스케줄러 아래 백그라운드 프로세스라 Windows 가 효율 모드로 돌리면 생성이 3배 느려진다 — 모델을 올리기 전에 끈다
+    opt_out_power_throttling()
     spec = json.loads(sys.argv[1])
     try:
         model, tokenizer = rt.load_base(spec["base_model"], bool(spec["use_4bit"]))

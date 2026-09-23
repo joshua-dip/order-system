@@ -35,6 +35,7 @@ _ROOT = _ML.parent
 sys.path.insert(0, str(_ML / "common"))
 
 import cuda_runtime as rt  # noqa: E402  (어댑터 탐색만 — torch 는 자식 프로세스에서만 쓴다)
+from win_qos import opt_out_power_throttling  # noqa: E402
 
 DB_NAME = "gomijoshua"  # 웹앱 getDb('gomijoshua') 와 같은 DB
 JOBS = "local_variant_jobs"
@@ -604,6 +605,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.log_file:
         redirect_output(Path(args.log_file))
+    # Windows 효율 모드(EcoQoS) 끄기 — 무거운 일은 자식(inference_child)이 하지만 워커도 같은 조건으로 둔다
+    opt_out_power_throttling()
 
     uri = load_env().get("MONGODB_URI")
     if not uri:
