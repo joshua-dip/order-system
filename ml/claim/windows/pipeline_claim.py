@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -126,6 +127,17 @@ EXPLAIN_SYS = """당신은 한국 수능 영어 「주장」 문항의 한국어
 5) 영어 문장으로만 된 해설 금지."""
 
 
+def _pick_str(obj: dict | None, *keys: str) -> str:
+    """0.5B 모델이 키 이름을 조금씩 바꿔 내는 일이 잦다 — 후보 키 중 처음 채워진 문자열."""
+    if not isinstance(obj, dict):
+        return ""
+    for k in keys:
+        v = obj.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
 def _strip_circled(opt: str) -> str:
     s = opt.strip()
     for c in CIRCLED:
@@ -160,6 +172,29 @@ def _has_modal_or_adj(s: str) -> bool:
 def _starts_bad_subject(s: str) -> bool:
     first = s.strip().split()[0].lower().rstrip(".,") if s.strip() else ""
     return first in ("you", "your", "he", "his", "she", "her")
+
+
+def _parse_lora_qd(obj: dict | None) -> tuple[list[str], int] | None:
+    """LoRA 가 학습한 문항 JSON(Options ### 5개 + CorrectAnswer ①~⑤)에서 선지·정답 위치."""
+    if not isinstance(obj, dict):
+        return None
+    opts = _normalize_options(obj.get("Options") or obj.get("options"))
+    ans = str(obj.get("CorrectAnswer") or "").strip()
+    if len(opts) == 5 and ans in CIRCLED:
+        return opts, CIRCLED.index(ans)
+    return None
+
+
+def _dup_option_errors(opts: list[str]) -> list[str]:
+    """같은 선지가 두 번 나오면 복수정답이 된다(검증 단계가 정답을 오답 자리에 베껴 넣은 적이 있다)."""
+    errs: list[str] = []
+    seen: set[str] = set()
+    for i, o in enumerate(opts):
+        key = re.sub(r"[^a-z0-9]+", " ", o.lower()).strip()
+        if key in seen:
+            errs.append(f"option {i+1} duplicates another option")
+        seen.add(key)
+    return errs
 
 
 def _format_options(phrases: list[str]) -> str:
@@ -219,6 +254,7 @@ def _format_ok(qd: dict, passage: str) -> list[str]:
             errs.append(f"option {i+1} must not start with You/He/She")
         if not _has_modal_or_adj(o):
             errs.append(f"option {i+1} missing modal verb or key adjective")
+    errs += _dup_option_errors(opts)
     ans = str(qd.get("CorrectAnswer") or "").strip()
     if ans not in CIRCLED:
         errs.append("CorrectAnswer must be ①-⑤")
@@ -251,31 +287,67 @@ def run_pipeline(
     if main_adapter:
         set_adapter(model, main_adapter)
 
+    # 주장 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. 다른 단계에 켜 두면 시스템 프롬프트를
+    # 무시하고 문항 JSON 을 뱉어 단계가 실패한다. 기본은 어댑터를 끈 베이스, 초안·해설 어댑터만 adapter=True.
     raw_out = [""]  # 마지막 모델 출력 원문 — JSON 이 깨졌을 때 실패 기록에 남긴다
 
-    def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
-        raw_out[0] = chat_text(model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp)
+    def call(
+        sys_p: str,
+        user: str,
+        max_tokens: int = 400,
+        *,
+        adapter: bool = False,
+        t: float | None = None,
+    ) -> dict | None:
+        raw_out[0] = chat_text(
+            model,
+            tokenizer,
+            sys_p,
+            user,
+            max_tokens=max_tokens,
+            temp=temp if t is None else t,
+            use_adapter=adapter,
+        )
         return extract_json_object(raw_out[0])
 
-    # 1) thesis — 작은 모델이라 JSON 이 가끔 깨진다. 몇 번 다시 묻고, 비었거나 한국어면 버린다
-    thesis_en = thesis_ko = ""
-    for _ in range(max_retries + 1):
+    def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
+        """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
+        full = call(SYSTEM_PROMPT, f"[지문 Paragraph]\n{passage}", max_tokens=1200, adapter=True)
+        return full, _parse_lora_qd(full)
+
+    # 1) thesis — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    # 베이스 0.5B 는 thesis_en 에 한국어를 넣기도 한다 — 영어가 아니면 버리고 다시 묻는다.
+    thesis: dict | None = None
+    thesis_raw = ""
+    for t_try in range(2):
         thesis = call(
             THESIS_SYS,
             f"[Passage]\n{passage}\n\nReturn thesis_en and thesis_ko JSON.",
             max_tokens=256,
+            t=temp if t_try == 0 else 0.0,
         )
-        cand = str((thesis or {}).get("thesis_en") or "").strip()
-        if cand and not _has_hangul(cand):
-            thesis_en, thesis_ko = cand, str(thesis.get("thesis_ko") or "").strip()
+        thesis_raw = _pick_str(thesis, "thesis_en", "thesis", "claim_en", "claim", "main_idea")
+        if thesis_raw and not _has_hangul(thesis_raw):
             break
         _log_failure(
             passage=passage, stage="thesis",
             bad_output=thesis if thesis is not None else {"raw": raw_out[0][:800]},
-            problem="thesis extraction failed", thesis=None,
+            problem="thesis extraction failed" if not thesis_raw else "thesis_en is not English", thesis=None,
         )
-    if not thesis_en:
+        thesis_raw = ""
+    lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
+    if not thesis_raw:
+        # 마지막 수단: LoRA 초안의 정답 주장문을 논지로(오답 초안 단계에서 그대로 재사용).
+        lora_first = lora_draft()
+        if lora_first[1] is not None:
+            opts, idx = lora_first[1]
+            if not _has_hangul(opts[idx]):
+                thesis_raw = opts[idx]
+                trace.append({"stage": "thesis", "fallback": "lora_draft_answer"})
+    if not thesis_raw:
         return {"ok": False, "error": "thesis stage failed", "trace": trace}
+    thesis_en = thesis_raw
+    thesis_ko = _pick_str(thesis, "thesis_ko", "thesis_korean", "ko")
     thesis_obj = {"thesis_en": thesis_en, "thesis_ko": thesis_ko}
     trace.append({"stage": "thesis", "out": thesis_obj})
     print(f"[pipeline] thesis: {thesis_en[:120]}", file=sys.stderr)
@@ -290,7 +362,7 @@ def run_pipeline(
         )
         cand = str((prac or {}).get("practical_en") or "").strip()
         trace.append({"stage": "practical", "out": prac})
-        if not cand:
+        if not cand or _has_hangul(cand):  # 선지가 될 문장 — 한국어면 버린다
             continue
         pver = call(
             VERIFY_PRACTICAL_SYS,
@@ -311,7 +383,7 @@ def run_pipeline(
             problem=str(pver.get("issue") or "thesis+modal / missing modal-adjective"), thesis=thesis_obj,
             improved_hint=better,
         )
-        if better and _has_modal_or_adj(better) and not _starts_bad_subject(better):
+        if better and not _has_hangul(better) and _has_modal_or_adj(better) and not _starts_bad_subject(better):
             practical_en = better
             if p_try >= 1:
                 break
@@ -323,14 +395,20 @@ def run_pipeline(
     correct_index = 0
 
     for draft_try in range(max_retries + 1):
-        # 3) draft distractors
-        draft = call(
-            DRAFT_DIST_SYS,
-            f"[Passage]\n{passage}\n\n[Thesis]\n{thesis_en}\n\n[Correct claim]\n{practical_en}\n\n"
-            "Return JSON with key options (array of 4 English distractor sentences).",
-            max_tokens=600,
-        )
-        distractors = _normalize_options((draft or {}).get("options"))
+        # 3) draft distractors — LoRA 가 학습한 문항 JSON 의 오답 4개를 먼저, 안 되면 베이스 + 작은 스키마
+        if draft_try == 0 and lora_first is not None:
+            draft, lora_qd = lora_first
+        else:
+            draft, lora_qd = lora_draft()
+        distractors = [o for i, o in enumerate(lora_qd[0]) if i != lora_qd[1]] if lora_qd else []
+        if len(distractors) != 4:
+            draft = call(
+                DRAFT_DIST_SYS,
+                f"[Passage]\n{passage}\n\n[Thesis]\n{thesis_en}\n\n[Correct claim]\n{practical_en}\n\n"
+                "Return JSON with key options (array of 4 English distractor sentences).",
+                max_tokens=600,
+            )
+            distractors = _normalize_options((draft or {}).get("options"))
         if len(distractors) != 4:
             # 오답을 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 오답으로 채웠다)
             _log_failure(
@@ -420,6 +498,7 @@ def run_pipeline(
                 f"[Thesis]\n{thesis_en} / {thesis_ko}\n\n"
                 "위 정답에 대한 한국어 Explanation JSON만 출력하세요.",
                 max_tokens=400,
+                adapter=has_explain_adapter,
             )
         finally:
             if has_explain_adapter:
@@ -435,7 +514,7 @@ def run_pipeline(
             )[:450]
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
-        # 형식에 안 맞는 오답(짧음·You 로 시작·조동사/핵심 형용사 없음)은 지어내 채우지 않는다 —
+        # 형식에 안 맞거나 겹치는 오답(짧음·You 로 시작·조동사/핵심 형용사 없음)은 지어내 채우지 않는다 —
         # 아래 형식 검사에서 걸러 다시 시도한다
         qd = {
             "Question": "이 글에서 글쓴이가 주장하는 바로 가장 적절한 것은?",

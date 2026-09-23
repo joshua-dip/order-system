@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -88,6 +89,17 @@ EXPLAIN_SYS = """당신은 한국 수능 영어 「제목」 문항의 한국어
 5) 영어 문장으로만 된 해설 금지."""
 
 
+def _pick_str(obj: dict | None, *keys: str) -> str:
+    """0.5B 모델이 키 이름을 조금씩 바꿔 내는 일이 잦다 — 후보 키 중 처음 채워진 문자열."""
+    if not isinstance(obj, dict):
+        return ""
+    for k in keys:
+        v = obj.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
 def _strip_circled(opt: str) -> str:
     s = opt.strip()
     for c in CIRCLED:
@@ -139,6 +151,29 @@ def _titlecase_start(s: str) -> str:
     if not s:
         return s
     return s[0].upper() + s[1:]
+
+
+def _parse_lora_qd(obj: dict | None) -> tuple[list[str], int] | None:
+    """LoRA 가 학습한 문항 JSON(Options ### 5개 + CorrectAnswer ①~⑤)에서 선지·정답 위치."""
+    if not isinstance(obj, dict):
+        return None
+    opts = _normalize_options(obj.get("Options") or obj.get("options"))
+    ans = str(obj.get("CorrectAnswer") or "").strip()
+    if len(opts) == 5 and ans in CIRCLED:
+        return opts, CIRCLED.index(ans)
+    return None
+
+
+def _dup_option_errors(opts: list[str]) -> list[str]:
+    """같은 선지가 두 번 나오면 복수정답이 된다(검증 단계가 정답을 오답 자리에 베껴 넣은 적이 있다)."""
+    errs: list[str] = []
+    seen: set[str] = set()
+    for i, o in enumerate(opts):
+        key = re.sub(r"[^a-z0-9]+", " ", o.lower()).strip()
+        if key in seen:
+            errs.append(f"option {i+1} duplicates another option")
+        seen.add(key)
+    return errs
 
 
 def _format_options(phrases: list[str]) -> str:
@@ -196,6 +231,7 @@ def _format_ok(qd: dict, passage: str) -> list[str]:
             errs.append(f"option {i+1} too long ({wc} words)")
         if o[:1] and not o[:1].isupper():
             errs.append(f"option {i+1} must start with a capital letter")
+    errs += _dup_option_errors(opts)
     ans = str(qd.get("CorrectAnswer") or "").strip()
     if ans not in CIRCLED:
         errs.append("CorrectAnswer must be ①-⑤")
@@ -231,33 +267,69 @@ def run_pipeline(
     if main_adapter:
         set_adapter(model, main_adapter)
 
+    # 제목 LoRA 는 (SYSTEM_PROMPT, 지문) → 문항 JSON 만 학습했다. 다른 단계에 켜 두면 시스템 프롬프트를
+    # 무시하고 문항 JSON 을 뱉어 단계가 실패한다. 기본은 어댑터를 끈 베이스, 초안·해설 어댑터만 adapter=True.
     raw_out = [""]  # 마지막 모델 출력 원문 — JSON 이 깨졌을 때 실패 기록에 남긴다
 
-    def call(sys_p: str, user: str, max_tokens: int = 400) -> dict | None:
-        raw_out[0] = chat_text(model, tokenizer, sys_p, user, max_tokens=max_tokens, temp=temp)
+    def call(
+        sys_p: str,
+        user: str,
+        max_tokens: int = 400,
+        *,
+        adapter: bool = False,
+        t: float | None = None,
+    ) -> dict | None:
+        raw_out[0] = chat_text(
+            model,
+            tokenizer,
+            sys_p,
+            user,
+            max_tokens=max_tokens,
+            temp=temp if t is None else t,
+            use_adapter=adapter,
+        )
         return extract_json_object(raw_out[0])
 
-    # 1) core message — 작은 모델이라 JSON 이 가끔 깨진다. 몇 번 다시 묻고, 비었거나 한국어면 버린다
-    message_en = message_ko = ""
-    for _ in range(max_retries + 1):
+    def lora_draft() -> tuple[dict | None, tuple[list[str], int] | None]:
+        """학습한 그대로의 입력(SYSTEM_PROMPT + 지문)으로 LoRA 문항 초안을 받는다."""
+        full = call(SYSTEM_PROMPT, f"[지문 Paragraph]\n{passage}", max_tokens=1200, adapter=True)
+        return full, _parse_lora_qd(full)
+
+    # 1) core message — 베이스 모델. 두 번째는 탐욕 디코딩, 비슷한 키도 받는다.
+    # 베이스 0.5B 는 message_en 에 한국어를 넣기도 한다 — 영어가 아니면 버리고 다시 묻는다.
+    msg: dict | None = None
+    message_raw = ""
+    for m_try in range(2):
         msg = call(
             MESSAGE_SYS,
             f"[Passage]\n{passage}\n\nReturn message_en and message_ko JSON.",
             max_tokens=256,
+            t=temp if m_try == 0 else 0.0,
         )
-        cand = str((msg or {}).get("message_en") or "").strip()
-        if cand and not _has_hangul(cand):
-            message_en, message_ko = cand, str(msg.get("message_ko") or "").strip()
+        message_raw = _pick_str(msg, "message_en", "message", "main_idea", "core_message", "claim_en")
+        if message_raw and not _has_hangul(message_raw):
             break
         _log_failure(
             passage=passage,
             stage="message",
             bad_output=msg if msg is not None else {"raw": raw_out[0][:800]},
-            problem="core message extraction failed",
+            problem="core message extraction failed" if not message_raw else "message_en is not English",
             message=None,
         )
-    if not message_en:
+        message_raw = ""
+    lora_first: tuple[dict | None, tuple[list[str], int] | None] | None = None
+    if not message_raw:
+        # 마지막 수단: LoRA 초안의 정답 제목을 핵심 메시지로(초안 단계에서 그대로 재사용).
+        lora_first = lora_draft()
+        if lora_first[1] is not None:
+            opts, idx = lora_first[1]
+            if not _has_hangul(opts[idx]):
+                message_raw = opts[idx]
+                trace.append({"stage": "message", "fallback": "lora_draft_answer"})
+    if not message_raw:
         return {"ok": False, "error": "message stage failed", "trace": trace}
+    message_en = message_raw
+    message_ko = _pick_str(msg, "message_ko", "message_korean", "ko")
     message_obj = {"message_en": message_en, "message_ko": message_ko}
     trace.append({"stage": "message", "out": message_obj})
     print(f"[pipeline] message: {message_en[:120]}", file=sys.stderr)
@@ -266,23 +338,20 @@ def run_pipeline(
     correct_index = 0
 
     for draft_try in range(max_retries + 1):
-        # 2) draft
-        draft = call(
-            DRAFT_SYS,
-            f"[Passage]\n{passage}\n\n[Core message]\n{message_en}\n\n"
-            "Return JSON with keys options (array of 5 English headline phrases) "
-            "and correct_index (0-4). Do not wrap in markdown.",
-            max_tokens=700,
-        )
-        parsed_draft = _parse_draft(draft)
+        # 2) draft — LoRA 가 학습한 형식(SYSTEM_PROMPT → 문항 JSON)을 먼저, 안 되면 베이스 + 작은 스키마
+        if draft_try == 0 and lora_first is not None:
+            draft, parsed_draft = lora_first
+        else:
+            draft, parsed_draft = lora_draft()
         if parsed_draft is None:
-            full = call(
-                SYSTEM_PROMPT,
-                f"[지문 Paragraph]\n{passage}",
-                max_tokens=1200,
+            draft = call(
+                DRAFT_SYS,
+                f"[Passage]\n{passage}\n\n[Core message]\n{message_en}\n\n"
+                "Return JSON with keys options (array of 5 English headline phrases) "
+                "and correct_index (0-4). Do not wrap in markdown.",
+                max_tokens=700,
             )
-            parsed_draft = _parse_draft(full)
-            draft = full
+            parsed_draft = _parse_draft(draft)
         if parsed_draft is None:
             # 선지를 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 헤드라인으로 채웠다)
             _log_failure(
@@ -448,6 +517,7 @@ def run_pipeline(
                 f"[Core message]\n{message_en} / {message_ko}\n\n"
                 "위 정답에 대한 한국어 Explanation JSON만 출력하세요.",
                 max_tokens=400,
+                adapter=has_explain_adapter,
             )
         finally:
             if has_explain_adapter:
@@ -463,7 +533,7 @@ def run_pipeline(
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
         # 대문자로 시작하게 맞추고, 정답 선지가 너무 짧게 망가졌으면 핵심 메시지로 바꾼다.
-        # 오답은 지어내지 않는다 — 짧은 오답은 아래 형식 검사에서 걸러 다시 시도한다
+        # 오답은 지어내지 않는다 — 짧거나 겹치는 오답은 아래 형식 검사에서 걸러 다시 시도한다
         options = [
             _titlecase_start(message_en if i == correct_index and len(o.split()) < 4 else o)
             for i, o in enumerate(options[:5])
