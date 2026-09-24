@@ -74,8 +74,10 @@ Output ONLY one JSON object. No markdown.
 Keys: verdicts (array of exactly 4 objects, same order as given: {{"i": 1-4, "verdict": "ok"|"also_correct"|"duplicate"|"off_topic", "reason": short English}}).
 - also_correct: a careful student could defend it as the answer too — the correct option's idea in other words, or the passage's real main point.
 - duplicate: same meaning as another distractor.
-- off_topic: unrelated to the passage's subject, so nobody would pick it.
-- ok: plausible but clearly NOT the answer — {k['not_it']}."""
+- off_topic: about a subject the passage does not discuss (e.g. "the history of …", "the economic costs of …",
+  "how to …" advice, apps, careers), so a student can reject it without reading the passage closely.
+- ok: plausible but clearly NOT the answer — {k['not_it']}. It uses the passage's subject and words,
+  so a student must read carefully to reject it."""
 
 
 def _revise_sys(kind: str, n: int) -> str:
@@ -84,6 +86,10 @@ def _revise_sys(kind: str, n: int) -> str:
 Output ONLY one JSON object. No markdown.
 Keys: options (array of exactly {n} {k['form']}).
 Each must be plausible but clearly NOT the answer: {k['not_it']}.
+Make them tempting like real CSAT distractors: use the passage's own subject and key words, so a student has to read
+carefully to reject them. Good kinds: covers only one example or detail; overstates or overgeneralizes the point;
+states the opposite; the view the author argues against; a related but different issue about the same subject.
+Do NOT write options about subjects the passage never discusses (its history, economic costs, health tips, careers).
 Never restate the correct option in other words, and never repeat any option already listed."""
 
 
@@ -93,25 +99,48 @@ Output ONLY one JSON object. No markdown.
 Keys: answer (one of ①②③④⑤ — the best answer), also_defensible (array of other circled numbers a careful student could ALSO defend as the answer; [] if none), reason (short English)."""
 
 
+# 지문과 무관한 오답은 문항당 이만큼만 둔다 — 수능에도 하나쯤은 있지만, 26년 9월 고1 시험에선 「~의 역사」
+# 「~의 경제적 비용」 같은 오답이 문항마다 2~4개라 읽지 않고도 지워졌다.
+MAX_OFF_TOPIC = 1
+
+
 def bad_distractors(dver: dict | None, n: int) -> dict[int, str]:
-    """판정 JSON → {오답 위치(0~n-1): 사유} — also_correct·duplicate 만. off_topic 은 수능 오답에도 흔해 막지 않는다.
+    """판정 JSON → {오답 위치(0~n-1): 사유} — also_correct·duplicate 전부 + off_topic 중 MAX_OFF_TOPIC 를 넘는 것.
     판정을 못 읽으면 문제 없음으로 본다(예전과 같음)."""
     out: dict[int, str] = {}
     rows = dver.get("verdicts") if isinstance(dver, dict) else None
     if not isinstance(rows, list):
         return out
+    off_seen = 0
     for pos, row in enumerate(rows[:n]):
         if not isinstance(row, dict):
             continue
         verdict = str(row.get("verdict") or "").strip().lower()
-        if verdict not in ("also_correct", "duplicate"):
+        if verdict == "off_topic":
+            off_seen += 1
+            if off_seen <= MAX_OFF_TOPIC:
+                continue
+        elif verdict not in ("also_correct", "duplicate"):
             continue
         try:
             k = int(row.get("i", pos + 1)) - 1
         except (TypeError, ValueError):
             k = pos
         if 0 <= k < n:
-            out[k] = f"{verdict}: {str(row.get('reason') or '').strip()[:160]}"
+            reason = str(row.get("reason") or "").strip()[:160]
+            if verdict == "off_topic":
+                reason = f"too easy — unrelated to the passage; write a tempting one on its subject. {reason}"
+            out[k] = f"{verdict}: {reason}"
+    return out
+
+
+def count_verdicts(dver: dict | None) -> dict[str, int]:
+    rows = dver.get("verdicts") if isinstance(dver, dict) else None
+    out: dict[str, int] = {}
+    for row in rows if isinstance(rows, list) else []:
+        if isinstance(row, dict):
+            v = str(row.get("verdict") or "").strip().lower()
+            out[v] = out.get(v, 0) + 1
     return out
 
 
@@ -148,6 +177,8 @@ def fix_distractors(
             max_tokens=500,
         )
         trace.append({"stage": "verify_distractors", "out": dver})
+        # 평가(ml/eval/view.py)가 마지막 판정의 무관 오답 수를 센다
+        print(f"[pipeline] distractor verdicts: {json.dumps(count_verdicts(dver))}", file=sys.stderr)
         bad = bad_distractors(dver, len(distractors))
         if form_issue:
             for k, d in enumerate(distractors):

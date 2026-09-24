@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
+import re
 import statistics
 import sys
 from collections import Counter
@@ -60,6 +61,73 @@ def grade_summary(set_name: str, label: str) -> dict[str, Counter]:
     return out
 
 
+def _pct(a: float, b: float) -> str:
+    return f"{100 * a / b:5.1f}%" if b else "   -  "
+
+
+def report(set_name: str, labels: list[str]) -> dict:
+    """버전별 성적표(%) — 사람 채점(정답 적절률) + 자동 지표 + 오답 재판정. 표로 찍고 dict 로 돌려준다."""
+    board: dict = {}
+    for lb in labels:
+        rows = load_rows(set_name, lb)
+        gpath = EVAL / "grades" / set_name / f"{lb}.json"
+        grades = json.loads(gpath.read_text(encoding="utf-8"))["grades"] if gpath.is_file() else {}
+        jpath = EVAL / "runs" / set_name / f"{lb}.judge.json"
+        judge = json.loads(jpath.read_text(encoding="utf-8"))["summary"] if jpath.is_file() else {}
+        per: dict = {}
+        for t in ("topic", "title", "claim", "all"):
+            rs = [r for r in rows if t == "all" or r["type"] == t]
+            gs = [g for k, g in grades.items() if t == "all" or k.split("|")[1] == t]
+            n_ok = sum(1 for r in rs if r["ok"])
+            form = 0
+            for r in rs:
+                ans = [o[1:].strip() for o in r["options"] if o[:1] == r["answer"]]
+                chk = topic_form_issue if r["type"] == "topic" else title_form_issue if r["type"] == "title" else None
+                if chk and ans and chk(ans[0]):
+                    form += 1
+            js = [judge[k] for k in judge if t == "all" or k == t]
+            items = sum(j.get("items", 0) for j in js)
+            per[t] = {
+                "n": len(rs),
+                "correct": sum(1 for g in gs if g == "O") / len(gs) if gs else None,
+                "correct_or_partial": sum(1 for g in gs if g in ("O", "P")) / len(gs) if gs else None,
+                "generated": n_ok / len(rs) if rs else None,
+                "bad_shape": form / len(rs) if rs else None,
+                "off_topic": sum(j.get("off_topic", 0) for j in js) / (4 * items) if items else None,
+                "also_correct": sum(j.get("also_correct", 0) for j in js) / (4 * items) if items else None,
+                "off_topic_2plus": sum(j.get("items_2plus_off", 0) for j in js) / items if items else None,
+                "sec": statistics.mean(r["sec"] for r in rs) if rs else None,
+            }
+        board[lb] = per
+
+    def w(text: str) -> int:  # 화면 폭 — 한글은 두 칸
+        return sum(2 if "\uac00" <= ch <= "\ud7a3" else 1 for ch in text)
+
+    def ljust(text: str, n: int) -> str:
+        return text + " " * max(0, n - w(text))
+
+    short = {lb: re.sub(r"^\d{4}-\d{2}-\d{2}-", "", lb) for lb in labels}
+
+    def cell(v, pct=True):
+        if v is None:
+            return "     -"
+        return f"{100 * v:5.1f}%" if pct else f"{v:5.1f}s"
+
+    rows_spec = [("정답 적절(맞음)", "correct", True), ("맞음+부분", "correct_or_partial", True),
+                 ("생성 성공", "generated", True), ("모양 틀린 정답 ↓", "bad_shape", True),
+                 ("무관 오답 ↓", "off_topic", True), ("무관 오답 2개+ 문항 ↓", "off_topic_2plus", True),
+                 ("정답으로도 읽히는 오답 ↓", "also_correct", True),
+                 ("문항당 시간 ↓", "sec", False)]
+    for t in ("all", "topic", "title", "claim"):
+        name = {"all": "전체", "topic": "주제", "title": "제목", "claim": "주장"}[t]
+        print("\n" + ljust(f"[{name}]", 26) + "".join(f"{short[lb]:>12}" for lb in labels))
+        for label, key, pct in rows_spec:
+            print(f"  {ljust(label, 24)}" + "".join(f"{cell(board[lb][t][key], pct):>12}" for lb in labels))
+        print(f"  {ljust('문항 수', 24)}" + "".join(f"{board[lb][t]['n']:>12}" for lb in labels))
+    print("\n↓ 는 낮을수록 좋음. 정답 적절은 사람 채점, 오답 두 줄은 judge_distractors.py(35B 온도 0) 재판정.")
+    return board
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--set", default="sep26-go1")
@@ -67,7 +135,15 @@ def main() -> int:
     ap.add_argument("--types", default="")
     ap.add_argument("--summary", action="store_true")
     ap.add_argument("--compare", default="", help="label,label — 사람 채점 합계를 나란히")
+    ap.add_argument("--report", default="", help="label,label,… — 버전별 성적표(%)")
+    ap.add_argument("--json", default="", help="--report 결과를 이 파일에 저장")
     args = ap.parse_args()
+
+    if args.report:
+        board = report(args.set, args.report.split(","))
+        if args.json:
+            Path(args.json).write_text(json.dumps(board, ensure_ascii=False, indent=1), encoding="utf-8")
+        return 0
 
     if args.compare:
         labels = args.compare.split(",")
@@ -99,6 +175,13 @@ def main() -> int:
                 print("    ⚠", x[:200])
     print(f"\n[자동 지표] {args.label}")
     auto_metrics(rows)
+    judge = EVAL / "runs" / args.set / f"{args.label}.judge.json"
+    if judge.is_file():
+        print("[오답 재판정 — judge_distractors.py, 35B 온도 0]")
+        for t, c in json.loads(judge.read_text(encoding="utf-8"))["summary"].items():
+            n = c.get("items", 0)
+            print(f"  {t:6} 오답 {4 * n} 중 무관 {c.get('off_topic', 0)} · 정답으로도 읽힘 {c.get('also_correct', 0)} · "
+                  f"겹침 {c.get('duplicate', 0)} · 무관 2개 이상 문항 {c.get('items_2plus_off', 0)}/{n}")
     gs = grade_summary(args.set, args.label)
     if gs:
         print("[사람 채점] 맞음/부분/틀림/실패")
