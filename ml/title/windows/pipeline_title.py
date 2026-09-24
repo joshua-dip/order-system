@@ -240,6 +240,20 @@ def _format_ok(qd: dict, passage: str) -> list[str]:
     return errs
 
 
+def _min_distractor_words(correct: str) -> int:
+    """오답 최소 단어 수 — 6단어, 정답이 그보다 짧으면 정답 길이.
+    초안 오답이 5단어짜리로 나와(「Print Media Versus Broadcast Media」) 8단어 정답과 오답 한 개만 길어
+    「긴 것 둘 중 하나」로 좁혀졌다(26년 9월 고1 41~42번)."""
+    return min(6, len(correct.split()))
+
+
+def _short_distractor(distractor: str, correct: str) -> str | None:
+    wc, need = len(distractor.split()), _min_distractor_words(correct)
+    if wc < need:
+        return f"too short ({wc} words; the answer has {len(correct.split())}) — write {max(need, 7)}-12 words so length gives no clue"
+    return None
+
+
 def _has_hangul(s: str) -> bool:
     return any("가" <= ch <= "힣" for ch in s)
 
@@ -442,10 +456,12 @@ def run_pipeline(
             options=options,
             correct_index=correct_index,
             max_retries=max_retries,
-            accept=lambda c, cands: distinct_options(c, cands, valid=lambda o: 4 <= len(o.split()) <= 18 and o[:1].isupper()),
+            accept=lambda c, cands: distinct_options(
+                c, cands, valid=lambda o: _min_distractor_words(c) <= len(o.split()) <= 18 and o[:1].isupper()),
             normalize=_normalize_options,
             trace=trace,
             log_failure=lambda **kw: _log_failure(passage=passage, message=message_obj, **kw),
+            form_issue=_short_distractor,
         )
 
 

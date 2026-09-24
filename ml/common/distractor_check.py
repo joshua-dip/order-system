@@ -106,9 +106,12 @@ def fix_distractors(
     normalize: Callable[[Any], list[str]],
     trace: list[dict[str, Any]],
     log_failure: Callable[..., None] | None = None,
+    form_issue: Callable[[str, str], str | None] | None = None,
 ) -> tuple[list[str], dict[str, str]]:
     """오답마다 판정해 문제 있는 것만 새로 쓴다. 돌려주는 값: (선지 5개, 끝까지 못 고친 오답 원문 → 사유).
-    accept(정답, 후보들) — 그 유형 형식에 맞고 정답·서로와 겹치지 않는 후보만 남기는 필터."""
+    accept(정답, 후보들) — 그 유형 형식에 맞고 정답·서로와 겹치지 않는 후보만 남기는 필터.
+    form_issue(오답, 정답) — 모양만 봐도 바꿀 오답이면 사유(예: 너무 짧아 길이로 정답이 드러남), 아니면 None.
+    판정 모델에 묻지 않고 걸러, 판정에서 문제없다고 해도 새로 쓴다."""
     options = list(options)
     flagged: dict[str, str] = {}
     for d_try in range(max_retries + 1):
@@ -124,6 +127,11 @@ def fix_distractors(
         )
         trace.append({"stage": "verify_distractors", "out": dver})
         bad = bad_distractors(dver, len(distractors))
+        if form_issue:
+            for k, d in enumerate(distractors):
+                issue = form_issue(d, correct)
+                if issue and k not in bad:
+                    bad[k] = f"form: {issue}"
         flagged = {distractors[k]: reason for k, reason in bad.items()}
         if not bad:
             break
@@ -155,7 +163,9 @@ def fix_distractors(
 def flagged_warnings(flagged: dict[str, str], options: list[str]) -> list[str]:
     """끝까지 못 고친 오답 → 최종 번호로 쓴 경고(정답 섞은 뒤에 부른다)."""
     return [
-        f"오답 {CIRCLED[options.index(text)]} 확인 필요 — 정답으로도 읽히거나 다른 오답과 겹칠 수 있음: {reason}"
+        f"오답 {CIRCLED[options.index(text)]} 확인 필요 — "
+        + ("형식: " if reason.startswith("form:") else "정답으로도 읽히거나 다른 오답과 겹칠 수 있음: ")
+        + reason.removeprefix("form: ")
         for text, reason in flagged.items()
         if text in options
     ]

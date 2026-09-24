@@ -72,6 +72,28 @@ def extract_json_object(text: str) -> dict | None:
     return None
 
 
+# Qwen 은 한국어 글 중간에 중국어 한자어를 섞는다(「전체主旨를 포괄하지 못한다」) — 학생에게 그대로 나가면 안 된다.
+# 자주 나오는 말은 한국어로 바꾸고, 그래도 한자가 남은 문장은 뺀다(해설은 여러 문장이라 한 문장 빠져도 뜻이 선다).
+_HAN_TERMS = {
+    "主旨": "요지", "要旨": "요지", "主题": "주제", "主題": "주제", "标题": "제목", "題目": "제목", "题目": "제목",
+    "核心": "핵심", "内容": "내용", "內容": "내용", "观点": "관점", "觀點": "관점", "主张": "주장", "主張": "주장",
+    "因此": "따라서", "所以": "그래서", "但是": "하지만", "例如": "예를 들어", "部分": "부분", "全体": "전체", "全體": "전체",
+}
+_HAN = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
+
+
+def strip_han(text: str) -> str:
+    if not _HAN.search(text):
+        return text
+    for han, ko in _HAN_TERMS.items():
+        # 한글 바로 뒤에 붙어 나온 한자어는 띄어 쓴다(「전체主旨를」→「전체 요지를」)
+        text = re.sub(rf"(?<=[\uac00-\ud7a3]){han}", " " + ko, text).replace(han, ko)
+    if not _HAN.search(text):
+        return text
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    return " ".join(s for s in sentences if not _HAN.search(s)).strip()
+
+
 def explanation_text(obj: dict | None, raw: str, answer: str) -> str:
     """해설 단계 출력 → 해설 문자열. 비면 호출한 쪽이 대체 문구를 쓴다.
 
@@ -89,6 +111,7 @@ def explanation_text(obj: dict | None, raw: str, answer: str) -> str:
             text = re.sub(r"^```\w*\s*", "", text)
             text = re.sub(r"\s*```$", "", text)
         text = re.sub(r"^(Explanation|해설)\s*[:：]\s*", "", text.strip()).strip().strip('"').strip()
+    text = strip_han(text)
     if not text or not any("\uac00" <= ch <= "\ud7a3" for ch in text):
         return ""
     stated = re.search(r"정답(?:은|는|:)?\s*([①②③④⑤])", text)
