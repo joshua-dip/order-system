@@ -59,7 +59,8 @@ JOBS = "local_variant_jobs"
 WORKERS = "local_variant_workers"
 VERSION = 1
 # 한글 유형 → ml/ 아래 폴더명. lib/local-variant-types.ts 의 표와 같아야 한다.
-TYPES = {"주제": "topic", "제목": "title", "주장": "claim"}
+# 일치·불일치는 어댑터 하나(fact)를 같이 쓴다 — 어느 쪽인지는 generate 가 한글 유형명(ko)으로 넘긴다.
+TYPES = {"주제": "topic", "제목": "title", "주장": "claim", "일치": "fact", "불일치": "fact"}
 MAX_ATTEMPTS = 3
 HEARTBEAT_SEC = 15
 MARK = "@@RESULT@@ "
@@ -175,9 +176,11 @@ def child_spec(types_info: dict[str, dict], base: str, use_4bit: bool) -> dict:
     """같은 베이스를 쓰는 어댑터를 전부 한 모델에 붙인다(주제·제목·주장 전환은 이름으로)."""
     adapters: list[list[str]] = []
     stamps: list[str] = []
+    seen: set[str] = set()
     for info in types_info.values():
-        if not info["trained"] or info["base_model"] != base:
-            continue
+        if not info["trained"] or info["base_model"] != base or info["en"] in seen:
+            continue  # 일치·불일치처럼 어댑터를 나눠 쓰는 유형은 한 번만 붙인다
+        seen.add(info["en"])
         adapters.append([info["en"], info["main_path"]])
         if info["explain"]:
             adapters.append([f"{info['en']}_explain", info["explain_path"]])
@@ -267,9 +270,10 @@ class InferenceChild:
     def alive(self) -> bool:
         return self.proc.poll() is None
 
-    def generate(self, en: str, paragraph: str, explain: bool, timeout: float) -> dict:
+    def generate(self, en: str, paragraph: str, explain: bool, timeout: float, ko: str = "") -> dict:
         assert self.proc.stdin is not None
-        self.proc.stdin.write(json.dumps({"en": en, "paragraph": paragraph, "explain": explain}, ensure_ascii=False) + "\n")
+        req = {"en": en, "paragraph": paragraph, "explain": explain, "ko": ko}
+        self.proc.stdin.write(json.dumps(req, ensure_ascii=False) + "\n")
         self.proc.stdin.flush()
         res = self._read(timeout)
         self.last_used = time.time()
@@ -493,7 +497,7 @@ class Worker:
                 log(f"작업 {job_id}: 시작 전에 취소됨")
                 return
             self.state = "running"
-            res = child.generate(en, paragraph, bool(info["explain"]), timeout=self.args.gen_timeout_sec)
+            res = child.generate(en, paragraph, bool(info["explain"]), timeout=self.args.gen_timeout_sec, ko=ko)
             if res.get("oom"):
                 self.drop_child()
                 raise GpuBusy(str(res.get("error") or "생성 중 CUDA 메모리 부족"))

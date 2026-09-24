@@ -6,6 +6,9 @@ export const LOCAL_VARIANT_TYPES = {
   주제: { en: 'topic', aiSource: 'local-topic-lora' },
   제목: { en: 'title', aiSource: 'local-title-lora' },
   주장: { en: 'claim', aiSource: 'local-claim-lora' },
+  // 일치·불일치는 LoRA 하나(ml/fact)를 같이 쓴다 — 워커가 한글 유형명으로 어느 쪽인지 파이프라인에 넘긴다
+  일치: { en: 'match', aiSource: 'local-fact-lora' },
+  불일치: { en: 'mismatch', aiSource: 'local-fact-lora' },
 } as const;
 
 export type LocalVariantType = keyof typeof LOCAL_VARIANT_TYPES;

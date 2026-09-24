@@ -33,6 +33,19 @@ KINDS: dict[str, dict[str, str]] = {
         "form": "English headline phrases, 7-12 words each, each starting with a Capital Letter, no leading ①",
         "not_it": "a headline for only a detail or example, an overstatement, the opposite, or a related but different issue",
     },
+    # 내용 일치·불일치 — 모의 풀이(solve_check)만 쓴다. 오답 심사는 pipeline_fact 의 사실 확인이 맡는다.
+    "match": {
+        "name": "「내용 일치」(which statement agrees with the passage)",
+        "question": "다음 글의 내용과 일치하는 것은?",
+        "form": "English sentences, 8-20 words each",
+        "not_it": "a statement the passage contradicts",
+    },
+    "mismatch": {
+        "name": "「내용 불일치」(which statement does NOT agree with the passage)",
+        "question": "다음 글의 내용과 일치하지 않는 것은?",
+        "form": "English sentences, 8-20 words each",
+        "not_it": "a statement the passage supports",
+    },
     "claim": {
         "name": "「주장」(the author's claim)",
         "question": "다음 글에서 필자가 주장하는 바로 가장 적절한 것은?",

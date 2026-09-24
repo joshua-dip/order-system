@@ -534,7 +534,7 @@ export default function AdminGeneratedQuestionsPage() {
   const [narrativeReadOnly, setNarrativeReadOnly] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
-  /** 로컬 LoRA 작업(GPU PC 워커가 처리) — 등록부터 완료까지 폴링한다. 주제·제목·주장만 */
+  /** 로컬 LoRA 작업(GPU PC 워커가 처리) — 등록부터 완료까지 폴링한다. 주제·제목·주장·일치·불일치만 */
   const [localJob, setLocalJob] = useState<LocalJobState | null>(null);
   /** setInterval 콜백이 최신 작업·폼을 보도록 ref 로도 들고 있다 */
   const localJobRef = useRef<LocalJobState | null>(null);
@@ -1643,7 +1643,7 @@ export default function AdminGeneratedQuestionsPage() {
       return;
     }
     if (!isLocalVariantType(type)) {
-      setDraftError('로컬 LoRA는 주제·제목·주장 유형만 지원합니다.');
+      setDraftError('로컬 LoRA는 주제·제목·주장·일치·불일치 유형만 지원합니다.');
       return;
     }
     const pid = form.passage_id.trim();

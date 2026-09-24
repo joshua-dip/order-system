@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import importlib.util
+import inspect
 import json
 import sys
 import time
@@ -80,7 +81,10 @@ def main() -> int:
         en = req["en"]
         t0 = time.time()
         try:
-            result = pipeline(en).run_pipeline(
+            mod = pipeline(en)
+            # 일치·불일치처럼 한 어댑터를 나눠 쓰는 파이프라인은 kind(한글 유형명)로 어느 쪽인지 받는다
+            extra = {"kind": req["ko"]} if req.get("ko") and "kind" in inspect.signature(mod.run_pipeline).parameters else {}
+            result = mod.run_pipeline(
                 model,
                 tokenizer,
                 req["paragraph"],
@@ -89,6 +93,7 @@ def main() -> int:
                 has_explain_adapter=bool(req.get("explain")),
                 main_adapter=en,
                 explain_adapter=f"{en}_explain",
+                **extra,
             )
             emit(
                 {

@@ -20,7 +20,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 EVAL = Path(__file__).resolve().parent
-KO = {"topic": "주제", "title": "제목", "claim": "주장"}
+KO = {"topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치"}
+# 평가 유형 → ml/ 폴더(파이프라인·어댑터). 일치·불일치는 fact 하나를 kind 로 나눠 쓴다
+MODULE = {"topic": "topic", "title": "title", "claim": "claim", "match": "fact", "mismatch": "fact"}
 BASE = "mlx-community/Qwen2.5-7B-Instruct-4bit"
 REASONER = "mlx-community/Qwen3.6-35B-A3B-4bit"
 
@@ -68,7 +70,8 @@ def main() -> int:
         return mods[en]
 
     model, tok = rt.load_base(BASE)
-    model = rt.attach_adapters(model, [(en, ROOT / f"ml/{en}/adapters/{en}-lora") for en in ("topic", "title", "claim")])
+    mods_needed = sorted({MODULE[t] for t in types})
+    model = rt.attach_adapters(model, [(m, ROOT / f"ml/{m}/adapters/{m}-lora") for m in mods_needed])
     model = rt.attach_reasoner(model, args.reasoner)
     db = MongoClient(w.load_env()["MONGODB_URI"], serverSelectionTimeoutMS=20000)["gomijoshua"]
     tb = spec["textbook"]
@@ -93,13 +96,15 @@ def main() -> int:
                     print(f"지문 없음: {tb} {num}", file=sys.stderr)
                     continue
                 para = doc["content"]["original"]
-                for en in types:
-                    mod = load(en)
+                p_types = next((p.get("types") for p in spec["passages"] if p["num"] == num), None)
+                for en in [t for t in types if not p_types or t in p_types]:
+                    mod = load(MODULE[en])
+                    extra = {"kind": KO[en]} if MODULE[en] == "fact" else {}
                     t0 = time.time()
                     err = io.StringIO()
                     with contextlib.redirect_stderr(err):
                         try:
-                            r = mod.run_pipeline(model, tok, para, max_retries=2, temp=0.3, main_adapter=en)
+                            r = mod.run_pipeline(model, tok, para, max_retries=2, temp=0.3, main_adapter=MODULE[en], **extra)
                         except Exception as e:  # noqa: BLE001
                             r = {"ok": False, "error": f"{type(e).__name__}: {e}"}
                     qd = r.get("question_data") or {}
