@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import AppBar from '@/app/components/AppBar';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
@@ -19,6 +19,11 @@ type Exam = { textbook: string; year: number; month: number; grade: number; coun
 type Checked = { picked: string; correct: boolean; correctAnswer: string; explanation: string };
 
 const CIRCLED = ['①', '②', '③', '④', '⑤'];
+const COUNT_CHOICES: { value: number; label: string }[] = [
+  { value: 10, label: '10문항' },
+  { value: 20, label: '20문항' },
+  { value: 0, label: '전체' },
+];
 const KIND_CHOICES: { key: string; label: string; kinds: Kind[] }[] = [
   { key: 'both', label: '순서 + 삽입', kinds: ['순서', '삽입'] },
   { key: 'order', label: '순서만', kinds: ['순서'] },
@@ -32,6 +37,7 @@ export default function PracticePage() {
   const [textbook, setTextbook] = useState('');
   const [kindKey, setKindKey] = useState('both');
   const [hard, setHard] = useState(false);
+  const [count, setCount] = useState(10);
   const [msg, setMsg] = useState('');
 
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -74,6 +80,7 @@ export default function PracticePage() {
       setLoadingSet(true);
       try {
         const qs = new URLSearchParams({ textbook, kinds: kinds.join(','), hard: hard ? '1' : '0' });
+        if (count > 0) qs.set('count', String(count));
         const r = await fetch(`/api/practice/set?${qs}`, { credentials: 'include' });
         const j = await r.json();
         if (!r.ok) throw new Error(j?.error || '문항을 불러오지 못했습니다.');
@@ -91,7 +98,7 @@ export default function PracticePage() {
         setLoadingSet(false);
       }
     },
-    [textbook, kinds, hard, questions],
+    [textbook, kinds, hard, count, questions],
   );
 
   const current = questions?.[idx];
@@ -143,7 +150,7 @@ export default function PracticePage() {
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-slate-900">순서·삽입 연습</h1>
               <p className="mt-2 text-sm text-slate-600">
-                모의고사 지문으로 만든 순서·삽입 문항을 한 문항씩 풀고 바로 정답과 해설을 확인합니다. 번호마다 한 문항씩, 풀 때마다 다른 변형이 나올 수 있어요.
+                모의고사 지문으로 만든 순서·삽입 문항을 한 문항씩 풀고 바로 정답과 해설을 확인합니다. 번호마다 한 문항씩, 풀 때마다 다른 변형이 나올 수 있어요. 키보드 1~5 로 답하고 Enter 로 넘어갈 수 있습니다.
               </p>
             </div>
 
@@ -156,7 +163,12 @@ export default function PracticePage() {
                 <span className="w-px bg-slate-200 mx-1" />
                 <Chip on={!hard} onClick={() => setHard(false)}>기본</Chip>
                 <Chip on={hard} onClick={() => setHard(true)}>고난도</Chip>
+                <span className="w-px bg-slate-200 mx-1" />
+                {COUNT_CHOICES.map((c) => (
+                  <Chip key={c.value} on={count === c.value} onClick={() => setCount(c.value)}>{c.label}</Chip>
+                ))}
               </div>
+              <p className="mt-2 text-xs text-slate-500">10·20문항은 회차 안에서 무작위로 뽑고, 순서 문항을 먼저 다 푼 뒤 삽입 문항이 나옵니다.</p>
             </section>
 
             <section className="mb-6">
@@ -253,6 +265,23 @@ function QuestionView({
   q: Question; idx: number; total: number; textbook: string; result?: Checked; checking: boolean;
   onAnswer: (a: string) => void; onNext: () => void; onQuit: () => void; msg: string;
 }) {
+  const resultRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [result]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      /* 버튼·링크에 포커스가 있으면 그 요소가 Enter 를 처리한다 — 같이 넘기면 한 문항을 건너뛴다 */
+      const focused = (e.target as HTMLElement | null)?.closest?.('button, a, input, textarea, select') as HTMLButtonElement | null;
+      if (focused && !focused.disabled) return;
+      if (!result && !checking && /^[1-5]$/.test(e.key)) onAnswer(CIRCLED[Number(e.key) - 1]);
+      else if (result && e.key === 'Enter') onNext();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [result, checking, onAnswer, onNext]);
+
   const optionState = (c: string) => {
     if (!result) return 'idle';
     if (c === result.correctAnswer) return 'correct';
@@ -321,9 +350,9 @@ function QuestionView({
                 type="button"
                 disabled={!!result || checking}
                 onClick={() => onAnswer(c)}
-                className={`text-left px-4 py-2.5 rounded-lg border text-sm transition ${optionClass(st)}`}
+                className={`${q.layout.kind === '삽입' ? 'text-center' : 'text-left'} px-4 py-2.5 rounded-lg border text-sm transition ${optionClass(st)}`}
               >
-                <span className="font-bold mr-2">{c}</span>
+                <span className={`font-bold ${q.layout.kind === '순서' ? 'mr-2' : ''}`}>{c}</span>
                 {q.layout.kind === '순서' ? q.layout.options[i] : ''}
               </button>
             );
@@ -333,7 +362,7 @@ function QuestionView({
         {msg && <p className="mt-3 text-sm text-red-600">{msg}</p>}
 
         {result && (
-          <div className={`mt-5 rounded-xl px-4 py-3 border ${result.correct ? 'border-emerald-300 bg-emerald-50' : 'border-rose-300 bg-rose-50'}`}>
+          <div ref={resultRef} className={`mt-5 rounded-xl px-4 py-3 border scroll-mb-24 ${result.correct ? 'border-emerald-300 bg-emerald-50' : 'border-rose-300 bg-rose-50'}`}>
             <p className={`text-sm font-bold ${result.correct ? 'text-emerald-700' : 'text-rose-700'}`}>
               {result.correct ? '정답입니다' : `오답입니다 — 정답은 ${result.correctAnswer}`}
             </p>

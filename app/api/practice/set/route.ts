@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * 학습실 — 연습 세트. 정답·해설은 싣지 않는다(문항마다 /api/practice/check 로 채점).
- * ?textbook=26년 9월 고1 영어모의고사&kinds=순서,삽입&hard=0
+ * ?textbook=26년 9월 고1 영어모의고사&kinds=순서,삽입&hard=0&count=10 (count 없으면 전체)
  */
 export async function GET(request: NextRequest) {
   if (!(await practiceMember(request))) {
@@ -24,7 +24,13 @@ export async function GET(request: NextRequest) {
   }
   try {
     const db = await getDb('gomijoshua');
-    const questions = await pickPracticeSet(db, { textbook, kinds, hard: sp.get('hard') === '1' });
+    const count = Number(sp.get('count') ?? '');
+    const questions = await pickPracticeSet(db, {
+      textbook,
+      kinds,
+      hard: sp.get('hard') === '1',
+      limit: Number.isInteger(count) && count > 0 ? count : undefined,
+    });
     return NextResponse.json({ ok: true, textbook, questions }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (e) {
     console.error('[practice/set]', e);
