@@ -49,6 +49,10 @@ else:
 from win_qos import opt_out_power_throttling  # noqa: E402
 # 어댑터 폴더 이름 — MLX 와 HF/peft 어댑터는 서로 호환되지 않아 이름을 나눠 둔다
 _ADAPTER_SUFFIX = "" if BACKEND == "mlx" else "-cuda"
+# [맥] 주장·검증·해설(어댑터를 끈 단계)을 맡길 큰 범용 모델. 초안은 여전히 유형별 LoRA 가 쓴다.
+# 같은 시험 세트에서 7B 단독 맞음 10/24 → 35B 를 붙여 21/24(통념→반박 지문이 풀림). 끄려면 --reasoner ""
+DEFAULT_REASONER = "mlx-community/Qwen3.6-35B-A3B-4bit" if BACKEND == "mlx" else ""
+REASONER = DEFAULT_REASONER
 
 DB_NAME = "gomijoshua"  # 웹앱 getDb('gomijoshua') 와 같은 DB
 JOBS = "local_variant_jobs"
@@ -178,7 +182,8 @@ def child_spec(types_info: dict[str, dict], base: str, use_4bit: bool) -> dict:
         if info["explain"]:
             adapters.append([f"{info['en']}_explain", info["explain_path"]])
         stamps.append(info["stamp"])
-    return {"base_model": base, "use_4bit": use_4bit, "adapters": adapters, "stamp": "|".join(stamps), "backend": BACKEND}
+    return {"base_model": base, "use_4bit": use_4bit, "adapters": adapters, "stamp": "|".join(stamps), "backend": BACKEND,
+            "reasoner": REASONER}
 
 
 def fake_question_data(ko: str, paragraph: str) -> dict:
@@ -206,7 +211,7 @@ class InferenceChild:
     def __init__(self, spec: dict, load_timeout: float) -> None:
         self.spec = spec
         self.results: queue.Queue[str] = queue.Queue()
-        payload = {k: spec[k] for k in ("base_model", "use_4bit", "adapters", "backend")}
+        payload = {k: spec[k] for k in ("base_model", "use_4bit", "adapters", "backend", "reasoner")}
         env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
         self.proc = subprocess.Popen(
             [sys.executable, str(_WORKER_DIR / "inference_child.py"), json.dumps(payload, ensure_ascii=False)],
@@ -317,6 +322,7 @@ class Worker:
                     "pid": os.getpid(),
                     "version": VERSION,
                     "backend": BACKEND,
+                    "reasoner": REASONER or None,
                     "gpu": {"name": gpu["name"], "free_mb": gpu["free_mb"], "total_mb": gpu["total_mb"]} if gpu else None,
                     "current_job": str(self.current_job) if self.current_job is not None else None,
                     "types": {
@@ -452,7 +458,8 @@ class Worker:
         if not self.gpu_ok():
             mem = gpu_memory()
             raise GpuBusy(f"GPU 여유 {mem['free_mb'] if mem else '?'}MB < {self.args.min_free_mb}MB")
-        log(f"모델 로드: {spec['base_model']} + 어댑터 {[a[0] for a in spec['adapters']]}")
+        log(f"모델 로드: {spec['base_model']} + 어댑터 {[a[0] for a in spec['adapters']]}"
+            + (f" + 추론 모델 {spec['reasoner']}" if spec.get("reasoner") else ""))
         self.child = InferenceChild(spec, load_timeout=self.args.load_timeout_sec)
         log("모델 준비됨")
         return self.child
@@ -645,7 +652,14 @@ def main() -> int:
     ap.add_argument("--load-timeout-sec", type=float, default=900)
     ap.add_argument("--gen-timeout-sec", type=float, default=900)
     ap.add_argument("--log-file", default="", help="출력을 이 파일에 덧붙임 — 창 없이 띄울 때(register_worker_task.ps1)")
+    ap.add_argument(
+        "--reasoner",
+        default=os.environ.get("LOCAL_VARIANT_REASONER", DEFAULT_REASONER),
+        help='[맥] 주장·검증·해설을 맡길 큰 모델(기본 Qwen3.6-35B-A3B-4bit, "" 이면 끔)',
+    )
     args = ap.parse_args()
+    global REASONER
+    REASONER = args.reasoner.strip() if BACKEND == "mlx" else ""
     if args.log_file:
         redirect_output(Path(args.log_file))
     # Windows 효율 모드(EcoQoS) 끄기 — 무거운 일은 자식(inference_child)이 하지만 워커도 같은 조건으로 둔다

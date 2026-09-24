@@ -24,6 +24,7 @@ from json_extract import extract_json_object  # noqa: E402
 
 BACKEND = "mlx"
 _BASE = "__base__"
+_REASONER = "__reasoner__"
 
 
 def use_as_cuda_runtime() -> None:
@@ -34,9 +35,11 @@ def use_as_cuda_runtime() -> None:
 class MlxModel:
     """베이스 + 이름 붙인 어댑터 모델 묶음. set_adapter / disable_adapter 는 peft 와 같은 뜻."""
 
-    def __init__(self, base_name: str, base_model: Any) -> None:
+    def __init__(self, base_name: str, base_model: Any, tokenizer: Any = None) -> None:
         self.base_name = base_name
         self.models: dict[str, Any] = {_BASE: base_model}
+        # 모델마다 토크나이저가 다를 수 있다(추론 전용 큰 모델) — 이름별로 둔다
+        self.tokenizers: dict[str, Any] = {_BASE: tokenizer}
         self.active = _BASE
         self._off = 0
 
@@ -53,8 +56,18 @@ class MlxModel:
         finally:
             self._off -= 1
 
+    def _current_name(self) -> str:
+        if self._off:
+            # 어댑터를 끈 단계(주장·검증·해설)는 추론 전용 큰 모델이 있으면 그쪽으로
+            return _REASONER if _REASONER in self.models else _BASE
+        return self.active
+
     def current(self) -> Any:
-        return self.models[_BASE] if self._off else self.models[self.active]
+        return self.models[self._current_name()]
+
+    def current_tokenizer(self) -> Any:
+        name = self._current_name()
+        return self.tokenizers.get(name) or self.tokenizers.get(_BASE)
 
 
 def load_base_model_name(adapter: Path, fallback: str) -> str:
@@ -86,7 +99,7 @@ def load_base(model_name: str, use_4bit: bool = True) -> tuple[MlxModel, Any]:
     from mlx_lm import load
 
     model, tokenizer = load(model_name)
-    return MlxModel(model_name, model), tokenizer
+    return MlxModel(model_name, model, tokenizer), tokenizer
 
 
 def attach_adapters(model: MlxModel, adapters: list[tuple[str, Path]]) -> MlxModel:
@@ -94,10 +107,22 @@ def attach_adapters(model: MlxModel, adapters: list[tuple[str, Path]]) -> MlxMod
     from mlx_lm import load
 
     for name, path in adapters:
-        adapted, _ = load(model.base_name, adapter_path=str(path))
+        adapted, tok = load(model.base_name, adapter_path=str(path))
         model.models[name] = adapted
+        model.tokenizers[name] = tok
     if adapters:
         model.active = adapters[0][0]
+    return model
+
+
+def attach_reasoner(model: MlxModel, reasoner_name: str) -> MlxModel:
+    """어댑터를 끈 단계(주장 뽑기·검증·해설)를 맡을 큰 범용 모델을 붙인다. 초안은 여전히 LoRA 모델이 쓴다.
+    LoRA 는 문항 형식만 배웠고 독해는 베이스 몫이라, 독해가 필요한 단계만 큰 모델로 바꾸는 것."""
+    from mlx_lm import load
+
+    reasoner, tok = load(reasoner_name)
+    model.models[_REASONER] = reasoner
+    model.tokenizers[_REASONER] = tok
     return model
 
 
@@ -154,18 +179,25 @@ def chat_text(
     from mlx_lm.sample_utils import make_sampler
 
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     ctx = contextlib.nullcontext() if use_adapter else adapter_off(model)
     with ctx:
-        m = model.current() if isinstance(model, MlxModel) else model
-        return generate(
+        if isinstance(model, MlxModel):
+            m, tok = model.current(), model.current_tokenizer() or tokenizer
+        else:
+            m, tok = model, tokenizer
+        # Qwen3 계열은 기본으로 <think> 추론을 길게 쓴다 — JSON 한 개만 받는 단계라 끈다(다른 템플릿은 이 값을 무시)
+        prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+        out = generate(
             m,
-            tokenizer,
+            tok,
             prompt,
             max_tokens=max_tokens,
             sampler=make_sampler(temp=temp, top_p=0.9 if temp > 0 else 0.0),
             verbose=False,
         )
+    if "</think>" in out:
+        out = out.split("</think>", 1)[1]
+    return out
 
 
 def chat_json(

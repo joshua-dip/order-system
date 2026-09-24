@@ -82,6 +82,7 @@ def main() -> int:
                     help="auto = 맥(Apple Silicon)이면 mlx, 아니면 cuda")
     ap.add_argument("--code-root", type=Path, default=_ML, help="파이프라인 코드를 가져올 ml 폴더")
     ap.add_argument("--out", type=Path, default=None, help="결과 JSONL")
+    ap.add_argument("--reasoner", default="", help="[mlx] 주장·검증·해설 단계를 맡을 큰 모델 (예: mlx-community/Qwen3.6-35B-A3B-4bit)")
     args = ap.parse_args()
 
     # 앞에 넣을수록 먼저 찾는다 — 최종 순서: topic/windows → topic → common
@@ -105,6 +106,11 @@ def main() -> int:
     t0 = time.time()
     model, tok = rt.load_base(base, use_4bit)
     model = rt.attach_adapters(model, [("topic", args.adapter)])
+    if args.reasoner:
+        if backend != "mlx":
+            raise SystemExit("--reasoner 는 mlx 백엔드에서만 씁니다")
+        model = rt.attach_reasoner(model, args.reasoner)
+        print(f"[mlx] 추론 모델 {args.reasoner} 붙임 — 주장·검증·해설은 이 모델, 초안은 LoRA", flush=True)
     print(f"[{backend}] 모델 {base} 4bit={use_4bit} 어댑터={args.adapter.name} 로드 {time.time() - t0:.0f}초 · "
           f"코드={args.code_root} · 지문 {len(cases)}개 × {args.n}회", flush=True)
 

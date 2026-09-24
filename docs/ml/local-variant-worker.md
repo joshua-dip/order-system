@@ -75,6 +75,10 @@ ml\worker\start_worker.bat --once    REM 한 건만 처리하고 끝
 - 학습: `npm run cc:topic-export` → `caffeinate -i ./ml/topic/train.sh mlx-community/Qwen2.5-7B-Instruct-4bit 3000` (약 45분, 최대 11.8GB).
   학습 중에도 워커는 돌아간다. 어댑터가 새로 저장되면 다음 작업부터 새 어댑터로 다시 올린다.
 - 품질 시험: `ml/topic/.venv/bin/python ml/topic/windows/eval_pipeline.py --k 5 --n 2` (맥에선 자동으로 MLX).
+- **추론 모델(`--reasoner`, 맥 기본 `mlx-community/Qwen3.6-35B-A3B-4bit`)** — 주장 뽑기·검증·해설(어댑터를 끈 단계)은
+  이 큰 범용 모델이, 문항 초안은 유형 LoRA(7B)가 맡는다. LoRA 는 문항 형식만 배웠고 독해는 베이스 몫이라 독해 단계만 키운 것.
+  MoE(한 번에 약 3B 만 씀)라 빠르고, 셋(7B·7B+LoRA·35B) 합쳐 약 28GB. 끄려면 `--reasoner ""` 또는 `LOCAL_VARIANT_REASONER=`.
+  시험 세트 8지문×3(1차 채점): 7B 단독 맞음 10·부분 5·틀림 9 → 35B 추론 23·1·0, 평균 12초 → 15초(2026-09-24).
 - **두 워커를 같이 켜 두지 않는다** — 먼저 집는 쪽이 처리하는데 모델이 달라 품질이 다르다.
 
 ## GPU 를 학습과 나눠 쓰는 규칙 (4GB)

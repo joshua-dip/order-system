@@ -4,7 +4,7 @@
 부모(local_variant_worker.py)가 이 프로세스를 끝내면 CUDA 메모리가 컨텍스트까지 통째로 풀린다.
 4GB GPU 를 학습과 나눠 쓰려면 모델을 내려놓을 때 프로세스째 끝내야 한다.
 
-  인자 1개: JSON {"base_model": str, "use_4bit": bool, "adapters": [[이름, 경로], ...], "backend": "cuda"|"mlx"}
+  인자 1개: JSON {"base_model": str, "use_4bit": bool, "adapters": [[이름, 경로], ...], "backend": "cuda"|"mlx", "reasoner": str}
   표준입력: 한 줄에 요청 JSON {"en": "topic", "paragraph": str, "explain": bool}
   표준출력: 한 줄에 "@@RESULT@@ " + JSON — 그 밖의 줄은 부모가 무시한다(진행 로그는 stderr).
 """
@@ -64,6 +64,8 @@ def main() -> int:
     try:
         model, tokenizer = rt.load_base(spec["base_model"], bool(spec["use_4bit"]))
         model = rt.attach_adapters(model, [(name, Path(path)) for name, path in spec["adapters"]])
+        if spec.get("reasoner") and hasattr(rt, "attach_reasoner"):
+            model = rt.attach_reasoner(model, spec["reasoner"])
     except Exception as e:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         emit({"ready": False, "error": f"{type(e).__name__}: {e}"[:1000], "oom": rt.is_cuda_oom(e)})

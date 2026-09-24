@@ -43,10 +43,18 @@ from _cuda_runtime import (  # noqa: E402
 
 FAILURE_DIR = _ROOT / "data" / "topic-pipeline-failures"
 
-CLAIM_SYS = """You extract the single core topic claim of an English passage for a Korean CSAT-style topic question.
-Output ONLY one JSON object. No markdown.
-Keys: claim_en (one English noun phrase or short sentence, facts from the passage only), claim_ko (one Korean sentence).
-Do NOT add ideas that are not in the passage. Do NOT write advice or prescriptions as the claim unless the passage itself argues for them."""
+CLAIM_SYS = """You find the AUTHOR's main point of an English passage for a Korean CSAT 「주제」 question.
+Output ONLY one JSON object. No markdown. Keys, in this order:
+  opening_view: the view, belief, or situation the passage starts with (one short English sentence),
+  turn: the sentence where the author pushes back against or qualifies that opening view, quoted exactly — or "" if the passage never turns,
+  author_claim: the author's own main point in one English sentence — what the whole passage argues, usually after the turn or in the conclusion,
+  claim_en: author_claim as a topic answer option — one English noun phrase of 6-15 words that keeps the whole point, NOT a sentence (e.g. "the need to balance customer value with company profit", "how ...", "why ..."),
+  claim_ko: author_claim in one Korean sentence.
+Rules:
+- If the passage presents a common belief, an old view, or an assumption and then argues against it, the claim is the author's counter-point, NOT the opening view.
+- If the passage never argues against an opening view, do not invent a contrast — just state what the whole passage is about.
+- Examples, studies, names, dates, side consequences, and a closing piece of advice only support the claim; the claim is the idea that the evidence proves.
+- Use only ideas stated in the passage."""
 
 DRAFT_SYS = """You write five English noun-phrase options for a Korean CSAT 「주제」 question.
 Output ONLY one JSON object. No markdown.
@@ -57,10 +65,11 @@ Rules:
 - no duplicate meanings among options.
 - topic = what the passage is ABOUT, not what one should do (unless the passage's topic is advice)."""
 
-VERIFY_ANS_SYS = """You check whether a correct topic option matches a core claim without adding unsupported info.
+VERIFY_ANS_SYS = """You check whether a correct topic option matches the author's core claim without adding unsupported info.
 Output ONLY one JSON object. No markdown.
-Keys: match (bool), unsupported (bool), issue (short English string or empty), better_option (English noun phrase if revise needed else empty string).
-unsupported=true if the option adds claims not in the claim/passage."""
+Keys: match (bool), unsupported (bool), restates_opening_view (bool), issue (short English string or empty), better_option (English noun phrase if revise needed else empty string).
+unsupported=true if the option adds claims not in the claim/passage.
+restates_opening_view=true if the option describes the view the author argues against, or only an example or side detail, instead of the author's own claim."""
 
 REVISE_ANS_SYS = """You revise ONLY the correct topic option so it matches the claim without unsupported additions.
 Output ONLY one JSON object. No markdown.
@@ -157,6 +166,25 @@ def _dup_option_errors(opts: list[str]) -> list[str]:
             errs.append(f"option {i+1} duplicates another option")
         seen.add(key)
     return errs
+
+
+def _norm_opt(s: str) -> str:
+    return " ".join(_strip_circled(s).lower().split()).rstrip(".")
+
+
+def _distinct_distractors(correct: str, revised: list[str], original: list[str]) -> list[str]:
+    """오답 4개 — 정답·서로와 같은 것, 5단어 미만을 뺀다. 모자라면 원래 오답(역시 겹치지 않는 것)으로 채운다."""
+    seen = {_norm_opt(correct)}
+    out: list[str] = []
+    for cand in list(revised) + list(original):
+        key = _norm_opt(cand)
+        if not key or key in seen or len(key.split()) < 5:  # 형식 검사(5단어 이상)에 걸릴 것도 뺀다
+            continue
+        seen.add(key)
+        out.append(cand)
+        if len(out) == 4:
+            break
+    return out
 
 
 def _format_options(phrases: list[str]) -> str:
@@ -297,11 +325,11 @@ def run_pipeline(
     for c_try in range(2):
         claim = call(
             CLAIM_SYS,
-            f"[Passage]\n{passage}\n\nReturn claim_en and claim_ko JSON.",
-            max_tokens=256,
+            f"[Passage]\n{passage}\n\nReturn opening_view, turn, author_claim, claim_en, claim_ko JSON.",
+            max_tokens=400,
             t=temp if c_try == 0 else 0.0,
         )
-        claim_raw = _pick_str(claim, "claim_en", "claim", "topic", "main_idea", "core_claim")
+        claim_raw = _pick_str(claim, "claim_en", "author_claim", "claim", "topic", "main_idea", "core_claim")
         if claim_raw and not _has_hangul(claim_raw):
             break
         _log_failure(
@@ -323,9 +351,18 @@ def run_pipeline(
                 trace.append({"stage": "claim", "fallback": "lora_draft_answer"})
     if not claim_raw:
         return {"ok": False, "error": "claim stage failed", "trace": trace}
+    # 모델이 "The limitation of …" 처럼 대문자로 시작한 명사구를 주면 _as_noun_phrase 가 문장으로 보고
+    # "importance of the idea that …" 을 붙인다 — 관사·의문사로 시작하면 소문자로 바꿔 명사구로 둔다.
+    first = claim_raw.split(" ", 1)[0]
+    if first in ("The", "A", "An", "How", "Why", "What"):
+        claim_raw = first.lower() + claim_raw[len(first):]
     claim_en = _as_noun_phrase(claim_raw)
     claim_ko = _pick_str(claim, "claim_ko", "claim_korean", "ko")
-    claim_obj = {"claim_en": claim_en, "claim_ko": claim_ko}
+    author_claim = _pick_str(claim, "author_claim")
+    opening_view = _pick_str(claim, "opening_view")
+    turn = _pick_str(claim, "turn")
+    claim_obj = {"claim_en": claim_en, "claim_ko": claim_ko, "author_claim": author_claim,
+                 "opening_view": opening_view, "turn": turn}
     trace.append({"stage": "claim", "out": claim_obj})
     print(f"[pipeline] claim: {claim_en[:120]}", file=sys.stderr)
 
@@ -376,14 +413,19 @@ def run_pipeline(
         ans_ok = False
         for v_try in range(max_retries + 1):
             correct = options[correct_index]
+            refuted = (
+                f"[View the author argues against]\n{opening_view}\n\n" if turn and opening_view else ""
+            )
             ver = call(
                 VERIFY_ANS_SYS,
-                f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
+                f"[Passage]\n{passage}\n\n[Author's core claim]\n{author_claim or claim_en}\n\n"
+                f"{refuted}"
                 f"[Correct option]\n{correct}\n\n"
-                "Return match, unsupported, issue, better_option JSON.",
+                "Return match, unsupported, restates_opening_view, issue, better_option JSON.",
                 max_tokens=256,
             )
-            match = bool((ver or {}).get("match"))
+            # 필자가 반박하는 관점·세부를 정답으로 냈으면 주장과 맞는다고 해도 불합격
+            match = bool((ver or {}).get("match")) and not bool((ver or {}).get("restates_opening_view"))
             unsupported = bool((ver or {}).get("unsupported"))
             better = str((ver or {}).get("better_option") or "").strip()
             issue = str((ver or {}).get("issue") or "").strip()
@@ -413,8 +455,10 @@ def run_pipeline(
                 improved_hint=better,
             )
             if v_try >= max_retries:
-                # Soft-pass with noun-phrase claim, never a 1-word stub
-                options[correct_index] = claim_en
+                # Soft-pass with noun-phrase claim, never a stub — 핵심 주장이 짧으면(「the purpose of marketing」)
+                # 정답 자리에 넣어도 형식 검사(5단어 이상)에 걸려 초안을 통째로 버리게 된다. 그때는 초안 선지를 둔다.
+                if len(claim_en.split()) >= 6:
+                    options[correct_index] = claim_en
                 print("[pipeline] answer verify soft-pass on last retry", file=sys.stderr)
                 ans_ok = True
                 break
@@ -485,6 +529,9 @@ def run_pipeline(
                 )
                 revised = _normalize_options((rev2 or {}).get("options"))
                 trace.append({"stage": "revise_distractors", "out": rev2})
+            # 큰 모델이 고친 오답에 정답과 같은 문장을 넣는 일이 있다(형식 검사 「선지 중복」으로 3번 모두 실패).
+            # 정답·서로와 겹치는 것은 버리고, 모자라면 원래 오답으로 채운다.
+            revised = _distinct_distractors(options[correct_index], revised, distractors)
             if len(revised) == 4:
                 new_opts: list[str] = []
                 di = 0
