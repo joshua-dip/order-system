@@ -86,28 +86,13 @@ export async function renderHtmlEntriesToZip(
     throw new Error('렌더링할 HTML이 없습니다.');
   }
   const margin = opts?.margin ?? { top: '0', right: '0', bottom: '0', left: '0' };
-  const folder = (opts?.zipFolder ?? '').trim().replace(/[\\/:*?"<>|]+/g, '_');
+  const names = zipEntryNames(entries, opts?.zipFolder);
   const browser = await launchPdfBrowser();
   try {
     const zip = new JSZip();
-    const used = new Set<string>();
-    for (const entry of entries) {
-      /* 하위 폴더(카테고리별/…)는 유지하고, 파일명 금지 문자만 치환한다 */
-      const parts = entry.fileName.normalize('NFC').split('/').filter(Boolean);
-      const leafRaw = (parts.pop() ?? 'file').replace(/[\\/:*?"<>|]+/g, '_');
-      const dirs = parts.map((p) => p.replace(/[\\/:*?"<>|]+/g, '_'));
-      const leaf = leafRaw.toLowerCase().endsWith('.pdf') ? leafRaw : `${leafRaw}.pdf`;
-      let name = [...dirs, leaf].join('/');
-      let n = 2;
-      while (used.has(name.toLowerCase())) {
-        const stem = leaf.replace(/\.pdf$/i, '');
-        name = [...dirs, `${stem}_${n}.pdf`].join('/');
-        n += 1;
-      }
-      used.add(name.toLowerCase());
-      const pdf = await htmlToPdfOnBrowser(browser, entry.html, margin);
-      const pathInZip = folder ? `${folder}/${name}` : name;
-      zip.file(pathInZip, pdf, { createFolders: true });
+    for (let i = 0; i < entries.length; i++) {
+      const pdf = await htmlToPdfOnBrowser(browser, entries[i].html, margin);
+      zip.file(names[i], pdf, { createFolders: true });
     }
     return Buffer.from(
       await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } }),
@@ -115,4 +100,28 @@ export async function renderHtmlEntriesToZip(
   } finally {
     await browser.close();
   }
+}
+
+/**
+ * ZIP 안 경로 — 하위 폴더(카테고리별/…)는 두고 파일명 금지 문자만 치환, 같은 이름은 _2, _3.
+ * 브라우저가 파일을 하나씩 받아 직접 묶을 때(Amplify 30초 제한 회피)도 같은 이름을 쓰게 따로 둔다.
+ */
+export function zipEntryNames(entries: { fileName: string }[], zipFolder?: string): string[] {
+  const folder = (zipFolder ?? '').trim().replace(/[\\/:*?"<>|]+/g, '_');
+  const used = new Set<string>();
+  return entries.map((entry) => {
+    const parts = entry.fileName.normalize('NFC').split('/').filter(Boolean);
+    const leafRaw = (parts.pop() ?? 'file').replace(/[\\/:*?"<>|]+/g, '_');
+    const dirs = parts.map((x) => x.replace(/[\\/:*?"<>|]+/g, '_'));
+    const leaf = leafRaw.toLowerCase().endsWith('.pdf') ? leafRaw : `${leafRaw}.pdf`;
+    let name = [...dirs, leaf].join('/');
+    let n = 2;
+    while (used.has(name.toLowerCase())) {
+      const stem = leaf.replace(/\.pdf$/i, '');
+      name = [...dirs, `${stem}_${n}.pdf`].join('/');
+      n += 1;
+    }
+    used.add(name.toLowerCase());
+    return folder ? `${folder}/${name}` : name;
+  });
 }

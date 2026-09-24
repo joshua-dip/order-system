@@ -1,7 +1,7 @@
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
-import { renderHtmlEntriesToZip } from '@/lib/chromium-pdf';
+import { renderHtmlEntriesToZip, renderHtmlToPdf, zipEntryNames } from '@/lib/chromium-pdf';
 import { splitQuestionOptionSegments } from '@/lib/question-options-segments';
 import {
   buildVariantPrintHtml,
@@ -451,7 +451,7 @@ async function buildModeEntries(
   }
 }
 
-export async function buildOrderVariantPdfZip(input: {
+export type OrderVariantPdfInput = {
   orderId?: string | null;
   orderNumber?: string | null;
   /** 구 API 단일 by — modes 가 있으면 무시 */
@@ -461,7 +461,47 @@ export async function buildOrderVariantPdfZip(input: {
   /** true 면 주문서 hwpStorageModes 에서 모드 추론 */
   fromOrderHwp?: boolean;
   typeOrder?: BundleTypeOrder;
-}): Promise<OrderVariantPdfResult> {
+};
+
+export type OrderVariantPdfPlan =
+  | { ok: false; status: number; error: string }
+  | {
+      ok: true;
+      orderNumber: string;
+      entries: { fileName: string; html: string }[];
+      /** ZIP 안 경로(entries 와 같은 순서) */
+      names: string[];
+      questionCount: number;
+      missingSlots: number;
+      modes: OrderPdfSplitMode[];
+    };
+
+/** 한 번에 ZIP 을 만든다(로컬·CLI). 배포(Amplify)는 요청 하나가 30초를 넘기면 끊기므로 웹은 plan + 파일별 렌더를 쓴다. */
+export async function buildOrderVariantPdfZip(input: OrderVariantPdfInput): Promise<OrderVariantPdfResult> {
+  const plan = await planOrderVariantPdf(input);
+  if (!plan.ok) return plan;
+  const zip = await renderHtmlEntriesToZip(plan.entries, {
+    margin: { top: '0', right: '0', bottom: '0', left: '0' },
+    zipFolder: plan.orderNumber,
+  });
+  return {
+    ok: true,
+    zip,
+    orderNumber: plan.orderNumber,
+    fileCount: plan.entries.length,
+    questionCount: plan.questionCount,
+    missingSlots: plan.missingSlots,
+    modes: plan.modes,
+  };
+}
+
+/** 파일 하나만 PDF 로 — 웹에서 브라우저가 파일별로 받아 ZIP 으로 묶을 때 */
+export async function renderOrderVariantPdfFile(html: string): Promise<Buffer> {
+  return renderHtmlToPdf(html, { margin: { top: '0', right: '0', bottom: '0', left: '0' } });
+}
+
+/** 주문 → 인쇄할 파일 목록(HTML)만. 렌더링 없음 — 빠르다. 문항 선택은 결정적이라 요청마다 같은 목록이 나온다. */
+export async function planOrderVariantPdf(input: OrderVariantPdfInput): Promise<OrderVariantPdfPlan> {
   const orderId = (input.orderId ?? '').trim();
   const orderNumber = (input.orderNumber ?? '').trim();
   if (!orderId && !orderNumber) {
@@ -536,16 +576,11 @@ export async function buildOrderVariantPdfZip(input: {
     };
   }
 
-  const zip = await renderHtmlEntriesToZip(allEntries, {
-    margin: { top: '0', right: '0', bottom: '0', left: '0' },
-    zipFolder: on,
-  });
-
   return {
     ok: true,
-    zip,
     orderNumber: on,
-    fileCount: allEntries.length,
+    entries: allEntries,
+    names: zipEntryNames(allEntries, on),
     questionCount,
     missingSlots,
     modes,

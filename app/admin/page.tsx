@@ -631,6 +631,8 @@ export default function AdminDashboardPage() {
   const [orderStockRefreshTick, setOrderStockRefreshTick] = useState(0);
   /** 주문 PDF ZIP 다운로드 중 */
   const [orderPdfDownloadingId, setOrderPdfDownloadingId] = useState<string | null>(null);
+  /** PDF ZIP 진행 — 파일을 하나씩 받아 묶으므로 「12/20」처럼 보여 준다 */
+  const [orderPdfProgress, setOrderPdfProgress] = useState('');
   /** PDF 분할 모드 선택 팝오버가 열린 주문 id */
   const [orderPdfMenuOrderId, setOrderPdfMenuOrderId] = useState<string | null>(null);
   const [orderPdfModes, setOrderPdfModes] = useState<string[]>([
@@ -844,40 +846,80 @@ export default function AdminDashboardPage() {
       }
       setOrderPdfDownloadingId(orderId);
       setOrderPdfMenuOrderId(null);
+      setOrderPdfProgress('목록 준비');
+      /* 배포(Amplify)는 요청 하나가 30초를 넘기면 끊긴다 — 파일 목록(plan)을 받고 PDF 를 하나씩 받아 여기서 ZIP 으로 묶는다 */
       try {
+        const base = `/api/admin/orders/${encodeURIComponent(orderId)}/pdf`;
         const qs = new URLSearchParams({ modes: selected.join(',') });
-        const res = await fetch(
-          `/api/admin/orders/${encodeURIComponent(orderId)}/pdf?${qs.toString()}`,
-          { credentials: 'include' },
-        );
-        if (!res.ok) {
-          const d = (await res.json().catch(() => ({}))) as { error?: string };
-          setMessage({ type: 'error', text: d?.error || 'PDF 다운로드에 실패했습니다.' });
+        const planRes = await fetch(`${base}?${qs.toString()}&plan=1`, { credentials: 'include' });
+        const plan = (await planRes.json().catch(() => ({}))) as {
+          error?: string;
+          orderNumber?: string;
+          files?: { index: number; name: string }[];
+          missingSlots?: number;
+          modes?: string[];
+        };
+        if (!planRes.ok || !plan.files?.length) {
+          setMessage({ type: 'error', text: plan?.error || 'PDF 목록을 만들지 못했습니다.' });
           return;
         }
-        const blob = await res.blob();
+        const files = plan.files;
+        const { default: JSZip } = await import('jszip');
+        const zip = new JSZip();
+        let done = 0;
+        const failed: string[] = [];
+        setOrderPdfProgress(`0/${files.length}`);
+        const fetchOne = async (f: { index: number; name: string }) => {
+          for (let attempt = 0; attempt < 2; attempt++) {
+            const r = await fetch(`${base}?${qs.toString()}&file=${f.index}`, { credentials: 'include' }).catch(() => null);
+            if (r?.ok) {
+              zip.file(f.name, await r.arrayBuffer(), { createFolders: true });
+              return;
+            }
+          }
+          failed.push(f.name);
+        };
+        /* 동시에 3개 — 너무 많이 띄우면 서버 인스턴스가 한꺼번에 크롬을 올려 느려진다 */
+        const queue = [...files];
+        await Promise.all(
+          Array.from({ length: Math.min(3, queue.length) }, async () => {
+            for (let f = queue.shift(); f; f = queue.shift()) {
+              await fetchOne(f);
+              done += 1;
+              setOrderPdfProgress(`${done}/${files.length}`);
+            }
+          }),
+        );
+        if (failed.length === files.length) {
+          setMessage({ type: 'error', text: 'PDF 를 하나도 만들지 못했습니다. 잠시 뒤 다시 시도해 주세요.' });
+          return;
+        }
+        setOrderPdfProgress('ZIP 묶는 중');
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${(orderNumber || orderId).replace(/[\\/:*?"<>|]+/g, '_')}.zip`;
+        a.download = `${(plan.orderNumber || orderNumber || orderId).replace(/[\\/:*?"<>|]+/g, '_')}.zip`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        const missing = Number(res.headers.get('X-Order-Pdf-Missing') || '0');
-        const files = Number(res.headers.get('X-Order-Pdf-Files') || '0');
-        const modeLabel = res.headers.get('X-Order-Pdf-Modes') || selected.join(',');
+        const missing = Number(plan.missingSlots || 0);
+        const modeLabel = (plan.modes ?? selected).join(',');
+        const ok = files.length - failed.length;
         setMessage({
-          type: 'success',
+          type: failed.length ? 'error' : 'success',
           text:
-            missing > 0
-              ? `PDF ZIP 저장 (${files}파일 · ${modeLabel}) · 부족 슬롯 ${missing}건은 빠졌을 수 있습니다`
-              : `PDF ZIP 저장 완료 (${files}파일 · ${modeLabel})`,
+            (failed.length
+              ? `PDF ZIP 저장 (${ok}/${files.length}파일 · ${modeLabel}) · 실패 ${failed.length}개: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? ' …' : ''}`
+              : `PDF ZIP 저장 완료 (${files.length}파일 · ${modeLabel})`) +
+            (missing > 0 ? ` · 부족 슬롯 ${missing}건은 빠졌을 수 있습니다` : ''),
         });
       } catch {
         setMessage({ type: 'error', text: 'PDF 다운로드 중 오류가 발생했습니다.' });
       } finally {
         setOrderPdfDownloadingId(null);
+        setOrderPdfProgress('');
       }
     },
     [orderPdfDownloadingId, orderPdfModes],
@@ -4266,7 +4308,7 @@ export default function AdminDashboardPage() {
                                     className="inline-flex items-center px-1.5 py-0.5 rounded border border-violet-500/50 bg-violet-950/40 text-violet-200 hover:bg-violet-900/50 text-[10px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="회차별·번호별·카테고리별 PDF ZIP"
                                   >
-                                    {orderPdfDownloadingId === o.id ? '생성 중…' : 'PDF'}
+                                    {orderPdfDownloadingId === o.id ? (orderPdfProgress ? `생성 ${orderPdfProgress}` : '생성 중…') : 'PDF'}
                                   </button>
                                   {orderPdfMenuOrderId === o.id && (
                                     <div
@@ -6150,7 +6192,7 @@ export default function AdminDashboardPage() {
                   title="선택한 방식으로 PDF ZIP 받기"
                 >
                   {orderPdfDownloadingId === orderDetailModal.id
-                    ? 'PDF 생성 중…'
+                    ? `PDF 생성 중… ${orderPdfProgress}`
                     : `⬇ PDF 다운로드 (${orderPdfModes.length}방식)`}
                 </button>
               </div>
