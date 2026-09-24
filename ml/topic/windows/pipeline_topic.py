@@ -43,6 +43,8 @@ from _cuda_runtime import (  # noqa: E402
 
 from json_extract import explanation_text, trim_to_sentence  # noqa: E402
 
+from distractor_check import distinct_options, fix_distractors, flagged_warnings, solve_check  # noqa: E402
+
 FAILURE_DIR = _ROOT / "data" / "topic-pipeline-failures"
 
 CLAIM_SYS = """You find the AUTHOR's main point of an English passage for a Korean CSAT 「주제」 question.
@@ -76,16 +78,6 @@ restates_opening_view=true if the option describes the view the author argues ag
 REVISE_ANS_SYS = """You revise ONLY the correct topic option so it matches the claim without unsupported additions.
 Output ONLY one JSON object. No markdown.
 Keys: correct_option (one English noun phrase, 8-15 words)."""
-
-VERIFY_DIST_SYS = """You check four distractor options for a topic MCQ.
-Output ONLY one JSON object. No markdown.
-Keys: ok (bool), issues (array of short English strings), options (array of exactly 4 revised distractors if ok=false else empty array).
-Fail if: duplicate meanings, same meaning as correct, unrelated to passage topic area, or clearly true given the claim."""
-
-REVISE_DIST_SYS = """You rewrite four distractors for a topic MCQ. Keep the correct option unchanged.
-Output ONLY one JSON object. No markdown.
-Keys: options (array of exactly 4 English noun phrases, 8-15 words).
-Distractors must be wrong relative to the claim, distinct, and passage-related."""
 
 EXPLAIN_SYS = """당신은 한국 수능 영어 「주제」 문항의 한국어 해설만 작성합니다.
 반드시 아래 키만 갖는 JSON 한 개만 출력하세요. 마크다운·설명 금지.
@@ -481,74 +473,29 @@ def run_pipeline(
         if not ans_ok:
             continue
 
-        # 4) verify distractors (+ revise)
-        dist_ok = False
-        for d_try in range(max_retries + 1):
-            correct = options[correct_index]
-            distractors = [options[i] for i in range(5) if i != correct_index]
-            dver = call(
-                VERIFY_DIST_SYS,
-                f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
-                f"[Correct]\n{correct}\n\n"
-                f"[Distractors]\n{json.dumps(distractors, ensure_ascii=False)}\n\n"
-                "Return ok, issues, options JSON.",
-                max_tokens=400,
-            )
-            trace.append({"stage": "verify_distractors", "out": dver})
-            if dver is None:
-                print("[pipeline] distractor verify skipped (null JSON)", file=sys.stderr)
-                dist_ok = True
-                break
-            if bool((dver or {}).get("ok")):
-                dist_ok = True
-                break
-            # If model cannot decide, don't block forever on last retry
-            if d_try >= max_retries:
-                print("[pipeline] distractor verify soft-pass on last retry", file=sys.stderr)
-                dist_ok = True
-                break
-            issues = (dver or {}).get("issues") or ["distractor quality fail"]
-            print(f"[pipeline] distractor verify fail: {issues}", file=sys.stderr)
-            _log_failure(
-                passage=passage,
-                stage="verify_distractors",
-                bad_output={"distractors": distractors, "verify": dver},
-                problem="; ".join(str(x) for x in issues),
-                claim=claim_obj,
-            )
-            if d_try >= max_retries:
-                break
-            revised = _normalize_options((dver or {}).get("options"))
-            if len(revised) != 4:
-                rev2 = call(
-                    REVISE_DIST_SYS,
-                    f"[Passage]\n{passage}\n\n[Core claim]\n{claim_en}\n\n"
-                    f"[Correct — do not change]\n{correct}\n\n"
-                    f"[Bad distractors]\n{json.dumps(distractors, ensure_ascii=False)}\n\n"
-                    f"[Issues]\n{json.dumps(issues, ensure_ascii=False)}\n\n"
-                    "Return options[4] JSON.",
-                    max_tokens=400,
-                )
-                revised = _normalize_options((rev2 or {}).get("options"))
-                trace.append({"stage": "revise_distractors", "out": rev2})
-            # 큰 모델이 고친 오답에 정답과 같은 문장을 넣는 일이 있다(형식 검사 「선지 중복」으로 3번 모두 실패).
-            # 정답·서로와 겹치는 것은 버리고, 모자라면 원래 오답으로 채운다.
-            revised = _distinct_distractors(options[correct_index], revised, distractors)
-            if len(revised) == 4:
-                new_opts: list[str] = []
-                di = 0
-                for i in range(5):
-                    if i == correct_index:
-                        new_opts.append(options[correct_index])
-                    else:
-                        new_opts.append(revised[di])
-                        di += 1
-                options = new_opts
+        # 4) 오답 검증 — 선지마다 판정해 정답으로도 읽히거나 겹치는 것만 새로 쓴다(ml/common/distractor_check.py).
+        #    끝까지 못 고친 오답은 경고로 남긴다 — 예전엔 세 번째 판정에서 그냥 통과시켰다.
+        options, flagged = fix_distractors(
+            call,
+            kind="topic",
+            passage=passage,
+            core=author_claim or claim_en,
+            options=options,
+            correct_index=correct_index,
+            max_retries=max_retries,
+            accept=lambda c, cands: distinct_options(c, cands, valid=lambda o: len(o.split()) >= 5),
+            normalize=_normalize_options,
+            trace=trace,
+            log_failure=lambda **kw: _log_failure(passage=passage, claim=claim_obj, **kw),
+        )
 
-        if not dist_ok:
-            continue
 
         options, correct_index = _shuffle_answer(options, correct_index)
+        # 5) 끝까지 못 고친 오답 + 모의 풀이(정답 모르는 학생처럼 풀기) → 관리자 화면 「검증 경고」
+        warnings = flagged_warnings(flagged, options) + solve_check(
+            call, kind="topic", passage=passage, options_text=_format_options(options),
+            answer=CIRCLED[correct_index], trace=trace,
+        )
 
         # 5) explanation (optional dedicated explain LoRA)
         if has_explain_adapter:
@@ -609,6 +556,7 @@ def run_pipeline(
         return {
             "ok": True,
             "question_data": qd,
+            "warnings": warnings,
             "pipeline": {
                 "claim": claim_obj,
                 "correct_index": correct_index,

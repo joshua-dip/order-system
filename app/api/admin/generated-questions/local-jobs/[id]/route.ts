@@ -32,9 +32,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (qd) {
       const doc = { type: job.type, option_type: 'English', passage_id: job.passage_id, question_data: qd };
       const issues = [...checkContentIntegrity(doc), ...(await runPerQuestionValidations(db, doc))];
+      const pipelineWarnings = Array.isArray(job.result?.warnings)
+        ? job.result.warnings.filter((w): w is string => typeof w === 'string' && w.trim() !== '')
+        : [];
       validation = {
         errors: issues.filter((i) => i.severity === 'error').map((i) => i.message),
-        warnings: issues.filter((i) => i.severity === 'warning').map((i) => i.message),
+        // 워커가 못 고친 오답(정답으로도 읽힘 등)을 앞에 — 저장 전에 가장 먼저 봐야 할 것
+        warnings: [...pipelineWarnings, ...issues.filter((i) => i.severity === 'warning').map((i) => i.message)],
       };
     }
 

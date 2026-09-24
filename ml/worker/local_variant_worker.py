@@ -506,6 +506,8 @@ class Worker:
                         "elapsed_ms": res.get("elapsed_ms"),
                         "adapter": {"main": en, "explain": bool(info["explain"]), "base_model": info["base_model"]},
                         "pipeline": res.get("pipeline"),
+                        # 파이프라인이 끝까지 못 고친 것(정답으로도 읽히는 오답 등) — 관리자 화면 「검증 경고」에 뜬다
+                        "warnings": res.get("warnings") or [],
                     },
                 )
             else:

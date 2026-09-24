@@ -95,6 +95,7 @@ def main() -> int:
                     "ok": bool(result.get("ok")),
                     "question_data": result.get("question_data"),
                     "error": result.get("error"),
+                    "warnings": result.get("warnings") or [],
                     "pipeline": result.get("pipeline"),
                     "elapsed_ms": int((time.time() - t0) * 1000),
                 }
