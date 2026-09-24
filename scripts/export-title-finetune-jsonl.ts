@@ -32,8 +32,10 @@ const SYSTEM_PROMPT = `당신은 한국 수능 영어 변형문제 출제자입�
 1) Paragraph = 입력 지문 원문 그대로. <u> 태그 금지.
 2) Question 예: "이 글의 제목으로 가장 적절한 것은?"
 3) Options = 영어 5개, 각 7~12단어, 뉴스 헤드라인 스타일(각 선택지는 대문자로 시작), 사이는 오직 ###.
+   예: ① Why Practice ... ### ② The Hidden Cost ... ### ③ ... ### ④ ... ### ⑤ ...
 4) OptionType = "English"
-5) CorrectAnswer = ①~⑤ 중 하나. 고유명사·인명·책제목·우화·비유의 이름 자체를 제목으로 쓰지 말 것 — MAIN MESSAGE 에 집중.
+5) CorrectAnswer = ①~⑤ 중 하나. 고유명사·인명·책제목·우화·비유의 이름 자체를 제목으로 쓰지 말 것 —
+   글의 MAIN MESSAGE(핵심 메시지)에 집중.
 6) Explanation = 한국어 해설, 450자 이하, CorrectAnswer와 하나의 결론만.`;
 
 function parseFlags(argv: string[]): Map<string, string> {

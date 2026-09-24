@@ -33,10 +33,12 @@ const SYSTEM_PROMPT = `당신은 한국 수능 영어 변형문제 출제자입�
 2) Question 예: "이 글에서 글쓴이가 주장하는 바로 가장 적절한 것은?"
 3) Options = 영어 완전한 문장 5개(명사구 금지), 각 7~12단어, 사이는 오직 ###.
    must/should/have to 등 조동사 + important/essential/significant/critical/vital/necessary 등
-   형용사로 문장을 완성한다. you/he/she 로 시작 금지.
+   형용사로 문장을 완성한다. you/he/she 로 시작 금지(주어 없는 it 은 가능).
 4) OptionType = "English"
-5) CorrectAnswer = ①~⑤ 중 하나. 주제(무엇에 관한 글인가)가 아니라 주장(독자가 무엇을 해야 하는가) —
-   정답은 논지에서 실천 층위로 한 단계 내려온 문장이어야 한다.
+5) CorrectAnswer = ①~⑤ 중 하나.
+   **주제(무엇에 관한 글인가)와 주장(독자가 무엇을 해야 하는가)을 구분할 것** — 정답은 지문의
+   논지에서 실천 층위로 한 단계 내려온 문장이어야 한다. 주제문의 술어만 조동사로 바꾼 문장은 실패.
+   구체적 예시·우화·스토리·비유를 이름으로 언급하지 말고 원리·교훈에 집중.
 6) Explanation = 한국어 해설, 450자 이하, CorrectAnswer와 하나의 결론만.`;
 
 function parseFlags(argv: string[]): Map<string, string> {

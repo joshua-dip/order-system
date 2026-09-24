@@ -237,6 +237,33 @@ def _log_failure(
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def _norm_opt(s: str) -> str:
+    return " ".join(_strip_circled(s).lower().split()).rstrip(".")
+
+
+def _valid_distractor(s: str) -> bool:
+    """주장 선지 형식(_format_ok 와 같은 기준) — 5~20단어, 조동사·핵심 형용사, You/He/She 로 시작 금지."""
+    wc = len(_strip_circled(s).split())
+    return 5 <= wc <= 20 and _has_modal_or_adj(s) and not _starts_bad_subject(s)
+
+
+def _distinct_distractors(correct: str, *pools: list[str]) -> list[str]:
+    """오답 4개 — 정답·서로와 같은 것, 형식에 어긋나는 것을 빼고 앞 풀부터 채운다.
+    LoRA 초안·35B 수정본이 정답을 오답 자리에 되풀이하거나 형식을 어겨, 형식 검사에서 세 번 모두 떨어지던 것."""
+    seen = {_norm_opt(correct)}
+    out: list[str] = []
+    for pool in pools:
+        for cand in pool:
+            key = _norm_opt(cand)
+            if not key or key in seen or not _valid_distractor(cand):
+                continue
+            seen.add(key)
+            out.append(cand)
+            if len(out) == 4:
+                return out
+    return out
+
+
 def _format_ok(qd: dict, passage: str) -> list[str]:
     errs: list[str] = []
     if str(qd.get("Paragraph") or "").strip() != passage.strip():
@@ -402,7 +429,8 @@ def run_pipeline(
             draft, lora_qd = lora_first
         else:
             draft, lora_qd = lora_draft()
-        distractors = [o for i, o in enumerate(lora_qd[0]) if i != lora_qd[1]] if lora_qd else []
+        lora_dist = [o for i, o in enumerate(lora_qd[0]) if i != lora_qd[1]] if lora_qd else []
+        distractors = _distinct_distractors(practical_en, lora_dist)
         if len(distractors) != 4:
             draft = call(
                 DRAFT_DIST_SYS,
@@ -410,7 +438,7 @@ def run_pipeline(
                 "Return JSON with key options (array of 4 English distractor sentences).",
                 max_tokens=600,
             )
-            distractors = _normalize_options((draft or {}).get("options"))
+            distractors = _distinct_distractors(practical_en, _normalize_options((draft or {}).get("options")), lora_dist)
         if len(distractors) != 4:
             # 오답을 못 받으면 지어내지 않고 다시 시도한다(예전엔 특정 예문용 고정 오답으로 채웠다)
             _log_failure(
@@ -470,6 +498,8 @@ def run_pipeline(
                 )
                 revised = _normalize_options((rev2 or {}).get("options"))
                 trace.append({"stage": "revise_distractors", "out": rev2})
+            # 정답과 같은 문장·형식 위반은 빼고, 모자라면 지금 오답으로 채운다
+            revised = _distinct_distractors(options[correct_index], revised, cur_dist)
             if len(revised) == 4:
                 new_opts: list[str] = []
                 di = 0
