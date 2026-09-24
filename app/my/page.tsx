@@ -169,7 +169,7 @@ interface AnnualSharedFileItem {
   uploadedAt: string | null;
 }
 
-type TabKey = 'orders' | 'schools' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'points' | 'settings';
+type TabKey = 'orders' | 'practice' | 'schools' | 'students' | 'exam' | 'myFormat' | 'annualShared' | 'vocabulary' | 'vip' | 'points' | 'settings';
 type ExamSubTabKey = 'upload' | 'list';
 type MyFormatType = '강의용자료' | '수업용자료' | '변형문제';
 
@@ -293,7 +293,7 @@ export default function MyPage() {
   // URL ?tab=… 으로 진입 시 해당 탭 열기 (홈 공지 「내 정보에서 포인트 받기」 등)
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab');
-    if (t === 'settings' || t === 'exam' || t === 'orders' || t === 'points') setActiveTab(t as TabKey);
+    if (t === 'settings' || t === 'exam' || t === 'orders' || t === 'points' || t === 'practice') setActiveTab(t as TabKey);
   }, []);
 
   useEffect(() => {
@@ -610,6 +610,7 @@ export default function MyPage() {
   const tabs = useMemo(() => {
     const base: { key: TabKey; label: string; icon: string; count?: number }[] = [
       { key: 'orders', label: '주문 내역', icon: '📋', count: orders.length },
+      { key: 'practice', label: '학습실 기록', icon: '📈' },
       { key: 'schools', label: '학교 관리', icon: '🏫' },
       { key: 'students', label: '학생 관리', icon: '👤', count: studentsCount },
       { key: 'exam', label: '기출문제', icon: '📤' },
@@ -1916,6 +1917,8 @@ export default function MyPage() {
           )}
 
           {/* ━━ 포인트 충전 탭 ━━ */}
+          {activeTab === 'practice' && <PracticeRecordTab />}
+
           {activeTab === 'points' && (
             <div className="space-y-4">
               {/* 포인트 */}
@@ -2336,5 +2339,128 @@ export default function MyPage() {
         customerEmail={user.email || ''}
       />
     </>
+  );
+}
+
+
+/* ━━ 학습실 기록 — 순서·삽입 연습 결과 분석·오답 복습(회원) ━━ */
+type PracticeStatsResp = {
+  total: number;
+  correct: number;
+  days: number;
+  byKind: { kind: string; total: number; correct: number }[];
+  byNumber: { number: string; total: number; correct: number; kinds: Record<string, { total: number; correct: number }> }[];
+  byExam: { textbook: string; total: number; correct: number }[];
+  wrong: { id: string; kind: string; textbook: string; number: string; picked: string; correctAnswer: string; at: string }[];
+};
+
+function pct(c: number, t: number): number {
+  return t ? Math.round((c / t) * 100) : 0;
+}
+
+function PracticeRecordTab() {
+  const [data, setData] = useState<PracticeStatsResp | null>(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    fetch('/api/practice/stats', { credentials: 'include' })
+      .then(async (r) => {
+        const j = await r.json();
+        if (!r.ok) throw new Error(j?.error || '기록을 불러오지 못했습니다.');
+        setData(j);
+      })
+      .catch((e) => setErr(e instanceof Error ? e.message : '기록을 불러오지 못했습니다.'));
+  }, []);
+
+  if (err) return <p className="py-10 text-center text-sm text-[#94a3b8]">{err}</p>;
+  if (!data) return <p className="py-10 text-center text-sm text-[#94a3b8]">불러오는 중…</p>;
+  if (data.total === 0) {
+    return (
+      <div className="py-16 text-center">
+        <div className="text-5xl mb-3 opacity-40">📈</div>
+        <p className="text-sm text-[#64748b] mb-3">아직 푼 연습 문항이 없어요. 순서·삽입을 풀면 여기에 분석이 쌓입니다.</p>
+        <Link href="/practice" className="inline-block rounded-xl bg-[#14213d] px-5 py-2.5 text-sm font-bold text-white no-underline">
+          순서·삽입 연습하러 가기 →
+        </Link>
+      </div>
+    );
+  }
+
+  /* 약한 번호 — 두 번 이상 푼 번호 중 정답률 낮은 순 */
+  const weak = data.byNumber.filter((n) => n.total >= 2).sort((a, b) => pct(a.correct, a.total) - pct(b.correct, b.total)).slice(0, 8);
+  const card = 'bg-white rounded-2xl border border-[#e2e8f0] p-4';
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <div className={card}>
+          <p className="text-xs text-[#94a3b8]">전체 정답률</p>
+          <p className="mt-1 text-2xl font-bold text-[#0f172a] tabular-nums">{pct(data.correct, data.total)}%</p>
+          <p className="text-[11px] text-[#94a3b8]">{data.correct} / {data.total}문항</p>
+        </div>
+        {data.byKind.map((k) => (
+          <div key={k.kind} className={card}>
+            <p className="text-xs text-[#94a3b8]">{k.kind}</p>
+            <p className="mt-1 text-2xl font-bold text-[#0f172a] tabular-nums">{k.total ? `${pct(k.correct, k.total)}%` : '—'}</p>
+            <p className="text-[11px] text-[#94a3b8]">{k.correct} / {k.total}문항</p>
+          </div>
+        ))}
+      </div>
+
+      <div className={card}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-bold text-[#0f172a]">번호별 정답률</p>
+          <span className="text-[11px] text-[#94a3b8]">연습한 날 {data.days}일</span>
+        </div>
+        <div className="space-y-1.5">
+          {data.byNumber.map((n) => {
+            const p = pct(n.correct, n.total);
+            return (
+              <div key={n.number} className="flex items-center gap-3 text-xs">
+                <span className="w-14 shrink-0 font-semibold text-[#334155]">{n.number}</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#f1f5f9]">
+                  <div className={`h-full ${p < 50 ? 'bg-[#e11d48]' : p < 80 ? 'bg-[#f59e0b]' : 'bg-[#16a34a]'}`} style={{ width: `${p}%` }} />
+                </div>
+                <span className="w-24 shrink-0 text-right tabular-nums text-[#64748b]">
+                  {p}% ({n.correct}/{n.total})
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {weak.length > 0 && (
+          <p className="mt-3 text-xs text-[#64748b]">
+            약한 번호: <b className="text-[#e11d48]">{weak.slice(0, 4).map((w) => w.number).join(' · ')}</b>
+          </p>
+        )}
+      </div>
+
+      <div className={card}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-bold text-[#0f172a]">틀린 문항 <span className="text-[#94a3b8] font-normal">({data.wrong.length})</span></p>
+          {data.wrong.length > 0 && (
+            <Link href="/practice?review=wrong" className="rounded-lg bg-[#14213d] px-3 py-1.5 text-xs font-bold text-white no-underline">
+              오답 모두 다시 풀기 →
+            </Link>
+          )}
+        </div>
+        {data.wrong.length === 0 ? (
+          <p className="text-sm text-[#94a3b8]">틀린 채로 남은 문항이 없어요. 👏</p>
+        ) : (
+          <ul className="divide-y divide-[#f1f5f9]">
+            {data.wrong.slice(0, 30).map((w) => (
+              <li key={w.id} className="flex items-center gap-3 py-2 text-xs">
+                <span className="rounded bg-[#14213d] px-1.5 py-0.5 font-bold text-white">{w.number}</span>
+                <span className="rounded border border-[#cbd5e1] px-1.5 py-0.5 text-[#334155]">{w.kind}</span>
+                <span className="min-w-0 flex-1 truncate text-[#64748b]">{w.textbook}</span>
+                <span className="shrink-0 text-[#94a3b8]">내 답 <b className="text-[#e11d48]">{w.picked}</b> · 정답 <b className="text-[#16a34a]">{w.correctAnswer}</b></span>
+                <Link href={`/practice?retry=${encodeURIComponent(w.id)}`} className="shrink-0 font-semibold text-[#2563eb] no-underline hover:underline">
+                  다시 풀기
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }

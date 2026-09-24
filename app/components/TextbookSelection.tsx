@@ -411,27 +411,19 @@ function useHubSections(
         ),
       },
     ];
-    /* 학습실 — 주문이 아니라 웹에서 바로 푸는 연습. 회원 전용 */
+    /* 학습실 — 주문이 아니라 웹에서 바로 푸는 연습. 풀기는 누구나, 해설·오답 분석은 회원 */
     const study: HubEntry[] = [
       {
         id: 'practice',
         title: '순서·삽입 연습',
         description: isMember
-          ? (<>모의고사 순서·삽입 문항을<br />웹에서 풀고 바로 채점</>)
-          : (<>회원 전용 연습입니다<br />로그인 후 이용해 주세요</>),
+          ? (<>모의고사 지문으로 끝없이 새 문항<br />해설 · 오답 분석까지</>)
+          : (<>누구나 무제한 무료 연습<br />해설 · 오답 분석은 회원 전용</>),
         icon: <IconPractice /> as ReactNode,
         accentColor: '#0369A1',
         gridClassName: 'lg:col-span-3',
         href: '/practice',
-        interactive: isMember,
-        bottomSlot: isMember ? undefined : (
-          <a
-            href="/login?from=/practice"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-blue-600 bg-blue-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 hover:border-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2"
-          >
-            로그인하기
-          </a>
-        ),
+        interactive: true,
       },
     ];
     return {
@@ -901,7 +893,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               <h2 id="hub-study-heading" className="text-base font-bold text-slate-800 tracking-tight">
                 학습실
               </h2>
-              <p className="mt-1 text-sm text-slate-500">주문 없이 웹에서 바로 풀어 보는 회원 전용 연습</p>
+              <p className="mt-1 text-sm text-slate-500">주문 없이 웹에서 바로 풀어 보는 무제한 연습</p>
             </div>
             {renderHubGrid(hubStudy)}
           </section>

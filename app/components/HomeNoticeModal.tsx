@@ -114,7 +114,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
           <h2 id="home-notice-title" className="mt-2 text-lg font-extrabold leading-snug">
             순서·삽입, 이제 웹에서 바로 연습하세요
           </h2>
-          <p className="mt-1 text-[13px] text-slate-300">모의고사 문항을 풀면 바로 채점 · 해설까지 (회원 무료)</p>
+          <p className="mt-1 text-[13px] text-slate-300">풀 때마다 새 문항 · 누구나 무제한 · 해설과 오답 분석은 회원</p>
         </div>
 
         {/* 본문 — 한 줄씩 */}
@@ -123,7 +123,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
             <li className="flex gap-3 py-2.5">
               <span className="w-5 shrink-0 text-center">✍️</span>
               <p className="text-slate-800">
-                <b>순서·삽입 연습</b> <span className="text-slate-500">— 회차·문항 수 골라 한 문항씩 풀기</span>
+                <b>순서·삽입 연습</b> <span className="text-slate-500">— 모의고사 지문으로 끝없이, 바로 채점</span>
               </p>
             </li>
             <li className="flex gap-3 py-2.5">
@@ -150,22 +150,22 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
 
           {/* 버튼 — 주 행동 하나 + 보조 */}
           <div className="mt-5 flex flex-col gap-2">
-            {showApply ? (
-              <button
-                type="button"
-                onClick={openApply}
-                className="w-full rounded-xl bg-sky-600 py-3 text-sm font-bold text-white transition hover:bg-sky-700"
-              >
-                가입 신청하고 연습 시작하기
-              </button>
-            ) : (
-              <a
+            {/* 비회원도 연습은 된다 — 먼저 풀어 보게 하고 가입은 그다음(해설·오답 분석) */}
+            <a
                 href="/practice"
                 onClick={closeSession}
                 className="w-full rounded-xl bg-sky-600 py-3 text-center text-sm font-bold text-white no-underline transition hover:bg-sky-700"
               >
-                순서·삽입 연습하러 가기 →
+                {showApply ? '무료로 바로 풀어 보기 →' : '순서·삽입 연습하러 가기 →'}
               </a>
+            {showApply && (
+              <button
+                type="button"
+                onClick={openApply}
+                className="w-full rounded-xl border border-sky-600 py-2.5 text-sm font-bold text-sky-700 transition hover:bg-sky-50"
+              >
+                가입 신청하고 해설·오답 분석 받기
+              </button>
             )}
             <a
               href={KAKAO_INQUIRY_URL}

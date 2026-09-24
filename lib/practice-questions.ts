@@ -1,27 +1,41 @@
 /**
- * 학습실 — 순서·삽입 온라인 연습.
+ * 학습실 — 순서·삽입 온라인 연습. 풀기는 누구나, 해설·기록·오답 분석은 회원만.
  *
- * 문항은 판매 재고인 `generated_questions` 에서 **모의고사 완료 문항만** 꺼낸다(교과서·부교재는 쏠북 판매와
- * 겹치므로 제외). 풀이 화면에는 정답·해설을 싣지 않고, 한 문항씩 채점 요청(`checkPracticeAnswer`) 때만 돌려준다.
+ * 문항은 판매 재고(generated_questions)를 쓰지 않고, 모의고사 **지문 원문**에서 `practice-generator` 로
+ * 즉석 생성한다 — 무한 연습, 판매 자료 노출 없음, 해설 없음.
+ * 문항 id 는 (지문·유형·seed) 를 담은 토큰이라 채점·복습 때 똑같이 다시 만든다.
+ * 채점할 때마다 `practice_attempts` 에 남겨 내정보에서 유형·번호별 오답을 분석·복습한다.
  */
 import { ObjectId, type Db } from 'mongodb';
-import { computeReadingOrderKey, findPositionInOriginal } from '@/lib/order-variant-validation';
+import {
+  CIRCLED,
+  generatePractice,
+  randomSeed,
+  splitPassageSentences,
+  type GeneratedPractice,
+  type PracticeGenKind,
+} from '@/lib/practice-generator';
 
 export const PRACTICE_KINDS = ['순서', '삽입'] as const;
-export type PracticeKind = (typeof PRACTICE_KINDS)[number];
+export type PracticeKind = PracticeGenKind;
+export const PRACTICE_ATTEMPTS_COLLECTION = 'practice_attempts';
+export const PRACTICE_MAX_SET = 50;
 
-/** 한 세트에 담는 최대 문항 수 — 한 회차 순서·삽입 전부(지문 25~30개 × 2)가 들어가게 */
-export const PRACTICE_MAX_SET = 80;
-
-const CIRCLED = ['①', '②', '③', '④', '⑤'] as const;
 const MOCK_TEXTBOOK_RE = /영어모의고사$/;
+/** 도표·안내문(25~28)·무관한 문장(35, 원문에 끼어 있음)·46번 이후는 뺀다 */
+const ELIGIBLE_NUMBERS = new Set([
+  '18', '19', '20', '21', '22', '23', '24', '29', '30', '31', '32', '33', '34',
+  '36', '37', '38', '39', '40', '41', '42', '41~42', '43~45',
+]);
+const MAX_SENTENCES = 16;
 
 export interface PracticeExam {
   textbook: string;
   year: number;
   month: number;
   grade: number;
-  counts: Record<string, number>;
+  /** 연습에 쓸 수 있는 지문 수 */
+  passages: number;
 }
 
 export type PracticeLayout =
@@ -29,264 +43,269 @@ export type PracticeLayout =
   | { kind: '삽입'; given: string; passage: string };
 
 export interface PracticeQuestion {
+  /** (지문·유형·seed) 토큰 */
   id: string;
   kind: PracticeKind;
-  hard: boolean;
   number: string;
+  textbook: string;
   question: string;
   layout: PracticeLayout;
 }
 
-function typeName(kind: PracticeKind, hard: boolean): string {
-  return hard ? `${kind}-고난도` : kind;
+export type PracticeReveal =
+  | { kind: '순서'; ordered: string[]; order: string }
+  | { kind: '삽입'; before: string; given: string; after: string };
+
+type Token = { p: string; k: PracticeKind; s: number };
+
+export function encodeToken(t: Token): string {
+  return Buffer.from(JSON.stringify({ p: t.p, k: t.k === '순서' ? 'o' : 'i', s: t.s })).toString('base64url');
+}
+export function decodeToken(id: string): Token | null {
+  try {
+    const o = JSON.parse(Buffer.from(id, 'base64url').toString('utf8')) as { p?: string; k?: string; s?: number };
+    if (!o.p || !ObjectId.isValid(o.p) || !Number.isInteger(o.s)) return null;
+    return { p: o.p, k: o.k === 'o' ? '순서' : '삽입', s: o.s as number };
+  } catch {
+    return null;
+  }
 }
 
-/** "26년 9월 고1 영어모의고사" → 정렬용 연·월·학년 */
 function parseExamName(textbook: string): { year: number; month: number; grade: number } {
   const m = textbook.match(/(\d{2})년\s*(\d{1,2})월\s*고(\d)/);
   return m ? { year: 2000 + Number(m[1]), month: Number(m[2]), grade: Number(m[3]) } : { year: 0, month: 0, grade: 0 };
 }
-
-/** "26년 9월 고1 영어모의고사 18번" → "18번", "43~45번" 도 그대로 */
-function numberOf(source: string): string {
-  const m = source.match(/(\d+(?:\s*~\s*\d+)?)번\s*$/);
-  return m ? `${m[1].replace(/\s+/g, '')}번` : source;
+function numberKey(raw: unknown): string {
+  return String(raw ?? '').replace(/번\s*$/, '').replace(/\s+/g, '');
 }
-
-function numberSortKey(n: string): number {
+function numberLabel(raw: unknown): string {
+  const k = numberKey(raw);
+  return k ? `${k}번` : '';
+}
+function numberSort(n: string): number {
   return Number(n.match(/\d+/)?.[0] ?? 999);
 }
 
-/** 순서 Paragraph: `도입 ### (A) … ### (B) … ### (C) …` 또는 빈 줄 구분 */
-function parseOrder(paragraph: string): { intro: string; A: string; B: string; C: string } | null {
-  const text = paragraph.replace(/\r\n/g, '\n').trim();
-  const parts = text.includes('###')
-    ? text.split(/\n?\s*###\s*\n?/)
-    : text.split(/\n\s*\n/);
-  const clean = parts.map((p) => p.trim()).filter(Boolean);
-  if (clean.length !== 4) return null;
-  const [intro, a, b, c] = clean;
-  const strip = (s: string, label: string) => (s.startsWith(`(${label})`) ? s.slice(3).trim() : null);
-  const A = strip(a, 'A');
-  const B = strip(b, 'B');
-  const C = strip(c, 'C');
-  if (!A || !B || !C || !intro) return null;
-  return { intro, A, B, C };
-}
+type PassageRow = { _id: ObjectId; textbook: string; number: string; sentences: string[] };
 
-/** 삽입 Paragraph: `주어진 문장 ### 본문(①~⑤)` 또는 빈 줄 구분 */
-function parseInsert(paragraph: string): { given: string; passage: string } | null {
-  const text = paragraph.replace(/\r\n/g, '\n').trim();
-  const m = text.includes('###') ? text.match(/^([\s\S]*?)###([\s\S]*)$/) : text.match(/^([\s\S]*?)\n\s*\n([\s\S]*)$/);
-  if (!m) return null;
-  const given = m[1].trim();
-  const passage = m[2].trim();
-  const marks = passage.match(/[①②③④⑤]/g) ?? [];
-  if (!given || /[①②③④⑤]/.test(given)) return null;
-  if (marks.length !== 5 || marks.join('') !== CIRCLED.join('')) return null;
-  return { given, passage };
-}
-
-/** 순서 선지 5개 — `###`·줄바꿈 두 구분자 모두 */
-function parseOrderOptions(raw: string): string[] | null {
-  const segs = (raw.includes('###') ? raw.split('###') : raw.split('\n'))
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => s.replace(/^[①②③④⑤]\s*/, '').replace(/\s*-\s*/g, ' - ').trim());
-  return segs.length === 5 ? segs : null;
-}
-
-const normText = (s: string) => s.toLowerCase().replace(/[’‘]/g, "'").replace(/[“”"]/g, '').replace(/\s+/g, ' ').trim();
-
-/**
- * 저장 정답이 원문과 어긋나는지 — 어긋나면 true(연습에서 뺀다). 원문과 대조할 수 없으면 false(그대로 둔다).
- * 순서: (A)(B)(C) 덩이의 원문 위치로 읽기 순서를 구해 정답 선지와 비교.
- * 삽입: 원문에서 주어진 문장 바로 뒤에 오는 글이 몇 번 마커 뒤에 있는지 비교(새로 쓴 브릿지 문장은 원문에 없어 건너뜀).
- */
-function contradictsOriginal(q: PracticeQuestion, correctAnswer: string, original: string): boolean {
-  if (!original) return false;
-  if (q.layout.kind === '순서') {
-    const truth = computeReadingOrderKey({
-      A: findPositionInOriginal(original, q.layout.A),
-      B: findPositionInOriginal(original, q.layout.B),
-      C: findPositionInOriginal(original, q.layout.C),
-    });
-    if (!truth) return false;
-    const picked = q.layout.options[CIRCLED.indexOf(correctAnswer as (typeof CIRCLED)[number])] ?? '';
-    return picked.replace(/[^ABC]/g, '') !== truth;
+/** 지문 캐시 — 원문 분할은 요청마다 할 필요가 없다 */
+let passageCache: { at: number; rows: PassageRow[] } | null = null;
+async function eligiblePassages(db: Db): Promise<PassageRow[]> {
+  if (passageCache && Date.now() - passageCache.at < 10 * 60_000) return passageCache.rows;
+  const docs = await db
+    .collection('passages')
+    .find({ textbook: { $regex: MOCK_TEXTBOOK_RE.source } }, { projection: { textbook: 1, number: 1, 'content.original': 1 } })
+    .toArray();
+  const rows: PassageRow[] = [];
+  for (const d of docs) {
+    if (!ELIGIBLE_NUMBERS.has(numberKey(d.number))) continue;
+    const sentences = splitPassageSentences(String((d.content as { original?: string } | undefined)?.original ?? ''));
+    if (sentences.length < 5 || sentences.length > MAX_SENTENCES) continue;
+    rows.push({ _id: d._id as ObjectId, textbook: String(d.textbook), number: numberLabel(d.number), sentences });
   }
-  const orig = normText(original);
-  const given = normText(q.layout.given);
-  const at = orig.indexOf(given.slice(0, 60));
-  if (given.length < 20 || at < 0) return false;
-  const after = orig.slice(at + given.length).trim().slice(0, 25);
-  const segs = q.layout.passage.split(/[①②③④⑤]/);
-  if (segs.length !== 6) return false;
-  const matches = CIRCLED.filter((_, i) => {
-    const next = normText(segs.slice(i + 1).join(' ')).slice(0, 25);
-    return after ? next.startsWith(after.slice(0, 20)) : next === '';
-  });
-  return matches.length === 1 && matches[0] !== correctAnswer;
+  passageCache = { at: Date.now(), rows };
+  return rows;
 }
 
-function toPracticeQuestion(doc: Record<string, unknown>): PracticeQuestion | null {
-  const qd = (doc.question_data ?? {}) as Record<string, unknown>;
-  const type = String(doc.type ?? '');
-  const hard = type.endsWith('-고난도');
-  const kind = (hard ? type.replace(/-고난도$/, '') : type) as PracticeKind;
-  if (!PRACTICE_KINDS.includes(kind)) return null;
-  if (!CIRCLED.includes(String(qd.CorrectAnswer ?? '').trim() as (typeof CIRCLED)[number])) return null;
+const QUESTION_TEXT: Record<PracticeKind, string> = {
+  순서: '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.',
+  삽입: '글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.',
+};
 
-  const paragraph = String(qd.Paragraph ?? '');
-  let layout: PracticeLayout | null = null;
-  if (kind === '순서') {
-    const parts = parseOrder(paragraph);
-    const options = parseOrderOptions(String(qd.Options ?? ''));
-    if (parts && options) layout = { kind, ...parts, options };
-  } else {
-    const parts = parseInsert(paragraph);
-    if (parts) layout = { kind, ...parts };
-  }
-  if (!layout) return null;
-
+function toQuestion(row: PassageRow, kind: PracticeKind, seed: number): { q: PracticeQuestion; g: GeneratedPractice } | null {
+  const g = generatePractice(kind, row.sentences, seed);
+  if (!g) return null;
+  const layout: PracticeLayout =
+    g.kind === '순서'
+      ? { kind: '순서', intro: g.intro, A: g.A, B: g.B, C: g.C, options: [...g.options] }
+      : { kind: '삽입', given: g.given, passage: g.passage };
   return {
-    id: String(doc._id),
-    kind,
-    hard,
-    number: numberOf(String(doc.source ?? '')),
-    question: String(qd.Question ?? '').trim(),
-    layout,
+    q: { id: encodeToken({ p: String(row._id), k: kind, s: seed }), kind, number: row.number, textbook: row.textbook, question: QUESTION_TEXT[kind], layout },
+    g,
   };
 }
 
-/** 연습할 수 있는 모의고사 회차 — 최신 회차부터, 학년 순 */
+/** 연습 가능한 모의고사 회차 */
 export async function listPracticeExams(db: Db): Promise<PracticeExam[]> {
-  const rows = await db
-    .collection('generated_questions')
-    .aggregate([
-      {
-        $match: {
-          status: '완료',
-          textbook: { $regex: MOCK_TEXTBOOK_RE.source },
-          type: { $in: PRACTICE_KINDS.flatMap((k) => [k, `${k}-고난도`]) },
-        },
-      },
-      /* 한 지문에 변형이 여러 개여도 세트엔 번호당 하나만 나가므로 지문(출처) 수를 센다 */
-      { $group: { _id: { textbook: '$textbook', type: '$type' }, sources: { $addToSet: '$source' } } },
-      { $project: { n: { $size: '$sources' } } },
-    ])
-    .toArray();
-
-  const byTextbook = new Map<string, PracticeExam>();
+  const rows = await eligiblePassages(db);
+  const by = new Map<string, PracticeExam>();
   for (const r of rows) {
-    const textbook = String(r._id?.textbook ?? '');
-    if (!textbook) continue;
-    let exam = byTextbook.get(textbook);
-    if (!exam) {
-      exam = { textbook, ...parseExamName(textbook), counts: {} };
-      byTextbook.set(textbook, exam);
-    }
-    exam.counts[String(r._id?.type)] = Number(r.n ?? 0);
+    const e = by.get(r.textbook) ?? { textbook: r.textbook, ...parseExamName(r.textbook), passages: 0 };
+    e.passages++;
+    by.set(r.textbook, e);
   }
-  return [...byTextbook.values()].sort(
-    (a, b) => b.year - a.year || b.month - a.month || a.grade - b.grade || a.textbook.localeCompare(b.textbook, 'ko'),
-  );
+  return [...by.values()].sort((a, b) => b.year - a.year || b.month - a.month || a.grade - b.grade);
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 /**
- * 한 회차에서 연습 세트를 뽑는다. 지문(번호)마다 한 문항씩, 같은 번호에 여러 문항이면 무작위.
- * 번호 순으로 돌려주고, 화면 형식으로 나눌 수 없는 문항은 건너뛴다.
+ * 새 세트 — textbook 이 없으면 grade 학년 전체 회차에서 섞는다.
+ * 지문마다 한 문항, 「순서+삽입」이면 지문을 반씩 나눠 순서 → 삽입 순으로 낸다.
  */
 export async function pickPracticeSet(
   db: Db,
-  opts: { textbook: string; kinds: PracticeKind[]; hard: boolean; limit?: number },
+  opts: { textbook?: string; grade?: number; kinds: PracticeKind[]; count: number },
 ): Promise<PracticeQuestion[]> {
-  const out = await pickPracticeSetDetailed(db, opts);
-  return out.questions;
-}
-
-/** pickPracticeSet + 원문과 어긋나 뺀 문항 수(점검용) */
-export async function pickPracticeSetDetailed(
-  db: Db,
-  opts: { textbook: string; kinds: PracticeKind[]; hard: boolean; limit?: number },
-): Promise<{ questions: PracticeQuestion[]; excluded: number }> {
-  if (!MOCK_TEXTBOOK_RE.test(opts.textbook)) return { questions: [], excluded: 0 };
-  const types = opts.kinds.map((k) => typeName(k, opts.hard));
-  const docs = await db
-    .collection('generated_questions')
-    .find(
-      { textbook: opts.textbook, status: '완료', type: { $in: types } },
-      { projection: { type: 1, source: 1, passage_id: 1, 'question_data.Question': 1, 'question_data.Paragraph': 1, 'question_data.Options': 1, 'question_data.CorrectAnswer': 1 } },
-    )
-    .toArray();
-
-  /* 저장 정답이 원문과 어긋난 문항(순서 off-by-one 등)은 연습에 내지 않는다 */
-  const pids = [...new Set(docs.map((d) => String(d.passage_id ?? '')).filter((x) => ObjectId.isValid(x)))];
-  const originals = new Map<string, string>();
-  if (pids.length) {
-    const ps = await db
-      .collection('passages')
-      .find({ _id: { $in: pids.map((x) => new ObjectId(x)) } }, { projection: { 'content.original': 1 } })
-      .toArray();
-    for (const p of ps) originals.set(String(p._id), String((p.content as { original?: string } | undefined)?.original ?? ''));
-  }
-  let excluded = 0;
-
-  /* 번호·유형별로 묶어 무작위 하나 */
-  const groups = new Map<string, PracticeQuestion[]>();
-  for (const d of docs) {
-    const q = toPracticeQuestion(d as Record<string, unknown>);
-    if (!q) continue;
-    const ca = String((d.question_data as { CorrectAnswer?: string } | undefined)?.CorrectAnswer ?? '').trim();
-    if (contradictsOriginal(q, ca, originals.get(String(d.passage_id ?? '')) ?? '')) {
-      excluded++;
-      continue;
-    }
-    const key = `${q.number}|${q.kind}`;
-    const list = groups.get(key) ?? [];
-    list.push(q);
-    groups.set(key, list);
-  }
-  let picked = [...groups.values()].map((list) => list[Math.floor(Math.random() * list.length)]);
-  /* 문항 수를 고르면 무작위로 그만큼만 — 앞 번호만 잘리지 않게 뽑은 뒤 정렬한다 */
-  const limit = Math.min(opts.limit ?? PRACTICE_MAX_SET, PRACTICE_MAX_SET);
-  if (picked.length > limit) {
-    for (let i = picked.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [picked[i], picked[j]] = [picked[j], picked[i]];
-    }
-    picked = picked.slice(0, limit);
-  }
-  /* 순서를 먼저 모두, 그다음 삽입 — 같은 지문의 삽입을 먼저 풀면 원문 흐름이 드러나 순서가 쉬워진다 */
-  picked.sort(
-    (a, b) =>
-      PRACTICE_KINDS.indexOf(a.kind) - PRACTICE_KINDS.indexOf(b.kind) || numberSortKey(a.number) - numberSortKey(b.number),
+  const all = await eligiblePassages(db);
+  const pool = all.filter((r) =>
+    opts.textbook ? r.textbook === opts.textbook : !opts.grade || parseExamName(r.textbook).grade === opts.grade,
   );
-  return { questions: picked, excluded };
+  const count = Math.max(1, Math.min(opts.count, PRACTICE_MAX_SET));
+  const out: PracticeQuestion[] = [];
+  let i = 0;
+  for (const row of shuffle(pool)) {
+    if (out.length >= count) break;
+    const kind = opts.kinds.length === 1 ? opts.kinds[0] : opts.kinds[i % opts.kinds.length];
+    const made = toQuestion(row, kind, randomSeed());
+    if (!made) continue;
+    out.push(made.q);
+    i++;
+  }
+  return out.sort(
+    (a, b) =>
+      PRACTICE_KINDS.indexOf(a.kind) - PRACTICE_KINDS.indexOf(b.kind) ||
+      (opts.textbook ? numberSort(a.number) - numberSort(b.number) : 0),
+  );
 }
 
-/** 한 문항 채점 — 연습 범위(모의고사·완료·순서/삽입) 밖의 id 는 거절 */
+async function rowById(db: Db, pid: string): Promise<PassageRow | null> {
+  const cached = passageCache?.rows.find((r) => String(r._id) === pid);
+  if (cached) return cached;
+  const d = await db.collection('passages').findOne({ _id: new ObjectId(pid) }, { projection: { textbook: 1, number: 1, 'content.original': 1 } });
+  if (!d || !MOCK_TEXTBOOK_RE.test(String(d.textbook))) return null;
+  return {
+    _id: d._id,
+    textbook: String(d.textbook),
+    number: numberLabel(d.number),
+    sentences: splitPassageSentences(String((d.content as { original?: string } | undefined)?.original ?? '')),
+  };
+}
+
+/** 토큰들로 문항을 다시 만든다(복습) */
+export async function questionsFromTokens(db: Db, ids: string[]): Promise<PracticeQuestion[]> {
+  const out: PracticeQuestion[] = [];
+  for (const id of ids) {
+    const t = decodeToken(id);
+    if (!t) continue;
+    const row = await rowById(db, t.p);
+    const made = row ? toQuestion(row, t.k, t.s) : null;
+    if (made) out.push(made.q);
+  }
+  return out;
+}
+
+let attemptIndexReady = false;
+async function ensureAttemptIndex(db: Db) {
+  if (attemptIndexReady) return;
+  attemptIndexReady = true;
+  await db.collection(PRACTICE_ATTEMPTS_COLLECTION).createIndex({ loginId: 1, createdAt: -1 }).catch(() => { attemptIndexReady = false; });
+}
+
+/** 채점 + 기록. 정답과 원래 흐름(reveal)을 돌려준다 — 해설은 없다. */
 export async function checkPracticeAnswer(
   db: Db,
+  /** 회원이면 기록한다. 비회원(null)은 기록하지 않는다 */
+  loginId: string | null,
   id: string,
   answer: string,
-): Promise<{ correct: boolean; correctAnswer: string; explanation: string } | null> {
-  if (!ObjectId.isValid(id)) return null;
-  const doc = await db.collection('generated_questions').findOne(
-    {
-      _id: new ObjectId(id),
-      status: '완료',
-      textbook: { $regex: MOCK_TEXTBOOK_RE.source },
-      type: { $in: PRACTICE_KINDS.flatMap((k) => [k, `${k}-고난도`]) },
-    },
-    { projection: { 'question_data.CorrectAnswer': 1, 'question_data.Explanation': 1 } },
-  );
-  if (!doc) return null;
-  const qd = (doc.question_data ?? {}) as Record<string, unknown>;
-  const correctAnswer = String(qd.CorrectAnswer ?? '').trim();
-  return {
-    correct: answer.trim() === correctAnswer,
+): Promise<{ correct: boolean; correctAnswer: string; reveal: PracticeReveal } | null> {
+  const t = decodeToken(id);
+  if (!t) return null;
+  const row = await rowById(db, t.p);
+  const made = row ? toQuestion(row, t.k, t.s) : null;
+  if (!row || !made) return null;
+  const correctAnswer = CIRCLED[made.g.answerIndex];
+  const correct = answer.trim() === correctAnswer;
+  const reveal: PracticeReveal =
+    made.g.kind === '순서'
+      ? { kind: '순서', ordered: made.g.ordered, order: made.g.options[made.g.answerIndex] }
+      : { kind: '삽입', ...made.g.restored };
+  if (loginId) await ensureAttemptIndex(db);
+  if (loginId) await db.collection(PRACTICE_ATTEMPTS_COLLECTION).insertOne({
+    loginId,
+    token: id,
+    passageId: t.p,
+    textbook: row.textbook,
+    number: row.number,
+    kind: t.k,
+    picked: answer.trim(),
     correctAnswer,
-    explanation: String(qd.Explanation ?? '').trim(),
+    correct,
+    createdAt: new Date(),
+  });
+  return { correct, correctAnswer, reveal };
+}
+
+export interface PracticeStats {
+  total: number;
+  correct: number;
+  byKind: { kind: PracticeKind; total: number; correct: number }[];
+  byNumber: { number: string; total: number; correct: number; kinds: Record<string, { total: number; correct: number }> }[];
+  byExam: { textbook: string; total: number; correct: number }[];
+  /** 마지막 시도가 오답인 문항(최근순) */
+  wrong: { id: string; kind: PracticeKind; textbook: string; number: string; picked: string; correctAnswer: string; at: string }[];
+  days: number;
+}
+
+/** 내 학습 기록 분석 */
+export async function practiceStats(db: Db, loginId: string): Promise<PracticeStats> {
+  const col = db.collection(PRACTICE_ATTEMPTS_COLLECTION);
+  const docs = await col
+    .find({ loginId }, { projection: { token: 1, textbook: 1, number: 1, kind: 1, picked: 1, correctAnswer: 1, correct: 1, createdAt: 1 } })
+    .sort({ createdAt: -1 })
+    .limit(5000)
+    .toArray();
+  const byKind = new Map<string, { total: number; correct: number }>();
+  const byNumber = new Map<string, { total: number; correct: number; kinds: Record<string, { total: number; correct: number }> }>();
+  const byExam = new Map<string, { total: number; correct: number }>();
+  const lastByToken = new Map<string, (typeof docs)[number]>();
+  const days = new Set<string>();
+  for (const d of docs) {
+    const ok = d.correct === true ? 1 : 0;
+    const k = byKind.get(d.kind) ?? { total: 0, correct: 0 };
+    k.total++; k.correct += ok; byKind.set(d.kind, k);
+    const n = byNumber.get(d.number) ?? { total: 0, correct: 0, kinds: {} };
+    n.total++; n.correct += ok;
+    n.kinds[d.kind] = { total: (n.kinds[d.kind]?.total ?? 0) + 1, correct: (n.kinds[d.kind]?.correct ?? 0) + ok };
+    byNumber.set(d.number, n);
+    const e = byExam.get(d.textbook) ?? { total: 0, correct: 0 };
+    e.total++; e.correct += ok; byExam.set(d.textbook, e);
+    if (!lastByToken.has(d.token)) lastByToken.set(d.token, d);
+    days.add(new Date(d.createdAt).toISOString().slice(0, 10));
+  }
+  const wrong = [...lastByToken.values()]
+    .filter((d) => d.correct !== true)
+    .slice(0, 100)
+    .map((d) => ({
+      id: String(d.token),
+      kind: d.kind as PracticeKind,
+      textbook: String(d.textbook),
+      number: String(d.number),
+      picked: String(d.picked),
+      correctAnswer: String(d.correctAnswer),
+      at: new Date(d.createdAt).toISOString(),
+    }));
+  return {
+    total: docs.length,
+    correct: docs.filter((d) => d.correct === true).length,
+    byKind: PRACTICE_KINDS.map((k) => ({ kind: k, ...(byKind.get(k) ?? { total: 0, correct: 0 }) })),
+    byNumber: [...byNumber.entries()].map(([number, v]) => ({ number, ...v })).sort((a, b) => numberSort(a.number) - numberSort(b.number)),
+    byExam: [...byExam.entries()].map(([textbook, v]) => ({ textbook, ...v })).sort((a, b) => b.total - a.total),
+    wrong,
+    days: days.size,
   };
+}
+
+/** 마지막 시도가 오답인 문항 토큰(최근순) — 복습 세트용 */
+export async function wrongTokens(db: Db, loginId: string, limit: number): Promise<string[]> {
+  const s = await practiceStats(db, loginId);
+  return s.wrong.slice(0, limit).map((w) => w.id);
 }
