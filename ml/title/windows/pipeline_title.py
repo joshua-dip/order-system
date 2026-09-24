@@ -41,6 +41,8 @@ from _cuda_runtime import (  # noqa: E402
     set_adapter,
 )
 
+from json_extract import explanation_text, trim_to_sentence  # noqa: E402
+
 FAILURE_DIR = _ROOT / "data" / "title-pipeline-failures"
 
 MESSAGE_SYS = """You extract the single core message of an English passage for a Korean CSAT-style title question.
@@ -522,9 +524,9 @@ def run_pipeline(
         finally:
             if has_explain_adapter:
                 set_adapter(model, main_adapter or "default")
-        explanation = str((expl or {}).get("Explanation") or "").strip()
-        if len(explanation) > 450:
-            explanation = explanation[:450].rstrip() + "…"
+        # 35B 추론 모델은 해설을 JSON 없이 글로만 쓰기도 한다 — 원문도 받는다(정답 번호가 어긋나면 버림)
+        explanation = explanation_text(expl, raw_out[0], CIRCLED[correct_index])
+        explanation = trim_to_sentence(explanation, 450)
         if len(explanation) < 40 or not _has_hangul(explanation):
             explanation = (
                 f"정답은 {CIRCLED[correct_index]}. 글의 핵심 메시지는 「{message_ko or message_en}」이므로 "
