@@ -42,8 +42,9 @@ from _cuda_runtime import (  # noqa: E402
 )
 
 from json_extract import explanation_text, trim_to_sentence  # noqa: E402
+from option_form import topic_form_issue  # noqa: E402
 
-from distractor_check import distinct_options, fix_distractors, flagged_warnings, solve_check  # noqa: E402
+from distractor_check import distinct_options, fix_distractors, flagged_warnings, settle_answer  # noqa: E402
 
 FAILURE_DIR = _ROOT / "data" / "topic-pipeline-failures"
 
@@ -423,6 +424,13 @@ def run_pipeline(
             unsupported = bool((ver or {}).get("unsupported"))
             better = str((ver or {}).get("better_option") or "").strip()
             issue = str((ver or {}).get("issue") or "").strip()
+            # 뜻이 맞아도 명사구가 아니면(「mathematics focuses on …」) 불합격 — 모양은 코드가 본다
+            form = topic_form_issue(correct)
+            if form and ver is not None:
+                match = False
+                issue = f"form: {form}. {issue}".strip()
+            if better and topic_form_issue(better):
+                better = ""
             # Tiny models often omit keys — if JSON missing, keep option and continue
             if ver is None:
                 print("[pipeline] answer verify skipped (null JSON)", file=sys.stderr)
@@ -451,7 +459,7 @@ def run_pipeline(
             if v_try >= max_retries:
                 # Soft-pass with noun-phrase claim, never a stub — 핵심 주장이 짧으면(「the purpose of marketing」)
                 # 정답 자리에 넣어도 형식 검사(5단어 이상)에 걸려 초안을 통째로 버리게 된다. 그때는 초안 선지를 둔다.
-                if len(claim_en.split()) >= 6:
+                if len(claim_en.split()) >= 6 and not topic_form_issue(claim_en):
                     options[correct_index] = claim_en
                 print("[pipeline] answer verify soft-pass on last retry", file=sys.stderr)
                 ans_ok = True
@@ -483,19 +491,22 @@ def run_pipeline(
             options=options,
             correct_index=correct_index,
             max_retries=max_retries,
-            accept=lambda c, cands: distinct_options(c, cands, valid=lambda o: len(o.split()) >= 5),
+            accept=lambda c, cands: distinct_options(
+                c, cands, valid=lambda o: len(o.split()) >= 5 and not topic_form_issue(o)),
             normalize=_normalize_options,
             trace=trace,
             log_failure=lambda **kw: _log_failure(passage=passage, claim=claim_obj, **kw),
+            form_issue=lambda d, c: topic_form_issue(d),
         )
 
 
         options, correct_index = _shuffle_answer(options, correct_index)
         # 5) 끝까지 못 고친 오답 + 모의 풀이(정답 모르는 학생처럼 풀기) → 관리자 화면 「검증 경고」
-        warnings = flagged_warnings(flagged, options) + solve_check(
-            call, kind="topic", passage=passage, options_text=_format_options(options),
-            answer=CIRCLED[correct_index], trace=trace,
+        correct_index, solve_warns = settle_answer(
+            call, kind="topic", passage=passage, options=options, correct_index=correct_index,
+            options_text=_format_options(options), trace=trace,
         )
+        warnings = flagged_warnings(flagged, options) + solve_warns
 
         # 5) explanation (optional dedicated explain LoRA)
         if has_explain_adapter:

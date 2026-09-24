@@ -13,6 +13,7 @@ call(sys, user, max_tokens, *, adapter=False, t=None) -> dict|None 는 각 파�
 from __future__ import annotations
 
 import json
+import re
 import sys
 from typing import Any, Callable
 
@@ -43,6 +44,27 @@ KINDS: dict[str, dict[str, str]] = {
 }
 
 Call = Callable[..., "dict | None"]
+
+# 오답끼리 내용어가 이만큼 겹치면 같은 오답으로 본다 — 35B 판정이 놓친 「It is important to keep paragraphs short …」 네 개
+# (26년 9월 고1 주장 30번 0.86, 31번 0.71). 0.6 대는 서로 다른 오답이었다. 정답과의 겹침은 보지 않는다 —
+# 반대 방향 오답은 정답과 단어를 많이 나눠 쓰는 게 정상이다.
+NEAR_DUP = 0.7
+_STOP = set(
+    "the a an of to in on for and or but with by as at from that this these those is are be we should must it its our "
+    "their your his her one not no any all every so than then more most very can will would may might need have has "
+    "do does important essential necessary crucial vital".split()
+)
+
+
+def _content_words(s: str) -> set[str]:
+    s = re.sub(r"^[①②③④⑤]\s*", "", s)
+    return {w for w in re.findall(r"[a-z']+", s.lower()) if w not in _STOP and len(w) > 2}
+
+
+def word_overlap(a: str, b: str) -> float:
+    """내용어 겹침 비율 — 겹친 수 / 짧은 쪽 내용어 수."""
+    ca, cb = _content_words(a), _content_words(b)
+    return len(ca & cb) / max(1, min(len(ca), len(cb)))
 
 
 def _verify_sys(kind: str) -> str:
@@ -132,6 +154,13 @@ def fix_distractors(
                 issue = form_issue(d, correct)
                 if issue and k not in bad:
                     bad[k] = f"form: {issue}"
+        for k, d in enumerate(distractors):
+            if k in bad:
+                continue
+            for j in range(k):
+                if j not in bad and word_overlap(d, distractors[j]) >= NEAR_DUP:
+                    bad[k] = f"duplicate: shares most words with distractor {j + 1} ({word_overlap(d, distractors[j]):.0%})"
+                    break
         flagged = {distractors[k]: reason for k, reason in bad.items()}
         if not bad:
             break
@@ -171,9 +200,51 @@ def flagged_warnings(flagged: dict[str, str], options: list[str]) -> list[str]:
     ]
 
 
+def _judge_sys(kind: str) -> str:
+    return f"""You compare two candidate answers of a Korean CSAT {KINDS[kind]['name']} question.
+Output ONLY one JSON object. No markdown.
+Keys: better ("A" | "B" | "tie"), reason (short English).
+Pick the one that covers the passage's WHOLE main point. A candidate that states only one example, one step,
+or one detail of the passage is worse than one that covers the overall point, even if it is more specific."""
+
+
+def _prefers(call: Call, kind: str, passage: str, first: str, second: str, trace: list[dict[str, Any]]) -> str:
+    out = call(
+        _judge_sys(kind),
+        f"[Passage]\n{passage}\n\n[Candidate A]\n{first}\n\n[Candidate B]\n{second}\n\nReturn better, reason JSON.",
+        max_tokens=120,
+        t=0.0,
+    )
+    trace.append({"stage": "judge_answer", "out": out})
+    return str((out or {}).get("better") or "").strip().upper()[:1]
+
+
+def settle_answer(call: Call, *, kind: str, passage: str, options: list[str], correct_index: int,
+                  options_text: str, trace: list[dict[str, Any]]) -> tuple[int, list[str]]:
+    """모의 풀이가 다른 번호를 고르면, 두 선지를 순서 바꿔 두 번 비교해 둘 다 풀이 쪽이 낫다고 할 때만 정답을 옮긴다.
+    제목에서 정답이 한 사례·세부로 좁게 잡힐 때(26년 9월 고1 35·37·38번) 모의 풀이는 매번 전체를 담은 선지를 골랐다 —
+    경고만 띄우면 사람이 고쳐야 했다. 옮긴 원래 정답은 「세부만 다룬 오답」으로 남는다(수능 오답의 흔한 꼴).
+    돌려주는 값: (정답 위치, 경고)."""
+    answer = CIRCLED[correct_index]
+    picked, warns, _ = _solve(call, kind=kind, passage=passage, options_text=options_text, answer=answer, trace=trace)
+    if picked in CIRCLED and picked != answer:
+        alt = CIRCLED.index(picked)
+        a, b = options[correct_index], options[alt]
+        # 순서 편향을 막으려고 두 번 — (현재, 풀이) 에선 B, (풀이, 현재) 에선 A 가 나와야 옮긴다
+        if _prefers(call, kind, passage, a, b, trace) == "B" and _prefers(call, kind, passage, b, a, trace) == "A":
+            print(f"[pipeline] answer moved {answer} -> {picked} (solver + judge agree)", file=sys.stderr)
+            return alt, [f"정답을 {answer}에서 {picked}(으)로 옮겼습니다 — 모의 풀이·비교 판정이 모두 {picked}이(가) 글 전체를 더 잘 담는다고 봄. 확인 권장"]
+    return correct_index, warns
+
+
 def solve_check(call: Call, *, kind: str, passage: str, options_text: str, answer: str,
                 trace: list[dict[str, Any]]) -> list[str]:
     """모의 풀이 — 다른 번호를 골랐거나 다른 선지도 정답으로 볼 수 있다고 하면 경고."""
+    return _solve(call, kind=kind, passage=passage, options_text=options_text, answer=answer, trace=trace)[1]
+
+
+def _solve(call: Call, *, kind: str, passage: str, options_text: str, answer: str,
+           trace: list[dict[str, Any]]) -> tuple[str, list[str], str]:
     solve = call(
         _solve_sys(kind),
         f"[Passage]\n{passage}\n\n[Question]\n{KINDS[kind]['question']}\n\n[Options]\n{options_text}\n\n"
@@ -183,7 +254,7 @@ def solve_check(call: Call, *, kind: str, passage: str, options_text: str, answe
     )
     trace.append({"stage": "solve", "out": solve})
     if not isinstance(solve, dict):
-        return []
+        return "", [], ""
     reason = str(solve.get("reason") or "").strip()[:160]
     picked = str(solve.get("answer") or "").strip()[:1]
     out: list[str] = []
@@ -193,7 +264,7 @@ def solve_check(call: Call, *, kind: str, passage: str, options_text: str, answe
     others = sorted({str(o).strip()[:1] for o in raw} & set(CIRCLED) - {answer, picked}) if isinstance(raw, list) else []
     if others:
         out.append(f"모의 풀이(35B): {'·'.join(others)}도 정답으로 볼 수 있다고 함 — 오답 확인 필요: {reason}")
-    return out
+    return picked, out, reason
 
 
 def distinct_options(correct: str, candidates: list[str], valid: Callable[[str], bool] = lambda s: True) -> list[str]:
@@ -209,6 +280,8 @@ def distinct_options(correct: str, candidates: list[str], valid: Callable[[str],
     for cand in candidates:
         key = norm(cand)
         if not key or key in seen or not valid(cand):
+            continue
+        if any(word_overlap(cand, o) >= NEAR_DUP for o in out):
             continue
         seen.add(key)
         out.append(cand)

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Claim multi-stage pipeline: thesis -> practical claim -> draft -> verify -> revise -> explain.
 
-주장(claim) != 주제(topic). 주제는 "무엇에 관한 글인가", 주장은 "독자가 무엇을 해야 하는가" —
-정답은 논지에서 실천 층위로 한 단계 내려와야 한다("practical" stage). 주제문의 술어만 조동사로
-바꾼 문장("topic sentence + should")은 실패로 간주해 verify_practical 이 잡는다.
+주장(claim) != 주제(topic). 주제는 "무엇에 관한 글인가", 주장은 "필자가 독자에게 무엇을 하라/믿으라 하는가".
+정답은 수능처럼 「필자의 주장 + should」(practical stage). 예전엔 「구체적 실천으로 한 단계 내려가라」고 해서
+35B 가 지문에 없는 행동·주체(「하루 30분」「정부는」)를 지어냈다 — 이제 지문 근거(grounded)와 필자 편(matches_author)만
+검증하고, 길이·지어낸 주체는 코드(_answer_issue)가 먼저 거른다.
 
 Same 0.5B/LoRA, multiple small JSON calls. stdout contract matches infer.py:
   first line { ok, question_data } + optional exam preview.
@@ -47,7 +48,7 @@ from _cuda_runtime import (  # noqa: E402
 
 from json_extract import explanation_text, trim_to_sentence  # noqa: E402
 
-from distractor_check import distinct_options, fix_distractors, flagged_warnings, solve_check  # noqa: E402
+from distractor_check import distinct_options, fix_distractors, flagged_warnings, settle_answer  # noqa: E402
 
 FAILURE_DIR = _ROOT / "data" / "claim-pipeline-failures"
 
@@ -69,29 +70,30 @@ Output ONLY one JSON object. No markdown.
 Keys: thesis_en (one English sentence — what the passage argues, facts/argument from the passage only), thesis_ko (one Korean sentence).
 Do NOT add ideas that are not in the passage."""
 
-PRACTICAL_SYS = """You turn a passage's core thesis into ONE practical claim sentence for a Korean CSAT 「주장」 (claim) question.
+PRACTICAL_SYS = """You write the correct answer of a Korean CSAT 「주장」 (claim) question: what the AUTHOR urges readers to do or believe.
 Output ONLY one JSON object. No markdown.
-Keys: practical_en (one English sentence, 7-12 words).
+Keys: practical_en (one English sentence, 7-14 words).
 
 Rules:
-- 주제(topic) asks "what is this about"; 주장(claim) asks "what should the reader DO about it" — step DOWN
-  from the thesis to a concrete practice/action level. Do NOT just restate the thesis with a modal verb bolted on
-  (e.g. thesis "practice matters more than talent" -> BAD "Practice should be valued more than talent"
-  because that is just the topic sentence + should; GOOD "Learners must dedicate regular practice time instead
-  of relying on natural ability alone").
-- Use a modal verb (must / should / have to / need to / ought to) OR a key adjective
-  (important / essential / significant / critical / vital / crucial / necessary / desirable / appropriate)
-  to form a complete English sentence.
-- Do NOT start the sentence with You/He/She. A dummy subject "It" is allowed
-  (e.g. "It is essential to ...").
-- Do not name a specific example, story, fable, or analogy by name — focus on the principle/lesson,
-  not the example itself."""
+- State the author's own recommendation as a should-sentence, grounded in the passage. Real CSAT answers look like
+  "We should put engagement before entertainment in learning games." — the author's point with a modal, in plain words.
+- If the passage gives advice, use it. If it only explains or describes, state the attitude the author wants readers
+  to take (e.g. "We should accept that ...", "We should recognize that ...", "We need to ...").
+- Use ONLY actions, people, and ideas that are in the passage. Never invent specific steps, numbers, tools, schedules,
+  or agents the passage does not mention (no "30 minutes a day", "journaling", "governments", "schools" unless the passage says so).
+- Cover the whole point, not one example or detail. If the passage first presents a common view and then argues
+  against it, the answer follows the author's side, never the common view.
+- Use a modal verb (must / should / have to / need to / ought to) or a key adjective
+  (important / essential / necessary / crucial ...). Do NOT start with You/He/She. Subject "We" or "It" is safest.
+- Do not name a specific example, story, or person from the passage."""
 
-VERIFY_PRACTICAL_SYS = """You check whether a practical claim sentence is a real CSAT 「주장」 answer, not just the thesis with a modal bolted on.
+VERIFY_PRACTICAL_SYS = """You check the correct answer of a Korean CSAT 「주장」 (claim) question against the passage.
 Output ONLY one JSON object. No markdown.
-Keys: ok (bool), is_just_thesis_plus_modal (bool), missing_modal_or_adjective (bool), issue (short English string or empty), better_sentence (revised English sentence if ok=false else empty string).
-is_just_thesis_plus_modal=true if the sentence is essentially "<thesis> + should/must" with no step down to a concrete practice/action.
-missing_modal_or_adjective=true if the sentence has neither a modal verb (must/should/have to/need to/ought to) nor one of these adjectives: important/essential/significant/critical/vital/crucial/necessary/desirable/appropriate."""
+Keys: ok (bool), grounded (bool), matches_author (bool), issue (short English string or empty), better_sentence (English sentence, 7-14 words, only if ok=false, else empty string).
+- grounded=false if the sentence adds actions, steps, numbers, tools, or agents (governments, schools, companies, parents …) that the passage does not mention or clearly imply.
+- matches_author=false if it states only a detail/example, the common view the author argues against, the opposite, or something the author does not urge.
+- ok=true only if grounded and matches_author are both true. A plain "We should <the author's point>" sentence is GOOD — do not demand concrete steps.
+- better_sentence must follow the same rules: the author's point with a modal verb, passage words only, 7-14 words, not starting with You/He/She."""
 
 DRAFT_DIST_SYS = """You write four wrong (distractor) claim options for a Korean CSAT 「주장」 MCQ.
 Output ONLY one JSON object. No markdown.
@@ -230,6 +232,32 @@ def _log_failure(
 
 def _norm_opt(s: str) -> str:
     return " ".join(_strip_circled(s).lower().split()).rstrip(".")
+
+
+_OK_SUBJECTS = {"we", "it", "people", "individuals", "everyone", "one", "each", "our", "all", "humans", "readers", "society"}
+
+
+def _answer_issue(sent: str, passage: str) -> str | None:
+    """정답 후보를 코드로 거른다 — 길이(7~16단어)와 지문에 없는 주체(「Governments should …」).
+    35B 검증기가 「구체적 실천」을 요구하며 지문에 없는 행동·주체를 붙인 20단어 넘는 문장을 만들어
+    형식 검사에서 떨어지거나 지어낸 정답이 나갔다(26년 9월 고1: 주장 18지문 중 실패 5, 지어냄 6)."""
+    words = sent.split()
+    if not 7 <= len(words) <= 16:
+        return f"{len(words)} words (need 7-16)"
+    low = sent.lower()
+    subj = low.split()[0].strip(".,")
+    for m in MODAL_WORDS:
+        k = low.find(f" {m} ")
+        if k > 0:
+            subj = low[:k]
+            break
+    head = [w.strip(".,'\"") for w in subj.split()]
+    if head and head[0] not in _OK_SUBJECTS and head[0] != "it":
+        plow = passage.lower()
+        # 주어 명사가 지문에 나오면(어근 5자) 괜찮다 — Athletes(athletic)·Pet owners(owners)
+        if not any(len(w) >= 3 and w[:5] in plow for w in head if w not in ("the", "a", "an", "all", "every")):
+            return f"subject '{subj}' is not in the passage"
+    return None
 
 
 def _valid_distractor(s: str) -> bool:
@@ -372,8 +400,10 @@ def run_pipeline(
     trace.append({"stage": "thesis", "out": thesis_obj})
     print(f"[pipeline] thesis: {thesis_en[:120]}", file=sys.stderr)
 
-    # 2) practical claim (step down from thesis) — with its own verify/revise loop
+    # 2) 정답 문장 — 필자의 주장 + 조동사. 지문에 없는 행동·주체를 지어내면 안 된다(코드 검사 + 35B 검증).
     practical_en = ""
+    fallback = ""  # 검증은 못 넘었지만 코드 검사는 통과한 후보 — 끝까지 없으면 경고와 함께 쓴다
+    practical_warn = ""
     for p_try in range(max_retries + 1):
         prac = call(
             PRACTICAL_SYS,
@@ -381,34 +411,44 @@ def run_pipeline(
             max_tokens=200,
         )
         cand = str((prac or {}).get("practical_en") or "").strip()
-        trace.append({"stage": "practical", "out": prac})
-        if not cand or _has_hangul(cand):  # 선지가 될 문장 — 한국어면 버린다
+        if not cand and "{" not in raw_out[0]:
+            # 35B 는 「JSON 만」이라 해도 문장 한 줄만 돌려주기도 한다 — 한 문장이면 그대로 받는다
+            line = raw_out[0].strip().strip('"').strip()
+            if line and "\n" not in line and len(line.split()) <= 20:
+                cand = line
+        trace.append({"stage": "practical", "out": prac, "raw": raw_out[0][:300]})
+        if not cand or _has_hangul(cand) or not _has_modal_or_adj(cand) or _starts_bad_subject(cand):
             continue
+        issue = _answer_issue(cand, passage)
+        if issue:
+            print(f"[pipeline] practical rejected try={p_try}: {issue} — {cand[:80]}", file=sys.stderr)
+            continue
+        fallback = fallback or cand
         pver = call(
             VERIFY_PRACTICAL_SYS,
-            f"[Thesis]\n{thesis_en}\n\n[Practical claim]\n{cand}\n\nReturn ok, is_just_thesis_plus_modal, missing_modal_or_adjective, issue, better_sentence JSON.",
+            f"[Passage]\n{passage}\n\n[Thesis]\n{thesis_en}\n\n[Claim answer]\n{cand}\n\n"
+            "Return ok, grounded, matches_author, issue, better_sentence JSON.",
             max_tokens=256,
         )
         trace.append({"stage": "verify_practical", "out": pver})
         if pver is None or bool(pver.get("ok")):
             practical_en = cand
             break
-        better = str(pver.get("better_sentence") or "").strip()
-        print(
-            f"[pipeline] practical verify fail try={p_try}: {pver.get('issue')}",
-            file=sys.stderr,
-        )
+        print(f"[pipeline] practical verify fail try={p_try}: {pver.get('issue')}", file=sys.stderr)
         _log_failure(
             passage=passage, stage="verify_practical", bad_output={"practical": cand, "verify": pver},
-            problem=str(pver.get("issue") or "thesis+modal / missing modal-adjective"), thesis=thesis_obj,
-            improved_hint=better,
+            problem=str(pver.get("issue") or "not grounded / not the author's claim"), thesis=thesis_obj,
         )
-        if better and not _has_hangul(better) and _has_modal_or_adj(better) and not _starts_bad_subject(better):
-            practical_en = better
-            if p_try >= 1:
-                break
+        better = str(pver.get("better_sentence") or "").strip()
+        if (better and not _has_hangul(better) and _has_modal_or_adj(better) and not _starts_bad_subject(better)
+                and not _answer_issue(better, passage)):
+            practical_en = better  # 검증기가 규칙대로 고친 문장 — 다시 묻지 않고 쓴다
+            break
+    if not practical_en and fallback:
+        practical_en = fallback
+        practical_warn = "주장 정답이 검증을 통과하지 못해 첫 후보를 썼습니다 — 필자의 주장과 맞는지 확인 필요"
     if not practical_en:
-        practical_en = f"It is essential to act on the idea that {thesis_en[0].lower()}{thesis_en[1:]}".rstrip(".")
+        return {"ok": False, "error": "practical claim stage failed", "trace": trace}
     print(f"[pipeline] practical: {practical_en[:120]}", file=sys.stderr)
 
     options: list[str] = [practical_en]
@@ -466,10 +506,11 @@ def run_pipeline(
 
         options, correct_index = _shuffle_answer(options, correct_index)
         # 5) 끝까지 못 고친 오답 + 모의 풀이(정답 모르는 학생처럼 풀기) → 관리자 화면 「검증 경고」
-        warnings = flagged_warnings(flagged, options) + solve_check(
-            call, kind="claim", passage=passage, options_text=_format_options(options),
-            answer=CIRCLED[correct_index], trace=trace,
+        correct_index, solve_warns = settle_answer(
+            call, kind="claim", passage=passage, options=options, correct_index=correct_index,
+            options_text=_format_options(options), trace=trace,
         )
+        warnings = ([practical_warn] if practical_warn else []) + flagged_warnings(flagged, options) + solve_warns
 
         # 5) explanation (optional dedicated explain LoRA)
         if has_explain_adapter:

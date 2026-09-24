@@ -42,8 +42,9 @@ from _cuda_runtime import (  # noqa: E402
 )
 
 from json_extract import explanation_text, trim_to_sentence  # noqa: E402
+from option_form import title_form_issue  # noqa: E402
 
-from distractor_check import distinct_options, fix_distractors, flagged_warnings, solve_check  # noqa: E402
+from distractor_check import distinct_options, fix_distractors, flagged_warnings, settle_answer  # noqa: E402
 
 FAILURE_DIR = _ROOT / "data" / "title-pipeline-failures"
 
@@ -400,6 +401,13 @@ def run_pipeline(
             unsupported = bool((ver or {}).get("unsupported"))
             better = str((ver or {}).get("better_option") or "").strip()
             issue = str((ver or {}).get("issue") or "").strip()
+            # 뜻이 맞아도 헤드라인이 아니면(마침표 문장·소문자) 불합격 — 모양은 코드가 본다
+            form = title_form_issue(correct)
+            if form and ver is not None:
+                match = False
+                issue = f"form: {form}. {issue}".strip()
+            if better and title_form_issue(_titlecase_start(_strip_circled(better))):
+                better = ""
             if ver is None:
                 print("[pipeline] answer verify skipped (null JSON)", file=sys.stderr)
                 ans_ok = True
@@ -425,7 +433,13 @@ def run_pipeline(
                 improved_hint=better,
             )
             if v_try >= max_retries:
-                options[correct_index] = _titlecase_start(message_en)
+                # 예전엔 핵심 메시지 문장을 그대로 정답에 넣어 마침표 달린 문장 제목이 나갔다(39번) —
+                # 헤드라인 모양인 것만 쓰고, 없으면 지금 선지를 둔다
+                for cand in (message_en, correct):
+                    cand = _titlecase_start(_strip_circled(cand).strip())
+                    if cand and not title_form_issue(cand) and len(cand.split()) >= 4:
+                        options[correct_index] = cand
+                        break
                 print("[pipeline] answer verify soft-pass on last retry", file=sys.stderr)
                 ans_ok = True
                 break
@@ -457,20 +471,22 @@ def run_pipeline(
             correct_index=correct_index,
             max_retries=max_retries,
             accept=lambda c, cands: distinct_options(
-                c, cands, valid=lambda o: _min_distractor_words(c) <= len(o.split()) <= 18 and o[:1].isupper()),
+                c, cands, valid=lambda o: _min_distractor_words(c) <= len(o.split()) <= 18 and o[:1].isupper()
+                and not title_form_issue(o)),
             normalize=_normalize_options,
             trace=trace,
             log_failure=lambda **kw: _log_failure(passage=passage, message=message_obj, **kw),
-            form_issue=_short_distractor,
+            form_issue=lambda d, c: _short_distractor(d, c) or title_form_issue(d),
         )
 
 
         options, correct_index = _shuffle_answer(options, correct_index)
         # 5) 끝까지 못 고친 오답 + 모의 풀이(정답 모르는 학생처럼 풀기) → 관리자 화면 「검증 경고」
-        warnings = flagged_warnings(flagged, options) + solve_check(
-            call, kind="title", passage=passage, options_text=_format_options(options),
-            answer=CIRCLED[correct_index], trace=trace,
+        correct_index, solve_warns = settle_answer(
+            call, kind="title", passage=passage, options=options, correct_index=correct_index,
+            options_text=_format_options(options), trace=trace,
         )
+        warnings = flagged_warnings(flagged, options) + solve_warns
 
         # 5) explanation (optional dedicated explain LoRA)
         if has_explain_adapter:
