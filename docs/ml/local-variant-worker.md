@@ -54,6 +54,29 @@ ml\worker\start_worker.bat --once    REM 한 건만 처리하고 끝
 절전 모드에서는 워커도 멈춘다 — 이 PC 의 절전 설정은 따로 꺼 둔다.
 워커는 PC 마다 하나만 뜬다(`ml/worker/.worker.lock`) — 이미 돌고 있으면 나중에 띄운 쪽이 바로 끝난다.
 
+## 맥(Apple Silicon · MLX)에서 돌리기
+
+2026-09-24 부터 주 워커는 맥북 프로(M5 Max 64GB)다. 코드는 같고 백엔드만 다르다 — 맥이면 자동으로 MLX
+(`LOCAL_VARIANT_BACKEND=cuda|mlx` 로 바꿀 수 있다). 파이프라인은 그대로 쓰고, `ml/common/mlx_runtime.py` 가
+`cuda_runtime` 자리에 들어가 `chat_text(use_adapter)` · `set_adapter` · `adapter_off` 를 MLX 로 처리한다.
+
+| | Windows(CUDA) | 맥(MLX) |
+|---|---|---|
+| venv | `ml/topic/windows/.venv` | `ml/topic/.venv` (`pip install -r ml/topic/requirements.txt -r ml/worker/requirements.txt`) |
+| 어댑터 | `ml/<유형>/adapters/<유형>-lora-cuda` | `ml/<유형>/adapters/<유형>-lora` (`ml/topic/train.sh` 결과) |
+| 베이스 | Qwen2.5-0.5B-Instruct | `mlx-community/Qwen2.5-7B-Instruct-4bit` |
+| 자동 시작 | `register_worker_task.ps1` (작업 스케줄러) | `./ml/worker/register_worker_launchd.sh` (LaunchAgent, `--remove` 로 해제) |
+| 직접 실행 | `start_worker.bat` | `./ml/worker/start_worker.sh` |
+| 메모리 대기 | GPU 여유 2600MB 미만이면 대기 | 없음(`--min-free-mb 0`) — 통합 메모리 64GB, 추론 약 9GB·학습 약 12GB |
+
+- MLX 는 peft 처럼 어댑터를 붙였다 뗐다 하지 않아 **베이스와 어댑터별 모델을 따로 올린다**(7B 4bit 한 벌 약 4.3GB).
+- LaunchAgent 는 `ProcessType=Interactive` 로 등록한다 — 지정하지 않으면 launchd 가 백그라운드 작업의 CPU·I/O 를
+  낮춰 잡을 수 있다(Windows 에서 같은 원인으로 5~9배 느렸다 — #45).
+- 학습: `npm run cc:topic-export` → `caffeinate -i ./ml/topic/train.sh mlx-community/Qwen2.5-7B-Instruct-4bit 3000` (약 45분, 최대 11.8GB).
+  학습 중에도 워커는 돌아간다. 어댑터가 새로 저장되면 다음 작업부터 새 어댑터로 다시 올린다.
+- 품질 시험: `ml/topic/.venv/bin/python ml/topic/windows/eval_pipeline.py --k 5 --n 2` (맥에선 자동으로 MLX).
+- **두 워커를 같이 켜 두지 않는다** — 먼저 집는 쪽이 처리하는데 모델이 달라 품질이 다르다.
+
 ## GPU 를 학습과 나눠 쓰는 규칙 (4GB)
 
 - 워커는 **여유 VRAM 이 2600MB 이상일 때만** 모델을 올린다(`--min-free-mb`). 학습 중(여유 1GB 남짓)이면

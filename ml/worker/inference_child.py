@@ -4,7 +4,7 @@
 부모(local_variant_worker.py)가 이 프로세스를 끝내면 CUDA 메모리가 컨텍스트까지 통째로 풀린다.
 4GB GPU 를 학습과 나눠 쓰려면 모델을 내려놓을 때 프로세스째 끝내야 한다.
 
-  인자 1개: JSON {"base_model": str, "use_4bit": bool, "adapters": [[이름, 경로], ...]}
+  인자 1개: JSON {"base_model": str, "use_4bit": bool, "adapters": [[이름, 경로], ...], "backend": "cuda"|"mlx"}
   표준입력: 한 줄에 요청 JSON {"en": "topic", "paragraph": str, "explain": bool}
   표준출력: 한 줄에 "@@RESULT@@ " + JSON — 그 밖의 줄은 부모가 무시한다(진행 로그는 stderr).
 """
@@ -21,6 +21,12 @@ from typing import Any
 _ML = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ML / "common"))
 
+# 백엔드는 부모가 넘긴 spec 에 있다 — 파이프라인을 불러오기 전에 정해야 한다.
+# MLX 면 mlx_runtime 을 cuda_runtime 자리에 끼워, 파이프라인(_cuda_runtime → cuda_runtime)이 그대로 MLX 를 쓰게 한다.
+if len(sys.argv) > 1 and json.loads(sys.argv[1]).get("backend") == "mlx":
+    import mlx_runtime  # noqa: E402
+
+    mlx_runtime.use_as_cuda_runtime()
 import cuda_runtime as rt  # noqa: E402
 from win_qos import opt_out_power_throttling  # noqa: E402
 

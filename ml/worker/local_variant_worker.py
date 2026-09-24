@@ -5,13 +5,19 @@
 PC 에서 Atlas 로 나가는 연결만 쓴다 — 포트를 열거나 터널을 둘 필요가 없다.
 필드·상태 규약: docs/handoff/2026-09-23-로컬-LoRA-작업큐.md · 사용법: docs/ml/local-variant-worker.md
 
-  register_worker_task.ps1                   # 로그인 때 창 없이 상주(권장) — 로그 ml/worker/logs/worker.log
-  start_worker.bat                           # 콘솔 창에서 직접 돌리기(창을 닫으면 멈춤)
+  register_worker_task.ps1                   # [Windows] 로그인 때 창 없이 상주(권장) — 로그 ml/worker/logs/worker.log
+  start_worker.bat                           # [Windows] 콘솔 창에서 직접 돌리기(창을 닫으면 멈춤)
+  register_worker_launchd.sh                 # [맥] 로그인 때 상주(LaunchAgent) — 로그 ml/worker/logs/worker.log
+  start_worker.sh                            # [맥] 터미널에서 직접 돌리기
   python local_variant_worker.py --fake      # GPU 없이 큐·화면 연결만 시험(고정 결과)
   python local_variant_worker.py --once      # 한 건만 처리하고 끝
 
 모델은 자식 프로세스(inference_child.py)에 올린다. 한동안 작업이 없으면 자식을 끝내
 CUDA 메모리를 통째로 돌려준다 — 같은 4GB GPU 로 학습도 돌리기 때문이다.
+
+백엔드: Windows·Linux = CUDA(torch·peft, 어댑터 <유형>-lora-cuda),
+        맥(Apple Silicon) = MLX(mlx-lm, 어댑터 <유형>-lora — ml/topic/train.sh 가 만드는 것).
+큐·하트비트·lease·재시도는 백엔드와 무관하다.
 """
 from __future__ import annotations
 
@@ -34,8 +40,15 @@ _ML = _WORKER_DIR.parent
 _ROOT = _ML.parent
 sys.path.insert(0, str(_ML / "common"))
 
-import cuda_runtime as rt  # noqa: E402  (어댑터 탐색만 — torch 는 자식 프로세스에서만 쓴다)
+# 맥은 MLX, 그 밖은 CUDA. LOCAL_VARIANT_BACKEND=cuda|mlx 로 바꿀 수 있다.
+BACKEND = os.environ.get("LOCAL_VARIANT_BACKEND") or ("mlx" if sys.platform == "darwin" else "cuda")
+if BACKEND == "mlx":
+    import mlx_runtime as rt  # noqa: E402  (어댑터 탐색만 — mlx 는 자식 프로세스에서만 쓴다)
+else:
+    import cuda_runtime as rt  # noqa: E402  (어댑터 탐색만 — torch 는 자식 프로세스에서만 쓴다)
 from win_qos import opt_out_power_throttling  # noqa: E402
+# 어댑터 폴더 이름 — MLX 와 HF/peft 어댑터는 서로 호환되지 않아 이름을 나눠 둔다
+_ADAPTER_SUFFIX = "" if BACKEND == "mlx" else "-cuda"
 
 DB_NAME = "gomijoshua"  # 웹앱 getDb('gomijoshua') 와 같은 DB
 JOBS = "local_variant_jobs"
@@ -83,9 +96,28 @@ def load_env() -> dict[str, str]:
     return env
 
 
+def _mac_memory() -> dict | None:
+    """맥 통합 메모리 — 칩 이름·전체·여유(free+inactive+speculative 페이지). 화면 표시용."""
+    try:
+        name = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True, text=True, timeout=5).stdout.strip()
+        total = int(subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True, timeout=5).stdout.strip())
+        vm = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=5).stdout
+        page = int(vm.split("page size of ")[1].split(" ")[0])
+        pages = 0
+        for line in vm.splitlines():
+            if line.startswith(("Pages free", "Pages inactive", "Pages speculative")):
+                pages += int(line.split(":")[1].strip().rstrip("."))
+        return {"name": name or "Apple Silicon", "free_mb": pages * page // 2**20, "total_mb": total // 2**20}
+    except Exception:
+        return None
+
+
 def gpu_memory() -> dict | None:
     """nvidia-smi 로 GPU 여유 메모리를 읽는다 — 이 프로세스에서 CUDA 를 켜지 않으려고.
-    (WDDM 에서는 프로세스별 사용량이 안 나와 학습 중인지는 여유 메모리로만 알 수 있다.)"""
+    (WDDM 에서는 프로세스별 사용량이 안 나와 학습 중인지는 여유 메모리로만 알 수 있다.)
+    맥은 통합 메모리 값을 돌려준다."""
+    if BACKEND == "mlx":
+        return _mac_memory()
     try:
         out = subprocess.run(
             ["nvidia-smi", "--query-gpu=name,memory.free,memory.total", "--format=csv,noheader,nounits"],
@@ -102,10 +134,13 @@ def gpu_memory() -> dict | None:
 
 
 def _stamp(adapter: Path) -> str:
-    try:
-        return str(int((adapter / "adapter_model.safetensors").stat().st_mtime))
-    except OSError:
-        return ""
+    """어댑터가 새로 학습되면 바뀌는 값 — peft 는 adapter_model.safetensors, MLX 는 adapters.safetensors."""
+    for name in ("adapter_model.safetensors", "adapters.safetensors"):
+        try:
+            return str(int((adapter / name).stat().st_mtime))
+        except OSError:
+            continue
+    return ""
 
 
 def discover_types(only: set[str]) -> dict[str, dict]:
@@ -114,8 +149,8 @@ def discover_types(only: set[str]) -> dict[str, dict]:
     for ko, en in TYPES.items():
         if only and ko not in only:
             continue
-        main = _ML / en / "adapters" / f"{en}-lora-cuda"
-        explain = _ML / en / "adapters" / f"{en}-explain-lora-cuda"
+        main = _ML / en / "adapters" / f"{en}-lora{_ADAPTER_SUFFIX}"
+        explain = _ML / en / "adapters" / f"{en}-explain-lora{_ADAPTER_SUFFIX}"
         trained = rt.adapter_exists(main)
         base = rt.load_base_model_name(main, "") if trained else ""
         explain_ok = trained and rt.adapter_exists(explain) and rt.load_base_model_name(explain, "") == base
@@ -143,7 +178,7 @@ def child_spec(types_info: dict[str, dict], base: str, use_4bit: bool) -> dict:
         if info["explain"]:
             adapters.append([f"{info['en']}_explain", info["explain_path"]])
         stamps.append(info["stamp"])
-    return {"base_model": base, "use_4bit": use_4bit, "adapters": adapters, "stamp": "|".join(stamps)}
+    return {"base_model": base, "use_4bit": use_4bit, "adapters": adapters, "stamp": "|".join(stamps), "backend": BACKEND}
 
 
 def fake_question_data(ko: str, paragraph: str) -> dict:
@@ -171,7 +206,7 @@ class InferenceChild:
     def __init__(self, spec: dict, load_timeout: float) -> None:
         self.spec = spec
         self.results: queue.Queue[str] = queue.Queue()
-        payload = {k: spec[k] for k in ("base_model", "use_4bit", "adapters")}
+        payload = {k: spec[k] for k in ("base_model", "use_4bit", "adapters", "backend")}
         env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
         self.proc = subprocess.Popen(
             [sys.executable, str(_WORKER_DIR / "inference_child.py"), json.dumps(payload, ensure_ascii=False)],
@@ -281,6 +316,7 @@ class Worker:
                     "fake": self.args.fake,
                     "pid": os.getpid(),
                     "version": VERSION,
+                    "backend": BACKEND,
                     "gpu": {"name": gpu["name"], "free_mb": gpu["free_mb"], "total_mb": gpu["total_mb"]} if gpu else None,
                     "current_job": str(self.current_job) if self.current_job is not None else None,
                     "types": {
@@ -397,6 +433,8 @@ class Worker:
 
     # ---- 모델 ----
     def gpu_ok(self) -> bool:
+        if not self.args.min_free_mb:
+            return True  # 맥 기본 — 통합 메모리는 여유를 기다리지 않는다
         mem = gpu_memory()
         return mem is not None and mem["free_mb"] >= self.args.min_free_mb
 
@@ -411,8 +449,8 @@ class Worker:
         if c is not None and c.alive() and c.spec["stamp"] == spec["stamp"] and c.spec["base_model"] == spec["base_model"]:
             return c
         self.drop_child()  # 베이스가 다르거나 어댑터가 새로 학습됐으면 새로 띄운다
-        mem = gpu_memory()
-        if mem is None or mem["free_mb"] < self.args.min_free_mb:
+        if not self.gpu_ok():
+            mem = gpu_memory()
             raise GpuBusy(f"GPU 여유 {mem['free_mb'] if mem else '?'}MB < {self.args.min_free_mb}MB")
         log(f"모델 로드: {spec['base_model']} + 어댑터 {[a[0] for a in spec['adapters']]}")
         self.child = InferenceChild(spec, load_timeout=self.args.load_timeout_sec)
@@ -440,7 +478,7 @@ class Worker:
                 return
             info = self.types_info.get(ko)
             if not info or not info["trained"]:
-                self.finish(job_id, error=f"{ko} 어댑터가 아직 학습되지 않았습니다 (ml/{en}/adapters/{en}-lora-cuda).")
+                self.finish(job_id, error=f"{ko} 어댑터가 아직 학습되지 않았습니다 (ml/{en}/adapters/{en}-lora{_ADAPTER_SUFFIX}).")
                 return
             self.state = "loading"
             child = self.ensure_child(info)
@@ -495,8 +533,8 @@ class Worker:
         threading.Thread(target=self.heartbeat_loop, daemon=True).start()
         trained = [ko for ko, i in self.types_info.items() if i["trained"]]
         log(
-            f"워커 시작 id={self.id} fake={self.args.fake} 학습된 유형={trained or '없음'} "
-            f"(GPU 여유 {self.args.min_free_mb}MB 이상일 때만 모델을 올림)"
+            f"워커 시작 id={self.id} backend={BACKEND} fake={self.args.fake} 학습된 유형={trained or '없음'} "
+            + (f"(GPU 여유 {self.args.min_free_mb}MB 이상일 때만 모델을 올림)" if self.args.min_free_mb else "(메모리 대기 없음)")
         )
         last_busy_log = 0.0
         errors = 0
@@ -598,7 +636,12 @@ def main() -> int:
     ap.add_argument("--poll-sec", type=float, default=3.0)
     ap.add_argument("--idle-unload-min", type=float, default=10.0, help="작업이 없으면 이만큼 뒤 모델을 내려놓음")
     ap.add_argument("--lease-min", type=float, default=15.0)
-    ap.add_argument("--min-free-mb", type=int, default=2600, help="모델을 올리기 전에 필요한 GPU 여유 메모리")
+    ap.add_argument(
+        "--min-free-mb",
+        type=int,
+        default=0 if BACKEND == "mlx" else 2600,
+        help="모델을 올리기 전에 필요한 GPU 여유 메모리(0=확인 안 함, 맥 기본)",
+    )
     ap.add_argument("--load-timeout-sec", type=float, default=900)
     ap.add_argument("--gen-timeout-sec", type=float, default=900)
     ap.add_argument("--log-file", default="", help="출력을 이 파일에 덧붙임 — 창 없이 띄울 때(register_worker_task.ps1)")

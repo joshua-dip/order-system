@@ -9,8 +9,9 @@
   python eval_pipeline.py --k 5 --n 2 --out eval.jsonl
   python eval_pipeline.py --adapter ..\\adapters\\topic-lora-cuda-1.5b   # 다른 어댑터(베이스·4bit 는 train_meta.json)
   python eval_pipeline.py --code-root <다른 체크아웃>\\ml                # 다른 버전의 파이프라인 코드와 비교
+  python eval_pipeline.py --backend mlx --adapter ../adapters/topic-lora  # 맥(MLX) — 맥에선 auto 가 mlx 를 고른다
 
-GPU 를 쓴다 — 워커가 모델을 올려 둔 상태에서 돌리면 4GB 가 모자랄 수 있다.
+GPU 를 쓴다 — 워커가 모델을 올려 둔 상태에서 돌리면 4GB 가 모자랄 수 있다(Windows).
 """
 from __future__ import annotations
 
@@ -75,7 +76,10 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=5, help="test.jsonl 에서 쓸 서로 다른 지문 수")
     ap.add_argument("--n", type=int, default=2, help="지문마다 돌릴 횟수")
     ap.add_argument("--data-root", type=Path, default=_ROOT / "data")
-    ap.add_argument("--adapter", type=Path, default=_ML / "topic" / "adapters" / "topic-lora-cuda")
+    ap.add_argument("--adapter", type=Path, default=None,
+                    help="기본: cuda → adapters/topic-lora-cuda, mlx → adapters/topic-lora")
+    ap.add_argument("--backend", choices=("auto", "cuda", "mlx"), default="auto",
+                    help="auto = 맥(Apple Silicon)이면 mlx, 아니면 cuda")
     ap.add_argument("--code-root", type=Path, default=_ML, help="파이프라인 코드를 가져올 ml 폴더")
     ap.add_argument("--out", type=Path, default=None, help="결과 JSONL")
     args = ap.parse_args()
@@ -83,8 +87,17 @@ def main() -> int:
     # 앞에 넣을수록 먼저 찾는다 — 최종 순서: topic/windows → topic → common
     for p in (args.code_root / "common", args.code_root / "topic", args.code_root / "topic" / "windows"):
         sys.path.insert(0, str(p))
+    backend = args.backend
+    if backend == "auto":
+        backend = "mlx" if sys.platform == "darwin" else "cuda"
+    if backend == "mlx":
+        import mlx_runtime  # noqa: E402
+
+        mlx_runtime.use_as_cuda_runtime()  # 파이프라인이 cuda_runtime 자리에서 MLX 를 쓰게
     import cuda_runtime as rt  # noqa: E402
     import pipeline_topic as pt  # noqa: E402
+    if args.adapter is None:
+        args.adapter = args.code_root / "topic" / "adapters" / ("topic-lora" if backend == "mlx" else "topic-lora-cuda")
 
     cases = load_cases(args.data_root, args.k)
     base = rt.load_base_model_name(args.adapter, "Qwen/Qwen2.5-0.5B-Instruct")
@@ -92,7 +105,7 @@ def main() -> int:
     t0 = time.time()
     model, tok = rt.load_base(base, use_4bit)
     model = rt.attach_adapters(model, [("topic", args.adapter)])
-    print(f"모델 {base} 4bit={use_4bit} 어댑터={args.adapter.name} 로드 {time.time() - t0:.0f}초 · "
+    print(f"[{backend}] 모델 {base} 4bit={use_4bit} 어댑터={args.adapter.name} 로드 {time.time() - t0:.0f}초 · "
           f"코드={args.code_root} · 지문 {len(cases)}개 × {args.n}회", flush=True)
 
     out = args.out.open("w", encoding="utf-8") if args.out else None
