@@ -87,6 +87,15 @@ function IconEssay() {
   );
 }
 
+function IconPractice() {
+  return (
+    <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </svg>
+  );
+}
+
 function IconVocabulary() {
   return (
     <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -163,7 +172,7 @@ function useHubSections(
   isMember: boolean,
   isPremiumMember: boolean,
   onFinalGate: () => void
-): { vocabulary: HubEntry; classkit: HubEntry; finalMock: HubEntry; primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[] } {
+): { vocabulary: HubEntry; classkit: HubEntry; finalMock: HubEntry; primary: HubEntry[]; workbook: HubEntry[]; more: HubEntry[]; study: HubEntry[] } {
   return useMemo(() => {
     const vocabulary: HubEntry = {
       id: 'vocabulary',
@@ -402,6 +411,29 @@ function useHubSections(
         ),
       },
     ];
+    /* 학습실 — 주문이 아니라 웹에서 바로 푸는 연습. 회원 전용 */
+    const study: HubEntry[] = [
+      {
+        id: 'practice',
+        title: '순서·삽입 연습',
+        description: isMember
+          ? (<>모의고사 순서·삽입 문항을<br />웹에서 풀고 바로 채점</>)
+          : (<>회원 전용 연습입니다<br />로그인 후 이용해 주세요</>),
+        icon: <IconPractice /> as ReactNode,
+        accentColor: '#0369A1',
+        gridClassName: 'lg:col-span-3',
+        href: '/practice',
+        interactive: isMember,
+        bottomSlot: isMember ? undefined : (
+          <a
+            href="/login?from=/practice"
+            className="inline-flex items-center gap-2 rounded-full border-2 border-blue-600 bg-blue-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 hover:border-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2"
+          >
+            로그인하기
+          </a>
+        ),
+      },
+    ];
     return {
       vocabulary,
       classkit,
@@ -411,6 +443,7 @@ function useHubSections(
         : [freeVariant, mock, textbook, gyogwaseo, external],
       workbook,
       more,
+      study,
     };
   }, [analysisUnlocked, isMember, isPremiumMember, onFinalGate]);
 }
@@ -441,7 +474,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const analysisUnlocked = isMember && user.canAccessAnalysis;
   const isPremiumMember = user?.isPremiumMember === true;
   const openFinalGate = () => setFinalGateOpen(true);
-  const { vocabulary: hubVocabulary, classkit: hubClassKit, finalMock: hubFinalMock, primary: hubPrimary, workbook: hubWorkbook, more: hubMore } = useHubSections(
+  const { vocabulary: hubVocabulary, classkit: hubClassKit, finalMock: hubFinalMock, primary: hubPrimary, workbook: hubWorkbook, more: hubMore, study: hubStudy } = useHubSections(
     analysisUnlocked,
     isMember,
     isPremiumMember,
@@ -861,6 +894,16 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               <p className="mt-1 text-sm text-slate-500">번호별 제작, 분석지, 서술형, 통합 주문 등</p>
             </div>
             {renderHubGrid(hubMore)}
+          </section>
+
+          <section className="mt-12 border-t border-slate-200/90 pt-10" aria-labelledby="hub-study-heading">
+            <div className="mb-4">
+              <h2 id="hub-study-heading" className="text-base font-bold text-slate-800 tracking-tight">
+                학습실
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">주문 없이 웹에서 바로 풀어 보는 회원 전용 연습</p>
+            </div>
+            {renderHubGrid(hubStudy)}
           </section>
         </div>
       </div>
