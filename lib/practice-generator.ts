@@ -62,7 +62,11 @@ export function randomSeed(): number {
   return Math.floor(Math.random() * 2 ** 31);
 }
 
-/** 원문 → 문장. 따옴표 안 대사에서는 끊지 않는다. */
+/** 이니셜·약어로 끝나는 자리 — 여기의 마침표는 문장 끝이 아니다(「Theodore M. Porter」가 둘로 쪼개져
+ *  삽입 번호가 이름 한가운데 들어갔다). ml/common/rule_gen.py 의 _ABBREV 와 같게 둘 것. */
+const ABBREV_END = /(?:^|[\s("“])(?:[A-Z]|Mr|Mrs|Ms|Dr|St|Jr|Sr|Prof|Mt|No|vs|etc|e\.g|i\.e|U\.S|U\.K)\.$/;
+
+/** 원문 → 문장. 따옴표 안 대사와 이니셜·약어 뒤에서는 끊지 않는다. */
 export function splitPassageSentences(original: string): string[] {
   const text = original.replace(/\s+/g, ' ').trim();
   const out: string[] = [];
@@ -74,6 +78,7 @@ export function splitPassageSentences(original: string): string[] {
     else if (ch === '“') inQuote = true;
     else if (ch === '”') inQuote = false;
     if (ch !== '.' && ch !== '!' && ch !== '?') continue;
+    if (ch === '.' && ABBREV_END.test(text.slice(0, i + 1))) continue;
     let j = i + 1;
     let after: boolean = inQuote;
     while (j < text.length && /["”'’)]/.test(text[j])) {
