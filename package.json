@@ -10,6 +10,7 @@
     "lint": "eslint",
     "seed:admin": "node scripts/seed-admin.js",
     "seed:testuser": "node scripts/seed-test-user.js",
+    "test:practice": "tsx --test lib/practice-generator.test.ts",
     "import:passages": "python3 scripts/excel_to_passages.py",
     "import:generated-questions": "python3 scripts/excel_variant_to_generated_questions.py",
     "mcp-bridge:install": "npm install --prefix mcp-bridge",
