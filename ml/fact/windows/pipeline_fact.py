@@ -18,6 +18,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +44,7 @@ from distractor_check import NEAR_DUP, solve_check, word_overlap  # noqa: E402
 from json_extract import explanation_text, extract_json_object, trim_to_sentence  # noqa: E402
 
 CIRCLED = "①②③④⑤"
+TIME_BUDGET_SEC = 150  # 문항 하나에 쓸 시간 — 넘으면 다시 쓰기를 멈추고 경고를 붙여 마무리
 KINDS = ("일치", "불일치")
 QUESTION = {"일치": "다음 글의 내용과 일치하는 것은?", "불일치": "다음 글의 내용과 일치하지 않는 것은?"}
 
@@ -98,7 +100,8 @@ EXPLAIN_SYS = """당신은 한국 수능 영어 「내용 일치/불일치」 �
 
 def _strip_circled(opt: str) -> str:
     s = opt.strip()
-    while s[:1] in CIRCLED:
+    # s[:1] 로 물으면 빈 문자열('')이 「들어 있다」가 돼 번호만 있는 선지(「①」)에서 영원히 돈다 — 한 문항이 20분 멈췄다
+    while s and s[0] in CIRCLED:
         s = s[1:].strip()
     return s.lstrip(".) ").strip()
 
@@ -218,6 +221,7 @@ def run_pipeline(
     if kind not in KINDS:
         return {"ok": False, "error": f"unknown kind {kind!r} (일치|불일치)"}
     trace: list[dict[str, Any]] = []
+    started = time.time()  # 문항 하나의 시간 한도 — 빈칸에서 다시 쓰기 반복으로 한 문항이 20분 걸린 일이 있었다
     if main_adapter:
         set_adapter(model, main_adapter)
     raw_out = [""]
@@ -252,6 +256,9 @@ def run_pipeline(
 
     # 2~3) 사실 확인 → 정답 번호 맞추기 → 어긋난 선지만 다시 쓰기
     for c_try in range(max_retries + 2):
+        if time.time() - started > TIME_BUDGET_SEC:
+            print(f"[pipeline] time budget {TIME_BUDGET_SEC}s reached — stop rewriting", file=sys.stderr)
+            break
         checks = _verdicts(call(
             CHECK_SYS,
             f"[Passage]\n{passage}\n\n[Options]\n" + "\n".join(f"{k + 1}. {o}" for k, o in enumerate(options))
@@ -301,7 +308,9 @@ def run_pipeline(
             others = [o for k, o in enumerate(options) if k != i]
             # 다른 선지가 아직 안 다룬 덩이부터 — k 번째 덩이만 주면 이미 있는 선지와 같은 사실을 비틀게 된다
             # (31번: 끝 두 덩이가 「샐러드 유행」 한 사실뿐이라 ③·④·⑤가 모두 그 얘기). 순서는 4) 에서 다시 맞춘다
-            for attempt, part_k in enumerate(_part_order(i, passage, parts, checks, skip=i)[:3]):
+            for attempt, part_k in enumerate(_part_order(i, passage, parts, checks, skip=i)[: 3 if c_try == 0 else 1]):
+                if time.time() - started > TIME_BUDGET_SEC:
+                    break
                 # 거절된 시도를 같이 보여 주고, 두 번째부터는 온도를 올린다 — 35B 가 같은 문장을 되풀이해
                 # 덩이를 바꿔 줘도 같은 이유로 또 거절됐다(재확인 실패 일치형의 대부분, 거절 36건)
                 tried = rejected.get(i, [])

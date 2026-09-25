@@ -321,7 +321,7 @@ def distinct_options(correct: str, candidates: list[str], valid: Callable[[str],
     """정답·서로와 같은 것, 형식(valid)에 어긋나는 것을 뺀 후보 — 순서 유지."""
     def norm(s: str) -> str:
         s = s.strip()
-        if s[:1] in CIRCLED:
+        if s and s[0] in CIRCLED:
             s = s[1:]
         return " ".join(s.lower().split()).rstrip(".")
 

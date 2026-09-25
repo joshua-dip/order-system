@@ -16,6 +16,7 @@ import json
 import random
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,8 @@ CIRCLED = "①②③④⑤"
 # definition of art」) — 주제·제목 오답의 0.7 로는 멀쩡한 오답을 겹침으로 잘랐다. 거의 같은 말만 겹침으로 본다.
 DUP = 0.9
 MAX_SPAN_WORDS = 20
+TIME_BUDGET_SEC = 150  # 문항 하나에 쓸 시간 — 넘으면 다시 쓰기를 멈춘다
+REDRAFT_WITHIN_SEC = 90  # 치명적 결함이 남았을 때 처음부터 다시 만드는 건 이 시간 안일 때만
 QUESTION = "다음 빈칸에 들어갈 말로 가장 적절한 것은?"
 BLANK = "<u>_____</u>"
 
@@ -85,6 +88,25 @@ GOAL_WRONG = ("It must be a tempting WRONG answer: use the passage's own words, 
               "the opposite, only one example or detail, or the view the passage argues against. "
               "Never write something that could also be correct.")
 
+GIST_SYS = """You judge the blank of a Korean CSAT fill-in-the-blank question.
+CSAT blanks cover the passage's KEY POINT: the author's main claim, or the idea the whole passage builds to
+(often a restatement of the topic sentence or the conclusion). A blank on an example, a number, a name, a date,
+a list item or a side detail is bad: many options could fit it, and it tests memory rather than understanding.
+Output ONLY one JSON object. No markdown.
+Keys: key_point (true|false), reason (short English), better_phrase (if key_point is false: a phrase of 4-20 words copied EXACTLY from the passage that states the key point; otherwise empty string)."""
+
+PICK_SYS = """You choose the blank for a Korean CSAT fill-in-the-blank question.
+Output ONLY one JSON object. No markdown.
+Keys: phrase (4-20 words copied EXACTLY from the passage — same spelling, punctuation and contractions — that states the passage's key point: the author's main claim or the idea the passage builds to; never an example, number, name or side detail)."""
+
+OPTIONS_SYS = """You write the five options of a Korean CSAT fill-in-the-blank question.
+Output ONLY one JSON object. No markdown.
+Keys: options (array of exactly 5 English phrases), answer (1-5, the position of the correct option).
+- The correct option means the same as [Original phrase] (keep it or paraphrase it lightly).
+- The four wrong options must fit the sentence around <u>_____</u> grammatically and use the passage's own words,
+  but break its logic: the opposite, only one example or detail, the view the author rejects, or an overstatement.
+- Never write a wrong option that could also be correct. Keep all five about the same length."""
+
 EXPLAIN_SYS = """당신은 한국 수능 영어 「빈칸 추론」 문항의 한국어 해설만 씁니다.
 출력은 JSON 한 개: {"Explanation": "..."} — 마크다운 금지.
 - 첫 문장은 「정답은 ①.」 꼴로 정답 번호를 밝힌다.
@@ -95,7 +117,8 @@ EXPLAIN_SYS = """당신은 한국 수능 영어 「빈칸 추론」 문항의 �
 
 def _strip_circled(opt: str) -> str:
     s = opt.strip()
-    while s[:1] in CIRCLED:
+    # s[:1] 로 물으면 빈 문자열('')이 「들어 있다」가 돼 번호만 있는 선지(「①」)에서 영원히 돈다 — 한 문항이 20분 멈췄다
+    while s and s[0] in CIRCLED:
         s = s[1:].strip()
     return s.lstrip(".) ").strip()
 
@@ -128,7 +151,13 @@ def blank_out(passage: str, span: str) -> str | None:
     span = " ".join(span.split()).strip()
     if not span or len(span.split()) < 2:
         return None
-    pattern = r"\s+".join(re.escape(w) for w in span.split())
+    # 둥근·곧은 따옴표 차이는 같은 글자로 본다(DB 지문은 ’·“ 를, 모델은 '·" 를 쓰곤 한다)
+    def word_pat(w: str) -> str:
+        out = re.escape(w)  # 따옴표는 re.escape 가 건드리지 않는다
+        out = re.sub("['\u2019\u2018]", "['\u2019\u2018]", out)
+        return re.sub('["\u201c\u201d]', '["\u201c\u201d]', out)
+
+    pattern = r"\s+".join(word_pat(w) for w in span.split())
     m = re.search(pattern, passage)
     if not m:
         return None
@@ -182,6 +211,9 @@ def run_pipeline(
     _second_try: bool = False,
 ) -> dict[str, Any]:
     trace: list[dict[str, Any]] = []
+    # 문항 하나의 시간 한도 — 다시 쓰기가 계속 거절되면 확인 4번 × 선지당 3번 × 재생성까지 100번 넘게 불러
+    # 한 문항에 20분이 걸렸다(23번). 한도를 넘으면 다시 쓰기를 멈추고 경고를 붙여 마무리한다
+    started = time.time()
     if main_adapter:
         set_adapter(model, main_adapter)
     raw_out = [""]
@@ -200,18 +232,67 @@ def run_pipeline(
         opts = _normalize_options((draft or {}).get("Options"))
         ans = str((draft or {}).get("CorrectAnswer") or "").strip()[:1]
         # 20단어 넘는 빈칸은 선지가 문장 틀을 그대로 베껴 같은 선지가 여럿 나왔다(23·37번) — 초안을 다시 받는다
-        if blanked is not None and len(span.split()) > MAX_SPAN_WORDS:
+        too_long = blanked is not None and len(span.split()) > MAX_SPAN_WORDS
+        if too_long:
             blanked = None
         ok = blanked is not None and len(opts) == 5 and ans in CIRCLED
         trace.append({"stage": "draft", "lora": use_lora, "ok": ok, "span": span})
         if ok:
             options, answer = opts, CIRCLED.index(ans)
             break
-        why = "blank not in passage" if blanked is None else f"options={len(opts)} answer={ans!r}"
+        why = ("blank too long" if too_long else "blank not in passage") if blanked is None else f"options={len(opts)} answer={ans!r}"
         print(f"[pipeline] draft try={d_try} unusable ({why}): {span[:60]}", file=sys.stderr)
     if not options or blanked is None:
-        return {"ok": False, "error": "draft stage failed", "trace": trace}
+        # 초안이 세 번 다 못 쓰면(구절을 살짝 바꿔 옮김·너무 김) 35B 가 요지 구절을 원문에서 골라 선지를 쓴다(35번)
+        picked = call(PICK_SYS, f"[Passage]\n{passage}\n\nReturn JSON.", max_tokens=200, t=0.0)
+        phrase = " ".join(str((picked or {}).get("phrase") or "").split())
+        pb = blank_out(passage, phrase) if phrase else None
+        made = None
+        if pb and 4 <= len(phrase.split()) <= MAX_SPAN_WORDS:
+            made = call(OPTIONS_SYS, f"[Passage with the blank]\n{pb}\n\n[Original phrase]\n{phrase}\n\nReturn options JSON.",
+                        max_tokens=400)
+        opts3 = [_strip_circled(str(o)) for o in ((made or {}).get("options") or [])][:5]
+        try:
+            ans3 = int((made or {}).get("answer")) - 1
+        except (TypeError, ValueError):
+            ans3 = -1
+        trace.append({"stage": "draft_fallback", "phrase": phrase, "ok": len(opts3) == 5 and 0 <= ans3 < 5})
+        if not (pb and len(opts3) == 5 and all(opts3) and 0 <= ans3 < 5):
+            return {"ok": False, "error": "draft stage failed", "trace": trace}
+        print(f"[pipeline] draft fallback (35B picked key phrase): {phrase[:70]}", file=sys.stderr)
+        span, blanked, options, answer = phrase, pb, opts3, ans3
     print(f"[pipeline] blank ({len(span.split())} words): {span[:80]} · answer={CIRCLED[answer]}", file=sys.stderr)
+
+    # 1-1) 요지 필터 — 예시·숫자·세부를 뚫으면 다른 선지도 말이 돼 정답이 둘이 된다(23번 「식량 급감이나 기온 급상승」,
+    #      35번 「한 주에 한두 번」). 요지가 아니면 35B 가 고른 요지 구절로 바꾸고 선지를 새로 쓴다
+    gist = call(GIST_SYS, f"[Passage with the blank]\n{blanked}\n\n[Blanked phrase]\n{span}\n\nReturn JSON.",
+                max_tokens=200, t=0.0)
+    trace.append({"stage": "gist", "out": gist})
+    gist_note = ""
+    if isinstance(gist, dict) and gist.get("key_point") is False:
+        better = " ".join(str(gist.get("better_phrase") or "").split())
+        new_blanked = blank_out(passage, better) if better else None
+        if new_blanked and 4 <= len(better.split()) <= MAX_SPAN_WORDS and not _same(better, span):
+            made = call(
+                OPTIONS_SYS,
+                f"[Passage with the blank]\n{new_blanked}\n\n[Original phrase]\n{better}\n\nReturn options JSON.",
+                max_tokens=400,
+            )
+            opts2 = [_strip_circled(str(o)) for o in ((made or {}).get("options") or [])][:5]
+            try:
+                ans2 = int((made or {}).get("answer")) - 1
+            except (TypeError, ValueError):
+                ans2 = -1
+            if len(opts2) == 5 and all(opts2) and 0 <= ans2 < 5:
+                print(f"[pipeline] gist: detail blank replaced — {span[:50]} → {better[:60]}", file=sys.stderr)
+                gist_note = f"빈칸을 요지 구절로 바꿨습니다(초안: 「{span[:60]}」 — {str(gist.get('reason') or '')[:80]})"
+                span, blanked, options, answer = better, new_blanked, opts2, ans2
+            else:
+                print("[pipeline] gist: options for key phrase unusable — keep draft blank", file=sys.stderr)
+        else:
+            print(f"[pipeline] gist: not key point but no usable phrase ({better[:60]!r}) — keep draft blank", file=sys.stderr)
+    elif isinstance(gist, dict):
+        print("[pipeline] gist: key point ok", file=sys.stderr)
 
     # 선지 길이 범위 — 가린 구절 길이를 기준으로(너무 짧거나 긴 선지는 길이로 답이 드러난다)
     n = len(span.split())
@@ -236,6 +317,9 @@ def run_pipeline(
     rejected: dict[int, list[str]] = {}
     verdicts: list[str] | None = None
     for c_try in range(max_retries + 2):
+        if time.time() - started > TIME_BUDGET_SEC:
+            print(f"[pipeline] time budget {TIME_BUDGET_SEC}s reached — stop rewriting", file=sys.stderr)
+            break
         # 2) 넣어 보기 — 순서를 바꿔 두 번(내용일치 16과: 놓인 순서에 따라 판정이 달라진다), 하나라도 어긋나면 고친다
         verdicts = check([0, 1, 2, 3, 4])
         rev = check([4, 3, 2, 1, 0])
@@ -277,7 +361,10 @@ def run_pipeline(
         # 3) 다시 쓰기
         for i, want_right in sorted(bad.items()):
             # 한 자리에 세 번까지 — 거절된 시도를 보여 주고 두 번째부터 온도를 올린다(35B 가 같은 문장을 되풀이했다)
-            for attempt in range(3):
+            # 첫 라운드만 세 번, 그 뒤엔 한 번 — 호출 수 상한
+            for attempt in range(3 if c_try == 0 else 1):
+                if time.time() - started > TIME_BUDGET_SEC:
+                    break
                 others = [o for k, o in enumerate(options) if k != i]
                 tried = rejected.get(i, [])
                 rew = call(
@@ -316,7 +403,7 @@ def run_pipeline(
     if fatal:
         print("[pipeline] duplicate / verbatim distractor left — " + ("giving up" if _second_try else "drafting again"),
               file=sys.stderr)
-        if not _second_try:
+        if not _second_try and time.time() - started < REDRAFT_WITHIN_SEC:
             return run_pipeline(model, tokenizer, passage, max_retries=max_retries, temp=temp,
                                 has_explain_adapter=has_explain_adapter, main_adapter=main_adapter,
                                 explain_adapter=explain_adapter, _second_try=True)
@@ -329,6 +416,8 @@ def run_pipeline(
                         + ("정답인데 빈칸에 맞지 않는다는 판정" if want_right else "오답인데 빈칸에 맞거나 문법이 어긋난다는 판정"))
     if moved_note:
         warnings.append(f"{moved_note} — 정답 번호를 넣어 보기 판정에 맞춰 옮겼습니다")
+    if gist_note:
+        warnings.append(gist_note)
 
     # 4) 모의 풀이 — 빈칸 뚫린 지문으로, 경고만
     warnings += solve_check(call, kind="blank", passage=blanked, options_text=_format_options(options),
@@ -357,7 +446,8 @@ def run_pipeline(
         "ok": True,
         "question_data": qd,
         "warnings": warnings,
-        "pipeline": {"blank": span, "answer_moved": bool(moved_note), "unresolved": len(remaining),
+        "pipeline": {"blank": span, "answer_moved": bool(moved_note), "gist_replaced": bool(gist_note),
+                     "unresolved": len(remaining),
                      "trace_len": len(trace)},
         "trace": trace,
     }
