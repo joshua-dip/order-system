@@ -20,11 +20,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 EVAL = Path(__file__).resolve().parent
-KO = {"topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치", "blank": "빈칸", "order": "순서", "insert": "삽입"}
+KO = {"topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치", "blank": "빈칸", "order": "순서", "insert": "삽입",
+      "irrelevant": "무관한문장", "vocab": "어휘", "grammar": "어법"}
 # 평가 유형 → ml/ 폴더(파이프라인·어댑터). 일치·불일치는 fact 하나를 kind 로 나눠 쓴다
 MODULE = {"topic": "topic", "title": "title", "claim": "claim", "match": "fact", "mismatch": "fact", "blank": "blank",
-          "order": "order", "insert": "insert"}
-RULE_MODULES = {"order", "insert"}  # 어댑터 없는 규칙 유형
+          "order": "order", "insert": "insert", "irrelevant": "irrelevant", "vocab": "vocab", "grammar": "grammar"}
+RULE_MODULES = {"order", "insert", "irrelevant", "vocab", "grammar"}  # 어댑터 없는 규칙 유형
 BASE = "mlx-community/Qwen2.5-7B-Instruct-4bit"
 REASONER = "mlx-community/Qwen3.6-35B-A3B-4bit"
 
@@ -117,8 +118,9 @@ def main() -> int:
                         "answer": qd.get("CorrectAnswer"), "explanation": qd.get("Explanation"),
                         "warnings": r.get("warnings") or [], "gold": gold(num, KO[en]),
                         # 빈칸은 재판정에 빈칸 뚫린 지문이 필요하다
-                        "blanked": qd.get("Paragraph") if en in ("blank", "order", "insert") else None,
+                        "blanked": qd.get("Paragraph") if en in ("blank", "order", "insert", "irrelevant", "vocab", "grammar") else None,
                         "log": [ln for ln in err.getvalue().splitlines() if "[pipeline]" in ln],
+                        "trace": r.get("trace") if not r.get("ok") else None,
                     }
                     out.write(json.dumps(row, ensure_ascii=False) + "\n")
                     out.flush()

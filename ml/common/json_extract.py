@@ -114,8 +114,10 @@ def explanation_text(obj: dict | None, raw: str, answer: str) -> str:
     text = strip_han(text)
     if not text or not any("\uac00" <= ch <= "\ud7a3" for ch in text):
         return ""
-    stated = re.search(r"정답(?:은|는|:)?\s*([①②③④⑤])", text)
-    if stated and stated.group(1) != answer:
+    # 「정답은 ⑤」뿐 아니라 「⑤가 정답입니다」 꼴도 본다 — 무관한 문장 해설이 「⑤가 정답입니다」라고 쓰고 정답 ①을 놓친 적이 있다
+    stated = [m.group(1) for m in re.finditer(r"정답(?:은|는|:)?\s*([①②③④⑤])", text)]
+    stated += [m.group(1) for m in re.finditer(r"([①②③④⑤])\s*(?:번)?(?:이|가)?\s*정답", text)]
+    if any(x != answer for x in stated):
         return ""  # 해설이 다른 번호를 정답이라 한다 — 쓰면 문항과 어긋난다
     if answer and answer not in text:
         text = f"정답은 {answer}. {text}"

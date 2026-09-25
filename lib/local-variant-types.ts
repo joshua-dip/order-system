@@ -13,6 +13,10 @@ export const LOCAL_VARIANT_TYPES = {
   // 순서·삽입은 LoRA 없이 규칙으로 만들고 35B 모의 풀이로 거른다(ml/common/rule_pipeline.py)
   순서: { en: 'order', aiSource: 'local-order-rule' },
   삽입: { en: 'insert', aiSource: 'local-insert-rule' },
+  // 무관한문장·어휘·어법은 자리를 코드가 정하고 35B 가 하나만 바꾼 뒤 모의 풀이로 거른다(ml/common/edit_pipeline.py)
+  무관한문장: { en: 'irrelevant', aiSource: 'local-irrelevant-rule' },
+  어휘: { en: 'vocab', aiSource: 'local-vocab-rule' },
+  어법: { en: 'grammar', aiSource: 'local-grammar-rule' },
 } as const;
 
 export type LocalVariantType = keyof typeof LOCAL_VARIANT_TYPES;

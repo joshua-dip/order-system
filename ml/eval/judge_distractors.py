@@ -89,7 +89,7 @@ def main() -> int:
         if not r.get("ok"):
             continue
         num, typ = r["num"], r["type"]
-        if typ in ("order", "insert"):
+        if typ in ("order", "insert", "irrelevant", "vocab", "grammar"):
             continue  # 규칙 유형은 파이프라인이 이미 35B 모의 풀이로 거른다 — 같은 모델로 재채점해도 뜻이 없어 사람 채점으로 본다
         if num not in paras:
             paras[num] = db.passages.find_one({"textbook": tb, "source_key": f"{tb} {num}"})["content"]["original"]
