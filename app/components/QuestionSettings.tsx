@@ -22,6 +22,9 @@ import {
   FREE_VARIANT_TYPES,
   isFreeVariantType,
   isAdvancedVariantType,
+  solbookVariantTierPrice,
+  solbookVariantUnitPrice,
+  SOLBOOK_VARIANT_PRICE_TIERS,
 } from '@/lib/variant-pricing';
 import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
@@ -96,11 +99,17 @@ const QuestionSettings = ({
   /** 이 주문에서 0원인 유형인지 — 외부지문·쏠북 교재엔 무료 유형이 없다.
    *  쏠북 교재는 변형 제작비를 쏠북에서 결제하므로 0원 유형을 두면 쏠북 결제가 0원이 된다.
    *  2026-09-10 에는 무료 7유형을 아예 막았지만, 2026-09-25 부터 모두 유료 단가로 주문제작한다
-   *  (주제·제목·주장·일치·불일치 = 기본 단가, 순서·삽입 = 해설 포함/미포함 단가). */
+   *  단가는 쏠북 판매 가격 정책(주문 총 문항 수 구간 단가, 고난도 80원)을 따른다 — solbookVariantUnitPrice. */
   const isFreeType = (t: string) => !isExternal && !isSolbookSelected && isFreeVariantType(t);
-  /** 이 주문의 문항 단가 */
+  /** 이 주문의 문항 단가 — 쏠북 교재는 정책 구간 단가(주문 총 문항 수 기준) */
   const unitPriceOf = (t: string, opts?: { withExplanation?: boolean }) =>
-    isExternal ? externalVariantUnitPrice(t, opts) : variantUnitPrice(t, opts);
+    isExternal
+      ? externalVariantUnitPrice(t, opts)
+      : isSolbookSelected
+        ? solbookVariantUnitPrice(t, orderTotalQuestions())
+        : variantUnitPrice(t, opts);
+  /** 이번 주문 총 문항 수 — 쏠북 구간 단가를 고르는 기준 */
+  const orderTotalQuestions = () => selectedTypes.length * selectedLessons.length * questionsPerType;
   /** 화면·주문서에 쓰는 단가표 — 외부지문이면 인상가 */
   const PRICE = isExternal
     ? {
@@ -123,6 +132,11 @@ const QuestionSettings = ({
     순서: true,
     삽입: true,
   });
+  /* 쏠북 교재는 해설 미포함(문제·답만) 할인이 없다 — 정책 최저가 아래로 내려가므로 항상 해설 포함으로 받는다 */
+  useEffect(() => {
+    if (!isSolbookSelected) return;
+    setOrderInsertExplanation((p) => (p.순서 && p.삽입 ? p : { 순서: true, 삽입: true }));
+  }, [isSolbookSelected]);
   const [isMember, setIsMember] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   /** 쏠북 커스텀 요금 면제: 연회원 또는 월구독 유효 시 */
@@ -662,7 +676,8 @@ const QuestionSettings = ({
       basePrice += charged * unitPriceOf(type, { withExplanation });
     }
     const totalQuestions = selectedTypes.length * questionsPerType * mult;
-    const discountRate = variantVolumeDiscountRate(totalQuestions);
+    /* 쏠북 교재는 구간 단가에 이미 수량 할인이 들어 있다 — 더 깎으면 정책 최저가 아래로 내려간다 */
+    const discountRate = isSolbookTextbook ? 0 : variantVolumeDiscountRate(totalQuestions);
     const discountAmount = basePrice * discountRate;
     const variantSubtotal = Math.round(basePrice - discountAmount);
     const solbookCustomFeeWaived =
@@ -678,7 +693,7 @@ const QuestionSettings = ({
       variantSubtotal,
       solbookFee,
       totalPrice,
-      isDiscounted: totalQuestions >= 100,
+      isDiscounted: discountRate > 0,
       isSolbookTextbook,
       solbookCustomFeeWaived,
       /* 멤버십 한도로 무료 처리된 기본난도 문항 수 (0 이면 적용 없음) */
@@ -741,7 +756,7 @@ const QuestionSettings = ({
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">무료</span>
                       )}
                     </label>
-                    {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
+                    {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && !isSolbookSelected && (
                       <div
                         className="flex rounded-lg border border-amber-300 bg-white overflow-hidden text-[11px] font-semibold shrink-0"
                         role="group"
@@ -793,7 +808,7 @@ const QuestionSettings = ({
                       📝 샘플
                     </button>
                   </div>
-                  {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
+                  {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && !isSolbookSelected && (
                     <p className="text-[10px] text-gray-500 mt-1.5 pl-8">미포함 {PRICE.orderInsertNoExplanation}원 · 해설 {PRICE.orderInsertWithExplanation}원/문항</p>
                   )}
                 </div>
@@ -1198,13 +1213,27 @@ ${solbookRetailLine}
                 <div className="flex items-center mb-2">
                   <span className="text-blue-600 font-semibold">💰 할인 안내</span>
                 </div>
+                {isSolbookSelected ? (
+                  /* 쏠북 판매 가격 정책(2026.09.01) — 주문 총 문항 수 구간 단가. 열람/출력 전용 요금제 기준 */
+                  <div className="text-sm text-blue-700">
+                    • 기본난도(순서·삽입 포함): 주문 총 문항 수에 따라 문항당{' '}
+                    {SOLBOOK_VARIANT_PRICE_TIERS.map((t, i, arr) => {
+                      const from = i === 0 ? 1 : arr[i - 1].maxQuestions + 1;
+                      const label = Number.isFinite(t.maxQuestions) ? `${from}~${t.maxQuestions}문항` : `${from}문항~`;
+                      return `${label} ${t.price}원`;
+                    }).join(' · ')}<br/>
+                    • 고난도: 문항당 {PRICE.advanced}원<br/>
+                    <span className="text-[12px] text-blue-600/80">쏠북 판매 가격 정책(열람/출력 전용 요금제, VAT 포함) 기준입니다. PDF 저장 요금제는 쏠북에서 2배로 책정됩니다.</span>
+                  </div>
+                ) : (
                 <div className="text-sm text-blue-700">
                   • 기본난도: 문항당 {PRICE.base}원<br/>
                   • 삽입-고난도·어법-고난도: 문항당 {PRICE.advanced}원<br/>
-                  {(isExternal || isSolbookSelected) && (<>• 순서·삽입: 해설 포함 {PRICE.orderInsertWithExplanation}원 · 문제·답만 {PRICE.orderInsertNoExplanation}원<br/></>)}
+                  {isExternal && (<>• 순서·삽입: 해설 포함 {PRICE.orderInsertWithExplanation}원 · 문제·답만 {PRICE.orderInsertNoExplanation}원<br/></>)}
                   • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                   • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                 </div>
+                )}
                 {/* 멤버십 혜택 — 회원이면 잔량을, 아니면 가입 유인을 보인다.
                     쏠북 교재는 주문을 막는 게 아니라 결제처가 둘로 나뉜다는 점을 먼저 알린다 —
                     「적용되지 않습니다」만 보이면 주문이 안 되는 줄 안다(2026-09-10). */}
@@ -1375,7 +1404,7 @@ ${solbookRetailLine}
                     </span>
                   ) : isSolbookTextbook ? (
                     <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                      문항당 {PRICE.base}원 · 쏠북에서 결제
+                      쏠북 정책 단가 · 이번 주문 문항당 {solbookVariantTierPrice(orderTotalQuestions())}원 · 쏠북에서 결제
                     </span>
                   ) : (
                     <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">

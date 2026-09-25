@@ -111,5 +111,34 @@ export function variantVolumeDiscountRate(totalQuestions: number): number {
   return 0;
 }
 
+/**
+ * 쏠북 「판매 가격 및 정산 정책(2026.09.01)」 영어 변형문제 최소 판매가.
+ * 자료(= 주문 한 건) 안의 **총 문항 수** 구간으로 문항당 가격이 정해지고 모든 문항에 같은 값을 쓴다.
+ * VAT 포함 · 열람/출력 전용 요금제 기준(PDF 저장 요금제는 이 값의 200% — 쏠북이 매긴다).
+ * https://docs.channel.io/patner-solvook/ko/articles/판매-가격-및-정산-정책-2026-09-01-cfc4feb9
+ */
+export const SOLBOOK_VARIANT_PRICE_TIERS: readonly { maxQuestions: number; price: number }[] = [
+  { maxQuestions: 50, price: 60 },
+  { maxQuestions: 100, price: 55 },
+  { maxQuestions: 200, price: 50 },
+  { maxQuestions: 300, price: 45 },
+  { maxQuestions: Infinity, price: 40 },
+];
+
+/** 쏠북 정책 구간 단가 — 주문 총 문항 수 기준 */
+export function solbookVariantTierPrice(totalQuestions: number): number {
+  const n = Math.max(0, Math.floor(totalQuestions));
+  return (SOLBOOK_VARIANT_PRICE_TIERS.find((t) => n <= t.maxQuestions) ?? SOLBOOK_VARIANT_PRICE_TIERS[SOLBOOK_VARIANT_PRICE_TIERS.length - 1]).price;
+}
+
+/**
+ * 쏠북 교재 문항 단가. 기본·순서·삽입은 정책 구간 단가, 고난도는 우리 단가(80원 — 구간가보다 항상 높다).
+ * 해설 미포함 할인·대량 할인은 없다 — 정책 최저가 아래로 내려가면 쏠북이 수정을 요청한다.
+ */
+export function solbookVariantUnitPrice(type: string, totalQuestions: number): number {
+  const tier = solbookVariantTierPrice(totalQuestions);
+  return isAdvancedVariantType(type) ? Math.max(VARIANT_PRICE.advanced, tier) : tier;
+}
+
 /** 순서·삽입 해설 포함/미포함 단가를 한 줄 안내 문구로. 예: '해설 포함 50원 / 문제·답만 30원'. */
 export const ORDER_INSERT_PRICE_NOTE = `해설 포함 ${VARIANT_PRICE.orderInsertWithExplanation}원 / 문제·답만 ${VARIANT_PRICE.orderInsertNoExplanation}원`;
