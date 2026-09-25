@@ -1,6 +1,6 @@
 {
   "name": "sep26-go1",
-  "title": "26년 9월 고1 영어모의고사 — 주제·제목·주장·일치·불일치·빈칸·순서·삽입·무관한문장·어휘·어법 고정 평가 세트",
+  "title": "26년 9월 고1 영어모의고사 — 주제·제목·주장·일치·불일치·빈칸·요약·순서·삽입·무관한문장·어휘·어법 고정 평가 세트",
   "textbook": "26년 9월 고1 영어모의고사",
   "types": [
     "topic",
@@ -13,7 +13,8 @@
     "insert",
     "irrelevant",
     "vocab",
-    "grammar"
+    "grammar",
+    "summary"
   ],
   "note": "지문 원문은 저장하지 않는다 — run_eval.py 가 DB passages(textbook + source_key)에서 읽는다. 18·25~28번(안내문·도표·일치), 19·43~45번(심경·이야기)은 세 유형에 맞지 않아 뺐다. key 는 채점 기준(글 전체의 요지), pitfalls 는 실제로 나왔던 오답·약점. match/mismatch(일치·불일치)는 한 LoRA(ml/fact)를 같이 쓰고, 채점은 judge_distractors.py 의 사실 재확인(정답 1개 규칙)이 자동으로 한다. blank(빈칸)은 judge_distractors.py 의 넣어 보기 재확인(맞는 선지가 정답 하나뿐인가)으로 채점한다. irrelevant·vocab·grammar(무관한문장·어휘·어법)는 ml/common/edit_pipeline.py 규칙+35B 유형으로, 사람 채점(grades/)을 기준으로 삼는다.",
   "grading": {

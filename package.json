@@ -26,6 +26,7 @@
     "cc:claim-export": "tsx scripts/export-claim-finetune-jsonl.ts",
     "cc:fact-export": "tsx scripts/export-fact-finetune-jsonl.ts",
     "cc:blank-export": "tsx scripts/export-blank-finetune-jsonl.ts",
+    "cc:summary-export": "tsx scripts/export-summary-finetune-jsonl.ts",
     "cc:local-usage": "tsx scripts/cc-local-usage.ts",
     "cc:claim-explain-export": "tsx scripts/export-claim-explain-jsonl.ts",
     "cc:claim-local": "tsx scripts/cc-claim-local.ts",

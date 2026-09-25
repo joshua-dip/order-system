@@ -61,7 +61,8 @@ VERSION = 1
 # 한글 유형 → ml/ 아래 폴더명. lib/local-variant-types.ts 의 표와 같아야 한다.
 # 일치·불일치는 어댑터 하나(fact)를 같이 쓴다 — 어느 쪽인지는 generate 가 한글 유형명(ko)으로 넘긴다.
 TYPES = {"주제": "topic", "제목": "title", "주장": "claim", "일치": "fact", "불일치": "fact", "빈칸": "blank",
-         "순서": "order", "삽입": "insert", "무관한문장": "irrelevant", "어휘": "vocab", "어법": "grammar"}
+         "순서": "order", "삽입": "insert", "무관한문장": "irrelevant", "어휘": "vocab", "어법": "grammar",
+         "요약": "summary"}
 # LoRA 없이 규칙으로 만드는 유형 — 어댑터를 붙이지 않고, 학습된 유형의 모델 묶음(35B 포함)을 빌려 쓴다
 RULE_TYPES = {"order", "insert", "irrelevant", "vocab", "grammar"}
 MAX_ATTEMPTS = 3

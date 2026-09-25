@@ -145,3 +145,5 @@ scripts/.backups/
 # 빈칸(blank) LoRA — 학습 데이터·어댑터
 /data/blank-finetune/
 /ml/blank/adapters/
+/data/summary-finetune/
+/ml/summary/adapters/

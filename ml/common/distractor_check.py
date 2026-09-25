@@ -52,6 +52,12 @@ KINDS: dict[str, dict[str, str]] = {
         "form": "English phrases that fit the blank grammatically",
         "not_it": "a phrase that fits the grammar but breaks the passage's logic",
     },
+    "summary": {
+        "name": "「요약문 완성」(complete the one-sentence summary: choose the (A)-(B) word pair)",
+        "question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+        "form": "word pairs '(A) word – (B) word'",
+        "not_it": "a pair that makes the summary say something the passage does not say",
+    },
     "claim": {
         "name": "「주장」(the author's claim)",
         "question": "다음 글에서 필자가 주장하는 바로 가장 적절한 것은?",

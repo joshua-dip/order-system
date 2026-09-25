@@ -10,6 +10,7 @@ export const LOCAL_VARIANT_TYPES = {
   일치: { en: 'match', aiSource: 'local-fact-lora' },
   불일치: { en: 'mismatch', aiSource: 'local-fact-lora' },
   빈칸: { en: 'blank', aiSource: 'local-blank-lora' },
+  요약: { en: 'summary', aiSource: 'local-summary-lora' },
   // 순서·삽입은 LoRA 없이 규칙으로 만들고 35B 모의 풀이로 거른다(ml/common/rule_pipeline.py)
   순서: { en: 'order', aiSource: 'local-order-rule' },
   삽입: { en: 'insert', aiSource: 'local-insert-rule' },

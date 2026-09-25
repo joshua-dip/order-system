@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const type = resolveLocalVariantType(typeof body.type === 'string' ? body.type : '');
 
     if (!type) {
-      return NextResponse.json({ error: '로컬 LoRA는 주제·제목·주장·일치·불일치·빈칸·순서·삽입·무관한문장·어휘·어법 유형만 지원합니다.' }, { status: 400 });
+      return NextResponse.json({ error: '로컬 LoRA는 주제·제목·주장·일치·불일치·빈칸·요약·순서·삽입·무관한문장·어휘·어법 유형만 지원합니다.' }, { status: 400 });
     }
     if (!passageIdStr || !ObjectId.isValid(passageIdStr)) {
       return NextResponse.json({ error: '유효한 passage_id(ObjectId)가 필요합니다.' }, { status: 400 });
