@@ -107,6 +107,12 @@ Keys: options (array of exactly 5 English phrases), answer (1-5, the position of
   but break its logic: the opposite, only one example or detail, the view the author rejects, or an overstatement.
 - Never write a wrong option that could also be correct. Keep all five about the same length."""
 
+SAME_SYS = """You check the correct option of a Korean CSAT fill-in-the-blank question.
+Output ONLY one JSON object. No markdown.
+Keys: same (true|false), reason (short English).
+same=true only if, put into the blank, [Option] says the same thing as [Original phrase] in this passage —
+a paraphrase is fine, but a different idea, a neighbouring idea from the passage, or a tautology with the sentence is not."""
+
 EXPLAIN_SYS = """당신은 한국 수능 영어 「빈칸 추론」 문항의 한국어 해설만 씁니다.
 출력은 JSON 한 개: {"Explanation": "..."} — 마크다운 금지.
 - 첫 문장은 「정답은 ①.」 꼴로 정답 번호를 밝힌다.
@@ -168,6 +174,24 @@ def _same(a: str, b: str) -> bool:
     """대소문자·문장부호·공백만 다르면 같은 말."""
     key = lambda x: " ".join(re.sub(r"[^\w\s']", " ", x.lower()).split())
     return key(a) == key(b)
+
+
+def _pin_answer_to_span(call, blanked: str, span: str, options: list[str], answer: int,
+                        trace: list[dict[str, Any]], stage: str) -> bool:
+    """정답 선지가 가린 구절과 뜻이 다르면 정답을 원문 구절 그대로로 바꾼다. 바꿨으면 True.
+    24번: 빈칸은 「용기를 내 불확실성을 마주하는 것」인데 정답이 「통제 욕구를 내려놓는 것」(문장과 동어반복),
+    22번: 초안이 빈칸 위치와 다른 자리용 선지를 썼다 — 둘 다 넣어 보기 판정은 통과했다."""
+    if _same(options[answer], span):
+        return False
+    got = call(SAME_SYS, f"[Passage with the blank]\n{blanked}\n\n[Original phrase]\n{span}\n\n"
+                         f"[Option]\n{options[answer]}\n\nReturn JSON.", max_tokens=120, t=0.0)
+    trace.append({"stage": f"same_{stage}", "out": got})
+    if isinstance(got, dict) and got.get("same") is False:
+        print(f"[pipeline] answer ≠ blank meaning ({stage}) — pinned to original phrase: {options[answer][:60]}",
+              file=sys.stderr)
+        options[answer] = span
+        return True
+    return False
 
 
 def _valid_option(s: str, lo: int, hi: int) -> bool:
@@ -294,6 +318,9 @@ def run_pipeline(
     elif isinstance(gist, dict):
         print("[pipeline] gist: key point ok", file=sys.stderr)
 
+    # 1-2) 정답이 가린 구절과 같은 뜻인가 — 아니면 원문 그대로로(뒤이은 넣어 보기가 나머지 선지를 맞춘다)
+    pinned = _pin_answer_to_span(call, blanked, span, options, answer, trace, "draft")
+
     # 선지 길이 범위 — 가린 구절 길이를 기준으로(너무 짧거나 긴 선지는 길이로 답이 드러난다)
     n = len(span.split())
     lo, hi = max(1, n // 2), max(n * 2, n + 6)
@@ -388,6 +415,8 @@ def run_pipeline(
                     rejected.setdefault(i, []).append(new)
                 print(f"[pipeline] rewrite {CIRCLED[i]} rejected: {new[:70]}", file=sys.stderr)
 
+    pinned = _pin_answer_to_span(call, blanked, span, options, answer, trace, "final") or pinned
+
     # 정답 위치 섞기 — 초안은 정답을 ①에 두는 버릇이 있다(36문항 중 25개). 빈칸은 선지 순서에 뜻이 없으니 섞는다
     # (경고의 선지 번호가 섞은 뒤 번호가 되게 경고보다 먼저)
     order = list(range(5))
@@ -447,6 +476,7 @@ def run_pipeline(
         "question_data": qd,
         "warnings": warnings,
         "pipeline": {"blank": span, "answer_moved": bool(moved_note), "gist_replaced": bool(gist_note),
+                     "answer_pinned": pinned,
                      "unresolved": len(remaining),
                      "trace_len": len(trace)},
         "trace": trace,
