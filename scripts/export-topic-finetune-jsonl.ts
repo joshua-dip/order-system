@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { ObjectId } from 'mongodb';
 import { loadCliEnv } from './_cli-env';
+import { createEvalSetFilter } from './_eval-set-filter';
 import { getDb } from '@/lib/mongodb';
 import { getPassageTextForVariantCompare } from '@/lib/passage-variant-text';
 
@@ -100,6 +101,7 @@ async function main() {
   });
 
   const passageCache = new Map<string, string>();
+  const evalSet = createEvalSetFilter(PROJECT_ROOT);
   type Row = {
     passageId: string;
     paragraph: string;
@@ -126,9 +128,11 @@ async function main() {
     let paragraph = passageCache.get(passageId);
     if (paragraph === undefined) {
       const p = await passages.findOne({ _id: new ObjectId(passageId) });
-      paragraph = getPassageTextForVariantCompare(p?.content);
+      // 고정 평가 세트(ml/eval/sets)의 교재는 학습에서 뺀다 — 시험 지문을 외워 푸는 걸 막는다(노트 21과)
+      paragraph = evalSet.exclude(passageId, p?.textbook) ? '' : getPassageTextForVariantCompare(p?.content);
       passageCache.set(passageId, paragraph);
     }
+    if (evalSet.skip(passageId)) continue;
     if (!paragraph.trim()) {
       skippedNoPassage++;
       continue;
@@ -175,6 +179,8 @@ async function main() {
     if (split === 'valid') validLines.push(line);
     else trainLines.push(line);
   }
+
+  evalSet.report();
 
   fs.mkdirSync(outDir, { recursive: true });
   const trainPath = path.join(outDir, 'train.jsonl');

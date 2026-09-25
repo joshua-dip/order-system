@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { ObjectId } from 'mongodb';
 import { loadCliEnv } from './_cli-env';
+import { createEvalSetFilter } from './_eval-set-filter';
 import { getDb } from '@/lib/mongodb';
 import { getPassageTextForVariantCompare } from '@/lib/passage-variant-text';
 
@@ -116,6 +117,7 @@ async function main() {
   );
 
   const passageCache = new Map<string, string>();
+  const evalSet = createEvalSetFilter(PROJECT_ROOT);
   type Row = { passageId: string; type: FactType; paragraph: string; assistant: string; order: number; answer: string };
   const rows: Row[] = [];
   const skipped = { noPassage: 0, badOptions: 0, badAnswer: 0, badQuestion: 0, badExplanation: 0 };
@@ -162,9 +164,11 @@ async function main() {
     let paragraph = passageCache.get(passageId);
     if (paragraph === undefined) {
       const p = await passages.findOne({ _id: new ObjectId(passageId) });
-      paragraph = getPassageTextForVariantCompare(p?.content);
+      // 고정 평가 세트(ml/eval/sets)의 교재는 학습에서 뺀다 — 시험 지문을 외워 푸는 걸 막는다(노트 21과)
+      paragraph = evalSet.exclude(passageId, p?.textbook) ? '' : getPassageTextForVariantCompare(p?.content);
       passageCache.set(passageId, paragraph);
     }
+    if (evalSet.skip(passageId)) continue;
     if (!paragraph.trim()) {
       skipped.noPassage++;
       continue;
@@ -215,6 +219,8 @@ async function main() {
   // mlx-lm 은 파일 순서대로 섞어 읽는다 — 같은 지문이 몰리지 않게 한 번 섞는다(해시 기준, 재현 가능)
   const shuffle = (xs: string[]) =>
     xs.map((x) => [bucket(x), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x);
+
+  evalSet.report();
 
   fs.mkdirSync(outDir, { recursive: true });
   const write = (name: string, lines: string[]) =>

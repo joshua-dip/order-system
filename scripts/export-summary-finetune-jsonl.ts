@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { ObjectId } from 'mongodb';
 import { loadCliEnv } from './_cli-env';
+import { createEvalSetFilter } from './_eval-set-filter';
 import { getDb } from '@/lib/mongodb';
 import { getPassageTextForVariantCompare } from '@/lib/passage-variant-text';
 
@@ -139,9 +140,11 @@ async function main() {
   );
 
   const passageCache = new Map<string, string>();
+  const evalSet = createEvalSetFilter(PROJECT_ROOT);
+
   type Row = { passageId: string; paragraph: string; assistant: string; order: number; answer: string; summaryWords: number };
   const rows: Row[] = [];
-  const skipped = { noPassage: 0, badOptions: 0, badAnswer: 0, noSummary: 0, badExplanation: 0 };
+  const skipped = { noPassage: 0, badOptions: 0, badAnswer: 0, noSummary: 0, badExplanation: 0, legacyImport: 0, evalSet: 0 };
 
   for await (const doc of cursor) {
     const pidRaw = doc.passage_id;
@@ -174,11 +177,22 @@ async function main() {
       skipped.badExplanation++;
       continue;
     }
+    // 3~4월 엑셀 임포트분(약 2,500)은 해설이 「① fake - information \n가짜 - 정보 \n*해설: …」 꼴이고 요약문·선지도 거칠다.
+    // 이것까지 배운 v1 LoRA 는 요지를 비껴간 요약문이 잦았다(노트 21과) — 이 형식은 뺀다
+    if (/^[①②③④⑤]\s*[A-Za-z(]/.test(explanation) || explanation.includes('*해설')) {
+      skipped.legacyImport++;
+      continue;
+    }
     let paragraph = passageCache.get(passageId);
     if (paragraph === undefined) {
       const p = await passages.findOne({ _id: new ObjectId(passageId) });
-      paragraph = getPassageTextForVariantCompare(p?.content);
+      // 고정 평가 세트(ml/eval/sets)의 교재는 학습에서 뺀다 — 시험 지문을 외워 푸는 걸 막는다(노트 21과)
+      paragraph = evalSet.exclude(passageId, p?.textbook) ? '' : getPassageTextForVariantCompare(p?.content);
       passageCache.set(passageId, paragraph);
+    }
+    if (evalSet.skip(passageId)) {
+      skipped.evalSet++;
+      continue;
     }
     if (!paragraph.trim()) {
       skipped.noPassage++;
@@ -233,6 +247,8 @@ async function main() {
   }
   const shuffle = (xs: string[]) =>
     xs.map((x) => [bucket(x), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x);
+
+  evalSet.report();
 
   fs.mkdirSync(outDir, { recursive: true });
   const write = (name: string, lines: string[]) =>
