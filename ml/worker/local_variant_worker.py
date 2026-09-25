@@ -60,7 +60,10 @@ WORKERS = "local_variant_workers"
 VERSION = 1
 # 한글 유형 → ml/ 아래 폴더명. lib/local-variant-types.ts 의 표와 같아야 한다.
 # 일치·불일치는 어댑터 하나(fact)를 같이 쓴다 — 어느 쪽인지는 generate 가 한글 유형명(ko)으로 넘긴다.
-TYPES = {"주제": "topic", "제목": "title", "주장": "claim", "일치": "fact", "불일치": "fact", "빈칸": "blank"}
+TYPES = {"주제": "topic", "제목": "title", "주장": "claim", "일치": "fact", "불일치": "fact", "빈칸": "blank",
+         "순서": "order", "삽입": "insert"}
+# LoRA 없이 규칙으로 만드는 유형 — 어댑터를 붙이지 않고, 학습된 유형의 모델 묶음(35B 포함)을 빌려 쓴다
+RULE_TYPES = {"order", "insert"}
 MAX_ATTEMPTS = 3
 HEARTBEAT_SEC = 15
 MARK = "@@RESULT@@ "
@@ -154,6 +157,8 @@ def discover_types(only: set[str]) -> dict[str, dict]:
     for ko, en in TYPES.items():
         if only and ko not in only:
             continue
+        if en in RULE_TYPES:
+            continue  # 아래에서 학습된 유형의 모델 묶음을 빌려 채운다
         main = _ML / en / "adapters" / f"{en}-lora{_ADAPTER_SUFFIX}"
         explain = _ML / en / "adapters" / f"{en}-explain-lora{_ADAPTER_SUFFIX}"
         trained = rt.adapter_exists(main)
@@ -169,6 +174,22 @@ def discover_types(only: set[str]) -> dict[str, dict]:
             "explain_path": str(explain),
             "stamp": _stamp(main) + "/" + (_stamp(explain) if explain_ok else ""),
         }
+    # 규칙 유형(순서·삽입): 학습된 유형 하나의 기본 모델을 빌린다 — 없으면(어댑터가 하나도 없으면) 못 한다
+    donor = next((i for i in out.values() if i["trained"]), None)
+    for ko, en in TYPES.items():
+        if en not in RULE_TYPES or (only and ko not in only):
+            continue
+        out[ko] = {
+            "en": en,
+            "trained": donor is not None,
+            "explain": False,
+            "rule": True,
+            "base_model": donor["base_model"] if donor else None,
+            "use_4bit": donor["use_4bit"] if donor else False,
+            "main_path": "",
+            "explain_path": "",
+            "stamp": "",
+        }
     return out
 
 
@@ -178,8 +199,8 @@ def child_spec(types_info: dict[str, dict], base: str, use_4bit: bool) -> dict:
     stamps: list[str] = []
     seen: set[str] = set()
     for info in types_info.values():
-        if not info["trained"] or info["base_model"] != base or info["en"] in seen:
-            continue  # 일치·불일치처럼 어댑터를 나눠 쓰는 유형은 한 번만 붙인다
+        if not info["trained"] or info.get("rule") or info["base_model"] != base or info["en"] in seen:
+            continue  # 일치·불일치처럼 어댑터를 나눠 쓰는 유형은 한 번만, 규칙 유형은 어댑터 없음
         seen.add(info["en"])
         adapters.append([info["en"], info["main_path"]])
         if info["explain"]:
