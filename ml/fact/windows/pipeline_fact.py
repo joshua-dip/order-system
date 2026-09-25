@@ -248,6 +248,7 @@ def run_pipeline(
     checks: list[dict] | None = None
     moved_note = ""
     remaining: dict[int, bool] = {}
+    rejected: dict[int, list[str]] = {}  # 선지 자리별로 거절된 다시 쓰기 — 되풀이를 막으려고 다음 시도에 보여 준다
 
     # 2~3) 사실 확인 → 정답 번호 맞추기 → 어긋난 선지만 다시 쓰기
     for c_try in range(max_retries + 2):
@@ -261,16 +262,31 @@ def run_pipeline(
         if checks is None:
             print("[pipeline] check unreadable", file=sys.stderr)
             continue
-        print(f"[pipeline] check: {' '.join(c['verdict'][0].upper() for c in checks)} answer={CIRCLED[answer]}",
-              file=sys.stderr)
-        # 정답이 될 수 있는 선지(일치=참, 불일치=거짓)가 딱 하나인데 번호만 다르면 번호를 옮긴다
+        # 같은 선지도 놓인 순서에 따라 판정이 달라졌다(재확인에서 걸린 일치형의 절반 — 오답이 사실은 참).
+        # 순서를 뒤집어 한 번 더 묻고, 두 판정 중 하나라도 규칙에 어긋나면 고친다(정답이 둘인 문항을 막는 쪽으로).
+        rev = _verdicts(call(
+            CHECK_SYS,
+            f"[Passage]\n{passage}\n\n[Options]\n" + "\n".join(f"{k + 1}. {o}" for k, o in enumerate(options[::-1]))
+            + "\n\nReturn checks JSON.",
+            max_tokens=600, t=0.0,
+        ))
+        checks_rev = rev[::-1] if rev else None
+        trace.append({"stage": "check_reversed", "out": checks_rev})
+        print(f"[pipeline] check: {' '.join(c['verdict'][0].upper() for c in checks)}"
+              + (f" / reversed: {' '.join(c['verdict'][0].upper() for c in checks_rev)}" if checks_rev else "")
+              + f" answer={CIRCLED[answer]}", file=sys.stderr)
+        # 정답이 될 수 있는 선지(일치=참, 불일치=거짓)가 딱 하나인데 번호만 다르면 번호를 옮긴다 — 두 판정이 같을 때만
         key = "true" if kind == "일치" else "false"
         cands = [i for i, c in enumerate(checks) if c["verdict"] == key]
-        if len(cands) == 1 and cands[0] != answer:
+        cands_rev = [i for i, c in enumerate(checks_rev) if c["verdict"] == key] if checks_rev else cands
+        if len(cands) == 1 and cands == cands_rev and cands[0] != answer:
             moved_note = f"초안 정답 {CIRCLED[answer]} → 사실 확인상 {CIRCLED[cands[0]]}"
             print(f"[pipeline] answer re-pointed {CIRCLED[answer]} -> {CIRCLED[cands[0]]}", file=sys.stderr)
             answer = cands[0]
         bad = _problems(kind, checks, answer)
+        if checks_rev:
+            for i, want in _problems(kind, checks_rev, answer).items():
+                bad.setdefault(i, want)
         # 선지끼리 거의 같은 말이면 뒤의 것을 다시 쓴다(오답 품질 14과와 같은 기준)
         for i in range(5):
             for j in range(i):
@@ -285,13 +301,19 @@ def run_pipeline(
             others = [o for k, o in enumerate(options) if k != i]
             # 다른 선지가 아직 안 다룬 덩이부터 — k 번째 덩이만 주면 이미 있는 선지와 같은 사실을 비틀게 된다
             # (31번: 끝 두 덩이가 「샐러드 유행」 한 사실뿐이라 ③·④·⑤가 모두 그 얘기). 순서는 4) 에서 다시 맞춘다
-            for part_k in _part_order(i, passage, parts, checks, skip=i)[:3]:
+            for attempt, part_k in enumerate(_part_order(i, passage, parts, checks, skip=i)[:3]):
+                # 거절된 시도를 같이 보여 주고, 두 번째부터는 온도를 올린다 — 35B 가 같은 문장을 되풀이해
+                # 덩이를 바꿔 줘도 같은 이유로 또 거절됐다(재확인 실패 일치형의 대부분, 거절 36건)
+                tried = rejected.get(i, [])
                 rew = call(
                     REWRITE_SYS.format(name=name, goal=GOAL[want_true]),
                     f"[Passage]\n{passage}\n\n[Target part]\n{parts[part_k]}\n\n[Other options — pick a different detail]\n"
                     + "\n".join(f"- {o}" for o in others)
+                    + (("\n\n[Already rejected — too close to another option; write about a DIFFERENT detail]\n"
+                        + "\n".join(f"- {x}" for x in tried[-3:])) if tried else "")
                     + f"\n\n[Option to replace]\n{options[i]}\n\nReturn option JSON.",
                     max_tokens=120,
+                    t=temp if attempt == 0 and not tried else 0.8,
                 )
                 new = _strip_circled(str((rew or {}).get("option") or ""))
                 ok = bool(new) and _valid_option(new) and all(word_overlap(new, o) < NEAR_DUP for o in others)
@@ -299,6 +321,8 @@ def run_pipeline(
                 if ok:
                     options[i] = new
                     break
+                if new:
+                    rejected.setdefault(i, []).append(new)
                 print(f"[pipeline] rewrite {CIRCLED[i]} rejected (part {part_k}): {new[:70]}", file=sys.stderr)
 
     warnings: list[str] = []

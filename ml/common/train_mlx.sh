@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# [맥] 유형별 MLX LoRA 학습 — 주제·제목·주장·내용일치(fact) 공용. Claude/API 없음.
-#   ./ml/common/train_mlx.sh <topic|title|claim|fact> [모델] [단계]
+# [맥] 유형별 MLX LoRA 학습 — 주제·제목·주장·내용일치(fact)·빈칸(blank) 공용. Claude/API 없음.
+#   ./ml/common/train_mlx.sh <topic|title|claim|fact|blank> [모델] [단계]
 #   예) caffeinate -i ./ml/common/train_mlx.sh title mlx-community/Qwen2.5-7B-Instruct-4bit 3000
 # 데이터: npm run cc:<유형>-export → data/<유형>-finetune/{train,valid}.jsonl
 # 결과:   ml/<유형>/adapters/<유형>-lora  — 워커(맥)가 다음 작업부터 알아서 잡는다
 # 설정은 주제에서 쓴 것과 같다(ml/topic/train.sh): lr 1e-5, 8층, batch 1, --mask-prompt(답 부분만 학습).
 set -euo pipefail
-TYPE="${1:?유형을 주세요: topic|title|claim|fact}"
-case "${TYPE}" in topic|title|claim|fact) ;; *) echo "유형은 topic|title|claim|fact 중 하나: ${TYPE}" >&2; exit 1 ;; esac
+TYPE="${1:?유형을 주세요: topic|title|claim|fact|blank}"
+case "${TYPE}" in topic|title|claim|fact|blank) ;; *) echo "유형은 topic|title|claim|fact|blank 중 하나: ${TYPE}" >&2; exit 1 ;; esac
 MODEL="${2:-mlx-community/Qwen2.5-7B-Instruct-4bit}"
 ITERS="${3:-3000}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

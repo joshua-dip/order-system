@@ -47,6 +47,9 @@ def main() -> int:
     sp = importlib.util.spec_from_file_location("pipeline_fact", ROOT / "ml/fact/windows/pipeline_fact.py")
     pf = importlib.util.module_from_spec(sp)
     sp.loader.exec_module(pf)
+    sp = importlib.util.spec_from_file_location("pipeline_blank", ROOT / "ml/blank/windows/pipeline_blank.py")
+    pb = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(pb)
     model, tok = mlx_runtime.load_base(args.reasoner)
     db = MongoClient(w.load_env()["MONGODB_URI"], serverSelectionTimeoutMS=20000)["gomijoshua"]
     paras: dict[str, str] = {}
@@ -58,6 +61,29 @@ def main() -> int:
         num = r["num"]
         if num not in paras:
             paras[num] = db.passages.find_one({"textbook": tb, "source_key": f"{tb} {num}"})["content"]["original"]
+        if r["type"] == "blank":
+            # 빈칸은 넣어 보기 재확인 — 맞는(fits) 선지가 정답 하나뿐이고 오답은 모두 wrong 인가
+            opts = [o[1:].strip() for o in r["options"]]
+            if len(opts) != 5 or r["answer"] not in "①②③④⑤" or not r.get("blanked"):
+                continue
+            raw = mlx_runtime.chat_text(
+                model, tok, pb.CHECK_SYS,
+                f"[Passage]\n{r['blanked']}\n\n[Options]\n" + "\n".join(f"{k + 1}. {o}" for k, o in enumerate(opts))
+                + "\n\nReturn checks JSON.", max_tokens=600, temp=0.0,
+            )
+            verdicts = pb._verdicts(extract_json_object(raw))
+            ans = "①②③④⑤".index(r["answer"])
+            bad = pb._problems(verdicts, ans) if verdicts else None
+            c = Counter()
+            c["items"] += 1
+            c["fact_ok"] += 1 if bad == {} else 0
+            c["fact_unreadable"] += 1 if verdicts is None else 0
+            c["fact_answer_wrong"] += 1 if bad and ans in bad else 0
+            c["fact_distractor_bad"] += sum(1 for i in (bad or {}) if i != ans)
+            total.setdefault(r["type"], Counter()).update(c)
+            out.append({"num": num, "type": r["type"], "rep": r.get("rep", 1), "verdicts": verdicts})
+            print(f"{num} blank ok={bad == {}} {verdicts}", flush=True)
+            continue
         if r["type"] in ("match", "mismatch"):
             # 내용일치는 오답 「무관」 대신 사실 재확인 — 정답 1개 규칙(일치=참1·거짓4, 불일치=거짓1·참4)을 지키나
             opts = [o[1:].strip() for o in r["options"]]

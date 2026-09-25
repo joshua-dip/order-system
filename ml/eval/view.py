@@ -75,7 +75,7 @@ def report(set_name: str, labels: list[str]) -> dict:
         jpath = EVAL / "runs" / set_name / f"{lb}.judge.json"
         judge = json.loads(jpath.read_text(encoding="utf-8"))["summary"] if jpath.is_file() else {}
         per: dict = {}
-        for t in ("topic", "title", "claim", "match", "mismatch", "all"):
+        for t in ("topic", "title", "claim", "match", "mismatch", "blank", "all"):
             rs = [r for r in rows if t == "all" or r["type"] == t]
             gs = [g for k, g in grades.items() if t == "all" or k.split("|")[1] == t]
             n_ok = sum(1 for r in rs if r["ok"])
@@ -116,14 +116,14 @@ def report(set_name: str, labels: list[str]) -> dict:
         return f"{100 * v:5.1f}%" if pct else f"{v:5.1f}s"
 
     rows_spec = [("정답 적절(맞음)", "correct", True), ("맞음+부분", "correct_or_partial", True),
-                 ("생성 성공", "generated", True), ("사실 확인 통과(일치·불일치)", "fact_ok", True),
+                 ("생성 성공", "generated", True), ("규칙 재확인 통과(일치·불일치·빈칸)", "fact_ok", True),
                  ("모양 틀린 정답 ↓", "bad_shape", True),
                  ("무관 오답 ↓", "off_topic", True), ("무관 오답 2개+ 문항 ↓", "off_topic_2plus", True),
                  ("정답으로도 읽히는 오답 ↓", "also_correct", True),
                  ("문항당 시간 ↓", "sec", False)]
     present = {t for lb in labels for t in board[lb] if board[lb][t]["n"]}
-    for t in [x for x in ("all", "topic", "title", "claim", "match", "mismatch") if x in present]:
-        name = {"all": "전체", "topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치"}[t]
+    for t in [x for x in ("all", "topic", "title", "claim", "match", "mismatch", "blank") if x in present]:
+        name = {"all": "전체", "topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치", "blank": "빈칸"}[t]
         print("\n" + ljust(f"[{name}]", 26) + "".join(f"{short[lb]:>12}" for lb in labels))
         for label, key, pct in rows_spec:
             print(f"  {ljust(label, 24)}" + "".join(f"{cell(board[lb][t][key], pct):>12}" for lb in labels))

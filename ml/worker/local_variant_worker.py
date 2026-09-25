@@ -60,7 +60,7 @@ WORKERS = "local_variant_workers"
 VERSION = 1
 # 한글 유형 → ml/ 아래 폴더명. lib/local-variant-types.ts 의 표와 같아야 한다.
 # 일치·불일치는 어댑터 하나(fact)를 같이 쓴다 — 어느 쪽인지는 generate 가 한글 유형명(ko)으로 넘긴다.
-TYPES = {"주제": "topic", "제목": "title", "주장": "claim", "일치": "fact", "불일치": "fact"}
+TYPES = {"주제": "topic", "제목": "title", "주장": "claim", "일치": "fact", "불일치": "fact", "빈칸": "blank"}
 MAX_ATTEMPTS = 3
 HEARTBEAT_SEC = 15
 MARK = "@@RESULT@@ "

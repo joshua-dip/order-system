@@ -141,3 +141,7 @@ scripts/.backups/
 /data/fact-finetune/
 /data/fact-pipeline-failures/
 /ml/fact/adapters/
+
+# 빈칸(blank) LoRA — 학습 데이터·어댑터
+/data/blank-finetune/
+/ml/blank/adapters/

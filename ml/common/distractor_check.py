@@ -46,6 +46,12 @@ KINDS: dict[str, dict[str, str]] = {
         "form": "English sentences, 8-20 words each",
         "not_it": "a statement the passage supports",
     },
+    "blank": {
+        "name": "「빈칸 추론」(fill in the blank)",
+        "question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+        "form": "English phrases that fit the blank grammatically",
+        "not_it": "a phrase that fits the grammar but breaks the passage's logic",
+    },
     "claim": {
         "name": "「주장」(the author's claim)",
         "question": "다음 글에서 필자가 주장하는 바로 가장 적절한 것은?",
