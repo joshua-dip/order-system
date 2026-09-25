@@ -72,7 +72,10 @@ def report(set_name: str, labels: list[str]) -> dict:
         rows = load_rows(set_name, lb)
         gpath = EVAL / "grades" / set_name / f"{lb}.json"
         grades = json.loads(gpath.read_text(encoding="utf-8"))["grades"] if gpath.is_file() else {}
-        jpath = EVAL / "runs" / set_name / f"{lb}.judge.json"
+        # 순서를 바꿔 두 번 판정한 judge2 가 있으면 그것을 쓴다(채점관의 순서 편향을 뺀 값, 노트 16과)
+        jpath = EVAL / "runs" / set_name / f"{lb}.judge2.json"
+        if not jpath.is_file():
+            jpath = EVAL / "runs" / set_name / f"{lb}.judge.json"
         judge = json.loads(jpath.read_text(encoding="utf-8"))["summary"] if jpath.is_file() else {}
         per: dict = {}
         for t in ("topic", "title", "claim", "match", "mismatch", "blank", "all"):
@@ -99,6 +102,8 @@ def report(set_name: str, labels: list[str]) -> dict:
                 "fact_ok": (sum(j.get("fact_ok", 0) for j in js) / sum(j.get("items", 0) for j in js if "fact_ok" in j))
                 if any("fact_ok" in j for j in js) else None,
                 "sec": statistics.mean(r["sec"] for r in rs) if rs else None,
+                "judge_agree": (sum(j.get("judge_agree", 0) for j in js) / sum(j.get("judge_pairs", 0) for j in js))
+                if sum(j.get("judge_pairs", 0) for j in js) else None,
             }
         board[lb] = per
 
@@ -120,6 +125,7 @@ def report(set_name: str, labels: list[str]) -> dict:
                  ("모양 틀린 정답 ↓", "bad_shape", True),
                  ("무관 오답 ↓", "off_topic", True), ("무관 오답 2개+ 문항 ↓", "off_topic_2plus", True),
                  ("정답으로도 읽히는 오답 ↓", "also_correct", True),
+                 ("채점관 두 순서 판정 일치", "judge_agree", True),
                  ("문항당 시간 ↓", "sec", False)]
     present = {t for lb in labels for t in board[lb] if board[lb][t]["n"]}
     for t in [x for x in ("all", "topic", "title", "claim", "match", "mismatch", "blank") if x in present]:
@@ -128,7 +134,7 @@ def report(set_name: str, labels: list[str]) -> dict:
         for label, key, pct in rows_spec:
             print(f"  {ljust(label, 24)}" + "".join(f"{cell(board[lb][t][key], pct):>12}" for lb in labels))
         print(f"  {ljust('문항 수', 24)}" + "".join(f"{board[lb][t]['n']:>12}" for lb in labels))
-    print("\n↓ 는 낮을수록 좋음. 정답 적절은 사람 채점, 오답 두 줄은 judge_distractors.py(35B 온도 0) 재판정.")
+    print("\n↓ 는 낮을수록 좋음. 정답 적절은 사람 채점, 재확인·오답 지표는 judge_distractors.py(35B 온도 0, judge2 = 순서 바꿔 두 번) 재판정.")
     return board
 
 
@@ -179,7 +185,9 @@ def main() -> int:
                 print("    ⚠", x[:200])
     print(f"\n[자동 지표] {args.label}")
     auto_metrics(rows)
-    judge = EVAL / "runs" / args.set / f"{args.label}.judge.json"
+    judge = EVAL / "runs" / args.set / f"{args.label}.judge2.json"
+    if not judge.is_file():
+        judge = EVAL / "runs" / args.set / f"{args.label}.judge.json"
     if judge.is_file():
         print("[오답 재판정 — judge_distractors.py, 35B 온도 0]")
         for t, c in json.loads(judge.read_text(encoding="utf-8"))["summary"].items():
