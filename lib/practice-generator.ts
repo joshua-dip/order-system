@@ -62,7 +62,54 @@ export function randomSeed(): number {
   return Math.floor(Math.random() * 2 ** 31);
 }
 
-/** 원문 → 문장. 따옴표 안 대사에서는 끊지 않는다. */
+/** 뒤에서 절대 끊지 않는 약어 — 호칭(Dear Ms. Spadler)·예시(e.g. Paris) */
+const ABBR_NEVER = /^(?:Mr|Mrs|Ms|Mx|Messrs|Dr|St|Prof|Mt|Rev|Gen|Capt|Lt|Sgt|Col|Gov|Sen|Rep|Fr)\.$|^(?:e\.g|i\.e|vs|cf|viz|approx)\.$/i;
+/** 이니셜(John J.) — 이름 뒤에서만 이어지는 것으로 본다 */
+const INITIAL = /^[A-Z]\.$/;
+/** 문장 끝일 수도 있는 약어 — U.S.·D.C.·Jr. 는 다음 낱말로 판단한다(a.m.·p.m.·etc. 는 보통 문장 끝이라 끊는다) */
+const ABBR_AMBIGUOUS = /^(?:(?:[A-Z]\.){1,3}[A-Z]|Jr|Sr|Inc|Ltd|Co|Corp)\.$/;
+/** 대문자로 시작해도 보통 낱말(=새 문장 시작)인 것 */
+const SENTENCE_STARTERS = new Set(
+  'I A An The This That These Those It Its He She We You They His Her Our Your Their There Here But And Or So Yet If When While As In On At For From By With To Of After Before Since Because Although Though However Then Now Also Some Many Most All Each Every No Not One Once What How Why Who Which Where Such Even Still Instead Thus Therefore Moreover Furthermore Besides Finally First Second Third Other Another Both Let Do Does Did Is Are Was Were Be Have Has Had Can Could Will Would Should May Might Must Please Dear Hence Indeed Otherwise Meanwhile Nevertheless Nonetheless Similarly Likewise Consequently Unfortunately Fortunately Perhaps Today Later'.split(' '),
+);
+
+/** 대문자로 시작한 next 가 고유명사가 아니라 보통 낱말(=새 문장 시작)인가 */
+function looksLikeSentenceStart(next: string, text: string, byShape = true): boolean {
+  if (SENTENCE_STARTERS.has(next)) return true;
+  if (byShape && /^[A-Z][a-z]+(?:ly|ing|ed)$/.test(next)) return true;
+  /* 같은 지문 어딘가에 소문자로 나오면 보통 낱말. 아니면 고유명사(Smith·Army) → 이어지는 이름 */
+  const lower = next.toLowerCase();
+  if (lower === next) return true;
+  const forms = [lower, lower.replace(/s$/, '')].filter((w) => w.length > 1);
+  return forms.some((w) => new RegExp(`(^|[^A-Za-z])${w.replace(/[^a-z]/g, '.')}([^A-Za-z]|$)`).test(text));
+}
+
+/** i 위치의 마침표가 약어의 점이라 끊으면 안 되면 true. j = 마침표 뒤 공백 위치 */
+function isAbbreviationDot(text: string, i: number, j: number): boolean {
+  const before = text.slice(0, i + 1);
+  const token = (before.match(/\S+$/)?.[0] ?? '').replace(/^["“'‘(]+/, '');
+  if (ABBR_NEVER.test(token)) return true;
+  const initial = INITIAL.test(token);
+  if (!initial && !ABBR_AMBIGUOUS.test(token)) return false;
+  /* 다음도 이니셜(G. E. Moore · J. S. Bach) → 이름이 이어진다 */
+  if (/^[A-Z]\.\s/.test(text.slice(j + 1, j + 4))) return true;
+  const next = text.slice(j + 1).match(/^["“(]*([A-Za-z][A-Za-z'’-]*)/)?.[1];
+  if (!next || SENTENCE_STARTERS.has(next)) return false;
+  if (initial) {
+    /* 이름 뒤(Martin L.)·and W. 면 이어진다 — 단 the English I. Different … 처럼 다음이 보통 낱말이면 끊는다.
+       Rowling 처럼 -ing 로 끝나는 성도 있어 여기서는 낱말 모양(-ing·-ly)은 보지 않는다 */
+    const prev = before.slice(0, before.length - token.length).trim().match(/(\S+)$/)?.[1]?.replace(/[^A-Za-z&]/g, '') ?? '';
+    if (prev === '' || /^[A-Z]/.test(prev) || /^(?:and|by|&)$/.test(prev)) return !looksLikeSentenceStart(next, text, false);
+    /* vitamin C. · from B to A. 처럼 앞이 소문자 낱말이면 보통 문장 끝 —
+       다음 낱말 뒤가 이름처럼(대문자 낱말·쉼표·'s) 이어질 때만 이어진다(psychiatrist M. Scott Peck) */
+    if (looksLikeSentenceStart(next, text)) return false;
+    const afterNext = text.slice(j + 1).replace(/^["“(]*[A-Za-z][A-Za-z'’-]*/, '');
+    return /^(?:,|['’]s\b| [A-Z])/.test(afterNext);
+  }
+  return !looksLikeSentenceStart(next, text);
+}
+
+/** 원문 → 문장. 따옴표 안 대사·약어 뒤에서는 끊지 않는다. */
 export function splitPassageSentences(original: string): string[] {
   const text = original.replace(/\s+/g, ' ').trim();
   const out: string[] = [];
@@ -82,6 +129,7 @@ export function splitPassageSentences(original: string): string[] {
       j++;
     }
     if (!after && text[j] === ' ' && /[A-Z"“(]/.test(text[j + 1] ?? '')) {
+      if (ch === '.' && j === i + 1 && isAbbreviationDot(text, i, j)) continue;
       out.push(text.slice(start, j).trim());
       start = j + 1;
       inQuote = after;
@@ -89,12 +137,17 @@ export function splitPassageSentences(original: string): string[] {
     }
   }
   if (start < text.length) out.push(text.slice(start).trim());
-  /* 너무 짧은 조각(약어 끊김 등)은 앞 문장에 붙인다 */
+  /* 그래도 남은 너무 짧은 조각은 붙인다 — 첫 조각은 다음 문장에, 나머지는 앞 문장에 */
   const merged: string[] = [];
+  let carry = '';
   for (const s of out) {
-    if (s.length < 12 && merged.length) merged[merged.length - 1] += ` ${s}`;
-    else merged.push(s);
+    const cur = carry ? `${carry} ${s}` : s;
+    carry = '';
+    if (cur.length >= 12) merged.push(cur);
+    else if (merged.length) merged[merged.length - 1] += ` ${cur}`;
+    else carry = cur;
   }
+  if (carry) merged.push(carry);
   return merged;
 }
 
