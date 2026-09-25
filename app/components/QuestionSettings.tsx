@@ -22,6 +22,7 @@ import {
   FREE_VARIANT_TYPES,
   isFreeVariantType,
   isAdvancedVariantType,
+  isOrderInsertType,
 } from '@/lib/variant-pricing';
 import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
@@ -90,8 +91,14 @@ const QuestionSettings = ({
      무료 유형·멤버십 무료 문항 없이 인상 단가(정가 ×1.3, 10원 단위)로 받는다(2026-09-11).
      제작 쪽에는 부교재 변형(bookVariant)과 같은 모양으로 넘기고 주문번호 접두사만 XV 로 나눈다. */
   const isExternal = orderFlow === 'external';
-  /** 이 주문에서 0원인 유형인지 — 외부지문엔 무료 유형이 없다 */
-  const isFreeType = (t: string) => !isExternal && isFreeVariantType(t);
+  const [solbookKeys, setSolbookKeys] = useState<string[]>([]);
+  /** 쏠북 연계 교재(교과서 포함)를 고른 주문인지 */
+  const isSolbookSelected = solbookKeys.includes(selectedTextbook);
+  /** 이 주문에서 0원인 유형인지 — 외부지문엔 무료 유형이 없다.
+   *  쏠북 교재의 순서·삽입은 무료가 아니라 유료 단가(해설 포함/미포함)로 주문제작한다(2026-09-25).
+   *  「원문 그대로의 기본 순서·삽입」 요청이 있어 막아 두지 않고 연다. */
+  const isFreeType = (t: string) =>
+    !isExternal && isFreeVariantType(t) && !(isSolbookSelected && isOrderInsertType(t));
   /** 이 주문의 문항 단가 */
   const unitPriceOf = (t: string, opts?: { withExplanation?: boolean }) =>
     isExternal ? externalVariantUnitPrice(t, opts) : variantUnitPrice(t, opts);
@@ -167,11 +174,10 @@ const QuestionSettings = ({
   const orderSubmittingRef = useRef(false);
 
   /** 쏠북 교재(변형문제) — 공개 설정 */
-  const [solbookKeys, setSolbookKeys] = useState<string[]>([]);
-  /* 쏠북 연계 교재는 무료 유형(주제·제목·주장·일치·불일치·순서·삽입)을 고를 수 없다.
+  /* 쏠북 연계 교재는 무료 유형(주제·제목·주장·일치·불일치)을 고를 수 없다.
      변형 제작비를 쏠북에서 결제하는 교재라, 0원 유형을 열어 두면 쏠북 쪽 결제가 0원이 된다.
-     2026-09-10 부터 — 그 전 주문은 그대로 둔다. */
-  const freeTypesBlocked = solbookKeys.includes(selectedTextbook);
+     2026-09-10 부터 — 그 전 주문은 그대로 둔다. 순서·삽입은 2026-09-25 부터 유료로 연다(isFreeType). */
+  const freeTypesBlocked = isSolbookSelected;
   /* 쏠북 교재로 바꾸거나, 저장된 옵션을 불러와 무료 유형이 딸려 들어온 경우 걷어낸다 */
   useEffect(() => {
     if (!freeTypesBlocked) return;
@@ -886,13 +892,13 @@ const QuestionSettings = ({
     if (selectedTypes.includes('순서')) {
       orderInsertLines.push(
         /* 순서 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
-        `순서: ${orderInsertExplanation.순서 ? '해설 포함' : '해설 미포함·문제·답만'} ${isExternal ? `(${unitPriceOf('순서', { withExplanation: orderInsertExplanation.순서 })}원/문항)` : '(무료 유형)'}`
+        `순서: ${orderInsertExplanation.순서 ? '해설 포함' : '해설 미포함·문제·답만'} ${isFreeType('순서') ? '(무료 유형)' : `(${unitPriceOf('순서', { withExplanation: orderInsertExplanation.순서 })}원/문항)`}`
       );
     }
     if (selectedTypes.includes('삽입')) {
       orderInsertLines.push(
         /* 삽입 은 무료 7유형이라 실제 청구가 0원이다 — 정가를 적으면 청구액과 어긋나 보인다 */
-        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함' : '해설 미포함·문제·답만'} ${isExternal ? `(${unitPriceOf('삽입', { withExplanation: orderInsertExplanation.삽입 })}원/문항)` : '(무료 유형)'}`
+        `삽입: ${orderInsertExplanation.삽입 ? '해설 포함' : '해설 미포함·문제·답만'} ${isFreeType('삽입') ? '(무료 유형)' : `(${unitPriceOf('삽입', { withExplanation: orderInsertExplanation.삽입 })}원/문항)`}`
       );
     }
     for (const advType of advancedTypes) {
@@ -1219,7 +1225,7 @@ ${solbookRetailLine}
                 <div className="text-sm text-blue-700">
                   • 기본난도: 문항당 {PRICE.base}원<br/>
                   • 삽입-고난도·어법-고난도: 문항당 {PRICE.advanced}원<br/>
-                  {isExternal && (<>• 순서·삽입: 해설 포함 {PRICE.orderInsertWithExplanation}원 · 문제·답만 {PRICE.orderInsertNoExplanation}원<br/></>)}
+                  {(isExternal || isSolbookSelected) && (<>• 순서·삽입: 해설 포함 {PRICE.orderInsertWithExplanation}원 · 문제·답만 {PRICE.orderInsertNoExplanation}원<br/></>)}
                   • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                   • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
                 </div>
@@ -1238,7 +1244,7 @@ ${solbookRetailLine}
                     {' '}이곳에는 <b>커스텀 비용 {solbookExtraFeeWon.toLocaleString()}원</b>만 입금하시고
                     (월·연회원 면제), <b>변형문제 금액은 쏠북에서 교재와 함께 구매</b>하시면 됩니다.
                     <span className="block text-[12px] text-slate-500 mt-0.5">
-                      변형문제 금액을 쏠북에서 결제하므로 무료 유형·멤버십 무료 문항·포인트는 적용되지 않습니다.
+                      변형문제 금액은 쏠북에서 결제하며, 모든 유형을 주문제작 단가로 받습니다.
                     </span>
                   </div>
                 ) : isPremiumMembership ? (
@@ -1421,15 +1427,14 @@ ${solbookRetailLine}
                   </a>
                 </div>
 
-                {/* 무료 유형 — 유료를 하나 이상 골라야 열린다. 외부지문엔 무료 유형이 없어 감춘다 */}
-                {freeStandardTypes.length > 0 && (
+                {/* 무료 유형 — 유료를 하나 이상 골라야 열린다. 외부지문엔 무료 유형이 없어 감춘다.
+                    쏠북 교재도 감춘다 — 쏠북에서 결제하는 교재라 「무료」 안내 자체가 없어야 한다(2026-09-25) */}
+                {freeStandardTypes.length > 0 && !freeTypesBlocked && (
                 <div className="mt-5 pt-4 border-t border-gray-200">
                   <div className="mb-3 flex items-center justify-center gap-2">
                     <span className="tier-badge-in text-xs font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded">누구나 무료</span>
                     <span className="text-xs text-gray-500">
-                      {freeTypesBlocked
-                        ? '쏠북 교재는 변형문제 금액을 쏠북에서 결제하므로 무료 유형이 없습니다'
-                        : hasPaidType(selectedTypes)
+                      {hasPaidType(selectedTypes)
                           ? '회원 여부·한도와 무관하게 항상 0원입니다'
                           : '유료 유형을 하나 이상 고르면 선택할 수 있어요'}
                     </span>
