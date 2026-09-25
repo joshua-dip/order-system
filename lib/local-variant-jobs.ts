@@ -44,6 +44,9 @@ export type LocalVariantJobDoc = {
   created_at: Date;
   updated_at: Date;
   finished_at: Date | null;
+  /** 이 초안으로 저장된 문항 — 실사용 지표(scripts/cc-local-usage.ts)가 초안과 저장본을 맞대 본다 */
+  saved_question_id?: ObjectId;
+  saved_at?: Date;
 };
 
 type LocalWorkerDoc = {
@@ -160,4 +163,17 @@ export async function getLocalWorkerStatus(db: Db): Promise<{ online: boolean; w
     };
   });
   return { online: workers.some((w) => w.online), workers };
+}
+
+/**
+ * 로컬 LoRA 초안이 문항으로 저장됐음을 작업에 적는다 — 「그대로·조금·크게 고쳐 저장 / 버림」 실사용 지표용.
+ * jobId 가 형식에 안 맞거나 작업이 없으면 아무것도 하지 않는다(저장 자체를 막지 않는다).
+ */
+export async function markLocalJobSaved(db: Db, jobId: unknown, questionId: ObjectId): Promise<ObjectId | null> {
+  if (typeof jobId !== 'string' || !ObjectId.isValid(jobId)) return null;
+  const id = new ObjectId(jobId);
+  const r = await db
+    .collection(LOCAL_VARIANT_JOBS_COLLECTION)
+    .updateOne({ _id: id, status: 'done' }, { $set: { saved_question_id: questionId, saved_at: new Date() } });
+  return r.matchedCount ? id : null;
 }

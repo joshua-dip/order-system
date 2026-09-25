@@ -6,6 +6,7 @@ import { GRAMMAR_VARIANT_OPTIONS_FIXED } from '@/lib/variant-draft-grammar-rules
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 import { acceptedLocalAiSource } from '@/lib/local-variant-types';
+import { markLocalJobSaved } from '@/lib/local-variant-jobs';
 
 function serialize(doc: Record<string, unknown>) {
   const { _id, passage_id, ...rest } = doc;
@@ -127,6 +128,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (explEnriched) $set.question_data = explEnriched;
     }
 
+    if (aiSource) {
+      // 기존 문항을 로컬 LoRA 초안으로 다시 만든 경우 — 어느 작업의 초안인지 남긴다(실사용 지표)
+      const jobId = await markLocalJobSaved(db, body.local_job_id, new ObjectId(id));
+      if (jobId) $set.local_job_id = jobId;
+    }
     await col.updateOne({ _id: new ObjectId(id) }, { $set });
     const updated = await col.findOne({ _id: new ObjectId(id) });
     return NextResponse.json({ ok: true, item: updated ? serialize(updated as Record<string, unknown>) : null });

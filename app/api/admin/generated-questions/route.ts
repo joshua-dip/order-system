@@ -11,6 +11,7 @@ import { buildVariantQFilter } from '@/lib/admin-generated-questions-q-filter';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { nextGeneratedSerial } from '@/lib/generated-question-serial';
 import { acceptedLocalAiSource } from '@/lib/local-variant-types';
+import { markLocalJobSaved } from '@/lib/local-variant-jobs';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -527,6 +528,11 @@ export async function POST(request: NextRequest) {
     const db = await getDb('gomijoshua');
     const serialNo = await nextGeneratedSerial(db);
     const r = await db.collection('generated_questions').insertOne({ ...doc, serialNo });
+    // 로컬 LoRA 초안에서 왔으면 어느 작업의 초안인지 남긴다(실사용 지표 — 초안과 저장본 비교)
+    if (aiSource) {
+      const jobId = await markLocalJobSaved(db, body.local_job_id, r.insertedId);
+      if (jobId) await db.collection('generated_questions').updateOne({ _id: r.insertedId }, { $set: { local_job_id: jobId } });
+    }
     const inserted = await db.collection('generated_questions').findOne({ _id: r.insertedId });
     return NextResponse.json({
       ok: true,

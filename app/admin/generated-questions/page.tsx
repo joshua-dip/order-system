@@ -548,6 +548,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [draftGenerated, setDraftGenerated] = useState(false);
   /** 편집창의 초안이 로컬 LoRA 에서 왔으면 그 ai_source — 저장 요청에 실어 보낸다 */
   const [localDraftAiSource, setLocalDraftAiSource] = useState<string | null>(null);
+  /** 그 초안을 만든 로컬 작업 번호 — 저장 요청에 실어 초안과 저장본을 짝짓는다(실사용 지표) */
+  const [localDraftJobId, setLocalDraftJobId] = useState<string | null>(null);
   /** Claude로 해설(Explanation)만 생성 중 */
   const [explanationOnlyLoading, setExplanationOnlyLoading] = useState(false);
   /** 해당 교재 passage_id의 원문(원문 미리보기) */
@@ -1544,6 +1546,7 @@ export default function AdminGeneratedQuestionsPage() {
         setForm((f) => ({ ...f, status: '대기' }));
         setDraftGenerated(true);
         setLocalDraftAiSource(null);
+        setLocalDraftJobId(null);
       }
     } catch {
       setDraftError('네트워크 오류');
@@ -1624,6 +1627,7 @@ export default function AdminGeneratedQuestionsPage() {
       setDraftGenerated(true);
       // 워커 시험 모드(--fake) 결과는 출처를 남기지 않는다 — 실수로 저장돼도 로컬 LoRA 문항으로 잡히지 않게
       setLocalDraftAiSource(item.result?.fake ? null : LOCAL_VARIANT_TYPES[current.type].aiSource);
+      setLocalDraftJobId(item.result?.fake ? null : current.id);
       const notes: string[] = [];
       if (item.result?.fake) notes.push('워커 시험 모드(--fake) 결과입니다 — 저장하지 마세요.');
       if (item.validation?.errors.length) notes.push(`검증 오류: ${item.validation.errors.join(' / ')}`);
@@ -1698,7 +1702,10 @@ export default function AdminGeneratedQuestionsPage() {
 
   // 초안이 비워질 때(새로 열기·편집 열기·이어 만들기 등) 로컬 출처도 함께 비운다
   useEffect(() => {
-    if (!draftGenerated) setLocalDraftAiSource(null);
+    if (!draftGenerated) {
+      setLocalDraftAiSource(null);
+      setLocalDraftJobId(null);
+    }
   }, [draftGenerated]);
 
   // 모달을 닫으면 화면 대기를 멈춘다. 워커가 아직 집지 않은 작업은 쓸 곳이 없으니 취소하고,
@@ -2039,6 +2046,7 @@ export default function AdminGeneratedQuestionsPage() {
             error_msg: form.error_msg.trim() || null,
             question_data,
             ...(localDraftAiSource ? { ai_source: localDraftAiSource } : {}),
+            ...(localDraftAiSource && localDraftJobId ? { local_job_id: localDraftJobId } : {}),
           }
         : {
             textbook: form.textbook.trim(),
@@ -2051,6 +2059,7 @@ export default function AdminGeneratedQuestionsPage() {
             error_msg: form.error_msg.trim() || null,
             question_data,
             ...(localDraftAiSource ? { ai_source: localDraftAiSource } : {}),
+            ...(localDraftAiSource && localDraftJobId ? { local_job_id: localDraftJobId } : {}),
           };
 
       const res = await fetch(url, {
