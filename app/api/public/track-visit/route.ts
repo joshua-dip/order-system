@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { getDb } from '@/lib/mongodb';
 import { koreaDateKey } from '@/lib/korea-date-key';
+import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import {
+  SITE_EVENTS_COLLECTION,
+  ensureSiteEventIndexes,
+  normalizeUsagePath,
+  usageMenuOf,
+  type SiteEventDoc,
+} from '@/lib/site-usage';
 
 const COOKIE = 'sv_id';
 const COL_STATS = 'site_stats_daily';
@@ -33,9 +41,11 @@ async function ensureIndexes(db: Awaited<ReturnType<typeof getDb>>) {
  */
 export async function POST(request: NextRequest) {
   let path = '';
+  let referrer = '';
   try {
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     path = typeof body.path === 'string' ? body.path : '';
+    referrer = typeof body.referrer === 'string' ? body.referrer : '';
   } catch {
     path = '';
   }
@@ -81,6 +91,34 @@ export async function POST(request: NextRequest) {
     } catch (e: unknown) {
       const code = typeof e === 'object' && e !== null && 'code' in e ? (e as { code: number }).code : 0;
       if (code !== 11000) throw e;
+    }
+
+    /* 사용 기록(메뉴별 분석용) — 실패해도 방문 집계는 그대로 */
+    try {
+      await ensureSiteEventIndexes(db);
+      const token = request.cookies.get(COOKIE_NAME)?.value;
+      const session = token ? await verifyToken(token) : null;
+      const normPath = normalizeUsagePath(path);
+      let refHost: string | undefined;
+      try {
+        const h = referrer ? new URL(referrer).host : '';
+        if (h && h !== request.nextUrl.host) refHost = h.slice(0, 100);
+      } catch {
+        /* ignore */
+      }
+      const doc: SiteEventDoc = {
+        ts: now,
+        date,
+        type: 'pageview',
+        path: normPath,
+        menu: usageMenuOf(normPath).key,
+        visitorId,
+        ...(session?.loginId ? { loginId: String(session.loginId), role: String(session.role ?? '') } : {}),
+        ...(refHost ? { refHost } : {}),
+      };
+      await db.collection(SITE_EVENTS_COLLECTION).insertOne(doc);
+    } catch (e) {
+      console.error('track-visit event:', e);
     }
 
     const res = NextResponse.json({ ok: true });

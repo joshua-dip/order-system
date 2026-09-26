@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import AppBar from '@/app/components/AppBar';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
 import { MEMBERSHIP_APPLY_OPEN_EVENT } from '@/lib/membership-apply-event';
+import { trackEvent } from '@/lib/track-event';
 
 /**
  * 학습실 — 모의고사 지문으로 순서·삽입 문항을 **그때그때 새로 만들어** 푼다(무한 연습). 판매 문항은 쓰지 않는다.
@@ -113,6 +114,7 @@ function PracticeInner() {
     const q = new URLSearchParams({ kinds: kinds.join(','), count: String(count) });
     if (textbook === ALL) q.set('grade', String(grade));
     else q.set('textbook', textbook);
+    trackEvent('practice_start', { kinds: kinds.join(','), count, scope: textbook === ALL ? `고${grade} 전체` : textbook });
     void loadSet(q.toString(), 'new');
   }, [kinds, count, textbook, grade, loadSet]);
 

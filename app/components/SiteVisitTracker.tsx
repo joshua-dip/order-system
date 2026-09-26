@@ -22,7 +22,8 @@ export default function SiteVisitTracker() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ path: pathname }),
+      /* 첫 조회에만 외부 유입 출처가 의미 있다 — 이후는 사이트 안 이동 */
+      body: JSON.stringify({ path: pathname, referrer: prev ? '' : document.referrer }),
     }).catch(() => {});
   }, [pathname]);
 

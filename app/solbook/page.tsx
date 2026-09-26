@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppBar from '@/app/components/AppBar';
 import type { SolvookBook, SolvookCatalog, SolvookItem } from '@/lib/solvook-catalog';
+import { trackEvent } from '@/lib/track-event';
 
 /** 쏠북 상품 페이지 — lib/solvook-catalog 의 solvookProductUrl 과 같다(클라이언트에서 서버 모듈을 불러오지 않으려고 따로 둔다) */
 const productUrl = (id: string) => `https://solvook.com/products/${id}`;
@@ -103,7 +104,8 @@ function SolbookInner() {
     const itemOk = (book: SolvookBook, unit: string, it: SolvookItem) => {
       if (tag !== '전체' && it.tag !== tag) return false;
       if (!tokens.length) return true;
-      const hay = normalize(`${book.source} ${book.title} ${unit} ${it.title}`);
+      /* 쏠북 교재명 머리말(「[22개정][YBM]」)은 빼고 찾는다 — 「2」가 「22개정」에 걸리지 않게 */
+      const hay = normalize(`${book.title} ${unit} ${it.title}`);
       return tokens.every((t) => hay.includes(t));
     };
     return catalog.categories
@@ -137,7 +139,16 @@ function SolbookInner() {
   let rendered = 0;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div
+      className="min-h-screen bg-slate-50"
+      onClickCapture={(e) => {
+        /* 쏠북 상품·매장 링크 클릭을 사용 기록으로 — 어떤 자료가 관심을 받는지 */
+        const a = (e.target as HTMLElement).closest('a[href^="https://solvook.com/"]') as HTMLAnchorElement | null;
+        if (!a) return;
+        const id = a.href.match(/\/products\/(\d+)/)?.[1];
+        trackEvent(id ? 'solbook_product_click' : 'solbook_store_click', { productId: id, title: a.title || a.textContent?.trim().slice(0, 120), query: query.trim() || undefined });
+      }}
+    >
       <AppBar title="쏠북 바로구매" />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="mb-6">

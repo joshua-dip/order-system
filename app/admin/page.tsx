@@ -6010,6 +6010,9 @@ export default function AdminDashboardPage() {
               <h3 id="site-visits-history-title" className="font-bold text-white text-lg">
                 사이트 방문 일별 기록
               </h3>
+              <a href="/admin/usage" className="ml-auto text-xs font-semibold text-cyan-400 hover:text-cyan-300">
+                메뉴별 사용 기록 →
+              </a>
               <button
                 type="button"
                 onClick={() => setSiteVisitsHistoryOpen(false)}

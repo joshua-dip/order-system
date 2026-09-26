@@ -10,6 +10,7 @@ import {
 } from '@/lib/variant-pricing';
 import { isFreeVariantType, isAdvancedVariantType } from '@/lib/variant-pricing';
 import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
+import { trackEvent } from '@/lib/track-event';
 import {
   HWP_STORAGE_OPTIONS,
   DEFAULT_HWP_STORAGE_MODES_MOCK,
@@ -476,6 +477,13 @@ const MockExamSettings = ({ onOrderGenerate, onBack }: MockExamSettingsProps) =>
       totalNumberCount,
       quotaFreeCount: quotaFree,
     } = computeMockExamPrice();
+    trackEvent('order_submit', {
+      flow: 'mockVariant',
+      numbers: totalNumberCount,
+      types: selectedTypes.length,
+      questions: totalQuestions,
+      price: totalPrice,
+    });
 
     /* 관리자·회원 모두 주문서만 보고 왜 금액이 깎였는지 알 수 있게 남긴다.
        무료분은 할인율이 붙기 전 정가에서 빠지므로 「정가 N원분 제외」로 적는다. */

@@ -28,6 +28,7 @@ import {
 } from '@/lib/variant-pricing';
 import { splitByBaseQuota, MEMBER_BASE_FREE_QUOTA } from '@/lib/variant-member-quota';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
+import { trackEvent } from '@/lib/track-event';
 export type { HwpStorageModeKey } from '@/lib/variant-order-options';
 import {
   HWP_STORAGE_OPTIONS,
@@ -878,6 +879,14 @@ const QuestionSettings = ({
       solbookCustomFeeWaived,
       quotaFreeCount: quotaFree,
     } = computeBookVariantPrice();
+    trackEvent('order_submit', {
+      flow: isExternal ? 'external' : isSolbookTextbook ? 'solbook' : 'bookVariant',
+      textbook: selectedTextbook,
+      lessons: selectedLessons.length,
+      types: selectedTypes.length,
+      questions: totalQuestions,
+      price: totalPrice,
+    });
 
     const orderInsertLines: string[] = [];
     if (selectedTypes.includes('순서')) {
