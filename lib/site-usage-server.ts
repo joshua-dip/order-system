@@ -6,6 +6,7 @@ import type { NextRequest } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { koreaDateKey } from '@/lib/korea-date-key';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { isOwnHost } from '@/lib/site-usage-host';
 import {
   SITE_EVENTS_COLLECTION,
   ensureSiteEventIndexes,
@@ -21,7 +22,7 @@ function pagePathOf(request: NextRequest): string {
     const ref = request.headers.get('referer');
     if (ref) {
       const u = new URL(ref);
-      if (u.host === request.nextUrl.host) return u.pathname;
+      if (isOwnHost(request, u.host)) return u.pathname;
     }
   } catch {
     /* ignore */

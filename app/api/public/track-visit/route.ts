@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { getDb } from '@/lib/mongodb';
 import { koreaDateKey } from '@/lib/korea-date-key';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { isOwnHost } from '@/lib/site-usage-host';
 import {
   SITE_EVENTS_COLLECTION,
   ensureSiteEventIndexes,
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       let refHost: string | undefined;
       try {
         const h = referrer ? new URL(referrer).host : '';
-        if (h && h !== request.nextUrl.host) refHost = h.slice(0, 100);
+        if (h && !isOwnHost(request, h)) refHost = h.slice(0, 100);
       } catch {
         /* ignore */
       }
