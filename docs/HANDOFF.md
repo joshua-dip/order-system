@@ -12,6 +12,7 @@
 
 | 날짜 | 문서 | 방향 | 내용 |
 |---|---|---|---|
+| 2026-09-26 | [로컬 LoRA — Claude Code → Codex 인수인계](handoff/2026-09-26-로컬-LoRA-Codex-인수인계.md) | Claude Code → Codex | 12유형 상태·누수 없는 점수, 평가·학습·채점 명령, 지킬 규칙, 배운 것, 다음 할 일(두 번째 시험지·요약·빈칸) — 실습 노트 원본은 `docs/ml/lora-notebook/` |
 | 2026-09-23 | [로컬 LoRA — 맥(MLX)으로 이전](handoff/2026-09-23-로컬-LoRA-맥-이전.md) | Windows GPU PC → 맥북 프로 Max | 0.5B 는 형식만 맞고 정답이 자주 틀림(통념→반박 지문), 맥에서 7B 급 MLX 학습·워커 MLX 백엔드·launchd, 시험 세트로 비교하는 개선 루프 |
 | 2026-09-23 | [로컬 LoRA 작업 큐](handoff/2026-09-23-로컬-LoRA-작업큐.md) | 웹앱 → GPU PC 워커 | 「로컬 LoRA로 초안」은 `local_variant_jobs` 에 넣고 GPU PC 워커가 처리, 하트비트 `local_variant_workers`, 저장 시 `ai_source=local-*-lora` |
 | 2026-09-11 | [외부지문 변형문제 주문 (XV)](handoff/2026-09-11-외부지문-주문제작.md) | 웹앱 → 제작기 | 새 주문번호 `XV`(flow=bookVariant), 회원 전용 교재 `외부지문_<loginId>`, 인상 단가 |

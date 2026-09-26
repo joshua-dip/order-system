@@ -35,6 +35,11 @@
 **`docs/HANDOFF.md`** 에 링크로 모은다. 새 합의가 생기면 그 표에 한 줄 추가하고 커밋할 것.
 현재 걸려 있는 것: `orders.delivery` (납품 부족분 → 무료 한도 반환).
 
+**로컬 LoRA 변형문제 AI**(맥 MLX 워커, 12유형)를 이어받으면 먼저
+**`docs/handoff/2026-09-26-로컬-LoRA-Codex-인수인계.md`** 를 읽을 것 — 상태·명령·규칙·다음 할 일.
+개선할 때마다 **`docs/ml/lora-notebook/notebook.html`** 「개선 기록」 표에 한 줄 추가하고
+`node docs/ml/lora-notebook/print-notebook.cjs` 로 PDF 재생성.
+
 ---
 
 ## 보안 · BV 주문번호 · MongoDB
