@@ -219,6 +219,12 @@ function SolbookInner() {
                     <span>{cat.title}</span>
                     <span className="text-xs font-medium text-slate-400 tabular-nums">{count.toLocaleString()}</span>
                   </h2>
+                  {/모의고사/.test(cat.title) && (
+                    <p className="-mt-1 mb-2.5 text-xs text-slate-500">
+                      모의고사는 <b className="text-slate-700">전체 합본 · 번호별 종합 · 유형별</b>로 나뉘어 있어 필요한 만큼만 골라 살 수 있어요.
+                      세 구성은 같은 문항을 다르게 묶은 것이라 <b className="text-slate-700">중복 구매에 유의</b>해 주세요.
+                    </p>
+                  )}
                   <div className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
                     {books.map(({ book, units, count: n }) => {
                       const expanded = open.has(book.source) || (searching && rendered < SEARCH_RENDER_CAP);
@@ -246,6 +252,10 @@ function SolbookInner() {
                             <div className="border-t border-slate-100 bg-slate-50/60 px-4 pb-3">
                               {units.map((u) => {
                                 if (searching && rendered >= SEARCH_RENDER_CAP) return null;
+                                if (isMockBook(book.source)) {
+                                  rendered += u.items.length;
+                                  return <MockUnit key={u.unit} unit={u.unit} items={u.items} />;
+                                }
                                 const shorts = shortTitles(u.items);
                                 return (
                                   <div key={u.unit} className="pt-3">
@@ -295,6 +305,236 @@ function Chip({ on, onClick, subtle, children }: { on: boolean; onClick: () => v
     >
       {children}
     </button>
+  );
+}
+
+/* ── 모의고사: 제목 표기가 제각각이라(127가지) 제목을 해석해 번호별 표 · 유형별 · 합본으로 다시 짠다 ── */
+
+function isMockBook(source: string): boolean {
+  return /모의고사/.test(source);
+}
+
+/** 「10월 모의고사」 → 「10월」, 「대수능」 → 「수능」 */
+function mockUnitLabel(unit: string): string {
+  const m = unit.match(/^0?(\d{1,2})월/);
+  if (m) return `${Number(m[1])}월`;
+  if (/수능/.test(unit)) return '수능';
+  return unit;
+}
+
+const MOCK_TYPES = '주제|제목|주장|일치|불일치|함의|빈칸|요약|어법|어휘|순서|삽입|무관한문장';
+/** 제목의 묶음 유형 약칭 → 화면 표기 */
+const MOCK_TYPE_ALIASES: Record<string, string> = { 주제주일불: '주제·주장·일치·불일치' };
+type MockVariant = '기본' | '고난도' | '전 유형' | '워크북';
+const MOCK_VARIANTS: MockVariant[] = ['기본', '고난도', '전 유형', '워크북'];
+
+type MockTab = '전체' | '번호별' | '유형별';
+
+type MockPart =
+  | { kind: 'num'; num: string; order: number; variant: MockVariant }
+  | { kind: 'type'; type: string; round: number | null }
+  | { kind: 'bundle'; label: string }
+  | { kind: 'other' };
+
+function parseMock(it: SolvookItem): MockPart {
+  const t = it.title;
+  const num = (m: RegExpMatchArray) => ({ num: `${m[1]}번`, order: Number(m[1].split('~')[0]) });
+  let m = t.match(/(\d{1,2}(?:~\d{1,2})?)번\s*통합\s*워크북/);
+  if (m) return { kind: 'num', ...num(m), variant: '워크북' };
+  m = t.match(new RegExp(`(?:^|[_\\s])(?:변형문제_)?(주제주일불|${MOCK_TYPES})(-고난도)?(?:[\\s_]*(\\d+)회차)?(?:[\\s_]*\\[|\\s*$)`));
+  if (m && !/\d번/.test(t)) return { kind: 'type', type: `${MOCK_TYPE_ALIASES[m[1]] ?? m[1]}${m[2] ?? ''}`, round: m[3] ? Number(m[3]) : null };
+  m = t.match(/워크북_([^_\[\]]+)\s*$/);
+  if (m) return { kind: 'bundle', label: `${m[1].trim()} 워크북` };
+  m = t.match(/(기본|고난도)\s*전체\s*합본/);
+  if (m) return { kind: 'bundle', label: `${m[1]} 전체 합본` };
+  /* 번호가 붙은 제목(「20번_변형문제 [93문항]」)은 합본이 아니다 */
+  const hasNum = /\d번/.test(t);
+  if (!hasNum && /전체_?일반/.test(t)) return { kind: 'bundle', label: '전체 합본 · 일반' };
+  if (!hasNum && /전체\s*합본|전문항|변형문제(?:_전체)?_?\s*\[/.test(t)) return { kind: 'bundle', label: '전 유형 전체 합본' };
+  m = t.match(/(?:번호)?(\d{1,2}(?:~\d{1,2})?)번[\s_]*(기본|고난도)?/);
+  if (m && it.tag === '변형문제') {
+    const v = m[2] as MockVariant | undefined;
+    return { kind: 'num', ...num(m), variant: v ?? '전 유형' };
+  }
+  return { kind: 'other' };
+}
+
+function CellLink({ item }: { item: SolvookItem }) {
+  return (
+    <a
+      href={productUrl(item.id)}
+      title={item.title}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col items-center rounded-md border border-slate-200 bg-white px-1.5 py-1 leading-tight hover:border-sky-600"
+    >
+      <span className="text-[11px] tabular-nums text-slate-500">{item.questions != null ? `${item.questions}문항` : '상품 보기'}</span>
+      <span className="text-xs font-semibold tabular-nums text-slate-800">{won(item.price)}</span>
+    </a>
+  );
+}
+
+function MockUnit({ unit, items }: { unit: string; items: SolvookItem[] }) {
+  const parsed = items.map((it) => ({ it, p: parseMock(it) }));
+  /* 번호별 표: 번호 → 변형 종류 → 상품(같은 칸이 둘이면 첫 것) */
+  const rows = new Map<string, { order: number; cells: Partial<Record<MockVariant, SolvookItem>> }>();
+  const types = new Map<string, SolvookItem[]>();
+  const bundles: { label: string; it: SolvookItem }[] = [];
+  const others: SolvookItem[] = [];
+  for (const { it, p } of parsed) {
+    if (p.kind === 'num') {
+      const r = rows.get(p.num) ?? { order: p.order, cells: {} };
+      if (!r.cells[p.variant]) r.cells[p.variant] = it;
+      else others.push(it);
+      rows.set(p.num, r);
+    } else if (p.kind === 'type') {
+      const key = p.type;
+      types.set(key, [...(types.get(key) ?? []), it]);
+    } else if (p.kind === 'bundle') bundles.push({ label: p.label, it });
+    else others.push(it);
+  }
+  const rowList = [...rows.entries()].sort((a, b) => a[1].order - b[1].order);
+  const cols = MOCK_VARIANTS.filter((v) => rowList.some(([, r]) => r.cells[v]));
+  const typeOrder = MOCK_TYPES.split('|');
+  const typeList = [...types.entries()].sort((a, b) => {
+    const idx = (t: string) => {
+      const i = typeOrder.indexOf(t.replace('-고난도', ''));
+      return i < 0 ? -1 : i; // 묶음(주제·주장·일치·불일치)은 맨 앞
+    };
+    return idx(a[0]) - idx(b[0]) || a[0].length - b[0].length;
+  });
+  const roundOf = (it: SolvookItem) => (parseMock(it) as { round?: number | null }).round ?? null;
+
+  const typeItemCount = typeList.reduce((n, [, l]) => n + l.length, 0);
+  const tabs: { key: MockTab; label: string; count: number; unitWord: string; desc: string }[] = [
+    { key: '전체', label: '전체 합본', count: bundles.length, unitWord: '개', desc: '18번부터 43~45번까지 전 지문의 변형문제를 한 파일로 — 유형별·번호별로 따로 받지 않고 한 번에 갖출 때.' },
+    { key: '번호별', label: '번호별 종합', count: rowList.length, unitWord: '개 번호', desc: '한 지문에 여러 유형을 모아 그 지문 하나는 확실히 — 번호마다 기본·고난도를 따로, 통합 워크북도 번호별로.' },
+    { key: '유형별', label: '유형별', count: typeItemCount, unitWord: '개', desc: '유형마다 1·2·3회차로 — 필요한 유형과 회차만 골라서. 수업은 기본난도, 상위권은 고난도로.' },
+  ];
+  const firstFilled = (['번호별', '유형별', '전체'] as MockTab[]).find((k) => tabs.find((t) => t.key === k)!.count > 0);
+  const [tab, setTab] = useState<MockTab | null>(null);
+  const active: MockTab | undefined = tab && tabs.find((t) => t.key === tab)!.count > 0 ? tab : firstFilled;
+  const activeTab = tabs.find((t) => t.key === active);
+
+  return (
+    <div className="pt-4">
+      <div className="mb-2 text-sm font-bold text-slate-800">{mockUnitLabel(unit)}</div>
+
+      {firstFilled && (
+        <>
+          <div className="flex gap-1 rounded-lg bg-slate-100 p-1" role="tablist" aria-label={`${mockUnitLabel(unit)} 구매 방식`}>
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={active === t.key}
+                disabled={t.count === 0}
+                onClick={() => setTab(t.key)}
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+                  active === t.key
+                    ? 'bg-slate-800 text-white shadow-sm'
+                    : t.count === 0
+                      ? 'cursor-not-allowed text-slate-300'
+                      : 'text-slate-600 hover:bg-white'
+                }`}
+              >
+                {t.label}
+                <span className={`ml-1 tabular-nums ${active === t.key ? 'text-white/70' : 'text-slate-400'}`}>
+                  {t.count > 0 ? t.count : '없음'}
+                </span>
+              </button>
+            ))}
+          </div>
+          {activeTab && <p className="mb-2 mt-1.5 text-[11px] text-slate-500">{activeTab.desc}</p>}
+        </>
+      )}
+
+      {active === '전체' && (
+        <div className="flex flex-wrap gap-1.5">
+          {bundles.map(({ label, it }) => (
+            <a
+              key={it.id}
+              href={productUrl(it.id)}
+              title={it.title}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+            >
+              {label}
+              <span className="font-normal text-white/70 tabular-nums">
+                {it.questions != null ? `${it.questions.toLocaleString()}문항 · ` : ''}
+                {won(it.price)}
+              </span>
+              <span aria-hidden>↗</span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {active === '번호별' && (
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <table className="w-full min-w-[320px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-500">
+                <th className="px-3 py-2 text-left">번호</th>
+                {cols.map((c) => (
+                  <th key={c} className="px-1.5 py-2 text-center">
+                    {c === '기본' ? '종합 기본' : c === '고난도' ? '종합 고난도' : c === '전 유형' ? '종합 (전 유형)' : '통합 워크북'}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rowList.map(([num, r]) => (
+                <tr key={num} className="border-b border-slate-100 last:border-0">
+                  <td className="whitespace-nowrap px-3 py-1.5 font-semibold tabular-nums text-slate-800">{num}</td>
+                  {cols.map((c) => (
+                    <td key={c} className="px-1.5 py-1.5">
+                      {r.cells[c] ? <CellLink item={r.cells[c]!} /> : <span className="block text-center text-xs text-slate-300">—</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {active === '유형별' && (
+        <div className="space-y-1">
+          {typeList.map(([type, list]) => (
+            <div key={type} className="flex flex-wrap items-center gap-1.5 rounded-lg bg-white px-3 py-1.5">
+              <span className="w-24 shrink-0 text-xs font-semibold text-slate-800">{type}</span>
+              {list
+                .sort((a, b) => (roundOf(a) ?? 0) - (roundOf(b) ?? 0))
+                .map((it) => (
+                  <a
+                    key={it.id}
+                    href={productUrl(it.id)}
+                    title={it.title}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md border border-slate-200 px-2 py-0.5 text-[11px] tabular-nums text-slate-700 hover:border-sky-600"
+                  >
+                    {roundOf(it) != null ? `${roundOf(it)}회차 · ` : ''}
+                    {it.questions != null ? `${it.questions}문항 · ` : ''}
+                    {won(it.price)}
+                  </a>
+                ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {others.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {others.map((it) => (
+            <ItemRow key={it.id} item={it} label={it.title.replace(/_/g, ' ')} />
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
