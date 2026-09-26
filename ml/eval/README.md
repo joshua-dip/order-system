@@ -23,6 +23,31 @@ python3 ml/eval/view.py --set sep26-go1 --compare 2026-09-24-final,2026-10-01-�
 - 채점은 `view.py` 출력의 「기준」 줄(세트의 `key`)에 대어 O/P/X/F 로 적고 `grades/` 에 저장한다.
   자동 지표(성공률·시간·경고·정답 이동·모양 틀린 정답·겹치는 오답 쌍)는 사람 없이도 나온다.
 
+## 학습 데이터 뽑기 → 재학습
+
+LoRA 가 있는 유형은 여섯 개다(주제 `topic` · 제목 `title` · 주장 `claim` · 일치·불일치 `fact` · 빈칸 `blank` · 요약 `summary`).
+순서·삽입·무관한문장·어휘·어법은 규칙 기반이라 학습할 것이 없다.
+
+```bash
+# 1) DB 완료 문항 → data/<유형>-finetune/{train,valid,test}.jsonl + meta.json (git 제외)
+npm run cc:summary-export                 # topic · title · claim · fact · blank · summary
+# 2) MLX LoRA 학습 — 7B 4bit, 3000 iters, 유형당 약 40~50분. 잠자기 방지 필수
+caffeinate -i ./ml/common/train_mlx.sh summary
+# 3) 같은 시험지로 다시 재기(위 「돌리기」) — 고유 라벨, --repeat 2
+```
+
+- **평가 세트 교재는 export 에서 자동으로 빠진다**(`scripts/_eval-set-filter.ts`, 끝에 「평가 세트 교재 제외: N문항」 출력).
+  새 세트는 `sets/` 에 json 만 추가하면 다음 export 부터 빠진다. 새 export 스크립트를 만들면 이 필터를 꼭 붙인다.
+- 요약 export 는 3~4월 엑셀 임포트 해설 형식(「① x - y / 가짜 - 정보 / *해설」)도 뺀다(노트 21과).
+- export 의 `SYSTEM_PROMPT`·사용자 메시지는 `ml/<유형>/windows/pipeline_<유형>.py` 와 **한 글자까지 같아야** 한다.
+  한쪽을 바꾸면 다른 쪽도 바꾸고 재학습한다(노트 10과).
+- 학습 중에는 `ml/<유형>/adapters/<유형>-lora.training` 에 쓰고, 끝나면 옛 어댑터를
+  `<유형>-lora.prev-<시각>` 으로 옮긴 뒤 새 것으로 바꿔 넣는다. **되돌리기** = 새 폴더를 치우고 `.prev-*` 를 `<유형>-lora` 로 이름 바꾸기.
+- 워커는 다음 작업부터 새 어댑터를 잡지만, 확실히 하려면 재시작한다:
+  `launchctl kickstart -k gui/$(id -u)/com.gomijoshua.local-variant-worker` (Cursor 호환 서버도 켜져 있으면 다시 켠다).
+- 학습(약 10GB)과 평가(약 34GB)·워커를 동시에 돌리지 않는다 — 여러 유형은 한 스크립트로 차례로 돌린다.
+- 기본값(모델·단계 수)은 `./ml/common/train_mlx.sh <유형> [모델] [단계]` 로 바꿀 수 있다. 설정 근거는 노트 4·5과.
+
 ## 세트
 
 - `sep26-go1` — 26년 9월 고1 모의고사 18지문(20~24·29~42번) × 3유형 = 54문항.
