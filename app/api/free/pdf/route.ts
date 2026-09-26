@@ -13,6 +13,7 @@ import {
   PUBLIC_FREE_DAILY_LIMIT,
 } from '@/lib/public-free-rate-limit';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 /**
  * 공개 — 무료 배포 세트 PDF. 로그인·이름·전화 아무것도 받지 않는다.
  *
@@ -31,7 +32,7 @@ function parseOptions(raw: string): string[] {
   return raw.split('\n').map((l) => l.trim()).filter(Boolean);
 }
 
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const textbook = (sp.get('textbook') ?? '').trim();
   if (!textbook) {
@@ -109,3 +110,5 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+
+export const GET = withDownloadTracking('무료 변형 PDF', handleGET);

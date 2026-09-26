@@ -102,6 +102,10 @@ export const USAGE_EVENT_LABEL: Record<string, string> = {
   solbook_product_click: '쏠북 상품 클릭',
   solbook_store_click: '쏠북 매장 클릭',
   practice_start: '학습실 세트 시작',
+  file_download: 'PDF·파일 다운로드',
+  signup_open: '가입신청 창 열기',
+  signup_submit: '가입신청 완료',
+  signup_kakao_click: '가입신청 후 카톡 알림',
 };
 
 let indexesReady = false;

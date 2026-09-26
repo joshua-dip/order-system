@@ -18,6 +18,7 @@ import { sortVocabularyEntries } from '@/lib/passage-analyzer-vocabulary';
 import { VOCABULARY_WORD_TYPE_LABELS } from '@/lib/passage-analyzer-vocabulary';
 import { lessonLabelFromPassageRow } from '@/lib/vocabulary-lesson-label';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 /* ── 요청 파라미터 타입 ── */
 
 interface DownloadParams {
@@ -593,7 +594,7 @@ async function buildPdf(
 
 /* ── 메인 핸들러 ── */
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   const payload = await verifyToken(token);
@@ -688,3 +689,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '다운로드에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const POST = withDownloadTracking('단어장', handlePOST);

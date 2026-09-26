@@ -13,6 +13,7 @@ import {
   DEFAULT_COLUMNS,
 } from '@/lib/vocabulary-export';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 const VALID_FORMATS = [
   'xlsx',
   'pdf',
@@ -34,7 +35,7 @@ function parseEntries(raw: unknown): VocabularyEntry[] {
  * POST /api/public/vocabulary/download
  * 비회원 체험 단어장 다운로드 — vocabulary_list 를 body 로 받음 (인증 없음)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
     const format: Format = VALID_FORMATS.includes(body?.format) ? (body.format as Format) : 'xlsx';
@@ -152,3 +153,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '다운로드에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const POST = withDownloadTracking('단어장(공개)', handlePOST);

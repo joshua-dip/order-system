@@ -13,6 +13,7 @@ import { requireVip } from '@/lib/vip-auth';
 import { getDb } from '@/lib/mongodb';
 import { formatGeneratedSerial } from '@/lib/generated-question-serial';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 /* ── 폰트 로더 ── */
 let fontCache: Record<string, Buffer> = {};
 async function loadFont(variant: 'Regular' | 'Bold' = 'Regular'): Promise<Buffer> {
@@ -130,7 +131,7 @@ function sourceLabel(textbook?: string, source?: string): string {
   return [shortTb, src].filter(Boolean).join(' · ');
 }
 
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const auth = await requireVip(request);
   if (auth instanceof NextResponse) return auth;
   return buildDownload(request.nextUrl.searchParams);
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
  * POST — 동일한 다운로드를 JSON 본문으로 받음. 서술형 지문 등 큰 데이터로 URL 이 길어져
  * GET 이 431(Request Header Fields Too Large)로 실패하는 것을 방지.
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const auth = await requireVip(request);
   if (auth instanceof NextResponse) return auth;
   let body: Record<string, unknown>;
@@ -1014,3 +1015,6 @@ async function buildAnswerOnlyPdf(opts: {
     },
   });
 }
+
+export const GET = withDownloadTracking('VIP 시험지', handleGET);
+export const POST = withDownloadTracking('VIP 시험지', handlePOST);

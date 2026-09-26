@@ -14,6 +14,13 @@ interface UsageData {
   referrers: { host: string; count: number }[];
   hours: { hour: number; count: number }[];
   solbookTop: { productId: string; title: string; count: number }[];
+  downloads: { kind: string; count: number; visitors: number; members: number }[];
+  signup: {
+    opens: number;
+    openVisitors: number;
+    submits: number;
+    byMenu: { menu: string; label: string; opens: number; openVisitors: number; submits: number }[];
+  };
   members: {
     loginId: string;
     name: string;
@@ -122,7 +129,7 @@ export default function AdminUsagePage() {
           <div>
             <h1 className="text-2xl font-bold text-white">📈 사용 기록</h1>
             <p className="text-sm text-slate-400 mt-1">
-              어떤 메뉴를 누가 얼마나 쓰는지 — 페이지 조회와 주요 행동(주문서 생성·쏠북 상품 클릭·학습실 시작)을 모았습니다.
+              어떤 메뉴를 누가 얼마나 쓰는지 — 페이지 조회와 주요 행동(주문서 생성·PDF 다운로드·가입 신청·쏠북 상품 클릭·학습실 시작)을 모았습니다.
               기록은 {`180`}일 보관, 관리자 화면(/admin)은 집계하지 않습니다.
             </p>
           </div>
@@ -215,6 +222,74 @@ export default function AdminUsagePage() {
                             <td className={td}>{e.label}</td>
                             <td className={`${td} text-right tabular-nums`}>{e.count.toLocaleString()}건</td>
                             <td className={`${td} text-right tabular-nums text-slate-400`}>{e.visitors.toLocaleString()}명</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </section>
+
+                <section className={card}>
+                  <h2 className="mb-3 font-bold">가입 신청 흐름</h2>
+                  {data.signup.opens === 0 ? (
+                    <p className="text-sm text-slate-500">아직 기록이 없습니다.</p>
+                  ) : (
+                    <>
+                      <div className="mb-3 flex items-baseline gap-4 text-sm">
+                        <span>
+                          창 연 방문자 <b className="tabular-nums">{data.signup.openVisitors.toLocaleString()}</b>명
+                        </span>
+                        <span aria-hidden className="text-slate-500">→</span>
+                        <span>
+                          신청 완료 <b className="tabular-nums">{data.signup.submits.toLocaleString()}</b>건
+                        </span>
+                        <span className="ml-auto text-sky-300 font-semibold tabular-nums">
+                          전환 {data.signup.openVisitors ? Math.round((data.signup.submits / data.signup.openVisitors) * 100) : 0}%
+                        </span>
+                      </div>
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-slate-700">
+                            <th className={th}>연 화면</th>
+                            <th className={`${th} text-right`}>연 방문자</th>
+                            <th className={`${th} text-right`}>신청</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.signup.byMenu.map((r) => (
+                            <tr key={r.menu} className="border-b border-slate-800">
+                              <td className={td}>{r.label}</td>
+                              <td className={`${td} text-right tabular-nums`}>{r.openVisitors.toLocaleString()}</td>
+                              <td className={`${td} text-right tabular-nums`}>{r.submits.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+                </section>
+
+                <section className={card}>
+                  <h2 className="mb-3 font-bold">PDF·파일 다운로드 (종류별)</h2>
+                  {data.downloads.length === 0 ? (
+                    <p className="text-sm text-slate-500">아직 기록이 없습니다.</p>
+                  ) : (
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-slate-700">
+                          <th className={th}>종류</th>
+                          <th className={`${th} text-right`}>다운로드</th>
+                          <th className={`${th} text-right`}>방문자</th>
+                          <th className={`${th} text-right`}>회원</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.downloads.map((d) => (
+                          <tr key={d.kind} className="border-b border-slate-800">
+                            <td className={td}>{d.kind}</td>
+                            <td className={`${td} text-right tabular-nums`}>{d.count.toLocaleString()}</td>
+                            <td className={`${td} text-right tabular-nums`}>{d.visitors.toLocaleString()}</td>
+                            <td className={`${td} text-right tabular-nums`}>{d.members.toLocaleString()}</td>
                           </tr>
                         ))}
                       </tbody>

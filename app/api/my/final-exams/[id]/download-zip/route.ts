@@ -21,6 +21,7 @@ import { getEmbeddedKoreanFontFaceCss } from '@/lib/pdf-korean-font';
 import { publicBaseUrl } from '@/lib/public-base-url';
 import { isDropboxConfigured, uploadTempDownload } from '@/lib/dropbox';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* 지문 수만큼 PDF 를 렌더하므로 여유 있게 */
@@ -72,7 +73,7 @@ function stableSeedFromId(id: string): number {
  *  - scope=full: 전체(기본순·회차별·전부랜덤) + 지문별 × 문제·정답 모두
  * ?kind=exam|answer 면 해당 종류만.
  */
-export async function GET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -244,3 +245,5 @@ export async function GET(
     );
   }
 }
+
+export const GET = withDownloadTracking('파이널 예비 모의고사(ZIP)', handleGET);

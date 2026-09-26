@@ -38,7 +38,7 @@ export async function getUsageReport(db: Db, opts: { days: number; includeAdmin:
   if (!includeAdmin) base.role = { $ne: 'admin' };
 
   const pv = { ...base, type: 'pageview' };
-  const [summary, menus, daily, events, refs, members, hours, solbookTop] = await Promise.all([
+  const [summary, menus, daily, events, refs, members, hours, solbookTop, downloads, signupPages] = await Promise.all([
     col
       .aggregate([
         { $match: base },
@@ -128,7 +128,43 @@ export async function getUsageReport(db: Db, opts: { days: number; includeAdmin:
         { $limit: 20 },
       ])
       .toArray(),
+    /* 파일 다운로드 — 종류별 */
+    col
+      .aggregate([
+        { $match: { ...base, type: 'event', name: 'file_download' } },
+        { $group: { _id: '$props.kind', count: { $sum: 1 }, visitors: { $addToSet: '$visitorId' }, members: { $addToSet: '$loginId' } } },
+        { $project: { count: 1, visitors: { $size: '$visitors' }, members: { $size: { $setDifference: ['$members', [null]] } } } },
+        { $sort: { count: -1 } },
+      ])
+      .toArray(),
+    /* 가입 신청 — 어느 화면에서 열었고 얼마나 신청까지 갔는지 */
+    col
+      .aggregate([
+        { $match: { ...base, type: 'event', name: { $in: ['signup_open', 'signup_submit'] } } },
+        { $group: { _id: { menu: '$menu', name: '$name' }, count: { $sum: 1 }, visitors: { $addToSet: '$visitorId' } } },
+        { $project: { count: 1, visitors: { $size: '$visitors' } } },
+      ])
+      .toArray(),
   ]);
+
+  const signupByMenu = new Map<string, { opens: number; openVisitors: number; submits: number }>();
+  for (const r of signupPages) {
+    const k = String(r._id.menu);
+    const row = signupByMenu.get(k) ?? { opens: 0, openVisitors: 0, submits: 0 };
+    if (r._id.name === 'signup_open') {
+      row.opens += r.count;
+      row.openVisitors += r.visitors;
+    } else row.submits += r.count;
+    signupByMenu.set(k, row);
+  }
+  const signup = {
+    opens: [...signupByMenu.values()].reduce((n, r) => n + r.opens, 0),
+    openVisitors: [...signupByMenu.values()].reduce((n, r) => n + r.openVisitors, 0),
+    submits: [...signupByMenu.values()].reduce((n, r) => n + r.submits, 0),
+    byMenu: [...signupByMenu.entries()]
+      .map(([menu, r]) => ({ menu, label: usageMenuLabel(menu).label, ...r }))
+      .sort((a, b) => b.opens - a.opens),
+  };
 
   const ids = members.map((m) => String(m._id));
   const users = ids.length
@@ -148,6 +184,8 @@ export async function getUsageReport(db: Db, opts: { days: number; includeAdmin:
     referrers: refs.map((r) => ({ host: r._id, count: r.count })),
     hours: hours.map((h) => ({ hour: h._id, count: h.count })),
     solbookTop: solbookTop.map((s) => ({ productId: s._id, title: s.title ?? '', count: s.count })),
+    downloads: downloads.map((d) => ({ kind: d._id ?? '(미상)', count: d.count, visitors: d.visitors, members: d.members })),
+    signup,
     members: members.map((m) => ({
       loginId: String(m._id),
       name: nameOf.get(String(m._id)) ?? '',

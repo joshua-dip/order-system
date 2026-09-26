@@ -7,11 +7,12 @@ import { getDb } from '@/lib/mongodb';
 import { STUDIO_MATERIALS_COLLECTION } from '@/lib/vip-material-studio';
 import { renderStudioDocToPdf } from '@/lib/vip-material-studio-pdf';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireVipMenu(request, 'materials');
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
@@ -38,3 +39,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     },
   });
 }
+
+export const GET = withDownloadTracking('교재 스튜디오', handleGET);

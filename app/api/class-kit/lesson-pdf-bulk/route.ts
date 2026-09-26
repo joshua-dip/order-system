@@ -25,6 +25,7 @@ import {
 } from '@/lib/lesson-material-html';
 import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* 다건 PDF 렌더링 — 50지문 안팎까지 안전한 5분 상한. */
@@ -43,7 +44,7 @@ const MAX_PASSAGES = 100;
  *   kicker?, lineHeight?, splitPct?, lineLayout?, enFont?, koFont?, enFontScale?, koFontScale?
  * }
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { error } = await requireUser(request);
   if (error) return error;
   const { level } = await resolveClassKitAccess(request);
@@ -316,3 +317,5 @@ function uniqueFilename(used: Set<string>, name: string): string {
   used.add(out);
   return out;
 }
+
+export const POST = withDownloadTracking('클래스키트 수업용(일괄)', handlePOST);

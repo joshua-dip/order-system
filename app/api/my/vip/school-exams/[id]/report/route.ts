@@ -6,6 +6,7 @@ import PDFDocument from 'pdfkit';
 import { requireVip } from '@/lib/vip-auth';
 import { getVipDb, col } from '@/lib/vip-db';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ async function loadFont(variant: 'Regular' | 'Bold' = 'Regular'): Promise<Buffer
 const num1 = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 /** GET — 이 시험의 문항별 분석(유형·교재·출처·배점)을 PDF 리포트로 반환. */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireVip(request);
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
@@ -174,3 +175,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${encodeURIComponent(fname)}"` },
   });
 }
+
+export const GET = withDownloadTracking('학교 시험 리포트', handleGET);

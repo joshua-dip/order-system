@@ -17,6 +17,7 @@ import {
 } from '@/lib/lecture-material-html';
 import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* 다건 PDF 렌더링 — Lambda 기본 30s 초과 가능 → 300s */
@@ -29,7 +30,7 @@ export const maxDuration = 300;
  *   - format=zip → 지문마다 A4 1장 PDF 를 zip 으로 묶음
  *   - format=pdf → 지문마다 A4 1페이지로 합친 다 페이지 PDF
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { error } = await requireUser(request);
   if (error) return error;
   const { level } = await resolveClassKitAccess(request);
@@ -268,3 +269,5 @@ function uniqueFilename(used: Set<string>, name: string): string {
   used.add(out);
   return out;
 }
+
+export const POST = withDownloadTracking('클래스키트 강의용(일괄)', handlePOST);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { trackEvent } from '@/lib/track-event';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -99,6 +100,7 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
         /* 복사에 실패해도 채팅방은 열어 준다 */
       }
     }
+    trackEvent('signup_kakao_click');
     window.open(KAKAO_INQUIRY_URL, '_blank', 'noopener,noreferrer');
   }, [applicantType, name]);
 
@@ -110,6 +112,11 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [open, handleClose]);
+
+  /* 사용 기록 — 가입 신청 창을 어느 화면에서 열었는지(전환율 분석) */
+  useEffect(() => {
+    if (open) trackEvent('signup_open');
+  }, [open]);
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
@@ -155,6 +162,7 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
         setError(data.error ?? '신청 중 오류가 발생했습니다.');
         return;
       }
+      trackEvent('signup_submit', { applicantType });
       setStep('done');
     } catch {
       setError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');

@@ -15,6 +15,7 @@ import {
   DEFAULT_COLUMNS,
 } from '@/lib/vocabulary-export';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 type Params = { params: Promise<{ id: string }> };
 
 const VALID_FORMATS = [
@@ -29,7 +30,7 @@ const VALID_FORMATS = [
 ] as const;
 type Format = (typeof VALID_FORMATS)[number];
 
-export async function POST(request: NextRequest, { params }: Params) {
+async function handlePOST(request: NextRequest, { params }: Params) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   const payload = await verifyToken(token);
@@ -155,3 +156,5 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: '다운로드에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const POST = withDownloadTracking('단어장(저장본)', handlePOST);

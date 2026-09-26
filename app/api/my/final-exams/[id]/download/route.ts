@@ -15,6 +15,7 @@ import {
 import { publicBaseUrl } from '@/lib/public-base-url';
 import { getEmbeddedKoreanFontFaceCss } from '@/lib/pdf-korean-font';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* puppeteer 다중 페이지 렌더 여유 */
@@ -68,7 +69,7 @@ function stableSeedFromId(id: string): number {
   return (h >>> 0) || 1;
 }
 
-export async function GET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -193,3 +194,5 @@ export async function GET(
     return NextResponse.json({ error: 'PDF 생성에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const GET = withDownloadTracking('파이널 예비 모의고사', handleGET);

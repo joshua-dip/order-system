@@ -9,12 +9,13 @@ import { GRAMMAR_WORKSHEETS_COLLECTION, type GrammarWorksheet } from '@/lib/vip-
 import { fetchWorksheetBlocks, buildWorksheetHtml, type WsConcept } from '@/lib/vip-worksheet-pdf';
 import { renderHtmlToPdf } from '@/lib/chromium-pdf';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /** GET — 저장된 문법 학습지를 A4 PDF 로 (QR 자가채점 포함). ?answers=0 정답지 제외 · ?qr=0 QR 제외. */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireVipMenu(request, 'grammar-problems');
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
@@ -58,3 +59,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     },
   });
 }
+
+export const GET = withDownloadTracking('VIP 문법 학습지(저장본)', handleGET);

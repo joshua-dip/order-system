@@ -5,6 +5,7 @@ import { getDb } from '@/lib/mongodb';
 import { VIP_API_KEYS_COLLECTION, type VipApiKeyDoc } from '@/lib/vip-api-keys-store';
 import { renderHtmlToPdf } from '@/lib/chromium-pdf';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -14,7 +15,7 @@ function esc(s: string): string {
 }
 
 /** GET — API 문서를 실제 PDF 파일로 다운로드 (서버 렌더, 한글 폰트 임베드). */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const auth = await requireVipMenu(request, 'writing-problems');
   if (auth instanceof NextResponse) return auth;
 
@@ -195,3 +196,5 @@ for q in r.json()["items"]:
     return NextResponse.json({ error: 'PDF 생성에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const GET = withDownloadTracking('VIP 라이팅 API 문서', handleGET);

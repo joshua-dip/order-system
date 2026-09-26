@@ -15,6 +15,7 @@ import {
 } from '@/lib/lesson-material-html';
 import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -23,7 +24,7 @@ export const maxDuration = 60;
  * 수업용자료 단건을 A4 PDF 로 렌더링. 모드에 따라 가로(영한대조)/세로(나머지).
  * body: { kicker?, title?, number?, mode?, lineHeight?, splitPct?, sentences: { en, ko? }[] }
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { error } = await requireUser(request);
   if (error) return error;
 
@@ -135,3 +136,5 @@ export async function POST(request: NextRequest) {
 function sanitizeFilename(name: string): string {
   return name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, 120);
 }
+
+export const POST = withDownloadTracking('클래스키트 수업용', handlePOST);

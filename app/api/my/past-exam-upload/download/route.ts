@@ -6,6 +6,7 @@ import { getPastExamFile } from '@/lib/past-exam-files';
 import path from 'path';
 import fs from 'fs/promises';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 const MIME_MAP: Record<string, string> = {
   '.pdf': 'application/pdf',
   '.jpg': 'image/jpeg',
@@ -17,7 +18,7 @@ const MIME_MAP: Record<string, string> = {
   '.hwpx': 'application/x-hwpx',
 };
 
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   const payload = await verifyToken(token);
@@ -89,3 +90,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '다운로드에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const GET = withDownloadTracking('기출 업로드 파일', handleGET);

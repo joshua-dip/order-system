@@ -4,6 +4,7 @@ import { getDb } from '@/lib/mongodb';
 import { MEMBER_GENERATED_QUESTIONS_COLLECTION } from '@/lib/member-variant-storage';
 import { requirePremiumMemberVariant } from '@/lib/member-variant-premium-auth';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -43,7 +44,7 @@ function binaryResponse(
   });
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const auth = await requirePremiumMemberVariant(request);
   if (!auth.ok) return auth.response;
 
@@ -154,3 +155,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withDownloadTracking('프리미엄 변형 내보내기', handlePOST);

@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/user-auth';
 import { buildLectureMaterialHtml, clampLineHeight, type LectureSentence } from '@/lib/lecture-material-html';
 import { prepareKoreanPdfHtml } from '@/lib/pdf-korean-font';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* 단건 PDF — puppeteer 렌더 여유 */
@@ -13,7 +14,7 @@ export const maxDuration = 60;
  * body: { kicker?, title?, number?, lineHeight?, sentences: string[] }
  * (구조 파라미터를 받아 서버에서 HTML 을 재구성 — 임의 HTML 신뢰 안 함.)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { error } = await requireUser(request);
   if (error) return error;
 
@@ -104,3 +105,5 @@ export async function POST(request: NextRequest) {
 function sanitizeFilename(name: string): string {
   return name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, 120);
 }
+
+export const POST = withDownloadTracking('클래스키트 강의용', handlePOST);

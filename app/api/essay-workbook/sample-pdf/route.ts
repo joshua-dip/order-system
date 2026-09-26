@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { renderEssayGroupsToPdfs } from '@/lib/essay-pdf-render';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // puppeteer 렌더 여유
@@ -49,7 +50,7 @@ async function findSampleGroup(
   return rows[0];
 }
 
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const type = request.nextUrl.searchParams.get('type') === 'meaning' ? 'meaning' : 'arrange';
     const typeFilter =
@@ -91,3 +92,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '샘플 생성에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const GET = withDownloadTracking('서술형 워크북 샘플', handleGET);

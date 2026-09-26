@@ -9,6 +9,7 @@ import {
   essayExampleHasReadableContent,
 } from '@/lib/essay-type-example-file';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 const MIME_MAP: Record<string, string> = {
   '.pdf': 'application/pdf',
   '.jpg': 'image/jpeg',
@@ -25,7 +26,7 @@ const MIME_MAP: Record<string, string> = {
 /**
  * 서술형 유형 예시 파일 다운로드 (서술형 접근 권한 있는 사용자만)
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   const payload = await verifyToken(token);
@@ -97,3 +98,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '다운로드에 실패했습니다.' }, { status: 500 });
   }
 }
+
+export const GET = withDownloadTracking('서술형 예시 파일', handleGET);

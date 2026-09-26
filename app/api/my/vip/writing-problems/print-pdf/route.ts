@@ -6,12 +6,13 @@ import { fetchWorksheetBlocks, buildWorksheetHtml } from '@/lib/vip-worksheet-pd
 import { renderHtmlToPdf } from '@/lib/chromium-pdf';
 import type { BankFormat } from '@/app/my/vip/grammar-problems/shared';
 
+import { withDownloadTracking } from '@/lib/site-usage-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /** GET — 선택 범위(topicKey 여러 개)를 A4 문제지 PDF 로 다운로드 (서버 렌더, 한글 폰트 임베드). */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const auth = await requireVipMenu(request, 'writing-problems');
   if (auth instanceof NextResponse) return auth;
 
@@ -40,3 +41,5 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+
+export const GET = withDownloadTracking('VIP 라이팅 학습지', handleGET);
