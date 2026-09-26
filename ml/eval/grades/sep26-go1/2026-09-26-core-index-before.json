@@ -1,0 +1,567 @@
+{
+  "grader": "Codex 직접 검토 (AI 1차, 독립 사람 채점 아님)",
+  "code": "근거 인용 방식 한 변수 비교. 각 세트 요약 전체 18지문×2회. 현재 main 코드가 before 기준.",
+  "rubric": {
+    "O": "중심 요지와 필요한 제한을 보존; 정답 완성문과 모든 선지 문법이 자연스럽고 다른 정답 없음",
+    "P": "전체 방향은 맞지만 요지 일부·핵심 제한 누락, 경미한 표현 결함·오답 문법 결함, 또는 추가 정답 후보 1개",
+    "X": "정답이 원문과 모순·과장·시점/인과 왜곡, 명백한 비문, 또는 추가 정답 후보 2개 이상",
+    "F": "ok=false; 원인과 무관하게 생성 실패",
+    "denominator": "세트당 18지문×2회=36; O%=O/36; F%=F/36",
+    "grader": "Codex 직접 원문·정답·선지 검토(AI, 독립 사람 채점 아님)"
+  },
+  "notes": {
+    "21번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "22번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "20번|summary": "학습 게임의 오락보다 참여·내용과의 상호작용 우선이라는 요지와 유일 정답이 맞음.",
+    "23번|summary": "정답 more capable to withstand는 capable of withstanding이 필요한 부자연스러운 연결. 오답 more unable도 비문 성격.",
+    "24번|summary": "정답 flexible/comfortable는 요지를 담지만 오답 stay open with what actually happens는 전치사 연결이 부자연스러움.",
+    "31번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "29번|summary": "운동 시 증가한 에너지 수요에 대한 무산소 호흡이 유산소 호흡으로 바뀌는 흐름이 맞음.",
+    "30번|summary": "짧은 문단의 이점과 지나친 분절의 문제를 반영하나 오답 make a text look warning은 형태가 부적절.",
+    "32번|summary": "judgment/strengthen도 판단을 바꾸어 감정이 달라진다는 원리상 가능한 조합. 정답을 weaken으로 한정할 근거가 약함.",
+    "33번|summary": "정답은 모방만으로 예술을 정의할 수 없다는 요지를 담지만 오답 divorced to visual experience는 from이 필요한 문법 결함.",
+    "34번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "35번|summary": "원문 근거가 있는 요지를 확인하지 못했습니다",
+    "37번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "36번|summary": "스도쿠에서 수치보다 패턴이 중요하다는 사례는 맞지만 수학의 본질이라는 전체 주장으로 일반화하지 못함.",
+    "38번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "39번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "40번|summary": "자존감의 비의식적 관계 감시와 위협 시 의식적 평가 전환이 정확함. 다른 쌍은 원문과 어긋남.",
+    "41~42번|summary": "인터넷이 기존 매체의 규범 제약을 풀어 속어의 정당화와 확산을 가능하게 한다는 요지.",
+    "20번|summary|2": "학습 증진을 위해 능동적 참여를 우선한다는 원칙이 맞으며 다른 선지는 방향이 반대.",
+    "21번|summary|2": "움직이지 않는 생활과 기술에 얽매인 삶이 본래의 움직임을 잃게 한다는 요지.",
+    "22번|summary|2": "생각·시각화보다 신념이 가장 강력한 끌어당김 요인이라는 대비를 정확히 반영.",
+    "23번|summary|2": "다양성 자체가 아닌 Darwin의 관찰이 인간의 멸종 위험을 낮춘다고 인과 주체를 바꿈.",
+    "24번|summary|2": "미래의 불확실성을 인정하고 계획을 유연하게 유지하라는 주장.",
+    "29번|summary|2": "초반 무산소 호흡의 불편함과 준비 후 유산소 호흡 전환을 함께 담음.",
+    "30번|summary|2": "짧은 문단의 시각적 이점과 지나친 분절의 이해 방해를 정확히 대비.",
+    "31번|summary|2": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "32번|summary|2": "감정은 무작위가 아니라 판단에 의해 형성되므로 해석을 점검하라는 요지가 정확함.",
+    "35번|summary|2": "원문 근거가 있는 요지를 확인하지 못했습니다",
+    "33번|summary|2": "Pollock의 비재현 작품이 단순 모방이라는 예술 정의의 한계를 보여 준다는 논지가 정확함.",
+    "34번|summary|2": "달리기의 복잡성이 몸에 내재한다는 방향은 맞지만 only learn what our bodies can do는 완전한 설명의 한계·몸이 더 안다는 핵심을 모호하게 축소.",
+    "36번|summary|2": "정답 patterns/discourages는 요지를 담지만 오답 encourages/attracts people from engaging은 전치사 연결이 맞지 않음.",
+    "37번|summary|2": "과학적 발견과 망원경 기술에 따른 우주 이해 발전이라는 전체 요지.",
+    "38번|summary|2": "공동체 확대로 주관적·지역적 단위의 한계가 드러나 일관된 표준이 필요하다는 논지.",
+    "39번|summary|2": "잎꾼개미의 먹이 재배와 농경 문명 형성이라는 요지가 맞고 다른 쌍은 문명 포기·파괴로 어긋남.",
+    "40번|summary|2": "관계 위협을 감지하면 의식화되는 자존감의 감시·경보 기능을 정확히 요약.",
+    "41~42번|summary|2": "정답의 new media environment extended it to spread quickly는 extended 목적어·부정사 연결이 부적절; enabled/allowed가 필요."
+  },
+  "grades": {
+    "21번|summary": "F",
+    "22번|summary": "F",
+    "20번|summary": "O",
+    "23번|summary": "X",
+    "24번|summary": "P",
+    "31번|summary": "F",
+    "29번|summary": "O",
+    "30번|summary": "P",
+    "32번|summary": "P",
+    "33번|summary": "P",
+    "34번|summary": "F",
+    "35번|summary": "F",
+    "37번|summary": "F",
+    "36번|summary": "P",
+    "38번|summary": "F",
+    "39번|summary": "F",
+    "40번|summary": "O",
+    "41~42번|summary": "O",
+    "20번|summary|2": "O",
+    "21번|summary|2": "O",
+    "22번|summary|2": "O",
+    "23번|summary|2": "X",
+    "24번|summary|2": "O",
+    "29번|summary|2": "O",
+    "30번|summary|2": "O",
+    "31번|summary|2": "F",
+    "32번|summary|2": "O",
+    "35번|summary|2": "F",
+    "33번|summary|2": "O",
+    "34번|summary|2": "P",
+    "36번|summary|2": "P",
+    "37번|summary|2": "O",
+    "38번|summary|2": "O",
+    "39번|summary|2": "O",
+    "40번|summary|2": "O",
+    "41~42번|summary|2": "X"
+  },
+  "experiment": {
+    "goal": "요약 근거 인용 실패 줄이기",
+    "change": "근거 인용 문자열 대신 원문 문장 번호 선택",
+    "repeat": 2,
+    "types": [
+      "summary"
+    ],
+    "sets": [
+      "sep26-go1",
+      "jun11-go2"
+    ],
+    "temperature": 0.3,
+    "max_retries": 2,
+    "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+    "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit",
+    "keep_trace": true,
+    "decision": "각 세트 O% 증가가 7%p 초과이고 F% 악화가 7%p 이하여야 유지, 그 외 이번 변경만 복원",
+    "grading": "Codex AI 직접 검토, O/P/X/F; 전후 결과를 같은 기준으로 평가, 사람 독립 채점 아님",
+    "before_sha256": {
+      "ml/common/summary_review.py": "59065be9b17802645c648adb4fa4c6390977c57929daf5738ed610c19932c4ee",
+      "ml/common/summary_draft.py": "7d5b313cd40f0ffaa67b1948fa8733acbe863d0809b55b43f394f0b8fdfe7a0c",
+      "ml/summary/windows/pipeline_summary.py": "18c82de91e82380364cac7f803579eaf156833cbb3d800d08a69ae7803e0edd1",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/summary/adapters/summary-lora/adapters.safetensors": "f877d0488891d1b0ffffafa11b1befaf80911a77fb357d7e49f1681afd3639ee",
+      "ml/summary/adapters/summary-lora/adapter_config.json": "2a35a8af081400e43c86d97528937f1242da7d4d72986403eb568e10b66f65c1"
+    },
+    "after_sha256": {
+      "ml/common/summary_review.py": "de8502dd6ef2719819504631dd43490e559cb298e871a2cb56f788b730a1de35",
+      "ml/common/summary_draft.py": "7d5b313cd40f0ffaa67b1948fa8733acbe863d0809b55b43f394f0b8fdfe7a0c",
+      "ml/summary/windows/pipeline_summary.py": "18c82de91e82380364cac7f803579eaf156833cbb3d800d08a69ae7803e0edd1",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/summary/adapters/summary-lora/adapters.safetensors": "f877d0488891d1b0ffffafa11b1befaf80911a77fb357d7e49f1681afd3639ee",
+      "ml/summary/adapters/summary-lora/adapter_config.json": "2a35a8af081400e43c86d97528937f1242da7d4d72986403eb568e10b66f65c1"
+    },
+    "candidate_diff": "--- a/ml/common/summary_review.py\n+++ b/ml/common/summary_review.py\n@@ -1,12 +1,14 @@\n \"\"\"요약 검증: 초안과 독립된 요지, 완성 문장 단위의 사실·문법 판정.\"\"\"\n from __future__ import annotations\n+\n+from rule_gen import split_sentences\n \n CORE_SYS = \"\"\"Read the passage independently, before seeing any proposed summary.\n Return ONLY JSON: {\"claim\": one short English sentence stating the author's central point,\n \"qualification\": an important limit, contrast or cause that must not be reversed (or \"\"),\n-\"evidence\": a short EXACT continuous quote from the passage supporting the claim}.\n+\"evidence_sentence\": the integer ID of ONE numbered source sentence supporting the claim}.\n Distinguish the author's position from a belief being challenged. Examples support the point; do not replace it.\n-Do not infer a new cause, stronger quantifier or different time sequence. Quote at most 20 words without ellipses.\"\"\"\n+Do not infer a new cause, stronger quantifier or different time sequence. Select a source sentence ID; do not copy or rewrite its text.\"\"\"\n \n MAIN_SYS = \"\"\"Audit one COMPLETE proposed summary against the passage and the independent reading notes.\n Return ONLY JSON: {\"main_point\": true|false, \"supported\": true|false, \"grammatical\": true|false,\n@@ -31,20 +33,25 @@\n \n \n def read_core(call, passage: str) -> dict | None:\n+    sentences = split_sentences(passage)\n+    if not sentences:\n+        return None\n+    numbered = \"\\n\".join(f\"[{i + 1}] {sentence}\" for i, sentence in enumerate(sentences))\n     feedback = \"\"\n     for attempt in range(2):\n-        obj = call(CORE_SYS, f\"[Passage]\\n{passage}\\n\\nReturn JSON with an exact evidence quote.\" + feedback,\n+        obj = call(CORE_SYS, f\"[Numbered passage]\\n{numbered}\\n\\nReturn JSON with an evidence_sentence ID.\" + feedback,\n                    max_tokens=240, t=0.0)\n         if not isinstance(obj, dict):\n             feedback = \"\\nThe previous response was unreadable. Return a compact JSON object.\"\n             continue\n-        claim, evidence = obj.get(\"claim\"), obj.get(\"evidence\")\n-        if (isinstance(claim, str) and claim.strip() and isinstance(evidence, str) and evidence.strip()\n-                and \" \".join(evidence.split()) in \" \".join(passage.split())):\n-            return {\"claim\": claim, \"qualification\": str(obj.get(\"qualification\") or \"\"), \"evidence\": evidence}\n-        feedback = (f\"\\nThe previous evidence was not an exact continuous source quote: {evidence!r}.\"\n-                    \" Copy a shorter continuous phrase directly from the passage; preserve punctuation and quotation marks.\"\n-                    \" Do not add closing quotation marks that are absent at the selected location.\")\n+        claim, index = obj.get(\"claim\"), obj.get(\"evidence_sentence\")\n+        if (isinstance(claim, str) and claim.strip() and type(index) is int\n+                and 1 <= index <= len(sentences)):\n+            # 인용은 모델이 다시 쓰지 않고, 선택한 원문의 표기를 그대로 가져온다.\n+            return {\"claim\": claim, \"qualification\": str(obj.get(\"qualification\") or \"\"),\n+                    \"evidence\": sentences[index - 1]}\n+        feedback = (f\"\\nInvalid claim or evidence_sentence ID: {index!r}.\"\n+                    f\" Return a nonempty claim and an integer evidence_sentence from 1 to {len(sentences)}.\")\n     return None\n \n \n",
+    "result": "두 세트 O% 차이가 모두 ±7%p 이내라 같음. 이번 문장 번호 선택 변경과 관련 테스트만 원복.",
+    "restored_sha256": {
+      "ml/common/summary_review.py": "59065be9b17802645c648adb4fa4c6390977c57929daf5738ed610c19932c4ee",
+      "ml/common/summary_draft.py": "7d5b313cd40f0ffaa67b1948fa8733acbe863d0809b55b43f394f0b8fdfe7a0c",
+      "ml/summary/windows/pipeline_summary.py": "18c82de91e82380364cac7f803579eaf156833cbb3d800d08a69ae7803e0edd1",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/summary/adapters/summary-lora/adapters.safetensors": "f877d0488891d1b0ffffafa11b1befaf80911a77fb357d7e49f1681afd3639ee",
+      "ml/summary/adapters/summary-lora/adapter_config.json": "2a35a8af081400e43c86d97528937f1242da7d4d72986403eb568e10b66f65c1"
+    },
+    "validation": {
+      "candidate_unit_tests": 14,
+      "candidate_unit_tests_result": "passed",
+      "rollback": "before bytes restored; production code and adapter SHA256 identical",
+      "restored_unit_tests": 12,
+      "restored_unit_tests_result": "passed"
+    },
+    "period": "2026-09-26~2026-09-27",
+    "random_seed": "기존 평가기대로 미고정. 설정은 같지만 생성 표본은 달라질 수 있음."
+  },
+  "phase": "before",
+  "counts": {
+    "F": 10,
+    "O": 16,
+    "X": 3,
+    "P": 7
+  },
+  "rates": {
+    "O_percent": 44.4444,
+    "F_percent": 27.7778,
+    "denominator": 36
+  },
+  "review_material": {
+    "20번|summary": {
+      "summary": "An effective learning game should place (A) ________ over entertainment, since the stronger the learners' (B) ________ with the content, the more instructional the game becomes.",
+      "options": [
+        "① (A) profit – (B) connection",
+        "② (A) leisure – (B) connection",
+        "③ (A) profit – (B) engagement",
+        "④ (A) engagement – (B) connection",
+        "⑤ (A) relaxation – (B) observation"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "21번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "22번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "23번|summary": {
+      "summary": "Since every human mind is not the same, a species has a greater chance of surviving (A) ________ environmental changes, so our species is more (B) ________ to withstand catastrophes.",
+      "options": [
+        "① (A) diverse – (B) capable",
+        "② (A) diverse – (B) unable",
+        "③ (A) uniform – (B) capable",
+        "④ (A) uniform – (B) unlikely",
+        "⑤ (A) uniform – (B) unable"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "24번|summary": {
+      "summary": "Although people tend to cling to their plans and ideas, a better way of dealing with uncertainty would be to keep them (A) ________, so that they can stay (B) ________ with what actually happens.",
+      "options": [
+        "① (A) rigid – (B) uncomfortable",
+        "② (A) secret – (B) optimistic",
+        "③ (A) rigid – (B) comfortable",
+        "④ (A) rigid – (B) open",
+        "⑤ (A) flexible – (B) comfortable"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "29번|summary": {
+      "summary": "The body's initial anaerobic response to (A) ________ demand is eventually (B) ________ by aerobic respiration.",
+      "options": [
+        "① (A) diminished – (B) supplemented",
+        "② (A) reduced – (B) replaced",
+        "③ (A) reduced – (B) ignored",
+        "④ (A) increased – (B) replaced",
+        "⑤ (A) decreased – (B) supplemented"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "30번|summary": {
+      "summary": "Short paragraphs make a text look (A) ________, but a succession of tiny ones can be (B) ________.",
+      "options": [
+        "① (A) inviting – (B) satisfying",
+        "② (A) warning – (B) confusing",
+        "③ (A) confusing – (B) annoying",
+        "④ (A) inviting – (B) confusing",
+        "⑤ (A) confusing – (B) inviting"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "31번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "32번|summary": {
+      "summary": "Stoics believe that emotions arise from our (A) ________ of events, so changing the story we tell ourselves can (B) ________ the emotion we feel.",
+      "options": [
+        "① (A) judgment – (B) strengthen",
+        "② (A) avoidance – (B) hide",
+        "③ (A) memory – (B) weaken",
+        "④ (A) memory – (B) strengthen",
+        "⑤ (A) judgment – (B) weaken"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "33번|summary": {
+      "summary": "Although ancient Greek art was (A) ________ to visual experience, it cannot (B) ________ the whole of art, since later artists such as Pollock showed that art need not copy anything.",
+      "options": [
+        "① (A) distant – (B) define",
+        "② (A) akin – (B) define",
+        "③ (A) opposed – (B) define",
+        "④ (A) divorced – (B) deny",
+        "⑤ (A) divorced – (B) outline"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "34번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "35번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "원문 근거가 있는 요지를 확인하지 못했습니다",
+      "warnings": []
+    },
+    "36번|summary": {
+      "summary": "Since the numerical values are (A) ________ to the puzzle, what really (B) ________ is the pattern, which can be made of any nine distinct symbols.",
+      "options": [
+        "① (A) central – (B) matters",
+        "② (A) vital – (B) changes",
+        "③ (A) irrelevant – (B) matters",
+        "④ (A) vital – (B) matters",
+        "⑤ (A) necessary – (B) changes"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "37번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "38번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "39번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "40번|summary": {
+      "summary": "Self-esteem serves as an evolutionary monitoring system that operates (A) ________ until relational value drops, at which point it (B) ________ conscious evaluation to address potential social exclusion.",
+      "options": [
+        "① (A) independently – (B) disregards",
+        "② (A) consciously – (B) ignores",
+        "③ (A) nonconsciously – (B) triggers",
+        "④ (A) randomly – (B) suppresses",
+        "⑤ (A) passively – (B) denies"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "41~42번|summary": {
+      "summary": "The internet has (A) ________ language by allowing content creators to (B) ________ and spread slang beyond traditional media constraints.",
+      "options": [
+        "① (A) democratized – (B) legitimize",
+        "② (A) stifled – (B) legitimize",
+        "③ (A) restricted – (B) suppress",
+        "④ (A) democratized – (B) suppress",
+        "⑤ (A) restricted – (B) legitimize"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "20번|summary|2": {
+      "summary": "Since the goal of a learning game is to (A) ________ learning, its design should prioritize (B) ________ engagement.",
+      "options": [
+        "① (A) improve – (B) active",
+        "② (A) restrict – (B) active",
+        "③ (A) restrict – (B) passive",
+        "④ (A) improve – (B) passive",
+        "⑤ (A) replace – (B) passive"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "21번|summary|2": {
+      "summary": "Because we stay (A) ________ and because we let technology (B) ________ our lives, we are losing our ability to move and to live the extraordinary lives we were meant to.",
+      "options": [
+        "① (A) active – (B) simplify",
+        "② (A) still – (B) liberate",
+        "③ (A) sedentary – (B) liberate",
+        "④ (A) active – (B) control",
+        "⑤ (A) inactive – (B) control"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "22번|summary|2": {
+      "summary": "Belief, not the act of (A) ________, is the most (B) ________ force in attracting what we desire.",
+      "options": [
+        "① (A) thinking – (B) powerful",
+        "② (A) doubting – (B) weak",
+        "③ (A) thinking – (B) weak",
+        "④ (A) visualizing – (B) secondary",
+        "⑤ (A) visualizing – (B) minor"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "23번|summary|2": {
+      "summary": "Darwin's observation that variation is crucial for survival makes the human species less (A) ________ to extinction, since it preserves the (B) ________ of our minds.",
+      "options": [
+        "① (A) resistant – (B) evolvability",
+        "② (A) vulnerable – (B) uniformity",
+        "③ (A) indifferent – (B) uniformity",
+        "④ (A) resistant – (B) uniformity",
+        "⑤ (A) vulnerable – (B) evolvability"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "24번|summary|2": {
+      "summary": "The writer argues that we should be (A) ________ enough to keep our plans flexible, even though we can't (B) ________ what will happen in the future.",
+      "options": [
+        "① (A) predictable – (B) accept",
+        "② (A) willing – (B) predict",
+        "③ (A) careless – (B) forget",
+        "④ (A) jealous – (B) measure",
+        "⑤ (A) stubborn – (B) predict"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "29번|summary|2": {
+      "summary": "Because the body has to rely on anaerobic respiration at the start of exercise, the first few minutes feel (A) ________, but once the body has warmed up, it has switched to (B) ________ respiration.",
+      "options": [
+        "① (A) easy – (B) aerobic",
+        "② (A) painful – (B) anaerobic",
+        "③ (A) painful – (B) aerobic",
+        "④ (A) tedious – (B) anaerobic",
+        "⑤ (A) easy – (B) anaerobic"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "30번|summary|2": {
+      "summary": "While short paragraphs (A) ________ visual appeal and encourage reading, excessively tiny paragraphs disrupt thought flow and (B) ________ comprehension.",
+      "options": [
+        "① (A) obscure – (B) facilitate",
+        "② (A) reduce – (B) impede",
+        "③ (A) enhance – (B) hinder",
+        "④ (A) confuse – (B) assist",
+        "⑤ (A) diminish – (B) obstruct"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "31번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "32번|summary|2": {
+      "summary": "Because emotions are not (A) ________ but are instead (B) ________ by our judgments, Stoics encourage us to examine the stories we tell ourselves and choose ones that serve us better.",
+      "options": [
+        "① (A) natural – (B) hidden",
+        "② (A) random – (B) shaped",
+        "③ (A) random – (B) unaffected",
+        "④ (A) random – (B) ignored",
+        "⑤ (A) random – (B) hidden"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "33번|summary|2": {
+      "summary": "Because Jackson Pollock created works that did not (A) ________ recognizable objects, the ancient Greek definition of art as mere (B) ________ is insufficient.",
+      "options": [
+        "① (A) distort – (B) transmission",
+        "② (A) ignore – (B) interpretation",
+        "③ (A) depict – (B) creation",
+        "④ (A) enhance – (B) expression",
+        "⑤ (A) replicate – (B) copying"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "34번|summary|2": {
+      "summary": "Because our bodies are so very good at running, the (A) ________ of the computations it takes to run is hidden within muscle fibres, cells, and DNA, so we can only (B) ________ what our bodies can do.",
+      "options": [
+        "① (A) origin – (B) measure",
+        "② (A) complexity – (B) forget",
+        "③ (A) speed – (B) measure",
+        "④ (A) speed – (B) forget",
+        "⑤ (A) complexity – (B) learn"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "35번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "원문 근거가 있는 요지를 확인하지 못했습니다",
+      "warnings": []
+    },
+    "36번|summary|2": {
+      "summary": "Sudoku demonstrates that mathematics focuses on (A) ________ rather than numerical values, yet the label 'maths' often (B) ________ people from engaging with logical reasoning.",
+      "options": [
+        "① (A) numbers – (B) encourages",
+        "② (A) patterns – (B) discourages",
+        "③ (A) symmetries – (B) attracts",
+        "④ (A) numbers – (B) discourages",
+        "⑤ (A) connections – (B) attracts"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "37번|summary|2": {
+      "summary": "Scientific (A) ________ and telescope (B) ________ have advanced our understanding of the universe.",
+      "options": [
+        "① (A) discoveries – (B) technology",
+        "② (A) limitations – (B) technology",
+        "③ (A) errors – (B) technology",
+        "④ (A) errors – (B) limitations",
+        "⑤ (A) discoveries – (B) limitations"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "38번|summary|2": {
+      "summary": "As societies expanded, the limitations of (A) ________, locally-defined units necessitated (B) ________ measurement standards to enable information exchange and resolve disputes.",
+      "options": [
+        "① (A) cultural – (B) ambiguous",
+        "② (A) subjective – (B) ambiguous",
+        "③ (A) subjective – (B) consistent",
+        "④ (A) arbitrary – (B) local",
+        "⑤ (A) complex – (B) simple"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "39번|summary|2": {
+      "summary": "Leaf-cutter ants cultivate their own food, and their farming strategy has (A) ________ them into a society that has (B) ________ a civilization.",
+      "options": [
+        "① (A) elevated – (B) abandoned",
+        "② (A) isolated – (B) abandoned",
+        "③ (A) transformed – (B) perfected",
+        "④ (A) transformed – (B) abandoned",
+        "⑤ (A) transformed – (B) destroyed"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "40번|summary|2": {
+      "summary": "Self-esteem works as a (A) ________ mechanism that monitors our social bonds, and it becomes (B) ________ when the system detects a threat to our relational value.",
+      "options": [
+        "① (A) reward – (B) conscious",
+        "② (A) warning – (B) conscious",
+        "③ (A) warning – (B) silent",
+        "④ (A) reward – (B) silent",
+        "⑤ (A) warning – (B) absent"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "41~42번|summary|2": {
+      "summary": "The internet (A) ________ the barriers that kept slang from becoming part of public language, and the new media environment (B) ________ it to spread quickly.",
+      "options": [
+        "① (A) restored – (B) extended",
+        "② (A) raised – (B) extended",
+        "③ (A) raised – (B) reduced",
+        "④ (A) broke – (B) confined",
+        "⑤ (A) removed – (B) extended"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    }
+  }
+}

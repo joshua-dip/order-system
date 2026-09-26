@@ -1,0 +1,574 @@
+{
+  "grader": "Codex 직접 검토 (AI 1차, 독립 사람 채점 아님)",
+  "code": "근거 인용 방식 한 변수 비교. 각 세트 요약 전체 18지문×2회. 현재 main 코드가 before 기준.",
+  "rubric": {
+    "O": "중심 요지와 필요한 제한을 보존; 정답 완성문과 모든 선지 문법이 자연스럽고 다른 정답 없음",
+    "P": "전체 방향은 맞지만 요지 일부·핵심 제한 누락, 경미한 표현 결함·오답 문법 결함, 또는 추가 정답 후보 1개",
+    "X": "정답이 원문과 모순·과장·시점/인과 왜곡, 명백한 비문, 또는 추가 정답 후보 2개 이상",
+    "F": "ok=false; 원인과 무관하게 생성 실패",
+    "denominator": "세트당 18지문×2회=36; O%=O/36; F%=F/36",
+    "grader": "Codex 직접 원문·정답·선지 검토(AI, 독립 사람 채점 아님)"
+  },
+  "notes": {
+    "24번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "18번|summary": "원문은 현실의 검색 엔진이 더 위협적이라고 하나 감시 능력이 소설 속 Big Brother보다 훨씬 강력하다고 비교하지 않는다. far more powerful in its surveillance는 비교 범위를 과장한다.",
+    "21번|summary": "루이지애나의 투계 금지와 이를 오랫동안 추구한 동물권 운동의 승리를 정확히 연결한다. 자동 경고의 opposed는 원문과 반대다.",
+    "22번|summary": "배움 자체의 즐거움과 주변 사람들의 실용성 요구를 대조한다. 정답 유일.",
+    "23번|summary": "조건 없는 수용이 잠재력 실현과 풍요로운 삶으로 이어지는 핵심을 보존한다.",
+    "25번|summary": "정답 cautious는 전문가의 침묵을 나타내지 못한다. 원문의 careful은 높은 곳의 등반자 상태인데 전문가 상태로 바뀌었다. silent-safe 조합이 없어 핵심 대조를 정확히 완성할 선지가 없다.",
+    "26번|summary": "potential power와 anticipation을 lasting power로 바꾸었다. 내구성보다 새 제품의 잠재력을 산다는 원문에서 lasting은 핵심을 왜곡한다. 정답과 별개로 fond to도 잘못된 결합이다.",
+    "27번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "30번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "28번|summary": "자신과 다른 인물을 연기하며 그 인물에 대한 자기 이해를 관객에게 전달한다는 요지를 보존한다.",
+    "31번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "33번|summary": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "32번|summary": "치아 속 식물·곡물 증거가 육식 위주라는 기존 이해를 뒤집는다는 요지를 보존한다. 식물만 먹었다거나 멸종 원인이 확정됐다는 주장은 없다.",
+    "34번|summary": "정신적 증상 개선과 체중 감소가 함께 나타난 연구 결과를 정확히 요약한다.",
+    "35번|summary": "정답은 협동과 낙후의 대조를 보존한다. 다만 ④ prosperous-isolated도 각자 일하려 했다는 원문으로 방어 가능해 추가 정답 후보가 있다.",
+    "38번|summary": "편안한 환경과 창의성의 관계는 맞지만 closely linked를 essential이라는 필수 조건으로 강화한다. 요지 방향은 유지하나 관계 강도가 과하다.",
+    "39번|summary": "while treating의 주어가 문법상 A delay에 걸려 지연이 학습 공백을 bug로 취급한다는 문장이 된다. 학생에게 즉시 해결하라는 핵심 권고도 완전한 절로 연결되지 않았다.",
+    "44번|summary": "기존 학습 규칙에 대한 연구의 반박과 자기에게 맞는 방법을 찾으라는 권고를 보존한다.",
+    "18번|summary|2": "검색 엔진이 가까운 사람보다 개인의 욕망을 많이 아는 현실적 위협이라는 요지를 보존한다. real은 가상 인물과의 대조에 근거한다.",
+    "21번|summary|2": "루이지애나의 투계 금지와 역사적 동물권 승리를 정확히 요약한다.",
+    "22번|summary|2": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "23번|summary|2": "편견 없는 수용이 Beast의 해방과 Beauty의 큰 보상으로 이어지는 인과를 보존한다.",
+    "24번|summary|2": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "25번|summary|2": "전문가의 침묵과 안전하다고 느낄 때의 실수 위험을 정확히 연결한다. kept silence는 가능한 표현이다.",
+    "26번|summary|2": "새 물건 구매와 기존 물건에 대한 무관심은 담았지만 실제 사용보다 잠재력과 기대에 이끌린다는 중심 이유를 놓쳤다. 원문의 쉽게 버릴 수 있음과 무감각의 인과도 뭉뚱그렸다.",
+    "28번|summary|2": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "27번|summary|2": "경험 사이 간격을 늘리면 습관화의 부정적 영향이 줄고 즐거움이 유지된다는 요지를 보존한다.",
+    "30번|summary|2": "지나치게 엄숙한 분위기로 인기가 줄었고 분위기를 풀어 관객을 되찾으려 한다는 대조를 보존한다.",
+    "31번|summary|2": "신속한 부정 답변이 양쪽을 편하게 하며 모호한 Maybe로 미루는 것은 도움이 안 된다는 두 핵심을 보존한다.",
+    "32번|summary|2": "육식으로 제한된 옛 식단 이해를 새 증거가 뒤집고 더 다양한 식단을 보여 준다는 요지를 보존한다.",
+    "33번|summary|2": "기억은 정확한 말을 저장하기보다 일반 의미를 저장해 대화 회상에 오류가 생길 수 있다는 핵심을 담았다.",
+    "34번|summary|2": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "35번|summary|2": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+    "38번|summary|2": "1회와 동일하게 편안한 환경이 도움이 된다는 요지 방향은 맞지만 closely linked를 essential이라는 필수 조건으로 강화한다.",
+    "39번|summary|2": "발견한 뒤 수정을 미룰수록 비용이 커진다는 원문을 늦게 발견할수록 어렵다고 바꿔 시점을 왜곡한다. should learn과 rather than adding의 병렬도 부자연스럽다.",
+    "44번|summary|2": "오랫동안 일관된 학습 조언과 달리 장소·학습 재료의 변화를 주면 도움이 된다는 연구 결과를 보존한다."
+  },
+  "grades": {
+    "24번|summary": "F",
+    "18번|summary": "X",
+    "21번|summary": "O",
+    "22번|summary": "O",
+    "23번|summary": "O",
+    "25번|summary": "X",
+    "26번|summary": "X",
+    "27번|summary": "F",
+    "30번|summary": "F",
+    "28번|summary": "O",
+    "31번|summary": "F",
+    "33번|summary": "F",
+    "32번|summary": "O",
+    "34번|summary": "O",
+    "35번|summary": "P",
+    "38번|summary": "P",
+    "39번|summary": "X",
+    "44번|summary": "O",
+    "18번|summary|2": "O",
+    "21번|summary|2": "O",
+    "22번|summary|2": "F",
+    "23번|summary|2": "O",
+    "24번|summary|2": "F",
+    "25번|summary|2": "O",
+    "26번|summary|2": "P",
+    "28번|summary|2": "F",
+    "27번|summary|2": "O",
+    "30번|summary|2": "O",
+    "31번|summary|2": "O",
+    "32번|summary|2": "O",
+    "33번|summary|2": "O",
+    "34번|summary|2": "F",
+    "35번|summary|2": "F",
+    "38번|summary|2": "P",
+    "39번|summary|2": "X",
+    "44번|summary|2": "O"
+  },
+  "experiment": {
+    "goal": "요약 근거 인용 실패 줄이기",
+    "change": "근거 인용 문자열 대신 원문 문장 번호 선택",
+    "repeat": 2,
+    "types": [
+      "summary"
+    ],
+    "sets": [
+      "sep26-go1",
+      "jun11-go2"
+    ],
+    "temperature": 0.3,
+    "max_retries": 2,
+    "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+    "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit",
+    "keep_trace": true,
+    "decision": "각 세트 O% 증가가 7%p 초과이고 F% 악화가 7%p 이하여야 유지, 그 외 이번 변경만 복원",
+    "grading": "Codex AI 직접 검토, O/P/X/F; 전후 결과를 같은 기준으로 평가, 사람 독립 채점 아님",
+    "before_sha256": {
+      "ml/common/summary_review.py": "59065be9b17802645c648adb4fa4c6390977c57929daf5738ed610c19932c4ee",
+      "ml/common/summary_draft.py": "7d5b313cd40f0ffaa67b1948fa8733acbe863d0809b55b43f394f0b8fdfe7a0c",
+      "ml/summary/windows/pipeline_summary.py": "18c82de91e82380364cac7f803579eaf156833cbb3d800d08a69ae7803e0edd1",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/summary/adapters/summary-lora/adapters.safetensors": "f877d0488891d1b0ffffafa11b1befaf80911a77fb357d7e49f1681afd3639ee",
+      "ml/summary/adapters/summary-lora/adapter_config.json": "2a35a8af081400e43c86d97528937f1242da7d4d72986403eb568e10b66f65c1"
+    },
+    "after_sha256": {
+      "ml/common/summary_review.py": "de8502dd6ef2719819504631dd43490e559cb298e871a2cb56f788b730a1de35",
+      "ml/common/summary_draft.py": "7d5b313cd40f0ffaa67b1948fa8733acbe863d0809b55b43f394f0b8fdfe7a0c",
+      "ml/summary/windows/pipeline_summary.py": "18c82de91e82380364cac7f803579eaf156833cbb3d800d08a69ae7803e0edd1",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/summary/adapters/summary-lora/adapters.safetensors": "f877d0488891d1b0ffffafa11b1befaf80911a77fb357d7e49f1681afd3639ee",
+      "ml/summary/adapters/summary-lora/adapter_config.json": "2a35a8af081400e43c86d97528937f1242da7d4d72986403eb568e10b66f65c1"
+    },
+    "candidate_diff": "--- a/ml/common/summary_review.py\n+++ b/ml/common/summary_review.py\n@@ -1,12 +1,14 @@\n \"\"\"요약 검증: 초안과 독립된 요지, 완성 문장 단위의 사실·문법 판정.\"\"\"\n from __future__ import annotations\n+\n+from rule_gen import split_sentences\n \n CORE_SYS = \"\"\"Read the passage independently, before seeing any proposed summary.\n Return ONLY JSON: {\"claim\": one short English sentence stating the author's central point,\n \"qualification\": an important limit, contrast or cause that must not be reversed (or \"\"),\n-\"evidence\": a short EXACT continuous quote from the passage supporting the claim}.\n+\"evidence_sentence\": the integer ID of ONE numbered source sentence supporting the claim}.\n Distinguish the author's position from a belief being challenged. Examples support the point; do not replace it.\n-Do not infer a new cause, stronger quantifier or different time sequence. Quote at most 20 words without ellipses.\"\"\"\n+Do not infer a new cause, stronger quantifier or different time sequence. Select a source sentence ID; do not copy or rewrite its text.\"\"\"\n \n MAIN_SYS = \"\"\"Audit one COMPLETE proposed summary against the passage and the independent reading notes.\n Return ONLY JSON: {\"main_point\": true|false, \"supported\": true|false, \"grammatical\": true|false,\n@@ -31,20 +33,25 @@\n \n \n def read_core(call, passage: str) -> dict | None:\n+    sentences = split_sentences(passage)\n+    if not sentences:\n+        return None\n+    numbered = \"\\n\".join(f\"[{i + 1}] {sentence}\" for i, sentence in enumerate(sentences))\n     feedback = \"\"\n     for attempt in range(2):\n-        obj = call(CORE_SYS, f\"[Passage]\\n{passage}\\n\\nReturn JSON with an exact evidence quote.\" + feedback,\n+        obj = call(CORE_SYS, f\"[Numbered passage]\\n{numbered}\\n\\nReturn JSON with an evidence_sentence ID.\" + feedback,\n                    max_tokens=240, t=0.0)\n         if not isinstance(obj, dict):\n             feedback = \"\\nThe previous response was unreadable. Return a compact JSON object.\"\n             continue\n-        claim, evidence = obj.get(\"claim\"), obj.get(\"evidence\")\n-        if (isinstance(claim, str) and claim.strip() and isinstance(evidence, str) and evidence.strip()\n-                and \" \".join(evidence.split()) in \" \".join(passage.split())):\n-            return {\"claim\": claim, \"qualification\": str(obj.get(\"qualification\") or \"\"), \"evidence\": evidence}\n-        feedback = (f\"\\nThe previous evidence was not an exact continuous source quote: {evidence!r}.\"\n-                    \" Copy a shorter continuous phrase directly from the passage; preserve punctuation and quotation marks.\"\n-                    \" Do not add closing quotation marks that are absent at the selected location.\")\n+        claim, index = obj.get(\"claim\"), obj.get(\"evidence_sentence\")\n+        if (isinstance(claim, str) and claim.strip() and type(index) is int\n+                and 1 <= index <= len(sentences)):\n+            # 인용은 모델이 다시 쓰지 않고, 선택한 원문의 표기를 그대로 가져온다.\n+            return {\"claim\": claim, \"qualification\": str(obj.get(\"qualification\") or \"\"),\n+                    \"evidence\": sentences[index - 1]}\n+        feedback = (f\"\\nInvalid claim or evidence_sentence ID: {index!r}.\"\n+                    f\" Return a nonempty claim and an integer evidence_sentence from 1 to {len(sentences)}.\")\n     return None\n \n \n",
+    "result": "두 세트 O% 차이가 모두 ±7%p 이내라 같음. 이번 문장 번호 선택 변경과 관련 테스트만 원복.",
+    "restored_sha256": {
+      "ml/common/summary_review.py": "59065be9b17802645c648adb4fa4c6390977c57929daf5738ed610c19932c4ee",
+      "ml/common/summary_draft.py": "7d5b313cd40f0ffaa67b1948fa8733acbe863d0809b55b43f394f0b8fdfe7a0c",
+      "ml/summary/windows/pipeline_summary.py": "18c82de91e82380364cac7f803579eaf156833cbb3d800d08a69ae7803e0edd1",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/summary/adapters/summary-lora/adapters.safetensors": "f877d0488891d1b0ffffafa11b1befaf80911a77fb357d7e49f1681afd3639ee",
+      "ml/summary/adapters/summary-lora/adapter_config.json": "2a35a8af081400e43c86d97528937f1242da7d4d72986403eb568e10b66f65c1"
+    },
+    "validation": {
+      "candidate_unit_tests": 14,
+      "candidate_unit_tests_result": "passed",
+      "rollback": "before bytes restored; production code and adapter SHA256 identical",
+      "restored_unit_tests": 12,
+      "restored_unit_tests_result": "passed"
+    },
+    "period": "2026-09-26~2026-09-27",
+    "random_seed": "기존 평가기대로 미고정. 설정은 같지만 생성 표본은 달라질 수 있음."
+  },
+  "phase": "before",
+  "counts": {
+    "F": 10,
+    "X": 5,
+    "O": 17,
+    "P": 4
+  },
+  "rates": {
+    "O_percent": 47.2222,
+    "F_percent": 27.7778,
+    "denominator": 36
+  },
+  "review_material": {
+    "18번|summary": {
+      "summary": "Although the search engine is far more (A) ________ in its surveillance than the fictional Big Brother, its repeated (B) ________ of trusting users' secrets makes it a far greater threat.",
+      "options": [
+        "① (A) powerful – (B) betrayal",
+        "② (A) transparent – (B) respect",
+        "③ (A) powerless – (B) betrayal",
+        "④ (A) weak – (B) betrayal",
+        "⑤ (A) powerful – (B) loyalty"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "21번|summary": {
+      "summary": "Cockfighting, which had long been permitted in Louisiana alone, was recently (A) ________, a victory the animal rights movement has (B) ________ for years.",
+      "options": [
+        "① (A) restored – (B) sought",
+        "② (A) outlawed – (B) opposed",
+        "③ (A) tolerated – (B) opposed",
+        "④ (A) restored – (B) welcomed",
+        "⑤ (A) outlawed – (B) sought"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": [
+        "모의 풀이(35B): ②도 정답으로 볼 수 있다고 함 — 오답 확인 필요: The passage states Louisiana 'voted to outlaw cockfighting,' making 'outlawed' the correct verb for (A). It also describes the animal rights movement as having "
+      ]
+    },
+    "22번|summary": {
+      "summary": "The writer takes up history and sociology not because they are useful, but because they are (A) ________, yet most people keep urging them to put their learning to (B) ________ use.",
+      "options": [
+        "① (A) enjoyable – (B) practical",
+        "② (A) enjoyable – (B) theoretical",
+        "③ (A) painful – (B) theoretical",
+        "④ (A) costly – (B) practical",
+        "⑤ (A) painful – (B) costly"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "23번|summary": {
+      "summary": "Beauty's unconditional acceptance of the Beast allowed him to (A) ________ his true potential, which ultimately resulted in a (B) ________ and prosperous life for both of them.",
+      "options": [
+        "① (A) suppress – (B) empty",
+        "② (A) realize – (B) fulfilling",
+        "③ (A) reject – (B) miserable",
+        "④ (A) ignore – (B) chaotic",
+        "⑤ (A) hide – (B) boring"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "24번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "25번|summary": {
+      "summary": "The expert remained (A) ________ until the man was nearly down, and then he gave a warning, because errors happen only when a person feels (B) ________.",
+      "options": [
+        "① (A) cautious – (B) anxious",
+        "② (A) silent – (B) exposed",
+        "③ (A) silent – (B) anxious",
+        "④ (A) impatient – (B) anxious",
+        "⑤ (A) cautious – (B) safe"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": [
+        "넣어 보기 판정을 한 번 이상 읽지 못했습니다 — 선지를 직접 확인 필요",
+        "모의 풀이(35B)가 ③을(를) 골랐습니다 — 정답 ⑤ 확인 필요: The text explicitly states the expert 'said nothing' until the man was coming down, making 'silent' the correct word for (A). The expert explains that he didn't"
+      ]
+    },
+    "26번|summary": {
+      "summary": "Consumers prefer to buy new items because they think the (A) ________ power of a new product is greater than its actual use, and because the easy disposal of goods makes us (B) ________ to what we already own.",
+      "options": [
+        "① (A) lasting – (B) fond",
+        "② (A) lasting – (B) indifferent",
+        "③ (A) declining – (B) fond",
+        "④ (A) limited – (B) indifferent",
+        "⑤ (A) declining – (B) attached"
+      ],
+      "answer": "②",
+      "error": null,
+      "warnings": []
+    },
+    "27번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "28번|summary": {
+      "summary": "Because actors can play roles that are (A) ________ from themselves, their performances become a way of (B) ________ what they understand about a character.",
+      "options": [
+        "① (A) different – (B) sharing",
+        "② (A) identical – (B) sharing",
+        "③ (A) similar – (B) sharing",
+        "④ (A) different – (B) hiding",
+        "⑤ (A) similar – (B) hiding"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "30번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "31번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "32번|summary": {
+      "summary": "New research has shown that Neanderthals ate grains and plants, (A) ________ the long-held belief that they ate only meat, and the evidence is found in the (B) ________ of preserved Neanderthal specimens.",
+      "options": [
+        "① (A) supporting – (B) bones",
+        "② (A) confirming – (B) teeth",
+        "③ (A) challenging – (B) bones",
+        "④ (A) confirming – (B) bones",
+        "⑤ (A) challenging – (B) teeth"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "33번|summary": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "34번|summary": {
+      "summary": "The pilot program showed that the course not only (A) ________ anxiety and depression but also helped people (B) ________ weight.",
+      "options": [
+        "① (A) reduced – (B) gain",
+        "② (A) ignored – (B) lose",
+        "③ (A) increased – (B) gain",
+        "④ (A) reduced – (B) lose",
+        "⑤ (A) ignored – (B) gain"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "35번|summary": {
+      "summary": "Because farmers in richer countries worked together, their dairy sectors became (A) ________, whereas the Balkan countries' dairy farmers, who tried to go it alone, have remained (B) ________.",
+      "options": [
+        "① (A) prosperous – (B) underdeveloped",
+        "② (A) isolated – (B) prosperous",
+        "③ (A) saturated – (B) prosperous",
+        "④ (A) prosperous – (B) isolated",
+        "⑤ (A) underdeveloped – (B) prosperous"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "38번|summary": {
+      "summary": "The writer argues that physical comfort is (A) ________ to creativity, so allowing employees to work from home or in a private space will (B) ________ their ideas.",
+      "options": [
+        "① (A) harmful – (B) improve",
+        "② (A) harmful – (B) weaken",
+        "③ (A) essential – (B) improve",
+        "④ (A) essential – (B) weaken",
+        "⑤ (A) essential – (B) ignore"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "39번|summary": {
+      "summary": "A delay in fixing a bug (A) ________ the work that it would take to repair it the first time, while treating anything not understood in class as a (B) ________ that must be fixed right away.",
+      "options": [
+        "① (A) reduces – (B) mistake",
+        "② (A) increases – (B) lesson",
+        "③ (A) saves – (B) mistake",
+        "④ (A) increases – (B) bug",
+        "⑤ (A) saves – (B) bug"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "44번|summary": {
+      "summary": "The traditional advice of staying in one place and sticking to one type of material has been (A) ________, and scientists now urge students to (B) ________ their own study methods.",
+      "options": [
+        "① (A) confirmed – (B) develop",
+        "② (A) confirmed – (B) copy",
+        "③ (A) ignored – (B) copy",
+        "④ (A) repeated – (B) copy",
+        "⑤ (A) challenged – (B) find"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "18번|summary|2": {
+      "summary": "Search engines have become a far more (A) ________ threat than the one in 1984, since they know far more about our (B) ________ than even our closest friends.",
+      "options": [
+        "① (A) distant – (B) identity",
+        "② (A) distant – (B) habits",
+        "③ (A) distant – (B) desires",
+        "④ (A) real – (B) desires",
+        "⑤ (A) fictional – (B) secrets"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "21번|summary|2": {
+      "summary": "Cockfighting, once permitted only in Louisiana, was (A) ________ by the state, marking a (B) ________ victory for animal rights advocates.",
+      "options": [
+        "① (A) banned – (B) historic",
+        "② (A) legalized – (B) recent",
+        "③ (A) legalized – (B) historic",
+        "④ (A) banned – (B) minor",
+        "⑤ (A) legalized – (B) minor"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "22번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "23번|summary|2": {
+      "summary": "Because Beauty treated the Beast without prejudice, he was able to (A) ________ himself, and her acceptance brought her the most (B) ________ reward.",
+      "options": [
+        "① (A) free – (B) modest",
+        "② (A) suppress – (B) generous",
+        "③ (A) conceal – (B) modest",
+        "④ (A) reveal – (B) modest",
+        "⑤ (A) free – (B) generous"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "24번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "25번|summary|2": {
+      "summary": "The expert kept (A) ________ until the man was nearly finished, and then he gave a warning, because he believed that mistakes are made only when a person feels (B) ________.",
+      "options": [
+        "① (A) silence – (B) tired",
+        "② (A) orders – (B) danger",
+        "③ (A) silence – (B) safe",
+        "④ (A) silence – (B) bored",
+        "⑤ (A) silence – (B) dead"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "26번|summary|2": {
+      "summary": "Consumers tend to (A) ________ new items rather than use what they already own, which makes them (B) ________ to the objects they actually own.",
+      "options": [
+        "① (A) keep – (B) attached",
+        "② (A) discard – (B) sensitive",
+        "③ (A) purchase – (B) indifferent",
+        "④ (A) purchase – (B) attached",
+        "⑤ (A) discard – (B) attached"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "27번|summary|2": {
+      "summary": "The longer the interval between repetitions of a desirable experience, the less (A) ________ the effects of habituation are, so New Year's ceremonies feel far more (B) ________ than daily ones.",
+      "options": [
+        "① (A) harmful – (B) urgent",
+        "② (A) brief – (B) urgent",
+        "③ (A) harmful – (B) delightful",
+        "④ (A) harmful – (B) bland",
+        "⑤ (A) inevitable – (B) familiar"
+      ],
+      "answer": "③",
+      "error": null,
+      "warnings": []
+    },
+    "28번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "30번|summary|2": {
+      "summary": "The declining popularity of classical music stems from its overly (A) ________ nature, yet orchestras are currently working to reverse this trend by fostering a more (B) ________ concert atmosphere.",
+      "options": [
+        "① (A) solemn – (B) relaxed",
+        "② (A) popular – (B) stuffy",
+        "③ (A) ancient – (B) modern",
+        "④ (A) complex – (B) chaotic",
+        "⑤ (A) dynamic – (B) formal"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "31번|summary|2": {
+      "summary": "The sooner a negative reply is given, the more (A) ________ both sides feel, so (B) ________ it with a vague 'Maybe' is not very helpful.",
+      "options": [
+        "① (A) anxious – (B) postponing",
+        "② (A) uncomfortable – (B) postponing",
+        "③ (A) annoyed – (B) ending",
+        "④ (A) relieved – (B) postponing",
+        "⑤ (A) anxious – (B) ending"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "32번|summary|2": {
+      "summary": "The new evidence has (A) ________ the long-held belief that Neanderthals ate only meat, and it shows that their diet was (B) ________ than previously assumed.",
+      "options": [
+        "① (A) confirmed – (B) richer",
+        "② (A) confirmed – (B) poorer",
+        "③ (A) challenged – (B) narrower",
+        "④ (A) confirmed – (B) narrower",
+        "⑤ (A) challenged – (B) richer"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "33번|summary|2": {
+      "summary": "Because memory is not (A) ________ but rather stores a general meaning, it can lead to errors in recalling a conversation, especially when two people remember it (B) ________.",
+      "options": [
+        "① (A) accurate – (B) differently",
+        "② (A) accurate – (B) exactly",
+        "③ (A) exact – (B) identically",
+        "④ (A) abstract – (B) exactly",
+        "⑤ (A) abstract – (B) differently"
+      ],
+      "answer": "①",
+      "error": null,
+      "warnings": []
+    },
+    "34번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "35번|summary|2": {
+      "summary": null,
+      "options": [],
+      "answer": null,
+      "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "warnings": []
+    },
+    "38번|summary|2": {
+      "summary": "Physical comfort is (A) ________ to the creative process, so working from home or a private space can (B) ________ better ideas.",
+      "options": [
+        "① (A) essential – (B) prevent",
+        "② (A) essential – (B) hide",
+        "③ (A) harmful – (B) produce",
+        "④ (A) harmful – (B) prevent",
+        "⑤ (A) essential – (B) produce"
+      ],
+      "answer": "⑤",
+      "error": null,
+      "warnings": []
+    },
+    "39번|summary|2": {
+      "summary": "Because a bug is harder to fix the later it is discovered, students should (A) ________ what they do not understand right away, rather than (B) ________ the new material.",
+      "options": [
+        "① (A) overlook – (B) piling",
+        "② (A) ignore – (B) skipping",
+        "③ (A) hide – (B) adding",
+        "④ (A) learn – (B) adding",
+        "⑤ (A) ignore – (B) adding"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": []
+    },
+    "44번|summary|2": {
+      "summary": "Although established advice on studying has been (A) ________, research suggests that (B) ________ settings and varied materials can improve learning.",
+      "options": [
+        "① (A) consistent – (B) fixed",
+        "② (A) outdated – (B) fixed",
+        "③ (A) unchanged – (B) static",
+        "④ (A) consistent – (B) flexible",
+        "⑤ (A) flexible – (B) fixed"
+      ],
+      "answer": "④",
+      "error": null,
+      "warnings": [
+        "초안 정답 ③ → 넣어 보기상 ② — 정답 번호를 넣어 보기 판정에 맞춰 옮겼습니다"
+      ]
+    }
+  }
+}
