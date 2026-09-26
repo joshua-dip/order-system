@@ -39,6 +39,7 @@ def main() -> int:
     ap.add_argument("--nums", default="", help="20번,30번 처럼 일부 지문만")
     ap.add_argument("--repeat", type=int, default=1, help="같은 문항을 몇 번 돌릴지 — 운의 몫을 줄이려면 2~3")
     ap.add_argument("--reasoner", default=REASONER)
+    ap.add_argument("--keep-trace", action="store_true", help="성공 문항도 판정 근거를 보관(진단용)")
     args = ap.parse_args()
 
     spec = json.loads((EVAL / "sets" / f"{args.set}.json").read_text(encoding="utf-8"))
@@ -121,7 +122,7 @@ def main() -> int:
                         # 빈칸은 재판정에 빈칸 뚫린 지문이 필요하다
                         "blanked": qd.get("Paragraph") if en in ("blank", "order", "insert", "irrelevant", "vocab", "grammar", "summary") else None,
                         "log": [ln for ln in err.getvalue().splitlines() if "[pipeline]" in ln],
-                        "trace": r.get("trace") if not r.get("ok") else None,
+                        "trace": r.get("trace") if args.keep_trace or not r.get("ok") else None,
                     }
                     out.write(json.dumps(row, ensure_ascii=False) + "\n")
                     out.flush()

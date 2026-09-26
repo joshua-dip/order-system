@@ -36,9 +36,11 @@
 현재 걸려 있는 것: `orders.delivery` (납품 부족분 → 무료 한도 반환).
 
 **로컬 LoRA 변형문제 AI**(맥 MLX 워커, 12유형)를 이어받으면 먼저
-**`docs/handoff/2026-09-26-로컬-LoRA-Codex-인수인계.md`** 를 읽을 것 — 상태·명령·규칙·다음 할 일.
-개선할 때마다 **`docs/ml/lora-notebook/notebook.html`** 「개선 기록」 표에 한 줄 추가하고
-`node docs/ml/lora-notebook/print-notebook.cjs` 로 PDF 재생성.
+**`docs/handoff/2026-09-26-로컬-LoRA-Codex-인수인계.md`** 를 읽을 것 — 현재 상태·다음 할 일.
+실습 노트 원본은 **`docs/ml/lora-notebook/notebook.html`** 이다. 개선할 때마다 「개선 기록」 표에
+한 줄 추가하고, 큰 교훈이면 새 과 섹션과 목차 항목을 넣는다. 진행 상세는 노트에 쓰고,
+인수인계 문서(`docs/handoff/…`)는 현재 상태와 다음 할 일만 짧게 유지한다.
+**PDF는 사용자가 요청할 때만** `node docs/ml/lora-notebook/print-notebook.cjs` 로 만든다.
 
 ---
 

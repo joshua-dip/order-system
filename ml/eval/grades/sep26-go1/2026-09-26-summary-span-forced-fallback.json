@@ -1,0 +1,16 @@
+{
+  "grader": "Codex 직접 검토 (AI 1차, 독립 사람 채점 아님)",
+  "code": "probe_summary_fallback.py로 LoRA 응답만 비워 대안 경로를 강제로 실행한 진단. 35B 초안·검증·해설은 실제 MLX 모델. 4/4 생성 및 A/B 빈칸 형식 통과. 일반 성능 점수와 합산 금지.",
+  "notes": {
+    "35번|summary": "핵심 대비와 정답은 명확하지만 오답들이 heavy coats–regular basis처럼 요지와 무관해 변별력이 약함.",
+    "41~42번|summary": "규범의 문지기를 우회한 창작자들의 slang 정당화와 확산을 정확히 연결.",
+    "35번|summary|2": "정답은 정확하나 prioritize–over 구문에 비해 오답 동사·전치사 결합이 부자연스러워 문법 단서로 풀릴 위험.",
+    "41~42번|summary|2": "다양한 창작자의 권한 확대와 slang 정당화가 확산을 가속한다는 중심 내용."
+  },
+  "grades": {
+    "35번|summary": "P",
+    "41~42번|summary": "O",
+    "35번|summary|2": "P",
+    "41~42번|summary|2": "O"
+  }
+}

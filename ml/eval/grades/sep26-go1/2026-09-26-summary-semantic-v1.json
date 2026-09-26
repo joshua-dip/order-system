@@ -1,0 +1,24 @@
+{
+  "grader": "Codex 직접 검토 (AI 1차, 독립 사람 채점 아님)",
+  "code": "semantic-v1. 이전 span-fallback과 동일 4지문×2회. 선택 표본으로 전체 점수 추정 불가.",
+  "notes": {
+    "30번|summary": "짧은 문단의 시각적 이점과 과도한 분절의 위험을 함께 반영.",
+    "35번|summary": "근거 인용의 따옴표를 바꿔 원문 일치 실패.",
+    "36번|summary": "선지 유일성·문법 판정 미완료로 실패.",
+    "41~42번|summary": "미디어 규범 장벽 해체와 속어 확산을 연결.",
+    "30번|summary|2": "짧은 문단의 이점만 남고 지나치게 짧으면 사고 흐름을 해친다는 제한을 누락.",
+    "35번|summary|2": "근거 인용의 따옴표를 바꿔 원문 일치 실패.",
+    "36번|summary|2": "what really reveals is the pattern은 reveals의 목적어가 없어 비문. 정답·오답 모두 문법 검증을 통과한 오판.",
+    "41~42번|summary|2": "복수정답을 찾았지만 교체에 실패하여 생성 중단."
+  },
+  "grades": {
+    "30번|summary": "O",
+    "35번|summary": "F",
+    "36번|summary": "F",
+    "41~42번|summary": "O",
+    "30번|summary|2": "P",
+    "35번|summary|2": "F",
+    "36번|summary|2": "X",
+    "41~42번|summary|2": "F"
+  }
+}

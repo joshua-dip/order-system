@@ -39,6 +39,8 @@ from _cuda_runtime import (  # noqa: E402
 from distractor_check import solve_check  # noqa: E402
 from json_extract import explanation_text, extract_json_object, trim_to_sentence  # noqa: E402
 from rule_pipeline import fix_particles  # noqa: E402
+from summary_draft import draft_from_spans  # noqa: E402
+from summary_review import MAIN_SYS, read_core, review_main, review_candidate  # noqa: E402
 
 CIRCLED = "①②③④⑤"
 TIME_BUDGET_SEC = 150
@@ -65,39 +67,32 @@ def user_message(paragraph: str) -> str:
 
 
 CHECK_SYS = """You check the five options of a Korean CSAT 「summary completion」 question.
-Put each (A)-(B) word pair into the summary sentence and compare it with the passage.
+Each numbered candidate is already a COMPLETE sentence. Compare each sentence with the passage independently.
+Do not choose the best sentence: every defensible sentence must be marked fits.
 Output ONLY one JSON object. No markdown.
 Keys: checks (array of exactly 5 objects, same order as given: {"i": 1-5, "verdict": "fits"|"wrong"|"ungrammatical", "reason": short English}).
 - fits: grammatical AND the completed summary states the passage correctly (both words right).
   Synonyms and near-synonyms of the right words ALSO count as fits (copying = imitation = representation, grew = raised).
 - wrong: grammatical, but the completed summary misstates the passage — one or both words point the wrong way,
-  name only a side detail, or say something the passage does not say.
+  or say something the passage does not say. Do not reject a true paraphrase merely because another is more precise.
 - ungrammatical: a word does not fit its blank grammatically.
 Judge only by the passage."""
 
-MAIN_SYS = """You check the summary sentence of a Korean CSAT 「summary completion」 question.
-Output ONLY one JSON object. No markdown.
-Keys: main_point (true|false), gives_away (true|false), reason (short English).
-main_point=true only if the completed [Summary] states the WHOLE passage's main point (the author's claim or the idea
-the passage builds to) — not just one example, one paragraph or a side detail — says nothing the passage does not say,
-and reads as a natural, logical English sentence.
-gives_away=true if the rest of [Blank summary] already states the missing ideas (e.g. it says "engagement over entertainment"
-while a blank asks for "engaging"), so the blanks can be filled without reading the passage."""
-
-SYN_SYS = """You check one wrong option of a Korean CSAT 「summary completion」 question.
-Output ONLY one JSON object. No markdown.
-Keys: acceptable (true|false), reason (short English).
-acceptable=true if, in [Summary], the word [Candidate] could replace [Correct word] and the summary would still be true to
-the passage (a synonym, a near-synonym, or another fair wording) — then this option would be a second correct answer."""
-
 DRAFT35_SYS = """You write a Korean CSAT 「summary completion」 question for the passage.
 Output ONLY one JSON object. No markdown.
-Keys: summary (one English sentence, 15-35 words, stating the WHOLE passage's main point, with two key words replaced by
-"(A) ________" and "(B) ________", (A) first), pairs (array of exactly 5 arrays [A word, B word], 1-3 words each),
-answer (1-5, the position of the correct pair).
-- The correct words should paraphrase the passage rather than copy it; the rest of the summary must not give them away.
-- Each wrong pair keeps at most one correct word and makes the summary clearly false (the opposite, a side detail).
-  Never use a synonym of a correct word in a wrong pair. Never put the same word in (A) and (B)."""
+Keys: sentence (one COMPLETE English sentence, 15-35 words, stating the WHOLE passage's main point),
+A (an exact 1-3 word phrase in sentence), B (another exact 1-3 word phrase in sentence),
+distractors (exactly FOUR arrays of two strings [wrong A, wrong B], 1-3 words per string).
+- Write the sentence with NO blanks, underscores or (A)/(B) markers. Code will hide A and B.
+- A and B must each occur EXACTLY ONCE in sentence, A before B. Choose two different central concepts.
+- State the author's conclusion, including qualifications; do not merely retell an example or invent a stronger claim.
+- Prefer paraphrases; do not repeat or reveal either hidden concept elsewhere in sentence.
+- Each distractor must fit grammatically but make the completed sentence clearly false according to the passage.
+  Keep at most one correct word; never make both words synonyms or fair alternatives of the correct pair.
+Format example (invent your own content):
+{"sentence":"Regular maintenance prevents equipment failures and extends the useful life of machines in demanding industrial environments.",
+ "A":"prevents","B":"extends",
+ "distractors":[["causes","extends"],["prevents","shortens"],["causes","shortens"],["ignores","reduces"]]}"""
 
 REWRITE_SYS = """You rewrite ONE option of a Korean CSAT 「summary completion」 question.
 Output ONLY one JSON object. No markdown.
@@ -196,14 +191,17 @@ def _same_word(p: tuple[str, str]) -> bool:
 
 def _verdicts(obj: dict | None) -> list[str] | None:
     rows = obj.get("checks") if isinstance(obj, dict) else None
-    if not isinstance(rows, list) or len(rows) < 5:
+    if not isinstance(rows, list) or len(rows) != 5:
         return None
-    out = []
-    for row in rows[:5]:
+    out = [""] * 5
+    for row in rows:
         v = str((row or {}).get("verdict") or "").strip().lower() if isinstance(row, dict) else ""
         if v not in ("fits", "wrong", "ungrammatical"):
             return None
-        out.append(v)
+        index = row.get("i")
+        if type(index) is not int or not 1 <= index <= 5 or out[index - 1]:
+            return None
+        out[index - 1] = v
     return out
 
 
@@ -240,11 +238,17 @@ def run_pipeline(
                                temp=temp if t is None else t, use_adapter=adapter)
         return extract_json_object(raw_out[0])
 
-    # 1) 초안 — 요약문(빈칸 둘)과 다섯 쌍이 읽혀야 쓴다. LoRA 두 번, 안 되면 35B 가 같은 지시문으로.
+    core = read_core(call, passage)
+    trace.append({"stage": "core", "out": core})
+    if core is None:
+        return {"ok": False, "error": "원문 근거가 있는 요지를 확인하지 못했습니다", "trace": trace}
+    rejected_drafts: list[str] = []
+
+    # 1) 초안 — 요약문(빈칸 둘)과 다섯 쌍이 읽혀야 쓴다. LoRA 세 번, 안 되면 35B 대안 두 번.
     #    요지가 아닌 요약문(한 사례·한 단락만)은 버리고 다시 받는다
     summary, pairs, answer = "", [], -1
-    # LoRA 세 번(두 번째부터 온도 0.7 — 같은 요약문을 되풀이했다), 안 되면 35B 가 JSON 틀이 분명한 지시문으로 두 번.
-    # 35B 에 LoRA 지시문을 그대로 주면 선지 모양이 제각각이라 못 읽었다(v1 실패 9건 중 9건이 마지막 단계에서 형식 실패)
+    # LoRA는 두 번째부터 온도 0.7. 35B 대안은 완성 문장과 A/B 표현을 받아 코드로 가린다.
+    # 모델이 빈칸 표시를 빠뜨려 좋은 내용도 형식 실패로 버리던 문제를 막는다.
     for d_try, (use_lora, t_d) in enumerate(((True, None), (True, 0.7), (True, 0.7), (False, None), (False, 0.7))):
         if time.time() - started > TIME_BUDGET_SEC:
             break
@@ -255,7 +259,9 @@ def run_pipeline(
             ans = str((draft or {}).get("CorrectAnswer") or "").strip()[:1]
             a_i = CIRCLED.index(ans) if ans and ans in CIRCLED else -1
         else:
-            draft = call(DRAFT35_SYS, f"[Passage]\n{passage}\n\nReturn JSON.", max_tokens=500, t=t_d)
+            draft = draft_from_spans(call(DRAFT35_SYS, f"[Passage]\n{passage}\n\n[Independent main point]\n{core['claim']}\n{core['qualification']}"
+                                         + ("\n\n[Avoid these rejected summaries]\n" + "\n".join(rejected_drafts[-3:]) if rejected_drafts else "")
+                                         + "\n\nReturn JSON.", max_tokens=500, t=t_d))
             s = norm_summary((draft or {}).get("summary") or "")
             raw_pairs = (draft or {}).get("pairs") or []
             ps = [parse_pair(f"(A) {x[0]} – (B) {x[1]}") if isinstance(x, list) and len(x) == 2 else None for x in raw_pairs][:5]
@@ -271,42 +277,42 @@ def run_pipeline(
             # 요약문 나머지에 정답 낱말(어간)이 그대로 — v2 20·29번(engagement … engaging, anaerobic)
             ok, why = False, f"gives away (word in summary) — {ps[a_i]}"
         if ok:
-            main = call(MAIN_SYS, f"[Passage]\n{passage}\n\n[Blank summary]\n{s}\n\n[Summary]\n{fill(s, ps[a_i])}\n\nReturn JSON.",
-                        max_tokens=150, t=0.0)
-            if isinstance(main, dict) and main.get("main_point") is False:
-                ok, why = False, f"not main point — {str(main.get('reason') or '')[:70]}"
-            elif isinstance(main, dict) and main.get("gives_away") is True:
-                ok, why = False, f"gives away — {str(main.get('reason') or '')[:70]}"
+            main = review_main(call, passage, fill(s, ps[a_i]), core)
+            trace.append({"stage": "main", "out": main})
+            if main is None:
+                ok, why = False, "main review unreadable"
+            elif not all(main[k] for k in ("main_point", "supported", "grammatical")):
+                ok, why = False, f"invalid summary — {str(main.get('reason') or '')[:140]}"
         trace.append({"stage": "draft", "lora": use_lora, "ok": ok, "why": why, "summary": s,
                       "raw": None if ok else raw_out[0][:400]})
         if ok:
             summary, pairs, answer = s, list(ps), a_i
             break
+        if s:
+            rejected_drafts.append(f"{s} — {why}")
         print(f"[pipeline] draft try={d_try} {'lora' if use_lora else '35b'} unusable ({why})", file=sys.stderr)
     if not summary:
         return {"ok": False, "error": "요약문 초안을 만들지 못했습니다 — 다시 생성해 주세요", "trace": trace}
     print(f"[pipeline] summary: {summary[:100]} · answer={CIRCLED[answer]}", file=sys.stderr)
 
-    def _second_answer(pair: tuple[str, str]) -> bool:
-        """오답 쌍이 정답으로도 읽히나 — 두 칸 모두 「정답 낱말과 같거나 대신 써도 되는 말」이면 정답이 둘이다.
-        v2 는 한 낱말을 같이 쓰는 오답만 봤다가 replicate – challenged(≈ imitate – undermined)를 놓쳤다."""
-        for slot in (0, 1):
-            if pair[slot].lower() == pairs[answer][slot].lower():
-                continue
-            syn = call(SYN_SYS, f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n[Blank]\n{'AB'[slot]}\n\n"
-                                f"[Correct word]\n{pairs[answer][slot]}\n\n[Candidate]\n{pair[slot]}\n\nReturn JSON.",
-                       max_tokens=120, t=0.0)
-            trace.append({"stage": "syn", "pair": pair, "slot": slot, "out": syn})
-            if not (isinstance(syn, dict) and syn.get("acceptable") is True):
-                return False  # 이 칸이 틀렸으니 오답이 맞다
-        print(f"[pipeline] {pair} ≈ {pairs[answer]} — second answer", file=sys.stderr)
-        return True
+    candidate_cache: dict[str, dict | None] = {}
+
+    def _candidate(pair: tuple[str, str]) -> dict | None:
+        sentence = fill(summary, pair)
+        if sentence not in candidate_cache:
+            candidate_cache[sentence] = review_candidate(call, passage, sentence)
+            trace.append({"stage": "candidate", "pair": pair, "out": candidate_cache[sentence]})
+        return candidate_cache[sentence]
+
+    def _usable_wrong(pair: tuple[str, str]) -> bool:
+        verdict = _candidate(pair)
+        return verdict is not None and verdict["grammatical"] and not verdict["supported"]
 
     def check(order: list[int]) -> list[str] | None:
         got = _verdicts(call(
             CHECK_SYS,
-            f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n[Options]\n"
-            + "\n".join(f"{k + 1}. (A) {pairs[j][0]} – (B) {pairs[j][1]}" for k, j in enumerate(order))
+            f"[Passage]\n{passage}\n\n[Complete candidates]\n"
+            + "\n".join(f"{k + 1}. {fill(summary, pairs[j])}" for k, j in enumerate(order))
             + "\n\nReturn checks JSON.",
             max_tokens=600, t=0.0,
         ))
@@ -322,6 +328,7 @@ def run_pipeline(
     remaining: dict[int, bool] = {}
     rejected: dict[int, list[str]] = {}
     verdicts: list[str] | None = None
+    checked_pairs = None
     for c_try in range(max_retries + 2):
         if time.time() - started > TIME_BUDGET_SEC:
             print(f"[pipeline] time budget {TIME_BUDGET_SEC}s reached — stop rewriting", file=sys.stderr)
@@ -330,6 +337,7 @@ def run_pipeline(
         verdicts = check([0, 1, 2, 3, 4])
         rev = check([4, 3, 2, 1, 0])
         trace.append({"stage": "check", "out": verdicts, "reversed": rev})
+        checked_pairs = tuple(pairs) if verdicts is not None and rev is not None else None
         if verdicts is None:
             # 판정을 못 읽어도 아래 중복·같은 낱말·유의어 검사는 한다 — v2 39번: 이 회차를 건너뛰어 정답과 같은 쌍이 오답으로 나갔다
             print("[pipeline] check unreadable", file=sys.stderr)
@@ -353,12 +361,13 @@ def run_pipeline(
             if i != answer and (_same_word(pairs[i]) or any(
                     _key(pairs[i]) == _key(pairs[j]) for j in range(5) if j != i and (j < i or j == answer))):
                 bad[i] = False
-        # 오답의 두 칸이 모두 정답 낱말과 같거나 유의어면 정답이 둘이다(v1 5건: representation – depict,
-        # raised – agricultural …, v3 replicate – challenged) — 넣어 보기 판정이 놓쳐 칸마다 따로 묻는다
+        # 정답 쌍을 보여 주지 않고 완성 문장 자체의 사실성·문법을 따로 확인한다.
         for i in range(5):
-            if i != answer and i not in bad and _second_answer(pairs[i]):
+            if i != answer and i not in bad and not _usable_wrong(pairs[i]):
                 bad[i] = False
         remaining = bad
+        if not bad and checked_pairs is None and c_try < max_retries + 1:
+            continue  # 판독 실패를 통과로 취급하지 말고 두 순서 판정을 다시 받는다.
         if not bad or c_try >= max_retries + 1:
             break
         # 3) 다시 쓰기 — 거절된 시도를 보여 주고 두 번째부터 온도를 올린다(16과)
@@ -367,7 +376,10 @@ def run_pipeline(
                 if time.time() - started > TIME_BUDGET_SEC:
                     break
                 others = [p for k, p in enumerate(pairs) if k != i]
-                tried = rejected.get(i, [])
+                current = f"(A) {pairs[i][0]} – (B) {pairs[i][1]}"
+                if current not in rejected.setdefault(i, []):
+                    rejected[i].append(current)
+                tried = rejected[i]
                 rew = call(
                     REWRITE_SYS.format(goal=GOAL_RIGHT if want_right else GOAL_WRONG),
                     f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n"
@@ -380,9 +392,10 @@ def run_pipeline(
                     t=temp if attempt == 0 and not tried else 0.8,
                 )
                 new = parse_pair(f"(A) {(rew or {}).get('A', '')} – (B) {(rew or {}).get('B', '')}")
-                ok = new is not None and all(_key(new) != _key(o) for o in others) and not _same_word(new)
-                if ok and not want_right and _second_answer(new):
-                    ok = False  # 다시 쓴 오답이 정답 낱말의 유의어 — v2 에서 경고만 달고 나갔다
+                ok = (new is not None and _key(new) != _key(pairs[i])
+                      and all(_key(new) != _key(o) for o in others) and not _same_word(new))
+                if ok and not want_right and not _usable_wrong(new):
+                    ok = False  # 다시 쓴 쌍도 사실이면 복수정답, 비문이면 부적절한 오답이다.
                 trace.append({"stage": "rewrite", "i": i, "right": want_right, "out": new, "ok": ok})
                 if ok:
                     pairs[i] = new  # type: ignore[assignment]
@@ -391,14 +404,14 @@ def run_pipeline(
                     rejected.setdefault(i, []).append(f"(A) {new[0]} – (B) {new[1]}")
                 print(f"[pipeline] rewrite {CIRCLED[i]} rejected: {new}", file=sys.stderr)
 
-    # 정답이 옮겨졌거나 다시 쓰였으면 요지 확인을 한 번 더 — v1 33번: 옮긴 정답이 「this view is sufficient
-    # because it fails …」로 말이 안 됐다
-    if moved_note or any(t.get("stage") == "rewrite" and t.get("right") and t.get("ok") for t in trace):
-        main = call(MAIN_SYS, f"[Passage]\n{passage}\n\n[Blank summary]\n{summary}\n\n[Summary]\n{fill(summary, pairs[answer])}"
-                              "\n\nReturn JSON.", max_tokens=150, t=0.0)
-        trace.append({"stage": "main_final", "out": main})
-        if isinstance(main, dict) and main.get("main_point") is False:
-            return {"ok": False, "error": "정답 쌍을 넣은 요약문이 요지와 맞지 않습니다 — 다시 생성해 주세요", "trace": trace}
+    # 미해결 복수정답·문법 오류 또는 교정 뒤 재검증하지 않은 선지는 성공으로 내보내지 않는다.
+    if remaining or checked_pairs != tuple(pairs):
+        return {"ok": False, "error": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다", "trace": trace}
+    main = review_main(call, passage, fill(summary, pairs[answer]), core)
+    trace.append({"stage": "main_final", "out": main})
+    if (main is None or not all(main[k] for k in ("main_point", "supported", "grammatical"))
+            or _gives_away(summary, pairs[answer])):
+        return {"ok": False, "error": "최종 요약문의 요지·문법·답 노출 검증에 실패했습니다", "trace": trace}
 
     # 정답 위치 섞기 — 쌍 순서에는 뜻이 없다(학습 데이터도 ①이 25%로 가장 많다)
     order = list(range(5))

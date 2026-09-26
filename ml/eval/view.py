@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""평가 실행 결과 보기 · 자동 지표 · 사람 채점 합계.
+"""평가 실행 결과 보기 · 자동 지표 · 직접 검토 채점 합계.
 
   python3 ml/eval/view.py --set sep26-go1 --label 2026-09-24-final            # 문항 전부 + 요약
   python3 ml/eval/view.py --set sep26-go1 --label X --types title --summary    # 요약만
   python3 ml/eval/view.py --set sep26-go1 --compare 2026-09-24-baseline,2026-09-24-final   # 채점 비교
 
-자동 지표(사람 없이 셈): 생성 성공률·평균 시간·경고 수·정답 이동·겹치는 오답 쌍.
-사람 채점은 grades/<세트>/<label>.json — {"20번|topic": "O", …} (O 맞음 · P 부분 · X 틀림 · F 실패, 반복이면 "20번|topic|2").
+자동 지표(자동 집계): 생성 성공률·평균 시간·경고 수·정답 이동·겹치는 오답 쌍.
+직접 검토 채점은 grades/<세트>/<label>.json — {"20번|topic": "O", …} (O 맞음 · P 부분 · X 틀림 · F 실패, 반복이면 "20번|topic|2").
 """
 from __future__ import annotations
 
@@ -23,6 +23,10 @@ EVAL = Path(__file__).resolve().parent
 sys.path.insert(0, str(EVAL.parent / "common"))
 from distractor_check import NEAR_DUP, word_overlap  # noqa: E402
 from option_form import title_form_issue, topic_form_issue  # noqa: E402
+
+TYPE_NAMES = {"topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치",
+              "blank": "빈칸", "order": "순서", "insert": "삽입", "irrelevant": "무관한문장",
+              "vocab": "어휘", "grammar": "어법", "summary": "요약"}
 
 
 def load_rows(set_name: str, label: str) -> list[dict]:
@@ -66,7 +70,7 @@ def _pct(a: float, b: float) -> str:
 
 
 def report(set_name: str, labels: list[str]) -> dict:
-    """버전별 성적표(%) — 사람 채점(정답 적절률) + 자동 지표 + 오답 재판정. 표로 찍고 dict 로 돌려준다."""
+    """버전별 성적표(%) — 직접 검토 채점(정답 적절률) + 자동 지표 + 오답 재판정. 표로 찍고 dict 로 돌려준다."""
     board: dict = {}
     for lb in labels:
         rows = load_rows(set_name, lb)
@@ -78,7 +82,7 @@ def report(set_name: str, labels: list[str]) -> dict:
             jpath = EVAL / "runs" / set_name / f"{lb}.judge.json"
         judge = json.loads(jpath.read_text(encoding="utf-8"))["summary"] if jpath.is_file() else {}
         per: dict = {}
-        for t in ("topic", "title", "claim", "match", "mismatch", "blank", "all"):
+        for t in (*TYPE_NAMES, "all"):
             rs = [r for r in rows if t == "all" or r["type"] == t]
             gs = [g for k, g in grades.items() if t == "all" or k.split("|")[1] == t]
             n_ok = sum(1 for r in rs if r["ok"])
@@ -114,6 +118,7 @@ def report(set_name: str, labels: list[str]) -> dict:
         return text + " " * max(0, n - w(text))
 
     short = {lb: re.sub(r"^\d{4}-\d{2}-\d{2}-", "", lb) for lb in labels}
+    column_width = max(12, *(w(label) + 2 for label in short.values()))
 
     def cell(v, pct=True):
         if v is None:
@@ -128,13 +133,13 @@ def report(set_name: str, labels: list[str]) -> dict:
                  ("채점관 두 순서 판정 일치", "judge_agree", True),
                  ("문항당 시간 ↓", "sec", False)]
     present = {t for lb in labels for t in board[lb] if board[lb][t]["n"]}
-    for t in [x for x in ("all", "topic", "title", "claim", "match", "mismatch", "blank") if x in present]:
-        name = {"all": "전체", "topic": "주제", "title": "제목", "claim": "주장", "match": "일치", "mismatch": "불일치", "blank": "빈칸"}[t]
-        print("\n" + ljust(f"[{name}]", 26) + "".join(f"{short[lb]:>12}" for lb in labels))
+    for t in [x for x in ("all", *TYPE_NAMES) if x in present]:
+        name = "전체" if t == "all" else TYPE_NAMES[t]
+        print("\n" + ljust(f"[{name}]", 26) + "".join(f"{short[lb]:>{column_width}}" for lb in labels))
         for label, key, pct in rows_spec:
-            print(f"  {ljust(label, 24)}" + "".join(f"{cell(board[lb][t][key], pct):>12}" for lb in labels))
-        print(f"  {ljust('문항 수', 24)}" + "".join(f"{board[lb][t]['n']:>12}" for lb in labels))
-    print("\n↓ 는 낮을수록 좋음. 정답 적절은 사람 채점, 재확인·오답 지표는 judge_distractors.py(35B 온도 0, judge2 = 순서 바꿔 두 번) 재판정.")
+            print(f"  {ljust(label, 24)}" + "".join(f"{cell(board[lb][t][key], pct):>{column_width}}" for lb in labels))
+        print(f"  {ljust('문항 수', 24)}" + "".join(f"{board[lb][t]['n']:>{column_width}}" for lb in labels))
+    print("\n↓ 는 낮을수록 좋음. 정답 적절은 grades의 직접 검토 채점(채점자는 grader 확인), 재확인·오답 지표는 judge_distractors.py(35B 온도 0, judge2 = 순서 바꿔 두 번) 재판정.")
     return board
 
 
@@ -144,7 +149,7 @@ def main() -> int:
     ap.add_argument("--label", default="")
     ap.add_argument("--types", default="")
     ap.add_argument("--summary", action="store_true")
-    ap.add_argument("--compare", default="", help="label,label — 사람 채점 합계를 나란히")
+    ap.add_argument("--compare", default="", help="label,label — 직접 검토 채점 합계를 나란히")
     ap.add_argument("--report", default="", help="label,label,… — 버전별 성적표(%)")
     ap.add_argument("--json", default="", help="--report 결과를 이 파일에 저장")
     args = ap.parse_args()
@@ -159,7 +164,8 @@ def main() -> int:
         labels = args.compare.split(",")
         sums = {lb: grade_summary(args.set, lb) for lb in labels}
         print(f"{'유형':6} " + " ".join(f"{lb:>28}" for lb in labels) + "   (맞음/부분/틀림/실패)")
-        for t in ("topic", "title", "claim"):
+        present = {t for counts in sums.values() for t in counts}
+        for t in (t for t in TYPE_NAMES if t in present):
             cells = []
             for lb in labels:
                 c = sums[lb].get(t, Counter())
@@ -196,7 +202,7 @@ def main() -> int:
                   f"겹침 {c.get('duplicate', 0)} · 무관 2개 이상 문항 {c.get('items_2plus_off', 0)}/{n}")
     gs = grade_summary(args.set, args.label)
     if gs:
-        print("[사람 채점] 맞음/부분/틀림/실패")
+        print("[직접 검토 채점] 맞음/부분/틀림/실패")
         for t, c in gs.items():
             print(f"  {t:6} {c['O']}/{c['P']}/{c['X']}/{c['F']}")
     return 0
