@@ -97,11 +97,35 @@ node docs/ml/lora-notebook/print-notebook.cjs
 2. **요약(50%) 개선** — 남은 결함: 요약문이 요지를 비껴감, 「그대로도 읽힐」 오답. v1~v5 기록은 노트 21과·`grades/…summary-v*.json`. 데이터 거르기(v5)로는 제자리였다.
 3. **빈칸(69%) 「바꿔 쓴 오답이 정답으로도 읽힘」** — 37번 천동설 풀어쓴 오답 셋, 35번 「주 2회 이하」. 요약에서 쓴 유의어 확인(`SYN_SYS`)을 빈칸 오답에도 적용해 볼 만하다.
 4. **주제·제목 무관 오답 증가** — 재학습 후 「무관 오답 2개+ 문항」 16.7→23.6%, 17.1→26.4%(judge2). `ml/common/distractor_check.py` 의 `MAX_OFF_TOPIC=1` 교체 로직이 새 어댑터에서도 도는지 확인.
-5. **실사용 지표 쌓기** — 주문 부족분을 로컬 초안으로 만들어 관리자에서 검수·저장 → `cc:local-usage`. 시험지보다 정직한 성적표.
+5. **Qwen3.8-27B 시험(선택)** — 2026-08 공개된 27B 밀집 모델(`mlx-community/Qwen3.8-27B-4bit`, 약 16GB). 7B 대신 LoRA 초안 기반으로 쓰면 요약·빈칸 초안이 나아질 수 있다(학습은 유형당 2~3시간). 35B-A3B(MoE, 3B만 활성) 대신 판정용으로 쓰면 느려질 가능성이 크다. `mlx_lm` 으로 LoRA 학습이 되는지부터 확인(변환본이 `mlx_vlm` 안내).
+6. **실사용 지표 쌓기** — 주문 부족분을 로컬 초안으로 만들어 관리자에서 검수·저장 → `cc:local-usage`. 시험지보다 정직한 성적표.
 
 ---
 
-## 6. 파일 지도
+## 7. Cursor 에서 쓰기 — OpenAI 호환 서버 (09-26 추가)
+
+12유형 파이프라인을 OpenAI 호환 `/v1` 서버로 감싸 **Cursor 의 커스텀 모델**로 부를 수 있다(Cursor 에이전트가 만듦).
+자세한 명령·설정·구현 메모는 **[`docs/ml/cursor-openai-server.md`](../ml/cursor-openai-server.md)** 가 원본이다.
+
+- 코드 `ml/serve/openai_server.py` · 실행 `ml/serve/run.sh` (127.0.0.1:8765, 로그 `ml/serve/logs/` — git 제외)
+- 모델 id `variant-<유형>` 12개(topic title claim match mismatch blank summary order insert irrelevant vocab grammar).
+  영어 지문만 보내면 완성 문항(마크다운 + 끝에 `question_data` JSON)이 온다. 실패해도 HTTP 200 + 오류 문구.
+- 켜는 순서: ① `export LOCAL_VARIANT_API_KEY=$(openssl rand -hex 24)` → `./ml/serve/run.sh`
+  ② `cloudflared tunnel --url http://localhost:8765` → `https://xxxx.trycloudflare.com`
+  ③ Cursor Settings → Models: OpenAI API Key = 그 키, Override OpenAI Base URL = `https://xxxx.trycloudflare.com/v1`, Add model `variant-summary` 등
+- **Cursor 는 요청을 자기 서버를 거쳐 보내서 `localhost` 는 안 된다** — 그래서 터널이 필요하다.
+
+지킬 것:
+- **키가 유일한 문**이다(터널로 인터넷에 열림). 키 없으면 서버가 안 뜨고, 틀리면 401. 키·`MONGODB_URI` 를 로그·채팅에 남기지 않는다.
+- 안 쓸 때는 서버·터널을 끄고, Cursor 의 **Override Base URL 도 끈다**(켜 두면 다른 OpenAI 계열 요청도 이 주소로 간다). 터널 주소는 켤 때마다 바뀐다.
+- 서버와 워커(launchd)가 **각각 모델을 올린다(약 25GB씩)** — 메모리가 모자라면 한쪽을 끈다.
+- MLX 는 스레드마다 stream 이 달라, 모델 로딩·`run_pipeline` 은 전용 추론 스레드에서만 돈다. 스트리밍은 15초마다 `: keep-alive`, `[DONE]` 뒤 연결을 닫는다.
+- 워커·파이프라인 코드를 고치면 서버도 다시 켜야 반영된다.
+- 우리 모델은 **변형문제 전용**이라 코딩 보조로는 못 쓴다. Cursor 에서 코딩용 로컬 모델이 필요하면 범용 모델(예: Qwen3.8-27B, LM Studio)을 같은 방식으로 붙인다.
+
+---
+
+## 8. 파일 지도
 
 | 파일 | 내용 |
 |---|---|
@@ -118,3 +142,4 @@ node docs/ml/lora-notebook/print-notebook.cjs
 | `ml/eval/` | `sets/` 시험지 · `run_eval.py` · `judge_distractors.py` · `view.py` · `dump_*.py` · `grades/` |
 | `lib/local-variant-types.ts` · `lib/local-variant-jobs.ts` · `scripts/cc-local-usage.ts` | 웹 쪽 유형 표·작업 큐·실사용 지표 |
 | `docs/ml/lora-notebook/` | 실습 노트(원본 HTML)와 PDF 인쇄 스크립트 |
+| `ml/serve/openai_server.py` · `run.sh` · `docs/ml/cursor-openai-server.md` | Cursor 용 OpenAI 호환 서버(7장) |
