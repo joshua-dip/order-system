@@ -138,6 +138,16 @@ function IconGyogwaseo() {
   );
 }
 
+function IconStore() {
+  return (
+    <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+      <path d="M3 6h18" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  );
+}
+
 function IconByok() {
   return (
     <svg className={svgBase} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -409,6 +419,16 @@ function useHubSections(
             로그인하기
           </a>
         ),
+      },
+      {
+        id: 'solbook',
+        title: '쏠북 바로구매',
+        description: (<>쏠북에 올린 변형문제·워크북을<br />교재·단원별로 한눈에 찾아 바로 구매</>),
+        icon: <IconStore /> as ReactNode,
+        accentColor: '#334155',
+        gridClassName: 'lg:col-span-4',
+        href: '/solbook',
+        interactive: true,
       },
     ];
     /* 학습실 — 주문이 아니라 웹에서 바로 푸는 연습. 풀기는 누구나, 해설·오답 분석은 회원 */
@@ -883,7 +903,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               <h2 id="hub-more-heading" className="text-base font-bold text-slate-800 tracking-tight">
                 다른 주문 · 서비스
               </h2>
-              <p className="mt-1 text-sm text-slate-500">번호별 제작, 분석지, 서술형, 통합 주문 등</p>
+              <p className="mt-1 text-sm text-slate-500">번호별 제작, 분석지, 서술형, 통합 주문, 쏠북 바로구매 등</p>
             </div>
             {renderHubGrid(hubMore)}
           </section>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   APP_BAR_ACCENT_LINE,
   APP_BAR_GRADIENT_END,
@@ -82,6 +83,8 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
   const roleLabel = user?.role === 'admin' ? '관리자' : user?.role === 'student' ? '학생' : '내정보';
   const showRoleBadge = !!displayName && displayName !== roleLabel;
   const myHref = user?.role === 'admin' ? '/admin' : user?.role === 'student' ? '/my/student' : '/my';
+  const pathname = usePathname();
+  const onSolbook = pathname?.startsWith('/solbook') ?? false;
 
   return (
     <header
@@ -93,8 +96,20 @@ const AppBar = ({ title = DEFAULT_APP_BAR_TITLE, showBackButton = false, onBackC
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between gap-2 h-16">
-          {/* 왼쪽 공간 (뒤로가기 버튼용) */}
+          {/* 왼쪽 — 뒤로가기가 있으면 뒤로가기, 없으면 쏠북 바로구매(모든 공개 화면 공통 메뉴) */}
           <div className="flex items-center shrink-0">
+            {!(showBackButton && onBackClick) && (
+              <Link
+                href="/solbook"
+                aria-current={onSolbook ? 'page' : undefined}
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-white transition-colors ${
+                  onSolbook ? 'border-white bg-white/20' : 'border-white/30 hover:bg-white/10'
+                }`}
+              >
+                <span className="sm:hidden">쏠북</span>
+                <span className="hidden sm:inline">쏠북 바로구매</span>
+              </Link>
+            )}
             {showBackButton && onBackClick && (
               <button
                 onClick={onBackClick}

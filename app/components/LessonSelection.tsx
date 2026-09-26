@@ -91,12 +91,12 @@ function gyogwaseoSectionOf(key: string): string {
   return ETC_SUBJECTS.has(s) ? '기타' : s;
 }
 
-/** 교과서 목록: 쏠북·구매 안내 링크 우선(extra → kyobo → 쏠북 매장) */
+/** 교과서 목록: 쏠북·구매 안내 링크 우선(extra → kyobo → 쏠북 자료실에서 이 교재로 거른 목록) */
 function solbookPurchaseCta(links: {
   kyoboUrl?: string;
   extraUrl?: string;
   extraLabel?: string;
-} | undefined): { primaryHref: string; primaryLabel: string; secondary?: { href: string; label: string } } {
+} | undefined, textbookKey?: string): { primaryHref: string; primaryLabel: string; secondary?: { href: string; label: string } } {
   const extra = links?.extraUrl?.trim();
   const kyobo = links?.kyoboUrl?.trim();
   if (extra) {
@@ -108,6 +108,10 @@ function solbookPurchaseCta(links: {
   }
   if (kyobo) {
     return { primaryHref: kyobo, primaryLabel: '교재 구매·정보 보기' };
+  }
+  /* 쏠북 자료실(/solbook)을 이 교재 검색어로 연다 — 쏠북에 올린 이 교재 자료만 모여 보인다 */
+  if (textbookKey) {
+    return { primaryHref: `/solbook?q=${encodeURIComponent(textbookKey.replace(/_/g, ' '))}`, primaryLabel: '쏠북에 올라온 이 교재 자료 보기' };
   }
   return { primaryHref: SOLVOOK_BRAND_PAGE_URL, primaryLabel: '쏠북 매장 바로가기' };
 }
@@ -523,7 +527,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
 
   const renderGyogwaseoCard = (textbook: string) => {
     const links = textbookLinks[textbook];
-    const cta = solbookPurchaseCta(links);
+    const cta = solbookPurchaseCta(links, textbook);
     const meta = parseGyogwaseoKey(textbook);
     const style = PUBLISHER_STYLE[meta.publisher] ?? PUBLISHER_STYLE['기타'];
     return (
@@ -882,7 +886,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                       if (flow === 'gyogwaseo' && gyogwaseoStep === 'checkSolbook' && gyogwaseoChosenKey) {
                         const tbKey = gyogwaseoChosenKey;
                         const links = textbookLinks[tbKey];
-                        const cta = solbookPurchaseCta(links);
+                        const cta = solbookPurchaseCta(links, tbKey);
                         const meta = parseGyogwaseoKey(tbKey);
                         const style = PUBLISHER_STYLE[meta.publisher] ?? PUBLISHER_STYLE['기타'];
                         return (
