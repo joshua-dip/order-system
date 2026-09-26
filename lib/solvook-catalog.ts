@@ -29,6 +29,8 @@ export interface SolvookItem {
 
 export interface SolvookUnit {
   unit: string;
+  /** 표지 — 단원 안 첫 상품의 쏠북 썸네일(상품마다 넣으면 목록이 너무 커진다) */
+  image?: string;
   items: SolvookItem[];
 }
 
@@ -49,7 +51,11 @@ export interface SolvookCategory {
   books: SolvookBook[];
 }
 
+/** 목록 모양이 바뀌면 올린다 — 옛 스냅샷은 6시간을 기다리지 않고 새로 받는다 */
+export const SOLVOOK_CATALOG_VERSION = 3;
+
 export interface SolvookCatalog {
+  version?: number;
   brand: string;
   storeUrl: string;
   fetchedAt: string;
@@ -64,6 +70,7 @@ type RawItem = {
   unit?: string | null;
   category?: { tag?: string } | null;
   price?: number | null;
+  imageUrl?: string | null;
   sourceName?: string | null;
   subject?: string | null;
 };
@@ -138,6 +145,8 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
 
   /* 교재(sourceName) → 단원 → 상품 */
   const bookMap = new Map<string, Map<string, SolvookItem[]>>();
+  const unitImage = new Map<string, string>();
+  const unitImageScore = new Map<string, number>();
   for (const r of raw) {
     const source = (r.sourceName ?? '').trim() || '기타';
     const unit = (r.unit ?? '').trim() || '전체';
@@ -152,6 +161,24 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
     const units = bookMap.get(source)!;
     if (!units.has(unit)) units.set(unit, []);
     units.get(unit)!.push(item);
+    /* 표지: 파일명에 「표지」가 든 이미지 > 페이지 썸네일(thumbnail)이 아닌 것 > 아무거나 */
+    const imgKey = `${source}\u0000${unit}`;
+    if (r.imageUrl) {
+      const url = String(r.imageUrl);
+      const decoded = (() => {
+        try {
+          return decodeURIComponent(url);
+        } catch {
+          return url;
+        }
+      })();
+      const score = /표지/.test(decoded) ? 3 : /thumbnail/i.test(decoded) ? 1 : 2;
+      const prev = unitImage.get(imgKey);
+      if (!prev || score > (unitImageScore.get(imgKey) ?? 0)) {
+        unitImage.set(imgKey, url);
+        unitImageScore.set(imgKey, score);
+      }
+    }
   }
   const books = new Map<string, SolvookBook>();
   for (const [source, units] of bookMap) {
@@ -161,7 +188,11 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
       .sort((a, b) => compareUnits(a[0], b[0]))
       .map(([unit, items]) => {
         for (const it of items) { tags[it.tag] = (tags[it.tag] ?? 0) + 1; count++; }
-        return { unit, items: items.sort((a, b) => a.title.localeCompare(b.title, 'ko', { numeric: true })) };
+        return {
+          unit,
+          image: unitImage.get(`${source}\u0000${unit}`),
+          items: items.sort((a, b) => a.title.localeCompare(b.title, 'ko', { numeric: true })),
+        };
       });
     books.set(source, { title: bookTitle(source), source, count, tags, units: list });
   }
@@ -187,6 +218,7 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
   const tags: Record<string, number> = {};
   for (const b of books.values()) for (const [t, n] of Object.entries(b.tags)) tags[t] = (tags[t] ?? 0) + n;
   return {
+    version: SOLVOOK_CATALOG_VERSION,
     brand: SOLVOOK_BRAND,
     storeUrl: SOLVOOK_STORE_URL,
     fetchedAt: new Date().toISOString(),
@@ -203,7 +235,10 @@ export async function getSolvookCatalog(opts: { force?: boolean } = {}): Promise
   const db = await getDb('gomijoshua');
   const col = db.collection<{ _id: string; catalog: SolvookCatalog; fetchedAt: Date }>(SNAPSHOT_COLLECTION);
   const snap = await col.findOne({ _id: SOLVOOK_BRAND });
-  const fresh = snap && Date.now() - new Date(snap.fetchedAt).getTime() < SOLVOOK_REFRESH_MS;
+  const fresh =
+    snap &&
+    snap.catalog?.version === SOLVOOK_CATALOG_VERSION &&
+    Date.now() - new Date(snap.fetchedAt).getTime() < SOLVOOK_REFRESH_MS;
   if (fresh && !opts.force) return snap.catalog;
   try {
     const catalog = await fetchSolvookCatalog();
