@@ -10,6 +10,66 @@ import mockExamsData from '../data/mock-exams.json';
 import { groupTextbooksByRevised } from '@/lib/textbookSort';
 import { parseMockExamKey } from '@/lib/mock-exam-key';
 import { filterTextbooksBySearch } from '@/lib/textbook-search';
+import { gyogwaseoDisplay, gyogwaseoSectionOf, subjectOrderIdx } from '@/lib/gyogwaseo-key';
+import type { TextbookLinkEntry } from '@/lib/useTextbookLinks';
+
+/**
+ * 교재 카드 — 카드 전체가 <button> 이라 키보드(Tab·Enter·Space)로 고를 수 있다.
+ * 교재 확인·추가 링크는 버튼 안에 넣을 수 없어서(중첩 인터랙티브 금지) 카드 아래 줄로 뺀다.
+ */
+function TextbookPickCard({
+  title,
+  subtitle,
+  link,
+  onSelect,
+}: {
+  title: string;
+  subtitle?: string;
+  link?: TextbookLinkEntry;
+  onSelect: () => void;
+}) {
+  const extraUrl = link?.extraUrl?.trim();
+  const kyoboUrl = link?.kyoboUrl?.trim();
+  return (
+    <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md focus-within:border-blue-400">
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex-1 rounded-lg p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      >
+        <span className="block text-sm font-semibold leading-snug text-gray-900 break-keep">{title}</span>
+        {subtitle && <span className="mt-0.5 block text-[13px] text-gray-700 break-keep">{subtitle}</span>}
+        <span className="mt-1 block text-xs text-gray-600">선택하면 강 선택으로 넘어갑니다</span>
+      </button>
+      {(extraUrl || kyoboUrl) && (
+        <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+          {extraUrl && (
+            <a
+              href={extraUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="max-w-full truncate text-xs font-medium text-violet-800 underline underline-offset-2 hover:text-violet-950"
+            >
+              {link?.extraLabel?.trim() || '추가 링크'}
+              <span className="sr-only"> (새 창)</span>
+            </a>
+          )}
+          {kyoboUrl && (
+            <a
+              href={kyoboUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto rounded bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-800 hover:bg-blue-200"
+              aria-label={`${title} 교재 정보 확인 (새 창)`}
+            >
+              📖 교재 확인
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** 워크북 주문 진입 카테고리. 미지정 시 부교재·교과서·모의고사 3섹션을 모두 노출. */
 export type WorkbookCategory = 'textbook' | 'gyogwaseo' | 'mockexam';
@@ -73,6 +133,10 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
      쏠북 교과서Keys 가 비어 있으면 교과서 섹션이 통째로 안 뜨는데, 실제로 비어 있어서
      교과서 워크북을 아무도 주문할 수 없었다(2026-09-10). 변형문제 화면과 같이 합집합으로 쓴다. */
   const [schoolTextbookKeys, setSchoolTextbookKeys] = useState<string[]>([]);
+  const [schoolLoaded, setSchoolLoaded] = useState(false);
+  /** 교과서 검색·과목 필터 — /gyogwaseo 주문 화면과 같은 구성 */
+  const [gyoSearch, setGyoSearch] = useState('');
+  const [gyoSubject, setGyoSubject] = useState('');
 
   useEffect(() => {
     fetch('/api/settings/default-textbooks')
@@ -104,7 +168,8 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
           : [];
         setSchoolTextbookKeys(keys);
       })
-      .catch(() => setSchoolTextbookKeys([]));
+      .catch(() => setSchoolTextbookKeys([]))
+      .finally(() => setSchoolLoaded(true));
   }, []);
 
   /** 교과서 섹션에 보일 전체 — 쏠북 등록분 ∪ 학교 교과서(권한 회원) */
@@ -112,6 +177,31 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
     () => [...new Set([...gyogwaseoKeys, ...schoolTextbookKeys])],
     [gyogwaseoKeys, schoolTextbookKeys],
   );
+
+  /* 교과서 — 과목 순 → 표시 이름 순. 표시만 바꾸고 선택 값은 원래 키 그대로 넘긴다. */
+  const gyoSorted = useMemo(
+    () =>
+      [...gyogwaseoAllKeys].sort((a, b) => {
+        const d = subjectOrderIdx(gyogwaseoSectionOf(a)) - subjectOrderIdx(gyogwaseoSectionOf(b));
+        return d || gyogwaseoDisplay(a).label.localeCompare(gyogwaseoDisplay(b).label, 'ko', { numeric: true });
+      }),
+    [gyogwaseoAllKeys],
+  );
+  const gyoSearched = useMemo(
+    () => (gyoSearch.trim() ? filterTextbooksBySearch(gyoSorted, gyoSearch) : gyoSorted),
+    [gyoSorted, gyoSearch],
+  );
+  const gyoSubjects = useMemo(
+    () =>
+      Array.from(new Set(gyoSearched.map(gyogwaseoSectionOf))).sort(
+        (a, b) => subjectOrderIdx(a) - subjectOrderIdx(b) || a.localeCompare(b, 'ko'),
+      ),
+    [gyoSearched],
+  );
+  /* 검색 결과에서 고른 과목이 사라지면 「전체」로 본다 */
+  const gyoActiveSubject = gyoSubjects.includes(gyoSubject) ? gyoSubject : '';
+  const gyoVisible = gyoActiveSubject ? gyoSearched.filter((k) => gyogwaseoSectionOf(k) === gyoActiveSubject) : gyoSearched;
+  const gyoListLoading = !gyogwaseoLoaded || !schoolLoaded;
 
   useEffect(() => {
     if (!convertedData || !defaultTextbooksLoaded || !gyogwaseoLoaded) return;
@@ -351,46 +441,12 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
                     const nonCommon = filteredTextbooks.filter((k) => !commonSet.has(k));
                     const { ebs, revised, other } = groupTextbooksByRevised(nonCommon);
                     const renderCard = (textbook: string) => (
-                      <div
+                      <TextbookPickCard
                         key={textbook}
-                        onClick={() => onTextbookSelect(textbook)}
-                        className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3 border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-1">
-                              {textbook}
-                            </h3>
-                            <p className="text-xs text-gray-500">클릭하여 선택</p>
-                            {textbookLinks[textbook]?.extraUrl?.trim() ? (
-                              <a
-                                href={textbookLinks[textbook].extraUrl!.trim()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="mt-1 inline-block max-w-full truncate text-[11px] font-medium text-violet-700 hover:text-violet-900 underline underline-offset-2"
-                                title={textbookLinks[textbook].extraLabel || '추가 링크'}
-                              >
-                                {textbookLinks[textbook].extraLabel?.trim() || '추가 링크'}
-                              </a>
-                            ) : null}
-                          </div>
-                          {textbookLinks[textbook]?.kyoboUrl?.trim() ? (
-                            <div className="ml-auto shrink-0">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(textbookLinks[textbook].kyoboUrl, '_blank');
-                                }}
-                                className="group relative px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded text-xs text-blue-700 hover:text-blue-800 transition-all duration-200 font-medium"
-                                title={`${textbookLinks[textbook].description} - YES24에서 확인`}
-                              >
-                                📖 교재 확인
-                              </button>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
+                        title={textbook}
+                        link={textbookLinks[textbook]}
+                        onSelect={() => onTextbookSelect(textbook)}
+                      />
                     );
                     return (
                       <>
@@ -446,8 +502,9 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
             </div>
           ) : null}
 
-          {/* 교과서 섹션 — 쏠북 교과서Keys ∪ 학교 교과서(권한 회원). 변형문제 화면과 같은 풀. */}
-          {showGyogwaseo && !dataLoading && !dataError && convertedData && gyogwaseoAllKeys.length > 0 && (
+          {/* 교과서 섹션 — 쏠북 교과서Keys ∪ 학교 교과서(권한 회원). 변형문제 화면과 같은 풀.
+              교과서 전용 진입(category=gyogwaseo)에서는 로딩·빈 목록도 보여 준다(아무것도 안 뜨면 고장처럼 보인다). */}
+          {showGyogwaseo && !dataLoading && !dataError && convertedData && (category === 'gyogwaseo' || gyogwaseoAllKeys.length > 0) && (
             <div className={category ? '' : 'mt-16'}>
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-3 mb-2">
@@ -455,72 +512,149 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
                     교과서
                   </h2>
                   <button
+                    type="button"
                     onClick={() => setIsGyogwaseoExpanded(!isGyogwaseoExpanded)}
                     className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
-                    title={isGyogwaseoExpanded ? '접기' : '펼치기'}
+                    aria-expanded={isGyogwaseoExpanded}
+                    aria-label={isGyogwaseoExpanded ? '교과서 목록 접기' : '교과서 목록 펼치기'}
                   >
                     {isGyogwaseoExpanded ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                       </svg>
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     )}
                   </button>
                 </div>
-                <p className="text-gray-600">워크북 제작에 사용할 교과서를 선택해주세요</p>
+                <p className="text-gray-700">워크북 제작에 사용할 교과서를 선택해주세요</p>
               </div>
 
-              {isGyogwaseoExpanded && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[...gyogwaseoAllKeys]
-                    .sort((a, b) => a.localeCompare(b, 'ko'))
-                    .map((textbook) => (
-                      <div
-                        key={textbook}
-                        onClick={() => onTextbookSelect(textbook)}
-                        className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3 border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-1">
-                              {textbook}
-                            </h3>
-                            <p className="text-xs text-gray-500">클릭하여 선택</p>
-                            {textbookLinks[textbook]?.extraUrl?.trim() ? (
-                              <a
-                                href={textbookLinks[textbook].extraUrl!.trim()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="mt-1 inline-block max-w-full truncate text-[11px] font-medium text-violet-700 hover:text-violet-900 underline underline-offset-2"
-                                title={textbookLinks[textbook].extraLabel || '추가 링크'}
-                              >
-                                {textbookLinks[textbook].extraLabel?.trim() || '추가 링크'}
-                              </a>
-                            ) : null}
-                          </div>
-                          {textbookLinks[textbook]?.kyoboUrl?.trim() ? (
-                            <div className="ml-auto shrink-0">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(textbookLinks[textbook].kyoboUrl, '_blank');
-                                }}
-                                className="group relative px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded text-xs text-blue-700 hover:text-blue-800 transition-all duration-200 font-medium"
-                                title={`${textbookLinks[textbook].description ?? ''} - YES24에서 확인`}
-                              >
-                                📖 교재 확인
-                              </button>
-                            </div>
-                          ) : null}
+              {isGyogwaseoExpanded &&
+                (gyoListLoading ? (
+                  <div className="py-12 text-center" role="status">
+                    <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" aria-hidden />
+                    <p className="text-gray-700">교과서 목록을 불러오는 중...</p>
+                  </div>
+                ) : gyogwaseoAllKeys.length === 0 ? (
+                  <div className="mx-auto max-w-lg rounded-xl border border-gray-200 bg-white px-5 py-8 text-center">
+                    <p className="font-semibold text-gray-900">지금 워크북으로 주문할 수 있는 교과서가 없습니다.</p>
+                    <p className="mt-1 text-sm text-gray-700">
+                      교과서 변형문제는{' '}
+                      <a href="/gyogwaseo" className="font-semibold text-blue-700 underline">교과서 자료 주문</a>
+                      에서 확인해 주세요.
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    {/* 검색 — /gyogwaseo 와 같은 모양 */}
+                    <div className="max-w-md mx-auto mb-4">
+                      <label htmlFor="gyo-workbook-search" className="sr-only">교과서 검색</label>
+                      <div className="relative">
+                        <input
+                          id="gyo-workbook-search"
+                          type="search"
+                          placeholder="교재명·출판사·저자로 검색..."
+                          value={gyoSearch}
+                          onChange={(e) => setGyoSearch(e.target.value)}
+                          className="w-full px-4 py-3 pl-12 pr-11 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-gray-800 placeholder-gray-500"
+                        />
+                        <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
+                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
                         </div>
+                        {gyoSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setGyoSearch('')}
+                            aria-label="검색어 지우기"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-500 hover:text-gray-800"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
-                    ))}
-                </div>
-              )}
+                      <p className="mt-2 text-center text-sm text-gray-700" role="status">
+                        {gyoSearch || gyoActiveSubject
+                          ? `${gyoVisible.length}개 교과서 (전체 ${gyogwaseoAllKeys.length}개)`
+                          : `전체 ${gyogwaseoAllKeys.length}개 교과서`}
+                      </p>
+                    </div>
+
+                    {/* 과목 칩 */}
+                    {gyoSubjects.length > 1 && (
+                      <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5" role="group" aria-label="과목 필터">
+                        <span className="mr-1 text-xs font-bold text-slate-600">과목</span>
+                        <button
+                          type="button"
+                          aria-pressed={gyoActiveSubject === ''}
+                          onClick={() => setGyoSubject('')}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            gyoActiveSubject === '' ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300 bg-white text-slate-800 hover:border-slate-500'
+                          }`}
+                        >
+                          전체 <span className="ml-0.5">{gyoSearched.length}</span>
+                        </button>
+                        {gyoSubjects.map((sub) => {
+                          const active = gyoActiveSubject === sub;
+                          const count = gyoSearched.filter((k) => gyogwaseoSectionOf(k) === sub).length;
+                          return (
+                            <button
+                              key={sub}
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => setGyoSubject(active ? '' : sub)}
+                              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                active ? 'border-[#13294B] bg-[#13294B] text-white' : 'border-slate-300 bg-white text-slate-800 hover:border-slate-500'
+                              }`}
+                            >
+                              {active && <span aria-hidden>✓ </span>}
+                              {sub} <span className="ml-0.5">{count}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {gyoVisible.length === 0 ? (
+                      <div className="py-12 text-center">
+                        <h3 className="mb-2 text-lg font-semibold text-gray-800">검색 결과가 없습니다</h3>
+                        <p className="mb-4 text-gray-700">&apos;{gyoSearch}&apos;에 해당하는 교과서를 찾을 수 없습니다</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGyoSearch('');
+                            setGyoSubject('');
+                          }}
+                          className="rounded-lg bg-[#13294B] px-4 py-2 text-white hover:bg-[#0c1c36]"
+                        >
+                          검색 초기화
+                        </button>
+                      </div>
+                    ) : (
+                      <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {gyoVisible.map((textbook) => {
+                          const d = gyogwaseoDisplay(textbook);
+                          return (
+                            <li key={textbook}>
+                              <TextbookPickCard
+                                title={[d.subject, d.publisher].filter(Boolean).join(' · ')}
+                                subtitle={[d.author ? `${d.author} 저` : '', d.extra].filter(Boolean).join(' · ') || undefined}
+                                link={textbookLinks[textbook]}
+                                onSelect={() => onTextbookSelect(textbook)}
+                              />
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                ))}
             </div>
           )}
 
@@ -605,8 +739,9 @@ const WorkbookTextbookSelection = ({ onTextbookSelect, onBack, category }: Workb
                       <p className="text-gray-400">먼저 연도를 선택해주세요</p>
                     </div>
                   ) : availableMonths.length === 0 ? (
+                    /* 시험 목록은 정적 JSON 이라 기다릴 게 없다 — 「불러오는 중」이 아니라 없음 */
                     <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                      <p className="text-gray-400">시험 데이터를 불러오는 중...</p>
+                      <p className="text-gray-700">이 연도에 등록된 시험이 없습니다</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">

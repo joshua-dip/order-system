@@ -2107,7 +2107,7 @@ export default function MyPage() {
                     <strong className="text-[#334155]">변형문제 만들기</strong> 화면에는 키 입력란이 없습니다.{' '}
                     <strong className="text-[#334155]">여기(내 정보 탭)에서만</strong> 등록·변경할 수 있어요. 키는{' '}
                     <strong className="text-[#334155]">이 브라우저(기기)의 로컬 저장소</strong>에만 보관되며, 서버 DB에는
-                    저장되지 않습니다. 생성 요청 시에만 Anthropic으로 전달됩니다.
+                    저장되지 않습니다. 생성 요청 때만 고미조슈아 서버를 거쳐 Anthropic으로 전달되고, 생성 비용은 키를 발급한 본인 Anthropic 계정에 청구됩니다.
                   </p>
                   <ol className="list-decimal list-inside text-[12px] text-[#475569] space-y-1.5 mb-4">
                     <li>

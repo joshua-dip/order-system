@@ -10,86 +10,11 @@ import { filterVariantSupplementaryTextbookKeys, VARIANT_SUPPLEMENTARY_COMMON_KE
 import { SOLVOOK_BRAND_PAGE_URL } from '@/lib/site-branding';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
 import { filterTextbooksBySearch } from '@/lib/textbook-search';
+import { parseGyogwaseoKey, PUBLISHER_STYLE, subjectOrderIdx, gyogwaseoSectionOf } from '@/lib/gyogwaseo-key';
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
-/** 교과서 키(`공통영어1_NE능률민병천`)를 학년·출판사·저자로 분해해 카드에 노출 */
-type GyogwaseoKeyMeta = {
-  subject: string;
-  publisher: string;
-  author: string;
-  raw: string;
-};
-
-const PUBLISHER_KEYS = [
-  'NE능률', 'YBM', '능률', '천재교육', '천재', '비상교육', '비상',
-  '동아출판', '동아', '미래엔', '지학사', '금성', '교학사', '다락원', '천재교과서',
-] as const;
-
-const PUBLISHER_STYLE: Record<string, { stripe: string; badge: string }> = {
-  'NE능률': { stripe: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  '능률':   { stripe: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  'YBM':    { stripe: 'bg-sky-500',     badge: 'bg-sky-50 text-sky-700 border-sky-200' },
-  '천재':   { stripe: 'bg-rose-500',    badge: 'bg-rose-50 text-rose-700 border-rose-200' },
-  '천재교육': { stripe: 'bg-rose-500',  badge: 'bg-rose-50 text-rose-700 border-rose-200' },
-  '천재교과서': { stripe: 'bg-rose-500', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
-  '비상':   { stripe: 'bg-orange-500',  badge: 'bg-orange-50 text-orange-700 border-orange-200' },
-  '비상교육': { stripe: 'bg-orange-500',badge: 'bg-orange-50 text-orange-700 border-orange-200' },
-  '동아':   { stripe: 'bg-indigo-500',  badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  '동아출판': { stripe: 'bg-indigo-500',badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  '미래엔': { stripe: 'bg-cyan-500',    badge: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-  '지학사': { stripe: 'bg-amber-500',   badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-  '금성':   { stripe: 'bg-yellow-500',  badge: 'bg-yellow-50 text-yellow-800 border-yellow-200' },
-  '교학사': { stripe: 'bg-lime-500',    badge: 'bg-lime-50 text-lime-700 border-lime-200' },
-  '다락원': { stripe: 'bg-fuchsia-500', badge: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200' },
-  '기타':   { stripe: 'bg-slate-400',   badge: 'bg-slate-100 text-slate-700 border-slate-200' },
-};
-
-function parseGyogwaseoKey(raw: string): GyogwaseoKeyMeta {
-  const idx = raw.indexOf('_');
-  let subject = '';
-  let rest = raw;
-  if (idx > 0) {
-    subject = raw.slice(0, idx).trim();
-    rest = raw.slice(idx + 1).trim();
-  }
-  let publisher = '';
-  let author = '';
-  for (const p of PUBLISHER_KEYS) {
-    if (rest.startsWith(p)) {
-      publisher = p;
-      author = rest.slice(p.length).trim();
-      break;
-    }
-  }
-  if (!publisher) {
-    publisher = '기타';
-    author = rest;
-  }
-  return { subject: subject || '교과서', publisher, author, raw };
-}
-
-/** 학년/과목 정렬: 공통영어1·2 → 영어I·II → 그 외 */
-const SUBJECT_ORDER = [
-  '공통영어1', '공통영어2',
-  '영어', '영어I', '영어II',
-  '영어 독해와 작문', '영어독해와작문',
-  '영어 회화', '영어회화',
-  '진로영어', '실용영어', '직무영어', '심화영어',
-];
-function subjectOrderIdx(s: string): number {
-  if (s === '기타') return 1000; // 「기타」는 항상 맨 뒤
-  const i = SUBJECT_ORDER.indexOf(s);
-  return i === -1 ? 999 : i;
-}
-
-/** 과목 칩·섹션에서 「기타」로 모을 과목 — 카드 배지는 원래 과목명 그대로 둔다(2026-09-19 요청). */
-const ETC_SUBJECTS = new Set(['미디어영어']);
-function gyogwaseoSectionOf(key: string): string {
-  const s = parseGyogwaseoKey(key).subject;
-  return ETC_SUBJECTS.has(s) ? '기타' : s;
-}
 
 /** 교과서 목록: 쏠북·구매 안내 링크 우선(extra → kyobo → 쏠북 자료실에서 이 교재로 거른 목록) */
 function solbookPurchaseCta(links: {
@@ -174,6 +99,8 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
   const [defaultTextbooks, setDefaultTextbooks] = useState<string[]>([]);
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [lessonGroups, setLessonGroups] = useState<{[key: string]: string[]}>({});
+  /** lessonGroups 를 어느 교재로 채웠는지 — 다르면 아직 불러오는 중(「데이터 없음」을 먼저 보이지 않게) */
+  const [lessonGroupsFor, setLessonGroupsFor] = useState<string | null>(null);
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
   const [textbooks, setTextbooks] = useState<string[]>([]);
   const [filteredTextbooks, setFilteredTextbooks] = useState<string[]>([]);
@@ -424,11 +351,14 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
           }
         }
 
+        if (ac.signal.aborted) return;
         setLessonGroups(groups);
+        setLessonGroupsFor(selectedTextbook);
       } catch (error) {
         console.error('교재 데이터 로딩 실패:', error);
         // 오류 발생 시 빈 그룹으로 설정
         setLessonGroups({});
+        setLessonGroupsFor(selectedTextbook);
       }
     };
 
@@ -863,9 +793,11 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                         return a.localeCompare(b, 'ko');
                       });
 
-                      const visibleTextbooks = gyogwaseoSubjectFilter
+                      /* 검색으로 고른 과목이 결과에서 사라지면 필터를 「전체」로 본다 — 빈 화면으로 남지 않게 */
+                      const activeSubject = subjects.includes(gyogwaseoSubjectFilter) ? gyogwaseoSubjectFilter : '';
+                      const visibleTextbooks = activeSubject
                         ? filteredTextbooks.filter(
-                            (k) => gyogwaseoSectionOf(k) === gyogwaseoSubjectFilter
+                            (k) => gyogwaseoSectionOf(k) === activeSubject
                           )
                         : filteredTextbooks;
 
@@ -1013,7 +945,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                                 type="button"
                                 onClick={() => setGyogwaseoSubjectFilter('')}
                                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${
-                                  gyogwaseoSubjectFilter === ''
+                                  activeSubject === ''
                                     ? 'border-slate-800 bg-slate-800 text-white'
                                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'
                                 }`}
@@ -1022,7 +954,7 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
                               </button>
                               {subjects.map((s) => {
                                 const count = filteredTextbooks.filter((k) => gyogwaseoSectionOf(k) === s).length;
-                                const active = gyogwaseoSubjectFilter === s;
+                                const active = activeSubject === s;
                                 return (
                                   <button
                                     key={s}
@@ -1192,7 +1124,9 @@ const LessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, onTextbook
             <div className="bg-white rounded-xl shadow-md p-6">
               {selectedTextbook !== '부교재_목록' && (
                 <>
-                  {Object.keys(lessonGroups).length === 0 ? (
+                  {lessonGroupsFor !== selectedTextbook ? (
+                    <p className="mb-4 py-8 text-center text-gray-700" role="status">강·번호 목록을 불러오는 중...</p>
+                  ) : Object.keys(lessonGroups).length === 0 ? (
                     <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950 leading-relaxed">
                       {solbookKeys.includes(selectedTextbook) ? (
                         <>

@@ -20,13 +20,52 @@ export function unitOf(label: string): string {
   return toks.join(' ');
 }
 
+/**
+ * 단원 정렬 순위 — 일반 강(「19강」)은 숫자 순, Test·Mini Test 는 일반 강 뒤에서 숫자 순,
+ * 그 밖(Lesson 1·CHAPTER 01·고난도 모의고사 11회 …)은 그 뒤에서 첫 숫자 순, 숫자 없는 단원은 맨 뒤.
+ */
+export function unitRank(unit: string): [number, number] {
+  const u = String(unit ?? '').trim();
+  let m = u.match(/^(\d+)\s*강/);
+  if (m) return [0, Number(m[1])];
+  m = u.match(/^test\s*(\d+)/i);
+  if (m) return [1, Number(m[1])];
+  m = u.match(/^mini\s*test\s*(\d+)/i);
+  if (m) return [2, Number(m[1])];
+  m = u.match(/\d+/);
+  if (m) return [3, Number(m[0])];
+  return [4, 0];
+}
+
+/**
+ * 단원 안 지문 번호 — 끝의 「N번」. 「01~02번」·「6-8번」 같은 범위는 **시작 번호**로 본다
+ * (예전엔 끝 번호를 잡아 「19강 01~02번」이 2번이 되어 Test 3 뒤로 밀렸다). 번호가 없으면 맨 뒤.
+ */
+export function passageNumberOf(label: string): number {
+  const m = String(label ?? '').match(/(\d+)\s*(?:[~\-–]\s*\d+\s*)?번\s*$/);
+  return m ? parseInt(m[1], 10) : 9999;
+}
+
+/** 지문 키 정렬 — 단원 순위 → 단원 안 번호 → 이름. 표시 순서만 바꾸며 키 자체는 건드리지 않는다. */
+export function comparePassageKeys(a: string, b: string): number {
+  const [ka, na] = unitRank(unitOf(a));
+  const [kb, nb] = unitRank(unitOf(b));
+  return (
+    ka - kb ||
+    na - nb ||
+    unitOf(a).localeCompare(unitOf(b), 'ko', { numeric: true }) ||
+    passageNumberOf(a) - passageNumberOf(b) ||
+    a.localeCompare(b, 'ko', { numeric: true })
+  );
+}
+
 export interface PassageGroup<T> {
   unit: string;
   items: T[];
 }
 
 /**
- * 라벨 기준으로 묶는다. 원래 순서를 유지한다(API 가 이미 번호순으로 준다).
+ * 라벨 기준으로 묶는다. 원래 순서를 유지한다(API 가 comparePassageKeys 로 이미 정렬해 준다).
  *
  * 묶어도 의미가 없을 때 — 단원 수가 지문 수와 별로 다르지 않을 때 — 는 `null`.
  * 모의고사처럼 라벨이 「18번」뿐인 교재는 단원이 지문 수만큼 생겨 오히려 방해가 된다.

@@ -1295,7 +1295,7 @@ export default function MemberVariantGeneratePage() {
 
       {/* ===== 하단 고정 CTA ===== */}
       {!busy && drafts.length === 0 && lastSavedIds.length === 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+        <div data-bottom-bar className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
             <div className="hidden min-w-0 flex-1 sm:block">
               {canGenerate ? (

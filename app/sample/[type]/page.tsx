@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/mongodb';
 import { getVariantTypeGuide, baseVariantType } from '@/app/data/variant-type-guides';
-import { variantUnitPrice, isAdvancedVariantType } from '@/lib/variant-pricing';
+import { variantUnitPrice, isAdvancedVariantType, isFreeVariantType } from '@/lib/variant-pricing';
 import BackButton from './BackButton';
 
 export const dynamic = 'force-dynamic';
@@ -68,9 +68,15 @@ export default async function VariantSamplePage({ params, searchParams }: { para
           {guide.isAdvanced && (
             <span className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">고난도</span>
           )}
-          <span className="text-xs font-medium text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded">
+          <span className="text-xs font-medium text-slate-700 bg-slate-200/70 px-2 py-0.5 rounded">
             문항당 {price.toLocaleString()}원
           </span>
+          {/* 무료 7종 — 모의고사·부교재 주문에서 유료 유형과 함께 담으면 0원 (쏠북 교재·번호별 제작은 제외) */}
+          {isFreeVariantType(type) && (
+            <span className="text-xs font-semibold text-sky-800 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded">
+              모의고사·부교재 주문에서 유료 유형과 함께 담으면 0원
+            </span>
+          )}
         </div>
         <p className="mt-1 text-slate-600">{guide.blurb}</p>
 

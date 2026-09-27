@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { normalizePassageKey } from '@/lib/passage-key-match';
+import { comparePassageKeys } from '@/lib/essay-workbook-grouping';
 import { ESSAY_MEANING_EXAM_TYPE, ESSAY_MAIN_IDEA_EXAM_TYPE } from '@/app/data/essay-categories';
 
 export const runtime = 'nodejs';
@@ -42,11 +43,6 @@ export async function GET(request: NextRequest) {
       ])
       .toArray();
 
-    // 「… 23번」 처럼 끝의 숫자를 뽑아 번호 순으로 정렬 (문자열 정렬이면 10번이 2번 앞에 온다)
-    const num = (s: string) => {
-      const m = s.match(/(\d+)\s*(?:-\s*\d+)?\s*번\s*$/);
-      return m ? parseInt(m[1], 10) : 9999;
-    };
     /* 갈라 담은 것을 지문 하나로 다시 합친다 — 화면은 지문 단위로 고르기 때문. */
     const byKey = new Map<string, { sourceKey: string; arrange: string[]; meaning: string[]; mainidea: string[] }>();
     for (const r of rows) {
@@ -80,7 +76,9 @@ export async function GET(request: NextRequest) {
         difficulties: p.arrange.length > 0 ? p.arrange : p.meaning.length > 0 ? p.meaning : p.mainidea,
         isMeaningType: p.meaning.length > 0,
       }))
-      .sort((a, b) => num(a.sourceKey) - num(b.sourceKey) || a.sourceKey.localeCompare(b.sourceKey, 'ko'));
+      /* 단원 순(일반 강 → Test → 그 밖) → 단원 안 번호 순. 번호만으로 정렬하면 강이 뒤섞이고,
+         「19강 01~02번」처럼 범위 번호가 끝 번호로 잡혀 19·20강이 Test 3 뒤로 밀렸다. */
+      .sort((a, b) => comparePassageKeys(a.sourceKey, b.sourceKey));
 
     return NextResponse.json({ ok: true, textbook, passages });
   } catch (e) {

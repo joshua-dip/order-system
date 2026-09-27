@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import AppBar from '../components/AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 import { useCurrentUser, filterTextbooksByAllowed } from '@/lib/useCurrentUser';
+import { ANALYSIS_PRICE_PER_PASSAGE } from '@/lib/analysis-pricing';
 import { saveOrderToDb } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 import { isMockExamTextbookKey } from '@/lib/mock-exam-key';
 
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
-const PRICE_PER_ITEM = 500; // 지문당 500원
+const PRICE_PER_ITEM = ANALYSIS_PRICE_PER_PASSAGE; // 지문당 (lib/analysis-pricing)
 
 interface LessonItem {
   번호: string;
@@ -261,8 +262,9 @@ export default function AnalysisPage() {
                 </p>
               </div>
 
-              {dataLoading ? (
-                <div className="p-8 text-center text-gray-500">교재 목록 불러오는 중…</div>
+              {/* 회원 정보(허용 교재)가 오기 전에는 「허용된 교재가 없습니다」를 먼저 보이지 않는다 */}
+              {dataLoading || !currentUser ? (
+                <div className="p-8 text-center text-gray-700" role="status">교재 목록 불러오는 중…</div>
               ) : dataError || !textbooksData ? (
                 <div className="p-8 text-center text-red-600">교재 데이터를 불러올 수 없습니다.</div>
               ) : textbookList.length === 0 ? (

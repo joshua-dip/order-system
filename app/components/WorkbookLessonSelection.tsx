@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { friendlyTextbookName } from '@/lib/gyogwaseo-key';
 import AppBar from './AppBar';
 import { useTextbooksData } from '@/lib/useTextbooksData';
 
@@ -28,10 +29,14 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
   /** 강 → 선택된 번호 인덱스 (키 존재 = 강 선택됨). 동일 라벨 중복 데이터가 있어 인덱스로 식별 */
   const [selectedByLesson, setSelectedByLesson] = useState<Record<string, number[]>>({});
   const [expandedLessons, setExpandedLessons] = useState<Record<string, boolean>>({});
+  /** 강 목록 상태 — 불러오는 중에 「강 없음」을 확정처럼 보이지 않게 */
+  const [lessonsState, setLessonsState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const textbookLabel = friendlyTextbookName(selectedTextbook);
 
   useEffect(() => {
     if (!convertedData) return;
     let alive = true;
+    setLessonsState('loading');
     /** Sheet1.{branch}, {branch}, '지문 데이터'.{branch} 순으로 검색해 강 데이터를 찾는다.
      *  교과서 키도 같은 흐름(부교재 → 교과서 fallback)으로 처리. */
     const pickFromBranch = (
@@ -81,11 +86,13 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
         if (!alive) return;
         setAvailableLessons(lessonNames);
         setLessonNumbers(numbersMap);
+        setLessonsState(res.ok ? 'ready' : 'error');
       } catch (error) {
         console.error('강 데이터(지문 폴백) 로드 실패:', error);
         if (!alive) return;
         setAvailableLessons([]);
         setLessonNumbers({});
+        setLessonsState('error');
       }
     };
 
@@ -121,10 +128,12 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
           }
         });
         setLessonNumbers(numbersMap);
+        setLessonsState('ready');
       } catch (error) {
         console.error('강 데이터 로드 실패:', error);
         setAvailableLessons([]);
         setLessonNumbers({});
+        setLessonsState('error');
       }
     };
 
@@ -248,7 +257,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
           </p>
           <div className="rounded-lg p-3 max-w-md mx-auto border-2" style={{ backgroundColor: '#00A9E0', borderColor: '#00A9E0' }}>
             <p className="text-white text-sm font-medium">
-              선택한 교재: {selectedTextbook}
+              선택한 교재: {textbookLabel}
             </p>
           </div>
         </div>
@@ -314,6 +323,15 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
 
               {/* 부교재 강 선택: 강 전체 토글 + 번호별 부분 선택 */}
               <div className="space-y-2 max-h-[32rem] overflow-y-auto">
+                {lessonsState === 'loading' && (
+                  <p className="py-10 text-center text-gray-700" role="status">강 목록을 불러오는 중...</p>
+                )}
+                {lessonsState === 'error' && availableLessons.length === 0 && (
+                  <p className="py-10 text-center text-red-700" role="alert">강 목록을 불러오지 못했습니다. 새로고침하거나 카카오톡으로 문의해 주세요.</p>
+                )}
+                {lessonsState === 'ready' && availableLessons.length === 0 && (
+                  <p className="py-10 text-center text-gray-800">이 교재에는 아직 고를 수 있는 강이 없습니다. 카카오톡으로 문의해 주세요.</p>
+                )}
                 {availableLessons.map((lesson) => {
                   const numbers = lessonNumbers[lesson] ?? [];
                   const selCount = selectedCount(lesson);
@@ -399,7 +417,7 @@ const WorkbookLessonSelection = ({ selectedTextbook, onLessonsSelect, onBack, on
                 <div className="p-3 rounded-lg border-2" style={{ backgroundColor: '#00A9E0', borderColor: '#00A9E0' }}>
                   <div className="text-white text-sm">
                     <div className="font-medium">선택한 교재</div>
-                    <div className="text-xs opacity-90">{selectedTextbook}</div>
+                    <div className="text-sm break-keep">{textbookLabel}</div>
                   </div>
                 </div>
 

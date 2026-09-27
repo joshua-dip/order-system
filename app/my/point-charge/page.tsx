@@ -433,7 +433,7 @@ export default function PointChargePage() {
                   )}
 
                   {/* 결제 진행 — 하단 고정 바 */}
-                  <div className="fixed bottom-0 inset-x-0 z-40 border-t border-[#e2e8f0] bg-white/95 backdrop-blur">
+                  <div data-bottom-bar className="fixed bottom-0 inset-x-0 z-40 border-t border-[#e2e8f0] bg-white/95 backdrop-blur">
                     <div className="max-w-3xl mx-auto px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-[12px] text-[#64748b] truncate">{selectedSummary.name}</p>

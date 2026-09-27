@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppBar from '@/app/components/AppBar';
+import { ServiceFactsPanel } from '@/app/components/ServiceCard';
+import { serviceById } from '@/lib/service-catalog';
+
+const freeService = serviceById('free-variant');
 
 /**
  * 공개 무료 변형문제 — 로그인 없이 회차·지문을 골라 바로 PDF 로 받는다.
@@ -114,10 +118,11 @@ export default function FreeVariantPage() {
             쓰실 수 있습니다. 회차와 지문을 고르고 내려받기만 누르면 됩니다.
           </p>
           {freeTypes.length > 0 && (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-sm text-slate-700">
               무료 제공 유형 — {freeTypes.join(' · ')}
             </p>
           )}
+          {freeService && <ServiceFactsPanel service={freeService} className="mt-4" />}
         </div>
 
         {/* 1. 회차 */}

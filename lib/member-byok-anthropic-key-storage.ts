@@ -1,6 +1,7 @@
 /**
  * 회원 본인 Anthropic API 키 — 브라우저 localStorage 전용.
- * 서버로 전송·저장하지 않으며, 로그인 ID별로 분리합니다.
+ * 보관은 브라우저에만 하고 로그인 ID별로 분리합니다. 생성 요청 때는 `x-anthropic-api-key` 헤더로
+ * 우리 API 라우트에 실려 가 Anthropic 으로 중계된다(서버는 키 전체를 저장하지 않고, 게스트 생성 기록에 앞 12자만 남긴다).
  * 비로그인 방문자는 GUEST_BYOK_ID 키로 저장됩니다.
  */
 const STORAGE_PREFIX = 'next-order:byok-anthropic-api-key:';

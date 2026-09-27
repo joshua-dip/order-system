@@ -1,5 +1,6 @@
 import { ObjectId, type Db } from 'mongodb';
 import { FREE_VARIANT_TYPES } from '@/lib/variant-pricing';
+import { PUBLIC_FREE_MAX_QUESTIONS_PER_PDF } from '@/lib/public-free-limits';
 
 /**
  * 공개 무료 배포용 변형문제.
@@ -20,8 +21,8 @@ export function isPublicFreeType(type: string): boolean {
   return PUBLIC_FREE_TYPES.includes(type);
 }
 
-/** 한 번에 받을 수 있는 문항 수 상한 (통째로 긁어가는 것을 막는다) */
-export const PUBLIC_FREE_MAX_QUESTIONS_PER_PDF = 60;
+/** 한 번에 받을 수 있는 문항 수 상한 (통째로 긁어가는 것을 막는다) — 값은 public-free-limits */
+export { PUBLIC_FREE_MAX_QUESTIONS_PER_PDF };
 
 /**
  * 공개에서 빼는 조합.

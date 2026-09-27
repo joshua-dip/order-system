@@ -18,6 +18,10 @@ import {
   sanitizeHwpStorageModes,
   type HwpStorageModeKey,
 } from '@/lib/variant-order-options';
+import { ServiceFactsPanel } from './ServiceCard';
+import { serviceById } from '@/lib/service-catalog';
+
+const mockService = serviceById('mock');
 export type OrderGenerateExtras = { orderMeta?: Record<string, unknown>; pointsUsed?: number };
 
 export type OrderGenerateHandler = (
@@ -610,10 +614,11 @@ ${examDetails}
           <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
             모의고사 설정
           </h1>
-          <p className="text-lg" style={{ color: '#888B8D' }}>
+          <p className="text-lg text-slate-700">
             여러 모의고사를 조합해서 주문할 수 있습니다
           </p>
         </div>
+        {mockService && <ServiceFactsPanel service={mockService} className="mx-auto mb-6 max-w-2xl" />}
 
         <div className="max-w-2xl mx-auto mb-6">
           <div className="flex items-center justify-between">
@@ -869,7 +874,7 @@ ${examDetails}
                   </div>
                   <div className="text-sm text-blue-700">
                     • 기본난도: 문항당 {VARIANT_PRICE.base}원<br/>
-                    • <span className="font-medium text-sky-700">누구나 무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — 회원 여부·한도와 무관<br/>
+                    • <span className="font-medium text-sky-700">무료 7종</span> (주제·제목·주장·일치·불일치·순서·삽입): <span className="font-medium text-sky-700">0원</span> — <b>유료 유형을 하나 이상 함께 주문</b>할 때 추가 비용 없이 담깁니다(회원 여부·한도와 무관)<br/>
                     • 삽입-고난도·어법-고난도: 문항당 {VARIANT_PRICE.advanced}원<br/>
                     • 100문항 이상: <span className="font-medium text-green-600">10% 할인</span><br/>
                     • 200문항 이상: <span className="font-medium text-green-600">20% 할인</span>
@@ -905,6 +910,19 @@ ${examDetails}
                       {selectedTypes.length === questionTypes.length ? '전체 해제' : '전체 선택'}
                     </button>
                   </div>
+                  {/* 무료 7종 조건 — 툴팁에만 두면 모바일에서 안 보인다. 선택 영역 바로 위에 글로 둔다. */}
+                  <div className="mb-3 flex flex-col gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-slate-800 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="leading-relaxed">
+                      <b>무료 7종</b>(주제·제목·주장·일치·불일치·순서·삽입)은 <b>유료 유형을 하나 이상 고른 뒤</b> 함께 담을 수 있어요.
+                      {!hasPaidType(selectedTypes) && <span className="block text-[13px] text-slate-600">지금은 유료 유형이 없어 무료 7종이 잠겨 있습니다.</span>}
+                    </p>
+                    <a
+                      href="/free"
+                      className="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-slate-800 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                    >
+                      무료 7종만 필요하면 · 무료 PDF 받기 <span aria-hidden>→</span>
+                    </a>
+                  </div>
                   {/* 기본 유형 — 무료 7유형은 유료를 하나 이상 고르기 전까지 잠긴다. */}
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
                     {standardTypes.map((type) => {
@@ -916,7 +934,7 @@ ${examDetails}
                         title={locked ? '유료 유형을 하나 이상 고르면 선택할 수 있어요' : undefined}
                         className={`p-3 border-2 rounded-lg transition-all ${
                           locked
-                            ? 'border-gray-200 bg-gray-50 opacity-60'
+                            ? 'border-gray-200 bg-gray-50'
                             : selectedTypes.includes(type)
                               ? 'border-blue-500 bg-blue-50 hover:shadow-md'
                               : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
@@ -931,11 +949,16 @@ ${examDetails}
                               onChange={() => handleTypeChange(type)}
                               className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 shrink-0 disabled:cursor-not-allowed"
                             />
-                            <span className={`font-medium break-keep ${locked ? 'text-gray-400' : 'text-black'}`}>{type}</span>
+                            <span className={`font-medium break-keep ${locked ? 'text-slate-500' : 'text-black'}`}>{type}</span>
                             {/* 「누구나 무료(파랑)」와 「회원이라 무료(초록)」를 색으로 가른다 */}
                             {isFreeVariantType(type) && !locked && (
-                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200 px-1.5 py-0.5 rounded shrink-0">
-                                누구나 무료
+                              <span className="text-[11px] font-bold text-sky-800 bg-sky-50 border border-sky-200 px-1.5 py-0.5 rounded shrink-0">
+                                무료 · 0원
+                              </span>
+                            )}
+                            {locked && (
+                              <span className="text-[11px] font-semibold text-slate-600 bg-white border border-slate-300 px-1.5 py-0.5 rounded shrink-0">
+                                <span aria-hidden>🔒</span> 유료 유형 선택 후
                               </span>
                             )}
                             {isPremiumMembership && !isFreeVariantType(type) && !isAdvancedVariantType(type) && (
@@ -995,8 +1018,9 @@ ${examDetails}
                             }}
                             className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
                             title={`${type} 유형 샘플·설명·공부방향 보기`}
+                            aria-label={`${type} 유형 샘플 보기`}
                           >
-                            📝
+                            <span aria-hidden>📝</span> 샘플
                           </button>
                         </div>
                         {ORDER_INSERT_TYPES.has(type) && selectedTypes.includes(type) && (
@@ -1043,8 +1067,9 @@ ${examDetails}
                               }}
                               className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-600 hover:text-gray-800 transition-all duration-200 shrink-0"
                               title={`${type} 유형 샘플·설명·공부방향 보기`}
+                              aria-label={`${type} 유형 샘플 보기`}
                             >
-                              📝
+                              <span aria-hidden>📝</span> 샘플
                             </button>
                           </div>
                           <p className="text-[10px] text-gray-500 mt-1.5 pl-8">

@@ -362,7 +362,7 @@ function GradePageInner() {
       </div>
 
       {/* 하단 고정 제출 바 */}
-      <div className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur border-t border-gray-200 p-3">
+      <div data-bottom-bar className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur border-t border-gray-200 p-3">
         <div className="mx-auto max-w-lg">
           <button
             onClick={() => void handleSubmit()}

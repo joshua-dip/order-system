@@ -11,6 +11,10 @@ import {
 import { groupPassages, unitOf } from '@/lib/essay-workbook-grouping';
 import { saveOrderToDb } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
+import { ServiceFactsPanel } from '../components/ServiceCard';
+import { serviceById } from '@/lib/service-catalog';
+
+const essayWorkbookService = serviceById('essay-workbook');
 
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
@@ -331,8 +335,8 @@ export default function EssayWorkbookPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="text-xl font-extrabold text-gray-900">서술형 워크북</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  지문을 고르시면 서술형 연습 자료를 제작해 PDF 로 보내 드립니다.
+                <p className="mt-1 text-[15px] text-gray-700">
+                  지문을 골라 주문하시면 접수 후 확인하여 PDF 로 보내 드립니다.
                 </p>
               </div>
               {/* 모의고사 서술형은 payperic 에서 판다 — 여기서는 부교재만 취급 */}
@@ -358,10 +362,11 @@ export default function EssayWorkbookPage() {
               </p>
             </div>
 
-            <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] leading-relaxed text-gray-700">
-              <b>가격</b> — 지문 1개당 {ESSAY_WORKBOOK_PRICE_PER_SOURCE.toLocaleString()}원
-              (그 지문의 <b>난도 전부 한 묶음</b>). 조건영작배열은 기본·중·고·최고 4난도입니다.
-            </div>
+            {/* 홈 카드와 같은 네 줄 요약 (lib/service-catalog) */}
+            {essayWorkbookService && <ServiceFactsPanel service={essayWorkbookService} className="mt-3" />}
+            <p className="mt-2 text-[13px] leading-relaxed text-gray-700">
+              지문 1개당 {ESSAY_WORKBOOK_PRICE_PER_SOURCE.toLocaleString()}원에 그 지문의 <b>난도 전부가 한 묶음</b>으로 들어갑니다. 조건영작배열은 기본·중·고·최고 4난도입니다.
+            </p>
 
             {/* 샘플 — 화면으로 보는 미리보기는 유형을 고르는 자리(2. 지문 선택)에 있다.
                 여기는 교재를 고르기 전(로그인 전 포함)에도 자료를 확인할 수 있게
@@ -543,7 +548,7 @@ export default function EssayWorkbookPage() {
               )}
               {/* 재고가 없는 지문도 담을 수 있다는 것을 미리 알린다 */}
               {shownPassages.some((p) => diffsOf(p, kind).length === 0) && (
-                <p className="mt-2 text-[11.5px] text-amber-700">
+                <p className="mt-2 text-[13px] text-amber-800">
                   <b className="text-amber-800">제작</b> 표시된 지문은 아직 만들어 두지 않았습니다 —
                   주문해 주시면 제작해 드립니다(제작분은 전달까지 시간이 걸립니다).
                 </p>
@@ -705,8 +710,8 @@ export default function EssayWorkbookPage() {
 
               {/* 주문 버튼은 아래 고정 바에 늘 떠 있다 — 여기서 또 두면 어느 쪽을
                   눌러야 하는지 헷갈린다. 안내와 보조 동작(복사)만 남긴다. */}
-              <p className="mt-3 text-[11px] text-gray-500">
-                아래 <b>주문하기</b> 를 누르시면 주문이 접수됩니다. 확인 후 PDF 를 보내드립니다.
+              <p className="mt-3 text-[13px] text-gray-700">
+                아래 <b>주문하기</b> 를 누르시면 주문이 접수됩니다. 접수 후 확인하여 PDF 를 보내 드립니다.
               </p>
               <button
                 type="button"
@@ -723,10 +728,10 @@ export default function EssayWorkbookPage() {
       {/* 담은 게 있으면 어디서 스크롤하든 금액·주문 버튼이 따라온다 —
           예전에는 맨 아래 「3. 주문 내용」까지 내려가야 확인할 수 있었다. */}
       {selectedKeys.length > 0 && (
-        <div className="sticky bottom-0 z-40 border-t border-gray-200 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur">
-          {/* 우하단 문의 위젯(fixed·z-50·64px)이 버튼 위에 떠서 가린다 — 그만큼 비운다.
-              또 줄바꿈을 막는다(flex-nowrap) — 폰에서 두 줄이 되면 아래 줄이 위젯에 깔린다. */}
-          <div className="container mx-auto flex max-w-5xl flex-nowrap items-center gap-2 py-2.5 pl-3 pr-[84px] sm:gap-3 sm:pl-4 sm:pr-[92px]">
+        <div data-bottom-bar className="sticky bottom-0 z-40 border-t border-gray-200 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur">
+          {/* 우하단 문의 위젯은 data-bottom-bar 를 보고 이 바 위로 올라간다(KakaoFab).
+              줄바꿈은 막는다(flex-nowrap) — 폰에서 두 줄이 되면 바가 너무 높아진다. */}
+          <div className="container mx-auto flex max-w-5xl flex-nowrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4">
             <div className="min-w-0 flex-1">
               <p className="hidden truncate text-[11px] text-gray-500 sm:block">
                 {selectedTextbook} · {KIND_LABEL[kind]}

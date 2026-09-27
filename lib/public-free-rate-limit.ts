@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { type Db } from 'mongodb';
+import { PUBLIC_FREE_DAILY_LIMIT } from './public-free-limits';
 
 /**
  * 공개 무료 PDF 다운로드의 IP 당 일일 제한.
@@ -13,8 +14,8 @@ import { type Db } from 'mongodb';
  */
 export const PUBLIC_FREE_DOWNLOADS_COLLECTION = 'public_free_downloads';
 
-/** IP 당 하루 다운로드 허용 횟수 */
-export const PUBLIC_FREE_DAILY_LIMIT = 5;
+/** IP 당 하루 다운로드 허용 횟수 — 값은 클라이언트 공용 모듈(public-free-limits)에 둔다 */
+export { PUBLIC_FREE_DAILY_LIMIT };
 
 /** 한국 시간 기준 날짜 키 (YYYY-MM-DD) — 자정에 초기화된다 */
 export function koreaDateKey(now = new Date()): string {

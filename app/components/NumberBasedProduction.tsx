@@ -6,6 +6,11 @@ import mockExamsData from '../data/mock-exams.json';
 import type { OrderGenerateHandler } from './MockExamSettings';
 import { VARIANT_PRICE } from '@/lib/variant-pricing';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
+import Link from 'next/link';
+import { ServiceFactsPanel } from './ServiceCard';
+import { serviceById } from '@/lib/service-catalog';
+
+const orderNumService = serviceById('order-num');
 
 interface NumberBasedProductionProps {
   onBack: () => void;
@@ -354,10 +359,11 @@ ${materialOrder.map((matId, index) => {
             <h1 className="text-4xl font-bold mb-2" style={{ color: '#101820' }}>
               번호별 교재 제작하기
             </h1>
-            <p className="text-lg" style={{ color: '#888B8D' }}>
+            <p className="text-lg text-slate-700">
               모의고사 번호별로 맞춤 교재를 제작해드립니다
             </p>
           </div>
+          {orderNumService && <ServiceFactsPanel service={orderNumService} className="mx-auto mb-8 max-w-6xl" />}
 
           <div className="max-w-6xl mx-auto space-y-8">
             {/* 모의고사 선택 */}
@@ -579,10 +585,21 @@ ${materialOrder.map((matId, index) => {
                     </div>
                   </div>
                   {isMember && (
-                    <p className="text-[11px] text-gray-500 mb-2">회원 · 모의고사·번호·교재 구성까지 직전 주문과 동일하게 불러옵니다</p>
+                    <p className="text-[13px] text-gray-600 mb-2">회원 · 모의고사·번호·교재 구성까지 직전 주문과 동일하게 불러옵니다</p>
                   )}
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-gray-700 mb-3">
                     교재 구성을 선택하세요. 순서를 조정할 수 있습니다.
+                  </p>
+                  {/* 무료 7종 0원 규칙은 모의고사·부교재 변형 주문(/mockexam·/textbook) 전용 — 이 상품 가격표엔 없다.
+                      왜 다른지는 정책으로 확정되지 않아 이유를 지어내지 않고 사실만 적는다. */}
+                  <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800">
+                    <span aria-hidden>ⓘ </span>
+                    이 상품의 변형문제는 주제·제목·주장·일치·불일치·순서·삽입도 표시된 가격으로 제작됩니다(무료 7종 0원 규칙 미적용).
+                    {' '}무료 7종만 필요하면{' '}
+                    <Link href="/free" className="font-semibold text-[#13294B] underline underline-offset-2">
+                      무료 PDF 받기
+                    </Link>
+                    를 이용해 주세요.
                   </p>
                   <div className="space-y-3">
                     {materials.map((material) => (

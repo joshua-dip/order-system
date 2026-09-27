@@ -1152,7 +1152,7 @@ export default function VocabularyOrderPage() {
       </div>
 
       {authorized && activeTab === 'buy' && selectedLessons.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div data-bottom-bar className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div className="text-xs text-slate-500">

@@ -12,6 +12,10 @@ import { ESSAY_ORDER_VISIBLE_MAIN_CATEGORIES } from '@/app/data/essay-categories
 import { saveOrderToDb, MEMBER_DEPOSIT_ACCOUNT } from '@/lib/orders';
 import { ORDER_PREFIX } from '@/lib/orderPrefix';
 import { isMockExamTextbookKey, parseMockExamKey } from '@/lib/mock-exam-key';
+import { ServiceFactsPanel } from '../components/ServiceCard';
+import { serviceById } from '@/lib/service-catalog';
+
+const essayService = serviceById('essay');
 const KAKAO_INQUIRY_URL = process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 const MOCK_PASSAGE_KEY = '번호';
 
@@ -54,6 +58,8 @@ export default function EssayPage() {
   const [pastExamUploads, setPastExamUploads] = useState<{ id: string; school: string; grade: string; examYear: string; examType: string; examScope: string; adminCategories: string[] }[]>([]);
   const [selectedPastExamId, setSelectedPastExamId] = useState<string | null>(null);
   const [essayTypes, setEssayTypes] = useState<EssayTypeItem[]>([]);
+  /** 유형 목록 응답 전에 「선택 가능한 유형이 없습니다」를 보이지 않게 */
+  const [essayTypesLoaded, setEssayTypesLoaded] = useState(false);
 
   /* ─── 유형별 샘플 (비로그인도 볼 수 있음) ─── */
   interface EssaySample {
@@ -272,7 +278,8 @@ export default function EssayPage() {
     fetch('/api/essay-types', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => setEssayTypes(Array.isArray(d?.types) ? d.types : []))
-      .catch(() => setEssayTypes([]));
+      .catch(() => setEssayTypes([]))
+      .finally(() => setEssayTypesLoaded(true));
   }, []);
 
   // 대분류가 하나뿐이면 자동 선택 (로드 시 1회)
@@ -498,9 +505,10 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="p-6 border-b bg-gray-50">
                   <h1 className="text-2xl font-bold text-gray-800 mb-2">서술형문제 주문제작</h1>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-700 text-sm">
                     대분류를 선택하면 해당 유형의 소분류가 모두 포함됩니다. 교재를 선택한 뒤 주문하세요.
                   </p>
+                  {essayService && <ServiceFactsPanel service={essayService} className="mt-3" />}
                 </div>
 
                 {/* 안내문 */}
@@ -527,7 +535,9 @@ ${MEMBER_DEPOSIT_ACCOUNT}`;
                 </div>
 
                 <div className="p-6 space-y-6">
-                {essayTypesGrouped.length === 0 ? (
+                {!essayTypesLoaded ? (
+                  <p className="py-8 text-center text-gray-700" role="status">유형 목록을 불러오는 중…</p>
+                ) : essayTypesGrouped.length === 0 ? (
                   <div className="py-8 px-4 rounded-xl bg-gray-100 border border-gray-200 text-center">
                     <p className="text-gray-700 font-medium mb-2">선택 가능한 유형이 없습니다.</p>
                     <p className="text-gray-600 text-sm mb-4">관리자가 주문서에 노출할 유형을 설정하면 여기에 표시됩니다. 문의가 필요하시면 카카오톡으로 연락해 주세요.</p>

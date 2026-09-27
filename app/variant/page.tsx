@@ -421,7 +421,7 @@ export default function VariantTryPage() {
                     삭제
                   </button>
                 </div>
-                <p className="mt-2 text-[11px] text-slate-400">이 브라우저에만 저장되어 있습니다. 페이지 닫아도 유지됩니다.</p>
+                <p className="mt-2 text-[13px] text-slate-600">이 브라우저에 저장되어 있습니다. 페이지를 닫아도 유지됩니다.</p>
               </>
             ) : showKeyInput ? (
               <div className="space-y-3">
@@ -700,7 +700,7 @@ export default function VariantTryPage() {
 
       {/* STICKY 액션 바 */}
       {!busy && !draft && (
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+        <div data-bottom-bar className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
             <div className="hidden sm:block flex-1">
               {canGenerate ? (
@@ -840,9 +840,9 @@ function SafetyNote() {
     <div className="mt-3 rounded-xl bg-slate-50 border border-slate-100 p-3">
       <div className="flex items-start gap-2">
         <Icon name="shield" className="h-4 w-4 shrink-0 text-slate-500 mt-0.5" />
-        <div className="text-[11px] text-slate-600 leading-relaxed">
-          <strong className="text-slate-800">키는 이 브라우저에만 저장됩니다.</strong>
-          {' '}서버로 전송되거나 DB에 저장되지 않으며, 변형문제 생성 시에만 Anthropic으로 그대로 전달됩니다. 과금은 본인 Claude 계정에서 발생합니다.{' '}
+        <div className="text-[13px] text-slate-700 leading-relaxed">
+          <strong className="text-slate-900">키는 이 브라우저에 저장됩니다.</strong>
+          {' '}생성할 때만 고미조슈아 서버를 거쳐 Anthropic으로 전달되며, 서버는 키 전체를 저장하지 않습니다(생성 기록에 앞 12자리만 남음). 생성 비용은 키를 발급한 본인 Anthropic 계정에 청구됩니다.{' '}
           <a
             href="https://platform.claude.com/settings/keys"
             target="_blank"
