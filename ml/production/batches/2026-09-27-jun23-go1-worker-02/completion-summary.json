@@ -1,0 +1,24 @@
+{
+  "finished_at": "2026-09-27T06:47:19.712300+00:00",
+  "jobs": 99,
+  "generated": 97,
+  "failed": 2,
+  "saved": 97,
+  "pending_verified": 97,
+  "unsaved_successful_drafts": 0,
+  "serial_range": [
+    197373,
+    197469
+  ],
+  "review_performed": false,
+  "content_edits_by_agent": false,
+  "completion_status_changes": 0,
+  "raw_retained": true,
+  "generation_timing_samples": 97,
+  "total_measured_generation_seconds": 1283.54,
+  "average_measured_generation_seconds": 13.23,
+  "missing_failed_generation_timing": 2,
+  "table": "docs/ml/lora-notebook/production-2023-jun-go1-02.html",
+  "source_index": "ml/production/batches/2026-09-27-jun23-go1-worker-02/source-index.md",
+  "automation_id": "23-6-1"
+}

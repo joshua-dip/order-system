@@ -1,0 +1,185 @@
+
+> next-order@0.1.1 cc:variant
+> tsx scripts/cc-variant-cli.ts passages --textbook 23년 6월 고1 영어모의고사 --limit 100
+
+{
+  "ok": true,
+  "count": 25,
+  "passages": [
+    {
+      "passage_id": "69c4ffc346f58f933b6dce14",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "18번",
+      "source_key": "23년 6월 고1 영어모의고사 18번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce15",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "19번",
+      "source_key": "23년 6월 고1 영어모의고사 19번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce16",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "20번",
+      "source_key": "23년 6월 고1 영어모의고사 20번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "21번",
+      "source_key": "23년 6월 고1 영어모의고사 21번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce18",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "22번",
+      "source_key": "23년 6월 고1 영어모의고사 22번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce19",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "23번",
+      "source_key": "23년 6월 고1 영어모의고사 23번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "24번",
+      "source_key": "23년 6월 고1 영어모의고사 24번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce1b",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "25번",
+      "source_key": "23년 6월 고1 영어모의고사 25번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce1c",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "26번",
+      "source_key": "23년 6월 고1 영어모의고사 26번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce1d",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "27번",
+      "source_key": "23년 6월 고1 영어모의고사 27번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce1e",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "28번",
+      "source_key": "23년 6월 고1 영어모의고사 28번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "29번",
+      "source_key": "23년 6월 고1 영어모의고사 29번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "30번",
+      "source_key": "23년 6월 고1 영어모의고사 30번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "31번",
+      "source_key": "23년 6월 고1 영어모의고사 31번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "32번",
+      "source_key": "23년 6월 고1 영어모의고사 32번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "33번",
+      "source_key": "23년 6월 고1 영어모의고사 33번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "34번",
+      "source_key": "23년 6월 고1 영어모의고사 34번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "35번",
+      "source_key": "23년 6월 고1 영어모의고사 35번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce26",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "36번",
+      "source_key": "23년 6월 고1 영어모의고사 36번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce27",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "37번",
+      "source_key": "23년 6월 고1 영어모의고사 37번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce28",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "38번",
+      "source_key": "23년 6월 고1 영어모의고사 38번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce29",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "39번",
+      "source_key": "23년 6월 고1 영어모의고사 39번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce2a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "40번",
+      "source_key": "23년 6월 고1 영어모의고사 40번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce2b",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "41~42번",
+      "source_key": "23년 6월 고1 영어모의고사 41~42번"
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce2c",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "43~45번",
+      "source_key": "23년 6월 고1 영어모의고사 43~45번"
+    }
+  ]
+}

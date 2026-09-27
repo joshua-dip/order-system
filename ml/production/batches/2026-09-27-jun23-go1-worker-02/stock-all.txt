@@ -1,0 +1,1421 @@
+
+> next-order@0.1.1 cc:variant
+> tsx scripts/cc-variant-cli.ts shortage --textbook 23년 6월 고1 영어모의고사 --required 3 --status all --max-rows 2000
+
+{
+  "ok": true,
+  "scope": "textbook",
+  "textbook": "23년 6월 고1 영어모의고사",
+  "questionStatusScope": "all",
+  "requiredPerType": 3,
+  "typesChecked": [
+    "주제",
+    "제목",
+    "주장",
+    "일치",
+    "불일치",
+    "함의",
+    "빈칸",
+    "요약",
+    "어법",
+    "어휘",
+    "워크북어법",
+    "순서",
+    "삽입",
+    "무관한문장",
+    "삽입-고난도",
+    "어법-고난도",
+    "빈칸-고난도",
+    "어휘-고난도",
+    "순서-고난도",
+    "요약-고난도",
+    "무관한문장-고난도",
+    "함의-고난도",
+    "주제-고난도",
+    "제목-고난도",
+    "주장-고난도",
+    "일치-고난도",
+    "불일치-고난도"
+  ],
+  "passageCount": 25,
+  "standardTypes": [
+    "주제",
+    "제목",
+    "주장",
+    "일치",
+    "불일치",
+    "함의",
+    "빈칸",
+    "요약",
+    "어법",
+    "어휘",
+    "워크북어법",
+    "순서",
+    "삽입",
+    "무관한문장",
+    "삽입-고난도",
+    "어법-고난도",
+    "빈칸-고난도",
+    "어휘-고난도",
+    "순서-고난도",
+    "요약-고난도",
+    "무관한문장-고난도",
+    "함의-고난도",
+    "주제-고난도",
+    "제목-고난도",
+    "주장-고난도",
+    "일치-고난도",
+    "불일치-고난도"
+  ],
+  "noQuestionsTotal": 22,
+  "underfilledTotal": 81,
+  "noQuestionsTruncated": false,
+  "underfilledTruncated": false,
+  "noQuestions": [
+    {
+      "passageId": "69c4ffc346f58f933b6dce14",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "18번",
+      "source_key": "23년 6월 고1 영어모의고사 18번",
+      "label": "23년 6월 고1 영어모의고사 18번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce15",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "19번",
+      "source_key": "23년 6월 고1 영어모의고사 19번",
+      "label": "23년 6월 고1 영어모의고사 19번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "21번",
+      "source_key": "23년 6월 고1 영어모의고사 21번",
+      "label": "23년 6월 고1 영어모의고사 21번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "24번",
+      "source_key": "23년 6월 고1 영어모의고사 24번",
+      "label": "23년 6월 고1 영어모의고사 24번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce1b",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "25번",
+      "source_key": "23년 6월 고1 영어모의고사 25번",
+      "label": "23년 6월 고1 영어모의고사 25번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce1c",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "26번",
+      "source_key": "23년 6월 고1 영어모의고사 26번",
+      "label": "23년 6월 고1 영어모의고사 26번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce1d",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "27번",
+      "source_key": "23년 6월 고1 영어모의고사 27번",
+      "label": "23년 6월 고1 영어모의고사 27번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce1e",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "28번",
+      "source_key": "23년 6월 고1 영어모의고사 28번",
+      "label": "23년 6월 고1 영어모의고사 28번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "29번",
+      "source_key": "23년 6월 고1 영어모의고사 29번",
+      "label": "23년 6월 고1 영어모의고사 29번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "30번",
+      "source_key": "23년 6월 고1 영어모의고사 30번",
+      "label": "23년 6월 고1 영어모의고사 30번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "31번",
+      "source_key": "23년 6월 고1 영어모의고사 31번",
+      "label": "23년 6월 고1 영어모의고사 31번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "32번",
+      "source_key": "23년 6월 고1 영어모의고사 32번",
+      "label": "23년 6월 고1 영어모의고사 32번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "33번",
+      "source_key": "23년 6월 고1 영어모의고사 33번",
+      "label": "23년 6월 고1 영어모의고사 33번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "34번",
+      "source_key": "23년 6월 고1 영어모의고사 34번",
+      "label": "23년 6월 고1 영어모의고사 34번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "35번",
+      "source_key": "23년 6월 고1 영어모의고사 35번",
+      "label": "23년 6월 고1 영어모의고사 35번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce26",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "36번",
+      "source_key": "23년 6월 고1 영어모의고사 36번",
+      "label": "23년 6월 고1 영어모의고사 36번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce27",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "37번",
+      "source_key": "23년 6월 고1 영어모의고사 37번",
+      "label": "23년 6월 고1 영어모의고사 37번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce28",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "38번",
+      "source_key": "23년 6월 고1 영어모의고사 38번",
+      "label": "23년 6월 고1 영어모의고사 38번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce29",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "39번",
+      "source_key": "23년 6월 고1 영어모의고사 39번",
+      "label": "23년 6월 고1 영어모의고사 39번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce2a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "40번",
+      "source_key": "23년 6월 고1 영어모의고사 40번",
+      "label": "23년 6월 고1 영어모의고사 40번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce2b",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "41~42번",
+      "source_key": "23년 6월 고1 영어모의고사 41~42번",
+      "label": "23년 6월 고1 영어모의고사 41~42번"
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce2c",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "chapter": "23년 6월 고1 영어모의고사",
+      "number": "43~45번",
+      "source_key": "23년 6월 고1 영어모의고사 43~45번",
+      "label": "23년 6월 고1 영어모의고사 43~45번"
+    }
+  ],
+  "underfilled": [
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "주제",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "제목",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "주장",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "일치",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "불일치",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "함의",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "빈칸",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "요약",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "어법",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "어휘",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "워크북어법",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "순서",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "삽입",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "무관한문장",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "삽입-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "어법-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "빈칸-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "어휘-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "순서-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "요약-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "무관한문장-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "함의-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "주제-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "제목-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "주장-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "일치-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce16",
+      "label": "23년 6월 고1 영어모의고사 20번",
+      "type": "불일치-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "주제",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "제목",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "주장",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "일치",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "불일치",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "함의",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "빈칸",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "요약",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "어법",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "어휘",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "워크북어법",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "순서",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "삽입",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "무관한문장",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "삽입-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "어법-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "빈칸-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "어휘-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "순서-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "요약-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "무관한문장-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "함의-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "주제-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "제목-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "주장-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "일치-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce18",
+      "label": "23년 6월 고1 영어모의고사 22번",
+      "type": "불일치-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "주제",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "제목",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "주장",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "일치",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "불일치",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "함의",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "빈칸",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "요약",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "어법",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "어휘",
+      "count": 1,
+      "required": 3,
+      "shortBy": 2,
+      "statusBreakdown": {
+        "완료": 1,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "워크북어법",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "순서",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "삽입",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "무관한문장",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "삽입-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "어법-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "빈칸-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "어휘-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "순서-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "요약-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "무관한문장-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "함의-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "주제-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "제목-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "주장-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "일치-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    },
+    {
+      "passageId": "69c4ffc346f58f933b6dce19",
+      "label": "23년 6월 고1 영어모의고사 23번",
+      "type": "불일치-고난도",
+      "count": 0,
+      "required": 3,
+      "shortBy": 3,
+      "statusBreakdown": {
+        "완료": 0,
+        "대기": 0,
+        "검수불일치": 0,
+        "기타": 0
+      }
+    }
+  ],
+  "pendingReviewTotal": 0,
+  "needCreateShortBySum": 216,
+  "needCreateFromEmptyPassagesTotal": 1782,
+  "needCreateGrandTotal": 1998,
+  "pendingInScopeTotal": 0,
+  "scopePassageIds": [
+    "69c4ffc346f58f933b6dce14",
+    "69c4ffc346f58f933b6dce15",
+    "69c4ffc346f58f933b6dce16",
+    "69c4ffc346f58f933b6dce17",
+    "69c4ffc346f58f933b6dce18",
+    "69c4ffc346f58f933b6dce19",
+    "69c4ffc346f58f933b6dce1a",
+    "69c4ffc346f58f933b6dce1b",
+    "69c4ffc346f58f933b6dce1c",
+    "69c4ffc346f58f933b6dce1d",
+    "69c4ffc346f58f933b6dce1e",
+    "69c4ffc346f58f933b6dce1f",
+    "69c4ffc346f58f933b6dce20",
+    "69c4ffc346f58f933b6dce21",
+    "69c4ffc346f58f933b6dce22",
+    "69c4ffc346f58f933b6dce23",
+    "69c4ffc346f58f933b6dce24",
+    "69c4ffc346f58f933b6dce25",
+    "69c4ffc346f58f933b6dce26",
+    "69c4ffc346f58f933b6dce27",
+    "69c4ffc346f58f933b6dce28",
+    "69c4ffc346f58f933b6dce29",
+    "69c4ffc346f58f933b6dce2a",
+    "69c4ffc346f58f933b6dce2b",
+    "69c4ffc346f58f933b6dce2c"
+  ],
+  "order": null
+}

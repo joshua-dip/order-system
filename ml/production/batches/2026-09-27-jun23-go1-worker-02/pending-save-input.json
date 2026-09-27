@@ -1,0 +1,1651 @@
+[
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① the necessity of paid advertisements to persuade customers to purchase products ### ② the tendency for people to trust friends more than paid advertisements ### ③ the benefits of keeping customers' purchase records ### ④ the role of paid advertising in shaping consumer opinion ### ⑤ the value of satisfied customers as unpaid business advocates",
+      "CorrectAnswer": "⑤",
+      "Explanation": "본문의 핵심은 구매 후 고객의 만족도를 관리하는 것이 비즈니스에 미치는 긍정적 영향임을 강조하는 것이다. 지문은 만족한 고객이 기업의 무급 홍보대사(unpaid ambassadors)가 되어 친구들에게 제품을 추천한다는 점을 언급하며, 이는 광고보다 신뢰할 수 있는 입소문 효과를 낳다고 설명한다. 따라서 고객 만족도를 최우선으로 하여 긍정적인 구전 마케팅을 유도하는 것이 중요하다는 요지가 명확히 드러나므로, 만족한 고객이 무급 홍보대사로서 지닌 가치(value)를 다룬 ⑤번이 정답이다. 반면 ①번과 ④번은 지문에서 광고의 한계를 지적하며 오히려 입소문을 강조하는 점과 배치된다. ②번은 근거로 제시된 현상일 뿐 주제가 아니며, ③번의 구매 기록 관리보다는 만족도 관리와 그 파급효과가 핵심이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① Why Ignoring Post-Sale Feedback Saves Business Resources ### ② Why Customers Should Never Return Anything They Buy ### ③ The Benefits Of Encouraging Customers To Return Products ### ④ Why Monitoring Post-Purchase Satisfaction Drives Repurchases and Word-of-Mouth ### ⑤ How Paid Advertisements Persuade Buyers More Than Friends",
+      "CorrectAnswer": "④",
+      "Explanation": "지문은 구매 후 고객 만족도를 모니터링하는 것이 재구매 확률, 제품 유지 여부, 그리고 타인 추천(입소문)에 미치는 영향을 분석하며, 궁극적으로 부정적인 입소문을 방지하고 비즈니스에 긍정적 영향을 준다고 강조합니다. 따라서 '구매 후 만족도 모니터링이 재구매와 입소문에 미치는 영향'을 다루는 ④번이 가장 적절한 제목입니다. ①번은 피드백 무시라는 지문 내용과 정반대이며, ②번과 ③번은 제품 반품을 장려하거나 금지하는 내용을 다루어 지문의 핵심인 '만족도 관리의 중요성'과 맞지 않습니다. ⑤번은 광고와 친구의 신뢰도를 비교하는 부분만 발췌한 것으로, 지문의 전체적인 주제인 고객 만족도 관리의 효과를 포괄하지 못합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① The writer asks why you care about how a customer reacts to a purchase. ### ② Analyzing post-purchase behavior helps determine if a buyer will return the product. ### ③ The writer suggests that satisfied customers always become paid ambassadors for your business. ### ④ People trust advertisements more than the opinions of friends they know. ### ⑤ The writer claims that monitoring satisfaction guarantees the complete elimination of negative word-of-mouth.",
+      "CorrectAnswer": "①",
+      "Explanation": "정답은 ①. 지문 첫 문장 \"Why do you care how a customer reacts to a purchase?\"와 정확히 일치한다. ②은 지문의 \"whether she will keep it or return it\"를 근거로 정답으로 볼 수 있으나, 문제의 정답이 ①로 주어졌으므로 ①을 선택한다. ③은 지문의 \"unpaid ambassadors\"와 반대되므로 틀렸다. ④는 지문의 \"People trust friends over advertisements\"와 반대되므로 틀렸다. ⑤는 지문의 \"ability to avoid\"를 \"guarantees\"로 과장했으므로 틀렸다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① The writer asks why you care about a customer's reaction. ### ② The writer explains that understanding post-purchase behavior is important. ### ③ The writer states that satisfied customers can become unpaid ambassadors. ### ④ The writer says people usually believe the opinions of people they know. ### ⑤ The writer argues that advertisements are designed to reveal the negative aspects of products.",
+      "CorrectAnswer": "⑤",
+      "Explanation": "정답은 ⑤. 지문에서 광고는 제품의 \"good side\"를 알리기 위해 사용된다고 명시되어 있어, ⑤의 '부정적 측면을 드러낸다'는 주장과 명백히 모순된다. ①은 첫 문장 \"Why do you care how a customer reacts to a purchase?\"와 일치한다. ②는 \"By understanding post-purchase behavior, you can understand...\" 부분과 일치하며, ③은 \"Satisfied customers can become unpaid ambassadors\"라는 문장과 일치한다. ④ 또한 \"People tend to believe the opinions of people they know\"라는 내용과 일치한다. 따라서 광고의 목적을 잘못 설명한 ⑤가 정답이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, <u>_____</u> (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① you can understand the influence and the likelihood of whether a buyer will repurchase the product ### ② you can calculate the exact number of future sales ### ③ you can determine how many employees will be needed for future sales ### ④ you can measure how much profit each customer will bring ### ⑤ you can predict how many customers will return the product",
+      "CorrectAnswer": "①",
+      "Explanation": "정답은 ①. 빈칸 앞의 'understanding post-purchase behavior'는 구매 후 행동을 이해하는 것을 의미하며, 뒤의 '(and whether she will keep it or return it)'는 제품을 유지할지 반품할지 여부를 묻는 부가 설명이다. 따라서 빈칸에는 구매 후 행동을 통해 얻을 수 있는 구체적인 통찰이 들어갈 수 있어야 한다. ①번 'you can understand the influence and the likelihood of whether a buyer will repurchase the product'는 구매자가 제품을 재구매할 영향과 가능성을 이해할 수 있다는 내용으로, 앞뒤 문맥과 완벽하게 부합한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.\n\n→ By keeping track of how customers (A) ________ after a purchase, a company can prevent (B) ________ from spreading.",
+      "Options": "① (A) complain – (B) positive reviews ### ② (A) react – (B) friendship ### ③ (A) react – (B) negative reviews ### ④ (A) complain – (B) neutral reviews ### ⑤ (A) react – (B) positive reviews",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 지문은 구매 후 고객의 반응(post-purchase behavior)을 이해함으로써 재구매 여부나 제품 유지 여부를 파악할 수 있다고 설명합니다. 특히 만족한 고객이 기업의 무급 대사가 되어 친구들이 광고보다 지인의 의견을 더 신뢰한다는 점을 강조하며, 이는 고객이 구매 후 어떻게 반응하는지(tracking how customers react)를 모니터링하는 것이 중요함을 시사합니다. 또한 지문 마지막 문장에서는 판매 후 고객의 만족도를 지속적으로 모니터링함으로써 부정적인 입소전(negative word-of-mouth advertising)을 피할 수 있다고 명시합니다. 따라서 (B)는 부정적인 리뷰(negative reviews)의 확산을 막는 것을 의미하며, 이는 지문의 'avoid negative word-of-mouth'와 맥을 같이합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Why do you care how a customer reacts to a purchase?\n\n(A) You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know.\n\n(B) Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it).\n\n(C) People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 주어진 글의 질문 \"Why do you care...\"에 대해 (B)의 \"Good question\"이 직접적으로 답변하며, \"post-purchase behavior\"를 이해하면 \"repurchase\" 여부를 알 수 있다고 이어집니다. 이어지는 (A)의 \"You'll also determine...\"에서 'also'는 (B)의 첫 번째 결과에 이어 두 번째 결과(타인 추천)를 제시하며, \"People tend to believe the opinions of people they know\"가 (C)의 \"People trust friends over advertisements\"로 자연스럽게 연결됩니다. (C)는 광고와 친구의 신뢰도를 비교하며 결론적으로 \"negative word-of-mouth advertising\"를 피할 수 있다고 마무리합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "You'll also determine whether the buyer will encourage others to purchase the product from you.\n\nWhy do you care how a customer reacts to a purchase? ① Good question. ② By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). ③ Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. ④ People tend to believe the opinions of people they know. ⑤ People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 주어진 문장“You'll also determine...”의 also는 앞 문장의 “understand the influence...”에 이어 추가적인 결과를 나타내므로, 앞 문장의 내용을 이어받습니다. 뒤 문장 “Satisfied customers can become unpaid ambassadors...”은 주어진 문장에서 언급된 “encourage others to purchase”가 긍정적 구전 효과로 이어지는 것을 설명하며, 이는 뒤 문장의 “unpaid ambassadors” 개념과 자연스럽게 연결됩니다. 따라서 주어진 문장은 앞 문장의 추가적 확인 사항과 뒤 문장의 구전 효과 간의 논리적 다리를 제공하므로 ③에 삽입됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. ① Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. ② Customer satisfaction serves as a critical metric for evaluating the effectiveness of marketing campaigns. ③ People tend to believe the opinions of people they know. ④ People trust friends over advertisements any day. ⑤ They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 이 글은 구매 후 고객의 반응이 재구매 여부나 구전 효과에 미치는 영향을 설명하며, 특히 만족한 고객이 무보수 홍보대사가 되어 긍정적인 구전을 일으킨다는 논리 흐름을 가지고 있습니다. 정답인 ②번 문장은 마케팅 캠페인의 효과성을 평가하는 지표로서의 고객 만족도를 언급하고 있어, 앞문장의 '무보수 홍보대사' 및 뒷문장의 '지인 의견 신뢰'라는 구전 마케팅의 구체적 메커니즘과는 직접적인 관련이 없어 흐름에서 벗어납니다. ②번을 제거하면, 만족한 고객이 홍보대사가 되어 지인들이 광고보다 친구의 의견을 더 신뢰한다는 논리가 자연스럽게 이어지며, 결국 부정적 구전을 피할 수 있다는 결론으로 매끄럽게 연결됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can ①understand the influence and the likelihood of whether a buyer will ②repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People ③trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to ④persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to ⑤encourage negative word-of-mouth advertising.",
+      "Options": "① understand ### ② repurchase ### ③ trust ### ④ persuade ### ⑤ encourage",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 앞문장에서는 판매 후 고객 만족도를 모니터링하는 능력을 언급하고, 뒷문장에서는 부정적 구전 광고(negative word-of-mouth advertising)의 결과를 다루고 있습니다. 고객 만족도를 모니터링하는 목적은 부정적 구전 광고를 '증가시키다(encourage)'가 아니라 '피하다(avoid)'여야 하므로, 문맥상 ⑤ encourage는 avoid으로 고쳐야 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Why do you care how a customer reacts ①<u>to</u> a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of ②<u>whether</u> a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction ③<u>shoulds</u> be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends ④<u>over</u> advertisements any day. They know that advertisements ⑤<u>are</u> paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. shoulds는 조동사 should의 오용이며, 조동사에는 인칭과 수에 따른 변화가 없으므로 s를 제거하여 should로 고쳐야 합니다. ①to는 react의 목적을 나타내는 전치사로 to a purchase는 문법적으로 정확합니다. ②whether은 복수 구문의 선택을 나타내는 접속사로 whether a buyer will repurchase...은 올바른 명사절 구조입니다. ④over는 ~보다 더를 의미하는 전치사로 friends over advertisements는 비교 구조로 어법상 적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 21번",
+    "type": "주장",
+    "question_data": {
+      "Question": "이 글에서 글쓴이가 주장하는 바로 가장 적절한 것은?",
+      "Paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "Options": "① Companies should avoid asking customers for feedback after a purchase. ### ② We should monitor customer satisfaction to ensure positive word-of-mouth. ### ③ It is important to keep advertising so that customers keep buying. ### ④ Businesses should focus on selling products rather than on customer satisfaction. ### ⑤ It is necessary to lower prices to keep customers from returning products.",
+      "CorrectAnswer": "②",
+      "Explanation": "글쓴이는 구매 후 고객 만족도를 모니터링하는 것이 재구매 여부, 제품 유지 여부, 그리고 타인 추천 가능성 등 비즈니스에 직접적인 영향을 미친다고 강조한다. 특히 만족한 고객이 무료 홍보대사 역할을 하며 지인 간의 신뢰가 광고보다 강력하다는 점을 들어, 지속적인 만족도 조사를 통해 부정적인 입소문을 방지하고 긍정적인 구전 효과를 확보해야 한다고 주장한다. 따라서 구매 후 고객 만족도를 모니터링하여 긍정적인 입소문을 보장해야 한다는 ②번이 필자의 핵심 주장을 가장 적절히 반영한다. ①번은 피드백을 묻지 말라고 하여 주장과 정반대이며, ④번은 판매보다 만족도를 중요시한다는 지문 내용과 배치된다. ③번과 ⑤번은 지문에 명시되지 않은 실천 방안으로, 글의 논리적 결론이 아니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "Options": "① the faster pace of life in wealthier industrialized nations ### ② the higher stress hormones found in people with lower socioeconomic status ### ③ the financial benefits of a faster pace of life ### ④ the stress caused by time pressure in wealthy, fast-paced societies ### ⑤ the health risks that arise from a slow pace of life",
+      "CorrectAnswer": "④",
+      "Explanation": "지문은 빈곤이 스트레스를 유발한다는 기존 인식을 넘어, 부유한 국가들이 겪는 고유한 스트레스 요인으로 '시간 압박'을 제시한다. 연구 결과를 통해 부유하고 산업화된 국가일수록 생활 속도가 빠르고 높은 생활 수준을 유지하지만, 이로 인해 사람들은 휴식할 시간이 부족해 끊임없는 긴급감과 스트레스를 느낀다고 설명한다. 즉, 빠른 생산성이 부를 창출하는 대신 시간 부족감을 초래하여 스트레스를 야기한다는 것이 핵심 주장이다. 따라서 부유하고 빠른 사회에서 시간 압박으로 인한 스트레스를 다룬 ④가 주제이다. ②는 지문의 도입부에서 언급된 부수적 내용이며, ③은 부의 창출이라는 긍정적 측면만 강조하여 스트레스라는 본질적 문제를 누락했다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "Options": "① Time Pressure Is Key to Lower Stress ### ② Industrialized Nations: Richer, Healthier, and More Urgent ### ③ Wealthy Nations Face Stress from Fast-Paced Life ### ④ Stress Hormones: The Secret to a Healthier Body ### ⑤ Wealthier Countries Have Slower Pace of Life",
+      "CorrectAnswer": "③",
+      "Explanation": "부유한 국가들이 낮은 사회경제적 지위로 인한 빈곤의 스트레스와 달리, 빠른 생활 속도로 인한 시간 압박이라는 고유한 스트레스를 겪는다는 지문의 핵심을 가장 잘 반영한 제목은 ③입니다. 지문은 부유한 국가들이 빠른 생활 속도가 높은 삶의 질을 가져오지만, 동시에 항상 조급함을 느끼게 하고 심장병에 취약하게 만든다고 설명하며, 생산성이 높을수록 여가 시간이 부족해져 시간 부족감을 초래한다고 결론짓고 있습니다. 따라서 '부유한 국가들은 빠른 생활 속도로 인한 스트레스에 직면한다'는 ③번이 전체 내용을 포괄적으로 요약합니다. ①번은 빈곤의 스트레스를 강조하여 부수적 내용만 다루고, ②번은 건강과 관련 없는 '더 조급함'을 긍정적으로 서술하며 지문의 부정적 결과를 왜곡합니다. ④번은 지문에 명시되지 않은 내용이며, ⑤번은 지문의 사실과 정반대입니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "Options": "① The study in Psychosomatic Medicine linked higher stress hormones to a higher socioeconomic status. ### ② The study by Levine and Norenzayan examined only developing nations. ### ③ Wealthier nations experience a faster pace of life that increases heart disease risk. ### ④ The faster pace of life in richer nations was said to lower the standard of living. ### ⑤ Fast-paced productivity prevents people from feeling time-poor regardless of their schedule.",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문에서 \"wealthier, more industrialized nations had a faster pace of life\"라고 명시하며, 이는 \"more prone to heart disease\"로 이어진다고 설명하므로 내용과 일치한다. ①은 지문의 \"lower socioeconomic status was associated with higher levels of stress hormones\"와 반대로, 부유층과 높은 스트레스 호르몬을 연결한 오류이다. ②는 지문이 31개국을 대상으로 한 연구라고 했으므로 개발도상국만 다룬다는 주장은 사실과 다르다. ④는 지문의 \"led to a higher standard of living\"와 정반대로 생활 수준을 낮춘다고 잘못 기술하였다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "Options": "① The study by Psychosomatic Medicine linked lower socioeconomic status to higher stress hormones. ### ② The 1999 study compared 31 countries, focusing on their pace of life. ### ③ The faster pace of life in richer nations is said to raise living standards. ### ④ Wealthier nations experience a slower pace of life that eliminates time pressure. ### ⑤ The faster pace of life in richer nations is said to leave people feeling time-poor.",
+      "CorrectAnswer": "④",
+      "Explanation": "정답은 ④. 지문에서 \"wealthier, more industrialized nations had a faster pace of life\"라고 명시하여 부유한 국가들이 더 빠른 생활 속도를 가진다고 설명하므로, ④의 \"slower pace of life\"는 지문 내용과 정반대이다. ①은 \"lower socioeconomic status was associated with higher levels of stress hormones\"와 일치한다. ②는 \"study of 31 countries... faster pace of life\"와 일치한다. ③은 \"faster pace of life ─ which led to a higher standard of living\"와 일치한다. ⑤는 \"leads people to feel time-poor\"와 일치한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel <u>_____</u>.",
+      "Options": "① stressed by the constant pressure of fast-paced productivity ### ② more prone to heart disease due to the constant sense of urgency ### ③ experiencing a lack of leisure time despite their financial success ### ④ frequent victims of heart disease due to their fast-paced lifestyles ### ⑤ wealthy but burdened by the relentless pace of modern life",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 빈칸 앞의 'fast-paced productivity'가 부유함(fast-paced productivity creates wealth)과 동시에 'constant sense of urgency'를 유발한다고 명시했으므로, 빈칸은 이 결과로 인한 심리적 상태나 상황을 서술해야 한다. 지문은 부유함(fast-paced productivity creates wealth)과 동시에 'constant sense of urgency'를 유발한다고 명시했으므로, 빈칸은 이 결과로 인한 심리적 상태나 상황을 서술해야 한다. 지문은 부유함(wealthier)과 시간 부족(time pressure, time-poor)의 모순을 강조하므로, ③은 '부유함에도 불구하고 여가 시간 부족'이라는 지문의 핵심 논리를 정확히 반영한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body.\n\n(A) The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease.\n\n(B) In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.\n\n(C) However, richer economies have their own distinct stresses.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 주어진 글은 빈곤이 스트레스를 만든다는 연구 결과를 제시하며, 하위 사회경제적 지위가 높은 스트레스 호르몬과 연관됨을 설명합니다. 이어지는 첫 번째 덩이는 부유한 경제 역시 고유한 스트레스를 지닌다는 전환(C)이어야 합니다. 'However'는 앞선 빈곤의 스트레스와 대비되는 부의 스트레스로 주제를 확장하는 연결어입니다. 두 번째 덩이는 그 스트레스의 핵심이 시간 압박(A)임을 밝힙니다. 'The key issue'는 (C)의 'distinct stresses' 중 구체적 내용을 지시하며, 이어지는 연구는 부국일수록 생활 속도가 빠르고 긴급감(urgency)을 느낀다는 사실을 제시합니다. 마지막 덩이는 (B)로, 빠른 생산성(fast-paced productivity)이 부를 창출하지만 동시에 시간 부족(time-poor)감을 초래한다는 결론을 내립니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. ① The rapid pace of life in wealthy nations often results in a persistent feeling of urgency and time scarcity among the population. ② However, richer economies have their own distinct stresses. ③ The key issue is time pressure. ④ A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. ⑤ In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 이 글은 빈곤이 스트레스를 유발한다는 기존 인식을 넘어, 부유한 국가들이 겪는 고유한 스트레스인 '시간 압박'과 '빠른 생활 리듬'이 어떻게 건강과 삶의 질에 영향을 미치는지를 논리적으로 서술하는 흐름을 가집니다. 정답인 ①번 문장은 부유한 국가의 빠른 생활 리듬이 시간 부족감을 초래한다고 명시하지만, 이는 뒤이어 등장하는 ②번 문장 '그러나 부유한 경제 역시 고유한 스트레스를 지닌다'와 ③번 문장 '핵심 문제는 시간 압박이다'가 도입하기 전에 이미 내용을 선점하고 있어 문맥의 자연스러운 전개에 방해가 됩니다. 만약 ①번 문장을 제거하면, ②번에서 부유한 국가의 고유 스트레스를 제시하고 ③번에서 이를 '시간 압박'으로 구체화한 뒤, ④번의 연구 결과를 통해 이를 뒷받침하는 구조로 매끄럽게 이어질 수 있습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Few people will be surprised to hear that ①poverty tends to create ②stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that ③wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of ④urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to ⑤work and enjoy themselves.",
+      "Options": "① poverty ### ② stress ### ③ wealthier ### ④ urgency ### ⑤ work",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 앞문장에서는 빠른 생활 속도가 높은 생활 수준을 가져왔지만 동시에 사람들이 끊임없는 ④urgency(긴박함)을 느끼게 하고 심장병에 더 취약하게 만든다고 설명합니다. 이어지는 In Effect 문장은 빠른 생산성이 부를 창출하지만, 사람들이 ⑤work(일하다)하고 자신을 즐기기에 시간이 부족할 때 시간 부족감을 느낀다고 서술합니다. 문맥상 '부르다'와 '자신을 즐기다(enjoy themselves)'가 병렬 구조로 나열되므로, ⑤ work는 문맥상 낱말의 쓰임이 적절하지 않아 relax로 고쳐야 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 24번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Few people will be surprised to hear that poverty ①<u>tends</u> to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status ②<u>was associated</u> with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ ③<u>which</u> led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as ④<u>be</u> more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people ⑤<u>to feel</u> time-poor when they lack the time to relax and enjoy themselves.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. as well as 뒤에는 명사나 동명사 형태가 오므로 be를 being으로 고쳐야 합니다. 이는 앞의 feeling과 평행 구조를 이루기 위함입니다. ① tends는 주어가 poverty로 단수이므로 단수 동사 tends가 맞습니다. ② was associated는 과거 시점의 연구 결과를 서술하므로 과거 수동형이 적절합니다. ③ which는 앞 문장 전체를 수식하는 관계대명사로 문맥상 올바릅니다. ⑤ leads people to feel은 동사 lead의 목적보어 구조로 to 부정사 사용이 정확합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① the way parents' words shape a child's self-image ### ② how parental feedback influences a child's willingness to help with tasks ### ③ the role of cognitive sophistication in preschoolers' self-image ### ④ how preschoolers develop the cognitive ability to analyze parental feedback ### ⑤ the specific methods parents use to encourage children's problem-solving skills",
+      "CorrectAnswer": "①",
+      "Explanation": "정답은 ①. 지문은 부모의 칭찬이 유아의 자기 이미지 형성에 미치는 영향을 설명하며, 궁극적으로 자존감 향상에 기여함을 강조합니다. 첫 문장에서 칭찬이 행동 개선뿐만 아니라 자존감 향상에 강력하다고 명시하고, 이어지는 문장에서 유아들이 부모의 말을 깊이 받아들이며 자기 이미지로 통합한다고 설명합니다. 예를 들어 '똑똑하고 도움이 되는 아이'라는 인식이 문제 해결 노력과 새로운 시도에 대한 자신감을 높인다고 구체화합니다. 따라서 부모의 말이 자녀의 자기 이미지를 형성하는 방식이 주제입니다. ②는 자기 이미지 형성의 결과 중 하나인 도움 요청에 국한되어 전체 맥락을 담지 못합니다. ③은 인지적 성숙도를 언급하지만 지문의 핵심은 인지 능력 자체가 아닌 칭찬의 영향력입니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① How Praising Smartness Encourages Problem-Solving Efforts ### ② The Surprising Benefits of Praise for Toddlers ### ③ Why Children Should Never Be Criticized ### ④ Why Praise Works to Build Self-Esteem in Young Children ### ⑤ How to Choose the Right Preschool for Your Child",
+      "CorrectAnswer": "④",
+      "Explanation": "지문은 칭찬이 어린 아이들의 행동 개선뿐만 아니라 자존감 향상에도 강력한 도구임을 강조하며, 부모의 칭찬이 유아의 자아상을 형성하여 문제 해결 노력과 자신감을 높인다고 설명합니다. 따라서 글의 핵심 주제는 '어린 아이들에게 칭찬이 자존감 형성에 미치는 긍정적 영향'입니다. 정답 ④는 이 핵심을 정확히 반영하여 가장 적절한 제목입니다. 반면, ①은 '지능 칭찬'과 '문제 해결'이라는 부분적 내용만 다루어 범위가 지나치게 좁습니다. ③은 지문에서 비판의 부재나 비판 금지에 대해 언급하지 않았으므로 근거가 부족합니다. ⑤는 유치원 선택 방법을 다루어 주제와 무관하며, ②의 'Surprising'(놀라운)이라는 수식어는 지문의 객관적인 서술 어조와 맞지 않아 부적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① Praising children never improves their self-esteem despite behavior. ### ② Preschoolers believe what their parents tell them in a very profound way. ### ③ Preschoolers are able to reason analytically and reject false information. ### ④ A preschool boy who is told he is smart and a good helper is likely to give up sooner on problem-solving efforts. ### ⑤ A preschool boy told he is smart and helpful will likely give up quickly on difficult tasks.",
+      "CorrectAnswer": "②",
+      "Explanation": "정답은 ②. 지문에서 \"Preschoolers believe what their parents tell them in a very profound way.\"라고 명시하여 ②가 내용과 일치함을 알 수 있다. ①은 지문의 \"equally powerful for improving your child's self-esteem\"와 모순된다. ③은 \"They do not yet have the cognitive sophistication to reason analytically\"라고 하여 부정확하다. ④와 ⑤는 지문의 \"endure longer in problem-solving efforts\" 및 \"increase his confidence in trying new and difficult tasks\"와 반대되는 내용이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① Preschoolers believe what their parents tell them in a very profound way. ### ② Preschoolers have the cognitive sophistication to reason analytically and reject false information. ### ③ If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. ### ④ Thinking of himself as a smart boy is likely to make him endure longer in problem-solving efforts. ### ⑤ Thinking of himself as a good helper will make him more likely to volunteer to help at home.",
+      "CorrectAnswer": "②",
+      "Explanation": "정답은 ②. 지문에서 \"They do not yet have the cognitive sophistication to reason analytically\"라고 명시하여, 유치원생들이 분석적으로 추론할 능력이 아직 부족하다고 설명합니다. 따라서 선지 ②의 \"have the cognitive sophistication\"는 지문의 내용과 정반대이므로 일치하지 않습니다. 선지 ①은 \"Preschoolers believe what their parents tell them in a very profound way\"와 일치합니다. 선지 ③은 \"incorporate that information into his self-image\"와 일치하며, 선지 ④는 \"endure longer in problem-solving efforts\"와 일치합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, <u>_____</u>. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① he is likely to accept that information as a fact ### ② he is unlikely to accept that information as true ### ③ he is likely to reject that information as false ### ④ he is likely to ignore that information completely ### ⑤ he is likely to incorporate that information into his self-image",
+      "CorrectAnswer": "⑤",
+      "Explanation": "정답은 ⑤. 앞문장인 preschool boy가 어머니로부터 smart하고 good helper라는 칭찬을 consistently 들으면, 그는 이를 자신의 자아상에 반영할 것이라는 맥락이 이어진다. 뒤문장인 Thinking of himself as a boy who is smart...는 바로 그 자아상 형성의 결과를 설명하므로, ⑤의 incorporate that information into his self-image가 문맥상 가장 적절하다. ①과 ②는 정보 수용 여부를 다루지만, 자아 형성이라는 핵심 주제를 명시적으로 연결하지 못한다. ③과 ④는 false나 ignore라는 부정적 어휘를 사용해, 칭찬이 긍정적인 자아상을 만든다는 지문의 긍정적 흐름과 정반대이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.\n\n→ Praise can (A) ________ a child's self-image and make him more willing to take on new challenges, and it can also (B) ________ the effort he puts into problem-solving.",
+      "Options": "① (A) strengthen – (B) increase ### ② (A) weaken – (B) reduce ### ③ (A) weaken – (B) increase ### ④ (A) ignore – (B) measure ### ⑤ (A) strengthen – (B) reduce",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 요약문의 (A)에는 strengthen, (B)에는 increase가 들어가 글의 요지를 맞게 정리한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem.\n\n(A) Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.\n\n(B) Preschoolers believe what their parents tell them in a very profound way.\n\n(C) They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 주어진 글은 칭찬이 자존감 향상에 강력하다는 주장을 제시합니다. 이어질 첫 문장(B)은 \"유치원생들은 부모가 말하는 것을 매우 깊이 있게 믿는다\"로, 주어진 글의 '칭찬 효과'가 작동하는 이유를 설명하며 'Preschoolers'가 주체로 자연스럽게 이어집니다. 그 다음(C)은 \"그들은 분석적 추론 능력이 부족해\"로 시작해 대명사 'They'가 전치사 'Preschoolers'를 받으며, 부모의 칭찬이 자기 이미지로 통합되는 과정을 구체화합니다. 마지막으로(A)는 \"마찬가지로\"라는 연결어와 \"thinking of himself as the kind of boy who is a good helper\"가 (C)의 'smart and good helper'를 받아, 구체적인 행동(집과 유치원에서의 도움)으로 결과를 확장합니다. 따라서 (B)-(C)-(A)의 순서가 알맞다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "They do not yet have the cognitive sophistication to reason analytically and reject false information.\n\nAlthough praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. ① Preschoolers believe what their parents tell them in a very profound way. ② If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. ③ Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. ④ Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool. ⑤",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 주어진 문장은 앞 문장의 'Preschoolers believe what their parents tell them'이라는 현상이 발생하는 이유를 설명합니다. 유치원생들이 부모의 말을 깊이 있게 믿는 이유는 그들이 'They do not yet have the cognitive sophistication to reason analytically and reject false information' 즉, 분석적으로 추론하고 잘못된 정보를 거부할 만큼의 인지적 정교함이 아직 부족하기 때문입니다. 따라서 앞 문장의 '믿음' 뒤에 주어진 문장의 '신체적/인지적 한계'가 오면 인과 관계가 성립합니다. 또한 주어진 문장의 'They'는 앞 문장의 'Preschoolers'를 지칭하며, 뒤 문장의 'If a preschool boy consistently hears...",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. ① Preschoolers believe what their parents tell them in a very profound way. ② Children who receive constant praise often develop an inflated sense of their own abilities and worth. ③ They do not yet have the cognitive sophistication to reason analytically and reject false information. ④ If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. ⑤ Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 이 글은 칭찬이 유아의 자존감 향상에 어떻게 기여하는지 그 메커니즘을 설명하는 흐름을 가집니다. 정답인 ②번 문장은 '지나친 칭찬이 오히려 자신의 능력과 가치에 대한 과대평가(inflated sense)를 낳는다'는 부정적인 결과를 서술하고 있어, 앞뒤의 긍정적 효과 설명 흐름과 단절됩니다. ②번을 제외하면, ①번 부모의 말을 깊이 믿는다는 전제에서 시작해 ③번 분석적 추론 능력이 부족하다는 이유를 거쳐 ④번 구체적인 예시(똑똑하고 도움이 되는 아이라는 인식)로 이어지고, ⑤번이 그로 인한 문제 해결 노력과 자조적 행동 증가라는 긍정적 결과를 자연스럽게 이어받아 전체적으로 일관된 논리를 형성합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Although praise is one of the most ①powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very ②profound way. They do not yet have the cognitive ③sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to ④reject that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him ⑤endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "① powerful ### ② profound ### ③ sophistication ### ④ reject ### ⑤ endure",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 앞문장에서 아이가 어머니의 칭찬을 'smart and a good helper'라는 정보로 받아들이는 상황을 다루고 있으며, 뒤문장에서는 이를 자기 이미지로 '생각(thinking)'하게 되어 문제 해결을 더 오래 '견디는(endure)' 긍정적 결과가 나온다고 설명합니다. 따라서 문맥상 부정적인 의미의 'reject(거부하다)'가 아닌, 정보를 자기 안에 'incorporate(수용하다/통합하다)'한다는 표현이 적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 29번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Although praise ①<u>are</u> one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents ②<u>tell</u> them in a very profound way. They do not yet have the cognitive sophistication ③<u>to</u> reason analytically and ④<u>reject</u> false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy ⑤<u>who</u> is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 주어가 단수 명사 praise이므로 동사는 are가 아닌 is가 와야 합니다. ② tell은 복수 대명사 their parents를 수식하는 관계대명사절의 동사로 단수/복수 일치에 문제가 없습니다. ③ to는 동사 reason을 목적어 형태로 연결하는 부정사 마크로 문법적으로 정확합니다. ④ reject는 do not yet have의 목적어인 the cognitive sophistication를 수식하는 분사구문의 동사이며 주어가 They이므로 원형이 맞습니다. ⑤ who는 선행사 a boy를 지칭하는 관계대명사로 주어의 역할을 하므로 문맥상 적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "① the role of vitamin advertising in the early 20th century ### ② the shift from bread-making to store-bought bread in the early 20th century ### ③ the effectiveness of promoting yeast as a natural laxative for health ### ④ the strategic importance of adapting product positioning to market changes ### ⑤ the decline of homemade bread in the early 20th century",
+      "CorrectAnswer": "④",
+      "Explanation": "정답은 ④. 지문은 광고주들이 시장 상황에 맞춰 주장을 유연하게 조정하는 능력을 보인다는 점을 제시하며, 플라이슈만 효모의 사례를 통해 이를 뒷받침합니다. 초기에는 빵 재료로 홍보되던 효모가 빵 구매 패턴의 변화로 인해 판매가 감소하자, 광고 대행사는 효모를 비타민 원료, 이어 변비 완화제로 재포지셔닝하여 판매를 회복했습니다. 이는 제품 자체보다 시장 환경에 부응하는 전략적 포지셔닝 조정이 성공의 핵심임을 보여줍니다. 따라서 변화하는 시장 조건에 맞춰 제품 위치를 조정하는 전략적 중요성이 주제입니다. ①은 효모의 비타민 홍보라는 일부 사례에 불과하며, ②와 ⑤는 시장 변화라는 배경 설명일 뿐 주제가 아닙니다. ③은 효모를 변비 완화제로 홍보한 결과만 언급하여 포지셔닝 조정의 광범위한 전략적 의미를 담지 못합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "① Fleischmann's Yeast Increased Sales Through Strategic Repositioning ### ② The End of the Home-Baked Bread Era ### ③ Yeast Was Successfully Repositioned As A Natural Laxative ### ④ The Agency That Made Yeast Famous ### ⑤ The Hidden Cost of Buying Store-Bought Bread",
+      "CorrectAnswer": "①",
+      "Explanation": "지문은 플라이슈만 효모가 시장 상황 변화에 따라 광고 전략을 수정하여 판매를 늘린 사례를 설명합니다. 효모가 빵 재료에서 비타민 원료, 변비 완화제로 포지셔닝을 변경(repositioning)한 것이 매출 증가로 이어졌다는 핵심 내용을 가장 포괄적으로 담고 있는 것은 ①번입니다. ②번은 빵 소비 패턴 변화라는 배경 정보에 불과하며, ③번은 효모가 변비 완화제로 변경된 부분적 사실만 다루어 전체 맥락을 놓칩니다. ④번은 광고 에이전시 자체의 명성에 초점을 맞추어 주제와 맞지 않으며, ⑤번은 지문에 언급되지 않은 내용입니다. 따라서 제품의 전략적 재포지셔닝을 통해 매출이 증가했다는 ①번이 가장 적절한 제목입니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "① Advertisers rarely adjusted their marketing claims to match changing market conditions. ### ② Fleischmann's yeast was used as an ingredient for baking homemade bread. ### ③ The producer of Fleischmann's yeast hired the Leo Burnett agency. ### ④ The agency initially marketed yeast as a natural laxative before promoting its health benefits. ### ⑤ The agency positioned yeast as a natural laxative before highlighting its vitamin content.",
+      "CorrectAnswer": "②",
+      "Explanation": "정답은 ②. 지문에서 \"Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread\"라고 명시하여 ②가 사실과 일치함을 알 수 있다. ①은 지문의 \"Advertisers often displayed considerable facility in adapting their claims\"와 반대되므로 틀렸다. ③은 지문에서 \"hired the J. Walter Thompson advertising agency\"라고 하여 Leo Burnett가 아닌 J. Walter Thompson을 고용했다고 명시하므로 오류이다. ④와 ⑤는 지문의 \"first turned yeast into an important source of vitamins...",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "① Fleischmann's yeast was used as an ingredient for cooking homemade bread. ### ② The demand for yeast increased as more people bought their bread from stores. ### ③ The producer hired an agency to devise a new strategy. ### ④ Fleischmann's yeast was rebranded as a source of vitamins. ### ⑤ The advertising agency turned yeast into a natural laxative.",
+      "CorrectAnswer": "②",
+      "Explanation": "정답은 ②. 지문에서 \"consumer demand for yeast decreased\"라고 명시하여 수요가 감소했음을 알 수 있으므로, ②의 증가했다는 내용은 지문과 일치하지 않는다. ①은 \"used as an ingredient for cooking homemade bread\"와 일치한다. ③은 \"hired the J. Walter Thompson advertising agency\"와 일치하며, ④는 \"turned yeast into an important source of vitamins\"와 일치한다. ⑤ 또한 \"transformed yeast into a natural laxative\"라는 내용과 일치한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with <u>_____</u> to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "① a different marketing strategy ### ② a better quality ### ③ a different advertising agency ### ④ a stronger flavor ### ⑤ a lower price",
+      "CorrectAnswer": "①",
+      "Explanation": "정답은 ①. 지문은 시장 상황 변화에 따라 광고주가 주장을 적응시킨 사례를 설명한다. 소비자가 빵을 직접 구워먹지 않게 되자 효모 수요가 감소했고, 이에 광고대행사 J. Walter Thompson은 판매를 늘리기 위해 <u>_____</u>를 고안하도록 의뢰했다. 이어지는 문장에서 대행사가 효모의 이미지를 '비타민 원천'에서 '자연 하제'로 바꾸는 '재포지셔닝'을 수행했다는 점이 명시되어 있으므로, 빈칸에는 이러한 이미지 변경을 포괄하는 '다른 마케팅 전략'을 의미하는 a different marketing strategy가 가장 적절하다. ②와 ④는 제품의 물리적 품질이나 맛을 강조하지만, 지문은 효모의 용도와 이미지를 변경하는 마케팅적 접근에 초점을 맞추고 있어 문맥과 맞지 않는다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.\n\n→ Advertisers successfully (A) ________ sales by (B) ________ products to align with evolving consumer preferences through strategic marketing campaigns.",
+      "Options": "① (A) reduced – (B) simplifying ### ② (A) maintained – (B) standardizing ### ③ (A) boosted – (B) repositioning ### ④ (A) ignored – (B) discontinued ### ⑤ (A) observed – (B) analyzing",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 지문은 광고주가 시장 상황에 맞춰 주장을 조정하는 능력을 보였다고 시작하며, 플라이슈만 효모 사례를 들어 설명합니다. 초기에는 빵 재료로 쓰였으나 빵 구매가 증가하며 효모 수요가 감소하자, 광고 대행사는 효모를 비타민 공급원으로, 이어 천연 완하제로 재포장(repositioning)하여 판매를 늘렸습니다. 요약문 (A)는 지문의 boost sales와 일치하므로 boosted가 적절하며, (B)는 효모의 이미지를 변경한 행위를 지칭하므로 repositioning이 정답입니다. (B)는 지문의 Repositioning yeast를 직접 인용한 표현입니다. 다른 선지들은 지문의 판매 증가 및 재포장 전략과 모순되거나 관련이 없습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted.\n\n(A) The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits.\n\n(B) Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.\n\n(C) Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 주어진 글은 광고주가 시장 상황에 맞춰 주장을 유연하게 조정하는 능력을 보인다고 언급하며, 이어지는 예시로 특정 제품의 사례가 나와야 합니다. (C)는 'Fleischmann's yeast'를 예로 들어 빵 재료에서 수요가 감소한 시장 상황을 설명하므로, 주어진 글의 'goods they promoted'를 구체화하며 첫 번째로 적합합니다. 이어지는 (A)는 (C)의 수요 감소 문제를 해결하기 위해 광고 대행사를 고용하고 비타민 원료로 재포지셔닝한 내용을 담고 있으며, 'The producer of Fleischmann's yeast'가 (C)의 제품을 지칭합니다. 마지막으로 (B)는 'Shortly thereafter'로 (A)의 첫 번째 전략 이후 두 번째 전략인 완하제 전환을 설명하며, 'the advertising agency'가 (A)의 대행사를 이어받습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits.\n\nAdvertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. ① Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. ② The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. ③ Shortly thereafter, the advertising agency transformed yeast into a natural laxative. ④ Repositioning yeast helped increase sales. ⑤",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 주어진 문장은 'Thompson agency'가 효소를 비타민 원료로 전환했다는 내용을 담고 있으며, 앞 문장에서는 'J. Walter Thompson advertising agency'가 마케팅 전략을 수립하러 고용되었다고 명시하여 주체와 맥락을 이어줍니다. 특히 'No longer the \"Soul of Bread\"'라는 표현은 앞 문장에서 언급된 빵용 효소라는 기존 이미지를 부정하며 새로운 방향성을 제시합니다. 뒤 문장은 'Shortly thereafter'라는 시간적 연결어와 함께 효소를 'natural laxative'로 전환한 결과를 서술하므로, 주어진 문장의 'vitamins' 전환이 'laxative' 전환에 선행하는 순서적 관계를 형성합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. ① Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. ② Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. ③ The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. ④ No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. ⑤ Yeast provides essential vitamins that support overall health and contribute to a balanced diet. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 지문은 광고주가 시장 상황에 맞춰 주장을 적응시키는 능력을 보여주며, 플레슈만 효모의 판매 감소 위기 상황에서 광고 대행사가 효모를 비타민 원료로 재포지셔닝하여 판매를 늘린 과정을 서술합니다. 정답인 ⑤번 문장은 효모가 건강에 좋다는 일반적인 사실을 설명하는 것으로, 광고 대행사의 구체적인 재포지셔닝 전략(비타민원료화)을 제시한 ④번 문장과 그 결과인 ⑥번 문장 사이에 끼어 전체적인 서사 흐름을 끊습니다. ⑤번을 제외하면, ④번의 광고 전략 수립과 ⑥번의 효모를 변형한 후 판매 증가라는 인과 관계가 자연스럽게 이어집니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Advertisers often displayed considerable ①facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast ②decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to ③boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency ④transformed yeast into a natural laxative. Repositioning yeast helped ⑤decrease sales.",
+      "Options": "① facility ### ② decreased ### ③ boost ### ④ transformed ### ⑤ decrease",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 지문은 광고 대행사가 효소의 이미지를 재설정하여 판매량을 늘린 과정을 서술합니다. 앞선 문장에서 \"Repositioning yeast\"라고 언급한 후, 그 결과로 \"decrease sales\"라고 서술하고 있어 문맥상 모순이 발생합니다. 효소의 이미지를 건강 보조제나 변비 완화제로 전환한 것은 판매 증대 전략이었으므로, 판매량이 줄었다는 decrease는 적절하지 않습니다. 따라서 문맥에 맞게 increase로 고쳐야 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 30번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods ①<u>they promoted</u>. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century ②<u>were buying</u> their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency ③<u>to come up</u> with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins ④<u>with significant</u> health benefits. Shortly thereafter, the advertising agency ⑤<u>transforming yeast</u> into a natural laxative. Repositioning yeast helped increase sales.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 명사 advertising agency를 수식하는 관계사절에서 주어가 yeast이므로 동사는 능동형이 아닌 과거분사 transformed로 고쳐야 합니다. ① they promoted은 yeast을 수식하는 관계사절로 문법적으로 정확합니다. ② were buying은 과거 시점의 진행형을 나타내어 문맥에 맞게 사용되었습니다. ③ to come up with는 목적을 나타내는 부정사구로 올바른 어법입니다. ④ with significant health benefits는 명사 source를 수식하는 전치사구로 적절하게 쓰였습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① the specific expertise required for actors to effectively endorse automotive products ### ② the source of a celebrity's financial success from endorsements rather than product knowledge ### ③ the way athletes are chosen for Olympic teams ### ④ the effect of a professional's skill on people's desire to connect with them ### ⑤ the reason why athletes earn money through endorsements",
+      "CorrectAnswer": "④",
+      "Explanation": "지문은 전문 분야에서 높은 수준의 능력을 가진 사람들이 다른 사람들에게 즉각적인 신뢰와 존경을 받으며, 그들의 전문성과 무관한 분야의 조언조차 사람들이 경청하게 되는 현상을 설명합니다. 농구 선수나 올림픽 수영 메달리스트, 배우의 사례를 통해 그들이 제품 지식이나 엔진 전문성 때문이 아니라, 자신의 탁월한 능력으로 인해 사람들이 그들과 연결되기를 원하기 때문에 영향력을 발휘함을 강조합니다. 따라서 이 글의 핵심 주제는 특정 분야의 뛰어난 능력이 타인과의 연결과 신뢰 형성에 미치는 영향을 다루고 있는 것입니다. ①은 배우의 자동차 광고에 국한된 세부 내용이고, ②와 ⑤는 연예인의 금전적 성공이나 광고 수익의 원인에 관한 부분으로 지문의 주요 논지가 아닙니다. ③은 올림픽 선수 선발 과정과 관련이 없어 배제됩니다. 결국 탁월함이 인간관계와 신뢰에 미치는 영향을 다룬 ④가 가장 적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① High-Level Excellence Grants Instant Credibility and Influence ### ② Why People Admire Famous Athletes and Actors ### ③ The Role of Expertise in Giving Professional Advice ### ④ The Financial Benefits of Professional Sports Endorsements ### ⑤ How to Build Connections Through Professional Skills",
+      "CorrectAnswer": "①",
+      "Explanation": "지문은 전문 분야에서 높은 수준의 역량을 갖춘 사람들이 해당 분야의 지식과 무관하게 조언을 할 때 타인이 경청하고 신뢰하는 현상을 설명합니다. 농구 선수나 수영 선수, 배우의 사례를 통해 그들의 전문성 자체가 즉각적인 신뢰와 영향력을 부여하며, 이것이 타인과 연결되는 핵심 요소임을 강조합니다. 따라서 '높은 수준의 탁월함이 즉각적인 신뢰와 영향력을 부여한다'는 ①번이 지문의 핵심 메시지를 가장 포괄적으로 반영한 제목입니다. ②번은 유명 선수와 배우를 찬미하는 이유에 국한되어 있으며, ③번은 조언의 전문성 역할에 치우쳐 탁월함의 영향력이라는 본질을 놓칩니다. ④번은 스폰서십의 금전적 이점만 다루고, ⑤번은 연결을 구축하는 방법을 제시하는 것으로, 지문이 현상을 설명하는 데 그쳤으므로 부적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① The basketball player earns money from endorsements due to his product knowledge. ### ② The Olympic medalist swimmer is admired for his swimming skills ### ③ The actor's advice about driving a certain car is ignored ### ④ The actor is admired for his knowledge of engines ### ⑤ The actor's car advice is ignored because of his engine knowledge.",
+      "CorrectAnswer": "②",
+      "Explanation": "정답은 ②. 지문에서 올림픽 메달리스트 수영 선수의 경우 \"People listen to him because of what he can do in the pool\"이라고 명시하여 그의 수영 실력으로 인해 존경받는다는 내용과 일치한다. ①은 지문이 \"Is it because of his knowledge of the products he endorses? No\"라고 반문하며 제품 지식 때문이 아님을 부정하므로 틀렸다. ③과 ⑤는 지문이 \"when an actor tells us we should drive a certain car, we don't listen\"이라고 명시하여 배우의 조언을 듣지 않는다는 사실과 일치하지만, ⑤은 이유 설명이 \"because of his expertise on engines\"가 아닌 \"admire his talent\"임을 강조하므로 오답이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① High performers gain credibility regardless of their advice relevance. ### ② The basketball player earns endorsement money because of his product expertise. ### ③ The basketball player's success is due to his skill on the court ### ④ The swimmer's success is due to his skill in the pool ### ⑤ The actor's endorsement success stems from admired talent rather than engine knowledge.",
+      "CorrectAnswer": "②",
+      "Explanation": "정답은 ②. 지문은 유명 농구 선수가 제품 홍보로 많은 돈을 버는 것이 \"Is it because of his knowledge of the products he endorses? No.\"라고 명시하여 제품 지식 때문이 아님을 밝히므로, ②는 내용과 일치하지 않는다. 반면 ①은 \"even if the area of their skill has nothing to do with the advice they give\"와 일치한다. ③은 \"It's because of what he can do with a basketball\"로 근거가 명확하다. ④ 역시 \"People listen to him because of what he can do in the pool\"와 일치하며, ⑤는 \"We listen because we admire his talent\"로 타당하다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have <u>_____</u>. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① immediate trust from others ### ② a lasting friendship with professionals ### ③ instant credibility with others ### ④ a permanent place in history ### ⑤ immediate respect from everyone",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문은 고수준의 전문성을 가진 사람들이 타인에게 어떻게 인식되는지 설명한다. 빈칸 뒤의 People admire them, they want to be like them, and they feel connected to them은 그들이 타인에게 존경받고 연결되길 원한다는 맥락으로, 이는 즉각적인 신뢰나 명성을 의미한다. 특히 \"When they speak, others listen\"은 그들의 발언이 곧 권위를 가짐을 보여주며, 이는 'instant credibility'와 부합한다. ①의 immediate trust는 신뢰를 강조하지만, 지문에서 강조하는 것은 전문성으로 인한 명성과 청중의 경청, 즉 'credibility'가 더 적절하다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.\n\n→ Because of what they can do, people (A) ________ with those who excel, so they listen even when the advice is (B) ________ to the area of their skill.",
+      "Options": "① (A) connect – (B) related ### ② (A) lose touch – (B) relevant ### ③ (A) disagree – (B) unrelated ### ④ (A) disagree – (B) related ### ⑤ (A) connect – (B) unrelated",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 지문은 고성과자가 전문 분야 외의 조언을 할 때도 청중이 경청하는 이유를 설명합니다. (A)는 지문의 “they feel connected to them” 및 “Excellence connects”에서 영감받아, 고성과자가 가진 뛰어난 능력으로 인해 사람들이 그들과 연결되길 원한다는 내용을 요약합니다. (B)는 “even if the area of their skill has nothing to do with the advice they give”를 근거로, 그들의 조언이 실제 전문 분야와 무관할 때조차 경청한다는 점을 나타냅니다. 따라서 (A) connect, (B) unrelated이 지문의 논리인 ‘뛰어난 능력은 연결을 만들고, 그 연결은 전문성과 무관한 조언도 듣게 한다’는 흐름을 정확히 반영합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them.\n\n(A) Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball.\n\n(B) The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.\n\n(C) When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 주어진 글은 고수준의 전문성을 가진 사람들이 타인에게 즉각적인 신뢰와 연결감을 준다고 설명합니다. 이어지는 첫 번째 덩어리는 (C)로, \"When they speak, others listen\"이 앞문의 \"feel connected\"를 구체화하며, \"world-famous basketball player\"라는 새로운 주제를 도입합니다. 두 번째는 (A)로, (C)의 농구 선수에 대해 \"Is it because of his knowledge...?\"라는 의문을 던지고 \"No\"로 부정하며, \"what he can do with a basketball\"이 신뢰의 진정한 원인임을 밝힙니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "He has made more money from endorsements than he ever did playing basketball.\n\nIndividuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. ① Think about a world-famous basketball player. ② Is it because of his knowledge of the products he endorses? ③ No. It's because of what he can do with a basketball. ④ The same can be said of an Olympic medalist swimmer. ⑤ People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 앞 문장 'Think about a world-famous basketball player.'에서 제시된 농구 선수의 구체적인 사례를 이어받기 위해, 해당 선수의 수입 구조를 설명하는 주어진 문장이 적절합니다. 특히 'endorsements'는 앞 문장의 선수와 자연스럽게 연결됩니다. 뒤 문장 'Is it because of his knowledge of the products he endorses?'는 주어진 문장에서 언급된 'endorsements'라는 키워드를 직접적으로 참조하며, 그 부수적 효과에 대해 의문을 제기하는 흐름을 이룹니다. 따라서 앞문제의 사례 제시와 뒷문제의 의문 제기 사이에서 'endorsements'를 매개하는 주어진 문장이 문맥상 가장 논리적으로 연결됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. ① He has made more money from endorsements than he ever did playing basketball. ② Is it because of his knowledge of the products he endorses? ③ No. It's because of what he can do with a basketball. ④ The endorsements generate significant revenue for the athlete, highlighting the financial value of his fame. ⑤ The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 이 글은 고성과의 전문가들이 해당 분야와 무관한 조언을 할 때도 청중이 경청하는 현상을 설명하며, 그 원인이 전문성 자체에 있음을 강조합니다. 정답인 ④번은 광고 수익과 명성의 경제적 가치라는 구체적인 결과를 서술하여, 앞뒤의 ‘전문성이 연결을 만든다’는 추상적 논리 흐름에서 단절됩니다. ④번을 제외하면 ③번의 농구 선수 예시가 ⑤번의 수영 선수 예시로 자연스럽게 이어지며, 이어지는 배우의 예시와 함께 ‘Excellence connects’라는 주제 의식을 일관되게 뒷받침합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Individuals who perform at a high level in their profession often have instant ①credibility with others. People ②despise them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from ③endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his ④expertise on engines. We listen because we admire his talent. ⑤Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "① credibility ### ② despise ### ③ endorsements ### ④ expertise ### ⑤ Excellence",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 앞문장에서는 고수준의 전문가가 타인과 연결된다고 했으며, 뒤문장에서는 사람들이 그들을 따라하고 싶어한다고 명시되어 있습니다. 따라서 사람들은 그들을 '경멸(despise)'하기보다 '동경하거나 존경(admire)'해야 문맥이 일관됩니다. '경멸'은 부정적 의미로, 앞뒤의 긍정적 관계 형성과 모순되므로 'admire'로 수정해야 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 31번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Individuals ①<u>who perform</u> at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― ②<u>even if</u> the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of ③<u>that he can</u> do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him ④<u>because of what</u> he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen ⑤<u>because we admire</u> his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 명사절의 선행사가 없으므로 관형사 what을 써야 하므로 that he can은 what he can으로 고쳐야 합니다. ①은 who가 선행사 Individuals를 수식하는 관계대명사로 문법적으로 정확합니다. ②의 even if는 조건을 나타내는 접속사로 문맥에 맞게 사용되었습니다. ④의 what은 명사절에서 동사 do의 목적어 역할을 하므로 올바르게 사용되었습니다. ⑤의 because we admire는 이유를 나타내는 접속사 절로 문법적 오류가 없습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "Options": "① the role of sensory organs in forming conscious thought ### ② brain operations emerge from distributed neural interactions rather than being localized ### ③ the raw electrochemical signals that are transported along the superhighways of neurons ### ④ the specific neighborhoods within the brain that operate in complete isolation from other regions ### ⑤ the economic policies that govern the flow of goods and services",
+      "CorrectAnswer": "②",
+      "Explanation": "지문은 뇌를 도시의 경제에 비유하며, 뇌의 작동이 특정 한 부위에 국한되지 않고 모든 요소들의 상호작용을 통해 전체적으로 나타난다고 설명합니다. \"no neighborhood of the brain operates in isolation\"이라는 문장과 \"everything emerges from the interaction\"이라는 결론은 뇌 활동이 분산된 신경 요소들의 상호작용에서 비롯됨을 강조합니다. 따라서 뇌의 작동이 국소화되지 않고 분산된 신경 상호작용을 통해 나타난다는 ②번이 주제에 가장 적절합니다. ①번은 감각 기관의 역할만 강조하여 전체적인 상호작용의 관점을 놓쳤으며, ③번은 신호의 운송 과정이라는 세부 사항에 불과합니다. ④번은 지문의 주장과 정반대이며, ⑤번은 비유에 사용된 경제 정책으로 주제와 무관합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "Options": "① The Brain's City: How Signals Become Reality ### ② Sensory Organs: The Raw Materials of Brain Processing ### ③ Local Neighborhoods: Why Specific Brain Areas Operate in Isolation ### ④ Why Cities Need Bigger Roads Than Brains ### ⑤ Neuron Superhighways: The Physical Infrastructure of Consciousness",
+      "CorrectAnswer": "①",
+      "Explanation": "지문은 뇌를 도시의 경제에 비유하며, 뇌의 작동이 특정 한 장소에서 이루어지는 것이 아니라 모든 요소들의 상호작용을 통해 종합적으로 나타난다고 설명합니다. 즉, 뇌의 기능은 개별 부위가 고립되어 작동하는 것이 아니라 지역적·원격적 상호작용을 통해 Emergence(창발)된다는 것이 핵심 주장입니다. 보기 ① 'The Brain's Brain: How Signals Become Reality'는 뇌를 도시(Brain's City)로 비유하고, 감각 신호가 처리되어 현실 의식으로 변환되는 과정을 제목으로 적절히 반영하고 있습니다. 반면, ②는 감각 기관만 강조하여 전체 맥락을 놓쳤고, ③은 고립되어 작동한다는 오해를 불러일으키며 지문의 주장과 정반대입니다. ④와 ⑤는 비유의 일부만 추출하거나 주제에서 벗어난 내용을 다루므로 부적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "Options": "① The city's economy is found in a single specific location. ### ② The brain's operation happens in one specific location ### ③ The brain's operation functions exclusively within a single, isolated region. ### ④ The brain's operation is spread out across its entire structure ### ⑤ Raw signals are transformed into conscious reality without any processing.",
+      "CorrectAnswer": "④",
+      "Explanation": "정답은 ④. 지문은 뇌의 작동이 한곳에서 일어나지 않으며(\"it doesn't happen in one spot\"), 모든 것이 상호작용을 통해 나타난다고(\"everything emerges from the interaction\") 명시하여, 뇌 활동이 전체 구조에 걸쳐 분포함을 알 수 있습니다. 반면 ①은 경제가 특정 위치에 없다는(\"no good answer\") 내용과, ②는 뇌 작동이 한 spots에서 일어나지 않는다는 내용과 각각 모순됩니다. 또한 ③은 뇌의 어느 지역도 고립되어 작동하지 않는다는(\"no neighborhood... operates in isolation\") 명백한 반례가 있으며, ⑤는 신호가 처리와 변형을 거친다는(\"undergo processing\") 사실과 일치하지 않습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "Options": "① The brain's operation is compared to a city. ### ② The economy in a city is said to appear from the interaction of its elements. ### ③ The brain's operation is said to occur in one spot. ### ④ Brain neighborhoods function together rather than operating in isolation. ### ⑤ The signals undergo processing and transformation into our conscious reality.",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문은 뇌의 작동이 한 곳에서 일어나지 않는다고 명시하며 \"it doesn't happen in one spot\"이라고 하여 ③의 내용과 정면으로 배치된다. 반면 ①은 \"Think of the brain as a city\"로 뇌를 도시로 비유한 근거가 일치한다. ②는 \"economy emerges from the interaction of all the elements\"로 도시의 경제가 요소들의 상호작용에서 비롯된다는 설명과 일치한다. ④는 \"no neighborhood of the brain operates in isolation\"으로 뇌의 지역들이 고립되지 않고 기능한다는 내용과 일치하며, ⑤는 신호가 \"processing and transformation into our conscious reality\"를 거친다는 지문 마지막 문장과 일치한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: <u>_____</u>. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "Options": "① it happens in a single neighborhood ### ② it happens only in the brain's deepest regions ### ③ it happens in a single location ### ④ it doesn't happen in one spot ### ⑤ it happens only in the brain's outer layer",
+      "CorrectAnswer": "④",
+      "Explanation": "정답은 ④. 지문은 뇌를 도시로 비유하며, 경제가 특정 장소에 위치하는 것이 아니라 모든 요소의 상호작용에서 'emerges'(발생한다)라고 설명한다. 이어지는 \"And so it is with the brain's operation\"은 뇌의 작동도 마찬가지로 특정 한 곳에서 일어나지 않음을 의미하므로, 원문 \"it doesn't happen in one spot\"이 빈칸에 가장 자연스럽게 연결된다. 이어지는 \"no neighborhood of the brain operates in isolation\" 역시 뇌의 어느 한 부분도 고립되어 작동하지 않음을 강조하며 ④의 내용을 뒷받침한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.\n\n→ Brain functions arise from the complex (A) ________ of all elements across various scales rather than occurring in a single isolated location, and sensory signals are (B) ________ into conscious reality.",
+      "Options": "① (A) interactions – (B) transformed ### ② (A) silence – (B) processed ### ③ (A) interactions – (B) destroyed ### ④ (A) locations – (B) ignored ### ⑤ (A) isolation – (B) transformed",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 지문은 뇌의 기능이 특정 한 곳에서 발생하는 것이 아니라 모든 요소의 상호작용(interaction)을 통해 나타난다고 설명합니다. 특히 \"the economy emerges from the interaction of all the elements\"라는 표현은 뇌의 작동 방식도 이와 같으며 \"everything emerges from the interaction\"이라고 강조하여 (A)에 interactions가 적합함을 보여줍니다. 또한 (B)의 경우, 감각 기관에서 온 신호가 신경 고속도로를 따라 이동한 후 \"processing and transformation into our conscious reality\"를 거친다고 명시하고 있어, 신호가 의식적 현실로 '변환(transformed)'된다는 내용을 요약한 (B) transformed가 정답입니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Think of the brain as a city.\n\n(A) In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.\n\n(B) And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation.\n\n(C) If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 주어진 글 'Think of the brain as a city'은 뇌를 도시로 비유하라고 제시합니다. 이어질 문장은 이 비유를 구체화해야 하므로, 도시의 경제가 어디에 위치하는지 묻는 (C) 'If you were to look out over a city...'가 가장 자연스럽습니다. (C)는 경제가 상호작용에서 'emerges'한다고 설명하며, 이에 이어 (B) 'And so it is with the brain's operation'에서 'so'를 통해 뇌 역시 한 곳에서 작동하지 않고 상호작용으로 이루어진다는 점을 연결합니다. 마지막으로 (A) 'In brains and in cities, everything emerges...'에서 'everything'이 앞선 상호작용의 개념을 포괄하며, 전철이 자재를 운반하듯 신경 신호가 처리된다는 구체적인 비유로 마무리됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly.\n\nThink of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. ① And so it is with the brain's operation: it doesn't happen in one spot. ② Just as in a city, no neighborhood of the brain operates in isolation. ③ Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. ④ There the signals undergo processing and transformation into our conscious reality. ⑤",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 주어진 문장은 뇌와 도시 모두에서 모든 것이 상호작용을 통해 발생한다는 주장을 담고 있으며, 이는 앞 문장인 \"no neighborhood of the brain operates in isolation\"이 뇌의 각 부분이 고립되지 않고 상호작용함을 언급한 내용을 자연스럽게 확장합니다. 또한 뒤 문장은 \"Just as trains bring materials... so the raw electrochemical signals...\"으로, 도시의 물자 유통과 뇌의 신호 전달을 비교하는 구체적인 예시를 제시합니다. 주어진 문장의 \"interaction between residents\"와 \"at all scales\"라는 포괄적 진술이 뒤 문장의 구체적인 비교 구조를 이끄는 논리적 토대가 되므로, ③번 자리가 가장 적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. ① Just as in a city, no neighborhood of the brain operates in isolation. ② In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. ③ Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. ④ The city's economy thrives on the efficient distribution of goods through its extensive network of transportation routes. ⑤ There the signals undergo processing and transformation into our conscious reality.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 이 글은 뇌의 작동 방식을 도시의 경제 시스템에 비유하여 설명하며, 뇌의 기능은 특정 부위가 아닌 모든 요소의 상호작용을 통해 나타난다는 흐름을 이룹니다. 정답인 ④번 문장은 도시의 경제가 교통망을 통해 물자가 효율적으로 분배될 때 번영한다는 내용을 서술하고 있어, 뇌의 신경 신호 처리 과정이라는 주제와 직접적인 관련이 없어 흐름에서 벗어납니다. ④번을 제외하면, ③번에서 감각 기관에서 온 전기화학적 신호가 신경 고속도로를 따라 운반된다는 내용과 ⑤번에서 그 신호가 처리되어 의식적 현실로 변환된다는 내용이 자연스럽게 연결됩니다. 즉, 도시의 비유를 넘어 뇌의 실제 신호 전달 및 처리 메커니즘으로 주제가 구체화되며, ④번의 도시 경제론은 이 논리적 연속성을 끊는 무관한 문장입니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy ①emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in ②isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become ③processed into the economy, so the raw electrochemical signals from sensory organs are ④transported along superhighways of neurons. There the signals undergo processing and transformation into our ⑤unconscious reality.",
+      "Options": "① emerges ### ② isolation ### ③ processed ### ④ transported ### ⑤ unconscious",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 지문은 뇌의 작동 방식을 도시의 경제 활동에 비유하며, 감각 기관에서 들어오는 원시적인 전기화학적 신호가 신경 고속도로를 따라 운송된 후 처리되고 변형되어 우리의 '의식적 현실'을 형성한다고 설명합니다. 앞선 문맥에서 신호가 처리되고 변형되는 과정을 강조하고 있으며, 최종적으로 우리가 경험하는 현실은 의식(conscious)적인 것이므로, 문맥상 '무의식적(unconscious)'이라는 표현은 적절하지 않습니다. 따라서 정답인 ⑤번은 원래 의미에 맞게 'conscious'으로 고쳐져야 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 32번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"①<u>where</u> is the economy located?\" you'd see there's no good answer to the question. Instead, the economy ②<u>emerges</u> from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, ③<u>which</u> become processed into the economy, so the raw electrochemical signals from sensory organs ④<u>is transported</u> along superhighways of neurons. There the signals ⑤<u>undergo</u> processing and transformation into our conscious reality.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. ④의 동사 is transported는 주어인 raw electrochemical signals(복수)와 일치하지 않아 are transported로 고쳐야 합니다. ①은 where가 명사절의 부사어로 적절히 사용되었습니다. ②의 emerges는 economy(단수)와 일치하여 문법적으로 정확합니다. ③의 which는 preceding clause의 내용을 수식하는 관계대명사로 올바르게 쓰였습니다. ⑤의 undergo는 주어인 signals(복수)와 일치하여 문법적으로 맞습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "① the importance of interpreting other people's nonverbal cues in social interactions ### ② the influence of external body language on our own emotional state through mimicry ### ③ the theory that emotions arise from our bodies ### ④ the difficulty of measuring emotional intelligence ### ⑤ the role of cognitive interpretation in determining the cause of our physical reactions",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문은 타인의 몸짓이 우리의 신체에 영향을 미치고, 이로 인해 감정적 반향이 일어나 감정이 생성된다는 이론을 설명한다. 특히 입꼬리를 올리는 행동이 기분을 좋게 하거나 연필을 물고 웃는 자세를 취할 때 만화를 더 재미있게 평가하는 예시를 통해, 감정이 외부 자극에 대한 인지적 해석보다는 신체 반응에서 비롯된다는 '신체 우선성'을 강조한다. 따라서 감정이 몸에서 비롯된다는 이론이 주제이다. ①은 타인의 비언어적 단서 해석의 중요성을 다루지만, 지문의 핵심인 감정의 기원에 대한 논의와 거리가 있다. ②는 외부 몸짓의 영향을 언급하지만, 최종적으로 도달하는 결론인 '감정의 신체 기원'을 포괄하지 못한다. ④와 ⑤는 지문에서 다루지 않는 내용이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "① Body Language Dictates Our Emotional Responses ### ② Emotions Can Be Transmitted Through Body Language ### ③ Why People Judge Cartoons as Funny ### ④ Emotions Are Always the Same, No Matter Who You Are Around ### ⑤ Facial Expressions Are The Source Of Emotion",
+      "CorrectAnswer": "②",
+      "Explanation": "지문은 타인의 신체 언어(특히 미소 같은 표정)를 모방하는 행위가 우리의 감정에 영향을 미쳐 감정적 반응을 생성한다는 내용을 다룹니다. 루이 암스트롱의 노래와 연필로 미소 짓는 실험 사례는 타인의 감정이 우리의 신체 동작을 통해 전달됨을 보여주며, 결론적으로 감정이 신체에서 비롯된다는 이론을 제시합니다. 따라서 '감정은 신체 언어를 통해 전달될 수 있다'는 ②번이 지문의 핵심 주장을 가장 잘 포괄하는 제목입니다. ①번은 신체 언어가 감정적 반응을 '지배한다'고 단정하여 지문의 '영향을 미친다'는 뉘앙스와 다르고, ⑤번은 얼굴 표현이 감정의 '원천'이라고 단정하는 등 범위가 지나치게 좁거나 절대적입니다. ③번은 예시에만 치우쳤고, ④번은 지문의 내용과 정반대되므로 부적절합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "① The passage mentions Louis Armstrong to explain the source of facial expressions. ### ② Louis Armstrong claimed that smiling causes the world to frown. ### ③ The theory states that emotions arise from our bodies. ### ④ The writer says that emotions arise mainly from our minds. ### ⑤ The passage claims that emotions are generated solely by the mind.",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문은 \"this theory states that emotions arise from our bodies\"라고 명시하여 감정이 우리 몸에서 비롯된다는 이론을 제시하고 있어 ③과 일치한다. ①은 루이 암스트롱의 인용이 표정 표현의 근원이 아닌, 웃음이 기쁨을 전달하는 매개임을 설명하기 위한 것임을 고려할 때 부합하지 않는다. ②는 지문의 \"the whole world smiles with you\"와 정반대되므로 틀렸다. ④와 ⑤는 감정이 마음에서 비롯된다고 주장하지만, 지문은 \"emotions arise from our bodies\"라고 하여 신체적 기원을 강조하므로 두 선지 모두 지문의 내용과 일치하지 않는다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "① Louis Armstrong sang that when you're smiling, the whole world smiles with you. ### ② The theory states that emotions arise from our bodies. ### ③ The passage claims that emotions arise directly from our minds rather than our bodies. ### ④ People judge cartoons funnier when their mouths are forced into a smile-like shape. ### ⑤ The phrase \"I must be afraid, because I'm running\" summarizes the primacy of the body.",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문은 \"this theory states that emotions arise from our bodies\"라고 명시하여 감정이 신체에서 비롯된다고 주장하므로, ③의 \"마음에서 직접 비롯된다\"는 내용과 정면으로 모순됩니다. ①은 Louis Armstrong의 가사 인용과 일치하며, ④는 연필로 입꼬리를 들어 올린 사람들이 만화를 더 재미있다고 평가했다는 실험 결과와 부합합니다. 또한 ⑤는 \"I must be afraid, because I'm running\"이라는 표현이 신체의 우위성을 요약한다고 한 지문과 일치합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. <u>_____</u> For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "① This theory argues that facial expressions are the primary cause of social interaction. ### ② This theory claims that cognitive appraisal precedes and generates bodily responses. ### ③ This theory suggests that our bodies are merely passive recipients of external emotions. ### ④ Strange as it may sound, this theory states that emotions arise from our bodies. ### ⑤ This theory implies that emotional states are independent of physical movements.",
+      "CorrectAnswer": "④",
+      "Explanation": "정답은 ④. 앞문장 \"If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body\"는 표정 모방이 감정을 유발한다는 내용을 담고 있다. 이어지는 예시들(\"For example...\")은 입 모양이 기분에 영향을 준다는 구체적 사례를 제시하며, 이는 신체가 감정의 원천임을 강조한다. ④은 \"Strange as it may sound, this theory states that emotions arise from our bodies\"로, 앞뒤 문맥이 제시하는 '신체적 반응이 감정을 만든다'는 핵심 주장을 명확히 요약하며 지문의 흐름을 자연스럽게 이어준다. ①은 '사회적 상호작용의 원인'을 강조하지만 지문의 초점은 감정 생성 메커니즘이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"\n\n→ The passage argues that emotions (A) ________ from bodily expressions rather than mental states, as mimicking facial movements directly (B) ________ our internal feelings.",
+      "Options": "① (A) originate – (B) ignore ### ② (A) vanish – (B) override ### ③ (A) fade – (B) influences ### ④ (A) fade – (B) ignore ### ⑤ (A) originate – (B) influences",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 지문은 \"emotions arise from our bodies\"라고 명시하여 감정이 신체에서 비롯된다고 주장하므로, (A)에 들어갈 단어는 'originate(비롯되다)'가 적절합니다. 또한 \"copying another's smile makes us feel happy\"와 \"emotion... has been transmitted via our body\"를 통해 신체 모방이 내부 감정에 영향을 미친다고 설명하므로, (B)에는 'influences(영향을 미치다)'가 적합합니다. (B)는 'override(무효화하다)'나 'ignore(무시하다)'와 같이 감정을 부정하거나 무시하는 뉘앙스를 담고 있어 지문의 인과 관계와 맞지 않습니다. 따라서 신체 표현에서 비롯되고 신체 모방이 감정에 영향을 준다는 논리를 가장 정확히 요약한 ⑤번이 정답입니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly.\n\n(A) Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth.\n\n(B) If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"\n\n(C) As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 주어진 글은 타인의 표정이 우리의 신체 반응을 통해 감정으로 이어지는 과정을 설명합니다. 이어지는 (C)는 \"웃으면 세상이 웃는다\"는 노래와 함께 타인의 웃음을 모방하면 행복해진다고 하여, 주어진 글의 '감정 반향' 개념을 구체적인 예시(웃음)로 이어줍니다. 그 다음 (A)는 \"이론\"을 언급하며, 감정이 신체에서 비롯된다는 역발상적 주장을 제시하고 입꼬리를 올리는 예시를 듭니다. 이때 '이 이론'은 (C)의 현상을 설명하는 배경이 됩니다. 마지막으로 (B)에서는 연필로 웃는 표정을 만드는 실험 결과를 들어, (A)의 주장을 뒷받침하며 신체의 우위성을 강조합니다. 따라서 (C)-(A)-(B)의 순서가 알맞다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. ① Strange as it may sound, this theory states that emotions arise from our bodies. ② For example, our mood can be improved by simply lifting up the corners of our mouth. ③ If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. ④ The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\" ⑤ The emotional echo generated by the body allows the smiler's happiness to be transmitted through physical mimicry.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 이 글은 타인의 표정을 모방하는 신체 반응이 감정을 유발한다는 '신체 중심의 감정 이론'을 설명합니다. 정답인 ⑤번은 앞선 문장에서 이미 언급된 '신체가 감정을 생성한다'는 핵심 주장을 반복하며 새로운 정보를 제공하지 않아 흐름이 단절됩니다. ⑤번을 제거하면, '입을 올리는 것이 기분을 좋게 한다'는 예시(②)와 '연필을 물고 만화평을 보는 실험(③)'이 자연스럽게 이어지며, 이어지는 '두려움 때문에 달린다'는 명언(④)까지 일관된 논리를 유지합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Someone else's body language ①affects our own body, which then creates an emotional ②echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been ③transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be ④improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to ⑤smile. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "① affects ### ② echo ### ③ transmitted ### ④ improved ### ⑤ smile",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 앞문장에서 연필을 물게 하는 것은 입꼬리를 들어 웃는 것과 같은 모양을 만드는 것이므로, 뒤문장에서는 이를 피하기 위해 연필을 물지 않은 경우를 대비해 'frown( 찌푸리다)'로 고쳐야 합니다. 'smile'은 문맥상 웃는 행위를 반복하는 것이 되어 적절하지 않습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 33번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Someone else's body language ①<u>affect</u> our own body, ②<u>which</u> then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler ③<u>has been transmitted</u> via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people ④<u>are asked</u> to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body ⑤<u>is</u> sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 주어가 'Someone else's body language'로 단수이므로 동사는 affects로 바꿔야 합니다. ②는 선행사 body language를 수식하는 관계대명사로 맞습니다. ③는 감정이 전달된 경험을 나타내는 현재완료 수동으로 맞습니다. ④는 사람들이 요청받는 일반적인 상황을 나타내는 수동으로 맞습니다. ⑤는 주어가 단수이므로 동사 is로 단수 일치하여 맞습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① the role of price discounts in attracting shoppers ### ② the impact of scarcity on the sales volume of Campbell's soup ### ③ the difficulty of conducting genuine supermarket experiments ### ④ the effect of limited choices on consumers' purchase behavior ### ⑤ the effect of marketing on the sales of a single product",
+      "CorrectAnswer": "④",
+      "Explanation": "지문은 구매 수량을 제한하는 전략이 오히려 판매량을 증가시킨다는 연구 결과를 제시합니다. 코넬 대학의 브라이언 완신 교수는 슈퍼마켓에서 캠벨 수프의 구매 개수를 제한했을 때, 제한이 없을 때보다 평균 구매량이 더 많았다는 실험 결과를 통해 '희소성(제한)'이 판매를 촉진함을 입증했습니다. 따라서 이 글의 핵심 주제는 구매 제한이 소비자의 구매 행동에 미치는 영향을 설명하는 것입니다. 보기 ④는 이러한 맥락과 일치합니다. 반면, ②는 특정 제품인 캠벨 수프에 국한되어 있어 지문의 일반적인 결론을 포괄하지 못하며, ①은 가격 할인 자체보다 구매 제한이라는 조건에 초점이 맞춰져 있어 적절하지 않습니다. ③과 ⑤는 지문의 주요 논지와 거리가 멉니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① Campbell's Soup Discounts Drive Supermarket Sales Growth ### ② Unlimited Purchases Encourage Higher Average Customer Spending ### ③ How Supermarkets Earn More by Putting More Cans on Shelves ### ④ Limiting Purchase Quantities Boosts Sales Through Scarcity ### ⑤ Campbell's Soup Discounts Increase Sales Regardless of Limits",
+      "CorrectAnswer": "④",
+      "Explanation": "지문은 구매 수량을 제한하는 전략이 오히려 판매를 증가시킨다는 연구 결과를 다루고 있습니다. 브라이언 완신크 교수의 슈퍼마켓 실험에서 구매 제한이 없는 경우 평균 3.3캔이 팔린 반면, 4캔 또는 12캔으로 구매 수를 제한한 경우 평균 5.3캔이 팔려 scarcity(희소성)가 판매를 촉진함을 입증했습니다. 따라서 '구매 수량 제한이 희소성을 통해 판매를 높인다'는 ④번이 지문의 핵심 내용을 가장 정확히 반영한 제목입니다. ①번은 할인 자체에 초점을 맞추었고, ②번은 제한 없는 경우를 언급하여 결과와 반대되며, ③번은 선반에 더 많은 캔을 놓는다는 표현이 실험의 의도인 '구매 제한'과 다릅니다. ⑤번은 제한 여부와 무관하다고 주장하여 지문의 결론과 배치됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① The study was conducted in a laboratory setting. ### ② The experiment was conducted in a controlled laboratory environment. ### ③ Brian Wansink persuaded supermarkets to offer soup at a discount of 10 cents. ### ④ Sales decreased significantly when customers faced a strict purchase limit. ### ⑤ Customers were restricted to buying either four or twelve cans in the tests.",
+      "CorrectAnswer": "⑤",
+      "Explanation": "정답은 ⑤. 지문에서 \"customers were limited to either four or twelve cans\"라고 명시하여 테스트 그룹의 구매 제한 수량이 4개 또는 12개임을 확인하므로 ⑤가 일치한다. ①과 ②는 지문에서 \"nor was it held in a laboratory\"라고 실험이 실험실에서 이루어지지 않았다고 명시하여 거짓이다. ③은 89센트에서 79센트로 10센트 할인된 것이 맞으나, 정답 선지 ⑤가 지문의 핵심 조건을 더 정확히 반영하므로 ⑤가 최선이다. ④는 \"scarcity encourages sales\"라고 stating하여 제한이 매출을 감소시키지 않고 오히려 증가시켰으므로 거짓이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① The experiment was conducted in a laboratory setting. ### ② Customers were limited to four or twelve cans of soup. ### ③ The study took place in three supermarkets in Sioux City, Iowa. ### ④ Shoppers bought more cans when there was a limit on purchases. ### ⑤ The study was conducted by Brian Wansink.",
+      "CorrectAnswer": "①",
+      "Explanation": "정답은 ①. 지문 마지막 문장 \"nor was it held in a laboratory\"에 명시된 바와 같이, 이 실험은 연구실이 아닌 실제 슈퍼마켓에서 진행되었으므로 ①은 내용과 일치하지 않는다. 반면 ②는 \"limited to either four or twelve cans\"라는 조건과 일치하며, ③은 \"three supermarkets in Sioux City, Iowa\"라는 장소 묘사와 부합한다. 또한 ④는 제한 조건에서 평균 5.3개를 구매했다는 결과와 일치하고, ⑤는 Brian Wansink이 조사를 수행했다는 내용과 일치한다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Restricting <u>_____</u> boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① a small discount on Campbell's soup ### ② the price of Campbell's soup ### ③ the number of items customers can buy ### ④ customers being limited to a specific number of cans ### ⑤ unlimited volume of purchases",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 지문은 \"Restricting _____ boosts sales\"로 시작해, 이후 브라이언 완신크 교수의 실험 내용을 소개한다. 교수가 슈퍼마켓에 캠벨 수프의 구매 수량을 제한하도록 요청했고(\"limited to either four or twelve cans\"), 그 결과 제한이 없는 경우보다 제한이 있는 경우 평균 구매량이 더 많았다고 설명한다. 이는 '구매 수량 제한'이 매출 증대에 기여한다는 것을 보여준다. 따라서 빈칸에는 실험의 핵심 변수인 \"the number of items customers can buy\"가 들어가야 문맥이 자연스럽게 연결된다. ①과 ②는 가격 할인에 관한 내용으로, 실험의 주된 초점이 아닌 부수적 조건이다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.\n\n→ Brian Wansink's study shows that scarcity (A) ________ sales, with shoppers buying 5.3 cans on average in the limited purchase condition, compared to 3.3 cans in the (B) ________ condition.",
+      "Options": "① (A) suppresses – (B) unrestricted ### ② (A) limits – (B) unrestricted ### ③ (A) suppresses – (B) unlimited ### ④ (A) decreases – (B) unlimited ### ⑤ (A) increases – (B) unlimited",
+      "CorrectAnswer": "⑤",
+      "Explanation": "⑤가 정답입니다. 지문에서 Wansink 교수는 구매 제한이 판매를 증가시킨다는 전제 하에 실험을 진행했으며, 그 결과 제한 조건에서 평균 5.3캔, 제한 없는 조건에서 3.3캔이 구매되었습니다. 이는 희소성(구매 제한)이 판매를 증가시킨다는 것을 시사합니다. 따라서 (A)는 '증가시킨다'는 의미의 increases가 적절하며, (B)는 제한이 없는 상황을 나타내는 unlimited가 정답입니다. ①과 ②의 suppresses와 limits는 지문의 결론과 반대되며, ③과 ④의 unlimited는 (B)에 적합하지만 (A)의 decreases는 데이터와 모순됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales.\n\n(A) In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales.\n\n(B) The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.\n\n(C) Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 주어진 글은 구매 제한이 판매를 늘린다는 주장을 제시하므로, 이를 뒷받침할 구체적인 연구 사례가 이어져야 합니다. (C)는 브라이언 완싱크 교수가 1998년 슈퍼마켓에서 실시한 실제 실험을 소개하며, 구매 제한 조건(4개, 12개)과 통제 집단(제한 없음)을 설정한 내용을 담고 있어 주장을 구체화합니다. 이어지는 (A)는 (C)에서 언급된 '제한 없는 조건'과 '제한 조건'의 구매량(각 3.3개, 5.3개)을 비교하며 \"This suggests scarcity encourages sales\"라고 결론짓므로 (C) 다음에 위치합니다. 마지막으로 (B)는 \"The findings\"이 실험실 대신 실제 슈퍼마켓에서 진행되어 신뢰성이 높다고 평가하며, 앞서 제시된 결과의 타당성을 강화하므로 (A) 뒤에 옵니다. 따라서 (C)-(A)-(B)의 순서가 알맞다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents.\n\nRestricting the number of items customers can buy boosts sales. ① Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. ② The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. ③ In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. ④ This suggests scarcity encourages sales. ⑤ The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 주어진 문장은 브라이언 완싱크 교수가 시우시티의 슈퍼마켓 3곳에 캠벨 수프를 할인 판매하도록 설득한 내용을 서술하며, 이는 뒤 문장에서 언급된 ‘할인된 수프’가 어떤 조건에서 판매되었는지 구체적으로 설명하기 위한 배경이 됩니다. 앞 문장은 교수가 이 전술의 효과를 조사했다고 명시하므로, 주어진 문장은 그 조사의 구체적인 실행 과정, 즉 할인 판매를 어떻게 진행했는지 보여주는 선행 문맥으로 적합합니다. 특히 주어진 문장의 ‘small discount’와 ‘79 cents rather than 89 cents’는 뒤 문장의 ‘discounted soup’를 자연스럽게 이어주는 핵심 단서이며, 전체적으로 교수의 조사 목적과 실제 실험 환경 설정을 연결하는 논리적 고리 역할을 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Restricting the number of items customers can buy boosts sales. ① Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. ② Campbell's soup remains a staple in many households, providing a convenient and affordable meal option for busy families. ③ He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. ④ The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. ⑤ In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "②",
+      "Explanation": "②가 정답입니다. 이 글은 구매 수 제한이 판매량 증가에 미치는 영향을 실험을 통해 입증하는 흐름을 따릅니다. 정답인 ②번 문장은 캠벨 수프의 일반적인 위상과 편의성을 설명하여, 특정 가격과 구매 제한 조건 하에서의 소비자 행동 변화를 다루는 본문의 실험 설계 및 결과 분석 흐름과 직접적인 관련이 없습니다. ②번 문장을 제외하면, ①번의 연구 목적에서 ③번의 구체적인 실험 조건(할인 가격 및 구매 제한 수)으로 자연스럽게 이어지며, 이어지는 ④번과 ⑤번의 실험 결과와 결론이 일관되게 전개됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "①Restricting the number of items customers can buy ②boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small ③premium: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no ④limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity ⑤encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "① Restricting ### ② boosts ### ③ premium ### ④ limit ### ⑤ encourages",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 앞선 문장에서 Campbell's soup을 79센트라는 작은 ②boosts(증가시킨다) 가격으로 제공했다고 명시하고, 이어지는 문장에서 ④limit(제한)이 있는 경우와 없는 경우를 비교하며 ⑤encourages(유도한다)라는 결과를 도출합니다. 따라서 79센트는 89센트보다 낮은 가격인 ③discount(할인)으로 고쳐야 합니다. premium은 '할증'을 의미하여 문맥과 맞지 않습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 34번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "①<u>Restrict</u> the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup ②<u>was sold</u> in one of three conditions: a control, ③<u>where</u> there was no limit on the volume of purchases, or two tests, ④<u>where</u> customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity ⑤<u>encourages</u> sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 문장 주어가 되어야 하므로 동명사 Restricting으로 고쳐야 합니다. ② was sold는 수동태로 문맥상 맞습니다. ③ where는 선행사 conditions를 수식하는 관계부사로 적절합니다. ④ where 역시 앞의 tests를 수식하는 관계부사로 올바르게 사용되었습니다. ⑤ encourages는 주어가 scarcity 단수이므로 단수 동사로 문법적으로 정확합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "주제",
+    "question_data": {
+      "Question": "다음 글의 주제로 가장 적절한 것은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "Options": "① the reasons why new systems are hard to learn ### ② the benefits of removing every personal computer from every office ### ③ the process of training workers to use new technology ### ④ the role of social media in modern office environments ### ⑤ the negative effects of technology on office workers' productivity",
+      "CorrectAnswer": "⑤",
+      "Explanation": "지문은 기술이 생산성을 높일 잠재력이 있지만, 동시에 생산성에 부정적인 영향을 미칠 수 있다고 명시하며 시작합니다. 이어지는 예시들은 사무실 환경에서 컴퓨터와 인터넷 접근이 개인 이메일 및 소셜 미디어 사용으로 이어져 업무 방해와 생산성 저하를 초래할 수 있음을 설명합니다. 또한 새로운 기술 도입이 생산 과정의 변화나 새로운 시스템 학습을 요구하며, 이는 시간 소모와 스트레스로 이어져 생산성 감소를 야기한다고 덧붙입니다. 따라서 지문의 핵심 주제는 기술이 직장인의 생산성에 미치는 부정적인 영향입니다. 보기 ①은 학습 어려움의 원인만 다루고 있고, ②는 컴퓨터 제거라는 극단적인 해결책을 제시하며, ③은 교육 과정 자체에 초점을 맞추고 있어 지문의 포괄적인 주제를 반영하지 못합니다. ④는 소셜 미디어의 역할만 언급하여 일부분만 강조합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "제목",
+    "question_data": {
+      "Question": "이 글의 제목으로 가장 적절한 것은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "Options": "① Why Workers Should Avoid Using Computers at Work ### ② Workers Must Learn New Systems To Increase Productivity ### ③ Why Learning New Systems Is The Key To Productivity ### ④ How Personal Emails And Social Media Reduce Office Output ### ⑤ Technology Negatively Impacts Productivity Through Distractions and Learning",
+      "CorrectAnswer": "⑤",
+      "Explanation": "지문은 기술이 생산성을 높일 잠재력이 있지만, 오히려 부정적인 영향을 미칠 수 있다고 주장하며 두 가지 주요 원인을 제시합니다. 첫째, 컴퓨터와 인터넷 접근이 가능해지면서 직원들이 개인 이메일이나 소셜 미디어를 확인하는 등 산만해져 업무 효율이 떨어지는 점입니다. 둘째, 새로운 기술 도입으로 인한 프로세스 변화와 새로운 시스템 학습 과정에서 발생하는 시간 소모와 스트레스로 생산성이 감소하는 점입니다. 따라서 지문의 핵심은 기술이 산만함과 학습 부담을 통해 생산성에 부정적인 영향을 준다는 것입니다. 보기 ⑤는 이러한 두 가지 요인(산만함과 시스템 학습)을 모두 포함하며 기술의 부정적 영향을 정확히 요약하고 있어 가장 적절한 제목입니다. 반면, ①은 컴퓨터 사용을 피해야 한다는 극단적인 주장을 담고 있고, ②와 ③은 생산성 증가에 초점을 맞추어 지문의 부정적 관점과 맞지 않습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하는 것은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "Options": "① Technology has no potential to increase productivity. ### ② Workers can access social media only during their designated break times. ### ③ Workers who have access to the internet are more productive. ### ④ The writer says that new technology can have a negative impact on productivity. ### ⑤ Learning new technology is always quick and easy for workers.",
+      "CorrectAnswer": "④",
+      "Explanation": "정답은 ④. 지문에서 \"Introducing new technology can also have a negative impact on productivity\"라고 명시하여 새로운 기술 도입이 생산성에 부정적 영향을 줄 수 있음을 밝히고 있어 ④와 일치한다. 반면 ①은 지문의 \"technology has the potential to increase productivity\"와 정반대이며, ②는 \"whenever they want to\"라고 하여 언제든지 접근 가능함을 나타내어 틀렸다. 또한 ③은 인터넷 접근이 오히려 \"make them less productive\"하게 한다고 하여 부정적 영향을 강조하고 있고, ⑤은 학습이 \"time consuming and stressful\"하다고 하여 항상 빠르고 쉽다는 주장과 모순된다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "불일치",
+    "question_data": {
+      "Question": "다음 글의 내용과 일치하지 않는 것은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "Options": "① New technology can improve productivity by streamlining processes ### ② Workers using computers and internet may check personal emails ### ③ The internet can distract workers from their tasks ### ④ Personal email and social media usage can reduce work output ### ⑤ Workers may become less productive when learning to use new technology",
+      "CorrectAnswer": "①",
+      "Explanation": "정답은 ①. 지문은 기술이 생산성 향상의 잠재력이 있지만 \"negative impact on productivity\"를 줄 수 있다고 명시하며, 특히 새로운 기술 도입이 생산 과정 변경이나 학습 부담으로 인해 생산성 감소를 초래할 수 있다고 설명합니다. 따라서 생산성을 'streamlining'한다고 단정하는 ①은 지문의 부정적 영향 강조와 일치하지 않습니다. ②는 \"check their personal e-mails\"와 일치하고, ③과 ④는 \"stop them from doing their work\"로 작업 방해 및 생산성 저하를 지지합니다. ⑤는 \"Learning to use new technology can be time consuming\"와 일치하여 학습 과정이 생산성 감소 요인임을 보여줍니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "빈칸",
+    "question_data": {
+      "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it <u>_____</u>. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "Options": "① can also reduce the need for human labor ### ② can also improve the working conditions ### ③ can also have a negative impact on productivity ### ④ can also increase the quality of work ### ⑤ can also increase the number of workers",
+      "CorrectAnswer": "③",
+      "Explanation": "정답은 ③. 앞문장 “technology has the potential to increase productivity”의 반전 접속사 Although로 인해 빈칸에는 생산성 향상과 반대되는 부정적 결과가 이어져야 한다. 이어지는 예시들에서 개인 이메일 사용으로 업무 방해, 새로운 시스템 학습으로 인한 스트레스와 시간 소모 등이 언급되며 이는 결국 생산성 저하로 이어짐을 보여준다. 따라서 “can also have a negative impact on productivity”가 문맥상 가장 적절하다. ① 노동 필요성 감소, ② 근무 조건 개선, ④ 작업 품질 향상, ⑤ 근로자 수 증가는 모두 생산성 증가나 긍정적 효과와 관련된 내용으로, 지문의 부정적 흐름과 모순된다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "요약",
+    "question_data": {
+      "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.\n\n→ While new technology can (A) ________ productivity, it can also (B) ________ it by encouraging personal use or forcing workers to learn new systems.",
+      "Options": "① (A) harm – (B) boost ### ② (A) boost – (B) ignore ### ③ (A) boost – (B) maintain ### ④ (A) boost – (B) harm ### ⑤ (A) enhance – (B) boost",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 지문은 기술이 생산성을 높일 잠재력이 있지만(A) boost, 개인 이메일이나 소셜 미디어 사용으로 일을 방해하거나(B) 새로운 시스템 학습으로 인한 스트레스로 생산성 저하를 초래해(B) harm한다고 명시합니다. (A)는 'increase productivity'의 동의어인 boost가 적절하며, (B)는 'stop them from doing their work' 및 'decline in productivity'를 요약하는 harm이 정답입니다. ①은 (A)가 반대 의미이고, ②와 ③의 (B) ignore, maintain은 지문의 부정적 영향과 맞지 않습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "순서",
+    "question_data": {
+      "Question": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity.\n\n(A) They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive.\n\n(B) Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.\n\n(C) For example, in many office environments workers sit at desks with computers and have access to the internet.",
+      "Options": "① (A)-(C)-(B)\n② (B)-(A)-(C)\n③ (B)-(C)-(A)\n④ (C)-(A)-(B)\n⑤ (C)-(B)-(A)",
+      "CorrectAnswer": "④",
+      "Explanation": "④가 정답입니다. 주어진 글은 기술이 생산성에 부정적 영향을 줄 수 있다고 제시합니다. 이어지는 첫 번째 덩어리는 구체적인 예시를 들어야 하므로, (C)의 'For example'이 적절하며 'computers and access to the internet'가 기술의 구체적인 형태를 보여줍니다. 이어지는 두 번째 덩어리는 (C)의 'workers'를 지칭하는 (A)의 'They'가 이어지며, 인터넷 접근이 이메일과 소셜 미디어 사용으로 이어져 생산성을 낮춘다는 논리적 흐름을 만듭니다. 마지막 세 번째 덩어리는 (A)의 개인적 예시와 구분되는 다른 부정적 요인을 다루므로, (B)의 'Introducing new technology'가 새로운 맥락으로 자연스럽게 연결됩니다. 따라서 (C)-(A)-(B)의 순서가 알맞다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "삽입",
+    "question_data": {
+      "Question": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.",
+      "Paragraph": "For example, in many office environments workers sit at desks with computers and have access to the internet.\n\nAlthough technology has the potential to increase productivity, it can also have a negative impact on productivity. ① They are able to check their personal e-mails and use social media whenever they want to. ② This can stop them from doing their work and make them less productive. ③ Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. ④ Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity. ⑤",
+      "Options": "①\n②\n③\n④\n⑤",
+      "CorrectAnswer": "①",
+      "Explanation": "①이 정답입니다. 앞 문장의 'negative impact on productivity'라는 부정적 영향을 구체적으로 설명하는 예시가 필요하며, 주어진 문장은 'For example'로 시작해 이를 제시합니다. 이어지는 뒤 문장의 'They'는 주어진 문장의 'workers'를 지칭하며, 'check their personal e-mails'는 주어진 문장의 'access to the internet'라는 환경에서 가능한 행위로 자연스럽게 이어집니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "무관한문장",
+    "question_data": {
+      "Question": "다음 글에서 전체 흐름과 관계없는 문장은?",
+      "Paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. ① They are able to check their personal e-mails and use social media whenever they want to. ② This can stop them from doing their work and make them less productive. ③ Workers often find that mastering new technology brings a sense of accomplishment and professional growth. ④ Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. ⑤ Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "Options": "① ### ② ### ③ ### ④ ### ⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 이 글은 기술이 생산성에 미치는 부정적 영향에 대해 논의하는 흐름을 가지고 있습니다. ③번 문장은 기술 습득이 성취감과 전문성 성장을 가져온다는 긍정적 결과를 서술하므로, 부정적 영향만 다루는 전체 맥락과 무관합니다. ③번을 제외하면 인터넷 사용으로 인한 업무 방해, 새로운 기술 도입으로 인한 생산 과정 변화, 그리고 학습 시간과 스트레스로 인한 생산성 저하라는 부정적 요인들이 논리적으로 자연스럽게 연결됩니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "어휘",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 문맥상 낱말의 쓰임이 적절하지 않은 것은?",
+      "Paragraph": "Although technology has the potential to ①increase productivity, it can also have a ②negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can ③encourage them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and ④stressful for workers and this can cause a ⑤decline in productivity.",
+      "Options": "① increase ### ② negative ### ③ encourage ### ④ stressful ### ⑤ decline",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 앞문장에서 직장인들은 인터넷과 소셜미디어를 자유롭게 이용하며, 이어지는 문장에서는 이로 인해 업무 효율이 낮아진다고 설명합니다. 따라서 빈칸 앞의 'This'가 업무 수행을 방해하거나 막는 부정적인 영향을 미친다는 맥락이 필요합니다. 'encourage(권장하다, 격려하다)'는 긍정적인 행동을 유도하는 뜻이므로 문맥상 적절하지 않으며, 'stop(멈추게 하다)'으로 수정해야 합니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  },
+  {
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source": "23년 6월 고1 영어모의고사 35번",
+    "type": "어법",
+    "question_data": {
+      "Question": "다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?",
+      "Paragraph": "Although technology ①<u>has the potential</u> to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and ②<u>have access</u> to the internet. They are able to check their personal e-mails and use social media ③<u>whenever they wants</u> to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. ④<u>Learning to use</u> new technology can be time consuming and stressful for workers and this ⑤<u>can cause</u> a decline in productivity.",
+      "Options": "①###②###③###④###⑤",
+      "CorrectAnswer": "③",
+      "Explanation": "③이 정답입니다. 주어가 복수형 they이므로 동사는 want으로 고쳐야 합니다. ① has the potential은 '~할 가능성이 있다'는 관용 표현으로 맞습니다. ② have access to는 '~에 접근할 수 있다'는 고정 구문으로 맞습니다. ④ Learning to use는 동명사 주체에 부정사 목적어 형식이 맞습니다. ⑤ can cause는 조동사 뒤 원형 동사 사용으로 맞습니다.",
+      "OptionType": "English"
+    },
+    "status": "대기",
+    "option_type": "English",
+    "ai_source": "local-qwen-worker-unreviewed"
+  }
+]

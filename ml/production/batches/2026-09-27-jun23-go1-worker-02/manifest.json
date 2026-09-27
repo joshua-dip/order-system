@@ -1,0 +1,1019 @@
+{
+  "batch_id": "2026-09-27-jun23-go1-worker-02",
+  "created_at": "2026-09-27T06:18:54.285414+00:00",
+  "textbook": "23년 6월 고1 영어모의고사",
+  "code_commit": "0fcccf4b3edfad5d3bee679ff94f8f37960a0017",
+  "target_completed_per_type": 3,
+  "max_jobs": 100,
+  "purpose": "Worker draft generation only. No auto review, completion, or retraining.",
+  "stock_before": {
+    "completed": 27,
+    "pending": 0,
+    "all_passages": 25,
+    "general_reading_passages": 18,
+    "raw_12_type_target": 648,
+    "raw_shortage_before_suitability": 621
+  },
+  "slots": [
+    {
+      "key": "21번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "주제",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "제목",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "일치",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "불일치",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "빈칸",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "요약",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "순서",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "삽입",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "무관한문장",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "어휘",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "어법",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "21번|주장",
+      "passage_id": "69c4ffc346f58f933b6dce17",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 21번",
+      "type": "주장",
+      "paragraph": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "paragraph_sha256": "914381f92ecc8c00af94e3baaa55241ff65b551d6379ad9b6dce16a23fc1ae43",
+      "suitability": "구매 후 고객 만족 관리 권고와 입소문 영향. 주장 포함."
+    },
+    {
+      "key": "24번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "주제",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "제목",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "일치",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "불일치",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "빈칸",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "요약",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "순서",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "무관한문장",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "어휘",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "24번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce1a",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 24번",
+      "type": "어법",
+      "paragraph": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "paragraph_sha256": "da44e90e1b96a77751d9f089a4f027822892d7875cf7ecd388ca78446c2e970f",
+      "suitability": "부유국의 시간 압박·빈곤 스트레스 비교. 권고문이 아니므로 주장 제외."
+    },
+    {
+      "key": "29번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "주제",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "제목",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "일치",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "불일치",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "빈칸",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "요약",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "순서",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "삽입",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "무관한문장",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "어휘",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "29번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce1f",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 29번",
+      "type": "어법",
+      "paragraph": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "paragraph_sha256": "eef15e419c3b4e20c9bc74476eb99bfb465b94cdda860f6beb4f8ccc978298a8",
+      "suitability": "칭찬과 유아 자아상·행동의 인과 설명. 직접 권고를 만들어 넣지 않음."
+    },
+    {
+      "key": "30번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "주제",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "제목",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "일치",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "불일치",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "빈칸",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "요약",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "순서",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "삽입",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "무관한문장",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "어휘",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "30번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce20",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 30번",
+      "type": "어법",
+      "paragraph": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "paragraph_sha256": "b567d0598b64101828597fe2e5f71fd46eba779e92a8d44de0a1e12c4dd41c6e",
+      "suitability": "효모 광고 포지셔닝의 시간 흐름과 매출 회복."
+    },
+    {
+      "key": "31번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "주제",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "제목",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "일치",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "불일치",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "빈칸",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "요약",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "순서",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "삽입",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "무관한문장",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "어휘",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "31번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce21",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 31번",
+      "type": "어법",
+      "paragraph": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "paragraph_sha256": "5681936c79bb286ff6dc22f14390ea4f74b56fb3e34a1218397a6eca4326cbbe",
+      "suitability": "영역 내 탁월함이 타 분야 신뢰와 연결로 확장되는 설명."
+    },
+    {
+      "key": "32번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "주제",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "제목",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "일치",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "불일치",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "빈칸",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "요약",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "순서",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "삽입",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "무관한문장",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "어휘",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "32번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce22",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 32번",
+      "type": "어법",
+      "paragraph": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "paragraph_sha256": "bda3a7c0aaa8ccfc5934533738f07ff3dabd4de1e45add8dd1e48d5ee0dedaec",
+      "suitability": "도시 경제와 뇌의 분산 상호작용 비유."
+    },
+    {
+      "key": "33번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "주제",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "제목",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "일치",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "불일치",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "빈칸",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "요약",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "순서",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "삽입",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "무관한문장",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "어휘",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "33번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce23",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 33번",
+      "type": "어법",
+      "paragraph": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "paragraph_sha256": "f3d0899bbe6020a2c73bed515bc44c8a4c1e9c8c85565498eeb1a0b1caafc035",
+      "suitability": "몸의 모방과 감정 발생 이론·실험 예시."
+    },
+    {
+      "key": "34번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "주제",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "제목",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "일치",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "불일치",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "빈칸",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "요약",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "순서",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "삽입",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "무관한문장",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "어휘",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "34번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce24",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 34번",
+      "type": "어법",
+      "paragraph": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "paragraph_sha256": "c5521e0474f8e606db393252d7a6afac9aa471573e5082f437fbe43dbb915a0a",
+      "suitability": "구매 제한과 수프 판매량 실험. 수치·대조군 구별."
+    },
+    {
+      "key": "35번|주제",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "주제",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|제목",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "제목",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|일치",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "일치",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|불일치",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "불일치",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|빈칸",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "빈칸",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|요약",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "요약",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|순서",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "순서",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|삽입",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "삽입",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|무관한문장",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "무관한문장",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|어휘",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "어휘",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    },
+    {
+      "key": "35번|어법",
+      "passage_id": "69c4ffc346f58f933b6dce25",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source": "23년 6월 고1 영어모의고사 35번",
+      "type": "어법",
+      "paragraph": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "paragraph_sha256": "d16f8d38e15724795bdb80144807966a920781149781bcfa1f909e39c2c52d60",
+      "suitability": "기술의 산만함과 학습 비용이 생산성을 낮추는 두 경로."
+    }
+  ],
+  "skipped": [
+    {
+      "number": "24번",
+      "type": "삽입",
+      "reason": "문장 수 5, 파이프라인 최소 조건 미달"
+    }
+  ],
+  "claim_rule": "Only passage21 has explicit should/monitoring recommendation. Other8 claim slots deferred.",
+  "review_plan": "Review generated drafts in groups of20-30, retain raw outputs, save approved edits and record individual solutions before complete.",
+  "auto_refill": false
+}

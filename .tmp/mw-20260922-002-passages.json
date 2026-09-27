@@ -1,0 +1,328 @@
+{
+  "lessons": [
+    "29",
+    "30",
+    "31",
+    "32",
+    "33",
+    "34"
+  ],
+  "found": [
+    "25년 9월 고2 영어모의고사 29번",
+    "25년 9월 고2 영어모의고사 30번",
+    "25년 9월 고2 영어모의고사 31번",
+    "25년 9월 고2 영어모의고사 32번",
+    "25년 9월 고2 영어모의고사 33번",
+    "25년 9월 고2 영어모의고사 34번"
+  ],
+  "stock": [
+    {
+      "sourceKey": "25년 9월 고2 영어모의고사 29번",
+      "missing": true
+    },
+    {
+      "sourceKey": "25년 9월 고2 영어모의고사 30번",
+      "missing": true
+    },
+    {
+      "sourceKey": "25년 9월 고2 영어모의고사 31번",
+      "missing": true
+    },
+    {
+      "sourceKey": "25년 9월 고2 영어모의고사 32번",
+      "missing": true
+    },
+    {
+      "sourceKey": "25년 9월 고2 영어모의고사 33번",
+      "missing": true
+    },
+    {
+      "sourceKey": "25년 9월 고2 영어모의고사 34번",
+      "missing": true
+    }
+  ],
+  "passages": [
+    {
+      "id": "6a311cf7d94f8e33562c806a",
+      "sourceKey": "25년 9월 고2 영어모의고사 29번",
+      "number": "29번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "All human cultures mark the passing of time by the differences they observe in the world around them.",
+          "ko": "인류의 모든 문화들은 그것들을 둘러싼 세계에서 그것들이 관찰하는 차이에 따라 시간의 흐름을 표시한다."
+        },
+        {
+          "i": 1,
+          "en": "Our choice of which differences to mark depends firstly on what we can observe and secondly on what is important in our lives.",
+          "ko": "어떤 차이를 표시할지에 대한 우리의 선택은 첫째로 우리가 무엇을 관찰할 수 있는지와 둘째로 우리 삶에서 무엇이 중요한지에 따라 달라진다."
+        },
+        {
+          "i": 2,
+          "en": "How we mark the differences ─ the shapes of our calendars and our rituals ─ depends on the connections we make between those two things.",
+          "ko": "우리의 달력과 의식의 형태처럼 우리가 그 차이들을 표시하는 방법은 그 두 가지 사이에 우리가 만드는 연결에 따라 달라진다."
+        },
+        {
+          "i": 3,
+          "en": "In the agricultural society of pre-modern Europe, where higher latitudes make the seasons easily observable, it was natural to monitor the solar cycle.",
+          "ko": "위도가 높아 계절을 쉽게 관찰할 수 있었던 전근대 유럽의 농경 사회에서는 태양의 주기를 관찰하는 것은 자연스러운 일이었다."
+        },
+        {
+          "i": 4,
+          "en": "Conversely, among the largely nomadic peoples of Arabia, for whom seasonal changes were less significant, the lunar calendar was a more sensible choice.",
+          "ko": "반대로, 계절 변화가 덜 중요한 아라비아의 대체로 유목 생활을 하는 민족들에게는 음력이 더 합리적인 선택이었다."
+        },
+        {
+          "i": 5,
+          "en": "That did not make it inevitable that Islam would use a lunar calendar and Roman Christianity a solar one, but political and religious decisions were made from options limited by geography and lifestyle, filtered through tradition.",
+          "ko": "그렇다고 해서 이슬람교가 음력을, 로마 기독교가 양력을 사용하는 것이 필연적인 것은 아니었지만, 지리와 생활 방식에 의해 제한된 선택지 중에서 전통을 통해 걸러져 정치적, 종교적 결정이 이루어졌다."
+        }
+      ]
+    },
+    {
+      "id": "6a311cf7d94f8e33562c806b",
+      "sourceKey": "25년 9월 고2 영어모의고사 30번",
+      "number": "30번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Although empathy is widely praised by scholars and public figures, not everyone is an empathy booster.",
+          "ko": "공감은 학자들과 유명 인사들에 의해 널리 칭송받지만, 모든 사람이 공감을 지지하는 사람인 것은 아니다."
+        },
+        {
+          "i": 1,
+          "en": "Critics of empathy argue that empathy will not save us from interpersonal and intergroup conflict.",
+          "ko": "공감에 대해 비판하는 사람들은 공감이 사람 간 그리고 집단 간 갈등으로부터 우리를 구해주지 않을 것이라고 주장한다."
+        },
+        {
+          "i": 2,
+          "en": "In fact, they argue, empathy makes such conflicts worse.",
+          "ko": "사실, 그들은 공감이 그러한 갈등을 더 악화시킨다고 주장한다."
+        },
+        {
+          "i": 3,
+          "en": "These critics maintain that empathy can be exhausting and lead to burnout or insensitivity to suffering.",
+          "ko": "이런 비평가들은 공감은 소모적일 수 있으며, 번아웃 또는 고통에 대한 무감각으로 이어질 수 있다고 주장한다."
+        },
+        {
+          "i": 4,
+          "en": "They argue that we tend to empathize strongly with our in-group and resist empathizing with out-groups, and even enjoy the suffering of out-groups in competitive or threatening contexts.",
+          "ko": "그들은 우리가 내집단에는 강하게 공감하고 외집단에 대한 공감에는 저항하며, 심지어 경쟁적이거나 위협적인 상황에서는 외집단의 고통을 즐기는 경향이 있다고 주장한다."
+        },
+        {
+          "i": 5,
+          "en": "Thus, the prescription for more empathy is often counterproductive in cases of conflict.",
+          "ko": "따라서, 더 많은 공감을 처방하는 것은 갈등 상황에서 종종 역효과를 낸다."
+        },
+        {
+          "i": 6,
+          "en": "Empathy, they argue, can further encourage conflict and force us into an us vs. them mentality.",
+          "ko": "그들이 주장하기로는, 공감은 더 나아가 갈등을 조장하고 우리를 우리 대 그들이라는 사고방식으로 몰아넣을 수 있다."
+        },
+        {
+          "i": 7,
+          "en": "Finally, even when we try to empathize with others who are dissimilar from us or in unfamiliar contexts, sometimes we are unable to accurately empathize with their experiences, causing further misunderstandings and frustration.",
+          "ko": "마지막으로, 우리와 다르거나 낯선 상황에 있는 타인에게 공감하려고 할 때조차도, 때때로 우리는 그들의 경험을 정확하게 공감하지 못하고, 그 이상의 오해와 좌절을 유발한다."
+        },
+        {
+          "i": 8,
+          "en": "Critics of empathy argue that we should give up on empathy and employ other tools in pursuit of social harmony, e.g., rational compassion or moral emotions like fear, anger, and shame.",
+          "ko": "공감을 비판하는 사람들은 우리가 공감을 포기하고 사회적 조화를 얻기 위해 다른 도구를 이용해야 한다고 주장하는데, 예를 들면 이성적 연민 또는 두려움, 분노, 수치심과 같은 도덕적 감정들이다."
+        }
+      ]
+    },
+    {
+      "id": "6a311cf7d94f8e33562c806c",
+      "sourceKey": "25년 9월 고2 영어모의고사 31번",
+      "number": "31번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Paradoxically, it's uncertainty that makes us feel most alive.",
+          "ko": "역설적으로, 우리가 가장 살아있다고 느끼게 만드는 것은 바로 불확실성이다."
+        },
+        {
+          "i": 1,
+          "en": "Think of events that shake you out of your everyday routine: maybe attending a family wedding, making a big presentation, or going somewhere you've never been.",
+          "ko": "여러분을 일상적인 삶에서 벗어나게 만드는 사건들을 생각해 보아라. 아마도 가족 결혼식에 참석하거나, 중대한 발표를 하거나, 한 번도 가보지 못한 곳에 가는 것 같은 일들 말이다."
+        },
+        {
+          "i": 2,
+          "en": "It's on those occasions that time seems to slow down a little, and you feel more fully engaged.",
+          "ko": "시간이 약간 느려지는 것 같고, 여러분이 더 온전히 몰입한다고 느끼는 때는 바로 그러한 순간들이다."
+        },
+        {
+          "i": 3,
+          "en": "The same holds true if the experience is risky, like mountain climbing or parasailing.",
+          "ko": "등산이나 패러세일링처럼 그 경험이 위험한 경우에도 마찬가지이다."
+        },
+        {
+          "i": 4,
+          "en": "Your senses are sharper.",
+          "ko": "여러분의 감각들이 더 예민해진다."
+        },
+        {
+          "i": 5,
+          "en": "You notice more.",
+          "ko": "여러분은 더 많은 것을 알아차린다."
+        },
+        {
+          "i": 6,
+          "en": "Thanks to the release of a feel-good chemical in the brain called dopamine, you get a greater rush of pleasure from chance encounters with people than planned meetings.",
+          "ko": "'도파민'이라고 불리는 기분 좋게 하는 화학 물질이 뇌 안에서 분비되는 덕분에, 여러분은 계획된 만남보다 사람들과의 우연한 만남에서 더 크게 몰려오는 즐거움을 얻게 된다."
+        },
+        {
+          "i": 7,
+          "en": "Good news, financial rewards, and gifts are more enjoyable if they are surprises.",
+          "ko": "좋은 소식, 금전적 보상, 그리고 선물은 뜻밖의 일일 때 더 즐겁다."
+        },
+        {
+          "i": 8,
+          "en": "It's why the most popular television shows and movies are the ones with unexpected plot twists and astonishing endings.",
+          "ko": "그것이 가장 인기 있는 텔레비전 쇼와 영화가 예기치 않은 줄거리의 반전과 놀라운 결말을 가진 것들인 이유다."
+        }
+      ]
+    },
+    {
+      "id": "6a311cf7d94f8e33562c806d",
+      "sourceKey": "25년 9월 고2 영어모의고사 32번",
+      "number": "32번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "A great strength of the market mechanism is that there are incentives for individuals to reveal their knowledge through their behavior.",
+          "ko": "시장 메커니즘의 한 가지 큰 장점은 사람들이 자신의 행동을 통해 자신이 알고 있는 것을 드러내도록 하는 유인이 있다는 것이다."
+        },
+        {
+          "i": 1,
+          "en": "This stands in contrast to many strategic situations ─ for example, in political negotiations ─ in which it is wise not to let the other side know what one's true preferences or production capacities are.",
+          "ko": "이는 자신의 진정한 선호나 생산 능력이 무엇인지 상대측이 알게 하지 '않는' 것이 현명한 여러 '전략적' 상황과 대조적인데, 정치적 협상을 예로 들 수 있다."
+        },
+        {
+          "i": 2,
+          "en": "A perfectly competitive market that clears on the spot leaves no room for such strategies.",
+          "ko": "상품이 바로바로 다 팔리는 완전 경쟁 시장은 그러한 전략을 위한 여지를 남겨두지 않는다."
+        },
+        {
+          "i": 3,
+          "en": "If prices are not sticky ─ as many models assume ─ individuals adapt their behavior instantaneously, whenever their preferences or the circumstances change.",
+          "ko": "많은 모델이 가정하는 것처럼 가격이 고착되어 있지 않다면, 사람들은 자신의 선호나 상황이 변할 때마다 즉각적으로 행동을 조정한다."
+        },
+        {
+          "i": 4,
+          "en": "They stop buying items that do not satisfy their needs and stop selling items that do not provide them with optimal gains, maybe switching to the production of other items.",
+          "ko": "그들은 자신의 필요를 충족시키지 못하는 물품의 구매를 중단하고 그들에게 최적의 이익을 제공하지 않는 물품의 판매를 중단하고, 다른 물품의 생산으로 전환할지도 모른다."
+        },
+        {
+          "i": 5,
+          "en": "If they have motivational problems, for example, falling into denial about the fact that there is no demand for their products, markets reveal to them, sometimes in quite brutal ways, that they better accept this fact.",
+          "ko": "예를 들어, 그들이 그들의 제품에 대한 수요가 없다는 사실을 부정하는 것에 빠지는 동기적 문제가 있다면, 시장은 그들이 이 사실을 받아들이는 편이 좋다는 것을 때로는 꽤 잔혹한 방법으로 그들에게 드러낸다."
+        }
+      ]
+    },
+    {
+      "id": "6a311cf7d94f8e33562c806e",
+      "sourceKey": "25년 9월 고2 영어모의고사 33번",
+      "number": "33번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Dictionary definitions are constantly revised to keep up with our changing uses and knowledge.",
+          "ko": "사전적 정의는 우리의 변화하는 용례와 지식에 뒤처지지 않기 위해 끊임없이 수정된다."
+        },
+        {
+          "i": 1,
+          "en": "In Roman times, \"addicts\" were people who were unable to pay their debts and gave themselves as slaves to their creditors.",
+          "ko": "로마 시대에 'addicts'는 빚을 갚을 수 없어서 스스로 채권자의 노예가 된 사람들이었다."
+        },
+        {
+          "i": 2,
+          "en": "The word eventually came to be associated with drug dependency: one becomes a slave to one's addiction.",
+          "ko": "그 단어는 결국 약물 의존과 연관되었는데, 사람은 자신이 중독된 것에 노예가 된다는 것이다."
+        },
+        {
+          "i": 3,
+          "en": "The word \"husband\" originally referred to being a homeowner; it had nothing to do with being married.",
+          "ko": "'husband'라는 단어는 원래 주택 소유자가 되는 것을 가리켰고, 기혼 상태와는 아무런 관련이 없었다."
+        },
+        {
+          "i": 4,
+          "en": "But because owning your own property made it more likely you'd find a mate, the word eventually came to mean a male who has been wed.",
+          "ko": "그러나 재산을 소유하는 것은 여러분이 배우자를 찾을 가능성을 더 높게 만들었기 때문에 결국 그 단어는 결혼한 남성을 의미하게 되었다."
+        },
+        {
+          "i": 5,
+          "en": "On November 5th, 1605, Guy Fawkes tried to blow up the British Parliament.",
+          "ko": "1605년 11월 5일, Guy Fawkes는 영국 의사당을 폭파하려 했다."
+        },
+        {
+          "i": 6,
+          "en": "He was captured and put to death.",
+          "ko": "그는 체포되어 처형당했다."
+        },
+        {
+          "i": 7,
+          "en": "Loyalists burned his effigy, which they nicknamed the \"guy.\"",
+          "ko": "로열리스트들은 그를 닮은 인형을 불태웠는데 그들은 그것에 'guy'라는 별명을 붙였다."
+        },
+        {
+          "i": 8,
+          "en": "Centuries later, the word lost its negative connotation and a musical named Guys and Dolls ran on Broadway.",
+          "ko": "수 세기 후, 그 단어는 부정적인 함축을 잃었고 Guys and Dolls라는 제목의 뮤지컬이 브로드웨이에서 상연되었다."
+        },
+        {
+          "i": 9,
+          "en": "In American slang, bad means good, cool means great, and wicked means excellent.",
+          "ko": "미국 속어에서 'bad'는 '좋은'을, 'cool'은 '멋진'을, 'wicked'는 '탁월한'을 의미한다."
+        },
+        {
+          "i": 10,
+          "en": "If you could transport yourself one hundred years into the future, you'd find yourself confused by your great-grandchildren's speech because language itself is an ever-changing reflection of human invention.",
+          "ko": "언어 자체가 인간이 만들어 내는 것의 계속 변화하는 반영물이기 때문에 여러분이 100년 후 미래로 이동할 수 있다면 여러분의 증손자의 말에 당황하게 될 것이다."
+        }
+      ]
+    },
+    {
+      "id": "6a311cf7d94f8e33562c806f",
+      "sourceKey": "25년 9월 고2 영어모의고사 34번",
+      "number": "34번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "The term \"anchoring\" was introduced by Roland Barthes who observed that text is often used next to images (his focus was on photographs) to confine meaning.",
+          "ko": "'anchoring'이라는 용어는 의미를 한정하기 위해 텍스트가 자주 이미지 옆에 사용되는 점을 관찰한 Roland Barthes(그는 사진에 중점을 두었다)에 의해 도입되었다."
+        },
+        {
+          "i": 1,
+          "en": "Of all possible literal or implied interpretations an image could elicit, text would point the viewer towards a desired, specific direction.",
+          "ko": "이미지가 이끌어 낼 수 있는 모든 가능한 있는 그대로의 또는 함축된 해석 중에서, 텍스트는 보는 사람을 원하는, 특정한 방향으로 향하게 할 것이다."
+        },
+        {
+          "i": 2,
+          "en": "In advertising, as Barthes argues, the symbolic message does not guide identification but interpretation.",
+          "ko": "광고할 때, Barthes가 주장하는 것처럼, 상징적 메시지는 식별이 아니라 해석을 유도한다."
+        },
+        {
+          "i": 3,
+          "en": "The viewer is not asked to recognize what they see but to understand why they see it and what it means to them.",
+          "ko": "보는 사람은 그들이 보는 것을 인식하도록 요구되는 것이 아니라 왜 그들이 그것을 보는지 그리고 그것이 그들에게 무엇을 의미하는지를 이해하도록 요구된다."
+        },
+        {
+          "i": 4,
+          "en": "By combining images with text, advertising produces symbolic meaning that is accurate and specific on the one hand, richer on the other, thus adding depth and eliminating breadth of rational and emotional interpretations.",
+          "ko": "이미지와 텍스트를 결합함으로써, 광고는 한편으로는 정확하고 구체적이며, 다른 한편으로는 더욱 풍부한 상징적 의미를 만들어 내어, 그 결과 이성적이고 감성적 해석의 깊이를 더하고 폭은 제거한다."
+        },
+        {
+          "i": 5,
+          "en": "The headline or tagline of an ad directs the reader through the intended meanings of the image, so that the reader avoids some and receives others.",
+          "ko": "광고의 헤드라인이나 끝맺음말이 이미지의 의도된 의미를 통해 독자를 안내하여, 독자는 어떤 것은 피하고 다른 것은 받아들인다."
+        },
+        {
+          "i": 6,
+          "en": "It \"remote-controls\" the reader towards a meaning chosen in advance.",
+          "ko": "그것은 독자를 미리 선택된 의미 쪽으로 '원격 제어한다'."
+        }
+      ]
+    }
+  ]
+}

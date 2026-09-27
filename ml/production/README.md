@@ -41,3 +41,15 @@
 fact 300단계 추가 학습과 두 세트 전체 repeat 2 전후296문항 평가 완료. 고1 O36.84→39.47%, 고2 O44.44→54.17%, F모두0. 고1은 ±7%p 이내이므로 후보 미채택·기존 어댑터 복원 및 SHA 확인. `cycles/2026-09-27-fact-production/comparison.json`과 `ml/eval/grades/`의 네 보고서에 직접 AI 판정·근거·원문·설정·해시가 있다. `publish_fact_grades.py <set> <before|after>`는 명시적 개별 판정을 보고서로 포장하며 자동 채점하지 않는다.
 
 사용자 요청에 따라 현재 작업은 종료했다. 다음 작업 계획은 운영 워커의 묶음 생성→20~30건씩 검수·수정→통과 문항 완료이며 이번에는 시작하지 않는다.
+
+## 워커 첫 대량 묶음 (09-27 사용자 후속 지시)
+
+`batches/2026-09-27-jun23-go1-worker-02/`: 23년6월고1의 새9지문, 빈 유형99슬롯. 최초27건은 제외. 문장 수·권고형 적합성을 확인한 뒤 원문 변경과 기존 문항/활성·미저장 작업 중복을 사전 검사했다.
+
+- `npx tsx ml/production/queue_worker_batch.ts check <batch-dir>`: 등록 전 원문·빈 슬롯 확인.
+- `enqueue <batch-dir>`: 앱의 기존 큐 등록 함수 사용. 최대100건·고정 작업 태그·배치 잠금·매건 영수증 저장. 이미 등록한 묶음은 재실행하지 않는다.
+- `snapshot <batch-dir>`: 해당99작업만 조회하여 `job-results.json`에 원본 결과 보존. 읽기 전용. 큐 TTL30일 전에 수집한다.
+
+생성은 기존 맥 MLX 워커가 처리한다. 이 도구는 모델 호출·자동 문제 저장·검수·완료·재학습을 하지 않는다. done은 큐 초안 완료이며 generated_questions의 완료가 아니다. 검수는 이후20~30건씩 진행한다.
+
+문항별 출처·모델·시간 표: `python3 ml/production/build_worker_report.py <batch-dir> docs/ml/lora-notebook/production-2023-jun-go1-02.html`. 입력은 manifest, job-results, worker-models, queue-receipts와 저장 후 pending-saved-snapshot(배열). 출력은 source-index.md·generation-report.json·검색 가능한 HTML. 채점·검수·DB 변경 없음. 생성 시간은 내부 검사·재시도·해설 포함, 큐 대기·모델 로딩 제외. 실패/누락 시간을0으로 계산하지 않는다.

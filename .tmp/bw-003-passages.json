@@ -1,0 +1,393 @@
+{
+  "found": [
+    "04강 01번",
+    "04강 02번",
+    "04강 03번",
+    "04강 04번",
+    "05강 01번",
+    "05강 02번",
+    "05강 03번",
+    "05강 04번"
+  ],
+  "missing": [],
+  "stock": [
+    {
+      "sourceKey": "04강 01번",
+      "missing": true
+    },
+    {
+      "sourceKey": "04강 02번",
+      "missing": true
+    },
+    {
+      "sourceKey": "04강 03번",
+      "missing": true
+    },
+    {
+      "sourceKey": "04강 04번",
+      "missing": true
+    },
+    {
+      "sourceKey": "05강 01번",
+      "missing": true
+    },
+    {
+      "sourceKey": "05강 02번",
+      "missing": true
+    },
+    {
+      "sourceKey": "05강 03번",
+      "missing": true
+    },
+    {
+      "sourceKey": "05강 04번",
+      "missing": true
+    }
+  ],
+  "passages": [
+    {
+      "id": "6a693f40e087c2fe78de419a",
+      "sourceKey": "04강 01번",
+      "chapter": "04강",
+      "number": "01번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Television, fashion magazines, and all forms of mass-media in today's society encourages people to purchase expensive brand-name clothes.",
+          "ko": "오늘날의 사회에서 텔레비전, 패션 잡지, 그리고 모든 형태의 대중매체는 사람들이 값비싼 유명 상표의 의류를 구매하도록 부추긴다."
+        },
+        {
+          "i": 1,
+          "en": "The result is that those who cannot afford to spend a lot of money on high-end fashion end up feeling guilty or ashamed.",
+          "ko": "그 결과는 고급 패션에 많은 돈을 쓸 여유가 없는 사람들이 결국 죄책감이나 부끄러움을 느끼게 된다는 것이다."
+        },
+        {
+          "i": 2,
+          "en": "However, the truth is that you don't need to feel bad about yourself for shopping at lower-end retailers, because doing so is simply a smarter financial decision.",
+          "ko": "그러나, 진실은 당신이 저가 소매점에서 쇼핑을 하는 것 때문에 자신에 대해 나쁘게 느낄 필요가 없다는 것인데, 그렇게 하는 것은 그저 더 현명한 재정적인 결정이기 때문이다."
+        },
+        {
+          "i": 3,
+          "en": "Regardless of where you shop, though, it is essential to remember to set a fashion budget for yourself.",
+          "ko": "하지만, 당신이 쇼핑을 하는 장소에 상관없이, 자신을 위한 패션 예산을 책정할 것을 기억하는 것은 필수적이다."
+        },
+        {
+          "i": 4,
+          "en": "If you think about how much you can realistically afford to spend ahead of time, it becomes much easier to make wise shopping decisions.",
+          "ko": "당신이 현실적으로 얼마나 많은 돈을 쓸 여유가 있는지에 대해 미리 생각한다면, 현명한 쇼핑 결정을 하는 것은 훨씬 더 쉬워진다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de419b",
+      "sourceKey": "04강 02번",
+      "chapter": "04강",
+      "number": "02번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Friendship, as well as the basis for forming it, differs depending on individuals.",
+          "ko": "우정은 그것을 이루는 기반뿐만 아니라 개인에 따라 다르다."
+        },
+        {
+          "i": 1,
+          "en": "Some people think friendship requires you to respect the fact that your friend may have the personality that is completely different from your own.",
+          "ko": "어떤 사람들은 우정이 당신의 친구가 당신과는 전혀 다른 성격을 가지고 있을 수 있다는 사실을 존중할 것을 당신에게 요구한다고 생각한다."
+        },
+        {
+          "i": 2,
+          "en": "Thus, they enjoy arguing about various issues with their friends.",
+          "ko": "그래서 그들은 친구들과 다양한 쟁점에 대해 논쟁하기를 즐긴다."
+        },
+        {
+          "i": 3,
+          "en": "For others, a friend is someone who shares similar characteristics.",
+          "ko": "다른 사람들에게 친구는 비슷한 특징을 공유하는 사람이다."
+        },
+        {
+          "i": 4,
+          "en": "They tend to form friendships early in life and are not so good at making friends later on.",
+          "ko": "그들은 인생의 초반에 우정을 쌓는 경향이 있고 나중에 새로운 친구를 사귀는 데 그리 능하지 못하다."
+        },
+        {
+          "i": 5,
+          "en": "If they move to a different city, they'll probably regret leaving their old friends.",
+          "ko": "그들이 다른 도시로 이사하면 그들은 아마 오랜 친구를 떠난 것을 후회할 것이다."
+        },
+        {
+          "i": 6,
+          "en": "Common interests can also be the basis for friendship for some people.",
+          "ko": "어떤 사람들에게는 공통의 관심사도 우정의 기초가 될 수 있다."
+        },
+        {
+          "i": 7,
+          "en": "Sharing common interests makes their friendships survive over time.",
+          "ko": "공통의 관심사를 공유하는 것은 그들의 우정이 오랫동안 지속되게 한다."
+        },
+        {
+          "i": 8,
+          "en": "When they meet their friends after long separation, they feel just as close as before.",
+          "ko": "그들은 오래 못 본 후에 만나도 전처럼 친밀하게 느낀다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de419c",
+      "sourceKey": "04강 03번",
+      "chapter": "04강",
+      "number": "03번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Is it possible to live forever?",
+          "ko": "영원히 사는 것이 가능한가?"
+        },
+        {
+          "i": 1,
+          "en": "For a certain kind of jellyfish, it might be.",
+          "ko": "특정 종류의 해파리에게는 가능할지 모른다."
+        },
+        {
+          "i": 2,
+          "en": "Turritopsis dohrnii is unique not only in the jellyfish family, but within the entire animal kingdom as well.",
+          "ko": "작은보호탑해파리는 해파리과(科)에서뿐만 아니라 전체 동물계에서도 유일무이하다."
+        },
+        {
+          "i": 3,
+          "en": "It appears to have found a way to permanently avoid death.",
+          "ko": "그것은 죽음을 영원히 피하는 방법을 찾은 것처럼 보인다."
+        },
+        {
+          "i": 4,
+          "en": "It does this by taking advantage of a life cycle that allows it to revert back to an earlier point in its development.",
+          "ko": "그것은 그것의 발달 초기 단계로 되돌아가게 하는 생명 주기를 이용함으로써 죽음을 피한다."
+        },
+        {
+          "i": 5,
+          "en": "If it is in danger of starvation or has serious injuries, it uses a process called transdifferentiation to change all of its cells into a younger, healthier state.",
+          "ko": "그것이 굶주림의 위험에 처하거나 심각한 부상을 입으면, 그것은 자신의 모든 세포를 더 어리고 건강한 상태로 바꾸기 위해 전환분화라고 불리는 과정을 이용한다."
+        },
+        {
+          "i": 6,
+          "en": "To do so, it reverts back into a polyp colony, which is the first stage in a jellyfish's life cycle.",
+          "ko": "그렇게 하기 위해서 그것은 폴립 군집 상태로 되돌아가는데, 그것은 해파리의 생명 주기의 첫 번째 단계이다."
+        },
+        {
+          "i": 7,
+          "en": "This creates replicas that are free from the illness or injuries that caused it to initiate transdifferentiation.",
+          "ko": "이것은 해파리가 전환분화를 시작하도록 했던 질병이나 부상이 없는 복제 해파리를 창조해 낸다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de419d",
+      "sourceKey": "04강 04번",
+      "chapter": "04강",
+      "number": "04번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "It is estimated that about half of the world's crop yields can be attributed to the use of some form of fertilizer.",
+          "ko": "세계의 농작물 수확량의 절반 가량이 일정한 형태의 비료 사용에 기인할 수 있는 것으로 추정된다."
+        },
+        {
+          "i": 1,
+          "en": "The use of the fertilizer has allowed us to produce enough food to feed the world, but it may also lead to future catastrophe.",
+          "ko": "비료의 사용은 우리가 세계에 식량을 공급할 만한 충분한 식품을 생산하게 해주었지만, 그것은 또한 미래 재앙을 초래할 수도 있다."
+        },
+        {
+          "i": 2,
+          "en": "This is because fertilizer contains nitrogen and other chemicals that can seep into the ground and end up contaminating drinking water.",
+          "ko": "이것은 비료가 땅속으로 스며 들어가 결국 식수를 오염시킬 수 있는 질소와 다른 화학물질들을 포함하고 있기 때문이다."
+        },
+        {
+          "i": 3,
+          "en": "Unfortunately, we have reached a point where we cannot completely stop using fertilizer.",
+          "ko": "불행히도, 우리는 비료 사용을 완전히 멈출 수 없는 지점에 이르렀다."
+        },
+        {
+          "i": 4,
+          "en": "Doing so would result not only in fewer crops and thus less food, but also in soil erosion caused by reduced plant growth.",
+          "ko": "그렇게 하는 것은 더 적은 농작물과, 그 결과 더 적은 식품뿐만 아니라, 감소된 식물 성장으로 인한 토양 침식을 초래할 것이다."
+        },
+        {
+          "i": 5,
+          "en": "Our only option is to apply organic fertilizer in moderation and help the soil to replace the nutrients it loses naturally.",
+          "ko": "우리의 유일한 선택은 유기농 비료를 적당히 사용하고 토양이 소실한 영양분을 자연적으로 대체하도록 돕는 것이다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de419e",
+      "sourceKey": "05강 01번",
+      "chapter": "05강",
+      "number": "01번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "A Spanish scientist took thousands of water samples from the world's oceans to measure how much plastic trash they contained.",
+          "ko": "한 스페인 과학자가 전 세계 해양에 얼마나 많은 플라스틱 쓰레기가 있는지 측정하기 위해 수천 개의 해수 표본을 채취했다."
+        },
+        {
+          "i": 1,
+          "en": "Surprisingly, the large volume of plastic found floating on the water was still far too little to account for the millions of tons of plastic entering the oceans each year.",
+          "ko": "놀랍게도, 물에 뜬 채 발견된 많은 양의 플라스틱은 매년 해양으로 흘러 들어가는 수백만 톤의 플라스틱을 설명하기에는 여전히 너무 적었다."
+        },
+        {
+          "i": 2,
+          "en": "Another scientist analyzed samples taken from several locations deep at the bottom of the ocean.",
+          "ko": "또 다른 과학자가 깊은 해저 몇몇 장소에서 채취한 표본들을 분석했다."
+        },
+        {
+          "i": 3,
+          "en": "He seems to have found the rest of the plastic.",
+          "ko": "그는 플라스틱의 나머지를 찾아낸 것 같다."
+        },
+        {
+          "i": 4,
+          "en": "Every sample contained many tiny plastic fibers-four times the amount measured near the surface.",
+          "ko": "모든 표본이 다수의 아주 작은 플라스틱 섬유를 포함하고 있었는데, 이는 수면 가까이에서 측정된 양의 네 배였다."
+        },
+        {
+          "i": 5,
+          "en": "Many sea animals confuse this plastic debris for food and eat it.",
+          "ko": "많은 해양 동물들이 이 플라스틱 잔해를 먹이로 혼동하고 그것을 먹는다."
+        },
+        {
+          "i": 6,
+          "en": "Thus, plastic can easily poison wildlife and contaminate the food chain.",
+          "ko": "따라서 플라스틱은 쉽게 야생동물과 먹이사슬을 오염시킬 수 있다."
+        },
+        {
+          "i": 7,
+          "en": "To prevent further environmental damage, people should stop to think about how to dispose of plastic responsibly.",
+          "ko": "더 이상의 환경 피해를 막기 위해, 사람들은 플라스틱을 책임감 있게 처리할 방법에 대해 생각하기 위해 멈춰야 한다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de419f",
+      "sourceKey": "05강 02번",
+      "chapter": "05강",
+      "number": "02번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "A musician's emotions can be felt through their music alone, and even a simple tune played on a piano can fill the listener with melancholy or joy.",
+          "ko": "음악가의 감정은 음악 하나만으로도 느껴질 수 있으며, 피아노에서 연주되는 간단한 곡조차도 듣는 사람을 우울감이나 기쁨으로 채울 수 있다."
+        },
+        {
+          "i": 1,
+          "en": "Music is a ubiquitous form of entertainment in all modern cultures, but it may have played a more important role in the lives of our ancestors.",
+          "ko": "음악은 모든 현대 문화에서 어디에나 있는 형태의 오락거리이지만, 우리 조상들의 삶에서 더 중요한 역할을 했을지도 모른다."
+        },
+        {
+          "i": 2,
+          "en": "Music may have developed from the need of early humans to communicate their emotions to their peers.",
+          "ko": "음악은 자신의 감정을 동료들에게 알리기 위한 초기 인류의 필요성에서 발전했을지도 모른다."
+        },
+        {
+          "i": 3,
+          "en": "While other primates maintain this emotional connection through grooming, early humans lived in groups that were too large for this method to be effective.",
+          "ko": "다른 영장류는 털 손질을 통해 이러한 정서적 연결을 유지하는 반면, 초기 인류는 이 방법이 효과적이기에는 너무나 큰 집단 안에서 살았다."
+        },
+        {
+          "i": 4,
+          "en": "They needed a way to broadcast their emotional state to a greater number of individuals.",
+          "ko": "그들은 자신의 감정 상태를 더 많은 사람에게 알릴 방법이 필요했다."
+        },
+        {
+          "i": 5,
+          "en": "This led our ancestors to begin communicating with emotional tones, called \"vocal grooming,\" to improve social ties on a large scale.",
+          "ko": "이것이 우리 조상들을 '보컬 그루밍'이라고 하는 감정적인 톤으로 의사소통을 하기를 시작하도록 이끌었고 대규모로 사회적 유대감을 향상시키게 되었다."
+        },
+        {
+          "i": 6,
+          "en": "This use of emotional tones to strengthen social cohesion is regarded by some as the origin of music.",
+          "ko": "사회적 화합을 강화하기 위해 이러한 감정적인 톤을 사용하는 것은 몇몇 이들에게 음악의 기원으로 간주된다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de41a0",
+      "sourceKey": "05강 03번",
+      "chapter": "05강",
+      "number": "03번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Learners can be classified by learning styles.",
+          "ko": "학습자들은 학습 방식으로 분류될 수 있다."
+        },
+        {
+          "i": 1,
+          "en": "Visual learners, for example, are people who depend mainly on vision when they study.",
+          "ko": "예를 들어, 시각 학습자들은 학습할 때 주로 시각에 의존하는 사람들이다."
+        },
+        {
+          "i": 2,
+          "en": "Visual learners have to \"see it to believe it.\"",
+          "ko": "시각 학습자들은 '그것을 믿으려면 봐야' 한다."
+        },
+        {
+          "i": 3,
+          "en": "Their imaginations are good enough to picture things in their minds, and they may also have a good sense of color and artistic ability.",
+          "ko": "그들의 상상력은 마음속에 무엇인가를 그려낼 만큼 충분히 뛰어나고, 그들은 또한 뛰어난 색감과 예술적인 능력을 갖추고 있을 수도 있다."
+        },
+        {
+          "i": 4,
+          "en": "These learners may find it hard to listen to lectures or instructions if there are no pictures or text to support what they hear.",
+          "ko": "이러한 학습자들은 자신들이 듣는 내용을 뒷받침할 그림이나 글이 없다면 강의나 설명을 듣는 것을 어려워할 수 있다."
+        },
+        {
+          "i": 5,
+          "en": "If you are a visual learner, it's useful to use charts and graphs when you're studying.",
+          "ko": "당신이 시각 학습자라면, 학습할 때 도표나 그래프를 사용하는 것이 유용하다."
+        },
+        {
+          "i": 6,
+          "en": "Pictures and symbols in your notes can also be used to help you remember ideas.",
+          "ko": "공책에 있는 그림과 기호들 또한 당신이 개념들을 기억하는 데 도움을 주기 위해 사용될 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f40e087c2fe78de41a1",
+      "sourceKey": "05강 04번",
+      "chapter": "05강",
+      "number": "04번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Many people believe they are the only ones who suffer from headaches when they don't hydrate well, but recent evidence suggests that we all do.",
+          "ko": "많은 사람이 자신이 수분을 잘 섭취하지 못할 때 두통으로 고통받는 유일한 사람이라고 생각하지만, 최근의 증거에 따르면 우리 모두가 그렇다고 한다."
+        },
+        {
+          "i": 1,
+          "en": "The human body is composed of roughly 60 percent water, which is why drinking a sufficient amount of water on a daily basis is a necessity.",
+          "ko": "인체는 약 60%의 물로 구성되어 있으며, 이것이 매일 충분한 양의 물을 마시는 것이 필요한 이유이다."
+        },
+        {
+          "i": 2,
+          "en": "It's considered a must if we want to keep our bodily organs functioning properly.",
+          "ko": "우리의 신체 장기가 제대로 기능하기를 원한다면 그것은 반드시 해야 하는 것으로 여겨진다."
+        },
+        {
+          "i": 3,
+          "en": "In fact, your body wouldn't be able to defend against fatigue, keep joints healthy, or maintain overall homeostasis if you didn't get enough water.",
+          "ko": "실제로, 당신이 충분한 물을 얻지 못하면 당신의 몸은 피로를 방어하고 관절을 건강하게 유지하거나 전반적인 항상성을 유지할 수 없을 것이다."
+        },
+        {
+          "i": 4,
+          "en": "For instance, a dehydrated brain has to devote itself to working extra hard to process simple tasks.",
+          "ko": "예를 들어, 탈수된 뇌는 간단한 작업을 처리하기 위해 더욱 열심히 노력해야 한다."
+        },
+        {
+          "i": 5,
+          "en": "Many people are shocked to find how just a little extra water helps them with a variety of tasks, from taking tests to solving mystery novels.",
+          "ko": "많은 사람들은 시험을 치르는 것에서부터 추리 소설을 푸는 것에 이르기까지 다양한 과제를 수행하는 데 약간의 물이 어떻게 도움을 주는지를 알고 충격을 받는다."
+        }
+      ]
+    }
+  ]
+}

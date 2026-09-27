@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-27T06:27:49.256Z",
+  "workers": [
+    {
+      "_id": "MacBook-Pro.local",
+      "backend": "mlx",
+      "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+      "last_seen": "2026-09-27T06:27:46.806Z",
+      "pid": 36039,
+      "started_at": "2026-09-27T06:15:43.735Z",
+      "types": {
+        "주제": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "제목": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "주장": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "일치": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "불일치": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "빈칸": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "요약": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "순서": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "삽입": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "무관한문장": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "어휘": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        },
+        "어법": {
+          "trained": true,
+          "explain": false,
+          "base_model": "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        }
+      },
+      "version": 1,
+      "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit"
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+[
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce17",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 21번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "21번",
+    "content": {
+      "original": "Why do you care how a customer reacts to a purchase? Good question. By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). You'll also determine whether the buyer will encourage others to purchase the product from you. Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. People tend to believe the opinions of people they know. People trust friends over advertisements any day. They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising.",
+      "translation": "왜 당신은 고객이 구매품에 어떻게 반응하는지에 대해 신경 쓰는가? 좋은 질문이다. 구매 후 행동을 이해 함으로써, 당신은 그 영향력과 구매자가 제품을 재구매 할지(그리고 그녀가 제품을 가질지 또는 반품할지)의 가능성을 이해할 수 있다. 당신은 구매자가 다른 사람들에게 당신으로부터 제품을 구매하도록 권장할지 여부도 또한 알아낼 것이다. 만족한 고객은 당신의 사업을 위한 무급 대사가 될 수 있으므로, 고객 만족이 할 일 목록의 최상단에 있어야 한다. 사람들은 그들이 아는 사람들의 의견을 믿는 경향이 있다. 사람들은 언제든 광고보다 친구를 더 신뢰한다. 그들은 광고에는 \"좋은 면\"을 말하기 위해 돈이 쓰이고 그리고 그것들이 제품과 서비스를 구매하도록 그들을 설득하는 데 사용된다는 것을 알고 있다. 판매 후 고객의 만족을 지속적으로 모니터함으로써, 당신은 부정적인 입소문 광고를 피할 수 있는 능력을 가진다.",
+      "sentences_en": [
+        "Why do you care how a customer reacts to a purchase?",
+        "Good question.",
+        "By understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it).",
+        "You'll also determine whether the buyer will encourage others to purchase the product from you.",
+        "Satisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list.",
+        "People tend to believe the opinions of people they know.",
+        "People trust friends over advertisements any day.",
+        "They know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services.",
+        "By continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising."
+      ],
+      "sentences_ko": [
+        "왜 당신은 고객이 구매품에 어떻게 반응하는지에 대해 신경 쓰는가?",
+        "좋은 질문이다.",
+        "구매 후 행동을 이해 함으로써, 당신은 그 영향력과 구매자가 제품을 재구매 할지(그리고 그녀가 제품을 가질지 또는 반품할지)의 가능성을 이해할 수 있다.",
+        "당신은 구매자가 다른 사람들에게 당신으로부터 제품을 구매하도록 권장할지 여부도 또한 알아낼 것이다.",
+        "만족한 고객은 당신의 사업을 위한 무급 대사가 될 수 있으므로, 고객 만족이 할 일 목록의 최상단에 있어야 한다.",
+        "사람들은 그들이 아는 사람들의 의견을 믿는 경향이 있다.",
+        "사람들은 언제든 광고보다 친구를 더 신뢰한다.",
+        "그들은 광고에는 \"좋은 면\"을 말하기 위해 돈이 쓰이고 그리고 그것들이 제품과 서비스를 구매하도록 그들을 설득하는 데 사용된다는 것을 알고 있다.",
+        "판매 후 고객의 만족을 지속적으로 모니터함으로써, 당신은 부정적인 입소문 광고를 피할 수 있는 능력을 가진다."
+      ],
+      "tokenized_en": "Why do you care how a customer reacts to a purchase? %%%\nGood question. %%%\nBy understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). %%%\nYou'll also determine whether the buyer will encourage others to purchase the product from you. %%%\nSatisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. %%%\nPeople tend to believe the opinions of people they know. %%%\nPeople trust friends over advertisements any day. %%%\nThey know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. %%%\nBy continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising. %%%",
+      "tokenized_ko": "왜 당신은 고객이 구매품에 어떻게 반응하는지에 대해 신경 쓰는가? %%%\n좋은 질문이다. %%%\n구매 후 행동을 이해 함으로써, 당신은 그 영향력과 구매자가 제품을 재구매 할지(그리고 그녀가 제품을 가질지 또는 반품할지)의 가능성을 이해할 수 있다. %%%\n당신은 구매자가 다른 사람들에게 당신으로부터 제품을 구매하도록 권장할지 여부도 또한 알아낼 것이다. %%%\n만족한 고객은 당신의 사업을 위한 무급 대사가 될 수 있으므로, 고객 만족이 할 일 목록의 최상단에 있어야 한다. %%%\n사람들은 그들이 아는 사람들의 의견을 믿는 경향이 있다. %%%\n사람들은 언제든 광고보다 친구를 더 신뢰한다. %%%\n그들은 광고에는 \"좋은 면\"을 말하기 위해 돈이 쓰이고 그리고 그것들이 제품과 서비스를 구매하도록 그들을 설득하는 데 사용된다는 것을 알고 있다. %%%\n판매 후 고객의 만족을 지속적으로 모니터함으로써, 당신은 부정적인 입소문 광고를 피할 수 있는 능력을 가진다. %%%",
+      "mixed": "Why do you care how a customer reacts to a purchase? %%%\n왜 당신은 고객이 구매품에 어떻게 반응하는지에 대해 신경 쓰는가? %%%\nGood question. %%%\n좋은 질문이다. %%%\nBy understanding post-purchase behavior, you can understand the influence and the likelihood of whether a buyer will repurchase the product (and whether she will keep it or return it). %%%\n구매 후 행동을 이해 함으로써, 당신은 그 영향력과 구매자가 제품을 재구매 할지(그리고 그녀가 제품을 가질지 또는 반품할지)의 가능성을 이해할 수 있다. %%%\nYou'll also determine whether the buyer will encourage others to purchase the product from you. %%%\n당신은 구매자가 다른 사람들에게 당신으로부터 제품을 구매하도록 권장할지 여부도 또한 알아낼 것이다. %%%\nSatisfied customers can become unpaid ambassadors for your business, so customer satisfaction should be on the top of your to-do list. %%%\n만족한 고객은 당신의 사업을 위한 무급 대사가 될 수 있으므로, 고객 만족이 할 일 목록의 최상단에 있어야 한다. %%%\nPeople tend to believe the opinions of people they know. %%%\n사람들은 그들이 아는 사람들의 의견을 믿는 경향이 있다. %%%\nPeople trust friends over advertisements any day. %%%\n사람들은 언제든 광고보다 친구를 더 신뢰한다. %%%\nThey know that advertisements are paid to tell the \"good side\" and that they're used to persuade them to purchase products and services. %%%\n그들은 광고에는 \"좋은 면\"을 말하기 위해 돈이 쓰이고 그리고 그것들이 제품과 서비스를 구매하도록 그들을 설득하는 데 사용된다는 것을 알고 있다. %%%\nBy continually monitoring your customer's satisfaction after the sale, you have the ability to avoid negative word-of-mouth advertising. %%%\n판매 후 고객의 만족을 지속적으로 모니터함으로써, 당신은 부정적인 입소문 광고를 피할 수 있는 능력을 가진다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce1a",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 24번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "24번",
+    "content": {
+      "original": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. However, richer economies have their own distinct stresses. The key issue is time pressure. A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves.",
+      "translation": "가난이 스트레스를 유발하는 경향이 있다는 것을 듣고 놀랄 사람은 거의 없을 것이다: 예를 들어, 미국의 저널 Psychosomatic Medicine에 발표된 2006년 연구는 더 낮은 사회 경제적 지위가 체내의 더 높은 수치의 스트레스 호르몬과 관련이 있다고 언급했다. 하지만, 더 부유한 국가는 그들만의 뚜렷한 스트레스를 가지고 있다. 핵심 쟁점은 시간 압박이다. 미국 심리학자 Robert Levine과 캐나다 심리학자 Ara Norenzayan이 31개국을 대상으로 한 1999년 연구는 더 부유하고, 더 산업화 된 국가들이 더 빠른 삶의 속도를 가지고 있다는 것 ─ 그리고 이것이 더 높은 생활 수준으로 이어졌지만, 동시에 사람들에게 지속적인 촉박함을 느끼게 했고 그뿐만 아니라 심장병에 걸리기 더 쉽게 한다는 것을 알아 냈다. 사실, 빠른 속도의 생산력은 부를 창출하지만, 그것은 또한 사람들이 긴장을 풀고 즐겁게 지낼 시간이 없을 때 시간이 부족하다고 느끼게 한다.",
+      "sentences_en": [
+        "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body.",
+        "However, richer economies have their own distinct stresses.",
+        "The key issue is time pressure.",
+        "A 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease.",
+        "In effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves."
+      ],
+      "sentences_ko": [
+        "가난이 스트레스를 유발하는 경향이 있다는 것을 듣고 놀랄 사람은 거의 없을 것이다: 예를 들어, 미국의 저널 Psychosomatic Medicine에 발표된 2006년 연구는 더 낮은 사회 경제적 지위가 체내의 더 높은 수치의 스트레스 호르몬과 관련이 있다고 언급했다.",
+        "하지만, 더 부유한 국가는 그들만의 뚜렷한 스트레스를 가지고 있다.",
+        "핵심 쟁점은 시간 압박이다.",
+        "미국 심리학자 Robert Levine과 캐나다 심리학자 Ara Norenzayan이 31개국을 대상으로 한 1999년 연구는 더 부유하고, 더 산업화 된 국가들이 더 빠른 삶의 속도를 가지고 있다는 것 ─ 그리고 이것이 더 높은 생활 수준으로 이어졌지만, 동시에 사람들에게 지속적인 촉박함을 느끼게 했고 그뿐만 아니라 심장병에 걸리기 더 쉽게 한다는 것을 알아 냈다.",
+        "사실, 빠른 속도의 생산력은 부를 창출하지만, 그것은 또한 사람들이 긴장을 풀고 즐겁게 지낼 시간이 없을 때 시간이 부족하다고 느끼게 한다."
+      ],
+      "tokenized_en": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. %%%\nHowever, richer economies have their own distinct stresses. %%%\nThe key issue is time pressure. %%%\nA 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. %%%\nIn effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves. %%%",
+      "tokenized_ko": "가난이 스트레스를 유발하는 경향이 있다는 것을 듣고 놀랄 사람은 거의 없을 것이다: 예를 들어, 미국의 저널 Psychosomatic Medicine에 발표된 2006년 연구는 더 낮은 사회 경제적 지위가 체내의 더 높은 수치의 스트레스 호르몬과 관련이 있다고 언급했다. %%%\n하지만, 더 부유한 국가는 그들만의 뚜렷한 스트레스를 가지고 있다. %%%\n핵심 쟁점은 시간 압박이다. %%%\n미국 심리학자 Robert Levine과 캐나다 심리학자 Ara Norenzayan이 31개국을 대상으로 한 1999년 연구는 더 부유하고, 더 산업화 된 국가들이 더 빠른 삶의 속도를 가지고 있다는 것 ─ 그리고 이것이 더 높은 생활 수준으로 이어졌지만, 동시에 사람들에게 지속적인 촉박함을 느끼게 했고 그뿐만 아니라 심장병에 걸리기 더 쉽게 한다는 것을 알아 냈다. %%%\n사실, 빠른 속도의 생산력은 부를 창출하지만, 그것은 또한 사람들이 긴장을 풀고 즐겁게 지낼 시간이 없을 때 시간이 부족하다고 느끼게 한다. %%%",
+      "mixed": "Few people will be surprised to hear that poverty tends to create stress: a 2006 study published in the American journal Psychosomatic Medicine, for example, noted that a lower socioeconomic status was associated with higher levels of stress hormones in the body. %%%\n가난이 스트레스를 유발하는 경향이 있다는 것을 듣고 놀랄 사람은 거의 없을 것이다: 예를 들어, 미국의 저널 Psychosomatic Medicine에 발표된 2006년 연구는 더 낮은 사회 경제적 지위가 체내의 더 높은 수치의 스트레스 호르몬과 관련이 있다고 언급했다. %%%\nHowever, richer economies have their own distinct stresses. %%%\n하지만, 더 부유한 국가는 그들만의 뚜렷한 스트레스를 가지고 있다. %%%\nThe key issue is time pressure. %%%\n핵심 쟁점은 시간 압박이다. %%%\nA 1999 study of 31 countries by American psychologist Robert Levine and Canadian psychologist Ara Norenzayan found that wealthier, more industrialized nations had a faster pace of life ─ which led to a higher standard of living, but at the same time left the population feeling a constant sense of urgency, as well as being more prone to heart disease. %%%\n미국 심리학자 Robert Levine과 캐나다 심리학자 Ara Norenzayan이 31개국을 대상으로 한 1999년 연구는 더 부유하고, 더 산업화 된 국가들이 더 빠른 삶의 속도를 가지고 있다는 것 ─ 그리고 이것이 더 높은 생활 수준으로 이어졌지만, 동시에 사람들에게 지속적인 촉박함을 느끼게 했고 그뿐만 아니라 심장병에 걸리기 더 쉽게 한다는 것을 알아 냈다. %%%\nIn effect, fast-paced productivity creates wealth, but it also leads people to feel time-poor when they lack the time to relax and enjoy themselves. %%%\n사실, 빠른 속도의 생산력은 부를 창출하지만, 그것은 또한 사람들이 긴장을 풀고 즐겁게 지낼 시간이 없을 때 시간이 부족하다고 느끼게 한다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce1f",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 29번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "29번",
+    "content": {
+      "original": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. Preschoolers believe what their parents tell them in a very profound way. They do not yet have the cognitive sophistication to reason analytically and reject false information. If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool.",
+      "translation": "칭찬은 어린 아이들의 행동을 개선하는 데 사용할 수 있는 가장 강력한 도구 중 하나이지만, 그것은 아이의 자존감을 향상시키는 데에도 똑같이 강력하다. 미취학 아동들은 그들의 부모가 그들에게 하는 말을 매우 뜻깊게 여긴다. 그들은 분석적으로 추론하고 잘못된 정보를 거부할 수 있는 인지적 정교함을 아직 가지고 있지 않다. 만약 미취학 소년이 그의 어머니로부터 그가 똑똑하고 좋은 조력자라는 것을 계속 듣는다면, 그는 그 정보를 그의 자아상으로 통합시킬 가능성이 높다. 스스로를 똑똑하고 일을 어떻게 하는지 아는 소년으로 생각하는 것은 그가 문제 해결 노력에 있어 더 오래 지속하도록 하고 새롭고 어려운 일을 시도하는 것에 있어 그의 자신감을 증가시킬 가능성이 높다. 마찬가지로, 자신을 좋은 조력자인 그런 부류의 소년으로 생각하는 것은 그가 집에서와 유치원에서 일을 자발적으로 돕게 할 가능성을 더 크게 만들 것이다.",
+      "sentences_en": [
+        "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem.",
+        "Preschoolers believe what their parents tell them in a very profound way.",
+        "They do not yet have the cognitive sophistication to reason analytically and reject false information.",
+        "If a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image.",
+        "Thinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks.",
+        "Similarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool."
+      ],
+      "sentences_ko": [
+        "칭찬은 어린 아이들의 행동을 개선하는 데 사용할 수 있는 가장 강력한 도구 중 하나이지만, 그것은 아이의 자존감을 향상시키는 데에도 똑같이 강력하다.",
+        "미취학 아동들은 그들의 부모가 그들에게 하는 말을 매우 뜻깊게 여긴다.",
+        "그들은 분석적으로 추론하고 잘못된 정보를 거부할 수 있는 인지적 정교함을 아직 가지고 있지 않다.",
+        "만약 미취학 소년이 그의 어머니로부터 그가 똑똑하고 좋은 조력자라는 것을 계속 듣는다면, 그는 그 정보를 그의 자아상으로 통합시킬 가능성이 높다.",
+        "스스로를 똑똑하고 일을 어떻게 하는지 아는 소년으로 생각하는 것은 그가 문제 해결 노력에 있어 더 오래 지속하도록 하고 새롭고 어려운 일을 시도하는 것에 있어 그의 자신감을 증가시킬 가능성이 높다.",
+        "마찬가지로, 자신을 좋은 조력자인 그런 부류의 소년으로 생각하는 것은 그가 집에서와 유치원에서 일을 자발적으로 돕게 할 가능성을 더 크게 만들 것이다."
+      ],
+      "tokenized_en": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. %%%\nPreschoolers believe what their parents tell them in a very profound way. %%%\nThey do not yet have the cognitive sophistication to reason analytically and reject false information. %%%\nIf a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. %%%\nThinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. %%%\nSimilarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool. %%%",
+      "tokenized_ko": "칭찬은 어린 아이들의 행동을 개선하는 데 사용할 수 있는 가장 강력한 도구 중 하나이지만, 그것은 아이의 자존감을 향상시키는 데에도 똑같이 강력하다. %%%\n미취학 아동들은 그들의 부모가 그들에게 하는 말을 매우 뜻깊게 여긴다. %%%\n그들은 분석적으로 추론하고 잘못된 정보를 거부할 수 있는 인지적 정교함을 아직 가지고 있지 않다. %%%\n만약 미취학 소년이 그의 어머니로부터 그가 똑똑하고 좋은 조력자라는 것을 계속 듣는다면, 그는 그 정보를 그의 자아상으로 통합시킬 가능성이 높다. %%%\n스스로를 똑똑하고 일을 어떻게 하는지 아는 소년으로 생각하는 것은 그가 문제 해결 노력에 있어 더 오래 지속하도록 하고 새롭고 어려운 일을 시도하는 것에 있어 그의 자신감을 증가시킬 가능성이 높다. %%%\n마찬가지로, 자신을 좋은 조력자인 그런 부류의 소년으로 생각하는 것은 그가 집에서와 유치원에서 일을 자발적으로 돕게 할 가능성을 더 크게 만들 것이다. %%%",
+      "mixed": "Although praise is one of the most powerful tools available for improving young children's behavior, it is equally powerful for improving your child's self-esteem. %%%\n칭찬은 어린 아이들의 행동을 개선하는 데 사용할 수 있는 가장 강력한 도구 중 하나이지만, 그것은 아이의 자존감을 향상시키는 데에도 똑같이 강력하다. %%%\nPreschoolers believe what their parents tell them in a very profound way. %%%\n미취학 아동들은 그들의 부모가 그들에게 하는 말을 매우 뜻깊게 여긴다. %%%\nThey do not yet have the cognitive sophistication to reason analytically and reject false information. %%%\n그들은 분석적으로 추론하고 잘못된 정보를 거부할 수 있는 인지적 정교함을 아직 가지고 있지 않다. %%%\nIf a preschool boy consistently hears from his mother that he is smart and a good helper, he is likely to incorporate that information into his self-image. %%%\n만약 미취학 소년이 그의 어머니로부터 그가 똑똑하고 좋은 조력자라는 것을 계속 듣는다면, 그는 그 정보를 그의 자아상으로 통합시킬 가능성이 높다. %%%\nThinking of himself as a boy who is smart and knows how to do things is likely to make him endure longer in problem-solving efforts and increase his confidence in trying new and difficult tasks. %%%\n스스로를 똑똑하고 일을 어떻게 하는지 아는 소년으로 생각하는 것은 그가 문제 해결 노력에 있어 더 오래 지속하도록 하고 새롭고 어려운 일을 시도하는 것에 있어 그의 자신감을 증가시킬 가능성이 높다. %%%\nSimilarly, thinking of himself as the kind of boy who is a good helper will make him more likely to volunteer to help with tasks at home and at preschool. %%%\n마찬가지로, 자신을 좋은 조력자인 그런 부류의 소년으로 생각하는 것은 그가 집에서와 유치원에서 일을 자발적으로 돕게 할 가능성을 더 크게 만들 것이다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce20",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 30번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "30번",
+    "content": {
+      "original": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. Shortly thereafter, the advertising agency transformed yeast into a natural laxative. Repositioning yeast helped increase sales.",
+      "translation": "광고주들은 그들이 홍보하는 상품의 시장 지위에 맞게 그들의 주장을 조절하는 상당한 능력을 자주 보여주었다. 예를 들어, Fleischmann의 효모는 집에서 만든 빵을 요리하는 재료로 사용되었다. 하지만 20세기 초에 점점 더 많은 사람들이 가게나 빵집에서 빵을 사고 있었고, 그래서 효모에 대한 소비자 수요는 감소했다. Fleischmann의 효모의 생산자는 판매를 촉진하기 위해서 다른 마케팅 전략을 고안하려고 J. Walter Thompson 광고 대행사를 고용했다. Thompson 광고 대행사는 먼저 효모를 더 이상 \"Soul of Bread\"가 아니라 상당한 건강상의 이점이 있는 비타민의 중요한 공급원으로 바꾸었다. 그 직후, 광고 대행사는 효모를 천연 완하제로 바꾸었다. 효모의 이미지 전환을 꾀하는 것은 매출을 증가시키는 것을 도왔다.",
+      "sentences_en": [
+        "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted.",
+        "Fleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread.",
+        "Yet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased.",
+        "The producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales.",
+        "No longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits.",
+        "Shortly thereafter, the advertising agency transformed yeast into a natural laxative.",
+        "Repositioning yeast helped increase sales."
+      ],
+      "sentences_ko": [
+        "광고주들은 그들이 홍보하는 상품의 시장 지위에 맞게 그들의 주장을 조절하는 상당한 능력을 자주 보여주었다.",
+        "예를 들어, Fleischmann의 효모는 집에서 만든 빵을 요리하는 재료로 사용되었다.",
+        "하지만 20세기 초에 점점 더 많은 사람들이 가게나 빵집에서 빵을 사고 있었고, 그래서 효모에 대한 소비자 수요는 감소했다.",
+        "Fleischmann의 효모의 생산자는 판매를 촉진하기 위해서 다른 마케팅 전략을 고안하려고 J. Walter Thompson 광고 대행사를 고용했다.",
+        "Thompson 광고 대행사는 먼저 효모를 더 이상 \"Soul of Bread\"가 아니라 상당한 건강상의 이점이 있는 비타민의 중요한 공급원으로 바꾸었다.",
+        "그 직후, 광고 대행사는 효모를 천연 완하제로 바꾸었다.",
+        "효모의 이미지 전환을 꾀하는 것은 매출을 증가시키는 것을 도왔다."
+      ],
+      "tokenized_en": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. %%%\nFleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. %%%\nYet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. %%%\nThe producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. %%%\nNo longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. %%%\nShortly thereafter, the advertising agency transformed yeast into a natural laxative. %%%\nRepositioning yeast helped increase sales. %%%",
+      "tokenized_ko": "광고주들은 그들이 홍보하는 상품의 시장 지위에 맞게 그들의 주장을 조절하는 상당한 능력을 자주 보여주었다. %%%\n예를 들어, Fleischmann의 효모는 집에서 만든 빵을 요리하는 재료로 사용되었다. %%%\n하지만 20세기 초에 점점 더 많은 사람들이 가게나 빵집에서 빵을 사고 있었고, 그래서 효모에 대한 소비자 수요는 감소했다. %%%\nFleischmann의 효모의 생산자는 판매를 촉진하기 위해서 다른 마케팅 전략을 고안하려고 J. Walter Thompson 광고 대행사를 고용했다. %%%\nThompson 광고 대행사는 먼저 효모를 더 이상 \"Soul of Bread\"가 아니라 상당한 건강상의 이점이 있는 비타민의 중요한 공급원으로 바꾸었다. %%%\n그 직후, 광고 대행사는 효모를 천연 완하제로 바꾸었다. %%%\n효모의 이미지 전환을 꾀하는 것은 매출을 증가시키는 것을 도왔다. %%%",
+      "mixed": "Advertisers often displayed considerable facility in adapting their claims to the market status of the goods they promoted. %%%\n광고주들은 그들이 홍보하는 상품의 시장 지위에 맞게 그들의 주장을 조절하는 상당한 능력을 자주 보여주었다. %%%\nFleischmann's yeast, for instance, was used as an ingredient for cooking homemade bread. %%%\n예를 들어, Fleischmann의 효모는 집에서 만든 빵을 요리하는 재료로 사용되었다. %%%\nYet more and more people in the early 20th century were buying their bread from stores or bakeries, so consumer demand for yeast decreased. %%%\n하지만 20세기 초에 점점 더 많은 사람들이 가게나 빵집에서 빵을 사고 있었고, 그래서 효모에 대한 소비자 수요는 감소했다. %%%\nThe producer of Fleischmann's yeast hired the J. Walter Thompson advertising agency to come up with a different marketing strategy to boost sales. %%%\nFleischmann의 효모의 생산자는 판매를 촉진하기 위해서 다른 마케팅 전략을 고안하려고 J. Walter Thompson 광고 대행사를 고용했다. %%%\nNo longer the \"Soul of Bread,\" the Thompson agency first turned yeast into an important source of vitamins with significant health benefits. %%%\nThompson 광고 대행사는 먼저 효모를 더 이상 \"Soul of Bread\"가 아니라 상당한 건강상의 이점이 있는 비타민의 중요한 공급원으로 바꾸었다. %%%\nShortly thereafter, the advertising agency transformed yeast into a natural laxative. %%%\n그 직후, 광고 대행사는 효모를 천연 완하제로 바꾸었다. %%%\nRepositioning yeast helped increase sales. %%%\n효모의 이미지 전환을 꾀하는 것은 매출을 증가시키는 것을 도왔다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce21",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 31번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "31번",
+    "content": {
+      "original": "Individuals who perform at a high level in their profession often have instant credibility with others. People admire them, they want to be like them, and they feel connected to them. When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. Think about a world-famous basketball player. He has made more money from endorsements than he ever did playing basketball. Is it because of his knowledge of the products he endorses? No. It's because of what he can do with a basketball. The same can be said of an Olympic medalist swimmer. People listen to him because of what he can do in the pool. And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. We listen because we admire his talent. Excellence connects. If you possess a high level of ability in an area, others may desire to connect with you because of it.",
+      "translation": "자신의 직업에서 높은 수준으로 수행하는 사람들은 흔히 다른 사람들에게 즉각적인 신뢰를 얻는다. 사람들은 그들을 존경하고, 그들처럼 되고 싶어 하고, 그들과 연결되어 있다고 느낀다. 그들이 말할 때, 다른 사람들은 비록 그들의 기술 분야가 그들이 주는 조언과 전혀 관련이 없을지라도 경청한다. 세계적으로 유명한 농구 선수에 대해 생각해 보라. 그는 그가 농구를 하면서 그간 벌었던 것보다 광고로부터 더 많은 돈을 벌었다. 그것이 그가 광고하는 제품에 대한 그의 지식 때문일까? 아니다. 그것은 그가 농구로 할 수 있는 것 때문이다. 올림픽 메달리스트 수영 선수도 마찬가지이다. 사람들은 그가 수영장에서 할 수 있는 것 때문에 그의 말을 경청한다. 그리고 어떤 배우가 우리에게 특정 자동차를 운전해야 한다고 말할 때, 우리는 엔진에 대한 그의 전문 지식 때문에 경청하는 것은 아니다. 우리는 그의 재능을 존경하기 때문에 경청한다. 탁월함이 연결된다. 만약 당신이 어떤 분야에서 높은 수준의 능력을 갖고 있다면, 다른 사람들은 그것 때문에 당신과 연결되기를 원할 수도 있다.",
+      "sentences_en": [
+        "Individuals who perform at a high level in their profession often have instant credibility with others.",
+        "People admire them, they want to be like them, and they feel connected to them.",
+        "When they speak, others listen ― even if the area of their skill has nothing to do with the advice they give.",
+        "Think about a world-famous basketball player.",
+        "He has made more money from endorsements than he ever did playing basketball.",
+        "Is it because of his knowledge of the products he endorses?",
+        "No. It's because of what he can do with a basketball.",
+        "The same can be said of an Olympic medalist swimmer.",
+        "People listen to him because of what he can do in the pool.",
+        "And when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines.",
+        "We listen because we admire his talent.",
+        "Excellence connects.",
+        "If you possess a high level of ability in an area, others may desire to connect with you because of it."
+      ],
+      "sentences_ko": [
+        "자신의 직업에서 높은 수준으로 수행하는 사람들은 흔히 다른 사람들에게 즉각적인 신뢰를 얻는다.",
+        "사람들은 그들을 존경하고, 그들처럼 되고 싶어 하고, 그들과 연결되어 있다고 느낀다.",
+        "그들이 말할 때, 다른 사람들은 비록 그들의 기술 분야가 그들이 주는 조언과 전혀 관련이 없을지라도 경청한다.",
+        "세계적으로 유명한 농구 선수에 대해 생각해 보라.",
+        "그는 그가 농구를 하면서 그간 벌었던 것보다 광고로부터 더 많은 돈을 벌었다.",
+        "그것이 그가 광고하는 제품에 대한 그의 지식 때문일까?",
+        "아니다. 그것은 그가 농구로 할 수 있는 것 때문이다.",
+        "올림픽 메달리스트 수영 선수도 마찬가지이다.",
+        "사람들은 그가 수영장에서 할 수 있는 것 때문에 그의 말을 경청한다.",
+        "그리고 어떤 배우가 우리에게 특정 자동차를 운전해야 한다고 말할 때, 우리는 엔진에 대한 그의 전문 지식 때문에 경청하는 것은 아니다.",
+        "우리는 그의 재능을 존경하기 때문에 경청한다.",
+        "탁월함이 연결된다.",
+        "만약 당신이 어떤 분야에서 높은 수준의 능력을 갖고 있다면, 다른 사람들은 그것 때문에 당신과 연결되기를 원할 수도 있다."
+      ],
+      "tokenized_en": "Individuals who perform at a high level in their profession often have instant credibility with others. %%%\nPeople admire them, they want to be like them, and they feel connected to them. %%%\nWhen they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. %%%\nThink about a world-famous basketball player. %%%\nHe has made more money from endorsements than he ever did playing basketball. %%%\nIs it because of his knowledge of the products he endorses? %%%\nNo. It's because of what he can do with a basketball. %%%\nThe same can be said of an Olympic medalist swimmer. %%%\nPeople listen to him because of what he can do in the pool. %%%\nAnd when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. %%%\nWe listen because we admire his talent. %%%\nExcellence connects. %%%\nIf you possess a high level of ability in an area, others may desire to connect with you because of it. %%%",
+      "tokenized_ko": "자신의 직업에서 높은 수준으로 수행하는 사람들은 흔히 다른 사람들에게 즉각적인 신뢰를 얻는다. %%%\n사람들은 그들을 존경하고, 그들처럼 되고 싶어 하고, 그들과 연결되어 있다고 느낀다. %%%\n그들이 말할 때, 다른 사람들은 비록 그들의 기술 분야가 그들이 주는 조언과 전혀 관련이 없을지라도 경청한다. %%%\n세계적으로 유명한 농구 선수에 대해 생각해 보라. %%%\n그는 그가 농구를 하면서 그간 벌었던 것보다 광고로부터 더 많은 돈을 벌었다. %%%\n그것이 그가 광고하는 제품에 대한 그의 지식 때문일까? %%%\n아니다. 그것은 그가 농구로 할 수 있는 것 때문이다. %%%\n올림픽 메달리스트 수영 선수도 마찬가지이다. %%%\n사람들은 그가 수영장에서 할 수 있는 것 때문에 그의 말을 경청한다. %%%\n그리고 어떤 배우가 우리에게 특정 자동차를 운전해야 한다고 말할 때, 우리는 엔진에 대한 그의 전문 지식 때문에 경청하는 것은 아니다. %%%\n우리는 그의 재능을 존경하기 때문에 경청한다. %%%\n탁월함이 연결된다. %%%\n만약 당신이 어떤 분야에서 높은 수준의 능력을 갖고 있다면, 다른 사람들은 그것 때문에 당신과 연결되기를 원할 수도 있다. %%%",
+      "mixed": "Individuals who perform at a high level in their profession often have instant credibility with others. %%%\n자신의 직업에서 높은 수준으로 수행하는 사람들은 흔히 다른 사람들에게 즉각적인 신뢰를 얻는다. %%%\nPeople admire them, they want to be like them, and they feel connected to them. %%%\n사람들은 그들을 존경하고, 그들처럼 되고 싶어 하고, 그들과 연결되어 있다고 느낀다. %%%\nWhen they speak, others listen ― even if the area of their skill has nothing to do with the advice they give. %%%\n그들이 말할 때, 다른 사람들은 비록 그들의 기술 분야가 그들이 주는 조언과 전혀 관련이 없을지라도 경청한다. %%%\nThink about a world-famous basketball player. %%%\n세계적으로 유명한 농구 선수에 대해 생각해 보라. %%%\nHe has made more money from endorsements than he ever did playing basketball. %%%\n그는 그가 농구를 하면서 그간 벌었던 것보다 광고로부터 더 많은 돈을 벌었다. %%%\nIs it because of his knowledge of the products he endorses? %%%\n그것이 그가 광고하는 제품에 대한 그의 지식 때문일까? %%%\nNo. It's because of what he can do with a basketball. %%%\n아니다. 그것은 그가 농구로 할 수 있는 것 때문이다. %%%\nThe same can be said of an Olympic medalist swimmer. %%%\n올림픽 메달리스트 수영 선수도 마찬가지이다. %%%\nPeople listen to him because of what he can do in the pool. %%%\n사람들은 그가 수영장에서 할 수 있는 것 때문에 그의 말을 경청한다. %%%\nAnd when an actor tells us we should drive a certain car, we don't listen because of his expertise on engines. %%%\n그리고 어떤 배우가 우리에게 특정 자동차를 운전해야 한다고 말할 때, 우리는 엔진에 대한 그의 전문 지식 때문에 경청하는 것은 아니다. %%%\nWe listen because we admire his talent. %%%\n우리는 그의 재능을 존경하기 때문에 경청한다. %%%\nExcellence connects. %%%\n탁월함이 연결된다. %%%\nIf you possess a high level of ability in an area, others may desire to connect with you because of it. %%%\n만약 당신이 어떤 분야에서 높은 수준의 능력을 갖고 있다면, 다른 사람들은 그것 때문에 당신과 연결되기를 원할 수도 있다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce22",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 32번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "32번",
+    "content": {
+      "original": "Think of the brain as a city. If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. And so it is with the brain's operation: it doesn't happen in one spot. Just as in a city, no neighborhood of the brain operates in isolation. In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. There the signals undergo processing and transformation into our conscious reality.",
+      "translation": "뇌를 도시라고 생각해보라. 만약 당신이 도시를 내다 보며 \"경제가 어디에 위치해 있나요?\"라고 묻는다면 그 질문에 대한 좋은 답이 없다는 것을 알게 될 것이다. 대신, 경제는 상점과 은행에서 상인과 고객에 이르기까지 모든 요소의 상호 작용으로부터 나타난다. 그리고 그것은 뇌의 작동도 그러하다: 그것은 한 곳에서 일어나지 않는다. 도시에서처럼, 뇌의 어떤 지역도 독립적으로 작동하지 않는다. 뇌와 도시 안에서, 모든 것은, 모든 규모에서, 근거리에서든 원거리에서든, 거주자들 간의 상호 작용으로부터 나타난다. 기차가 자재와 직물을 도시로 들여오고, 그것이 경제 속으로 처리되는 것처럼, 감각 기관으로부터의 가공되지 않은 전기화학적 신호는 뉴런의 초고속도로를 따라서 전해진다. 거기서 신호는 처리와 우리의 의식적인 현실로 변형을 겪는다.",
+      "sentences_en": [
+        "Think of the brain as a city.",
+        "If you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question.",
+        "Instead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers.",
+        "And so it is with the brain's operation: it doesn't happen in one spot.",
+        "Just as in a city, no neighborhood of the brain operates in isolation.",
+        "In brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly.",
+        "Just as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons.",
+        "There the signals undergo processing and transformation into our conscious reality."
+      ],
+      "sentences_ko": [
+        "뇌를 도시라고 생각해보라.",
+        "만약 당신이 도시를 내다 보며 \"경제가 어디에 위치해 있나요?\"라고 묻는다면 그 질문에 대한 좋은 답이 없다는 것을 알게 될 것이다.",
+        "대신, 경제는 상점과 은행에서 상인과 고객에 이르기까지 모든 요소의 상호 작용으로부터 나타난다.",
+        "그리고 그것은 뇌의 작동도 그러하다: 그것은 한 곳에서 일어나지 않는다.",
+        "도시에서처럼, 뇌의 어떤 지역도 독립적으로 작동하지 않는다.",
+        "뇌와 도시 안에서, 모든 것은, 모든 규모에서, 근거리에서든 원거리에서든, 거주자들 간의 상호 작용으로부터 나타난다.",
+        "기차가 자재와 직물을 도시로 들여오고, 그것이 경제 속으로 처리되는 것처럼, 감각 기관으로부터의 가공되지 않은 전기화학적 신호는 뉴런의 초고속도로를 따라서 전해진다.",
+        "거기서 신호는 처리와 우리의 의식적인 현실로 변형을 겪는다."
+      ],
+      "tokenized_en": "Think of the brain as a city. %%%\nIf you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. %%%\nInstead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. %%%\nAnd so it is with the brain's operation: it doesn't happen in one spot. %%%\nJust as in a city, no neighborhood of the brain operates in isolation. %%%\nIn brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. %%%\nJust as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. %%%\nThere the signals undergo processing and transformation into our conscious reality. %%%",
+      "tokenized_ko": "뇌를 도시라고 생각해보라. %%%\n만약 당신이 도시를 내다 보며 \"경제가 어디에 위치해 있나요?\"라고 묻는다면 그 질문에 대한 좋은 답이 없다는 것을 알게 될 것이다. %%%\n대신, 경제는 상점과 은행에서 상인과 고객에 이르기까지 모든 요소의 상호 작용으로부터 나타난다. %%%\n그리고 그것은 뇌의 작동도 그러하다: 그것은 한 곳에서 일어나지 않는다. %%%\n도시에서처럼, 뇌의 어떤 지역도 독립적으로 작동하지 않는다. %%%\n뇌와 도시 안에서, 모든 것은, 모든 규모에서, 근거리에서든 원거리에서든, 거주자들 간의 상호 작용으로부터 나타난다. %%%\n기차가 자재와 직물을 도시로 들여오고, 그것이 경제 속으로 처리되는 것처럼, 감각 기관으로부터의 가공되지 않은 전기화학적 신호는 뉴런의 초고속도로를 따라서 전해진다. %%%\n거기서 신호는 처리와 우리의 의식적인 현실로 변형을 겪는다. %%%",
+      "mixed": "Think of the brain as a city. %%%\n뇌를 도시라고 생각해보라. %%%\nIf you were to look out over a city and ask \"where is the economy located?\" you'd see there's no good answer to the question. %%%\n만약 당신이 도시를 내다 보며 \"경제가 어디에 위치해 있나요?\"라고 묻는다면 그 질문에 대한 좋은 답이 없다는 것을 알게 될 것이다. %%%\nInstead, the economy emerges from the interaction of all the elements ― from the stores and the banks to the merchants and the customers. %%%\n대신, 경제는 상점과 은행에서 상인과 고객에 이르기까지 모든 요소의 상호 작용으로부터 나타난다. %%%\nAnd so it is with the brain's operation: it doesn't happen in one spot. %%%\n그리고 그것은 뇌의 작동도 그러하다: 그것은 한 곳에서 일어나지 않는다. %%%\nJust as in a city, no neighborhood of the brain operates in isolation. %%%\n도시에서처럼, 뇌의 어떤 지역도 독립적으로 작동하지 않는다. %%%\nIn brains and in cities, everything emerges from the interaction between residents, at all scales, locally and distantly. %%%\n뇌와 도시 안에서, 모든 것은, 모든 규모에서, 근거리에서든 원거리에서든, 거주자들 간의 상호 작용으로부터 나타난다. %%%\nJust as trains bring materials and textiles into a city, which become processed into the economy, so the raw electrochemical signals from sensory organs are transported along superhighways of neurons. %%%\n기차가 자재와 직물을 도시로 들여오고, 그것이 경제 속으로 처리되는 것처럼, 감각 기관으로부터의 가공되지 않은 전기화학적 신호는 뉴런의 초고속도로를 따라서 전해진다. %%%\nThere the signals undergo processing and transformation into our conscious reality. %%%\n거기서 신호는 처리와 우리의 의식적인 현실로 변형을 겪는다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce23",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 33번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "33번",
+    "content": {
+      "original": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. Strange as it may sound, this theory states that emotions arise from our bodies. For example, our mood can be improved by simply lifting up the corners of our mouth. If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\"",
+      "translation": "다른 사람의 보디 랭귀지는 우리 자신의 신체에 영향을 미치며, 그것은 그 후 우리가 그에 따라 느끼도록 하는 감정적인 메아리를 만들어낸다. Louis Armstrong이 노래했듯이, \"당신이 미소 지을 때, 전 세계가 당신과 함께 미소 짓는다.\" 만약 다른 사람의 미소를 따라 하는 것이 우리를 행복하게 한다면, 그 미소 짓는 사람의 감정은 우리의 신체를 통해 전달된 것이다. 이상하게 들릴지 모르지만, 이 이론은 감정이 우리 신체에서 발생한다고 말한다. 예를 들어, 우리의 기분은 단순히 입꼬리를 올리는 것으로 좋아질 수 있다. 만약 사람들이 연필을 긴 방향으로 꽉 물라고 요구받으면, 연필이 그들의 입술에 닿지 않도록 조심하면서 (그리하여 억지로 입을 미소 짓는 것과 같은 모양이 되도록), 그들은 인상을 찌푸리라고 요구받은 경우보다 만화를 더 재미있다고 판단한다. 신체가 우선함은 \"나는 두려운 것이 분명하다, 왜냐하면 나는 도망치고 있기 때문이다.\"라는 구절로 때때로 요약된다.",
+      "sentences_en": [
+        "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly.",
+        "As Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\"",
+        "If copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body.",
+        "Strange as it may sound, this theory states that emotions arise from our bodies.",
+        "For example, our mood can be improved by simply lifting up the corners of our mouth.",
+        "If people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown.",
+        "The primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\""
+      ],
+      "sentences_ko": [
+        "다른 사람의 보디 랭귀지는 우리 자신의 신체에 영향을 미치며, 그것은 그 후 우리가 그에 따라 느끼도록 하는 감정적인 메아리를 만들어낸다.",
+        "Louis Armstrong이 노래했듯이, \"당신이 미소 지을 때, 전 세계가 당신과 함께 미소 짓는다.\"",
+        "만약 다른 사람의 미소를 따라 하는 것이 우리를 행복하게 한다면, 그 미소 짓는 사람의 감정은 우리의 신체를 통해 전달된 것이다.",
+        "이상하게 들릴지 모르지만, 이 이론은 감정이 우리 신체에서 발생한다고 말한다.",
+        "예를 들어, 우리의 기분은 단순히 입꼬리를 올리는 것으로 좋아질 수 있다.",
+        "만약 사람들이 연필을 긴 방향으로 꽉 물라고 요구받으면, 연필이 그들의 입술에 닿지 않도록 조심하면서 (그리하여 억지로 입을 미소 짓는 것과 같은 모양이 되도록), 그들은 인상을 찌푸리라고 요구받은 경우보다 만화를 더 재미있다고 판단한다.",
+        "신체가 우선함은 \"나는 두려운 것이 분명하다, 왜냐하면 나는 도망치고 있기 때문이다.\"라는 구절로 때때로 요약된다."
+      ],
+      "tokenized_en": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. %%%\nAs Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" %%%\nIf copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. %%%\nStrange as it may sound, this theory states that emotions arise from our bodies. %%%\nFor example, our mood can be improved by simply lifting up the corners of our mouth. %%%\nIf people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. %%%\nThe primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\" %%%",
+      "tokenized_ko": "다른 사람의 보디 랭귀지는 우리 자신의 신체에 영향을 미치며, 그것은 그 후 우리가 그에 따라 느끼도록 하는 감정적인 메아리를 만들어낸다. %%%\nLouis Armstrong이 노래했듯이, \"당신이 미소 지을 때, 전 세계가 당신과 함께 미소 짓는다.\" %%%\n만약 다른 사람의 미소를 따라 하는 것이 우리를 행복하게 한다면, 그 미소 짓는 사람의 감정은 우리의 신체를 통해 전달된 것이다. %%%\n이상하게 들릴지 모르지만, 이 이론은 감정이 우리 신체에서 발생한다고 말한다. %%%\n예를 들어, 우리의 기분은 단순히 입꼬리를 올리는 것으로 좋아질 수 있다. %%%\n만약 사람들이 연필을 긴 방향으로 꽉 물라고 요구받으면, 연필이 그들의 입술에 닿지 않도록 조심하면서 (그리하여 억지로 입을 미소 짓는 것과 같은 모양이 되도록), 그들은 인상을 찌푸리라고 요구받은 경우보다 만화를 더 재미있다고 판단한다. %%%\n신체가 우선함은 \"나는 두려운 것이 분명하다, 왜냐하면 나는 도망치고 있기 때문이다.\"라는 구절로 때때로 요약된다. %%%",
+      "mixed": "Someone else's body language affects our own body, which then creates an emotional echo that makes us feel accordingly. %%%\n다른 사람의 보디 랭귀지는 우리 자신의 신체에 영향을 미치며, 그것은 그 후 우리가 그에 따라 느끼도록 하는 감정적인 메아리를 만들어낸다. %%%\nAs Louis Armstrong sang, \"When you're smiling, the whole world smiles with you.\" %%%\nLouis Armstrong이 노래했듯이, \"당신이 미소 지을 때, 전 세계가 당신과 함께 미소 짓는다.\" %%%\nIf copying another's smile makes us feel happy, the emotion of the smiler has been transmitted via our body. %%%\n만약 다른 사람의 미소를 따라 하는 것이 우리를 행복하게 한다면, 그 미소 짓는 사람의 감정은 우리의 신체를 통해 전달된 것이다. %%%\nStrange as it may sound, this theory states that emotions arise from our bodies. %%%\n이상하게 들릴지 모르지만, 이 이론은 감정이 우리 신체에서 발생한다고 말한다. %%%\nFor example, our mood can be improved by simply lifting up the corners of our mouth. %%%\n예를 들어, 우리의 기분은 단순히 입꼬리를 올리는 것으로 좋아질 수 있다. %%%\nIf people are asked to bite down on a pencil lengthwise, taking care not to let the pencil touch their lips (thus forcing the mouth into a smile-like shape), they judge cartoons funnier than if they have been asked to frown. %%%\n만약 사람들이 연필을 긴 방향으로 꽉 물라고 요구받으면, 연필이 그들의 입술에 닿지 않도록 조심하면서 (그리하여 억지로 입을 미소 짓는 것과 같은 모양이 되도록), 그들은 인상을 찌푸리라고 요구받은 경우보다 만화를 더 재미있다고 판단한다. %%%\nThe primacy of the body is sometimes summarized in the phrase \"I must be afraid, because I'm running.\" %%%\n신체가 우선함은 \"나는 두려운 것이 분명하다, 왜냐하면 나는 도망치고 있기 때문이다.\"라는 구절로 때때로 요약된다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce24",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 34번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "34번",
+    "content": {
+      "original": "Restricting the number of items customers can buy boosts sales. Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. This suggests scarcity encourages sales. The findings are particularly strong because the test took place in a supermarket with genuine shoppers. It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently.",
+      "translation": "고객이 구입할 수 있는 품목의 개수를 제한하는 것은 매출을 증가시킨다. Cornell University의 마케팅 교수인 Brian Wansink는 1998년에 이 전략의 효과를 조사했다. 그는 Iowa주 Sioux City에 있는 세 개의 슈퍼마켓이 Campbell의 수프를 약간 할인하여 제공하도록 설득했다: 89센트가 아닌 79센트로. 할인된 수프는 세 가지 조건 중 하나의 조건으로 판매되었다: 구매량에 제한이 없는 하나의 대조군, 또는 고객이 4개의 캔으로 제한되거나 12개의 캔으로 제한되는 두 개의 실험군. 무제한 조건에서 구매자들은 평균 3.3캔을 구입했던 반면, 제한이 있던 희소 조건에서는, 평균 5.3캔을 구입했다. 이것은 희소성이 판매를 장려한다는 것을 보여준다. 이 실험은 진짜 구매자들이 있는 슈퍼마켓에서 진행되었기 때문에 그 결과는 특히 타당하다. 그것은 주장된 데이터에 의존하지 않았고, 소비자들이 다르게 행동할지도 모르는 실험실에서 이루어진 것도 아니었다.",
+      "sentences_en": [
+        "Restricting the number of items customers can buy boosts sales.",
+        "Brian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998.",
+        "He persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents.",
+        "The discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans.",
+        "In the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average.",
+        "This suggests scarcity encourages sales.",
+        "The findings are particularly strong because the test took place in a supermarket with genuine shoppers.",
+        "It didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently."
+      ],
+      "sentences_ko": [
+        "고객이 구입할 수 있는 품목의 개수를 제한하는 것은 매출을 증가시킨다.",
+        "Cornell University의 마케팅 교수인 Brian Wansink는 1998년에 이 전략의 효과를 조사했다.",
+        "그는 Iowa주 Sioux City에 있는 세 개의 슈퍼마켓이 Campbell의 수프를 약간 할인하여 제공하도록 설득했다: 89센트가 아닌 79센트로.",
+        "할인된 수프는 세 가지 조건 중 하나의 조건으로 판매되었다: 구매량에 제한이 없는 하나의 대조군, 또는 고객이 4개의 캔으로 제한되거나 12개의 캔으로 제한되는 두 개의 실험군.",
+        "무제한 조건에서 구매자들은 평균 3.3캔을 구입했던 반면, 제한이 있던 희소 조건에서는, 평균 5.3캔을 구입했다.",
+        "이것은 희소성이 판매를 장려한다는 것을 보여준다.",
+        "이 실험은 진짜 구매자들이 있는 슈퍼마켓에서 진행되었기 때문에 그 결과는 특히 타당하다.",
+        "그것은 주장된 데이터에 의존하지 않았고, 소비자들이 다르게 행동할지도 모르는 실험실에서 이루어진 것도 아니었다."
+      ],
+      "tokenized_en": "Restricting the number of items customers can buy boosts sales. %%%\nBrian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. %%%\nHe persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. %%%\nThe discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. %%%\nIn the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. %%%\nThis suggests scarcity encourages sales. %%%\nThe findings are particularly strong because the test took place in a supermarket with genuine shoppers. %%%\nIt didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently. %%%",
+      "tokenized_ko": "고객이 구입할 수 있는 품목의 개수를 제한하는 것은 매출을 증가시킨다. %%%\nCornell University의 마케팅 교수인 Brian Wansink는 1998년에 이 전략의 효과를 조사했다. %%%\n그는 Iowa주 Sioux City에 있는 세 개의 슈퍼마켓이 Campbell의 수프를 약간 할인하여 제공하도록 설득했다: 89센트가 아닌 79센트로. %%%\n할인된 수프는 세 가지 조건 중 하나의 조건으로 판매되었다: 구매량에 제한이 없는 하나의 대조군, 또는 고객이 4개의 캔으로 제한되거나 12개의 캔으로 제한되는 두 개의 실험군. %%%\n무제한 조건에서 구매자들은 평균 3.3캔을 구입했던 반면, 제한이 있던 희소 조건에서는, 평균 5.3캔을 구입했다. %%%\n이것은 희소성이 판매를 장려한다는 것을 보여준다. %%%\n이 실험은 진짜 구매자들이 있는 슈퍼마켓에서 진행되었기 때문에 그 결과는 특히 타당하다. %%%\n그것은 주장된 데이터에 의존하지 않았고, 소비자들이 다르게 행동할지도 모르는 실험실에서 이루어진 것도 아니었다. %%%",
+      "mixed": "Restricting the number of items customers can buy boosts sales. %%%\n고객이 구입할 수 있는 품목의 개수를 제한하는 것은 매출을 증가시킨다. %%%\nBrian Wansink, Professor of Marketing at Cornell University, investigated the effectiveness of this tactic in 1998. %%%\nCornell University의 마케팅 교수인 Brian Wansink는 1998년에 이 전략의 효과를 조사했다. %%%\nHe persuaded three supermarkets in Sioux City, Iowa, to offer Campbell's soup at a small discount: 79 cents rather than 89 cents. %%%\n그는 Iowa주 Sioux City에 있는 세 개의 슈퍼마켓이 Campbell의 수프를 약간 할인하여 제공하도록 설득했다: 89센트가 아닌 79센트로. %%%\nThe discounted soup was sold in one of three conditions: a control, where there was no limit on the volume of purchases, or two tests, where customers were limited to either four or twelve cans. %%%\n할인된 수프는 세 가지 조건 중 하나의 조건으로 판매되었다: 구매량에 제한이 없는 하나의 대조군, 또는 고객이 4개의 캔으로 제한되거나 12개의 캔으로 제한되는 두 개의 실험군. %%%\nIn the unlimited condition shoppers bought 3.3 cans on average, whereas in the scarce condition, when there was a limit, they bought 5.3 on average. %%%\n무제한 조건에서 구매자들은 평균 3.3캔을 구입했던 반면, 제한이 있던 희소 조건에서는, 평균 5.3캔을 구입했다. %%%\nThis suggests scarcity encourages sales. %%%\n이것은 희소성이 판매를 장려한다는 것을 보여준다. %%%\nThe findings are particularly strong because the test took place in a supermarket with genuine shoppers. %%%\n이 실험은 진짜 구매자들이 있는 슈퍼마켓에서 진행되었기 때문에 그 결과는 특히 타당하다. %%%\nIt didn't rely on claimed data, nor was it held in a laboratory where consumers might behave differently. %%%\n그것은 주장된 데이터에 의존하지 않았고, 소비자들이 다르게 행동할지도 모르는 실험실에서 이루어진 것도 아니었다. %%%"
+    }
+  },
+  {
+    "ok": true,
+    "passage_id": "69c4ffc346f58f933b6dce25",
+    "textbook": "23년 6월 고1 영어모의고사",
+    "source_key": "23년 6월 고1 영어모의고사 35번",
+    "passage_source": "",
+    "chapter": "23년 6월 고1 영어모의고사",
+    "number": "35번",
+    "content": {
+      "original": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. For example, in many office environments workers sit at desks with computers and have access to the internet. They are able to check their personal e-mails and use social media whenever they want to. This can stop them from doing their work and make them less productive. Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity.",
+      "translation": "기술은 생산성을 높일 수 있는 잠재력을 가지고 있지만, 또한 생산성에 부정적인 영향을 미칠 수 있다. 예를 들어, 많은 사무실 환경에서 직원들은 컴퓨터가 있는 책상에 앉아 인터넷에 접속한다. 그들은 원할 때마다 개인 이메일을 확인하고 소셜 미디어를 사용할 수 있다. 이것은 그들이 일을 하는 것을 방해하고 그들의 생산성을 떨어뜨리게 만들 수 있다. 또한 새로운 기술을 도입하는 것은 생산 공정에 변화를 야기하거나 직원들에게 새로운 시스템을 배우도록 요구할 때 생산에 부정 적인 영향을 미칠 수 있다. 새로운 기술을 사용하는 것을 배우는 것은 직원들에게 시간이 많이 걸리고 스트레스를 줄 수 있으며 이것은 생산성 저하를 야기할 수 있다.",
+      "sentences_en": [
+        "Although technology has the potential to increase productivity, it can also have a negative impact on productivity.",
+        "For example, in many office environments workers sit at desks with computers and have access to the internet.",
+        "They are able to check their personal e-mails and use social media whenever they want to.",
+        "This can stop them from doing their work and make them less productive.",
+        "Introducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system.",
+        "Learning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity."
+      ],
+      "sentences_ko": [
+        "기술은 생산성을 높일 수 있는 잠재력을 가지고 있지만, 또한 생산성에 부정적인 영향을 미칠 수 있다.",
+        "예를 들어, 많은 사무실 환경에서 직원들은 컴퓨터가 있는 책상에 앉아 인터넷에 접속한다.",
+        "그들은 원할 때마다 개인 이메일을 확인하고 소셜 미디어를 사용할 수 있다.",
+        "이것은 그들이 일을 하는 것을 방해하고 그들의 생산성을 떨어뜨리게 만들 수 있다.",
+        "또한 새로운 기술을 도입하는 것은 생산 공정에 변화를 야기하거나 직원들에게 새로운 시스템을 배우도록 요구할 때 생산에 부정 적인 영향을 미칠 수 있다.",
+        "새로운 기술을 사용하는 것을 배우는 것은 직원들에게 시간이 많이 걸리고 스트레스를 줄 수 있으며 이것은 생산성 저하를 야기할 수 있다."
+      ],
+      "tokenized_en": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. %%%\nFor example, in many office environments workers sit at desks with computers and have access to the internet. %%%\nThey are able to check their personal e-mails and use social media whenever they want to. %%%\nThis can stop them from doing their work and make them less productive. %%%\nIntroducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. %%%\nLearning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity. %%%",
+      "tokenized_ko": "기술은 생산성을 높일 수 있는 잠재력을 가지고 있지만, 또한 생산성에 부정적인 영향을 미칠 수 있다. %%%\n예를 들어, 많은 사무실 환경에서 직원들은 컴퓨터가 있는 책상에 앉아 인터넷에 접속한다. %%%\n그들은 원할 때마다 개인 이메일을 확인하고 소셜 미디어를 사용할 수 있다. %%%\n이것은 그들이 일을 하는 것을 방해하고 그들의 생산성을 떨어뜨리게 만들 수 있다. %%%\n또한 새로운 기술을 도입하는 것은 생산 공정에 변화를 야기하거나 직원들에게 새로운 시스템을 배우도록 요구할 때 생산에 부정 적인 영향을 미칠 수 있다. %%%\n새로운 기술을 사용하는 것을 배우는 것은 직원들에게 시간이 많이 걸리고 스트레스를 줄 수 있으며 이것은 생산성 저하를 야기할 수 있다. %%%",
+      "mixed": "Although technology has the potential to increase productivity, it can also have a negative impact on productivity. %%%\n기술은 생산성을 높일 수 있는 잠재력을 가지고 있지만, 또한 생산성에 부정적인 영향을 미칠 수 있다. %%%\nFor example, in many office environments workers sit at desks with computers and have access to the internet. %%%\n예를 들어, 많은 사무실 환경에서 직원들은 컴퓨터가 있는 책상에 앉아 인터넷에 접속한다. %%%\nThey are able to check their personal e-mails and use social media whenever they want to. %%%\n그들은 원할 때마다 개인 이메일을 확인하고 소셜 미디어를 사용할 수 있다. %%%\nThis can stop them from doing their work and make them less productive. %%%\n이것은 그들이 일을 하는 것을 방해하고 그들의 생산성을 떨어뜨리게 만들 수 있다. %%%\nIntroducing new technology can also have a negative impact on production when it causes a change to the production process or requires workers to learn a new system. %%%\n또한 새로운 기술을 도입하는 것은 생산 공정에 변화를 야기하거나 직원들에게 새로운 시스템을 배우도록 요구할 때 생산에 부정 적인 영향을 미칠 수 있다. %%%\nLearning to use new technology can be time consuming and stressful for workers and this can cause a decline in productivity. %%%\n새로운 기술을 사용하는 것을 배우는 것은 직원들에게 시간이 많이 걸리고 스트레스를 줄 수 있으며 이것은 생산성 저하를 야기할 수 있다. %%%"
+    }
+  }
+]

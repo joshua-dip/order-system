@@ -1,0 +1,869 @@
+{
+  "allInChapters": [
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문1",
+      "number": "본문1"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문2",
+      "number": "본문2"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문3-1",
+      "number": "본문3-1"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문3-2",
+      "number": "본문3-2"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문4",
+      "number": "본문4"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문5",
+      "number": "본문5"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans 본문6",
+      "number": "본문6"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans Further Reading 1",
+      "number": "Further Reading 1"
+    },
+    {
+      "source_key": "Lesson 2. From Casual Buyers to Lasting Fans Further Reading 2",
+      "number": "Further Reading 2"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문1",
+      "number": "본문1"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문2",
+      "number": "본문2"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문3-1",
+      "number": "본문3-1"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문3-2",
+      "number": "본문3-2"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문4",
+      "number": "본문4"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문5-1",
+      "number": "본문5-1"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses 본문5-2",
+      "number": "본문5-2"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses Further Reading 1",
+      "number": "Further Reading 1"
+    },
+    {
+      "source_key": "Lesson 3. Living With Viruses Further Reading 2",
+      "number": "Further Reading 2"
+    }
+  ],
+  "bodyKeys": [
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문1",
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문2",
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문3-1",
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문3-2",
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문4",
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문5",
+    "Lesson 2. From Casual Buyers to Lasting Fans 본문6",
+    "Lesson 3. Living With Viruses 본문1",
+    "Lesson 3. Living With Viruses 본문2",
+    "Lesson 3. Living With Viruses 본문3-1",
+    "Lesson 3. Living With Viruses 본문3-2",
+    "Lesson 3. Living With Viruses 본문4",
+    "Lesson 3. Living With Viruses 본문5-1",
+    "Lesson 3. Living With Viruses 본문5-2"
+  ],
+  "stock": [
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문1",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문2",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문3-1",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문3-2",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문4",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문5",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문6",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문1",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문2",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문3-1",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문3-2",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문4",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문5-1",
+      "missing": true
+    },
+    {
+      "sourceKey": "Lesson 3. Living With Viruses 본문5-2",
+      "missing": true
+    }
+  ],
+  "passages": [
+    {
+      "id": "6a6f570be087c2fe78de5ec9",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문1",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문1",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<The Subscription Economy: From Ownership to Access>",
+          "ko": "<구독 경제: 소유에서 접근으로>"
+        },
+        {
+          "i": 1,
+          "en": "Jiyun, a high school student, starts her day by logging in to a music streaming service on her smartphone.",
+          "ko": "고등학생인 지윤이는 그녀의 스마트폰에서 음악 스트리밍 서비스에 로그인 하며 하루를 시작한다."
+        },
+        {
+          "i": 2,
+          "en": "She enjoys listening to her favorite music, discovering new songs, and exploring new artists every day.",
+          "ko": "그녀는 매일 자신이 선호하는 음악을 듣고, 새로운 노래들을 발견하고, 새로운 아티스트들을 탐색하는 것을 즐긴다."
+        },
+        {
+          "i": 3,
+          "en": "For a healthy breakfast, Jiyun receives a delivery from a subscription service that provides fresh vegetables and fruits.",
+          "ko": "건강한 아침 식사를 위해, 지윤이는 신선한 채소와 과일을 공급하는 구독 서비스로부터 배송을 받는다."
+        },
+        {
+          "i": 4,
+          "en": "After school, Jiyun utilizes a video lecture service to expand her knowledge in whatever she finds interesting.",
+          "ko": "방과 후에, 지윤이는 그녀가 흥미를 느끼는 것마다 그녀의 지식을 확장하기 위해 비디오 강의 서비스를 활용한다."
+        },
+        {
+          "i": 5,
+          "en": "For example, she watches various academic lectures to review her schoolwork and stay updated about the latest knowledge in her chosen field of study.",
+          "ko": "예를 들어, 그녀는 학교 공부를 복습하고 그녀가 선택한 연구 분야의 최신 지식에 대해 업데이트하기 위해 다양한 학술 강의를 시청한다."
+        },
+        {
+          "i": 6,
+          "en": "During weekends, Jiyun and her family spend quality time together watching movies or dramas using a streaming service.",
+          "ko": "주말에 지윤이와 그녀의 가족은 스트리밍 서비스를 사용하면서 함께 영화나 드라마를 시청하는 좋은 시간을 보낸다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5eca",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문2",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문2",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<Subscriptions are everywhere>",
+          "ko": "<구독은 모든 곳에 있다>"
+        },
+        {
+          "i": 1,
+          "en": "To be sure, the subscription economy is a popular economic model nowadays, and Jiyun is actively taking part in it.",
+          "ko": "분명히, 구독 경제는 요즈음 인기 있는 경제 모델이고, 지윤이는 그것에 적극적으로 참여하고 있다."
+        },
+        {
+          "i": 2,
+          "en": "The concept of business models based on subscriptions is not new.",
+          "ko": "구독 기반의 비즈니스 모델의 개념은 새로운 것이 아니다."
+        },
+        {
+          "i": 3,
+          "en": "Initially it was limited to products such as milk and newspapers.",
+          "ko": "처음에 그것은 우유와 신문 같은 제품들에 한정되었다."
+        },
+        {
+          "i": 4,
+          "en": "However, these business models have expanded to all industries, including entertainment, technology, fashion, education, and much more.",
+          "ko": "하지만, 이들 사업 모델은 엔터테인먼트, 기술, 패션, 교육, 그리고 훨씬 더 많은 것들을 포함한, 모든 산업들로 확산되었다."
+        },
+        {
+          "i": 5,
+          "en": "Instead of creating a hit product that will be sold once, companies now prioritize providing continuing value, such as new content, more personalization, or access to updates.",
+          "ko": "일회성으로 팔릴 히트 상품을 창출하는 대신에, 기업들은 지금 새 콘텐츠, 보다 개인 맞춤형, 또는 업데이트 접근성 같은 지속적 가치를 제공하는 것을 우선시한다."
+        },
+        {
+          "i": 6,
+          "en": "Customers pay for these benefits via a regular subscription.",
+          "ko": "고객들은 정기적 구독을 통해 이러한 혜택들에 대해 비용을 지불한다."
+        },
+        {
+          "i": 7,
+          "en": "The subscription economy brings advantages for both companies and consumers.",
+          "ko": "구독 경제는 기업과 소비자 모두에게 이점을 가져다준다."
+        },
+        {
+          "i": 8,
+          "en": "Companies can have a stable revenue and build customer loyalty by using the subscription model.",
+          "ko": "기업들은 구독 모델을 사용해서 안정적인 수입을 얻고 고객 충성을 구축할 수 있다."
+        },
+        {
+          "i": 9,
+          "en": "From the consumers' perspective, they can enjoy a wider range of choices and personalized experiences.",
+          "ko": "소비자의 관점에서, 그들은 더욱 다양한 범위의 선택과 개인 맞춤형 경험을 즐길 수 있다."
+        },
+        {
+          "i": 10,
+          "en": "They can also save money by having flexible subscription contracts.",
+          "ko": "그들은 또한 융통성 있는 계약을 함으로써 돈을 절약할 수 있다."
+        },
+        {
+          "i": 11,
+          "en": "The rise of the subscription economy is closely connected to two major drivers: changes in consumption trends and the rapid growth of online platforms.",
+          "ko": "구독 경제의 부상은 두 개의 주요한 동인들과 깊은 연관이 있다: 소비 추세의 변화들과 온라인 플랫폼의 급성장."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ecb",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문3-1",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문3-1",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<People love the subscriptions>",
+          "ko": "<사람들은 구독을 사랑한다>"
+        },
+        {
+          "i": 1,
+          "en": "The subscription economy is highly relevant to how people consume goods and services nowadays.",
+          "ko": "구독 경제는 요즘 사람들이 어떻게 재화와 서비스를 소비하는지와 상당히 관련되어 있다."
+        },
+        {
+          "i": 2,
+          "en": "More and more people prioritize experiences over owning things.",
+          "ko": "점점 더 많은 사람이 물건을 소유하는 것보다 경험을 우선시한다."
+        },
+        {
+          "i": 3,
+          "en": "This makes the subscription economy attractive to them because it offers access to services or content without the requirement of ownership.",
+          "ko": "이것이 구독 경제를 그들에게 매력적인 것으로 만드는데 왜냐하면 그것은 소유의 필요 없이 서비스나 콘텐츠에 대한 접근을 제공하기 때문이다."
+        },
+        {
+          "i": 4,
+          "en": "For example, by subscribing to a music streaming service, consumers can enjoy limitless music without the need for having disc albums.",
+          "ko": "예를 들어, 음악 스트리밍 서비스를 구독함으로써, 소비자들은 디스크 앨범을 가질 필요가 없이 무한한 음악을 즐길 수 있다."
+        },
+        {
+          "i": 5,
+          "en": "Another example is subscribing to clothing services, where consumers can explore a variety of clothing styles without filling up their drawers.",
+          "ko": "또 다른 예는 의류 서비스를 구독하는 것으로, 소비자들은 그들의 서랍을 채우지 않고 다양한 의류 스타일을 탐색할 수 있다."
+        },
+        {
+          "i": 6,
+          "en": "Moreover, consumers value diversity and customization.",
+          "ko": "게다가, 소비자들은 다양성과 맞춤화에 가치를 둔다."
+        },
+        {
+          "i": 7,
+          "en": "The subscription economy offers a diverse range of subscription options, enabling individuals to personalize their experiences based on their own preferences and interests.",
+          "ko": "구독 경제는 다양한 범위의 구독 선택을 제공하여, 개인들이 그들의 선호와 관심에 기초하여 그들의 경험들을 개별화할 수 있도록 해 준다."
+        },
+        {
+          "i": 8,
+          "en": "This aspect of the subscription economy is more popular among younger generations, as they enjoy expressing their uniqueness and discovering valuable content and services that fit with their individual tastes.",
+          "ko": "구독 경제의 이러한 측면은 젊은 세대가 그들의 고유함을 표현하고, 젊은 세대의 개별적 취향에 부합하는 가치 있는 콘텐츠와 서비스들을 발견하는 것을 즐김에 따라, 젊은 세대 사이에 더욱 인기가 있다."
+        },
+        {
+          "i": 9,
+          "en": "A popular example that has gained attention is the cosmetics subscription service.",
+          "ko": "주목받고 있는 인기 사례는 화장품 구독 서비스이다."
+        },
+        {
+          "i": 10,
+          "en": "It stands out by thoroughly analyzing customers' current skin conditions and providing specialized recommendations, including manufacturing cosmetics created to address each individual's unique skin concerns.",
+          "ko": "그것은 소비자의 현재 피부 상태를 철저하게 분석하고 개개인의 고유한 피부 고민을 해결하기 위해 만들어진 화장품 제조를 포함한 전문적인 추천을 제공하는 것이 돋보인다."
+        },
+        {
+          "i": 11,
+          "en": "To come to the point, consumers receive a personalized experience that prioritizes their individual skin conditions, rather than a uniform purchasing process.",
+          "ko": "요점을 말하자면, 소비자들은 획일화된 구매 과정 대신에, 그들 개인의 피부 조건을 우선시하는 개별화된 경험을 얻는다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ecc",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문3-2",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문3-2",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Furthermore, consumers appreciate flexibility and convenience.",
+          "ko": "게다가, 소비자들은 유연성과 편의성을 높이 평가한다."
+        },
+        {
+          "i": 1,
+          "en": "In some subscription models, consumers can experience a variety of products or services for a fixed cost.",
+          "ko": "일부 구독 모델에서는, 소비자들이 고정된 비용으로 다양한 제품과 서비스를 경험할 수 있다."
+        },
+        {
+          "i": 2,
+          "en": "In other models, they can flexibly adjust subscription fees by choosing only the necessary services or products when needed.",
+          "ko": "다른 모델에서는, 필요할 때 필요한 서비스나 제품만 선택하여 구독 요금을 유연하게 조정할 수 있다."
+        },
+        {
+          "i": 3,
+          "en": "This means they can either enjoy a range of offerings for a set price or save money by selecting only what they really need.",
+          "ko": "이것은 정해진 가격으로 다양한 제공을 즐길 수도 있고, 그들이 실제 필요한 것만 선택함으로써 돈을 절약할 수도 있음을 의미한다."
+        },
+        {
+          "i": 4,
+          "en": "Moreover, subscription services are made easily accessible by online platforms, enhancing consumers convenience.",
+          "ko": "게다가, 구독 서비스는 온라인 플랫폼을 통해 쉽게 접근할 수 있게 되어 소비자들의 편의를 증진시킨다."
+        },
+        {
+          "i": 5,
+          "en": "With just a few clicks, consumers can receive services or products.",
+          "ko": "단지 몇번의 클릭으로, 소비자들은 서비스나 제품을 받을 수 있다."
+        },
+        {
+          "i": 6,
+          "en": "If they wish to change their device model, they can do so.",
+          "ko": "만약 그들이 그들의 기기 모델을 변경하기를 원하면, 그렇게 할 수 있다."
+        },
+        {
+          "i": 7,
+          "en": "Whoever desires an upgrade can get it and experience the latest models.",
+          "ko": "업그레이드를 원하는 사람들은 누구든지 받을 수 있고 최신 모델을 경험할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ecd",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문4",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문4",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<Online platforms drive the subscription economy>",
+          "ko": "<온라인 플랫폼들이 구독 경제를 구동한다>"
+        },
+        {
+          "i": 1,
+          "en": "With the development of various digital devices centered on smartphones, consumers have been able to do numerous things with great ease.",
+          "ko": "스마트폰을 중심으로 한 다양한 디지털 기기의 발전과 함께 소비자들은 많은 것들을 아주 쉽게 할 수 있게 되었다."
+        },
+        {
+          "i": 2,
+          "en": "In the past, people had no choice but to go to the theater or purchase the videos they wanted to watch.",
+          "ko": "과거에는, 사람들이 영화관에 가거나, 그들이 시청하기 원하는 비디오들을 구매할 수 밖에 없었다."
+        },
+        {
+          "i": 3,
+          "en": "Today, whoever wants to watch a movie can access online media subscription platforms and enjoy a vast selection of movies on their smartphones or other digital devices.",
+          "ko": "오늘날에는, 영화 시청을 원하는 사람들은 누구나 온라인 미디어 구독 플랫폼에 접속해서 그들의 스마트폰에서 또는 다른 디지털 기기에서 엄청난 양의 영화를 즐길 수 있다."
+        },
+        {
+          "i": 4,
+          "en": "At the same time, these platforms make it easy for companies to offer customized products and services to customers.",
+          "ko": "동시에, 이들 플랫폼들은 기업들이 고객들에게 맞춤형 제품과 서비스를 제공하는 것을 쉽게 만든다."
+        },
+        {
+          "i": 5,
+          "en": "By applying AI and big data algorithm technology, companies identify consumers' needs, tastes, and consumption patterns.",
+          "ko": "인공지능과 빅데이터 알고리즘 기술을 적용하여, 기업들은 고객들의 요구, 기호, 소비 패턴들을 확인한다."
+        },
+        {
+          "i": 6,
+          "en": "People appreciate having diverse choices and customization, which in turn enhances their satisfaction.",
+          "ko": "사람들은 다양한 선택과 맞춤화를 환영하며 이는 결과적으로 그들의 만족을 증진시킨다."
+        },
+        {
+          "i": 7,
+          "en": "Services, such as suggesting personalized clothing styles based on customers' purchase history or recommending videos that match their movie and video viewing history, bring them great satisfaction.",
+          "ko": "소비자의 구매 기록에 기반한 개인 맞춤화된 의류 스타일 제안이나, 그들의 영화 및 비디오 시청 기록과 부합하는 비디오 추천과 같은 서비스는 그들에게 커다란 만족을 가져다준다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ece",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문5",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문5",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<Limitations of the subscription economy>",
+          "ko": "<구독 경제의 제한점들>"
+        },
+        {
+          "i": 1,
+          "en": "Although the subscription economy offers many advantages, there are also some disadvantages to consider.",
+          "ko": "비록 구독 경제가 많은 장점을 제공하지만, 또한 일부 고려해야 할 단점들도 있다."
+        },
+        {
+          "i": 2,
+          "en": "One concern is the potential for overconsumption.",
+          "ko": "한 가지 우려 사항은 과소비 가능성이다."
+        },
+        {
+          "i": 3,
+          "en": "The convenience and accessibility of the subscription model make it easy for consumers to sign up for multiple services and use a lot of content or products.",
+          "ko": "구독 모델의 편리성과 접근성은 소비자들이 복수의 서비스를 계약하고 많은 콘텐츠나 제품을 사용하는 것을 쉽게 만든다."
+        },
+        {
+          "i": 4,
+          "en": "This can result in excessive consumption and using more subscription services than actually needed.",
+          "ko": "이것은 과도한 소비와 실제로 필요한 것보다 많은 구독 서비스 사용을 야기할 수 있다."
+        },
+        {
+          "i": 5,
+          "en": "It is crucial to subscribe only to services that are truly necessary and avoid subscribing to similar services.",
+          "ko": "진정으로 필요한 시비스들만 구독하고 유사한 서비스들을 구독하는 것을 피하는 것이 매우 중요하다."
+        },
+        {
+          "i": 6,
+          "en": "Related to the concern of overconsumption is the financial burden that subscriptions can create.",
+          "ko": "과소비의 우려와 관련된 것으로 구독이 창출할 수 있는 금융 부담이 있다."
+        },
+        {
+          "i": 7,
+          "en": "While the cost of individual subscriptions may seem affordable, subscribing to multiple services can add up quickly.",
+          "ko": "개별 구독 비용은 감당할 수 있어 보일 수 있지만, 복수의 서비스를 구독하는 것은 비용이 빠르게 증가할 수 있다."
+        },
+        {
+          "i": 8,
+          "en": "It is important to carefully consider the costs of these subscriptions to avoid financial strain.",
+          "ko": "재정적 부담을 피하기 위해 이들 구독의 비용을 신중하게 고려하는 것이 중요하다."
+        },
+        {
+          "i": 9,
+          "en": "Regularly reviewing and canceling unnecessary subscriptions can be beneficial.",
+          "ko": "정기적으로 검토하고 불필요한 구독들을 취소하는 것이 유익할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ecf",
+      "sourceKey": "Lesson 2. From Casual Buyers to Lasting Fans 본문6",
+      "chapter": "Lesson 2. From Casual Buyers to Lasting Fans",
+      "number": "본문6",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Additionally, the subscription economy can contribute to environmental pollution.",
+          "ko": "부가적으로, 구독 경제는 환경 오염에 기여할 수 있다."
+        },
+        {
+          "i": 1,
+          "en": "The regular delivery of products in packaging materials can increase the use of disposable packaging, which harms the environment.",
+          "ko": "포장재에 담긴 제품들을 정기적으로 배달하는 것은 일회용 포장의 사용을 증가시킬 수 있어 이것이 환경을 해친다."
+        },
+        {
+          "i": 2,
+          "en": "Using environmentally friendly packaging materials and opting for reusable packaging can help reduce this problem.",
+          "ko": "친환경 포장 재료를 사용하고 재사용 가능한 포장을 선택하는 것은 이 문제를 줄일 수 있다."
+        },
+        {
+          "i": 3,
+          "en": "Despite the potential limitations of subscription services, they have become deeply embedded in our lives and more and more businesses are jumping onto the subscription economy model.",
+          "ko": "구독 서비스들의 잠재적 제한점들에도 불구하고, 그것은 우리의 삶에 깊숙이 자리 잡고 있으며 더욱더 많은 사업이 구독 경제 모델에 올라타고 있다."
+        },
+        {
+          "i": 4,
+          "en": "It is expected that new subscription services will be continuously provided to consumers in new areas in the future.",
+          "ko": "미래에 새로운 영역들에서 소비자들에게 새로운 구독 서비스들이 지속적으로 제공될 것으로 예상된다."
+        },
+        {
+          "i": 5,
+          "en": "We need to have a deeper understanding of the subscription economy and become wise consumers who receive the services that are really needed.",
+          "ko": "우리는 구독 경제에 대해 보다 깊은 이해를 가지고 정말 필요한 서비스들을 받는 현명한 소비자가 되어야 한다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed2",
+      "sourceKey": "Lesson 3. Living With Viruses 본문1",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문1",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<The Varied World of Viruses>",
+          "ko": "<바이러스의 다양한 세계>"
+        },
+        {
+          "i": 1,
+          "en": "It appears that viruses exist solely to bring suffering to humanity.",
+          "ko": "바이러스는 오로지 인류에게 고통을 주기 위해 존재하는 것으로 보인다."
+        },
+        {
+          "i": 2,
+          "en": "The 1918 influenza pandemic is estimated to have killed 50 to 100 million people.",
+          "ko": "1918년 인플루엔자 대유행은 5천만 명에서 1억 명의 목숨을 빼앗아간 것으로 추정된다."
+        },
+        {
+          "i": 3,
+          "en": "Smallpox claimed the lives of a further 200 million people in the 20th century alone, according to estimates.",
+          "ko": "추정에 따르면, 천연두는 20세기에만 2억 명 이상의 목숨을 앗아갔다."
+        },
+        {
+          "i": 4,
+          "en": "And of course, the recent COVID-19 pandemic has taken several million lives, affecting almost every aspect of human life worldwide.",
+          "ko": "그리고 물론 최근의 코로나19 팬데믹은 수백만 명의 목숨을 앗아갔으며, 전 세계적으로 인간 삶의 거의 모든 측면에 영향을 미치고 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed3",
+      "sourceKey": "Lesson 3. Living With Viruses 본문2",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문2",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Outbreaks of viral diseases are frequently linked to contact with wild animals such as bats.",
+          "ko": "바이러스성 질병의 발생은 박쥐와 같은 야생동물과의 접촉과 관련이 있는 경우가 많다."
+        },
+        {
+          "i": 1,
+          "en": "Such contacts allow new viruses to enter human bodies that have no prior immunity to such viruses.",
+          "ko": "이러한 접촉을 통해 새로운 바이러스가 그 바이러스에 대한 기존 면역력이 없는 사람의 몸에 침투할 수 있다."
+        },
+        {
+          "i": 2,
+          "en": "Historically, natural barriers such as mountains and forests prevented animal viruses from infecting humans.",
+          "ko": "역사적으로 산과 숲과 같은 자연 장벽은 동물 바이러스가 인간을 감염시키는 것을 막았다."
+        },
+        {
+          "i": 3,
+          "en": "Industrialization has destroyed these barriers, and climate change has pushed some wild animals out of their original habitats.",
+          "ko": "산업화는 이러한 장벽을 파괴시켜왔고 기후 변화로 인해 일부 야생동물들이 원래 서식지에서 밀려났다."
+        },
+        {
+          "i": 4,
+          "en": "These changes have resulted in an increase in interactions between human and wild animals, meaning more opportunities for the viruses present in wild animals to spread to humans.",
+          "ko": "이러한 변화로 인해 인간과 야생동물 간의 상호작용이 증가했고, 이는 야생동물에 존재하는 바이러스가 인간에게 전파될 기회가 더 많아졌다는 것을 의미한다."
+        },
+        {
+          "i": 5,
+          "en": "This is the primary reason for scientists' concern that pandemics may increase in the future.",
+          "ko": "이것이 과학자들이 앞으로 팬데믹이 증가할 수 있다고 우려하는 주된 이유이다."
+        },
+        {
+          "i": 6,
+          "en": "Then, is the virus truly a harmful presence to humans? Not necessarily.",
+          "ko": "그렇다면 바이러스는 정말 인간에게 해로운 존재일까? 반드시 그렇지는 않다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed4",
+      "sourceKey": "Lesson 3. Living With Viruses 본문3-1",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문3-1",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<Keepers of the Earth>",
+          "ko": "<지구의 수호자>"
+        },
+        {
+          "i": 1,
+          "en": "What is less commonly known is that viruses play crucial roles in supporting much of life on Earth.",
+          "ko": "덜 일반적으로 알려진 것은 바이러스가 지구상의 많은 생명체를 지탱하는데 중요한 역할을 한다는 것이다."
+        },
+        {
+          "i": 2,
+          "en": "This is because researchers have only recently begun investigating the viruses that sustain us and the planet, instead of just those that harm us.",
+          "ko": "이는 연구자들이 인간에게 해를 끼치는 바이러스 대신에 인간과 지구를 지탱하는 바이러스에 대한 연구를 최근에야 시작했기 때문이다."
+        },
+        {
+          "i": 3,
+          "en": "Therefore, scientists have much more to learn about viruses than they currently know.",
+          "ko": "따라서 과학자들은 바이러스에 대해 현재 알고 있는 것보다 훨씬 더 많은 것을 알아야 한다."
+        },
+        {
+          "i": 4,
+          "en": "What they do know is that viruses act as the primary regulators of bacterial and insect populations.",
+          "ko": "그들이 알고 있는 것은 바이러스가 박테리아와 곤충 개체군의 주요 조절자 역할을 한다는 것이다."
+        },
+        {
+          "i": 5,
+          "en": "Since viruses do not have reproductive functions on their own, they steal the reproductive functions of other organisms to multiply.",
+          "ko": "바이러스는 자체의 생식 기능이 없기 때문에 증식하기 위해 다른 유기체의 생식 기능을 훔친다."
+        },
+        {
+          "i": 6,
+          "en": "Some types of viruses use bacteria.",
+          "ko": "일부 유형의 바이러스는 박테리아를 사용한다."
+        },
+        {
+          "i": 7,
+          "en": "When the virus continues to multiply inside the bacteria, the bacteria eventually die, and the newly produced viruses go on to infect other bacteria.",
+          "ko": "바이러스가 박테리아 내에서 계속 증식하면 박테리아는 결국 죽고 새로 생성된 바이러스가 다른 박테리아를 감염시킨다."
+        },
+        {
+          "i": 8,
+          "en": "This whole process helps viruses control the excessive growth of certain bacteria.",
+          "ko": "이 전체 과정은 바이러스가 특정 박테리아의 과도한 성장을 제어하는 데 도움이 된다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed5",
+      "sourceKey": "Lesson 3. Living With Viruses 본문3-2",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문3-2",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "The greater significance of viruses infecting bacteria is that they play a vital role in supplying oxygen to our planet.",
+          "ko": "박테리아를 감염시키는 바이러스가 갖는 더 중요한 의미는 그들이 지구에 산소를 공급하는 데 필수적인 역할을 한다는 것이다."
+        },
+        {
+          "i": 1,
+          "en": "About half of the oxygen on Earth is produced by plankton in the oceans, and the primary food source for these plankton is nutrients released from bacteria killed by viral infections.",
+          "ko": "지구에 있는 산소의 약 절반은 바다의 플랑크톤이 생산하며, 이 플랑크톤의 주요 먹이는 바이러스 감염으로 죽은 박테리아에서 방출되는 영양소이다."
+        },
+        {
+          "i": 2,
+          "en": "If viruses did not infect and kill bacteria, there would be no bacterial remains, leading to a lack of plankton.",
+          "ko": "바이러스가 박테리아를 감염시켜 죽이지 않는다면 박테리아의 사체도 없을 것이고, 그 결과 플랑크톤이 부족해질 것이다."
+        },
+        {
+          "i": 3,
+          "en": "Without plankton, half of Earth's oxygen would disappear.",
+          "ko": "플랑크톤이 없다면 지구 산소의 절반이 사라질 것이다."
+        },
+        {
+          "i": 4,
+          "en": "In short, without viruses, the lack of oxygen would make it impossible for humans to survive.",
+          "ko": "요약하자면, 바이러스가 없다면 산소가 부족해져 인류의 생존이 불가능할 것이다."
+        },
+        {
+          "i": 5,
+          "en": "Insect species populations are also regulated by viruses.",
+          "ko": "곤충 종의 개체 수 역시 바이러스에 의해 조절된다."
+        },
+        {
+          "i": 6,
+          "en": "When a specific type of insect increases excessively, the viruses that infect those insects also increase, reducing their numbers.",
+          "ko": "특정 유형의 곤충이 과도하게 증가하면 해당 곤충을 감염시키는 바이러스도 증가하여 그 곤충의 수가 감소한다."
+        },
+        {
+          "i": 7,
+          "en": "This, in turn, creates room for other types of insects to flourish.",
+          "ko": "이는 결국 다른 종류의 곤충이 번성할 수 있는 여지를 만들어 준다."
+        },
+        {
+          "i": 8,
+          "en": "Considering the chain of food in nature, it would not be difficult to assume that viruses fulfill important functions in regulating other species.",
+          "ko": "자연의 먹이사슬을 고려할 때, 바이러스가 다른 종을 조절하는 중요한 기능을 수행한다고 가정하는 것은 어렵지 않을 것이다."
+        },
+        {
+          "i": 9,
+          "en": "We have just started to understand their various roles in the ecosystem.",
+          "ko": "우리는 생태계에서 바이러스가 수행하는 다양한 역할을 이제 막 이해하기 시작했다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed6",
+      "sourceKey": "Lesson 3. Living With Viruses 본문4",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문4",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<Helpers of Evolution>",
+          "ko": "<진화의 조력자>"
+        },
+        {
+          "i": 1,
+          "en": "Another less recognized role of viruses is their contribution to the evolution of life on Earth.",
+          "ko": "바이러스의 또 다른 잘 알려지지 않은 역할은 지구 생명체의 진화에 대한 기여이다."
+        },
+        {
+          "i": 2,
+          "en": "When a virus infects a reproductive cell of its host, such as an egg or sperm, the viral DNA may be passed down to the host's offspring.",
+          "ko": "바이러스가 난자나 정자와 같은 숙주의 생식 세포를 감염시키면 바이러스의 DNA가 숙주의 자손에게 전달될 수 있다."
+        },
+        {
+          "i": 3,
+          "en": "The insertion of new DNA into genomes is a significant mechanism of evolution.",
+          "ko": "새로운 DNA가 게놈에 삽입되는 것은 진화의 중요한 메커니즘이다."
+        },
+        {
+          "i": 4,
+          "en": "Without viruses, in other words, the evolutionary potential for all life on the planet would be impacted.",
+          "ko": "다시 말해, 바이러스가 없다면 지구상의 모든 생명체의 진화 잠재력이 영향을 받을 것이다."
+        },
+        {
+          "i": 5,
+          "en": "One example of viruses' contributions to evolution is their role in the development of the placenta in mammals.",
+          "ko": "바이러스가 진화에 기여한 한 가지 예는 포유류의 태반 발달에서 바이러스가 한 역할이다."
+        },
+        {
+          "i": 6,
+          "en": "A placenta is a complex organ that helps the fetus grow securely inside its mother's body.",
+          "ko": "태반은 태아가 엄마의 몸 안에서 안전하게 성장할 수 있도록 돕는 복잡한 기관이다."
+        },
+        {
+          "i": 7,
+          "en": "It facilitates the exchange of oxygen, nutrients, and waste products while protecting the fetus from the mother's immune system.",
+          "ko": "태반은 산소, 영양분, 노폐물의 교환을 용이하게 하는 동시에 태아를 엄마의 면역 체계로부터 보호한다."
+        },
+        {
+          "i": 8,
+          "en": "In the early days of evolution, female animals had to leave their offspring in one location, like eggs in a nest, making them vulnerable to predators.",
+          "ko": "진화 초기에 암컷 동물은 둥지에 놓인 알처럼 새끼를 한 곳에 놓아두어야 했기 때문에 포식자의 공격에 취약할 수밖에 없었다."
+        },
+        {
+          "i": 9,
+          "en": "After the emergence of the placenta, females were able to carry their young inside their bodies safely from one location to another.",
+          "ko": "태반의 출현 이후 암컷은 새끼를 몸 안에 넣어 한 장소에서 다른 장소로 안전하게 옮길 수 있게 되었다."
+        },
+        {
+          "i": 10,
+          "en": "Viruses that infected our remote ancestors more than 130 million years ago have been reported to have served a key function in the development of this vital organ.",
+          "ko": "1억 3천만 년 이상 전 인류의 먼 조상을 감염시킨 바이러스가 이 중요한 기관의 발달에 핵심적인 역할을 한 것으로 보고되었다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed7",
+      "sourceKey": "Lesson 3. Living With Viruses 본문5-1",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문5-1",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "<Means for Cures>",
+          "ko": "<치료를 위한 수단>"
+        },
+        {
+          "i": 1,
+          "en": "As scientific knowledge about viruses continues to expand, new opportunities for utilizing them in the battle against diseases are arising.",
+          "ko": "바이러스에 대한 과학적 지식이 계속 확장됨에 따라 질병과의 전쟁에서 바이러스를 활용할 수 있는 새로운 기회가 생겨나고 있다."
+        },
+        {
+          "i": 2,
+          "en": "Of notable interest are the areas of gene therapy and cancer treatment.",
+          "ko": "주목할 만한 관심사는 유전자 치료와 암 치료 분야이다."
+        },
+        {
+          "i": 3,
+          "en": "Genes can be compared to instruction guides that govern how our bodies function.",
+          "ko": "유전자는 우리 몸이 기능하는 방식을 규정하는 지침서에 비유할 수 있다."
+        },
+        {
+          "i": 4,
+          "en": "Sometimes, people are born with genetic disorders, which can lead to health problems.",
+          "ko": "때때로 사람들은 유전적 장애를 가지고 태어나며 이 장애가 건강에 문제를 일으킬 수 있다."
+        },
+        {
+          "i": 5,
+          "en": "Gene therapy steps in to fix these issues.",
+          "ko": "유전자 치료는 이러한 문제를 해결하기 위해 개입한다."
+        },
+        {
+          "i": 6,
+          "en": "The essence of gene therapy lies in delivering corrected genetic instructions to a patient's cells, enabling them to function properly.",
+          "ko": "유전자 치료의 핵심은 환자의 세포에 올바른 유전적 지침을 전달하여 세포가 제대로 기능할 수 있도록 하는 것에 있다."
+        },
+        {
+          "i": 7,
+          "en": "In this process, specially modified viruses are used as one of the carriers of the genetic instructions.",
+          "ko": "이 과정에서 특수하게 변형된 바이러스가 유전적 지시를 전달하는 매개체 중 하나로 사용된다."
+        },
+        {
+          "i": 8,
+          "en": "If the patient's cells function properly, it can potentially help the body fight off certain diseases.",
+          "ko": "환자의 세포가 제대로 기능하면 신체가 특정 질병을 퇴치하는 데 잠재적으로 도움이 될 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a6f570be087c2fe78de5ed8",
+      "sourceKey": "Lesson 3. Living With Viruses 본문5-2",
+      "chapter": "Lesson 3. Living With Viruses",
+      "number": "본문5-2",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Using viruses to treat cancer, another use of viruses, is based on the notion of utilizing their natural ability to infect and kill cells.",
+          "ko": "바이러스를 이용한 암 치료는 바이러스의 또 다른 용도로서, 세포를 감염시키고 죽이는 바이러스의 자연적인 능력을 활용한다는 개념에 기반을 두고 있다."
+        },
+        {
+          "i": 1,
+          "en": "If successful, viruses can be manipulated to specifically target and destroy cancer cells while leaving healthy cells unharmed.",
+          "ko": "성공한다면 바이러스를 조작하여 건강한 세포는 손상시키지 않으면서 암세포만 명확히 표적으로 삼아 파괴할 수 있다."
+        },
+        {
+          "i": 2,
+          "en": "The use of viruses in gene therapy and cancer treatment is still in the early stages.",
+          "ko": "유전자 치료와 암 치료에 바이러스를 사용하는 것은 아직 초기 단계에 머물러 있다."
+        },
+        {
+          "i": 3,
+          "en": "However, many researchers are involved in hundreds of projects with the goal of discovering cures for diseases that were once thought to be incurable.",
+          "ko": "그러나 많은 연구자들이 한때 불치병으로 여겨졌던 질병의 치료법을 발견하기 위해 수백 개의 프로젝트에 참여하고 있다."
+        },
+        {
+          "i": 4,
+          "en": "We have yet to find out how many virus types even exist, let alone the characteristics of each of them.",
+          "ko": "우리는 아직 각 바이러스의 특성은 물론이고 얼마나 많은 종류의 바이러스가 존재하는지조차 파악하지 못하고 있다."
+        },
+        {
+          "i": 5,
+          "en": "The more we learn about viruses, however, the better equipped we will be to use certain viruses for beneficial purposes and to develop defenses against viruses that could lead to the next pandemic.",
+          "ko": "하지만 바이러스에 대해 더 많이 알수록 특정 바이러스를 유익한 목적으로 사용하고 다음 팬데믹으로 이어질 수 있는 바이러스에 대한 방어책을 개발하는 데 더 잘 대비할 수 있을 것이다."
+        },
+        {
+          "i": 6,
+          "en": "More than that, learning more about viral diversity will help us reach a deeper understanding of the working of our planet, ecosystems, and our own bodies.",
+          "ko": "뿐만 아니라, 바이러스 다양성에 대해 더 많이 알게 되는 것은 지구와 생태계, 우리 몸의 작용에 대해 더 깊이 이해할 수 있게 도움을 줄 것이다."
+        }
+      ]
+    }
+  ]
+}

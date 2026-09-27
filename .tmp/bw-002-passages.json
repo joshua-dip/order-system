@@ -1,0 +1,393 @@
+{
+  "found": [
+    "10강 01번",
+    "10강 02번",
+    "10강 03번",
+    "10강 04번",
+    "11강 01번",
+    "11강 02번",
+    "11강 03번",
+    "11강 04번"
+  ],
+  "missing": [],
+  "stock": [
+    {
+      "sourceKey": "10강 01번",
+      "missing": true
+    },
+    {
+      "sourceKey": "10강 02번",
+      "missing": true
+    },
+    {
+      "sourceKey": "10강 03번",
+      "missing": true
+    },
+    {
+      "sourceKey": "10강 04번",
+      "missing": true
+    },
+    {
+      "sourceKey": "11강 01번",
+      "missing": true
+    },
+    {
+      "sourceKey": "11강 02번",
+      "missing": true
+    },
+    {
+      "sourceKey": "11강 03번",
+      "missing": true
+    },
+    {
+      "sourceKey": "11강 04번",
+      "missing": true
+    }
+  ],
+  "passages": [
+    {
+      "id": "6a693f3de087c2fe78de416a",
+      "sourceKey": "10강 01번",
+      "chapter": "10강",
+      "number": "01번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "An \"ice cream headache\" is the painful feeling you sometimes get after drinking a cold beverage or eating ice cream quickly.",
+          "ko": "아이스크림 두통'은 당신이 차가운 음료를 마시거나 아이스크림을 빨리 먹고 난 후에 때때로 겪는 고통스러운 느낌이다."
+        },
+        {
+          "i": 1,
+          "en": "Do you know what causes this kind of headache?",
+          "ko": "당신은 이런 종류의 두통이 무엇 때문에 생기는지 아는가?"
+        },
+        {
+          "i": 2,
+          "en": "The temperature of cold food or drinks makes the blood vessels located in the roof of your mouth constrict.",
+          "ko": "차가운 음식이나 음료의 온도가 당신의 입천장에 위치한 혈관을 수축하게 만든다."
+        },
+        {
+          "i": 3,
+          "en": "In response, your brain sends a message ordering the blood vessels to relax.",
+          "ko": "이에 반응하여, 당신의 뇌는 혈관에 이완하라고 명령하는 메시지를 보낸다."
+        },
+        {
+          "i": 4,
+          "en": "This sudden relaxation causes the fluid in the vessels to be released into nearby tissue.",
+          "ko": "이 갑작스러운 이완은 혈관에 있는 액체들이 주변의 조직으로 방출되도록 한다."
+        },
+        {
+          "i": 5,
+          "en": "The result is a short, sharp pain in your head that can last for up to a few minutes.",
+          "ko": "그 결과가 몇 분 동안 지속할 수 있는, 짧으면서도 찌르는 듯한 머리의 통증이다."
+        },
+        {
+          "i": 6,
+          "en": "It may be strong enough to make you need to lie down or be so mild that you barely notice it at all.",
+          "ko": "그것은 당신이 누워야 할 정도로 충분히 심하거나 혹은 너무 경미해서 거의 느끼지 못할 수도 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de416b",
+      "sourceKey": "10강 02번",
+      "chapter": "10강",
+      "number": "02번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Libraries are no longer dusty rooms filled with books, but exciting multimedia venues.",
+          "ko": "도서관은 더는 책들로 가득 찬 먼지투성이의 장소가 아니라 흥미로운 멀티미디어의 현장이다."
+        },
+        {
+          "i": 1,
+          "en": "The New York Public Library, for example, occasionally hosts special children's events.",
+          "ko": "예를 들어, 뉴욕 공립 도서관은 때때로 어린이들을 위한 특별 이벤트를 주최한다."
+        },
+        {
+          "i": 2,
+          "en": "Other libraries around the world are transforming their style from traditional to modern.",
+          "ko": "전 세계의 다른 도서관들은 그들의 스타일을 전통적인 것에서 현대적인 것으로 바꾸고 있다."
+        },
+        {
+          "i": 3,
+          "en": "Some now offer outdoor spaces to allow people to relax and perhaps even feel artistically inspired.",
+          "ko": "어떤 도서관들은 이제 사람들이 편히 쉬면서 어쩌면 예술적인 영감까지도 느끼게 하는 야외 공간을 제공한다."
+        },
+        {
+          "i": 4,
+          "en": "In our digital age, the role of libraries has actually become more important, providing a reliable authority to check unreliable online information.",
+          "ko": "우리의 디지털 시대에, 도서관의 역할은 신뢰할 수 없는 온라인 정보를 점검하는 신뢰할 만한 권한을 제공하면서, 실제로 더욱 중요해지고 있다."
+        },
+        {
+          "i": 5,
+          "en": "To distinguish themselves from Internet portals and blogs, libraries often collect large amounts of information and check the accuracy of their facts before publishing reports.",
+          "ko": "인터넷 포털 사이트와 블로그로부터 자선을 구별하기 위해서, 도서관은 기록을 공개하기 전에 흔히 많은 양의 정보를 수집하고 그 사실들의 정확도를 점검한다."
+        },
+        {
+          "i": 6,
+          "en": "Such changes have revived the popularity of libraries, even with the younger Internet generation.",
+          "ko": "그러한 변화들이 젊은 인터넷 세대들에게도 도서관의 인기를 되살리고 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de416c",
+      "sourceKey": "10강 03번",
+      "chapter": "10강",
+      "number": "03번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Everyone knows skin wounds should be covered with a bandage.",
+          "ko": "피부 상처가 붕대로 덮여 있어야 한다는 것은 모두가 안다."
+        },
+        {
+          "i": 1,
+          "en": "What they usually don't know is how to prevent infections and monitor the injury.",
+          "ko": "그들이 일반적으로 모르는 것은 감염을 예방하고 부상을 추적 관찰하는 방법이다."
+        },
+        {
+          "i": 2,
+          "en": "That won't be a problem much longer though because with a smart bandage, they won't need such knowledge.",
+          "ko": "스마트 붕대가 있으면 그러한 지식이 필요하지 않기 때문에 그것은 더는 문제가 되지 않을 것이다."
+        },
+        {
+          "i": 3,
+          "en": "Designed with integrated sensors that monitor and treat the injury, the smart bandage will revolutionize the self-healing process-and it's not that far around the corner.",
+          "ko": "부상을 추적 관찰하고 치료하는 통합된 센서로 설계되었기 때문에, 스마트 붕대는 자가 치유 과정에 혁신을 일으킬 것이다."
+        },
+        {
+          "i": 4,
+          "en": "The way it works is actually quite remarkable.",
+          "ko": "그리고 그 일은 머지않았다."
+        },
+        {
+          "i": 5,
+          "en": "It has temperature and pH sensors, which can evaluate the wound so that the bandage can adjust to ideal healing conditions.",
+          "ko": "스마트 붕대의 작동 방식은 실제로 매우 뛰어나다. 그것은 온도와 pH 센서가 있는데, 그것은 붕대가 이상적인 치유 조건으로 조정되도록 상처를 평가할 수 있다."
+        },
+        {
+          "i": 6,
+          "en": "Additionally, antibiotics and pain medication are delivered by the device if sensors detect that infection or inflammation is worsening.",
+          "ko": "게다가, 센서가 감염이나 염증이 악화되고 있음을 감지하면 항생제와 진통제가 장치에 의해 전달된다."
+        },
+        {
+          "i": 7,
+          "en": "Doctors predict smart bandages will make frequent hospital visits unnecessary by automatically scanning and",
+          "ko": "의사들은 스마트 붕대가 자동으로 스캔하여 다친 부위로 약을 방출함으로써 빈번한 병원 방문을 불필요하게 할 것으로 예측한다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de416d",
+      "sourceKey": "10강 04번",
+      "chapter": "10강",
+      "number": "04번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "The \"Internet of Things\" (IoT) makes it possible to connect almost any electronic device to the Internet.",
+          "ko": "사물 인터넷(IoT)'은 거의 모든 전자 장치를 인터넷에 연결하는 것을 가능하게 한다."
+        },
+        {
+          "i": 1,
+          "en": "And it has the potential not only to change our home life but also to affect things like work and transportation.",
+          "ko": "그리고 그것은 우리의 가정생활을 바꿀 뿐만 아니라 일과 교통수단 같은 것들에 영향을 미치는 잠재력을 지니고 있다."
+        },
+        {
+          "i": 2,
+          "en": "For example, if you had an important meeting, your car's GPS could access your online calendar and know exactly where you need to go.",
+          "ko": "예를 들어, 당신이 중요한 모임이 있다면, 당신 차의 GPS는 당신의 온라인 달력에 접속하여 당신이 가야 하는 곳을 정확히 알 수 있다."
+        },
+        {
+          "i": 3,
+          "en": "And if you got stuck in traffic, your car could automatically send text messages notifying the other attendees that you are running late.",
+          "ko": "그리고 당신이 교통 체증을 겪고 있다면, 당신의 차는 다른 참석자들에게 당산이 늦을 거라고 알리는 문자를 자동으로 보낼 수 있다."
+        },
+        {
+          "i": 4,
+          "en": "Possibilities like these are endless with the IoT.",
+          "ko": "이 같은 가능성은 사물 인터넷과 함께 무궁무진하다."
+        },
+        {
+          "i": 5,
+          "en": "Discussions about its potential applications are taking place in countries around the world as people try to understand the many ways in which it could transform our lives.",
+          "ko": "그것의 잠재적인 응용에 대한 논의가 전 세계 각국에서 이뤄지고 있는데, 사물 인터넷이 우리의 삶을 변화시킬 수 있는 다양한 방식들을 사람들이 이해하려고 노력하기 때문이다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de416e",
+      "sourceKey": "11강 01번",
+      "chapter": "11강",
+      "number": "01번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Have you ever wondered where dust comes from?",
+          "ko": "당신은 먼지가 어디에서 오는지 궁금해한 적이 있는가?"
+        },
+        {
+          "i": 1,
+          "en": "It seems amazing that such a large quantity of dust can gather inside your home.",
+          "ko": "그렇게 많은 양의 먼지가 집안에 모일 수 있다는 것은 놀라운 일인 것 같다."
+        },
+        {
+          "i": 2,
+          "en": "However, once you know how dust forms, it's actually surprising that there isn't more of it.",
+          "ko": "하지만 일단 당신이 먼지가 어떻게 형성되는지 알게 되면, 먼지가 더 많지 않다는 것이 정말 놀랍다."
+        },
+        {
+          "i": 3,
+          "en": "Unless you use an air cleaner, air coming in from outside carries a huge amount of dust.",
+          "ko": "만일 당신이 공기 청정기를 사용하지 않는다면, 바깥에서 들어온 공기는 엄청난 양의 먼지를 운반한다."
+        },
+        {
+          "i": 4,
+          "en": "However, that's nothing more than a small part of what makes up house dust.",
+          "ko": "하지만 그것은 집 먼지를 구성하는 것의 작은 부분에 지나지 않는다."
+        },
+        {
+          "i": 5,
+          "en": "Another component is the 30,000 to 40,000 dead skin cells that each human drops every minute.",
+          "ko": "다른 (먼지의) 구성 요소로 개개인이 매 순간 떨어뜨리는 3~4만 개의 죽은 피부 세포들이 있다."
+        },
+        {
+          "i": 6,
+          "en": "In addition, clothes and furniture fabrics discard tiny fibers each time they are used.",
+          "ko": "게다가 옷과 가구의 천들은 그것들이 사용될 때마다 아주 작은 섬유 조직을 떨어뜨린다."
+        },
+        {
+          "i": 7,
+          "en": "In homes that are carpeted, even more tiny fibers gather to form dust.",
+          "ko": "카펫이 깔린 집에는 훨씬 더 많은 작은 섬유 조직들이 모여서 먼지를 형성한다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de416f",
+      "sourceKey": "11강 02번",
+      "chapter": "11강",
+      "number": "02번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Soft drinks are popular beverages made with carbonated water, sweeteners, and flavoring.",
+          "ko": "청량음료는 탄산수, 감미료, 향료로 만들어진 인기 있는 음료수이다."
+        },
+        {
+          "i": 1,
+          "en": "Based on this description, little would you imagine that they contain alcohol.",
+          "ko": "이 설명에 근거하면, 당신은 청량음료들이 알코올을 함유하고 있을 거라고는 별로 상상하지 못했을 것이다."
+        },
+        {
+          "i": 2,
+          "en": "However, a study showed that most soft drinks do contain tiny amounts of alcohol.",
+          "ko": "그러나 한 연구에서 대부분의 청량음료가 정말로 미량의 알코올을 함유하고 있다는 것이 밝혀졌다."
+        },
+        {
+          "i": 3,
+          "en": "This is primarily due to the naturally occurring fermentation of sugar inside the drink.",
+          "ko": "이것은 주로 음료 안에서 일어나는 자연 발생적인 설탕의 발효 때문이다."
+        },
+        {
+          "i": 4,
+          "en": "In some soft drinks, additional alcohol is also introduced via the flavor extracts that are used.",
+          "ko": "몇몇 청량음료에는 또한 (음료에) 사용되는 향미료 추출물을 통해 알코올이 추가로 들어가게 된다."
+        },
+        {
+          "i": 5,
+          "en": "You may wonder how any of this is legal, as minors are not allowed to drink alcohol.",
+          "ko": "미성년자들은 술을 마시는 게 허락되지 않기 때문에 당신은 어떻게 이것이 합법적인지 궁금할지도 모른다."
+        },
+        {
+          "i": 6,
+          "en": "To better understand how little alcohol is involved, you should be aware that a container of yogurt of a similar size to that of a soft drink will contain about twice as much alcohol.",
+          "ko": "얼마나 적은 양의 알코올이 함유되었는지 보다 잘 이해하기 위해 당신은 청량음료 용기와 비슷한 크기의 요구르트 용기가 두 배만큼의 알코올을 포함할 것이라는 점을 알아야 한다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de4170",
+      "sourceKey": "11강 03번",
+      "chapter": "11강",
+      "number": "03번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "A study found that older people are not good at taking in new information because they tend to focus on extra information more than younger people.",
+          "ko": "한 연구에서 나이 든 사람들은 새로운 정보를 받아들이는 데 능숙하지 않은데 이는 그들이 젊은 사람들보다 추가 정보에 더 집중하는 경향이 있기 때문이라는 것을 발견했다."
+        },
+        {
+          "i": 1,
+          "en": "In the study, ten young people and ten seniors were shown slides, each with six letters, two numerals, and a background of moving dots.",
+          "ko": "그 연구에서 열 명의 젊은 사람들과 열 명의 연장자들에게 슬라이드를 보여주었는데, 각각에는 여섯 개의 글자와 두 개의 숫자, 그리고 움직이는 점으로 된 배경이 있었다."
+        },
+        {
+          "i": 2,
+          "en": "Next, they were asked what numbers they had seen.",
+          "ko": "다음으로 그들은 무슨 숫자들을 봤는지 질문을 받았다."
+        },
+        {
+          "i": 3,
+          "en": "The seniors often mentioned the dots, even if this information was irrelevant.",
+          "ko": "연장자들은 이 정보가 (질문과는) 관련이 없는데도 점에 대해 자주 언급했다."
+        },
+        {
+          "i": 4,
+          "en": "Such a habit could be distracting, as it risks replacing important information with something trivial.",
+          "ko": "그러한 버릇은 주의를 산만하게 할 수 있는데, 이는 중요한 정보를 하찮은 것으로 대체할 위험이 있기 때문이다."
+        },
+        {
+          "i": 5,
+          "en": "In later tests, the more irrelevant information was presented, the less the seniors were able to filter it out.",
+          "ko": "이후 실험들에서 (질문과) 관련 없는 정보가 더 많이 제시될수록, 연장자들은 그것을 더 걸러내지 못했다."
+        },
+        {
+          "i": 6,
+          "en": "This could explain why older people find new tasks involving a lot of distractions challenging.",
+          "ko": "이것은 왜 나이 든 사람들이 집중을 방해하는 요소가 많이 포함된 새로운 과제를 어렵다고 느끼는지 설명할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "6a693f3de087c2fe78de4171",
+      "sourceKey": "11강 04번",
+      "chapter": "11강",
+      "number": "04번",
+      "sentences": [
+        {
+          "i": 0,
+          "en": "Separation anxiety is a normal stage of development that occurs when babies begin to understand that they are individual people, separate from their caregivers.",
+          "ko": "분리 불안은 아기들이 자신들이 고들의 양육자들로부터 분리된, 개별적인 사람이라는 것을 이해하기 시작할 때 발생하는 정상적인 발달 단계이다."
+        },
+        {
+          "i": 1,
+          "en": "At this time, they comprehend object permanence, meaning they realize that something continues to exist when they can no longer see it.",
+          "ko": "이 시기에 아기들은 대상 영속성을 이해하는데, 이것은 그들이 무언가를 더는 볼 수 없을 때도 그것이 계속 존재한다는 것을 알게 됨을 의미한다."
+        },
+        {
+          "i": 2,
+          "en": "Because of this, babies are able to understand that their caregivers can go away, but they don't understand that they will return.",
+          "ko": "이것 때문에, 아기들은 자신들의 양육자들이 다른 데로 가버릴 수 있다는 것을 이해할 수는 있지만, 그들이 돌아올 것을 알지는 못한다."
+        },
+        {
+          "i": 3,
+          "en": "Nor do they have a full understanding of time.",
+          "ko": "아기들은 시간에 대하여 완전하게 이해하지도 못한다."
+        },
+        {
+          "i": 4,
+          "en": "The normal, healthy reaction to all of this is what is known as separation anxiety.",
+          "ko": "이 모든 것에 대한 정상적이고 건강한 반응이 분리 불안으로 알려진 것이다."
+        },
+        {
+          "i": 5,
+          "en": "It generally begins around the age of eight months, peaking somewhere around the age of 13 to 15 months, after which it starts to decline.",
+          "ko": "그것은 일반적으로 대략 8개월 정도의 시기에 시작되어, 13~15개월쯤의 어느 순간에 최고조에 이르렀다가 그 이후에 감소하기 시작한다."
+        }
+      ]
+    }
+  ]
+}
