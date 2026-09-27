@@ -136,7 +136,7 @@ export default function HomeNoticeModal({ showApplyCta = false }: HomeNoticeModa
             <li className="flex gap-3 py-2.5">
               <span className="w-5 shrink-0 text-center">🎯</span>
               <p className="text-slate-800">
-                <b>파이널 예비 모의고사</b>{' '}
+                <b>내신 예비시험지</b>{' '}
                 <span className="text-slate-500">— 범위만 고르면 PDF 즉시 (연회원·월구독)</span>
               </p>
             </li>

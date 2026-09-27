@@ -137,7 +137,7 @@ export default function SchoolScopeManagement() {
     }
     const preset = presets.find((p) => p.id === slotPresetId);
     if (!preset) {
-      setMessage({ type: 'error', text: '복사할 「저장된 시험범위」를 선택해 주세요. (없으면 파이널 예비고사에서 먼저 저장)' });
+      setMessage({ type: 'error', text: '복사할 「저장된 시험범위」를 선택해 주세요. (없으면 내신 예비시험지에서 먼저 저장)' });
       return;
     }
     setSavingSlot(true);
@@ -155,7 +155,7 @@ export default function SchoolScopeManagement() {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setMessage({ type: 'success', text: '학기별 시험범위를 저장했습니다. 파이널 예비고사에서 불러올 수 있어요.' });
+        setMessage({ type: 'success', text: '학기별 시험범위를 저장했습니다. 내신 예비시험지에서 불러올 수 있어요.' });
         await refresh();
       } else {
         setMessage({ type: 'error', text: data?.error || '저장에 실패했습니다.' });
@@ -201,7 +201,7 @@ export default function SchoolScopeManagement() {
         <p className="mt-2 text-sm text-indigo-900/90 leading-relaxed">
           먼저 <strong>학교</strong>를 등록한 뒤, <strong>학년도·학기</strong>마다 마이페이지 「저장된 시험범위」에 있는 구성을 복사해 두면,{' '}
           <Link href="/unified" className="font-semibold text-indigo-700 underline underline-offset-2">
-            파이널 예비 모의고사
+            내신 예비시험지
           </Link>
           에서 한 번에 불러올 수 있습니다. 학생 관리에서는 등록된 학교만 선택할 수 있습니다.
         </p>
@@ -239,7 +239,7 @@ export default function SchoolScopeManagement() {
         <div className="px-5 py-4 border-b border-[#f1f5f9]">
           <p className="text-sm font-bold text-[#0f172a]">학기별 시험범위 연결</p>
           <p className="text-[12px] text-[#94a3b8] mt-0.5">
-            「저장된 시험범위」는 파이널 예비고사 1단계에서 시험범위로 저장한 목록입니다. 동일 구성을 이 학기에 복사합니다.
+            「저장된 시험범위」는 내신 예비시험지 1단계에서 시험범위로 저장한 목록입니다. 동일 구성을 이 학기에 복사합니다.
           </p>
         </div>
         <div className="p-5 space-y-4">
@@ -319,7 +319,7 @@ export default function SchoolScopeManagement() {
                 <p className="text-xs text-amber-700">
                   저장된 시험범위가 없습니다.{' '}
                   <Link href="/unified" className="underline font-semibold">
-                    파이널 예비고사
+                    내신 예비시험지
                   </Link>
                   에서 범위를 만든 뒤 「시험범위로 저장」해 주세요.
                 </p>

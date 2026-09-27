@@ -352,7 +352,7 @@ export default function UnifiedOrder() {
   /* ── 토스트 ── */
   const [toast, setToast] = useState('');
 
-  /* ── 즉시 발급 — 완료 후 /unified/downloads(내 다운로드)로 이동 ── */
+  /* ── 즉시 발급 — 완료 후 /unified/downloads(내 예비시험지)로 이동 ── */
   const [issuing, setIssuing] = useState(false);
 
   /* ── 기출 유형 분석 요청/추천 ── */
@@ -718,7 +718,7 @@ export default function UnifiedOrder() {
       return c !== 'solbook-textbook' && c !== 'solbook-suppl';
     });
     if (withoutSolbook.length === 0) {
-      setToast('불러올 항목이 없습니다. 파이널 예비 모의고사에서는 쏠북 교재를 제외합니다.');
+      setToast('불러올 항목이 없습니다. 내신 예비시험지에서는 쏠북 교재를 제외합니다.');
       return null;
     }
     const restored: DbEntry[] = withoutSolbook.map((e) => {
@@ -869,7 +869,7 @@ export default function UnifiedOrder() {
       : selectedTypes.map((t) => `${t} ${questionsPerTypeMap[t] ?? 3}문항`).join(', ');
 
     const orderText = [
-      '=== 파이널 예비 모의고사 주문 (UV) ===',
+      '=== 내신 예비시험지 주문 (UV) ===',
       '',
       '[ 시험 범위 ]',
       dbSummary,
@@ -952,7 +952,7 @@ export default function UnifiedOrder() {
     const sets = setsMode ? selectedTypes.map((t) => ({ types: [t], label: t })) : [{ types: selectedTypes, label: '' }];
     const confirmMsg = setsMode
       ? `${totalPrice.toLocaleString()}P를 차감하고 유형별 ${sets.length}개 세트(각 ${examTotal}문항)를 발급합니다.${studentList.length ? `\n학생 ${studentList.length}명 이름이 박힌 개별 문제지도 받을 수 있어요.` : ''}\n진행할까요?`
-      : `${totalPrice.toLocaleString()}P를 차감하고 파이널 예비 모의고사를 바로 발급합니다.\n(${examMode ? `시험형 총 ${examTotal}문항 · ${totalSources}개 지문에서 랜덤` : `총 ${totalSources}개 지문`}${studentList.length ? ` · 학생 ${studentList.length}명 개별 문제지` : ''})\n진행할까요?`;
+      : `${totalPrice.toLocaleString()}P를 차감하고 내신 예비시험지를 바로 발급합니다.\n(${examMode ? `시험형 총 ${examTotal}문항 · ${totalSources}개 지문에서 랜덤` : `총 ${totalSources}개 지문`}${studentList.length ? ` · 학생 ${studentList.length}명 개별 문제지` : ''})\n진행할까요?`;
     if (!window.confirm(confirmMsg)) return;
     setIssuing(true);
     const dbEntriesPayload = dbEntries.map(({ displayName, selectedSources, textbookCategory }) => ({
@@ -984,7 +984,7 @@ export default function UnifiedOrder() {
       setUserPoints(balance);
       if (okCount === 0) { alert(lastErr || '발급에 실패했습니다. 잠시 후 다시 시도해주세요.'); return; }
       if (lastErr) alert(`일부만 발급됐습니다 (${okCount}/${sets.length} 세트).\n${lastErr}`);
-      else if (anyShort) alert('발급이 접수되었습니다. 부족한 문항은 관리자가 제작 중이며, 완성되면 「내 다운로드」에서 자동으로 다운로드 가능해집니다.');
+      else if (anyShort) alert('발급이 접수되었습니다. 부족한 문항은 관리자가 제작 중이며, 완성되면 「내 예비시험지」에서 자동으로 다운로드 가능해집니다.');
       router.push('/unified/downloads');
     } catch {
       alert('발급 처리 중 오류가 발생했습니다.');
@@ -1000,7 +1000,7 @@ export default function UnifiedOrder() {
   if (!authChecked) {
     return (
       <>
-        <AppBar title="파이널 예비 모의고사" showBackButton />
+        <AppBar title="내신 예비시험지" showBackButton />
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-3">
           <div className="animate-spin w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full" />
           <p className="text-sm text-gray-500">회원 정보 확인 중…</p>
@@ -1012,7 +1012,7 @@ export default function UnifiedOrder() {
   if (!premiumOk) {
     return (
       <>
-        <AppBar title="파이널 예비 모의고사" showBackButton />
+        <AppBar title="내신 예비시험지" showBackButton />
         <div
           className="min-h-screen flex items-center justify-center px-4"
           style={{
@@ -1020,7 +1020,7 @@ export default function UnifiedOrder() {
           }}
         >
           <div className="max-w-md w-full rounded-2xl bg-white/95 shadow-xl p-8 text-center space-y-4">
-            <h1 className="text-xl font-extrabold text-gray-900">파이널 예비 모의고사</h1>
+            <h1 className="text-xl font-extrabold text-gray-900">내신 예비시험지</h1>
             {!hasUser ? (
               <p className="text-sm text-gray-600">
                 이 기능은 <strong>로그인</strong> 후, <strong>연회원 또는 월구독</strong> 회원만 이용할 수 있습니다.
@@ -1084,7 +1084,7 @@ export default function UnifiedOrder() {
               <span className="rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-gray-900">
                 NEW
               </span>
-              <h1 className="text-2xl font-extrabold tracking-tight">파이널 예비 모의고사</h1>
+              <h1 className="text-2xl font-extrabold tracking-tight">내신 예비시험지</h1>
             </div>
             <p className="text-sm text-purple-200">
               부교재 + 모의고사를 한 번에 조합하여 시험 범위 맞춤 예비 시험지를 제작합니다
@@ -1122,15 +1122,15 @@ export default function UnifiedOrder() {
     </div>
   );
 
-  /* ── 내 다운로드 링크 (전용 페이지로 분리) ── */
+  /* ── 내 예비시험지 링크 (전용 페이지로 분리) ── */
   const downloadsPanel = premiumOk ? (
     <Link
       href="/unified/downloads"
       className="flex items-center justify-between rounded-2xl border border-indigo-200 bg-white px-5 py-4 shadow-sm hover:border-indigo-400 hover:shadow transition-all"
     >
       <div>
-        <p className="font-bold text-gray-800">📥 내 다운로드</p>
-        <p className="mt-0.5 text-xs text-gray-500">발급한 모의고사·오답 세트 PDF와 학생별 채점 기록 보기</p>
+        <p className="font-bold text-gray-800">📝 내 예비시험지</p>
+        <p className="mt-0.5 text-xs text-gray-500">발급한 예비시험지·오답 세트를 학교 시험지 양식으로 보기·인쇄 · 학생별 채점 기록</p>
       </div>
       <span className="text-indigo-500 font-bold">→</span>
     </Link>
@@ -1160,7 +1160,7 @@ export default function UnifiedOrder() {
   if (phase === 1) {
     return (
       <>
-        <AppBar title="파이널 예비 모의고사" showBackButton />
+        <AppBar title="내신 예비시험지" showBackButton />
         {header}
         <div className="min-h-screen bg-gray-50">
           <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
@@ -2320,7 +2320,7 @@ export default function UnifiedOrder() {
                 disabled={selectedTypes.length === 0 || totalSources === 0 || !email.trim()}
                 className="w-full rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 py-4 text-base font-extrabold text-white shadow-lg hover:from-purple-800 hover:to-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                파이널 예비 모의고사 주문하기
+                내신 예비시험지 주문하기
               </button>
               <p className="text-center text-xs text-gray-400">
                 쏠북 교재가 포함된 범위는 주문서 접수 후 제작됩니다 · 주문 완료 후 카카오톡 오픈채팅으로 입금 확인을 알려주세요
@@ -2336,7 +2336,7 @@ export default function UnifiedOrder() {
                 {issuing ? '발급 중…' : `⚡ 포인트로 바로 발급받기 (${totalPrice.toLocaleString()}P)`}
               </button>
               <p className="text-center text-xs text-gray-400">
-                보유 포인트 {userPoints.toLocaleString()}P · 발급 즉시 「내 다운로드」에서 문제지·정답해설 PDF를 받을 수 있습니다.
+                보유 포인트 {userPoints.toLocaleString()}P · 발급 즉시 「내 예비시험지」에서 문제지·정답해설 PDF를 받을 수 있습니다.
                 <br />
                 일부 문항이 준비 전이면 관리자가 제작을 마치는 대로 자동으로 다운로드 가능해집니다.
               </p>

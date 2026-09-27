@@ -4,7 +4,7 @@
  * 값은 **가격·권한 로직의 상수에서 끌어온다**(화면마다 하드코딩하지 않는다).
  * 코드로 확인되지 않는 항목(파일 형식 등)은 비워 둔다 — 추측해서 채우지 않는다.
  *
- * - 원(₩)과 포인트(P)는 섞지 않는다. 포인트로 매겨지는 상품(단어장·파이널·AI 고난도)만 P 로 쓴다.
+ * - 원(₩)과 포인트(P)는 섞지 않는다. 포인트로 매겨지는 상품(단어장·예비시험지·AI 고난도)만 P 로 쓴다.
  * - 「받는 시점」의 주문 제작 문구는 주문서 하단 안내(ORDER_FOOTER_MESSAGE)와 같은 정책을 따른다.
  */
 import { VARIANT_PRICE, SOLBOOK_VARIANT_PRICE_TIERS } from './variant-pricing';
@@ -277,15 +277,16 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'final-mock',
     group: 'compose',
-    title: '파이널 예비 모의고사',
-    summary: '시험 범위(부교재+모의고사)를 정해 예비 시험지를 바로 발급',
+    title: '내신 예비시험지',
+    formerTitle: '파이널 예비 모의고사',
+    summary: '시험 범위(부교재+모의고사)를 정해 학교 시험지 양식(A4 2단·선택형/서·논술형)으로 바로 발급',
     href: '/unified',
     cta: '범위 설정',
     badges: ['premium', 'instant'],
     facts: {
       price: '선택 문항 가격만큼 포인트 차감 (쏠북 교재 포함 시 원화 입금)',
-      delivery: '포인트 차감 즉시 발급 — 「내 다운로드」',
-      format: '문제지·정답해설 PDF',
+      delivery: '포인트 차감 즉시 발급 — 「내 예비시험지」에서 보기·인쇄',
+      format: '시험지·정답과 해설 PDF (브라우저 인쇄 가능)',
       condition: `연회원·월구독 전용 (월 ${won(MEMBERSHIP_MONTHLY_WON)} · 연 ${won(MEMBERSHIP_ANNUAL_REFERENCE_WON)})`,
     },
   },

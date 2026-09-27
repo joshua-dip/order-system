@@ -54,7 +54,7 @@ export async function POST(
     const used = await countRetryJobs(db, rootJobId);
     if (used >= FINAL_EXAM_FREE_RETRY_LIMIT) {
       return NextResponse.json(
-        { error: `무료 재학습 세트 ${FINAL_EXAM_FREE_RETRY_LIMIT}회를 모두 사용했습니다. 새 파이널 예비 모의고사를 발급해 보세요!`, exhausted: true },
+        { error: `무료 재학습 세트 ${FINAL_EXAM_FREE_RETRY_LIMIT}회를 모두 사용했습니다. 새 내신 예비시험지를 발급해 보세요!`, exhausted: true },
         { status: 400 },
       );
     }

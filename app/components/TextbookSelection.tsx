@@ -284,7 +284,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
           </section>
 
           {finalGateOpen && (
-            <GateModal title="파이널 예비 모의고사" onClose={() => setFinalGateOpen(false)}>
+            <GateModal title="내신 예비시험지" onClose={() => setFinalGateOpen(false)}>
               <p className="text-[15px] leading-relaxed text-slate-700">
                 {isMember ? (
                   <>이 메뉴는 <strong>연회원</strong> 또는 <strong>월구독</strong> 회원만 이용할 수 있습니다. 가입·요금 안내는 카카오톡으로 문의해 주세요.</>

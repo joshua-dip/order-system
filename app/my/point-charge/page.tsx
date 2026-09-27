@@ -354,7 +354,7 @@ export default function PointChargePage() {
                         {[
                           { icon: '🎁', title: `변형문제 기본난도 월 ${MEMBER_BASE_FREE_QUOTA.toLocaleString()}문항 무료`, desc: '주문 시 기본난도가 한도까지 0원 (고난도는 정상가)' },
                           { icon: '✏️', title: '변형문제 만들기', desc: '지문을 골라 직접 제작·다운로드 (본인 Claude API 키 필요)' },
-                          { icon: '📝', title: '파이널 예비 모의고사', desc: '시험 범위로 예비 시험지를 바로 제작' },
+                          { icon: '📝', title: '내신 예비시험지', desc: '시험 범위로 학교 시험지 양식 예비시험지를 바로 제작' },
                           { icon: '📖', title: '단어장', desc: '교재 단어장·단어시험지 편집·다운로드' },
                           { icon: '📥', title: '무료 공유자료', desc: '회원 전용 공유자료 다운로드' },
                           { icon: '💸', title: '쏠북 교재 추가비 면제', desc: '쏠북 교재 커스텀 추가 요금 무료' },

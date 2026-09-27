@@ -154,7 +154,7 @@ function GradePageInner() {
       if (!r.ok) { setIssueMsg(typeof d.error === 'string' ? d.error : '발급에 실패했습니다.'); return; }
       setIssueMsg(
         d.status === 'ready'
-          ? `✅ 오답 재학습 세트 ${d.retryIndex} 발급 완료! 파이널 메뉴 「내 다운로드」에서 PDF를 받으세요. (남은 무료 ${d.remaining}회)`
+          ? `✅ 오답 재학습 세트 ${d.retryIndex} 발급 완료! 「내 예비시험지」에서 보고 인쇄하세요. (남은 무료 ${d.remaining}회)`
           : `✅ 세트 ${d.retryIndex} 접수 완료 — 부족 문항 ${d.totalShort}개 제작 후 다운로드 가능해집니다. (남은 무료 ${d.remaining}회)`,
       );
       setReport({ ...report, retry: { ...report.retry, used: d.retryIndex, canIssue: d.remaining > 0 && report.retry.isOwner } });
@@ -256,14 +256,14 @@ function GradePageInner() {
                 <p className="text-xs font-medium text-indigo-700">{issueMsg}</p>
                 {issueMsg.startsWith('✅') && (
                   <Link href="/unified/downloads" className="block rounded-lg bg-indigo-600 py-2 text-center text-xs font-bold text-white hover:bg-indigo-700">
-                    📥 내 다운로드에서 받기 →
+                    📝 내 예비시험지에서 보기 →
                   </Link>
                 )}
               </div>
             )}
             {perfect ? (
               <Link href="/unified" className="block rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-3 text-center text-sm font-extrabold text-white">
-                만점! 🎉 새 파이널 예비 모의고사에 도전하기 →
+                만점! 🎉 새 내신 예비시험지에 도전하기 →
               </Link>
             ) : report.retry.canIssue ? (
               <>
@@ -278,7 +278,7 @@ function GradePageInner() {
               </>
             ) : exhausted ? (
               <Link href="/unified" className="block rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-3 text-center text-sm font-extrabold text-white">
-                🎯 무료 세트를 모두 풀었어요! 새 파이널 모의고사 만들러 가기 →
+                🎯 무료 세트를 모두 풀었어요! 새 내신 예비시험지 만들러 가기 →
               </Link>
             ) : !report.retry.isOwner ? (
               <p className="text-center text-[11px] text-gray-400">

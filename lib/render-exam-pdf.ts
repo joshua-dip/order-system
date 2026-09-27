@@ -1,3 +1,4 @@
+import { waitForPaperFonts } from './final-exam-render';
 /**
  * PDF 버퍼의 페이지 수 — 페이지 객체(`/Type /Page`, `/Pages` 제외) 개수.
  * 합본 시 학생별 페이지 수로 홀수페이지 정렬(빈 페이지 삽입)을 계산하는 데 쓴다.
@@ -45,6 +46,7 @@ async function renderOne(browser: Browser, html: string): Promise<Buffer> {
   try {
     page.setDefaultTimeout(PAGE_TIMEOUT_MS);
     await page.setContent(html, { waitUntil: 'load', timeout: PAGE_TIMEOUT_MS });
+    await waitForPaperFonts(page);
     const pdf = await page.pdf({ format: 'a4', printBackground: true, preferCSSPageSize: true, timeout: PAGE_TIMEOUT_MS });
     return Buffer.from(pdf);
   } finally {

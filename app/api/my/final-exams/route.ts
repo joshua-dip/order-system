@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
       ? [...new Set(body.students.map((s) => String(s ?? '').trim()).filter(Boolean))].slice(0, 200)
       : [];
     const setLabel = typeof body.setLabel === 'string' ? body.setLabel.trim().slice(0, 30) : '';
-    const title = `파이널 예비 모의고사${setLabel ? ` · ${setLabel}` : ''} (${school ? `${school} · ` : ''}${dateStamp} · ${totalRequested}문항)`;
+    const title = `내신 예비시험지${setLabel ? ` · ${setLabel}` : ''} (${school ? `${school} · ` : ''}${dateStamp} · ${totalRequested}문항)`;
     const jobDoc: Omit<FinalExamJobDoc, '_id'> = {
       loginId,
       userId: auth.userId,

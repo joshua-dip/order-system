@@ -13,6 +13,7 @@ import {
   buildFinalExamSheetHtml,
   buildFinalExamSheetMultiHtml,
   buildFinalExamAnswerHtml,
+  finalExamHeader,
   type FinalExamBuildInput,
   type FinalExamQuestion,
 } from '@/lib/final-exam-html';
@@ -126,13 +127,14 @@ async function handleGET(
         const seed = stableExamSeed(`${jobId}:${nm}:${i}`);
         const qs = await loadExamQuestions(db, { ...job, orderMode: 'shuffle', shuffleSeed: seed });
         if (qs.length === 0) return NextResponse.json({ error: '문항을 불러오지 못했습니다.' }, { status: 500 });
-        const subtitle = `${job.scopeSummary} · 총 ${qs.length}문항`;
+        const subtitle = `총 ${qs.length}문항`;
+        const header = finalExamHeader({ title: job.title, subtitle, school: job.school, scopeSummary: job.scopeSummary, createdAt: job.createdAt });
         // QR 은 같은 시드(seed)를 실어 채점 페이지가 이 학생 배치 그대로 채점.
         let qrDataUrl: string | undefined;
         if (QRCode) {
           try { qrDataUrl = await QRCode.toDataURL(`${baseUrl}/grade/${token}?seed=${seed}`, { margin: 0, width: 240 }); } catch { /* QR 없이 진행 */ }
         }
-        const examSheet: FinalExamBuildInput = { title: job!.title, subtitle, questions: qs, studentName: nm, qrDataUrl, qrLabel: 'QR 스캔 → 바로 채점', fontFaceCss: fontCss };
+        const examSheet: FinalExamBuildInput = { title: job!.title, subtitle, header, questions: qs, studentName: nm, qrDataUrl, qrLabel: 'QR 스캔 → 바로 채점', fontFaceCss: fontCss };
         examSheets.push(examSheet);
         if (combined) continue; // 합본은 ZIP 항목 안 만든다
         const idx2 = String(i + 1).padStart(2, '0');
@@ -143,7 +145,7 @@ async function handleGET(
           // 정답·해설지 — 그 학생 배치(순서)에 맞춘 정답 및 해설
           studentEntries.push({
             name: `${idx2}_${safe(nm)}_정답해설`,
-            html: buildFinalExamAnswerHtml({ title: job!.title, subtitle: `${subtitle} · ${nm}`, questions: qs, fontFaceCss: fontCss }),
+            html: buildFinalExamAnswerHtml({ title: job!.title, subtitle: `${job!.scopeSummary} · ${subtitle} · ${nm}`, questions: qs, fontFaceCss: fontCss }),
           });
         }
       }
@@ -166,7 +168,7 @@ async function handleGET(
         const html = buildFinalExamSheetMultiHtml(examSheets, { fontFaceCss: fontCss, docTitle: job!.title, blankBefore });
         const [pdf] = await renderExamPdfs([html]);
         if (!pdf) return NextResponse.json({ error: '합본 PDF 생성에 실패했습니다.' }, { status: 500 });
-        const fn = safe(`파이널예비모의고사_${st}_학생합본`) + '.pdf';
+        const fn = safe(`내신예비시험지_${st}_학생합본`) + '.pdf';
         return respondBinary(new Uint8Array(pdf), 'application/pdf', fn, `final-exam-${st}-students-merged.pdf`);
       }
 
@@ -175,14 +177,16 @@ async function handleGET(
       const zip = new JSZip();
       studentEntries.forEach((e, i) => zip.file(`${e.name}.pdf`, pdfs[i]));
       const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-      const fn = safe(`파이널예비모의고사_${st}_학생별`) + '.zip';
+      const fn = safe(`내신예비시험지_${st}_학생별`) + '.zip';
       return respondBinary(new Uint8Array(buf), 'application/zip', fn, `final-exam-${st}-students.zip`);
     }
 
     const fontFaceCss = await getEmbeddedKoreanFontFaceCss();
     const entries: { name: string; html: string }[] = [];
+    const headerFor = (subtitle: string) =>
+      finalExamHeader({ title: job!.title, subtitle, school: job!.school, scopeSummary: job!.scopeSummary, createdAt: job!.createdAt });
     const exam = (subtitle: string, qs: FinalExamQuestion[]) =>
-      buildFinalExamSheetHtml({ title: job!.title, subtitle, questions: qs, fontFaceCss }); // ZIP 은 QR 미포함(정렬마다 번호가 달라 채점 혼동 방지)
+      buildFinalExamSheetHtml({ title: job!.title, subtitle, header: headerFor(subtitle), questions: qs, fontFaceCss }); // ZIP 은 QR 미포함(정렬마다 번호가 달라 채점 혼동 방지)
     const answer = (subtitle: string, qs: FinalExamQuestion[]) =>
       buildFinalExamAnswerHtml({ title: job!.title, subtitle, questions: qs, fontFaceCss });
 
@@ -197,7 +201,7 @@ async function handleGET(
       for (const m of modes) {
         const qs = await loadExamQuestions(db, { ...job, orderMode: m.key, ...(m.key === 'shuffle' ? { shuffleSeed } : {}) });
         if (qs.length === 0) continue;
-        const subtitle = `${job.scopeSummary} · 총 ${qs.length}문항`;
+        const subtitle = `총 ${qs.length}문항`;
         if (wantExam) entries.push({ name: `${m.folder}/문제지`, html: exam(subtitle, qs) });
         if (wantAnswer) entries.push({ name: `${m.folder}/정답해설`, html: answer(subtitle, qs) });
       }
@@ -235,7 +239,7 @@ async function handleGET(
 
     const stamp = (job.createdAt instanceof Date ? job.createdAt : new Date()).toISOString().slice(0, 10).replace(/-/g, '');
     const tag = full ? '전체묶음' : '지문별';
-    const fname = safe(`파이널예비모의고사_${stamp}_${tag}`) + '.zip';
+    const fname = safe(`내신예비시험지_${stamp}_${tag}`) + '.zip';
     return respondBinary(new Uint8Array(buf), 'application/zip', fname, `final-exam-${stamp}-${full ? 'all' : 'bysource'}.zip`);
   } catch (e) {
     console.error('[final-exams download-zip]', e);

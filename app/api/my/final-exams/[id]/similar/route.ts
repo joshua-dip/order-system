@@ -85,7 +85,7 @@ export async function POST(
     const now = new Date();
     const status: FinalExamJobDoc['status'] = sel.totalShort > 0 ? 'awaiting_admin' : 'ready';
     const dateStamp = now.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\s/g, '');
-    const title = `파이널 예비 모의고사 · 유사문항 (${school ? `${school} · ` : ''}${dateStamp} · ${sel.totalRequested}문항)`;
+    const title = `내신 예비시험지 · 유사문항 (${school ? `${school} · ` : ''}${dateStamp} · ${sel.totalRequested}문항)`;
     const jobDoc: Omit<FinalExamJobDoc, '_id'> = {
       loginId,
       userId: auth.userId,
@@ -124,7 +124,7 @@ export async function POST(
       items: sel.items,
       selectedTypes,
       questionsPerTypeMap: countsMap,
-      contextLabel: '파이널 예비 모의고사 (유사문항)',
+      contextLabel: '내신 예비시험지 (유사문항)',
       force: true,
       autoCreated: 'final_exam_similar',
     });

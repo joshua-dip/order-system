@@ -690,7 +690,7 @@ export async function createFinalExamShortageOrder(
   const shortItems = input.items.filter((it) => it.shortBy > 0);
   if (shortItems.length === 0 && !input.force) return null;
   const now = new Date();
-  const label = input.contextLabel ?? '파이널 예비 모의고사';
+  const label = input.contextLabel ?? '내신 예비시험지';
 
   const orderText = [
     `=== ${label}${shortItems.length ? ' 부족분' : ''} 제작 요청 (자동 생성) ===`,
