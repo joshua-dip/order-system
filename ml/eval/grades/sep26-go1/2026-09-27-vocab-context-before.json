@@ -1,0 +1,1875 @@
+{
+  "grader": "Codex AI — 원문·유일성·해설·변별력 직접 검토; 독립 사람/블라인드 검수 아님",
+  "grading_version": "product-content-discrimination-v1",
+  "rubric": "O: 내용·유일성·해설·형식·정성 변별력 통과. P: 부분 결함/모호성/해설 오류/수치·기능어/결합만으로 정답 노출. X: 정답 불성립 또는 틀린 교정. F: 생성 실패. 새 지문 상품 검수와 별개.",
+  "source_run_label": "2026-09-27-vocab-context-before",
+  "run_sha256": "6bc01fa913bb3f48630d9bfbcab3fed87952fad6fc2a9212938d8b8ba310799c",
+  "experiment": {
+    "name": "vocab-context-input",
+    "phase": "before",
+    "date": "2026-09-27",
+    "commit_at_review": "4a68c6e74daf1adf07fcf0983e8fe273dc9fec3f",
+    "hypothesis": "원래 단어가 남은 지문 때문에 원문과 다름을 문맥 모순으로 오인한다. 검사에 바뀐 단어가 반영된 전체 지문을 주는 입력 하나만 변경한다.",
+    "settings": {
+      "base": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+      "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit",
+      "adapter": "none — vocab 규칙 유형",
+      "temp": 0.3,
+      "vocab_check_temp": 0.0,
+      "repeat": 2,
+      "keep_trace": true,
+      "seed": "not fixed",
+      "max_retries_argument": 2
+    },
+    "code_sha256": {
+      "ml/common/edit_pipeline.py": "5b4c1dc343dc16b80fcb4b9dda3c6848a09441d1ef4119a876e22e30436feee9",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/vocab/windows/pipeline_vocab.py": "2654cd1d7eca8315ec35c209a1bfb0e968ab3f09855e8f7f369580bff49add0f",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376"
+    },
+    "runner": {
+      "status": "baseline_complete_needs_grading",
+      "runner_pid": 90024,
+      "started_at": "2026-09-27T03:41:40.051831+09:00",
+      "deadline": "2026-09-27T09:45:00+09:00",
+      "label": "2026-09-27-vocab-context-before",
+      "type": "vocab",
+      "repeat": 2,
+      "keep_trace": true,
+      "expected_rows_per_set": 36,
+      "code_sha256": {
+        "ml/common/edit_pipeline.py": "5b4c1dc343dc16b80fcb4b9dda3c6848a09441d1ef4119a876e22e30436feee9",
+        "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+        "ml/vocab/windows/pipeline_vocab.py": "2654cd1d7eca8315ec35c209a1bfb0e968ab3f09855e8f7f369580bff49add0f",
+        "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376"
+      },
+      "candidate_applied": false,
+      "runs": [
+        {
+          "set": "sep26-go1",
+          "pid": 90027,
+          "started_at": "2026-09-27T03:41:40.053985+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "sep26-go1",
+            "--label",
+            "2026-09-27-vocab-context-before",
+            "--types",
+            "vocab",
+            "--repeat",
+            "2",
+            "--keep-trace"
+          ],
+          "log": "/private/tmp/lora-vocab-context-cycle/sep26-go1.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T03:44:43.310976+09:00",
+          "rows": 36,
+          "unique_rows": 36,
+          "code_unchanged": true
+        },
+        {
+          "set": "jun11-go2",
+          "pid": 90134,
+          "started_at": "2026-09-27T03:44:43.316158+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "jun11-go2",
+            "--label",
+            "2026-09-27-vocab-context-before",
+            "--types",
+            "vocab",
+            "--repeat",
+            "2",
+            "--keep-trace"
+          ],
+          "log": "/private/tmp/lora-vocab-context-cycle/jun11-go2.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T03:48:06.130919+09:00",
+          "rows": 36,
+          "unique_rows": 36,
+          "code_unchanged": true
+        }
+      ],
+      "updated_at": "2026-09-27T03:48:06.132985+09:00"
+    },
+    "set_sha256": "28ed113807906eaf1cf8d49f49e5a85d55c4d0d32fb45b85129e15014d9f1e21",
+    "decision_rule": "각 세트 O 변화 ±7%p 이내=같음. 같음/악화면 후보 복원. F도 함께 비교. 반복 문항은 독립 새 지문 아님."
+  },
+  "grades": {
+    "20번|vocab": "X",
+    "20번|vocab|2": "O",
+    "21번|vocab": "P",
+    "21번|vocab|2": "P",
+    "22번|vocab": "O",
+    "22번|vocab|2": "P",
+    "23번|vocab": "O",
+    "23번|vocab|2": "O",
+    "24번|vocab": "O",
+    "24번|vocab|2": "X",
+    "29번|vocab": "O",
+    "29번|vocab|2": "O",
+    "30번|vocab": "P",
+    "30번|vocab|2": "O",
+    "31번|vocab": "P",
+    "31번|vocab|2": "O",
+    "32번|vocab": "X",
+    "32번|vocab|2": "P",
+    "33번|vocab": "O",
+    "33번|vocab|2": "O",
+    "34번|vocab": "O",
+    "34번|vocab|2": "O",
+    "35번|vocab": "P",
+    "35번|vocab|2": "P",
+    "36번|vocab": "X",
+    "36번|vocab|2": "O",
+    "37번|vocab": "O",
+    "37번|vocab|2": "O",
+    "38번|vocab": "F",
+    "38번|vocab|2": "O",
+    "39번|vocab": "O",
+    "39번|vocab|2": "O",
+    "40번|vocab": "O",
+    "40번|vocab|2": "O",
+    "41~42번|vocab": "P",
+    "41~42번|vocab|2": "O"
+  },
+  "notes": {
+    "20번|vocab": "engaged and active가 distracted보다 중요하다는 비교도 성립한다. 원문의 entertained와 다르다는 이유만으로 틀린 어휘라 할 수 없고, 해설은 열위 비교항도 긍정적 목표여야 한다고 오인한다.",
+    "20번|vocab|2": "distraction에 집중하라는 지시는 학습·참여·상호작용을 목표로 삼으라는 후속 내용과 모순. engagement 교정과 해설이 타당하다.",
+    "21번|vocab": "free→captive는 후속의 움직임 제한과 일치하나 being held free라는 부자연스러운 결합 자체가 정답 단서가 된다. 문맥 어휘 문제로서 표현을 다듬어야 한다.",
+    "21번|vocab|2": "being held free는 결합만으로 어색함이 드러난다. 움직임을 제한하는 기기라는 교정 근거는 맞지만 어휘 문맥 판단 외 단서가 크다.",
+    "22번|vocab": "시각화만으로 충분하다는 생각을 뒤에서 제한하므로 strength가 아닌 flaw. 신념의 중요성과 대비하는 해설도 맞다.",
+    "22번|vocab|2": "ignores→states는 옳지만 Law of Attraction을 명성법칙이라고 잘못 명명한다. 지문 핵심 개념을 바꾸는 해설 오류.",
+    "23번|vocab": "생존·환경 적응 가능성을 보존하는 다양성을 stagnation 보존이라 할 수 없다. evolvability 교정과 전체 근거가 맞다.",
+    "23번|vocab|2": "멸종을 초래하는 식량 감소를 beneficial로 평가하면 재난과 대비하는 논리에 어긋난다. catastrophic 교정 타당.",
+    "24번|vocab": "불확실성에 대한 두려움 때문에 실제보다 예측 가능하다고 가장한다는 맥락. unpredictable→predictable 유일하며 해설의 방향도 맞다.",
+    "24번|vocab|2": "계획도 precious하나 계획 과정이 더 중요하다는 대비는 성립한다. 해설 스스로 precious가 적절하다고 인정하면서 정답 근거를 핑계로 ⑤를 지정한다.",
+    "29번|vocab": "젖산 과다로 sickness·weakness·miserable을 초래하므로 beneficial→toxic. 해설도 이 연결을 정확히 짚는다.",
+    "29번|vocab|2": "with oxygen과 anaerobic의 정의 모순을 원문 두 호흡 대조로 확인할 수 있다. aerobic 교정 타당.",
+    "30번|vocab": "gains가 hazards를 undermine한다는 말은 부자연스럽지만 이득이 위험을 줄인다는 우호적 관계 자체는 결론과 반대가 아니다. 문맥 모순보다 결합 어색함에 기대는 출제.",
+    "30번|vocab|2": "단락을 짧게 하라는 전체 주장에 long이 반대된다. 과도하게 잘게 나누지 말라는 후반 제한도 해치지 않는다.",
+    "31번|vocab": "embraced→avoided는 맞다. 다만 해설이 wrong people liking it을 남들이 좋아하는 것 일반에 대한 반감으로 확대해 사회적 자기상이라는 한정을 빠뜨린다.",
+    "31번|vocab|2": "사람 간 전파를 비유하는 자리에 medicines는 부적절하고 viruses가 맞다. 사회적 취향 확산 설명과 교정이 일치한다.",
+    "32번|vocab": "감정 판단을 바꾸라는 것이 감정 표현을 뜻하지는 않는다는 문장은 성립한다. 해설은 원문의 억압을 뜻하지 않는다는 내용을 오히려 억압 강조로 뒤집는다.",
+    "32번|vocab|2": "systematic→random 선택은 적절하지만 해설 첫 문장은 원문을 감정이 체계적이지 않다는 뜻이라고 반대로 풀이한다. 판단에서 생기는 감정이라는 핵심 설명을 잘못 전달한다.",
+    "33번|vocab": "시각 경험 복제와 realism이 대응하며 abstraction은 후반 폴록과의 대비를 무너뜨린다. 교정과 설명 적절.",
+    "33번|vocab|2": "기존 사물을 복제하지 않는다는 명시적 설명에 embrace가 모순된다. avoid로 수정하는 근거가 충분하다.",
+    "34번|vocab": "몸속에 깊이 묻혀 있어 설명하지 못한다는 인과에서 exposed는 어긋난다. buried 교정과 해설 일치.",
+    "34번|vocab|2": "복잡하고 능숙한 달리기 기제를 이해한다는 내용에 정체 stagnation은 부적절하다. alchemy의 비유 의미를 설명한다.",
+    "35번|vocab": "ignore→bathe는 맞지만 해설의 ignore는 돌보는 행위의 부재를 나타내지 않는다는 문장이 뜻을 잘못 풀이한다. 냄새·목욕의 핵심 근거 외 해설 교정이 필요하다.",
+    "35번|vocab|2": "prohibited→prescribed 정답은 맞다. 다만 해설은 금지된 목욕을 이미 처방한 목욕이라고 전제한다. 정기 목욕이 필요한 예외와 unless의 관계를 설명해야 한다.",
+    "36번|vocab": "Could you accept ...?도 말이 안 되는 광고를 받아들일 수 있겠냐는 수사 질문으로 자연스럽다. imagine만 가능하다는 근거가 없다. 해설의 수두는 Sudoku도 잘못 옮긴다.",
+    "36번|vocab|2": "숫자를 문자나 모양으로 대체 가능하므로 수치 자체가 critical일 수 없다. irrelevant 교정의 근거가 명료하다.",
+    "37번|vocab": "반대에도 발표했고 후대가 계승했다는 연결에서 suppressed가 아니라 published. 대조와 결과에 근거한 해설 타당.",
+    "37번|vocab|2": "당시 정설을 뒤집었다는 다음 문장에 conventional이 반대된다. revolutionary 교정 적절.",
+    "38번|vocab": "생성 결과 없음. 풀 만한 문항을 만들지 못했다는 오류 반환.",
+    "38번|vocab|2": "공유 가능한 기준·신뢰할 정의가 필요하다는 글에서 inconsistency는 consistency로 수정. 근거와 나머지 어휘 타당.",
+    "39번|vocab": "성공적인 농업과 인간과의 유사성을 마무리하는 곳에 savagery가 어긋난다. civilization 교정이 전체 내용과 일치.",
+    "39번|vocab|2": "인간처럼 농업을 완성했다는 결론에서 savagery→civilization이 맞고 해설도 성공적 농업·둥지 근거를 든다.",
+    "40번|vocab": "위협을 감지한 후 의식에 떠오른다는 후속 문장에 근거해 평소 consciously를 부정할 수 있다. 교정 방향도 명확하다.",
+    "40번|vocab|2": "의식에 떠오르기 전후의 구분에 근거해 consciously→nonconsciously. 다른 어휘와 해설도 타당.",
+    "41~42번|vocab": "invalidates→legitimizes는 맞지만 해설이 인용문의 빈칸을 반복하다 끝나 실제 교정어와 정당화/확산의 관계를 설명하지 않는다.",
+    "41~42번|vocab|2": "기회의 평등·누구나 공적 인물이 됨과 restricted가 모순된다. democratized 교정과 원문 근거 충분."
+  },
+  "review_material": {
+    "20번|vocab": {
+      "blanked": "Learning games need to be what we call 'fun enough.' Many new learning-game developers try to design an ①entertaining game. Unfortunately, that often makes learning ②harder rather than easier. Remember, you are not creating the next great commercial game to entertain your learners; you are creating a learning game in which success will be measured by the achievement of learning outcomes. ③Resist the temptation to create a ton of rules, pile on different game elements, and incorporate multiple dynamics to keep player interest high. Yes, the game should be engaging with a mild level of fun, but learning should be the goal. Focus on engagement rather than entertainment. The goals of the game play should be ④interactivity and engagement. Research shows that what makes games instructional is the level of interactivity and engagement the learners have with the content. Given those parameters, making sure the learners are engaged and active is far more important than making sure they are ⑤distracted.",
+      "options": [
+        "① entertaining",
+        "② harder",
+        "③ Resist",
+        "④ interactivity",
+        "⑤ distracted"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 학습 게임의 목표가 단순한 오락이 아닌 학습 결과의 달성에 있음을 강조합니다. 특히 \"Focus on engagement rather than entertainment\"라고 명시하며, 학습자가 콘텐츠와 적극적으로 상호작용하며 몰입하는 것이 중요하다고 말합니다. 따라서 문맥상 학습자가 '산만해지거나(distracted)' 있는 것이 아니라 '재미있고(enjoyable/entertained)' 상태여야 한다는 논리가 성립합니다. 'distracted'은 주의가 흩어졌다는 부정적 의미로, 학습 게임의 긍정적 목표와 배치되므로 'entertained'로 수정해야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|vocab": {
+      "blanked": "We are ①wonderfully made, yet we don't allow ourselves to participate in the wonder for which we were created. Instead of moving anywhere and everywhere, most of us spend our time moving nowhere. We occupy the same square footage of a chair for hours and hours every day. Many kids today are being held ②free by 'smart' devices like phones and tablets. They are not going outside to play, they are not learning how to ③socialize and read physical cues from others. As a result they are not learning or building their movement repertoire, the very thing that will help them learn, communicate, create, and become emotionally mature. They are not even learning how to run, how to skip, or how to climb. Instead, they are learning how to live with ④anxiety, depression, and even diseases they were never meant to have. The point is we are getting further and further away from our design. We were made to move ─ and through movement, we are meant to live ⑤extraordinary lives. Movement is life to us.",
+      "options": [
+        "① wonderfully",
+        "② free",
+        "③ socialize",
+        "④ anxiety",
+        "⑤ extraordinary"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 지문에서 'smart' devices에 의해 아이들이 밖으로 나가 놀지 않고, 신체적 단서를 읽는 법을 배우지 못하며, 운동 능력을 키우지 못한다고 설명하고 있습니다. 이는 아이들이 기기에 의해 갇혀 있거나 구속된 상태를 의미하므로, 문맥상 'free(자유로운)'가 아닌 'captive(갇힌, 포로가 된)'가 적절합니다. 따라서 ② free를 captive로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|vocab": {
+      "blanked": "Perhaps you have heard of the Law of Attraction, which ①states that 'like attracts like' and that by focusing on positive or negative thoughts, one can bring about positive or negative results. The common ②strength in our understanding of this law is that we believe all we have to do is think about or visualize something to manifest it. It is true that we attract at the level of our own vibration and that our thoughts and words are extremely ③magnetic. But the most powerful attractor is our belief system. You can create beautiful poster boards full of images of what you want and affirm every day that you are available for an incredibly successful, passionate career or a loving relationship; but if you don't truly believe you are enough, worthy, lovable, and deserving, then attracting a great career or relationship into your life may be more ④challenging. Consider what limiting beliefs you have that contradict your desires and ⑤upgrade them to beliefs that are in line with what you want to attract.",
+      "options": [
+        "① states",
+        "② strength",
+        "③ magnetic",
+        "④ challenging",
+        "⑤ upgrade"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 앞문장에서 'like attracts like'과 긍정적 사고로 결과를 가져온다는 법의 정의를 설명한 뒤, 뒷문장에서 'It is true that... magnetic'이라고 하여 이 법이 실제로 작동한다는 점을 인정하고 있습니다. 그러나 'But'로 시작하는 문장에서 '가장 강력한 것은 신념 체계'라고 강조하며, 단순히 시각화만으로는 부족하고 진정한 신념이 필요함을 지적합니다. 이는 우리가 이 법을 이해하는 데 있는 일반적인 '결함(flaw)'을 언급하는 것으로, 'strength(강점)'는 문맥상 적절하지 않습니다. 따라서 'strength'는 'flaw'로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|vocab": {
+      "blanked": "It's important for humans to have many kinds of minds, because ①variation is critical for the survival of a species. One of Charles Darwin's greatest insights was that variation is a prerequisite for natural selection to work. Think about it: If there's a huge change in the environment, like a catastrophic drop in the food supply or a big increase in temperature, a species without much variation might be completely wiped out. A species with great variation will more likely have some survivors after any ②catastrophe ─ the members who are well suited for the new environment. Darwin observed variation in the bodies of animals, and the same principle applies to human minds. If we all had the same kind of mind ─ if there were only one human nature ─ then when disaster struck, we might become ③extinct. Thankfully, our species has many kinds of minds, both within a single culture and across cultures, so we're less likely to be wiped out. This variation ④preserves the ⑤stagnation of our species.",
+      "options": [
+        "① variation",
+        "② catastrophe",
+        "③ extinct",
+        "④ preserves",
+        "⑤ stagnation"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 인간의 다양한 사고방식(variation)이 종의 생존(survival)에 필수적이라고 강조합니다. 특히 마지막 문장은 이러한 다양성이 종을 어떻게 하는지 설명해야 하는데, 'stagnation(정체)'은 앞선 문맥인 'wiped out(멸종)'을 피하고 생존하는 긍정적 결과와 모순됩니다. 따라서 다양성이 종의 '진화 가능성(evolvability)'을 보존한다는 의미로 고쳐야 합니다. 앞문장에서 'disaster struck(재난 발생)'과 'less likely to be wiped out(멸종될 가능성이 적다)'는 맥락이 이어지므로, 다양성이 종의 정체성이 아닌 생존과 진화를 가능하게 한다는 논리가 성립합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|vocab": {
+      "blanked": "Letting go of our need for control, being aware, is a lot about gathering the courage to face ①uncertainty. Human beings want to know. When we don't know, when things are uncertain, we often feel ②frightened and become inflexible. So we pretend that things are more ③unpredictable than they really are, even though we actually live with enormous uncertainty all the time. We cling to our plans and ideas about how things should be and turn out ever so desperately. And there's nothing wrong with having plans. I think it's a beautiful thing. But there's a difference between planning and thinking all your plans have to come to ④fruition. American president Eisenhower once said: 'Plans are ⑤worthless, but planning is everything.' Imagine if we all used pencil instead of ink to write in our calendars and planners. Both figuratively and literally. Imagine if we could bear in mind that what we write down, what we think is going to happen, might not be what actually happens. And if we could try our best to be all right with that.",
+      "options": [
+        "① uncertainty",
+        "② frightened",
+        "③ unpredictable",
+        "④ fruition",
+        "⑤ worthless"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 앞문장인 'things are uncertain'과 뒤문장인 'live with enormous uncertainty'를 통해 문맥이 불확실성을 다루고 있음을 알 수 있습니다. 따라서 'more unpredictable than they really are'는 '실제보다 더 예측 불가능하다'는 뜻으로, 문맥상 '실제보다 더 예측 가능하다(predictable)'는 의미로 고쳐져야 합니다. 즉, 'unpredictable'은 'predictable'으로 수정되어야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "29번|vocab": {
+      "blanked": "To understand how breathing affects athletic performance, we first need to understand how the body makes energy from air and food. There are two options: with oxygen, a process known as ①aerobic respiration, and without it, which is called anaerobic respiration. Anaerobic energy is generated only with glucose (a simple sugar), and it's quicker and ②easier for our bodies to access. It's a kind of backup system and turbo boost when the body doesn't have enough oxygen. But anaerobic energy is ③inefficient and can be ④beneficial, creating too much lactic acid. The sickness, muscle weakness, and sweating you experience after you've pushed it too hard at the gym is the feeling of anaerobic overload. This process explains why the first few minutes of an intense workout are often so ⑤miserable. Our lungs and respiratory system haven't caught up to supply the oxygen our bodies need, and so the body has to use anaerobic respiration. This also explains why, after we're warmed up, exercise feels easier. The body has switched from anaerobic to aerobic respiration.",
+      "options": [
+        "① aerobic",
+        "② easier",
+        "③ inefficient",
+        "④ beneficial",
+        "⑤ miserable"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 지문은 무산소 호흡이 근육 약화와 발한, 피로감 등 부정적인 결과를 초래한다고 설명하며, 이를 'anaerobic overload'라고 부릅니다. 이어지는 문장에서는 이러한 상태가 운동 초기에 'miserable(고통스러운)' 느낌을 준다고 명시하고 있으므로, 전체 문맥은 무산소 호흡의 비효율성과 해로움을 강조합니다. 따라서 'too much lactic acid'를 생성하여 건강에 해로운 영향을 미치는 무산소 에너지를 'beneficial(유익한)'이라고 표현하는 것은 문맥상 모순됩니다. 이는 오히려 'toxic(유독한)' 또는 부정적인 의미를 지닌 낱말로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "30번|vocab": {
+      "blanked": "Keep your paragraphs ①short. Writing is visual ─ it catches the eye before it has a chance to catch the brain. Short paragraphs put air around what you write and make it look ②inviting, whereas a long chunk of type can discourage a reader from even starting to read. Newspaper paragraphs should be only two or three sentences long; newspaper type is set in a narrow width, and the inches quickly add up. You may think such frequent paragraphing will ③damage the development of your point. Obviously The New Yorker is obsessed by this fear ─ a reader can go for miles without relief. Don't worry; the gains far ④undermine the hazards. But don't go too far. A succession of tiny paragraphs is as annoying as a paragraph that's too long. I'm thinking of all those tiny paragraphs ─ verbless wonders ─ written by modern journalists trying to make their articles quick 'n' easy. Actually they make the reader's job ⑤harder by chopping up a natural train of thought.",
+      "options": [
+        "① short",
+        "② inviting",
+        "③ damage",
+        "④ undermine",
+        "⑤ harder"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장 ‘The New Yorker는 이런 두려움에 사로잡혀 있다’를 비유적으로 들어 단락을 자주 나누는 것이 오히려 독자에게 유리함을 강조합니다. 이어지는 ‘Don't worry; the gains far ___ the hazards’에서 ‘gains(이익)’과 ‘hazards(위험)’의 관계를 논리적으로 연결해야 하므로, 이익이 위험을 ‘초월하다’는 뜻의 outweigh이 적절합니다. undermine은 ‘약화시키다’로, 문맥상 이득이 위험을 약화시킨다는 표현은 부자연스럽습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|vocab": {
+      "blanked": "Our tastes are ①social. Even when you first drank milk, there was the milk, yes, but there was also the person behind the milk who will have presumably either made or ②messed up your relationship with food for the couple of decades after that. We learn to eat from our families and friends, at school and in work. A village develops a particular ③recipe for an apple pie ─ one that nobody outside the village likes, but who cares? We want these things not just because of what they are, but who we are. Tastes spread like this, person to person, like ④viruses, almost irrespective of the qualities of the food involved. We observe other people in their food lives, often judgmentally. Nothing turns me off something quicker than the wrong people liking it, by which I mean people almost identical to me in every respect, in a way that doesn't flatter me. I ⑤embraced the viral chopped salad moment of 2024 by the skin of my teeth.",
+      "options": [
+        "① social",
+        "② messed",
+        "③ recipe",
+        "④ viruses",
+        "⑤ embraced"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 앞문장 'Nothing turns me off something quicker than the wrong people liking it'은 내가 싫어하는 것은 남들이 좋아하는 것임을 나타냅니다. 이어지는 'by which I mean... doesn't flatter me'는 그런 상황이 나를 기분 나쁘게 만든다는 맥락입니다. 따라서 'embraced(받아들였다)'는 'avoided(피했다)'로 고쳐져야 문맥이 맞습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|vocab": {
+      "blanked": "One of the most ①fascinating and empowering insights in Stoic philosophy is that our emotions are not random; they arise from our ②judgments. This may sound surprising, especially if you've ever felt ③overwhelmed by anger, fear, or sadness. But the Stoics taught that emotions aren't just automatic reactions. They're shaped by how we ④interpret events. Here's how it works: something happens, you interpret what it means, and that interpretation triggers an emotional response. For example: If someone criticizes you, you may feel angry not due to the words themselves but because you perceive the comment as unfair or threatening. If you lose a job, you might feel devastated not simply because of the job loss but because you believe it defines your worth or future. Change the judgment, and you change the emotion. This doesn't mean ⑤expressing how you feel; it means examining the story you tell yourself and choosing one that serves you better.",
+      "options": [
+        "① fascinating",
+        "② judgments",
+        "③ overwhelmed",
+        "④ interpret",
+        "⑤ expressing"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 스토아 철학에서 감정이 무작위가 아니라 우리의 판단(judgments)과 해석(interpret)에 의해 형성된다고 설명합니다. 마지막 문장은 \"이것이 감정을 어떻게 표현(expressing)하는 것을 의미하지는 않습니다\"라고 시작하지만, 이어지는 설명인 \"자신이 만드는 이야기를 검토하고 더 나은 것을 선택하라\"는 맥락은 감정을 표출하는 것이 아니라 억누거나 통제하는 것을 강조합니다. 특히 \"Change the judgment, and you change the emotion\"이라는 전제 하에, 감정을 그대로 표현하기보다는 그 근거가 되는 판단을 수정하여 감정을 조절하는 것이 핵심이므로, 문맥상 '표현'이 아닌 '억제(suppressing)'가 적절합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "33번|vocab": {
+      "blanked": "The ancient Greeks felt that the visual artist's goal was to ①copy visual experience. This approach appears in the ②abstraction of ancient Greek sculpture and pottery. We must sadly note that, due to the action of time and weather, no paintings from ancient Greek artists exist today. We can only surmise their quality based on tales such as that of Zeuxis and Parrhasios, the obvious skill in ancient Greek sculpture, and in drawings that ③survive on ancient Greek pottery. This definition of art as copying reality has a problem, though. Jackson Pollock, a leader in the New York School of the 1950's, ④intentionally did not copy existing objects in his art. While painting these works, Pollock and his fellow artists would consciously avoid making marks or passages that resembled recognizable objects. They succeeded at making artwork that did not copy anything, thus demonstrating that the ancient Greek view of art as mimesis ─ simple copying ─ does not ⑤sufficiently define art.",
+      "options": [
+        "① copy",
+        "② abstraction",
+        "③ survive",
+        "④ intentionally",
+        "⑤ sufficiently"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 앞문장에서 그리스 예술가의 목표가 '시각적 경험을 복사하는 것(copy)'임을 언급하고, 뒤문장에서 '고대 그리스 조각과 도자기의 ___'을 예로 들며 이 접근 방식이 나타났다고 설명합니다. 따라서 빈칸에는 '복사'라는 개념과 일치하는 'realism(사실주의)'이 와야 하며, 'abstraction(추상화)'은 문맥상 적절하지 않습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|vocab": {
+      "blanked": "If our bodies know best, why are they easily ①injured when we do something so seemingly natural as running? On the one hand, running seems very easy, but that is only because our bodies are so very good at it. The most powerful supercomputer on the planet cannot administer the enormous number of computations it takes to run, untethered, on two legs. Wherever our running intelligence is, running is not all ②conscious to us and is so complicated that only the T-1000 Terminators of our imagination are able to do it. Because our running knowledge is ③exposed so deeply within muscle fibres, cells and our DNA, we have to accept that we cannot fully explain its complexities. That doesn't mean our bodies don't know how to do it. We may feel our way towards understanding the ④alchemy of running by learning how to use our senses, getting them firing, and seeing what they are ⑤capable of, and accepting that our bodies know more about running than we ever will.",
+      "options": [
+        "① injured",
+        "② conscious",
+        "③ exposed",
+        "④ alchemy",
+        "⑤ capable"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 지문에서 'Because our running knowledge is ③exposed so deeply within muscle fibres, cells and our DNA'라고 하여, 달리기 지식이 근육 섬유, 세포, DNA 속에 '깊이 노출되어 있다'고 서술하고 있습니다. 그러나 문맥상 달리기와 관련된 복잡한 신체 지식이 외부로 드러나는 것이 아니라, 우리 몸속 깊숙이 '묻혀 있거나 숨겨져 있는' 상태를 의미하므로, exposed(노출된)는 문맥에 맞지 않습니다. 대신 buried(묻힌)가 적절하며, 이는 뒤이어 '우리는 그 복잡성을 완전히 설명할 수 없다'는 내용과 일관됩니다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|vocab": {
+      "blanked": "Our number one ①criterion for how we care for our pets should be, \"Is this what they actually need? How is it impacting them?\" rather than, \"What do I want?\" For example, we have encountered many dog owners who ②ignore their dogs religiously multiple times a week because they want to avoid the 'doggy' smell, but veterinary dermatologists ③warn against such practices, as they are not good for a dog's skin. If someone is really concerned about their dog's smell they can use waterless shampoo and thoroughly brush their dog every day but keep the baths down to once or twice a week at most. Unless they have a skin ④condition for which a vet has prescribed medicated baths, most dogs don't need to be bathed on a ⑤regular basis. Even dogs with thick, heavy coats generally only need baths every 6 to 8 weeks.",
+      "options": [
+        "① criterion",
+        "② ignore",
+        "③ warn",
+        "④ condition",
+        "⑤ regular"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 앞문장에서는 반려동물 돌봄의 기준이 '그들이 실제로 필요로 하는 것'이어야 한다고 강조하며, 뒤이유절에서 '개 냄새를 피하고 싶어서'라는 동기를 제시합니다. 그러나 문맥상 개를 자주 목욕시키는 것이 피부에 해롭다는 수의사들의 경고가 이어지므로, 냄새 제거를 위해 개를 자주 '목욕시키는' 행위를 의미하는 bathe가 적절합니다. ignore(무시하다)는 문맥상 개를 돌보는 행위의 부재를 나타내지 않으며, 오히려 과도한 목욕이라는 잘못된 관행을 지적하는 맥락이므로 bathe로 수정해야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "36번|vocab": {
+      "blanked": "The central concerns of mathematics are not numbers, but ①patterns, structures, symmetries and connections. Take, for example, the Sudoku puzzles that appear daily in newspapers. The objective is to complete a 9 x 9 grid, starting from a few given numbers or clues, while ensuring that each row, each column and each 3 x 3 block contains all the digits from 1 to 9 once and only once. But the numerical values of the digits are ②irrelevant; what is important is that there are nine ③distinct symbols. They could be nine letters or nine shapes. It's the pattern that matters. One Irish daily paper publishes these puzzles with the statement 'There's no maths involved, simply use reasoning and logic!' It seems that even the idea that something might be spoiled by mathematics is enough to ④scare off potential solvers! Could you ⑤accept the promotion of an exhibition in the National Gallery with the slogan 'No art involved, just painting and sculpture'? If you can do Sudoku, you can do maths!",
+      "options": [
+        "① patterns",
+        "② irrelevant",
+        "③ distinct",
+        "④ scare",
+        "⑤ accept"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 앞문장에서 '수학이 개입될까 봐 잠재적 해결자들을 ④ scare off(겁주다)한다'고 언급하며, 수학에 대한 부정적 인식을 제시합니다. 이어지는 문장은 '국립화랑의 전시에 대해 “예술은 없고 그림과 조각만 있다”는 슬로건을 ⑤ accept(수용하다)할 수 있습니까?'라고 묻습니다. 이는 앞선 수두 사례와 유사하게, 예술에 대한 편견이 작품 감상을 방해할 수 있다는 점을 강조하기 위한 가상의 질문입니다. 따라서 '수용하다'는 문맥상 적절하지 않으며, '상상하다(imagine)'가 되어야 합니다. 즉, '그런 식으로 예술을 대할 수 있다고 상상할 수 있습니까?'라는 의미로, 수두를 풀 수 있다면 수학도 할 수 있다는 결론을 이끌어내기 위해 필요한 표현입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "37번|vocab": {
+      "blanked": "Even before telescopes existed, people looked out into space and tried to understand the universe. The Egyptians, Babylonians, Greeks, and Maya were among the first peoples to ①map the movements of the stars. In Europe, a 16th-century Polish mathematician named Nicolaus Copernicus put forth a ②revolutionary idea. Copernicus watched the stars and took measurements by eye. He concluded that the view of the universe accepted at the time that the Sun traveled around Earth was ③wrong, and that it was in fact Earth that traveled around the Sun. Despite widespread objections to his ideas, he ④suppressed his theory in a book. Later astronomers built on Copernicus' work. Technological improvements led to the development of the telescope in the early 17th century. Using a telescope, the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter and observed craters on Earth's Moon. He also confirmed that Copernicus' theory was correct. Over the centuries, scientific discoveries and information from telescopes ⑤advanced our knowledge of how the universe works.",
+      "options": [
+        "① map",
+        "② revolutionary",
+        "③ wrong",
+        "④ suppressed",
+        "⑤ advanced"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 지문에서 코페르니쿠스는 자신의 이론을 책에 'suppressed'(억압하다, 숨기다)했다고 되어 있으나, 앞문장에서 그는 태양 중심설이라는 혁명적인 아이디어를 제시했고, 뒤문장에서는 이후 천문학자들이 그의 연구를 바탕으로 발전시켰다고 명시하고 있습니다. 따라서 그는 자신의 이론을 숨긴 것이 아니라 책에 'published'(발간하다, 출판하다)했을 것이 문맥상 자연스럽습니다. 'suppressed'는 'published'으로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "38번|vocab": {
+      "blanked": null,
+      "options": [],
+      "answer": null,
+      "explanation": null,
+      "error": "풀 만한 문항을 만들지 못했습니다(시도 0번 모두 모의 풀이 실패) — 다시 생성해 주세요",
+      "warnings": []
+    },
+    "39번|vocab": {
+      "blanked": "With millions of members in a colony, leaf-cutter ants ①cultivate their own food. Just like humans, they're farmers. Some of the ants set forth from the nest to find fresh ②vegetation; when they find it, they chew off large pieces that they carry back to the nest. However, the ants don't eat these leaves. Instead, smaller worker ants take the pieces of leaves, chew them into smaller pieces, and use these as ③fertilizer to grow fungus in large underground 'gardens.' The ants feed the fungus, and the fungus ④blossoms into small fruiting bodies which the ants later eat. Using this successful farming strategy, the ants build enormous nests underground, something spanning hundreds of square meters. Just like humans, they have perfected an agricultural ⑤savagery.",
+      "options": [
+        "① cultivate",
+        "② vegetation",
+        "③ fertilizer",
+        "④ blossoms",
+        "⑤ savagery"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 잎꾼개미가 인간과 마찬가지로 농업을 수행하며 거대한 둥지를 짓는 문명화된 모습을 묘사하고 있습니다. 특히 'Just like humans, they have perfected an agricultural...'이라는 표현은 인간과 유사한 고도의 농업 기술을 완성했다는 의미를 담고 있으므로, 야생성을 뜻하는 'savagery'가 아닌 문명이나 사회성을 뜻하는 'civilization'이 적절합니다. 따라서 문맥상 낱말의 쓰임이 적절하지 않은 것은 ⑤입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "40번|vocab": {
+      "blanked": "From an evolutionary perspective, self-esteem has ①developed as a monitoring mechanism for the quality of our relationships. The system monitors other people's reactions to our behaviors and sends an alarm that alerts us to any possible changes in our inclusion status. The monitoring system generally operates ②consciously until it detects that our relational value is ③falling or low. When the alarm bell rings, the threat to our social bonds is pushed into conscious awareness and we evaluate the situation. Am I being accepted or am I being pushed out? Do I need to adjust my behaviors to fix the relationship? With such a high value for survival closely tied with relationships, it makes sense that the way we ④mobilize our internal resources around relationships would be highly networked in our brain and body. It also makes sense that we would develop specific mechanisms to attend to minimizing rejection and enhancing acceptance. The continuous scanning is normal, a part of being human. We all have an interpersonal process of searching for cues from the environment to ⑤assess our value in the social structure.",
+      "options": [
+        "① developed",
+        "② consciously",
+        "③ falling",
+        "④ mobilize",
+        "⑤ assess"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 지문은 자존감이 관계의 질을 모니터링하는 메커니즘으로 진화했다고 설명합니다. 이어지는 문장, 'The monitoring system generally operates ② consciously until it detects that our relational value is ③ falling or low.'에서 모니터링 시스템이 관계적 가치가 떨어지거나 낮을 때까지 ② consciously(의식적으로) 작동한다고 서술하고 있습니다. 그러나 이어지는 문장, 'When the alarm bell rings, the threat to our social bonds is pushed into conscious awareness...'에서 알람이 울렸을 때 비로소 위협이 의식적 인식으로 밀려 들어온다고 명시하고 있으므로, 알람이 울리기 전 단계는 의식적이지 않은 상태여야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "41~42번|vocab": {
+      "blanked": "The role of 'slang' in popular culture has fundamentally changed because of the internet. Since the emergence of Standard English, the rule makers of language have been in charge, and their prescriptive norms about a 'correct' version of the English language have ①dominated our channels of communication. If you wanted your voice to be heard by the public, you had to work within their limits, conforming to the strict expectations of either print or broadcast media. Social media completely ②broke that barrier. The playing field is now level, and public access is ③democratized. Anybody and everybody can become a public figure on the new communicative platforms, meaning that nobody's left to enforce the old rules. TV presenters and journalists might not have been able to use slang, but content creators can. We regularly use words like 'function' and 'side-eye,' and our influence both ④invalidates these terms and gives them a large platform to spread quicker than they could have before. Content creators also come from a greater variety of backgrounds than people working in traditional media. This means that slang can more naturally go beyond the economic and social barriers that once limited its growth. The loose social networks that previously connected us geographically are simply stronger online, and memes are now ⑤transmitted at rapid pace.",
+      "options": [
+        "① dominated",
+        "② broke",
+        "③ democratized",
+        "④ invalidates",
+        "⑤ transmitted"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장인 'TV presenters and journalists might not have been able to use slang, but content creators can.'에서 전통 매체에서는 슬랭을 사용할 수 없었지만 콘텐츠 크리에이터는 사용할 수 있다고 명시하고 있습니다. 이어지는 뒷문장 'We regularly use words like 'function' and 'side-eye,' and our influence both ___ these terms and gives them a large platform to spread quicker than they could have before.'는 우리가 이러한 단어를 사용하며 그들의 영향력이 단어를 ___하고 더 빠르게 퍼질 수 있는 큰 플랫폼을 제공한다고 설명합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "20번|vocab|2": {
+      "blanked": "Learning games need to be what we call '①fun enough.' Many new learning-game developers try to design an ②entertaining game. Unfortunately, that often makes learning ③harder rather than easier. Remember, you are not creating the next great commercial game to entertain your learners; you are creating a learning game in which success will be measured by the achievement of learning outcomes. Resist the temptation to create a ton of rules, pile on different game elements, and incorporate multiple dynamics to keep player interest high. Yes, the game should be engaging with a mild level of fun, but learning should be the goal. Focus on ④distraction rather than entertainment. The goals of the game play should be interactivity and engagement. Research shows that what makes games ⑤instructional is the level of interactivity and engagement the learners have with the content. Given those parameters, making sure the learners are engaged and active is far more important than making sure they are entertained.",
+      "options": [
+        "① fun",
+        "② entertaining",
+        "③ harder",
+        "④ distraction",
+        "⑤ instructional"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장에서는 'fun'과 'learning'의 균형을 강조하며, 뒷문장에서는 'interactivity and engagement'가 게임의 목표라고 명시하고 있습니다. 특히 'Focus on ④distraction rather than entertainment'에서 distraction(산만함)은 부정적 의미이므로 문맥상 긍정적 개념인 engagement(참여)로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|vocab|2": {
+      "blanked": "We are ①wonderfully made, yet we don't allow ourselves to participate in the wonder for which we were created. Instead of moving anywhere and everywhere, most of us spend our time moving ②nowhere. We occupy the same square footage of a chair for hours and hours every day. Many kids today are being held ③free by 'smart' devices like phones and tablets. They are not going outside to play, they are not learning how to socialize and read physical cues from others. As a result they are not learning or building their movement repertoire, the very thing that will help them learn, communicate, create, and become emotionally ④mature. They are not even learning how to run, how to skip, or how to climb. Instead, they are learning how to live with anxiety, depression, and even diseases they were never meant to have. The point is we are getting further and further away from our design. We were made to move ─ and through movement, we are meant to live ⑤extraordinary lives. Movement is life to us.",
+      "options": [
+        "① wonderfully",
+        "② nowhere",
+        "③ free",
+        "④ mature",
+        "⑤ extraordinary"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 앞문장 'We are wonderfully made'와 뒤문장 'Instead of moving anywhere and everywhere, most of us spend our time moving nowhere'의 맥락을 고려할 때, 아이들이 스마트폰과 태블릿 같은 '스마트' 기기들에 의해 자유롭게(free) 유지된다는 표현은 문맥과 모순됩니다. 이어지는 문장 'They are not going outside to play...'에서 아이들이 밖으로 나가 놀지 않는다는 점을 볼 때, 기기들에 의해 갇히거나 포획된(captive) 상태임을 나타내는 낱말로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|vocab|2": {
+      "blanked": "Perhaps you have heard of the Law of Attraction, which ①ignores that 'like attracts like' and that by focusing on positive or negative thoughts, one can bring about positive or negative results. The common ②flaw in our understanding of this law is that we believe all we have to do is think about or visualize something to manifest it. It is true that we attract at the level of our own vibration and that our thoughts and words are extremely ③magnetic. But the most powerful attractor is our belief system. You can create beautiful poster boards full of images of what you want and affirm every day that you are available for an incredibly successful, passionate career or a loving relationship; but if you don't truly believe you are enough, worthy, lovable, and deserving, then attracting a great career or relationship into your life may be more ④challenging. Consider what limiting beliefs you have that contradict your desires and ⑤upgrade them to beliefs that are in line with what you want to attract.",
+      "options": [
+        "① ignores",
+        "② flaw",
+        "③ magnetic",
+        "④ challenging",
+        "⑤ upgrade"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 지문은 명성법칙이 ‘유사한 것이 비슷한 것을 끌어당긴다’는 사실을 설명한다고 언급하며, 긍정적인 사고에 집중하면 결과가 나타난다고 전합니다. 따라서 빈칸에는 해당 법칙의 내용을 ‘기술하다’ 또는 ‘말하다’는 뜻의 states가 적합합니다. ignores(무시하다)는 문맥상 명성법칙의 핵심 원리를 부정하는 뉘앙스로, 지문의 긍정적 서술과 맞지 않아 적절하지 않습니다. 반면 ② flaw(결점), ③ magnetic(자석 같은), ④ challenging(어려운), ⑤ upgrade(개선하다)는 각각 이해의 결점, 생각의 끌어당김력, 성공의 어려움, 신념의 개선을 나타내어 문맥에 자연스럽게 부합합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|vocab|2": {
+      "blanked": "It's important for humans to have many kinds of minds, because ①variation is critical for the survival of a species. One of Charles Darwin's greatest insights was that variation is a prerequisite for natural selection to work. Think about it: If there's a huge change in the environment, like a ②beneficial drop in the food supply or a big increase in temperature, a species without much variation might be completely wiped out. A species with great variation will more likely have some survivors after any catastrophe ─ the members who are well suited for the new environment. Darwin observed variation in the bodies of animals, and the same principle applies to human minds. If we all had the same kind of mind ─ if there were only one human nature ─ then when disaster struck, we might become ③extinct. Thankfully, our species has many kinds of minds, both within a single culture and across cultures, so we're less likely to be wiped out. This variation ④preserves the ⑤evolvability of our species.",
+      "options": [
+        "① variation",
+        "② beneficial",
+        "③ extinct",
+        "④ preserves",
+        "⑤ evolvability"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 앞문장에서 'huge change'라는 큰 변화를 언급하며, 이어지는 예시로 'food supply'의 감소나 'temperature'의 증가를 들고 있습니다. 이러한 환경 변화는 생존에 부정적인 영향을 미치는 것이므로, 이를 'beneficial(유익한)'이라고 표현하는 것은 문맥상 모순됩니다. 따라서 'catastrophic(재난적인)'으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|vocab|2": {
+      "blanked": "Letting go of our need for control, being aware, is a lot about gathering the courage to face ①uncertainty. Human beings want to know. When we don't know, when things are uncertain, we often feel ②frightened and become inflexible. So we pretend that things are more ③predictable than they really are, even though we actually live with enormous uncertainty all the time. We cling to our plans and ideas about how things should be and turn out ever so desperately. And there's nothing wrong with having plans. I think it's a beautiful thing. But there's a difference between planning and thinking all your plans have to come to ④fruition. American president Eisenhower once said: 'Plans are ⑤precious, but planning is everything.' Imagine if we all used pencil instead of ink to write in our calendars and planners. Both figuratively and literally. Imagine if we could bear in mind that what we write down, what we think is going to happen, might not be what actually happens. And if we could try our best to be all right with that.",
+      "options": [
+        "① uncertainty",
+        "② frightened",
+        "③ predictable",
+        "④ fruition",
+        "⑤ precious"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 계획의 중요성과 유연한 태도의 필요성을 다루고 있습니다. 아이젠하워의 인용문 'Plans are precious, but planning is everything'은 계획 자체보다 계획 과정이 더 중요하다는 뜻으로, 'precious(귀중한)'가 문맥상 적절합니다. 그러나 정답 근거에 따르면 이는 'worthless(무가치한)'으로 고쳐져야 한다고 명시되어 있습니다. 이는 계획의 형식적 가치보다 실행 과정의 가치를 강조하는 맥락에서, 계획 자체를 낮게 평가하는 극단적 표현으로 해석하거나, 원문 오타를 반영한 것으로 보입니다. 앞뒤 문맥에서 계획은 'beautiful thing'이며 'nothing wrong with having plans'라고 긍정하므로, 정답 근거의 'worthless'는 문맥과 모순되나, 문제에서 요구하는 정답 번호는 ⑤입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "29번|vocab|2": {
+      "blanked": "To understand how breathing affects athletic performance, we first need to understand how the body makes energy from air and food. There are two options: with oxygen, a process known as ①anaerobic respiration, and without it, which is called anaerobic respiration. Anaerobic energy is generated only with ②glucose (a simple sugar), and it's quicker and easier for our bodies to access. It's a kind of backup system and turbo boost when the body doesn't have enough oxygen. But anaerobic energy is ③inefficient and can be toxic, creating too much lactic acid. The sickness, muscle weakness, and sweating you experience after you've pushed it too hard at the gym is the feeling of anaerobic overload. This process explains why the first few minutes of an intense workout are often so ④miserable. Our lungs and respiratory system haven't caught up to supply the oxygen our bodies need, and so the body has to use anaerobic respiration. This also explains why, after we're warmed up, exercise feels easier. The body has switched from anaerobic to ⑤aerobic respiration.",
+      "options": [
+        "① anaerobic",
+        "② glucose",
+        "③ inefficient",
+        "④ miserable",
+        "⑤ aerobic"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 지문에서 'with oxygen'라고 명시했으므로, 산소가 있는 호흡 과정은 'aerobic respiration'이어야 합니다. 그러나 밑줄 친 부분에는 'anaerobic respiration'이 적혀 있어 문맥상 어색합니다. 'anaerobic'은 산소가 없는 상태를 의미하므로, 앞의 'with oxygen'와 모순됩니다. 따라서 'anaerobic'을 'aerobic'으로 고쳐야 합니다. 나머지 낱말들은 문맥에 맞게 사용되었습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "30번|vocab|2": {
+      "blanked": "Keep your paragraphs ①long. Writing is visual ─ it catches the eye before it has a chance to catch the brain. Short paragraphs put air around what you write and make it look ②inviting, whereas a long chunk of type can discourage a reader from even starting to read. Newspaper paragraphs should be only two or three sentences long; newspaper type is set in a narrow width, and the inches quickly add up. You may think such frequent paragraphing will ③damage the development of your point. Obviously The New Yorker is obsessed by this fear ─ a reader can go for miles without relief. Don't worry; the gains far ④outweigh the hazards. But don't go too far. A succession of tiny paragraphs is as annoying as a paragraph that's too long. I'm thinking of all those tiny paragraphs ─ verbless wonders ─ written by modern journalists trying to make their articles quick 'n' easy. Actually they make the reader's job ⑤harder by chopping up a natural train of thought.",
+      "options": [
+        "① long",
+        "② inviting",
+        "③ damage",
+        "④ outweigh",
+        "⑤ harder"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 지문은 독자의 시선을 끌고 읽기 편하게 하려면 단락을 짧게 써야 한다고 강조합니다. \"Short paragraphs put air around what you write and make it look inviting\"라고 명시하여 짧은 단락이 시각적으로 매력적임을 설명한 반면, 긴 단락은 독자를 위축시킨다고 대비하고 있습니다. 따라서 \"Keep your paragraphs ①long\"의 long은 문맥상 short으로 고쳐져야 합니다. 나머지 ② inviting(매력적인), ③ damage(손상시키다), ④ outweigh(초월하다), ⑤ harder(더 어렵게)는 모두 문맥에 맞게 적절히 사용되었습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|vocab|2": {
+      "blanked": "Our tastes are ①social. Even when you first drank milk, there was the milk, yes, but there was also the person behind the milk who will have presumably either made or ②messed up your relationship with food for the couple of decades after that. We learn to eat from our families and friends, at school and in work. A village develops a particular ③recipe for an apple pie ─ one that nobody outside the village likes, but who cares? We want these things not just because of what they are, but who we are. Tastes spread like this, person to person, like ④medicines, almost irrespective of the qualities of the food involved. We observe other people in their food lives, often judgmentally. Nothing turns me off something quicker than the wrong people liking it, by which I mean people almost identical to me in every respect, in a way that doesn't flatter me. I ⑤avoided the viral chopped salad moment of 2024 by the skin of my teeth.",
+      "options": [
+        "① social",
+        "② messed",
+        "③ recipe",
+        "④ medicines",
+        "⑤ avoided"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장인 'Tastes spread like this, person to person'에서 취향이 사람 간에 퍼지는 양상을 설명하고 있으며, 뒤이어 'We observe other people... Nothing turns me off something quicker than the wrong people liking it'라고 하여 타인의 식습관을 관찰하고 판단하는 과정을 서술합니다. 이는 특정 취향이나 유행이 빠르게 확산되는 현상을 비유하는 것으로, 'medicines(약)'보다는 전염병처럼 퍼지는 'viruses(바이러스)'가 문맥상 더 적절합니다. 따라서 medicines를 viruses로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|vocab|2": {
+      "blanked": "One of the most fascinating and empowering insights in Stoic philosophy is that our emotions are not ①systematic; they arise from our ②judgments. This may sound surprising, especially if you've ever felt ③overwhelmed by anger, fear, or sadness. But the Stoics taught that emotions aren't just automatic reactions. They're shaped by how we ④interpret events. Here's how it works: something happens, you interpret what it means, and that interpretation triggers an emotional response. For example: If someone criticizes you, you may feel angry not due to the words themselves but because you perceive the comment as unfair or threatening. If you lose a job, you might feel devastated not simply because of the job loss but because you believe it defines your worth or future. Change the judgment, and you change the emotion. This doesn't mean ⑤suppressing how you feel; it means examining the story you tell yourself and choosing one that serves you better.",
+      "options": [
+        "① systematic",
+        "② judgments",
+        "③ overwhelmed",
+        "④ interpret",
+        "⑤ suppressing"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 문맥상 '우리의 감정이 체계적이지 않다(random)'는 의미이므로, ① systematic은 random으로 고쳐야 합니다. 이어지는 'they arise from our ②judgments'에서 감정이 판단에서 비롯된다는 설명과, 'emotions aren't just automatic reactions'라는 부정적 서술이 ①의 의미를 뒷받침합니다. ③overwhelmed, ④interpret, ⑤suppressing은 각각 문맥상 적절한 용법입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "33번|vocab|2": {
+      "blanked": "The ancient Greeks felt that the visual artist's goal was to ①copy visual experience. This approach appears in the realism of ancient Greek sculpture and pottery. We must sadly note that, due to the action of time and weather, no paintings from ancient Greek artists exist today. We can only ②surmise their quality based on tales such as that of Zeuxis and Parrhasios, the obvious skill in ancient Greek sculpture, and in drawings that survive on ancient Greek pottery. This definition of art as copying reality has a problem, though. Jackson Pollock, a leader in the New York School of the 1950's, ③intentionally did not copy existing objects in his art. While painting these works, Pollock and his fellow artists would consciously ④embrace making marks or passages that resembled recognizable objects. They ⑤succeeded at making artwork that did not copy anything, thus demonstrating that the ancient Greek view of art as mimesis ─ simple copying ─ does not sufficiently define art.",
+      "options": [
+        "① copy",
+        "② surmise",
+        "③ intentionally",
+        "④ embrace",
+        "⑤ succeeded"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장에서 잭슨 폴록이 기존 사물을 의도적으로 복사하지 않았다고 했으므로, 뒤문장에서는 인식 가능한 사물을 닮은 흔적을 피했음을 나타내는 avoid로 고쳐야 합니다. embrace는 '포용하다'는 뜻으로 문맥상 적절하지 않습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|vocab|2": {
+      "blanked": "If our bodies know best, why are they easily ①injured when we do something so seemingly natural as running? On the one hand, running seems very easy, but that is only because our bodies are so very good at it. The most powerful supercomputer on the planet cannot administer the enormous number of computations it takes to run, untethered, on two legs. Wherever our running intelligence is, running is not all ②conscious to us and is so complicated that only the T-1000 Terminators of our imagination are able to do it. Because our running knowledge is ③buried so deeply within muscle fibres, cells and our DNA, we have to accept that we cannot fully explain its complexities. That doesn't mean our bodies don't know how to do it. We may feel our way towards understanding the ④stagnation of running by learning how to use our senses, getting them firing, and seeing what they are ⑤capable of, and accepting that our bodies know more about running than we ever will.",
+      "options": [
+        "① injured",
+        "② conscious",
+        "③ buried",
+        "④ stagnation",
+        "⑤ capable"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장에서는 달리기 지식이 근육과 DNA 속에 깊이 묻혀(buried) 있어 우리가 완전히 설명할 수 없다고 언급합니다. 이어지는 문장은 '그것이 우리 몸이 그것을 어떻게 하는지 모른다는 뜻은 아니다'라고 부정하며, 이어 '우리는 감각을 사용하여 달리기 ④stagnation(정체, 정체 상태)에 대해 이해하는 방향으로 나아갈 수 있다'라고 서술합니다. 그러나 문맥상 달리기라는 능숙한 동작을 설명하는 맥락이므로 '정체'라는 의미의 stagnation은 적절하지 않습니다. 이는 달리기라는 신비한 현상(alchemy)을 이해하는 과정을 의미하는 alchemy로 고쳐져야 합니다. 따라서 문맥상 낱말의 쓰임이 적절하지 않은 것은 ④입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|vocab|2": {
+      "blanked": "Our number one ①criterion for how we care for our pets should be, \"Is this what they actually need? How is it impacting them?\" rather than, \"What do I want?\" For example, we have encountered many dog owners who ②bathe their dogs religiously multiple times a week because they want to avoid the 'doggy' smell, but veterinary dermatologists ③warn against such practices, as they are not good for a dog's skin. If someone is really ④concerned about their dog's smell they can use waterless shampoo and thoroughly brush their dog every day but keep the baths down to once or twice a week at most. Unless they have a skin condition for which a vet has ⑤prohibited medicated baths, most dogs don't need to be bathed on a regular basis. Even dogs with thick, heavy coats generally only need baths every 6 to 8 weeks.",
+      "options": [
+        "① criterion",
+        "② bathe",
+        "③ warn",
+        "④ concerned",
+        "⑤ prohibited"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문에서 수의사가 처방한 약용 목욕을 금지하는 경우를 제외하고는 대부분의 개가 정기적인 목욕이 필요하지 않다고 설명하고 있습니다. 'prohibited'는 금지하다라는 뜻으로, 문맥상 수의사가 처방한 목욕을 금지한다는 것은 논리적 모순이 발생하며, 실제로 수의사가 처방하는 목욕을 의미하는 'prescribed'가 올바른 표현입니다. 다른 선택지들은 문맥에 부합합니다. 'criterion'은 기준을, 'bathe'는 목욕시키다, 'warn'은 경고하다, 'concerned'는 걱정하는이라는 뜻으로 각각 문맥상 적절하게 사용되었습니다. 따라서 문맥상 낱말의 쓰임이 적절하지 않은 것은 ⑤입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "36번|vocab|2": {
+      "blanked": "The central concerns of mathematics are not ①numbers, but patterns, structures, symmetries and connections. Take, for example, the Sudoku puzzles that appear daily in newspapers. The objective is to complete a 9 x 9 grid, starting from a few given numbers or clues, while ensuring that each row, each column and each 3 x 3 block contains all the digits from 1 to 9 once and only once. But the numerical values of the digits are ②critical; what is important is that there are nine distinct ③symbols. They could be nine letters or nine shapes. It's the pattern that matters. One Irish daily paper publishes these puzzles with the statement 'There's no maths involved, simply use reasoning and logic!' It seems that even the idea that something might be ④spoiled by mathematics is enough to scare off potential solvers! Could you ⑤imagine the promotion of an exhibition in the National Gallery with the slogan 'No art involved, just painting and sculpture'? If you can do Sudoku, you can do maths!",
+      "options": [
+        "① numbers",
+        "② critical",
+        "③ symbols",
+        "④ spoiled",
+        "⑤ imagine"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 앞문장에서는 숫자 1부터 9가 한 번씩 들어가는 규칙을 언급하지만, 뒤이은 문장 'what is important is that there are nine distinct ③symbols'에서 핵심은 숫자의 값이 아니라 서로 다른 9개의 기호에 있음을 강조합니다. 이어지는 'They could be nine letters or nine shapes'는 숫자 값이 중요하지 않음을 예시로 보여줍니다. 따라서 숫자의 수치적 가치가 'critical(중요한)'이 아니라 'irrelevant(무관한)'이어야 문맥이 맞습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "37번|vocab|2": {
+      "blanked": "Even before telescopes existed, people looked out into space and tried to understand the universe. The Egyptians, Babylonians, Greeks, and Maya were among the first peoples to ①map the movements of the stars. In Europe, a 16th-century Polish mathematician named Nicolaus Copernicus put forth a ②conventional idea. Copernicus watched the stars and took measurements by eye. He concluded that the view of the universe accepted at the time that the Sun traveled around Earth was ③wrong, and that it was in fact Earth that traveled around the Sun. Despite widespread objections to his ideas, he ④published his theory in a book. Later astronomers built on Copernicus' work. Technological improvements led to the development of the telescope in the early 17th century. Using a telescope, the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter and observed craters on Earth's Moon. He also confirmed that Copernicus' theory was correct. Over the centuries, scientific discoveries and information from telescopes ⑤advanced our knowledge of how the universe works.",
+      "options": [
+        "① map",
+        "② conventional",
+        "③ wrong",
+        "④ published",
+        "⑤ advanced"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 코페르니쿠스는 당시 태양이 지구를 도는 것이 맞다는 정설을 뒤집고 지구가 태양을 돈다는 주장을 펼쳤으므로, 이는 당시 사람들에게 매우 놀라운 혁신적인 아이디어였습니다. 따라서 'conventional(관습적인, 정통적인)'은 문맥상 적절하지 않으며, 이를 의미하는 'revolutionary(혁명적인)'로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "38번|vocab|2": {
+      "blanked": "To harness the full potential of units of measurement, we need some degree of ①inconsistency. Subjective measures contain useful knowledge, but this can be difficult to share, based as it is on an individual's experience. The historian of science Theodore M. Porter describes measurement as a 'technology of distance': a tool that uses ②shared rules to ③bridge differences of culture and geography, allowing for the exchange of information. Following this logic, if measurement is another sort of language, then just as with words, individual units need ④reliable definitions in order to communicate. In the earliest societies, these definitions might need to be shared no more widely than a single settlement, meaning that the definition can be no more complex than knowing that a unit was equal to a certain body part. As these communities grew in size, though, the inadequacies of this system would become evident. Imagine a disagreement over trade or tribute: it is a moment of ⑤conflict that demands greater consistency in measurement.",
+      "options": [
+        "① inconsistency",
+        "② shared",
+        "③ bridge",
+        "④ reliable",
+        "⑤ conflict"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 지문 첫 문장 'To harness the full potential of units of measurement, we need some degree of ①inconsistency'에서 측정 단위(full potential)의 잠재력을 활용하기 위해 필요한 것은 모순(inconsistency)이 아니라 일관성(consistency)이어야 합니다. 이어지는 문장 'Subjective measures contain useful knowledge, but this can be difficult to share'에서 주관적 측정은 공유하기 어렵다고 설명하며, 이후 Theodore M. Porter의 주장인 'shared rules'와 'bridge differences'를 통해 측정의 공통된 기준과 연결 고리가 중요함을 강조합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|vocab|2": {
+      "blanked": "With millions of members in a colony, leaf-cutter ants ①cultivate their own food. Just like humans, they're farmers. Some of the ants set forth from the nest to find fresh vegetation; when they find it, they ②chew off large pieces that they carry back to the nest. However, the ants don't eat these leaves. Instead, smaller worker ants take the pieces of leaves, chew them into smaller pieces, and use these as ③fertilizer to grow fungus in large underground 'gardens.' The ants feed the fungus, and the fungus ④blossoms into small fruiting bodies which the ants later eat. Using this successful farming strategy, the ants build enormous nests underground, something spanning hundreds of square meters. Just like humans, they have perfected an agricultural ⑤savagery.",
+      "options": [
+        "① cultivate",
+        "② chew",
+        "③ fertilizer",
+        "④ blossoms",
+        "⑤ savagery"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문에서 개미들이 거대한 둥지를 만들고 농업을 완벽하게 수행하는 등 문명화된 모습을 묘사하고 있으므로, '농업 문명'을 뜻하는 civilization이 적절합니다. 반면 savagery는 '야만성'을 의미하여 문맥상 어색합니다. 앞문장인 'Using this successful farming strategy, the ants build enormous nests underground'에서 성공적인 농업 전략과 거대한 둥지 건설은 문명의 특징이므로, 이를 강조하는 civilization으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "40번|vocab|2": {
+      "blanked": "From an evolutionary perspective, self-esteem has ①developed as a monitoring mechanism for the quality of our relationships. The system monitors other people's reactions to our behaviors and sends an alarm that alerts us to any possible changes in our inclusion status. The monitoring system generally operates ②consciously until it detects that our relational value is ③falling or low. When the alarm bell rings, the threat to our social bonds is pushed into conscious awareness and we ④evaluate the situation. Am I being accepted or am I being pushed out? Do I need to adjust my behaviors to fix the relationship? With such a high value for survival closely tied with relationships, it makes sense that the way we mobilize our internal resources around relationships would be highly networked in our brain and body. It also makes sense that we would develop specific mechanisms to attend to minimizing rejection and enhancing acceptance. The continuous scanning is ⑤normal, a part of being human. We all have an interpersonal process of searching for cues from the environment to assess our value in the social structure.",
+      "options": [
+        "① developed",
+        "② consciously",
+        "③ falling",
+        "④ evaluate",
+        "⑤ normal"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 지문은 자존감이 관계의 질을 모니터링하는 메커니즘으로 진화했다고 설명합니다. 이어지는 문장에서는 이 시스템이 관계적 가치가 떨어지거나 낮은 상태를 감지하기 전까지는 일반적으로 작동한다고 서술합니다. 여기서 'consciously(의식적으로)'라는 표현은 이후 문장에서 'alarm bell rings' 시 비로소 'conscious awareness(의식적 인식)'로 넘어간다는 흐름과 모순됩니다. 감지되지 않은 평소 상태는 의식적 개입이 없는 비의식적 과정을 의미하므로, 문맥상 'nonconsciously(비의식적으로)'로 수정되어야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "41~42번|vocab|2": {
+      "blanked": "The role of 'slang' in popular culture has fundamentally changed because of the internet. Since the emergence of Standard English, the rule makers of language have been in charge, and their prescriptive norms about a 'correct' version of the English language have ①dominated our channels of communication. If you wanted your voice to be heard by the public, you had to work within their limits, conforming to the strict expectations of either print or broadcast media. Social media completely ②broke that barrier. The playing field is now level, and public access is ③restricted. Anybody and everybody can become a public figure on the new communicative platforms, meaning that nobody's left to enforce the old rules. TV presenters and journalists might not have been able to use slang, but content creators can. We regularly use words like 'function' and 'side-eye,' and our influence both ④legitimizes these terms and gives them a large platform to spread quicker than they could have before. Content creators also come from a greater variety of backgrounds than people working in traditional media. This means that slang can more naturally go beyond the economic and social barriers that once limited its growth. The loose social networks that previously connected us geographically are simply stronger online, and memes are now ⑤transmitted at rapid pace.",
+      "options": [
+        "① dominated",
+        "② broke",
+        "③ restricted",
+        "④ legitimizes",
+        "⑤ transmitted"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 지문은 인터넷과 소셜 미디어가 언어 규범의 장벽을 허물고 누구나 공적으로 발언할 수 있는 평등한 환경을 만들었다는 내용을 담고 있습니다. 앞문장“The playing field is now level”에서 ‘경기장이 평평해졌다’, 즉 기회의 평등이 실현되었음을 나타냅니다. 이어지는 “public access is ③restricted”에서 restricted(제한된)는 앞선 맥락과 정반대되는 의미이므로 문맥상 적절하지 않습니다. 오히려 누구나 접근할 수 있는 ‘democratized(민주화된)’가 적절합니다. 뒤이어 “Anybody and everybody can become a public figure”라고 명시하며 대중의 접근성이 확대되었음을 강조하므로, restricted는 문맥을 해칩니다.",
+      "error": null,
+      "warnings": []
+    }
+  },
+  "generation_trace": {
+    "20번|vocab": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "entertaining",
+          "harder",
+          "Resist",
+          "interactivity",
+          "entertained"
+        ],
+        "wrong": "distracted"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Given those parameters, making sure the learners are engaged and active is far more important than making sure they are distracted.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "21번|vocab": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "wonderfully",
+          "captive",
+          "socialize",
+          "anxiety",
+          "extraordinary"
+        ],
+        "wrong": "free"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Many kids today are being held free by 'smart' devices like phones and tablets.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "22번|vocab": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "states",
+          "flaw",
+          "magnetic",
+          "challenging",
+          "upgrade"
+        ],
+        "wrong": "strength"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The common strength in our understanding of this law is that we believe all we have to do is think about or visualize something to manifest it.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "23번|vocab": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "variation",
+          "catastrophe",
+          "extinct",
+          "preserves",
+          "evolvability"
+        ],
+        "wrong": "stagnation"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "This variation preserves the stagnation of our species.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "24번|vocab": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "uncertainty",
+          "frightened",
+          "predictable",
+          "fruition",
+          "worthless"
+        ],
+        "wrong": "unpredictable"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "So we pretend that things are more unpredictable than they really are, even though we actually live with enormous uncertainty all the time.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "29번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "aerobic",
+          "easier",
+          "inefficient",
+          "toxic",
+          "miserable"
+        ],
+        "wrong": "beneficial"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "But anaerobic energy is inefficient and can be beneficial, creating too much lactic acid.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "30번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "short",
+          "inviting",
+          "damage",
+          "outweigh",
+          "harder"
+        ],
+        "wrong": "undermine"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Don't worry; the gains far undermine the hazards.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "31번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — messed up"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — messed up"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — messed up"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "social",
+          "messed",
+          "recipe",
+          "viruses",
+          "avoided"
+        ],
+        "wrong": "embraced"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "I embraced the viral chopped salad moment of 2024 by the skin of my teeth.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "32번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "fascinating",
+          "random",
+          "interpret",
+          "threatening",
+          "suppressing"
+        ],
+        "wrong": "beneficial"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — threatening → beneficial"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['random', 'judgments', 'trigger', 'criticizes', 'suppressing']"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "fascinating",
+          "judgments",
+          "overwhelmed",
+          "interpret",
+          "suppressing"
+        ],
+        "wrong": "expressing"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "This doesn't mean expressing how you feel; it means examining the story you tell yourself and choosing one that serves you better.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "33번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — survive on"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "copy",
+          "realism",
+          "survive",
+          "intentionally",
+          "sufficiently"
+        ],
+        "wrong": "abstraction"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "This approach appears in the abstraction of ancient Greek sculpture and pottery.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "34번|vocab": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "injured",
+          "conscious",
+          "buried",
+          "alchemy",
+          "capable"
+        ],
+        "wrong": "exposed"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Because our running knowledge is exposed so deeply within muscle fibres, cells and our DNA, we have to accept that we cannot fully explain its complexities.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "35번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — criterion for"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "criterion",
+          "religiously",
+          "warn",
+          "concerned",
+          "prescribed"
+        ],
+        "wrong": "recommended"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Unless they have a skin condition for which a vet has recommended medicated baths, most dogs don't need to be bathed on a regular basis.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — prescribed → recommended"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "criterion",
+          "bathe",
+          "warn",
+          "condition",
+          "regular"
+        ],
+        "wrong": "ignore"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For example, we have encountered many dog owners who ignore their dogs religiously multiple times a week because they want to avoid the 'doggy' smell, but veterinary dermatologists warn against such practices, as they are not good for a dog's skin.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "36번|vocab": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "patterns",
+          "irrelevant",
+          "distinct",
+          "scare",
+          "imagine"
+        ],
+        "wrong": "accept"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Could you accept the promotion of an exhibition in the National Gallery with the slogan 'No art involved, just painting and sculpture'?",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "37번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "map",
+          "revolutionary",
+          "wrong",
+          "published",
+          "advanced"
+        ],
+        "wrong": "suppressed"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Despite widespread objections to his ideas, he suppressed his theory in a book.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "38번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      }
+    ],
+    "39번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — fertilizer to"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — blossoms into"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — fertilizer to"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "cultivate",
+          "vegetation",
+          "fertilizer",
+          "blossoms",
+          "civilization"
+        ],
+        "wrong": "savagery"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Just like humans, they have perfected an agricultural savagery.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "40번|vocab": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "developed",
+          "nonconsciously",
+          "falling",
+          "mobilize",
+          "assess"
+        ],
+        "wrong": "consciously"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The monitoring system generally operates consciously until it detects that our relational value is falling or low.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "41~42번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "dominated",
+          "broke",
+          "democratized",
+          "legitimizes",
+          "transmitted"
+        ],
+        "wrong": "invalidates"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "We regularly use words like 'function' and 'side-eye,' and our influence both invalidates these terms and gives them a large platform to spread quicker than they could have before.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "20번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "fun",
+          "entertaining",
+          "harder",
+          "engagement",
+          "instructional"
+        ],
+        "wrong": "distraction"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Focus on distraction rather than entertainment.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "21번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "wonderfully",
+          "nowhere",
+          "captive",
+          "mature",
+          "extraordinary"
+        ],
+        "wrong": "free"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Many kids today are being held free by 'smart' devices like phones and tablets.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "22번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "states",
+          "flaw",
+          "magnetic",
+          "challenging",
+          "upgrade"
+        ],
+        "wrong": "ignores"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Perhaps you have heard of the Law of Attraction, which ignores that 'like attracts like' and that by focusing on positive or negative thoughts, one can bring about positive or negative results.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "23번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "variation",
+          "catastrophic",
+          "extinct",
+          "preserves",
+          "evolvability"
+        ],
+        "wrong": "beneficial"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Think about it: If there's a huge change in the environment, like a beneficial drop in the food supply or a big increase in temperature, a species without much variation might be completely wiped out.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "24번|vocab|2": [
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['uncertainty', 'frightened', 'predictable', 'clinging', 'fruition']"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "uncertainty",
+          "frightened",
+          "predictable",
+          "fruition",
+          "worthless"
+        ],
+        "wrong": "precious"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "American president Eisenhower once said: 'Plans are precious, but planning is everything.'",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "29번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "aerobic",
+          "glucose",
+          "inefficient",
+          "miserable",
+          "aerobic"
+        ],
+        "wrong": "anaerobic"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "There are two options: with oxygen, a process known as anaerobic respiration, and without it, which is called anaerobic respiration.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "30번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "short",
+          "inviting",
+          "damage",
+          "outweigh",
+          "harder"
+        ],
+        "wrong": "long"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Keep your paragraphs long.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "31번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "social",
+          "messed",
+          "recipe",
+          "viruses",
+          "avoided"
+        ],
+        "wrong": "medicines"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Tastes spread like this, person to person, like medicines, almost irrespective of the qualities of the food involved.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "32번|vocab|2": [
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['random', 'judgments', 'interpret', 'trigger', 'suppressing']"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "random",
+          "judgments",
+          "overwhelmed",
+          "interpret",
+          "suppressing"
+        ],
+        "wrong": "systematic"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "One of the most fascinating and empowering insights in Stoic philosophy is that our emotions are not systematic; they arise from our judgments.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "33번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "copy",
+          "surmise",
+          "intentionally",
+          "avoid",
+          "succeeded"
+        ],
+        "wrong": "embrace"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "While painting these works, Pollock and his fellow artists would consciously embrace making marks or passages that resembled recognizable objects.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "34번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "injured",
+          "conscious",
+          "buried",
+          "alchemy",
+          "capable"
+        ],
+        "wrong": "chaos"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — alchemy → chaos"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "injured",
+          "conscious",
+          "buried",
+          "alchemy",
+          "capable"
+        ],
+        "wrong": "stagnation"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "We may feel our way towards understanding the stagnation of running by learning how to use our senses, getting them firing, and seeing what they are capable of, and accepting that our bodies know more about running than we ever will.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "35번|vocab|2": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — criterion for"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — criterion for"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — warn against"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — criterion for"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "criterion",
+          "bathe",
+          "warn",
+          "concerned",
+          "prescribed"
+        ],
+        "wrong": "prohibited"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Unless they have a skin condition for which a vet has prohibited medicated baths, most dogs don't need to be bathed on a regular basis.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "36번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "numbers",
+          "irrelevant",
+          "symbols",
+          "spoiled",
+          "imagine"
+        ],
+        "wrong": "critical"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "But the numerical values of the digits are critical; what is important is that there are nine distinct symbols.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "37번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "map",
+          "revolutionary",
+          "wrong",
+          "published",
+          "advanced"
+        ],
+        "wrong": "conventional"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In Europe, a 16th-century Polish mathematician named Nicolaus Copernicus put forth a conventional idea.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "38번|vocab|2": [
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['consistency', 'subjective', 'bridge', 'reliable', 'inadequacies']"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "consistency",
+          "shared",
+          "bridge",
+          "reliable",
+          "conflict"
+        ],
+        "wrong": "inconsistency"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "To harness the full potential of units of measurement, we need some degree of inconsistency.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "39번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "cultivate",
+          "chew",
+          "fertilizer",
+          "blossoms",
+          "enormous"
+        ],
+        "wrong": "tiny"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Using this successful farming strategy, the ants build tiny nests underground, something spanning hundreds of square meters.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "③",
+        "also": []
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — blossoms into"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "cultivate",
+          "chew",
+          "fertilizer",
+          "blossoms",
+          "civilization"
+        ],
+        "wrong": "savagery"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Just like humans, they have perfected an agricultural savagery.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "40번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "developed",
+          "nonconsciously",
+          "falling",
+          "evaluate",
+          "normal"
+        ],
+        "wrong": "consciously"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The monitoring system generally operates consciously until it detects that our relational value is falling or low.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "41~42번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "dominated",
+          "broke",
+          "democratized",
+          "legitimizes",
+          "transmitted"
+        ],
+        "wrong": "restricted"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The playing field is now level, and public access is restricted.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ]
+  },
+  "by_type": {
+    "vocab": {
+      "n": 36,
+      "O": 22,
+      "P": 9,
+      "X": 4,
+      "F": 1,
+      "O_pct": 61.1,
+      "F_pct": 2.8
+    }
+  },
+  "cycle_result": {
+    "status": "complete_reverted",
+    "completed_at": "2026-09-27T04:51:26.705908+09:00",
+    "comparison": {
+      "sep26-go1": {
+        "before": {
+          "n": 36,
+          "O": 22,
+          "P": 9,
+          "X": 4,
+          "F": 1,
+          "O_pct": 61.1,
+          "F_pct": 2.8
+        },
+        "after": {
+          "n": 36,
+          "O": 24,
+          "P": 9,
+          "X": 0,
+          "F": 3,
+          "O_pct": 66.7,
+          "F_pct": 8.3
+        },
+        "delta_O_pp": 5.6,
+        "judgment": "같다"
+      },
+      "jun11-go2": {
+        "before": {
+          "n": 36,
+          "O": 23,
+          "P": 9,
+          "X": 3,
+          "F": 1,
+          "O_pct": 63.9,
+          "F_pct": 2.8
+        },
+        "after": {
+          "n": 36,
+          "O": 18,
+          "P": 10,
+          "X": 3,
+          "F": 5,
+          "O_pct": 50.0,
+          "F_pct": 13.9
+        },
+        "delta_O_pp": -13.9,
+        "judgment": "악화"
+      }
+    },
+    "restored_sha256": "5b4c1dc343dc16b80fcb4b9dda3c6848a09441d1ef4119a876e22e30436feee9",
+    "decision": "고1 같다, 고2 악화. 후보 복원. 생성 실패도 증가. 상품 승인 없음."
+  }
+}

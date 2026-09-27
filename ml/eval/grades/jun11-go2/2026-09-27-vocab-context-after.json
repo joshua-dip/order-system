@@ -1,0 +1,2770 @@
+{
+  "grader": "Codex AI — 원문·유일성·해설·변별력 직접 검토; 독립 사람/블라인드 검수 아님",
+  "grading_version": "product-content-discrimination-v1",
+  "rubric": "O: 내용·유일성·해설·형식·정성 변별력 통과. P: 부분 결함/모호성/해설 오류/수치·기능어/결합만으로 정답 노출. X: 정답 불성립 또는 틀린 교정. F: 생성 실패. 새 지문 상품 검수와 별개.",
+  "source_run_label": "2026-09-27-vocab-context-after",
+  "run_sha256": "5691ad80603ed15515a53cbabbac7e6f5bafb86bdc0352ed4cd50772156e46f2",
+  "experiment": {
+    "name": "vocab-context-input",
+    "phase": "after",
+    "date": "2026-09-27",
+    "commit_at_review": "4a68c6e74daf1adf07fcf0983e8fe273dc9fec3f",
+    "hypothesis": "원래 단어가 남은 지문 때문에 원문과 다름을 문맥 모순으로 오인한다. 검사에 바뀐 단어가 반영된 전체 지문을 주는 입력 하나만 변경한다.",
+    "settings": {
+      "base": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+      "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit",
+      "adapter": "none — vocab 규칙 유형",
+      "temp": 0.3,
+      "vocab_check_temp": 0.0,
+      "repeat": 2,
+      "keep_trace": true,
+      "seed": "not fixed",
+      "max_retries_argument": 2
+    },
+    "code_sha256": {
+      "ml/common/edit_pipeline.py": "a375d61836f9a04467b77598eee8ab69a8533a322b31f4d8e43ea751537dae8e",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/vocab/windows/pipeline_vocab.py": "2654cd1d7eca8315ec35c209a1bfb0e968ab3f09855e8f7f369580bff49add0f",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376"
+    },
+    "runner": {
+      "status": "after_complete_needs_grading",
+      "runner_pid": 93847,
+      "started_at": "2026-09-27T04:42:32.207768+09:00",
+      "deadline": "2026-09-27T09:45:00+09:00",
+      "label": "2026-09-27-vocab-context-after",
+      "type": "vocab",
+      "repeat": 2,
+      "keep_trace": true,
+      "expected_rows_per_set": 36,
+      "code_sha256": {
+        "ml/common/edit_pipeline.py": "a375d61836f9a04467b77598eee8ab69a8533a322b31f4d8e43ea751537dae8e",
+        "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+        "ml/vocab/windows/pipeline_vocab.py": "2654cd1d7eca8315ec35c209a1bfb0e968ab3f09855e8f7f369580bff49add0f",
+        "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376"
+      },
+      "candidate_applied": true,
+      "runs": [
+        {
+          "set": "sep26-go1",
+          "pid": 93850,
+          "started_at": "2026-09-27T04:42:32.209537+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "sep26-go1",
+            "--label",
+            "2026-09-27-vocab-context-after",
+            "--types",
+            "vocab",
+            "--repeat",
+            "2",
+            "--keep-trace"
+          ],
+          "log": "/private/tmp/lora-vocab-context-cycle/sep26-go1-after.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T04:46:40.659234+09:00",
+          "rows": 36,
+          "unique_rows": 36,
+          "code_unchanged": true
+        },
+        {
+          "set": "jun11-go2",
+          "pid": 93975,
+          "started_at": "2026-09-27T04:46:40.663370+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "jun11-go2",
+            "--label",
+            "2026-09-27-vocab-context-after",
+            "--types",
+            "vocab",
+            "--repeat",
+            "2",
+            "--keep-trace"
+          ],
+          "log": "/private/tmp/lora-vocab-context-cycle/jun11-go2-after.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T04:50:40.892716+09:00",
+          "rows": 36,
+          "unique_rows": 36,
+          "code_unchanged": true
+        }
+      ],
+      "updated_at": "2026-09-27T04:50:40.894520+09:00"
+    },
+    "set_sha256": "e8a12b58ad6dc15aefc593e33e24e60d51a12cdeb8341c8f1eeade8a2147a208",
+    "decision_rule": "각 세트 O 변화 ±7%p 이내=같음. 같음/악화면 후보 복원. F도 함께 비교. 반복 문항은 독립 새 지문 아님.",
+    "candidate_diff": "--- edit_pipeline.before.py\n+++ edit_pipeline.after.py\n@@ -397,7 +397,8 @@\n         a0, b0 = locs[k]\n         sent = next((x for x in split_sentences(passage) if passage[a0:b0] in x), \"\")\n         changed = sent.replace(passage[a0:b0], wrong, 1)\n-        chk = call(VOCAB_CHECK_SYS, f\"[Passage]\\n{passage}\\n\\n[Changed sentence]\\n{changed}\\n\\nReturn JSON.\",\n+        changed_passage = passage[:a0] + wrong + passage[b0:]\n+        chk = call(VOCAB_CHECK_SYS, f\"[Passage]\\n{changed_passage}\\n\\n[Changed sentence]\\n{changed}\\n\\nReturn JSON.\",\n                    max_tokens=160, t=0.0) or {}\n         trace.append({\"stage\": \"vocab_check\", \"changed\": changed, **{x: chk.get(x) for x in (\"grammatical\", \"makes_sense\")}})\n         if chk.get(\"grammatical\") is False or chk.get(\"makes_sense\") is True:\n"
+  },
+  "grades": {
+    "18번|vocab": "O",
+    "21번|vocab": "O",
+    "22번|vocab": "X",
+    "23번|vocab": "O",
+    "24번|vocab": "O",
+    "25번|vocab": "X",
+    "26번|vocab": "F",
+    "27번|vocab": "P",
+    "28번|vocab": "F",
+    "30번|vocab": "P",
+    "31번|vocab": "O",
+    "32번|vocab": "O",
+    "33번|vocab": "P",
+    "34번|vocab": "P",
+    "35번|vocab": "F",
+    "38번|vocab": "O",
+    "39번|vocab": "O",
+    "44번|vocab": "O",
+    "18번|vocab|2": "P",
+    "21번|vocab|2": "O",
+    "22번|vocab|2": "X",
+    "23번|vocab|2": "O",
+    "24번|vocab|2": "P",
+    "25번|vocab|2": "O",
+    "26번|vocab|2": "F",
+    "27번|vocab|2": "O",
+    "28번|vocab|2": "O",
+    "30번|vocab|2": "P",
+    "31번|vocab|2": "O",
+    "32번|vocab|2": "O",
+    "33번|vocab|2": "P",
+    "34번|vocab|2": "P",
+    "35번|vocab|2": "F",
+    "38번|vocab|2": "O",
+    "39번|vocab|2": "P",
+    "44번|vocab|2": "O"
+  },
+  "notes": {
+    "18번|vocab": "모든 삶을 감시하는 수단과 ignored가 모순된다. controlled 교정과 해설의 전체 연결 적절.",
+    "21번|vocab": "이미 합법이던 종목을 banishing했다는 결과에 legalize가 반대된다. outlaw 교정과 직접 근거 타당.",
+    "22번|vocab": "선지 hinder가 틀린 것은 맞지만 해설은 실제 형태를 hindering으로 바꾸고 advancing으로 교정한다. 본문 to 뒤에 advancing을 넣으면 비문이므로 제시 교정답 자체가 틀리다.",
+    "23번|vocab": "있는 그대로 수용한 행동에 disdained가 반대이며 valued 교정·근거 맞다. 베루아라는 인명 표기는 어색하지만 같은 인물을 가리키고 논지·의미를 바꾸지는 않아 감점하지 않았다.",
+    "24번|vocab": "마차 소음이 사라져 침묵이 드러났다는 인과에 present가 반대된다. gone 교정과 설명 타당.",
+    "25번|vocab": "여전히 unknown인 전문가도 가능하다. 수정 후에도 명성과 경험을 같게 취급해 famous만 가능하다고 주장하며 해설은 교정어 번호도 ②로 혼동한다.",
+    "26번|vocab": "생성 실패. satisfaction 등 문맥상 말이 될 수 있는 변형을 거절했으나 유효한 문항 생성으로 이어지지 않았다.",
+    "27번|vocab": "sufferings→delights는 맞지만 New Year’s Eve를 새해 첫날로 잘못 옮긴다. 반복 간격 설명은 맞아도 인용된 상황의 사실 오류는 수정 필요.",
+    "28번|vocab": "생성 실패. forgiveness를 문맥상 성립 가능으로 거절했으나 열 번의 시도 안에 대체 문항을 만들지 못했다.",
+    "30번|vocab": "noisy→silent는 맞지만 해설 첫 문장에서 줄어든 대상을 고전음악의 인기가 아닌 찬반을 표현하던 행동으로 바꾼다. keeping noisy 결합도 문맥 외 단서를 준다.",
+    "31번|vocab": "빠른 거절이 고맙게 여겨진다는 내용에 worse가 반대된다. better 교정과 설명 타당.",
+    "32번|vocab": "곡물·식물을 먹었다는 새 증거는 육식에만 의존했다는 이론을 지지하지 않는다. supported→challenged 교정·근거 타당.",
+    "33번|vocab": "conflate A from B는 전치사 결합이 틀리다. distinguish로 고칠 수 있지만 문맥 어휘가 아니라 결합 문법만으로 정답을 고를 수 있어 형식 미달.",
+    "34번|vocab": "hindrance→help는 맞지만 enlisted the hindrance부터 부자연스럽다. 해설도 사람들의 방해를 요청한다를 사람들을 방해한다고 주체·목적을 뒤집는다.",
+    "35번|vocab": "생성 실패. 선택 단어 찾기와 문맥 검사 거절이 반복되어 문항을 반환하지 못했다.",
+    "38번|vocab": "편안한 개인 공간이 창의성에 도움이 된다는 근거에 worse가 반대된다. better 교정과 해설 충분.",
+    "39번|vocab": "이해하지 못한 학습을 즉시 고칠 버그로 비유하는 문맥에 ignore가 부적절하다. understand 교정과 최종 해설의 조건 관계가 맞다.",
+    "44번|vocab": "여러 연관성으로 학습 효율을 높이는 예시에서 forget은 retain으로 고쳐야 한다. 인과와 해설 맞다.",
+    "18번|vocab|2": "trust 교정은 맞지만 distrust that절 결합 자체가 부자연스러운 정답 단서다. 수정 전 동일 결함과 같은 기준 적용.",
+    "21번|vocab|2": "49개 주의 금지와 나머지 주의 예외에 illegal가 반대된다. legal 교정·근거 맞다. 계투 표기는 닭싸움의 논지를 바꾸지 않는 오기.",
+    "22번|vocab|2": "hinder 정답은 맞지만 교정어를 advancing이라고 제시하여 to advancing이라는 비문이 된다. 친구들이 직업 전망을 해친다고 오해한다는 설명도 원문에 없다.",
+    "23번|vocab|2": "편견 없이 대했다는 태도와 without acceptance는 반대된다. prejudice 교정과 전체 수용의 결론이 맞다. 두 acceptance는 서로 다른 문맥 위치이므로 복수정답을 만들지 않는다.",
+    "24번|vocab|2": "present→gone은 맞지만 해설은 이전에 소음이 있었으므로 없어졌다는 결론만 반복한다. 원문의 침묵·당혹감이라는 소음 소멸 근거를 빠뜨려 교정 이유가 성립하지 않는다.",
+    "25번|vocab|2": "Watch your step 경고와 careless가 모순된다. careful 교정·전문가의 주의 환기 설명 적절.",
+    "26번|vocab|2": "생성 실패. fragile use 등 말이 되는 비교 또는 형태 부적합 변형으로 유효 문항을 반환하지 못했다.",
+    "27번|vocab|2": "실제 문항 마지막 문장의 습관화 효과가 persist한다는 말은 충분한 간격으로 효과가 사라진다는 내용과 모순. disappear 교정 타당. trace는 같은 어간의 첫 문장을 검사하는 위치 불일치가 있다.",
+    "28번|vocab|2": "해석이 서로 같지 않으므로 연기가 identical이 아니라 unique. 교정과 직접 근거 적절.",
+    "30번|vocab|2": "silent 교정은 맞지만 해설이 quietly라는 부사를 같은 자리에 대응시켜 keep quietly라는 잘못된 학습 단서를 준다. keeping noisy도 문맥 외 결합 단서가 있다.",
+    "31번|vocab|2": "거절을 빨리 명확히 하면 양측에 도움이 된다는 문맥에서 worse→better. 해설의 인과 적절.",
+    "32번|vocab|2": "치아에서 익힌 곡물이 발견됐다는 근거로 ignored가 아니라 cooked. 해설의 앞/뒤 지칭은 부정확하나 인용한 핵심 증거와 교정은 맞다.",
+    "33번|vocab|2": "conflate A from B는 결합 문법 오류여서 문맥 어휘 문제로 부적합하다. distinguish 교정 자체는 맞다.",
+    "34번|vocab|2": "hindrance→help는 맞지만 enlisted the hindrance는 결합만으로 부자연스러워 정답이 드러난다. 수정 전 held free 등과 같은 변별력 기준 적용.",
+    "35번|vocab|2": "생성 실패. identical 등 성립 가능한 치환을 거절하고도 열 번 안에 유효 문항을 생성하지 못했다.",
+    "38번|vocab|2": "편안한 개인 공간의 창의성 이익을 말하는 결론에 suppress가 반대. generate 교정과 해설 맞다.",
+    "39번|vocab|2": "ignore→understand는 맞지만 fifty라는 수치를 다섯 어휘 중 하나로 사용한다. 해설의 끝도 이해하지 못함과 무시함을 혼동해 핵심 조건을 흐린다.",
+    "44번|vocab|2": "학습 방법 개선으로 정보를 더 잘 기억한다는 결론에 inefficiency가 반대된다. efficiency 교정·근거 적절."
+  },
+  "review_material": {
+    "18번|vocab": {
+      "blanked": "In George Orwell's novel 1984, Big Brother ①ignored every individual by keeping watch on every aspect of their life. Today, there is an even more ②threatening Big Brother hiding in the shadows: the search engine. We ③pour our secrets into the all-powerful search engine through the tens of millions of questions we enter daily. Search engines know more about our habits, our interests, and our desires than our friends, our loved ones, and our doctor combined. But unlike Big Brother in 1984, this one is very real. We have to ④trust that it will not spill our secrets, but it's a trust that has repeatedly been ⑤betrayed.",
+      "options": [
+        "① ignored",
+        "② threatening",
+        "③ pour",
+        "④ trust",
+        "⑤ betrayed"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 지문은 오웰의 소설 속 빅브라더가 개인의 삶을 감시하며 통제하는 모습을 묘사합니다. 앞문장인 'keeping watch on every aspect of their life(삶의 모든 측면을 감시하며)'의 맥락상, 빅브라더가 개인을 '무시하다(ignored)'는 표현은 문맥과 모순됩니다. 빅브라더의 본질은 감시와 통제가므로, 'ignored'는 문맥상 적절한 낱말이 아니며 'controlled' 등으로 고쳐져야 합니다. 나머지 ②threatening(위협적인), ③pour(쏟아붓다), ④trust(신뢰하다), ⑤betrayed(배신당하다)는 모두 검색 엔진의 위험성과 우리의 신뢰 관계를 설명하는 문맥에 부합하여 적절하게 사용되었습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|vocab": {
+      "blanked": "Cockfighting is an organized fight between two roosters that are placed in a pit to fight each other. This bloody sport had already been ①banned in forty-nine states. Louisiana was the only state where cockfighting remained ②legal because chickens were not defined as animals according to state law. Last week we achieved a great success. The state of Louisiana voted to ③legalize cockfighting and succeeded in banishing the ④cruel sport. This victory represents a ⑤historic achievement for the animal rights movement, which has fought long and hard to ban cockfighting throughout the country.",
+      "options": [
+        "① banned",
+        "② legal",
+        "③ legalize",
+        "④ cruel",
+        "⑤ historic"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 앞문장에서 루이지애나주가 닭싸움을 합법화(legalize)했다고 언급한 뒤, 뒤이어 '성공적으로 박멸(banishing)했다'고 기술하고 있으므로, 문맥상 닭싸움을 금지하는 의미의 'outlaw'가 적절합니다. 'legalize(합법화)'는 문맥과 정반대이므로 오류입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|vocab": {
+      "blanked": "I am a mature student who has just ①completed a part-time degree course in History and Sociology. I enjoyed every moment of it, learning for learning's sake and gaining wonderful knowledge of the humanities and many other subjects. However, whenever I talked with friends about my studies, they would ②invariably ask me, \"So what are you going to do with your degree? What's it for?\" I tried to explain that I did it because I love learning and want to expand my knowledge about the world, but nobody seemed to understand that. They would ③persist and say that I must use it somehow to ④hinder my job prospects, or it would be a waste of time. It's a ⑤shame they don't understand that education and knowledge for its own sake is never wasted.",
+      "options": [
+        "① completed",
+        "② invariably",
+        "③ persist",
+        "④ hinder",
+        "⑤ shame"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 문맥상 친구들이 학위가 직업 전망에 부정적인 영향을 미친다고 주장한다고 서술하고 있습니다. hindering은 '방해하다'는 뜻으로, 학위가 직업 전망을 방해한다는 의미는 논리적으로 어색합니다. 앞선 문장에서 친구들이 학위의 실용성을 묻는 부정적인 시각을 보이고 있으므로, hindering은 문맥상 적합하지 않습니다. 올바른 표현은 직업 전망을 '향상시키다'를 의미하는 advancing이어야 합니다. 따라서 hindering을 advancing으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|vocab": {
+      "blanked": "Remember, in Beauty and the Beast, Beauty did not need the Beast to ①change. She took him as he was, and ②disdained him for his good qualities. She did not try to make a prince out of a monster. She did not say, \"I'll be happy when he's not an animal anymore.\" She did not pity him for being what he was or try to change him. And therein lies the lesson. Because she treated him without any ③prejudice, he was ④freed to become his own best self. That his true self just happened to be a handsome prince shows symbolically that she was rewarded greatly when she practiced ⑤acceptance. Her reward was a rich and fulfilling life with the prince.",
+      "options": [
+        "① change",
+        "② disdained",
+        "③ prejudice",
+        "④ freed",
+        "⑤ acceptance"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 지문에서 베루아는 비스트를 있는 그대로 받아들이며 그의 좋은 qualities를 인정했으므로, 부정적 의미의 disdained(경멸하다)는 문맥에 맞지 않습니다. 앞문장 'She took him as he was'와 뒤문장 'he was freed to become his own best self'에서 알 수 있듯, 그녀는 그를 가치 있게 여겼으므로 disdained는 valued로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|vocab": {
+      "blanked": "The nineteenth-century European railway carriage placed its six to eight passengers in a compartment where they ①faced one another. This kind of seating plan was derived from the large horse-drawn coaches of earlier times. When it first appeared as train seating, this arrangement ②provoked a sense of \"the embarrassment of people facing each other in silence,\" for now the cover of noise in the horse-drawn carriages was ③present. Then, the American railroad carriage,  developed in the 1840s, put its passengers in a position which made it possible to be left ④alone in silence. Without compartments, all the passengers in the American railroad carriages looked forward, ⑤staring at one another's backs rather than faces. So one could cross the North American continent without having to say a word to anyone.",
+      "options": [
+        "① faced",
+        "② provoked",
+        "③ present",
+        "④ alone",
+        "⑤ staring"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 앞문장에서는 승객들이 서로 마주 보며 침묵으로 인한 당혹감을 느꼈다고 설명하며, 이어지는 문장에서 'now the cover of noise in the horse-drawn carriages was ___'라고 하여, 이전의 마차에는 존재하던 소음의 가려짐(cover of noise)이 이제 어떻게 되었는지 설명합니다. 마차 시대의 소음 가려짐이 사라졌기 때문에 새로운 철도 좌석 배치에서 당혹감이 유발되었다는 맥락이므로, 'present(존재하는)'은 문맥상 적절하지 않습니다. 소음의 가려짐이 'gone(사라진/없어진)' 상태였어야 하므로, ③의 낱말은 gone으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "25번|vocab": {
+      "blanked": "A man who was ①unknown as a tree climber was guiding someone in climbing a tall tree. He ordered the man to cut the top branches, and during this time, when the man seemed to be in great ②danger, the expert said nothing. Only when the man was coming down and had reached the height of the eaves did the expert call out, \"Be ③careful! Watch your step coming down!\" I asked him, \"Why did you say that? At that height he could jump the rest of the way down if he chose.\" \"That's the point,\" said the expert. \"As long as the man was up at a dizzying height and the branches were threatening to break, he was so careful I said nothing. ④Mistakes are always made when you feel you are ⑤safe.\"",
+      "options": [
+        "① unknown",
+        "② danger",
+        "③ careful",
+        "④ Mistakes",
+        "⑤ safe"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 지문은 나무 타기 전문가가 초보자를 지도하는 상황을 묘사합니다. 전문가가 '높은 곳에서는 조심해야 한다'고 강조하며, 내려올 때만 경고를 주는 이유를 설명하는 맥락에서, 그는 나무 타기에 있어 ①unknown(알려지지 않은)이 아니라 오히려 명성이 높거나 경험이 풍부한 ②famous(유명한) 전문가로 소개되어야 문맥이 자연스럽습니다. 나머지 ②danger, ③careful, ④Mistakes, ⑤safe는 각각 위험, 조심, 실수, 안전이라는 의미로 문맥상 적절하게 사용되었습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "26번|vocab": {
+      "blanked": null,
+      "options": [],
+      "answer": null,
+      "explanation": null,
+      "error": "풀 만한 문항을 만들지 못했습니다(시도 0번 모두 모의 풀이 실패) — 다시 생성해 주세요",
+      "warnings": []
+    },
+    "27번|vocab": {
+      "blanked": "Wonderful things are especially ①wonderful the first time they happen, but their wonderfulness ②disappears with repetition. When we have an experience on successive occasions, we quickly begin to ③adapt to it, and the experience produces less pleasure each time. Psychologists call this habituation. One way to beat habituation is to increase the amount of time that separates repetitions of the experience. Clinking champagne glasses would be a relatively ④dull exercise if it happened every evening. However, if one does it on New Year's Eve and then allows a full year to pass before doing it again, the experience will offer endless ⑤sufferings. A year is long enough for the effects of habituation to disappear.",
+      "options": [
+        "① wonderful",
+        "② disappears",
+        "③ adapt",
+        "④ dull",
+        "⑤ sufferings"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 반복으로 인한 즐거움의 감소(habituation)를 설명하며, 새해 첫날 샴페인 잔을 부딪는 행위가 매일이면 지루할(dull) 수 있지만, 일 년 간격으로 반복할 때는 끝없는 즐거움(delights)을 준다고 서술합니다. 따라서 문맥상 '고통(sufferings)'이 아닌 '즐거움'을 의미하는 단어가 필요하므로, ⑤ sufferings를 delights로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "28번|vocab": {
+      "blanked": null,
+      "options": [],
+      "answer": null,
+      "explanation": null,
+      "error": "풀 만한 문항을 만들지 못했습니다(시도 0번 모두 모의 풀이 실패) — 다시 생성해 주세요",
+      "warnings": []
+    },
+    "30번|vocab": {
+      "blanked": "In the old days, when classical music was pop music, audiences openly ①approved (or disapproved) of a performance of a piece of music while it was being played. However, the popularity of classical music has ②declined because it got too holy for the audience to express responses. If Beethoven were alive today, he would be ③surprised to see the audience keeping ④noisy while his works were being played. Fortunately, as orchestras try to get lost audiences back into the concert halls, this stuffy atmosphere is slowly ⑤changing. For example, conductors, who have been mute on stage, now speak from the podium sometimes.",
+      "options": [
+        "① approved",
+        "② declined",
+        "③ surprised",
+        "④ noisy",
+        "⑤ changing"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 지문은 고전 음악 청중의 반응 변화를 다루며, 과거에는 공연 중 찬반을 표현하던 ①approved 것이 음악이 너무 신성시되며 ②declined해졌다고 설명합니다. 이어지는 문장 'If Beethoven were alive today, he would be ③surprised to see the audience keeping ___ while his works were being played'에서 베토벤이 놀랄 만한 상황은 공연 중 소음을 내는 것이 아니라, 오히려 침묵하는 것입니다. 이는 앞선 문맥에서 음악이 'too holy'해져 반응을 표현하지 못하게 된 점과 연결되며, 뒤이어 'stuffy atmosphere'가 'changing'한다고 하여 현재는 조금씩 변하고 있음을 시사합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|vocab": {
+      "blanked": "For most people, it's saying \"no\" that's really ①hard. We don't like to say \"no\" ― and people don't like to hear it. However, we should not ②postpone delivering bad news. When it comes to rejection, a quick response is almost always ③appreciated. The sooner you can finish it, the ④worse both parties feel. Leaving the door open doesn't help, either. Responding to an email request with an absolute \"There's just no way I can do that, but good luck\" is a greater ⑤favor than answering with a \"Maybe\" that's never going to happen.",
+      "options": [
+        "① hard",
+        "② postpone",
+        "③ appreciated",
+        "④ worse",
+        "⑤ favor"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 'The sooner you can finish it, the ___ both parties feel.'에서 더 빨리 거절을 처리할수록 상대방이 느끼는 감정이 어떻게 되는지 묻고 있습니다. 앞문장에서 'quick response는 almost always appreciated(감사받는다)'라고 긍정적으로 평가했으므로, 빨리 끝낼수록 더 좋은(better) 결과가 나옵니다. 따라서 'worse(더 나쁜)'는 문맥상 적절하지 않으며 'better'으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|vocab": {
+      "blanked": "New research has shown that Neanderthals ①cooked and ate grains and plants. American researchers came to that conclusion after they had found cooked grains and plants in the teeth of preserved Neanderthal specimens. Their diet was more ②varied than previously thought. Before, Neanderthals were widely believed to be great meat eaters. Some had believed that they had gone ③extinct when the Ice Age began because they relied on meat. Now, the new evidence has ④supported this theory. Although grains had been found at Neanderthal sites before, it wasn't known whether they were cultivated for food or perhaps for some other reason. The new findings show that the food was actually being ⑤consumed as it was found in the mouth of a Neanderthal.",
+      "options": [
+        "① cooked",
+        "② varied",
+        "③ extinct",
+        "④ supported",
+        "⑤ consumed"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장에서는 네안데르탈인이 고기만 먹어 빙하기 때 멸종했다는 기존 이론을 소개하고, 뒤문장에서는 새로운 증거가 그 이론을 어떻게 다루는지 설명합니다. 새로운 증거는 네안데르탈인이 곡물을 섭취했다는 것을 보여주므로, 이는 고기만 먹었다는 기존 주장을 반박하거나 도전하는 것입니다. 따라서 '지원하다(supported)'가 아닌 '도전하다(challenged)'가 문맥상 적절합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "33번|vocab": {
+      "blanked": "In a memory process called \"①abstraction,\" you store what a message means but not the exact words or sentence ②structure. You may think you have recalled a conversation correctly, but commonly you store its general meaning. Another source of error is when you ③combine various facts together in your memory. Once you do this, you cannot ④conflate your thoughts from what you actually experienced, and you can't recall the original exactly. This phenomenon is particularly important when you are claiming you had a verbal agreement with someone and you each remember that agreement differently. Your memory could be wrong, just as the other party's could be, but you each are equally ⑤certain that you are right.",
+      "options": [
+        "① abstraction",
+        "② structure",
+        "③ combine",
+        "④ conflate",
+        "⑤ certain"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 문맥상 'conflate'는 '혼합하다, 합치다'라는 뜻으로, 앞문장에서 기억이 왜곡되는 과정을 설명한 후 '이렇게 하면 실제 경험한 것과 생각한 것을 ④conflate할 수 없고, 원래의 내용을 정확히 기억할 수 없다'고 서술하고 있습니다. 그러나 'conflate'는 이미 결합된 상태를 의미하므로 '실제 경험과 생각을 구분하지 못한다'는 부정적 맥락과 모순됩니다. 앞뒤 맥락인 'cannot ~ your thoughts from what you actually experienced'와 'recall the original exactly'를 고려할 때, 실제 경험과 기억을 '구별하지(distinguish)' 못한다는 의미가 적절하므로 'conflate'는 'distinguish'으로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|vocab": {
+      "blanked": "A few years ago I ①created a home study course for treating anxiety and depression. To test the course, we enlisted the ②hindrance of ninety people to take part in a pilot program. The results were ③astounding: as I expected, most of the individuals experienced ④significant improvement in their levels of anxiety and depression. But that's not all. A number of the people told us that by following the twelve-week program, they also lost twenty to thirty pounds. This ⑤surprising result showed me that when people help their brains, they help their bodies.",
+      "options": [
+        "① created",
+        "② hindrance",
+        "③ astounding",
+        "④ significant",
+        "⑤ surprising"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 지문에서 'ninety people to take part in a pilot program'이라는 문맥을 살펴보면, 불안과 우울증을 치료하기 위한 홈 스터디 코스를 테스트하기 위해 90명의 사람들에게 도움을 요청했다는 의미입니다. 따라서 'enlisted the hindrance'는 문맥상 어색하며, 'enlisted the help'(도움을 받다/요청하다)로 고쳐져야 합니다. hindrance는 '방해'라는 뜻으로, 프로그램을 테스트하기 위해 사람들을 방해했다는 것은 논리적으로 맞지 않습니다. 나머지 ① created(만들다), ③ astounding(놀라운), ④ significant(현저한), ⑤ surprising(놀라운)은 모두 문맥에 부합하는 올바른 단어 사용입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|vocab": {
+      "blanked": null,
+      "options": [],
+      "answer": null,
+      "explanation": null,
+      "error": "풀 만한 문항을 만들지 못했습니다(시도 0번 모두 모의 풀이 실패) — 다시 생성해 주세요",
+      "warnings": []
+    },
+    "38번|vocab": {
+      "blanked": "In most offices, the phone is constantly ringing, people are stopping by, and it is ①impossible to focus on one problem. I have always found it ②hard to be creative in a doorless office. In such an office, we cannot stare into space for a long time, pace the floor, or lie down for a few minutes. However, all of these things I do regularly when I am coming up with an idea behind closed doors. For me ─ and I believe for most people ─ the generation of ideas is closely linked to physical ③comfort. Allowing employees to occasionally work from home or a private space will ④generate ⑤worse ideas and results.",
+      "options": [
+        "① impossible",
+        "② hard",
+        "③ comfort",
+        "④ generate",
+        "⑤ worse"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 앞 문장에서 저자는 폐쇄된 공간에서 아이디어를 생각해낼 때 신체적 ③comfort가 중요하다고 강조하며, 사적인 공간에서 일하는 것이 창의성에 도움이 된다는 긍정적 맥락을 유지하고 있습니다. 그러나 ⑤ worse는 '더 나쁜'이라는 부정적 의미를 지녀, 사적 공간 활용이 아이디어의 질을 낮춘다는 모순된 결론을 초래합니다. 문맥상 창의성과 결과의 질이 향상된다는 긍정적 어휘가 필요하므로, 부정적 형용사 worse를 긍정적 형용사 better로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|vocab": {
+      "blanked": "In software development it's well known that bugs should be fixed as soon as possible after they're ①identified. Waiting to fix a bug toward the end of a project can take fifty times as much effort as it would take to fix the bug the first time it was noticed. Failing to learn what you're supposedly taught each day is a ②serious bug. If you don't ③ignore something you were taught in class today, treat it as a bug that must be fixed as soon as possible. Do not ④put it off. Do not pile new material on top of it. If you don't understand a word, a concept, or a lesson, then drop everything and do whatever it takes to learn it before you ⑤continue on.",
+      "options": [
+        "① identified",
+        "② serious",
+        "③ ignore",
+        "④ put",
+        "⑤ continue"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 앞문장인 'Failing to learn what you're supposedly taught each day is a serious bug'에서 학습하지 않는 것을 버그로 비유하며, 이어지는 문장에서는 'If you don't ③ignore something you were taught in class today'라고 하여 배운 것을 무시하지 말라고 합니다. 그러나 문맥상 수업에서 배운 내용을 무시하는 것이 아니라, 이해하지 못한 내용을 바로 해결해야 한다는 의미이므로 'ignore(무시하다)'는 문맥상 적절하지 않습니다. 이는 'understand(이해하다)'로 고쳐져야 합니다. 즉, 수업 내용을 이해하지 못했다면 그것을 버그로 간주하고 즉시 해결해야 한다는 논리가 성립합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "44번|vocab": {
+      "blanked": "For years, the rules of good studying habits have remained ①consistent. Teachers and parents say, \"Find a quiet work place, stay focused, and stick to a schedule.\" Now, however, many scientists are finding that the results of actual school exams are ②contradicting some of these well-known approaches to learning. For example, studying in multiple locations has been proven to actually help the brain ③forget information because changing settings forces the brain to make multiple associations with the same material. Along with location, scientists also found that ④varying the type of material studied in one setting can leave a deeper impression. Next time, when you make a study plan, don't stick to previous rules. Instead, try to find your own way to raise the ⑤efficiency of your studying.",
+      "options": [
+        "① consistent",
+        "② contradicting",
+        "③ forget",
+        "④ varying",
+        "⑤ efficiency"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 앞문장에서는 여러 장소에서 공부하는 것이 실제로 뇌에 도움이 된다고 언급하며, 뒤이유로 'changing settings forces the brain to make multiple associations with the same material'라고 설명합니다. 즉, 환경을 바꾸면 뇌가 동일한 자료에 대해 여러 연관성을 만들게 된다는 뜻이므로, 뇌가 정보를 'forget'(잊다)하는 것이 아니라 'retain'(기억하다/유지하다)하는 것이 맞습니다. 문맥상 반대되는 의미이므로 ③이 적절하지 않습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "18번|vocab|2": {
+      "blanked": "In George Orwell's novel 1984, Big Brother ①controlled every individual by keeping watch on every aspect of their life. Today, there is an even more ②threatening Big Brother hiding in the shadows: the search engine. We ③pour our secrets into the all-powerful search engine through the tens of millions of questions we enter daily. Search engines know more about our habits, our interests, and our desires than our friends, our loved ones, and our doctor combined. But unlike Big Brother in 1984, this one is very real. We have to ④distrust that it will not spill our secrets, but it's a trust that has repeatedly been ⑤betrayed.",
+      "options": [
+        "① controlled",
+        "② threatening",
+        "③ pour",
+        "④ distrust",
+        "⑤ betrayed"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장인 'Search engines know more about our habits...'에서 검색 엔진이 우리의 정보를 더 많이 안다는 점을 고려할 때, 뒤이어 'We have to ___ that it will not spill our secrets'라고 할 때, 부정적인 'distrust'가 아닌 긍정적인 'trust'가 문맥상 적절합니다. 즉, 검색 엔진이 비밀을 새지 않을 것이라고 '신뢰해야 한다'는 의미여야 하며, 이어지는 'but it's a trust that has repeatedly been betrayed'에서도 trust라는 단어가 반복되어 정답이 trust임을 명확히 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|vocab|2": {
+      "blanked": "Cockfighting is an organized fight between two roosters that are placed in a pit to fight each other. This bloody sport had already been ①banned in forty-nine states. Louisiana was the only state where cockfighting remained ②illegal because chickens were not defined as animals according to state law. Last week we achieved a great success. The state of Louisiana voted to ③outlaw cockfighting and succeeded in banishing the ④cruel sport. This victory represents a ⑤historic achievement for the animal rights movement, which has fought long and hard to ban cockfighting throughout the country.",
+      "options": [
+        "① banned",
+        "② illegal",
+        "③ outlaw",
+        "④ cruel",
+        "⑤ historic"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 지문에서 루이지애나주는 닭을 동물로 정의하지 않았기 때문에 다른 주들과 달리 계투가 여전히 합법적이었음을 나타냅니다. 앞문장인 'banned in forty-nine states'와 대비되는 문맥으로, 나머지 한 주에서는 해당 스포츠가 금지되지 않았다는 의미이므로 'illegal'은 문맥상 적절하지 않습니다. 따라서 'legal'으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|vocab|2": {
+      "blanked": "I am a mature student who has just ①completed a part-time degree course in History and Sociology. I enjoyed every moment of it, learning for learning's sake and gaining wonderful knowledge of the humanities and many other subjects. However, whenever I talked with friends about my studies, they would invariably ask me, \"So what are you going to do with your degree? What's it for?\" I tried to explain that I did it because I ②love learning and want to expand my knowledge about the world, but nobody seemed to understand that. They would ③persist and say that I must use it somehow to ④hinder my job prospects, or it would be a waste of time. It's a ⑤shame they don't understand that education and knowledge for its own sake is never wasted.",
+      "options": [
+        "① completed",
+        "② love",
+        "③ persist",
+        "④ hinder",
+        "⑤ shame"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장에서 친구들이 학위 취득 후 진로에 대해 묻는 것을 보면, 학위가 직업 전망에 부정적인 영향을 미친다고 오해하고 있음을 알 수 있습니다. hindering은 '방해하다'는 뜻으로 문맥상 어색하며, 학위가 직업 전망을 '향상시킨다'는 의미의 advancing이 적절합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|vocab|2": {
+      "blanked": "Remember, in Beauty and the Beast, Beauty did not need the Beast to ①change. She took him as he was, and ②valued him for his good qualities. She did not try to make a prince out of a monster. She did not say, \"I'll be happy when he's not an animal anymore.\" She did not pity him for being what he was or try to change him. And therein lies the lesson. Because she treated him without any ③acceptance, he was ④freed to become his own best self. That his true self just happened to be a handsome prince shows symbolically that she was rewarded greatly when she practiced ⑤acceptance. Her reward was a rich and fulfilling life with the prince.",
+      "options": [
+        "① change",
+        "② valued",
+        "③ acceptance",
+        "④ freed",
+        "⑤ acceptance"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 지문은 미녀가 야수에게 변화를 강요하지 않고 그의 본질을 있는 그대로 인정하며 사랑한 내용을 서술합니다. 앞선 문장들에서 She did not try to make a prince out of a monster(그를 괴물에서 왕자로 만들려 하지 않았다), She did not pity him(그를 불쌍히 여기지 않았다)라는 부정적 표현이 반복되며, 이는 편견이나 선입견 없이 대하는 태도를 강조합니다. 따라서 '그녀는 어떤 ③수용(acceptance) 없이 그를 대했다'는 문장은 문맥과 모순되므로, 원래 낱말인 'prejudice(편견)'로 고쳐져야 합니다. 그녀가 편견 없이 그를 대했기에 그는 자신의 최고의 모습으로 자유롭게 될 수 있었으며, 이는 그녀가 수용을 실천했을 때 큰 보상을 받았다는 결론과 일관됩니다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|vocab|2": {
+      "blanked": "The nineteenth-century European railway carriage placed its six to eight passengers in a compartment where they ①faced one another. This kind of seating plan was derived from the large horse-drawn coaches of earlier times. When it first appeared as train seating, this arrangement ②provoked a sense of \"the embarrassment of people facing each other in ③silence,\" for now the cover of noise in the horse-drawn carriages was ④present. Then, the American railroad carriage,  developed in the 1840s, put its passengers in a position which made it possible to be left alone in silence. Without compartments, all the passengers in the American railroad carriages looked ⑤forward, staring at one another's backs rather than faces. So one could cross the North American continent without having to say a word to anyone.",
+      "options": [
+        "① faced",
+        "② provoked",
+        "③ silence",
+        "④ present",
+        "⑤ forward"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장에서 'the cover of noise'가 있었다고 언급한 후, 이어지는 문장에서 'was ___'라고 설명하고 있으므로, 소리의 가림이 '없어진' 상태를 나타내는 'gone'이 적절합니다. 'present'(존재하는)를 사용하면 문맥상 모순이 발생하며, 소리의 가림이 사라졌다는 맥락에 맞게 'gone'으로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "25번|vocab|2": {
+      "blanked": "A man who was ①famous as a tree climber was guiding someone in climbing a tall tree. He ordered the man to cut the top branches, and during this time, when the man seemed to be in great ②danger, the expert said nothing. Only when the man was coming down and had reached the height of the eaves did the expert call out, \"Be ③careless! Watch your step coming down!\" I asked him, \"Why did you say that? At that height he could jump the rest of the way down if he chose.\" \"That's the point,\" said the expert. \"As long as the man was up at a dizzying height and the branches were threatening to break, he was so careful I said nothing. ④Mistakes are always made when you feel you are ⑤safe.\"",
+      "options": [
+        "① famous",
+        "② danger",
+        "③ careless",
+        "④ Mistakes",
+        "⑤ safe"
+      ],
+      "answer": "③",
+      "explanation": "③이 정답입니다. 지문에서 전문가가 내려오는 사람에게 한 말은 'Be careful! Watch your step coming down!'입니다. 앞문장인 'he was so careful I said nothing'에서 내려올 때 더 주의해야 한다는 맥락이 드러나므로, ③ careless는 문맥상 적절하지 않아 careful로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "26번|vocab|2": {
+      "blanked": null,
+      "options": [],
+      "answer": null,
+      "explanation": null,
+      "error": "풀 만한 문항을 만들지 못했습니다(시도 0번 모두 모의 풀이 실패) — 다시 생성해 주세요",
+      "warnings": []
+    },
+    "27번|vocab|2": {
+      "blanked": "Wonderful things are especially wonderful the first time they happen, but their wonderfulness ①disappears with repetition. When we have an experience on successive occasions, we quickly begin to ②adapt to it, and the experience produces less pleasure each time. Psychologists call this habituation. One way to beat habituation is to increase the amount of time that separates repetitions of the experience. Clinking champagne glasses would be a relatively ③dull exercise if it happened every evening. However, if one does it on New Year's Eve and then allows a full year to pass before doing it again, the experience will offer endless ④delights. A year is long enough for the effects of habituation to ⑤persist.",
+      "options": [
+        "① disappears",
+        "② adapt",
+        "③ dull",
+        "④ delights",
+        "⑤ persist"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 문맥상 'habituation의 효과가 사라져야 한다'는 의미가 필요하므로, persist(계속되다)는 disappear(사라지다)로 고쳐야 합니다. 앞문장에서 'habituation을 이기는 방법'으로 '경험 사이의 시간을 늘리는 것'을 제시하고, 뒷문장에서 '1년은 충분히 길다'며 새로운 경험의 '끝없는 즐거움'을 준다고 설명합니다. 이는 습관화가 사라져 즐거움이 되돌아오는 상황을 묘사하므로, 효과가 '계속된다'는 persist는 문맥과 모순됩니다.",
+      "error": null,
+      "warnings": []
+    },
+    "28번|vocab|2": {
+      "blanked": "Actors do not ①become the characters they play. You can't, in ②reality, be anybody other than yourself. Neither can I. I can't be you, and you can't be me, and neither of us can be Hamlet. But both of us understand ③revenge in our own ways, and therein lies the secret of how you and I can play Hamlet. Our performances would be similar in that we both say Shakespeare's lines, but what you think makes Hamlet behave the way he does is not the same as what I think. That's why our acting is ④identical. The fun in acting is to play characters that are ⑤different from yourself because, when you do, you are telling an audience what you understand about this character.",
+      "options": [
+        "① become",
+        "② reality",
+        "③ revenge",
+        "④ identical",
+        "⑤ different"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장 'what you think... is not the same as what I think'에 따라 연기는 서로 다르다는 의미이므로 identical(일치하는)은 unique(독특한)로 고쳐야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "30번|vocab|2": {
+      "blanked": "In the old days, when classical music was pop music, audiences openly ①approved (or disapproved) of a performance of a piece of music while it was being played. However, the popularity of classical music has ②declined because it got too holy for the audience to express responses. If Beethoven were alive today, he would be ③surprised to see the audience keeping ④noisy while his works were being played. Fortunately, as orchestras try to get lost audiences back into the concert halls, this stuffy atmosphere is slowly ⑤changing. For example, conductors, who have been mute on stage, now speak from the podium sometimes.",
+      "options": [
+        "① approved",
+        "② declined",
+        "③ surprised",
+        "④ noisy",
+        "⑤ changing"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 지문은 과거 청중이 공연 중 반응을 openly 표현했으나, 고전 음악이 너무 신성시되며 청중이 반응을 표현하지 못해 인기가 declining했다고 설명합니다. 이어지는 문장에서 청중이 'noisy'하게 유지된다고 하면, 이는 '반응을 표현하지 못해 조용해진' 이전 상황과 모순됩니다. 따라서 정답은 'silent'로 바뀌어야 하며, 이는 'quietly'나 'still'과 같은 의미로 문맥상 적절합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|vocab|2": {
+      "blanked": "For most people, it's saying \"no\" that's really ①hard. We don't like to say \"no\" ― and people don't like to hear it. However, we should not ②postpone delivering bad news. When it comes to rejection, a quick response is almost always ③appreciated. The sooner you can finish it, the ④worse both parties feel. Leaving the door open doesn't help, either. Responding to an email request with an absolute \"There's just no way I can do that, but good luck\" is a greater ⑤favor than answering with a \"Maybe\" that's never going to happen.",
+      "options": [
+        "① hard",
+        "② postpone",
+        "③ appreciated",
+        "④ worse",
+        "⑤ favor"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장 'When it comes to rejection, a quick response is almost always appreciated'에서 거절 시 빠른 응답이 감사함을 받음을 언급하며, 이어지는 문장 'The sooner you can finish it, the ___ both parties feel.'는 그 결과를 설명합니다. 거절을 빨리 끝내면 상대방이 더 이상 기다리지 않아 기분이 나아지므로, 문맥상 'worse'가 아닌 'better'가 적절합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|vocab|2": {
+      "blanked": "New research has shown that Neanderthals ①ignored and ate grains and plants. American researchers came to that conclusion after they had found cooked grains and plants in the teeth of preserved Neanderthal specimens. Their diet was more ②varied than previously thought. Before, Neanderthals were widely believed to be great meat eaters. Some had believed that they had gone ③extinct when the Ice Age began because they relied on meat. Now, the new evidence has ④challenged this theory. Although grains had been found at Neanderthal sites before, it wasn't known whether they were cultivated for food or perhaps for some other reason. The new findings show that the food was actually being ⑤consumed as it was found in the mouth of a Neanderthal.",
+      "options": [
+        "① ignored",
+        "② varied",
+        "③ extinct",
+        "④ challenged",
+        "⑤ consumed"
+      ],
+      "answer": "①",
+      "explanation": "①이 정답입니다. 앞문장에서 'cooked grains'를 언급한 뒤, 뒤이어 'and ate grains and plants'라고 하여 Neanderthals가 곡물을 섭취했다는 사실을 강조하고 있습니다. 따라서 'ignored'(무시했다)는 문맥상 어색하며, 앞의 'cooked'와 대응되는 'ate'의 의미와 맞지 않습니다. 문맥상 'ignored'는 'cooked'로 고쳐져야 합니다. 다른 보기들은 문맥상 적절합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "33번|vocab|2": {
+      "blanked": "In a memory process called \"①abstraction,\" you store what a message means but not the exact words or sentence structure. You may think you have recalled a conversation correctly, but commonly you store its ②general meaning. Another source of error is when you ③combine various facts together in your memory. Once you do this, you cannot ④conflate your thoughts from what you actually experienced, and you can't recall the original exactly. This phenomenon is particularly important when you are claiming you had a verbal agreement with someone and you each remember that agreement differently. Your memory could be wrong, just as the other party's could be, but you each are equally ⑤certain that you are right.",
+      "options": [
+        "① abstraction",
+        "② general",
+        "③ combine",
+        "④ conflate",
+        "⑤ certain"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 문맥상 '실제로 경험한 것과 사고를 구별할 수 없다'는 부정의 의미를 나타내야 하므로, ④ conflate(혼합하다)는 distinguish(구별하다)로 고쳐져야 합니다. 앞문장에서 기억이 여러 사실을 결합하는 오류를 언급한 후, '그렇게 하면 실제 경험과 사고를 구별할 수 없고 원래 그대로 기억할 수 없다'는 논리가 이어지므로, 혼동한다는 의미의 conflate은 문맥상 부적절합니다. 나머지 ① abstraction(추상화), ② general(일반적인), ③ combine(결합하다), ⑤ certain(확신하는)은 모두 문맥에 맞게 적절히 사용되었습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|vocab|2": {
+      "blanked": "A few years ago I ①created a home study course for treating anxiety and depression. To test the course, we enlisted the ②hindrance of ninety people to take part in a pilot program. The results were ③astounding: as I expected, most of the individuals experienced ④significant improvement in their levels of anxiety and depression. But that's not all. A number of the people told us that by following the twelve-week program, they also ⑤lost twenty to thirty pounds. This surprising result showed me that when people help their brains, they help their bodies.",
+      "options": [
+        "① created",
+        "② hindrance",
+        "③ astounding",
+        "④ significant",
+        "⑤ lost"
+      ],
+      "answer": "②",
+      "explanation": "②가 정답입니다. 앞문장에서 'study course'를 만든 후, 이를 테스트하기 위해 90명의 참여자를 모집했다는 맥락을 볼 때, hindrance(방해)는 문맥상 부적절합니다. 프로그램의 성공적인 시범 운영을 위해 사람들의 '도움(help)'이 필요했으므로, hindrance는 help로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|vocab|2": {
+      "blanked": null,
+      "options": [],
+      "answer": null,
+      "explanation": null,
+      "error": "풀 만한 문항을 만들지 못했습니다(시도 0번 모두 모의 풀이 실패) — 다시 생성해 주세요",
+      "warnings": []
+    },
+    "38번|vocab|2": {
+      "blanked": "In most offices, the phone is constantly ringing, people are stopping by, and it is ①impossible to focus on one problem. I have always found it hard to be ②creative in a doorless office. In such an office, we cannot ③stare into space for a long time, pace the floor, or lie down for a few minutes. However, all of these things I do regularly when I am coming up with an idea behind closed doors. For me ─ and I believe for most people ─ the generation of ideas is closely linked to physical ④comfort. Allowing employees to occasionally work from home or a private space will ⑤suppress better ideas and results.",
+      "options": [
+        "① impossible",
+        "② creative",
+        "③ stare",
+        "④ comfort",
+        "⑤ suppress"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문은 개인 공간이나 재택근무가 창의적인 아이디어와 좋은 결과를 '생성'하는 데 도움이 된다고 주장합니다. 앞문장에서는 아이디어 생성이 신체적 편안함과 밀접하다고 언급하며, 마지막 문장은 이러한 유연한 근무 방식이 더 나은 아이디어와 결과를 '억압(suppress)'한다고 서술하고 있습니다. 그러나 문맥상 이러한 조치는 아이디어를 막는 것이 아니라 오히려 촉진하므로, 'suppress'는 'generate'로 고쳐져야 합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|vocab|2": {
+      "blanked": "In software development it's well known that bugs should be ①fixed as soon as possible after they're identified. Waiting to fix a bug toward the end of a project can take ②fifty times as much effort as it would take to fix the bug the first time it was noticed. Failing to learn what you're supposedly taught each day is a ③serious bug. If you don't ④ignore something you were taught in class today, treat it as a bug that must be fixed as soon as possible. Do not put it off. Do not pile new material on top of it. If you don't understand a word, a concept, or a lesson, then drop everything and do whatever it takes to learn it before you ⑤continue on.",
+      "options": [
+        "① fixed",
+        "② fifty",
+        "③ serious",
+        "④ ignore",
+        "⑤ continue"
+      ],
+      "answer": "④",
+      "explanation": "④가 정답입니다. 앞문장 'Failing to learn what you're supposedly taught each day is a serious bug'에서 배운 것을 학습하지 않는 것을 '심각한 버그'로 비유하고, 이어지는 문장 'If you don't ④ignore something you were taught in class today, treat it as a bug...'에서는 그 버그를 즉시 해결해야 한다고 강조합니다. 따라서 '무시하다(ignore)'가 아닌 '이해하다(understand)'가 문맥상 적절합니다. 버그를 무시하면 해결할 수 없기 때문입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "44번|vocab|2": {
+      "blanked": "For years, the rules of good studying habits have remained ①consistent. Teachers and parents say, \"Find a quiet work place, stay focused, and stick to a schedule.\" Now, however, many scientists are finding that the results of actual school exams are ②contradicting some of these well-known approaches to learning. For example, studying in multiple locations has been proven to actually help the brain ③retain information because changing settings forces the brain to make multiple associations with the same material. Along with location, scientists also found that ④varying the type of material studied in one setting can leave a deeper impression. Next time, when you make a study plan, don't stick to previous rules. Instead, try to find your own way to raise the ⑤inefficiency of your studying.",
+      "options": [
+        "① consistent",
+        "② contradicting",
+        "③ retain",
+        "④ varying",
+        "⑤ inefficiency"
+      ],
+      "answer": "⑤",
+      "explanation": "⑤가 정답입니다. 지문 앞부분에서는 'don't stick to previous rules'이라고 하여 기존의 규칙을 고수하지 말라고 권하고, 'Instead, try to find your own way'라고 하여 새로운 방법을 시도하라고 안내합니다. 이러한 맥락에서 학습의 '비효율성(inefficiency)'을 높이라는 표현은 문맥과 모순됩니다. 앞선 예시들에서 변경된 학습 방식이 뇌에 정보를 'retain'하거나 더 깊은 인상을 남긴다고 긍정적으로 서술한 점을 고려할 때, 마지막 문장은 학습의 '효율성(efficiency)'을 높이라는 의미로 이어져야 하므로 ⑤ inefficiency가 문맥상 적절하지 않습니다.",
+      "error": null,
+      "warnings": []
+    }
+  },
+  "generation_trace": {
+    "18번|vocab": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "controlled",
+          "threatening",
+          "pour",
+          "trust",
+          "betrayed"
+        ],
+        "wrong": "ignored"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In George Orwell's novel 1984, Big Brother ignored every individual by keeping watch on every aspect of their life.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "21번|vocab": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "banned",
+          "legal",
+          "outlaw",
+          "cruel",
+          "historic"
+        ],
+        "wrong": "legalized"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "This bloody sport had already been legalized in forty-nine states.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — banned → legalized"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "banned",
+          "legal",
+          "outlaw",
+          "cruel",
+          "historic"
+        ],
+        "wrong": "legalize"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The state of Louisiana voted to legalize cockfighting and succeeded in banishing the cruel sport.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "22번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "completed",
+          "invariably",
+          "persist",
+          "advance",
+          "shame"
+        ],
+        "wrong": "hinder"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "They would persist and say that I must use it somehow to hinder my job prospects, or it would be a waste of time.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "23번|vocab": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "change",
+          "valued",
+          "prejudice",
+          "freed",
+          "acceptance"
+        ],
+        "wrong": "disdained"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "She took him as he was, and disdained him for his good qualities.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "24번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — derived from"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "faced",
+          "provoked",
+          "gone",
+          "alone",
+          "staring"
+        ],
+        "wrong": "ignored"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The nineteenth-century European railway carriage placed its six to eight passengers in a compartment where they ignored one another.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — faced → ignored"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — possible to"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — derived from"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "faced",
+          "provoked",
+          "gone",
+          "alone",
+          "staring"
+        ],
+        "wrong": "present"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "When it first appeared as train seating, this arrangement provoked a sense of \"the embarrassment of people facing each other in silence,\" for now the cover of noise in the horse-drawn carriages was present.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "25번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "famous",
+          "danger",
+          "careful",
+          "Mistakes",
+          "safe"
+        ],
+        "wrong": "Successes"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "\"As long as the man was up at a dizzying height and the branches were threatening to break, he was so careful I said nothing. Successes are always made when you feel you are safe.\"",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — Mistakes → Successes"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "famous",
+          "danger",
+          "careful",
+          "Mistakes",
+          "safe"
+        ],
+        "wrong": "Successes"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "\"As long as the man was up at a dizzying height and the branches were threatening to break, he was so careful I said nothing. Successes are always made when you feel you are safe.\"",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — Mistakes → Successes"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['famous', 'danger', 'careful', 'safe', 'mistakes']"
+      },
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['famous', 'danger', 'careful', 'safe', 'mistakes']"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "famous",
+          "danger",
+          "careful",
+          "Mistakes",
+          "safe"
+        ],
+        "wrong": "unknown"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "A man who was unknown as a tree climber was guiding someone in climbing a tall tree.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "26번|vocab": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "anticipation",
+          "insensitive"
+        ],
+        "wrong": "actual"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Consumers buy the actual power of new objects rather than the power they actually use.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — potential → actual"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — thrown out"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — thrown out"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — thrown out"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "unsuitable"
+      },
+      {
+        "stage": "skip",
+        "reason": "관사 a/an 어긋남 — a unsuitable"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — insensitive to"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "thrown",
+          "serviceable",
+          "anticipation",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "satisfaction"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Consumers are more motivated by satisfaction than by operation.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — anticipation → satisfaction"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "thrown",
+          "serviceable",
+          "motivated",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "unsuitable"
+      },
+      {
+        "stage": "skip",
+        "reason": "관사 a/an 어긋남 — a unsuitable"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — insensitive to"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — insensitive to"
+      }
+    ],
+    "27번|vocab": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "wonderful",
+          "disappears",
+          "adapt",
+          "dull",
+          "delights"
+        ],
+        "wrong": "thrilling"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — dull → thrilling"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — adapt to"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "wonderful",
+          "disappears",
+          "adapt",
+          "dull",
+          "delights"
+        ],
+        "wrong": "sufferings"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "However, if one does it on New Year's Eve and then allows a full year to pass before doing it again, the experience will offer endless sufferings.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "28번|vocab": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "become",
+          "understand",
+          "unique",
+          "different",
+          "understand"
+        ],
+        "wrong": "ignore"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "But both of us ignore revenge in our own ways, and therein lies the secret of how you and I can play Hamlet.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — understand → ignore"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "avoid"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Actors do not avoid the characters they play.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — become → avoid"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "fiction"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "You can't, in fiction, be anybody other than yourself.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — reality → fiction"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "fantasy"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "You can't, in fantasy, be anybody other than yourself.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — reality → fantasy"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "common"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "That's why our acting is common.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — unique → common"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "remain"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Actors do not remain the characters they play.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — become → remain"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "fiction"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "You can't, in fiction, be anybody other than yourself.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — reality → fiction"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "forgiveness"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "But both of us understand forgiveness in our own ways, and therein lies the secret of how you and I can play Hamlet.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — revenge → forgiveness"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "fiction"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "You can't, in fiction, be anybody other than yourself.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — reality → fiction"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "forgiveness"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "But both of us understand forgiveness in our own ways, and therein lies the secret of how you and I can play Hamlet.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — revenge → forgiveness"
+      }
+    ],
+    "30번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "지문에서 못 찾음 — ['approved', 'declined', 'surprised', 'silently', 'changing']"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "approved",
+          "declined",
+          "surprised",
+          "silent",
+          "changing"
+        ],
+        "wrong": "noisy"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "If Beethoven were alive today, he would be surprised to see the audience keeping noisy while his works were being played.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "31번|vocab": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "hard",
+          "postpone",
+          "appreciated",
+          "better",
+          "favor"
+        ],
+        "wrong": "easy"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For most people, it's saying \"no\" that's really easy.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — hard → easy"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "hard",
+          "postpone",
+          "appreciated",
+          "better",
+          "favor"
+        ],
+        "wrong": "ignored"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "When it comes to rejection, a quick response is almost always ignored.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — appreciated → ignored"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "hard",
+          "postpone",
+          "appreciated",
+          "better",
+          "favor"
+        ],
+        "wrong": "worse"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The sooner you can finish it, the worse both parties feel.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "32번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — cultivated for"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "cooked",
+          "varied",
+          "extinct",
+          "challenged",
+          "consumed"
+        ],
+        "wrong": "supported"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Now, the new evidence has supported this theory.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "33번|vocab": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "abstraction",
+          "general",
+          "combine",
+          "distinguish",
+          "certain"
+        ],
+        "wrong": "unsure"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Your memory could be wrong, just as the other party's could be, but you each are equally unsure that you are right.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — certain → unsure"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "abstraction",
+          "distinguish",
+          "phenomenon",
+          "claiming",
+          "certain"
+        ],
+        "wrong": "denying"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "This phenomenon is particularly important when you are denying you had a verbal agreement with someone and you each remember that agreement differently.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — claiming → denying"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "abstraction",
+          "structure",
+          "combine",
+          "distinguish",
+          "certain"
+        ],
+        "wrong": "conflate"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Once you do this, you cannot conflate your thoughts from what you actually experienced, and you can't recall the original exactly.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "34번|vocab": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "created",
+          "help",
+          "astounding",
+          "significant",
+          "surprising"
+        ],
+        "wrong": "hindrance"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "To test the course, we enlisted the hindrance of ninety people to take part in a pilot program.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "35번|vocab": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — failed to"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — failed to"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "example"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In example, he dairy sectors in the Balkan countries have failed to develop despite quite a large amount of money channelled into them, because all their dairy farmers tried to make it on their own.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — contrast → example"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — failed to"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "disbanded"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For example, the dairy sectors in countries such as Denmark, the Netherlands, and Germany have become what they are today only because their farmers disbanded themselves, with state help, into cooperatives and jointly invested in processing facilities and overseas marketing.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — organized → disbanded"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "withdrew"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — invested → withdrew"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "withdrew"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — invested → withdrew"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "withdrew"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — invested → withdrew"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "cooperate",
+          "counterparts",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "similarity"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In similarity, he dairy sectors in the Balkan countries have failed to develop despite quite a large amount of money channelled into them, because all their dairy farmers tried to make it on their own.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — contrast → similarity"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — cooperate with"
+      }
+    ],
+    "38번|vocab": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "impossible",
+          "hard",
+          "comfort",
+          "generate",
+          "better"
+        ],
+        "wrong": "worse"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Allowing employees to occasionally work from home or a private space will generate worse ideas and results.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "39번|vocab": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "identified",
+          "serious",
+          "understand",
+          "put",
+          "continue"
+        ],
+        "wrong": "ignore"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "If you don't ignore something you were taught in class today, treat it as a bug that must be fixed as soon as possible.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "44번|vocab": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "consistent",
+          "contradicting",
+          "retain",
+          "varying",
+          "efficiency"
+        ],
+        "wrong": "forget"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For example, studying in multiple locations has been proven to actually help the brain forget information because changing settings forces the brain to make multiple associations with the same material.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "18번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "controlled",
+          "threatening",
+          "pour",
+          "trust",
+          "betrayed"
+        ],
+        "wrong": "distrust"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "We have to distrust that it will not spill our secrets, but it's a trust that has repeatedly been betrayed.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "21번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "banned",
+          "legal",
+          "outlaw",
+          "cruel",
+          "historic"
+        ],
+        "wrong": "illegal"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Louisiana was the only state where cockfighting remained illegal because chickens were not defined as animals according to state law.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "22번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "completed",
+          "love",
+          "persist",
+          "advance",
+          "shame"
+        ],
+        "wrong": "pity"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "It's a pity they don't understand that education and knowledge for its own sake is never wasted.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — shame → pity"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "completed",
+          "love",
+          "persist",
+          "advance",
+          "shame"
+        ],
+        "wrong": "hinder"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "They would persist and say that I must use it somehow to hinder my job prospects, or it would be a waste of time.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "23번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "change",
+          "valued",
+          "prejudice",
+          "freed",
+          "acceptance"
+        ],
+        "wrong": "acceptance"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Because she treated him without any acceptance, he was freed to become his own best self.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "24번|vocab|2": [
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — possible to"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — derived from"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "faced",
+          "provoked",
+          "gone",
+          "alone",
+          "staring"
+        ],
+        "wrong": "ignored"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The nineteenth-century European railway carriage placed its six to eight passengers in a compartment where they ignored one another.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — faced → ignored"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "faced",
+          "provoked",
+          "gone",
+          "possible",
+          "staring"
+        ],
+        "wrong": "ignored"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The nineteenth-century European railway carriage placed its six to eight passengers in a compartment where they ignored one another.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — faced → ignored"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "faced",
+          "provoked",
+          "silence",
+          "gone",
+          "forward"
+        ],
+        "wrong": "present"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "When it first appeared as train seating, this arrangement provoked a sense of \"the embarrassment of people facing each other in silence,\" for now the cover of noise in the horse-drawn carriages was present.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "25번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "famous",
+          "danger",
+          "careful",
+          "Mistakes",
+          "safe"
+        ],
+        "wrong": "safety"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "He ordered the man to cut the top branches, and during this time, when the man seemed to be in great safety, the expert said nothing.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — danger → safety"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "famous",
+          "danger",
+          "careful",
+          "Mistakes",
+          "safe"
+        ],
+        "wrong": "careless"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Only when the man was coming down and had reached the height of the eaves did the expert call out, \"Be careless! Watch your step coming down!\"",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "③",
+        "picked": "③",
+        "also": []
+      }
+    ],
+    "26번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "actual"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Consumers buy the actual power of new objects rather than the power they actually use.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — potential → actual"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "fragile"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Getting the latest thing is more important than making fragile use of it.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — durable → fragile"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "actual"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Consumers buy the actual power of new objects rather than the power they actually use.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — potential → actual"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "anticipation",
+          "insensitive"
+        ],
+        "wrong": "unsuitable"
+      },
+      {
+        "stage": "skip",
+        "reason": "관사 a/an 어긋남 — a unsuitable"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "fragile"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Getting the latest thing is more important than making fragile use of it.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — durable → fragile"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — insensitive to"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "useless"
+      },
+      {
+        "stage": "skip",
+        "reason": "관사 a/an 어긋남 — a useless"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — insensitive to"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "thrown",
+          "serviceable",
+          "potential",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "unsuitable"
+      },
+      {
+        "stage": "skip",
+        "reason": "관사 a/an 어긋남 — a unsuitable"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "thrown",
+          "serviceable",
+          "motivated",
+          "durable",
+          "insensitive"
+        ],
+        "wrong": "fragile"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Getting the latest thing is more important than making fragile use of it.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — durable → fragile"
+      }
+    ],
+    "27번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "wonderful",
+          "repetition",
+          "adapt",
+          "dull",
+          "delights"
+        ],
+        "wrong": "scarcity"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Wonderful things are especially wonderful the first time they happen, but their wonderfulness disappears with scarcity.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — repetition → scarcity"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — adapt to"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — adapt to"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "wonderful",
+          "disappears",
+          "adapt",
+          "repetitions",
+          "delights"
+        ],
+        "wrong": "terrible"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Wonderful things are especially terrible the first time they happen, but their wonderfulness disappears with repetition.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "②",
+        "also": []
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — disappears with"
+      },
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "disappears",
+          "adapt",
+          "dull",
+          "delights",
+          "disappear"
+        ],
+        "wrong": "persist"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Wonderful things are especially wonderful the first time they happen, but their wonderfulness persists with repetition.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "28번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "remain"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Actors do not remain the characters they play.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — become → remain"
+      },
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "become",
+          "reality",
+          "understand",
+          "unique",
+          "different"
+        ],
+        "wrong": "remain"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Actors do not remain the characters they play.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — become → remain"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "become",
+          "reality",
+          "revenge",
+          "unique",
+          "different"
+        ],
+        "wrong": "identical"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "That's why our acting is identical.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "30번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "approved",
+          "declined",
+          "holy",
+          "silent",
+          "stuffy"
+        ],
+        "wrong": "increased"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "However, the popularity of classical music has increased because it got too holy for the audience to express responses.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — declined → increased"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — holy for"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — holy for"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "approved",
+          "declined",
+          "surprised",
+          "silent",
+          "changing"
+        ],
+        "wrong": "noisy"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "If Beethoven were alive today, he would be surprised to see the audience keeping noisy while his works were being played.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "31번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "hard",
+          "postpone",
+          "appreciated",
+          "better",
+          "favor"
+        ],
+        "wrong": "worse"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "The sooner you can finish it, the worse both parties feel.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "32번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 0,
+        "items": [
+          "cooked",
+          "varied",
+          "extinct",
+          "challenged",
+          "consumed"
+        ],
+        "wrong": "ignored"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "New research has shown that Neanderthals ignored and ate grains and plants.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "①",
+        "picked": "①",
+        "also": []
+      }
+    ],
+    "33번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "abstraction",
+          "general",
+          "combine",
+          "distinguish",
+          "certain"
+        ],
+        "wrong": "conflate"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Once you do this, you cannot conflate your thoughts from what you actually experienced, and you can't recall the original exactly.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "34번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "created",
+          "help",
+          "astounding",
+          "significant",
+          "lost"
+        ],
+        "wrong": "hindrance"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "To test the course, we enlisted the hindrance of ninety people to take part in a pilot program.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "②",
+        "picked": "②",
+        "also": []
+      }
+    ],
+    "35번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "disbanded"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For example, the dairy sectors in countries such as Denmark, the Netherlands, and Germany have become what they are today only because their farmers disbanded themselves, with state help, into cooperatives and jointly invested in processing facilities and overseas marketing.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — organized → disbanded"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "addition"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In addition, he dairy sectors in the Balkan countries have failed to develop despite quite a large amount of money channelled into them, because all their dairy farmers tried to make it on their own.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — contrast → addition"
+      },
+      {
+        "stage": "pick",
+        "k": 2,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "withdrew"
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 꼴 불일치 — invested → withdrew"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "disbanded"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For example, the dairy sectors in countries such as Denmark, the Netherlands, and Germany have become what they are today only because their farmers disbanded themselves, with state help, into cooperatives and jointly invested in processing facilities and overseas marketing.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — organized → disbanded"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "cooperate",
+          "organized",
+          "invested",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "disbanded"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "For example, the dairy sectors in countries such as Denmark, the Netherlands, and Germany have become what they are today only because their farmers disbanded themselves, with state help, into cooperatives and jointly invested in processing facilities and overseas marketing.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — organized → disbanded"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — failed to"
+      },
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "cooperate",
+          "organized",
+          "jointly",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "similarity"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In similarity, he dairy sectors in the Balkan countries have failed to develop despite quite a large amount of money channelled into them, because all their dairy farmers tried to make it on their own.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — contrast → similarity"
+      },
+      {
+        "stage": "pick",
+        "k": 1,
+        "items": [
+          "cooperate",
+          "similar",
+          "organized",
+          "contrast",
+          "failed"
+        ],
+        "wrong": "identical"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "In rich countries, enterprises cooperate with each other a lot more than their counterparts in poor countries, even if they operate in identical industries.",
+        "grammatical": true,
+        "makes_sense": true
+      },
+      {
+        "stage": "skip",
+        "reason": "어휘 확인 실패(비문=False·그대로도 말이 됨=True) — similar → identical"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — cooperate with"
+      },
+      {
+        "stage": "skip",
+        "reason": "전치사에 묶인 낱말 — cooperate with"
+      }
+    ],
+    "38번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "impossible",
+          "creative",
+          "stare",
+          "comfort",
+          "generate"
+        ],
+        "wrong": "suppress"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Allowing employees to occasionally work from home or a private space will suppress better ideas and results.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ],
+    "39번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 3,
+        "items": [
+          "fixed",
+          "fifty",
+          "serious",
+          "understand",
+          "continue"
+        ],
+        "wrong": "ignore"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "If you don't ignore something you were taught in class today, treat it as a bug that must be fixed as soon as possible.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "④",
+        "picked": "④",
+        "also": []
+      }
+    ],
+    "44번|vocab|2": [
+      {
+        "stage": "pick",
+        "k": 4,
+        "items": [
+          "consistent",
+          "contradicting",
+          "retain",
+          "varying",
+          "efficiency"
+        ],
+        "wrong": "inefficiency"
+      },
+      {
+        "stage": "vocab_check",
+        "changed": "Instead, try to find your own way to raise the inefficiency of your studying.",
+        "grammatical": true,
+        "makes_sense": false
+      },
+      {
+        "stage": "solve",
+        "key": "⑤",
+        "picked": "⑤",
+        "also": []
+      }
+    ]
+  },
+  "by_type": {
+    "vocab": {
+      "n": 36,
+      "O": 18,
+      "P": 10,
+      "X": 3,
+      "F": 5,
+      "O_pct": 50.0,
+      "F_pct": 13.9
+    }
+  },
+  "cycle_result": {
+    "status": "complete_reverted",
+    "completed_at": "2026-09-27T04:51:26.705908+09:00",
+    "comparison": {
+      "sep26-go1": {
+        "before": {
+          "n": 36,
+          "O": 22,
+          "P": 9,
+          "X": 4,
+          "F": 1,
+          "O_pct": 61.1,
+          "F_pct": 2.8
+        },
+        "after": {
+          "n": 36,
+          "O": 24,
+          "P": 9,
+          "X": 0,
+          "F": 3,
+          "O_pct": 66.7,
+          "F_pct": 8.3
+        },
+        "delta_O_pp": 5.6,
+        "judgment": "같다"
+      },
+      "jun11-go2": {
+        "before": {
+          "n": 36,
+          "O": 23,
+          "P": 9,
+          "X": 3,
+          "F": 1,
+          "O_pct": 63.9,
+          "F_pct": 2.8
+        },
+        "after": {
+          "n": 36,
+          "O": 18,
+          "P": 10,
+          "X": 3,
+          "F": 5,
+          "O_pct": 50.0,
+          "F_pct": 13.9
+        },
+        "delta_O_pp": -13.9,
+        "judgment": "악화"
+      }
+    },
+    "restored_sha256": "5b4c1dc343dc16b80fcb4b9dda3c6848a09441d1ef4119a876e22e30436feee9",
+    "decision": "고1 같다, 고2 악화. 후보 복원. 생성 실패도 증가. 상품 승인 없음."
+  }
+}

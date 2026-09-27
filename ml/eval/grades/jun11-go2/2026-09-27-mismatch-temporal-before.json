@@ -1,0 +1,5165 @@
+{
+  "grader": "Codex AI — 원문·유일성·해설·변별력 직접 검토; 독립 사람/블라인드 검수 아님",
+  "grading_version": "product-content-discrimination-v1",
+  "rubric": "O: 내용·유일성·해설·형식·정성 변별력 통과. P: 복수정답/미언급·범위 모호성/해설 오류·잘림/동일 의미 선지 반복·선지만으로 정답 노출. X: 정답 불성립 또는 틀린 교정. F: 생성 실패. 새 지문 상품 검수와 별개.",
+  "source_run_label": "2026-09-27-mismatch-temporal-before",
+  "run_sha256": "32eb5c3f6e993ec8684ade291ccfe08d038212d626dcc94365128f8e2e79b82c",
+  "experiment": {
+    "name": "mismatch-temporal-input",
+    "phase": "before",
+    "date": "2026-09-27",
+    "commit_at_review": "4a68c6e74daf1adf07fcf0983e8fe273dc9fec3f",
+    "hypothesis": "시간 변화가 있는 주장에서 과거 상태만 인용하고 이후 갱신을 합치지 않아 직접 추론을 false로 판단한다. CHECK_SYS에 시간 변화 통합 판정 원칙 하나만 추가한다.",
+    "settings": {
+      "base": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+      "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit",
+      "adapter": "fact-lora; SHA-256 in code_sha256",
+      "temp": 0.3,
+      "fact_check_temp": 0.0,
+      "repeat": 2,
+      "keep_trace": true,
+      "seed": "not fixed",
+      "max_retries_argument": 2
+    },
+    "code_sha256": {
+      "ml/fact/windows/pipeline_fact.py": "4c1ec244e908681432659e87ce80ca0e3476e43aba673fa4eab92dfaf3a5dfe7",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/common/distractor_check.py": "133dbf249b6a7626d8b555f513fe2907692a347c91378835075a53707b04aa65",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/fact/adapters/fact-lora/adapters.safetensors": "f8714bca6eaabd0fbd36ff9087cd1585755a44996ee0eda72c3b272e69341db9"
+    },
+    "runner": {
+      "status": "baseline_complete_needs_grading",
+      "runner_pid": 94159,
+      "started_at": "2026-09-27T04:55:52.142626+09:00",
+      "deadline": "2026-09-27T09:45:00+09:00",
+      "label": "2026-09-27-mismatch-temporal-before",
+      "type": "mismatch",
+      "repeat": 2,
+      "keep_trace": true,
+      "expected_rows_per_set": {
+        "sep26-go1": 38,
+        "jun11-go2": 36
+      },
+      "code_sha256": {
+        "ml/fact/windows/pipeline_fact.py": "4c1ec244e908681432659e87ce80ca0e3476e43aba673fa4eab92dfaf3a5dfe7",
+        "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+        "ml/common/distractor_check.py": "133dbf249b6a7626d8b555f513fe2907692a347c91378835075a53707b04aa65",
+        "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+        "ml/fact/adapters/fact-lora/adapters.safetensors": "f8714bca6eaabd0fbd36ff9087cd1585755a44996ee0eda72c3b272e69341db9"
+      },
+      "candidate_applied": false,
+      "runs": [
+        {
+          "set": "sep26-go1",
+          "pid": 94160,
+          "started_at": "2026-09-27T04:55:52.161608+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "sep26-go1",
+            "--label",
+            "2026-09-27-mismatch-temporal-before",
+            "--types",
+            "mismatch",
+            "--repeat",
+            "2",
+            "--keep-trace"
+          ],
+          "log": "/private/tmp/lora-mismatch-temporal-cycle/sep26-go1.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T05:03:53.573518+09:00",
+          "rows": 38,
+          "unique_rows": 38,
+          "code_unchanged": true
+        },
+        {
+          "set": "jun11-go2",
+          "pid": 94372,
+          "started_at": "2026-09-27T05:03:53.596498+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "jun11-go2",
+            "--label",
+            "2026-09-27-mismatch-temporal-before",
+            "--types",
+            "mismatch",
+            "--repeat",
+            "2",
+            "--keep-trace"
+          ],
+          "log": "/private/tmp/lora-mismatch-temporal-cycle/jun11-go2.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T05:11:42.403289+09:00",
+          "rows": 36,
+          "unique_rows": 36,
+          "code_unchanged": true
+        }
+      ],
+      "updated_at": "2026-09-27T05:11:42.415056+09:00"
+    },
+    "set_sha256": "e8a12b58ad6dc15aefc593e33e24e60d51a12cdeb8341c8f1eeade8a2147a208",
+    "decision_rule": "각 세트 O 변화 ±7%p 이내=같음. 같음/악화면 후보 복원. F도 함께 비교. 반복 문항은 독립 새 지문 아님."
+  },
+  "grades": {
+    "18번|mismatch": "P",
+    "21번|mismatch": "P",
+    "22번|mismatch": "P",
+    "23번|mismatch": "O",
+    "24번|mismatch": "O",
+    "25번|mismatch": "P",
+    "26번|mismatch": "O",
+    "27번|mismatch": "O",
+    "28번|mismatch": "P",
+    "30번|mismatch": "X",
+    "31번|mismatch": "O",
+    "32번|mismatch": "P",
+    "33번|mismatch": "P",
+    "34번|mismatch": "P",
+    "35번|mismatch": "O",
+    "38번|mismatch": "O",
+    "39번|mismatch": "O",
+    "44번|mismatch": "P",
+    "18번|mismatch|2": "P",
+    "21번|mismatch|2": "O",
+    "22번|mismatch|2": "P",
+    "23번|mismatch|2": "O",
+    "24번|mismatch|2": "P",
+    "25번|mismatch|2": "P",
+    "26번|mismatch|2": "O",
+    "27번|mismatch|2": "P",
+    "28번|mismatch|2": "O",
+    "30번|mismatch|2": "O",
+    "31번|mismatch|2": "P",
+    "32번|mismatch|2": "P",
+    "33번|mismatch|2": "P",
+    "34번|mismatch|2": "O",
+    "35번|mismatch|2": "P",
+    "38번|mismatch|2": "P",
+    "39번|mismatch|2": "P",
+    "44번|mismatch|2": "P"
+  },
+  "notes": {
+    "18번|mismatch": "① 삶 통제는 검색 엔진에 직접 명시되진 않지만 더 위협적인 Big Brother라는 비유와도 성립한다. 미언급과 함의를 명확히 구분하지 못해 정답 모호.",
+    "21번|mismatch": "① dogs는 틀리지만 cockfighting이라는 단어 뜻만으로 배제할 수 있고 동물·장소 두 사실을 동시에 바꿔 정답이 지나치게 드러난다.",
+    "22번|mismatch": "친구들이 순수 학습 동기를 이해 못했어도 실용적 학위는 지지할 수 있다. supportive of the degree 전체를 부정하는 것은 원문보다 강한 추론.",
+    "23번|mismatch": "① 왕자로 변화를 요구했다는 진술은 did not need to change와 반대. 나머지 수용·좋은 자질·연민·편견과 해설 일치.",
+    "24번|mismatch": "③ 유럽 좌석 목적을 미국 좌석의 혼자 침묵으로 바꿈. 유래·시선·혼자 여행 선지와 해설 맞다.",
+    "25번|mismatch": "② 경고 시점은 틀리지만 ⑤ 높은 가지에서 뛰어도 안전하다는 말도 틀리다. 실제는 처마 높이에서 화자가 한 말이라 주체와 높이가 모두 다름. 치명적 복수정답.",
+    "26번|mismatch": "⑤ 실제 활용을 기대보다 중시한다는 주장은 potential·anticipation 우선과 반대. 나머지 수명·성능·교통체증 선지와 해설 타당.",
+    "27번|mismatch": "⑤ always increases는 충분한 간격 뒤 습관화 소멸과 모순. 나머지 즐거움·반복·샴페인 선지와 해설 적절.",
+    "28번|mismatch": "①은 틀리지만 ②③이 배우는 자신으로 남는다는 동일 뜻을 반복하고 이를 직접 반박한다. 해설 마지막 ④ 인용도 잘렸다.",
+    "30번|mismatch": "③은 지나친 신성시로 반응을 못 하게 된 분위기와 인기 하락이라는 인과의 자연스러운 요약이다. 해설은 표현 제약을 중간 원인으로 읽지 않고 인과 역전이라고 오인한다.",
+    "31번|mismatch": "③ 가능성 열어두기가 도움이라는 말은 doesnt help와 반대. 나머지 거절의 어려움·신속함·양측 이익과 해설 일치.",
+    "32번|mismatch": "⑤는 근거 없지만 해설은 as it was found in the mouth의 as를 발견 당시 모습 그대로로 오역한다. 실제는 입에서 발견됐으므로 먹었다는 증거 관계다. ④도 육식 의존 원인을 빠뜨린다.",
+    "33번|mismatch": "③ 정답은 맞지만 ①②가 뜻만 저장한다는 내용을 사실상 반복한다. ④⑤의 기억 오류와 묶여 반대 선지가 과도하게 드러난다.",
+    "34번|mismatch": "불안 개선은 예상했지만 체중 감소는 surprising result였으므로 ③ results not as expected도 전체 결과를 가리키면 성립한다. 평가 대상 결과를 한정하지 않아 정답 모호.",
+    "35번|mismatch": "④ Balkan 발전 성공은 failed to develop과 반대. 국가 지원·협동·단독 시도 선지와 해설 타당.",
+    "38번|mismatch": "① doorless office에서 easy는 hard와 반대. 사적 공간·신체적 편안함 선지와 해설 적절.",
+    "39번|mismatch": "④ 새 내용을 쌓으라는 주장은 Do not pile과 반대. 지연 비용·즉시 해결·버그 비유와 해설 일치.",
+    "44번|mismatch": "과거의 전통 조언은 consistent였지만 현재 과학 결과는 기존 규칙을 뒤집는다. ① over time이 어느 시기까지인지 불명확해 현재 변화까지 포함하면 배제하기 어렵다.",
+    "18번|mismatch|2": "④ real Big Brother in 1984는 현실 존재를 뜻할 수도 원작의 인물을 뜻할 수도 있다. 소설 속 실제 원형을 가리키는 독해가 가능해 유일한 불일치 보장 부족.",
+    "21번|mismatch|2": "⑤ minor achievement는 great success·historic achievement와 반대. 나머지 동물·49개 주·법 정의와 해설 일치.",
+    "22번|mismatch|2": "순수 학습 목적을 이해 못하는 것과 학업에 진심으로 관심이 없는 것은 다르다. 실용성에 대한 진지한 관심도 가능해 ③을 단정적으로 false 처리할 수 없다.",
+    "23번|mismatch|2": "⑤는 미녀가 하지 않았다고 명시된 말을 했다고 바꾼 유일 불일치. 나머지 수용 태도와 해설 적절.",
+    "24번|mismatch|2": "③ 마차가 아닌 미국 좌석 유래는 틀려 정답은 맞다. 해설의 forward-facing을 전방 시계열로 옮긴 것은 공간 배치를 시간 계열로 바꾸는 의미 오류.",
+    "25번|mismatch|2": "③ 높은 곳에서 즉시 경고는 틀리지만 해설은 ② said nothing을 내려가게 둔 사실로 설명한다. 실제는 위에서 가지를 자를 때 침묵하고 내려오면 경고했다.",
+    "26번|mismatch|2": "③ 보통 고속 주행은 usually stuck in traffic과 반대. 나머지 잠재 수명·성능·기대·둔감함과 해설 타당.",
+    "27번|mismatch|2": "① 즐거움 증가는 틀리지만 ② 반복하면 감소·④ 매일 샴페인 지루함이 같은 명제를 반복해 반대 정답을 직접 드러낸다. 선지별 내용 분산 부족.",
+    "28번|mismatch|2": "① 완전히 배역이 된다는 말은 첫 문장과 반대. 나머지 복수·같은 대사·자기 자신·다른 인물의 즐거움은 서로 다른 사실로 타당.",
+    "30번|mismatch|2": "③ 현재 공연 중 청중의 공개 반응은 silent와 반대. 지휘자 말하기와 청중 반응을 구분한 다른 선지·해설 타당.",
+    "31번|mismatch|2": "③ 정답은 맞지만 ② prefer a quick response to delivering bad news는 빠른 응답과 나쁜 소식 전달을 비교한다. 의도한 빠른 나쁜 소식 전달이라는 의미와 달라 추가 불일치 가능.",
+    "32번|mismatch|2": "⑤ 발견한 그대로 먹었다는 말은 조리와 맞지 않지만 해설도 as를 상태 그대로로 오역한다. 인과 증거를 설명하지 못하고 새 잘못된 사실을 가르친다.",
+    "33번|mismatch|2": "원문은 abstraction 뒤 Another source of error로 사실 결합을 별개로 소개한다. ③④⑤와 해설은 그 두 과정을 모두 abstraction으로 뭉쳐 구분을 훼손한다.",
+    "34번|mismatch|2": "② disappointing은 astounding·significant improvement와 반대. 나머지 목적·인원 성과·기간·체중 변화와 해설 맞다.",
+    "35번|mismatch|2": "④ 정답은 맞지만 ①②가 국가 지원 협동조합 성공을 반복하고 ③⑤가 Balkan 실패를 반복해 답이 선지 묶음만으로 드러난다.",
+    "38번|mismatch|2": "② closely linked와 달리 ③④ essential/necessary는 필요조건으로 강화되어 추가 불일치 후보다. ① quiet office도 글과 양립 가능하며 세 선지가 편안함만 반복한다.",
+    "39번|mismatch|2": "④ minor는 틀리는 방향이나 ①②가 지연 비용을 그대로 반복한다. 해설과 정답은 맞아도 선지 다양성이 부족하다.",
+    "44번|mismatch|2": "④ one place의 기억 도움을 글이 전면 부정하지는 않는다. 다중 장소의 장점을 단일 장소의 무효로 바꾸는 추론이며 해설 마지막 ⑤ 인용도 잘렸다."
+  },
+  "review_material": {
+    "18번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The search engine is described as a powerful tool that controls every aspect of our lives.",
+        "② The search engine is compared to Big Brother in the novel 1984.",
+        "③ We share personal secrets with search engines by typing many questions.",
+        "④ The search engine is said to know more about us than our friends and loved ones.",
+        "⑤ The search engine is presented as a real threat, unlike the one in 1984."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문에서 빅브러더가 모든 개인의 삶을 감시하며 통제한다고 했으나, 검색 엔진은 우리의 비밀을 알고 있을 뿐 직접적으로 삶을 통제한다고 명시하지 않았다. ②는 \"even more threatening Big Brother... the search engine\" 부분과 일치한다. ③는 \"pour our secrets... through the tens of millions of questions\" 내용과 일치한다. ④는 \"know more about our habits... than our friends\"와 일치한다. ⑤는 \"unlike Big Brother in 1984, this one is very real\"과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Cockfighting involves dogs fighting in a large arena.",
+        "② The sport was already banned in forty-nine states.",
+        "③ Louisiana was the only state where cockfighting remained legal.",
+        "④ The sport was outlawed in Louisiana last week.",
+        "⑤ The animal rights movement has fought long and hard to ban cockfighting."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문은 계투가 \"two roosters\" (수탉 두 마리)가 \"pit\" (구덩이)에서 싸우는 것임을 명시하며, ①의 \"dogs\"와 \"arena\"는 사실과 다르다. ②는 \"banned in forty-nine states\"와 일치하고, ③은 \"Louisiana was the only state where cockfighting remained legal\"와 일치한다. ④는 \"voted to outlaw cockfighting\"와 일치하며, ⑤는 \"fought long and hard to ban cockfighting\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer has a part-time degree in History and Sociology.",
+        "② The writer enjoyed every moment of the degree course.",
+        "③ The writer's friends were supportive of the degree.",
+        "④ The writer's friends insisted the degree must lead to career advancement.",
+        "⑤ The writer believes education for its own sake is never wasted."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 저자는 친구들이 학위 취득 목적을 이해하지 못했다고 명시하며, \"nobody seemed to understand that\"라고 하여 친구들의 지지가 없었음을 알 수 있다. 반면 ①은 \"completed a part-time degree course in History and Sociology\"와 일치하고, ②는 \"enjoyed every moment of it\"와 일치한다. 또한 ④는 친구들이 \"advance my job prospects\"를 강조했다는 내용과 일치하며, ⑤는 저자의 신념인 \"education and knowledge for its own sake is never wasted\"와 일치한다. 따라서 친구들이 학위를 지지했다는 ③만이 지문 내용과 일치하지 않는다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Beauty needed the Beast to change into a handsome prince",
+        "② Beauty valued the Beast for his good qualities",
+        "③ She did not pity him for being what he was",
+        "④ She treated him without any prejudice",
+        "⑤ She accepted him without trying to change him"
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문에서 \"Beauty did not need the Beast to change\"라고 명시하여, 뷰티가 비스트의 변화를 필요로 하지 않았음을 밝히고 있어 ①은 내용과 일치하지 않는다. 반면 ②는 \"valued him for his good qualities\"와, ③은 \"did not pity him for being what he was\"와, ④는 \"treated him without any prejudice\"와 각각 지문의 문장들이 정확히 일치한다. 또한 ⑤는 지문의 \"practiced acceptance\" 및 \"took him as he was\"라는 내용과 맥락을 같이하여 내용 일치로 볼 수 있다. 따라서 내용과 일치하지 않는 것은 ①이다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The nineteenth-century European railway carriage seated passengers facing one another.",
+        "② The seating plan of the nineteenth-century European carriage was based on earlier horse-drawn coaches.",
+        "③ The European railway seating was designed to allow passengers to sit alone in silence.",
+        "④ Without compartments, American passengers could stare at one another's backs.",
+        "⑤ The American carriage design allowed passengers to remain silent without interaction."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 유럽 철도 좌석이 서로를 마주 보게 배치하여 소음의 가려짐이 사라진 상태에서 \"침묵 속에서 서로를 마주 보는 어색함\"을 유발했다고 명시하므로, 승객이 혼자서 침묵을 유지하도록 설계되었다는 ③의 내용은 지문의 사실과 반대된다. 반면 ①은 \"faced one another\"와 일치하고, ②는 \"derived from the large horse-drawn coaches\"와 일치한다. 또한 ④는 \"staring at one another's backs\"와, ⑤는 \"without having to say a word\"와 일치하여 내용상 옳다.",
+      "error": null,
+      "warnings": []
+    },
+    "25번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The expert guided the man as he climbed the tall tree",
+        "② The expert warned the man to be careful while he was climbing high up",
+        "③ The expert remained silent until the man reached the eaves",
+        "④ The expert advised caution only when the man was descending near the ground",
+        "⑤ The expert thought the man could jump down safely from the high branches"
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 전문가가 높은 곳에 있을 때는 \"said nothing\"이라고 명시되어 있어, 등반 중 주의를 경고했다는 ②번은 내용과 일치하지 않는다. 반면 ①번은 \"guiding someone in climbing\"과 일치하며, ③번은 \"reached the height of the eaves did the expert call out\"과 맞아 맞다. ④번은 \"Watch your step coming down\"이라는 내리막 시 경고 내용과 일치하고, ⑤번은 \"he could jump the rest of the way down\"이라는 전문가의 발언과 일치한다. 따라서 등반 중 경고했다는 ②번이 유일한 불일치 선지이다.",
+      "error": null,
+      "warnings": []
+    },
+    "26번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Many discarded items still retain significant potential for future practical use.",
+        "② Consumers buy the potential power of new objects rather than the power they actually use.",
+        "③ The new automobile can reach speeds of a hundred miles an hour, even though the driver is usually stuck in traffic.",
+        "④ Consumers are more motivated by anticipation than by operation.",
+        "⑤ Consumers value the actual practical use of items more than the anticipation of new things."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 \"Consumers buy the potential power of new objects rather than the power they actually use\"라고 명시하여 소비자가 실제 사용 가치보다 잠재적 가치를 구매함을 강조한다. 또한 \"Getting the latest thing is more important than making durable use of it\"라고 하여 최신 것을 얻는 것이 내구성 있는 사용보다 중요하다고 명시하므로, ⑤의 '실제 실용적 가치를 더 중요하게 여긴다'는 내용과 명백히 모순된다.",
+      "error": null,
+      "warnings": []
+    },
+    "27번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The first time an experience occurs, it is usually more pleasurable than later repetitions.",
+        "② The wonderfulness of an experience disappears with repeated occurrences.",
+        "③ A year is long enough for the effects of habituation to disappear.",
+        "④ Clinking champagne glasses would be a relatively dull exercise if it happened every evening.",
+        "⑤ Psychologists claim that habituation always increases with time."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 습관화(habituation)를 피하는 방법으로 \"경험의 반복 사이에 더 긴 시간을 두는 것\"을 제시하며, 이는 습관화가 시간이 지남에 따라 사라진다는 것을 전제로 한다. 반면 ⑤은 습관화가 시간이 지남에 따라 \"항상 증가한다\"고 주장하여 지문의 내용과 정면으로 모순된다. ①은 지문의 \"the experience produces less pleasure each time\"와 일치한다. ②는 \"their wonderfulness disappears with repetition\"이라는 문장과 동일하다. ③은 \"A year is long enough for the effects of habituation to disappear\"를 그대로 반영한다.",
+      "error": null,
+      "warnings": []
+    },
+    "28번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer believes actors can completely become the characters they portray.",
+        "② The writer argues that actors remain themselves while performing roles.",
+        "③ The writer believes actors cannot be anyone other than themselves.",
+        "④ The writer says the performances are unique because the actors say the same lines but have different thoughts.",
+        "⑤ The writer thinks actors enjoy playing characters that are different from themselves."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문 첫 문장 \"Actors do not become the characters they play\"은 배우가 자신이 연기하는 캐릭터가 되지 않는다고 명시하여 ①의 주장과 정면으로 모순된다. 반면 ②는 \"be anybody other than yourself\"라는 표현으로 배우가 본연의 자신을 유지한다는 지문의 내용과 일치한다. ③ 역시 \"be anybody other than yourself\"를 근거로 하여 배우는 자신이 될 수밖에 없다는 지문 주장과 부합한다. ④는 \"what you think...",
+      "error": null,
+      "warnings": []
+    },
+    "30번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Classical music was once considered popular among the general audience",
+        "② Audiences would have openly approved of Beethoven's music in the old days",
+        "③ Classical music has become less popular because audiences no longer express responses during performances",
+        "④ The atmosphere in concert halls is becoming more relaxed as orchestras try to attract audiences",
+        "⑤ Conductors have traditionally remained silent while music was being performed"
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 고전 음악의 인기가 declined한 이유가 청중이 반응을 표현할 수 없을 정도로 \"too holy\"해졌기 때문이라고 명시하고 있습니다. 반면 ③은 청중이 반응을 표현하지 않기 때문에 인기가 줄었다고 인과 관계를 반대로 서술하여 내용과 일치하지 않습니다. ①은 \"classical music was pop music\"이라는 첫 문장과 일치합니다. ②는 청중이 \"openly approved\"했다는 내용과 일치합니다. ④는 \"stuffy atmosphere is slowly changing\"한다는 내용과 일치하며, ⑤는 지문에서 conductors가 \"mute on stage\"였다는 사실과 일치합니다.",
+      "error": null,
+      "warnings": [
+        "초안 정답 ⑤ → 사실 확인상 ① — 정답 번호를 사실 확인에 맞춰 옮겼습니다"
+      ]
+    },
+    "31번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer says that people don't like to hear rejection.",
+        "② The writer states that declining requests is difficult for most people.",
+        "③ The writer says that leaving the door open is a helpful response.",
+        "④ The writer says that a quick response is almost always appreciated.",
+        "⑤ The writer claims that prompt rejection benefits both parties involved."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 \"Leaving the door open doesn't help, either\"라고 명시하여 문을 열어두는 것이 도움이 되지 않는다고 했으므로, ③의 '도움이 되는 응답'이라는 주장은 내용과 일치하지 않습니다. 반면 ①은 \"people don't like to hear it\"와, ②는 \"it's saying 'no' that's really hard\"와, ④는 \"a quick response is almost always appreciated\"와 각각 일치합니다. 또한 ⑤는 \"The sooner you can finish it, the better both parties feel\"를 근거로 정답임을 확인할 수 있습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Neanderthals ate grains and plants.",
+        "② American researchers found cooked grains and plants in Neanderthal teeth.",
+        "③ Before the research, Neanderthals were thought to be great meat eaters.",
+        "④ The new evidence challenges the theory that Neanderthals went extinct when the Ice Age began.",
+        "⑤ The grains were cultivated for food rather than being consumed as found."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 새로운 증거가 음식이 발견된 그대로 섭취되었음을 보여주었다고 명시하므로, ⑤의 ‘식량 작물로 재배되었다’는 주장은 지문의 “food was actually being consumed as it was found in the mouth”와 모순되어 일치하지 않습니다. ①은 지문의 첫 문장 “Neanderthals cooked and ate grains and plants”와 일치합니다. ②는 “found cooked grains and plants in the teeth”와 일치합니다. ③은 “Neanderthals were widely believed to be great meat eaters”와 일치합니다. ④는 “new evidence has challenged this theory”와 일치합니다.",
+      "error": null,
+      "warnings": [
+        "선지 모양 확인 필요: option 1 shape"
+      ]
+    },
+    "33번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Abstraction involves storing what a message means but not the exact words",
+        "② Abstraction involves storing the general meaning of a message",
+        "③ You can distinguish your thoughts from what you actually experienced",
+        "④ You cannot recall the original exactly once facts are combined",
+        "⑤ Conflicting memories of agreements can both feel equally correct despite being wrong"
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 \"you cannot distinguish your thoughts from what you actually experienced\"라고 명시하여 생각과 실제 경험의 구분이 불가능함을 밝히므로, ③의 주장과 정반대이다. ①은 \"store what a message means but not the exact words\"와 일치하며, ②는 \"commonly you store its general meaning\"를 반영한다. 또한 ④는 \"you can't recall the original exactly\"와 부합하고, ⑤는 \"you each are equally certain that you are right\"라는 내용을 정확히 전달한다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The course was designed to treat anxiety and depression.",
+        "② The course was tested with ninety participants.",
+        "③ The results of the pilot program were not as expected.",
+        "④ The writer expected most participants to improve.",
+        "⑤ The twelve-week program helped participants lose weight."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 저자는 \"as I expected, most of the individuals experienced significant improvement\"라고 명시하여 결과가 예상대로였음을 밝히고 있다. 따라서 결과가 예상대로 되지 않았다는 ③번은 내용과 일치하지 않는다. ①번은 \"course for treating anxiety and depression\"와 일치하며, ②번은 \"ninety people to take part\"와 일치한다. ④번은 저자의 기대(\"as I expected\")를 반영하여 일치하고, ⑤번은 참가자들이 \"lost twenty to thirty pounds\"라는 결과를 얻었으므로 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Rich countries' enterprises cooperate with each other more than their counterparts in poor countries.",
+        "② Cooperatives and joint investments have helped the dairy sectors in countries such as Denmark.",
+        "③ State help was crucial for the dairy sectors in countries such as Denmark.",
+        "④ The dairy sectors in the Balkan countries have developed well despite quite a large amount of money.",
+        "⑤ Balkan dairy farmers failed because they tried to succeed individually without cooperation."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서 발칸 반도 국가들의 낙농업은 \"failed to develop\"하여 발전하지 못했다고 명시되어 있으나, ④는 \"developed well\" 잘 발전했다고 기술하여 내용과 일치하지 않는다. ①은 \"enterprises cooperate with each other a lot more than their counterparts in poor countries\"와 일치한다. ②는 \"organized themselves... into cooperatives\"와 일치하며, ③은 \"with state help\"라는 국가의 지원이 중요했다는 내용과 일치한다. ⑤는 \"tried to make it on their own\" 즉 개별적으로 성공하려다 실패했다는 지문의 서술과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "38번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer finds it easy to be creative in a doorless office.",
+        "② People cannot pace the floor in a doorless office.",
+        "③ The writer believes that ideas are better generated in a private space.",
+        "④ Physical comfort is linked to the generation of ideas.",
+        "⑤ The writer argues that working from home can also generate better ideas."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문에서 작가는 \"I have always found it hard to be creative in a doorless office\"라고 명시하여 문이 없는 사무실에서 창의적으로 일하는 것이 어렵다고 밝혔으므로, ①의 'easy'는 내용과 일치하지 않는다. 반면 ②는 \"we cannot... pace the floor\"와 일치하고, ③은 \"coming up with an idea behind closed doors\"와 ④는 \"generation of ideas is closely linked to physical comfort\"로 지문의 주장과 부합한다. 또한 ⑤는 \"work from home or a private space will generate better ideas\"를 근거로 내용과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Fixing a bug immediately requires significantly less effort than delaying the fix.",
+        "② Failing to learn what one was taught is compared to a serious bug.",
+        "③ The author urges students to resolve misunderstandings immediately rather than delaying.",
+        "④ The writer says to pile new material on top of a word or concept.",
+        "⑤ The writer advises dropping everything to learn a word or concept."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서는 \"Do not pile new material on top of it.\"이라고 명시하여 새로운 내용을 쌓아 올리지 말라고 경고하고 있으므로, ④의 주장과 정반대이다. ①은 \"Waiting to fix a bug... can take fifty times as much effort\"와 일치하며, 즉각적인 수정이 훨씬 적은 노력을 요구함을 나타낸다. ②는 \"Failing to learn... is a serious bug\"라는 비유적 표현과 일치한다. ③은 \"treat it as a bug that must be fixed as soon as possible\"라는 조언과 일치하며, 이해하지 못한 내용을 미루지 말고 즉시 해결할 것을 강조한다. ⑤는 \"drop everything and do whatever it takes to learn it\"라는 지문의 권고사항과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "44번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer claims that the rules of good studying habits have changed over time.",
+        "② The writer states that traditional study advice has remained unchanged for a long time.",
+        "③ The writer says that studying in multiple locations has been proven to help the brain.",
+        "④ The writer says that changing settings forces the brain to make multiple associations.",
+        "⑤ The writer says that varying the type of material studied in one setting can leave a deeper impression."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문 첫 문장 \"rules of good studying habits have remained consistent\"에 따라 학습 습관 규칙은 시간이 지나도 변하지 않았다고 명시하므로, ①의 \"changed over time\"는 내용과 일치하지 않는다. ②는 지문의 \"remained consistent\"와 일치한다. ③은 \"studying in multiple locations has been proven to actually help\"와 일치하며, ④는 \"changing settings forces the brain to make multiple associations\"와 일치한다. ⑤는 \"varying the type of material... can leave a deeper impression\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "18번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Daily questions entered reveal our secrets to the powerful search engine.",
+        "② The writer suggests that search engines know more about us than our loved ones.",
+        "③ The writer compares the search engine to Big Brother in 1984.",
+        "④ The search engine is compared to the real Big Brother in 1984.",
+        "⑤ The writer says that we have to trust the search engine."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 오웰의 소설 속 빅브라더와 비교하며, \"unlike Big Brother in 1984, this one is very real\"이라고 명시합니다. 즉, 소설 속 가상의 인물이 아닌 현실의 검색 엔진을 비유한 것이지, 소설 속 실제 인물을 비교한 것이 아니므로 ④는 내용과 일치하지 않습니다. ①은 \"pour our secrets into the all-powerful search engine through... questions\"와 일치하고, ②는 \"know more... than our friends, our loved ones\"와 일치합니다. ③은 검색 엔진을 빅브라더에 비유했다는 점, ⑤는 \"We have to trust that it will not spill our secrets\"라는 내용과 일치합니다.",
+      "error": null,
+      "warnings": [
+        "초안 정답 ⑤ → 사실 확인상 ① — 정답 번호를 사실 확인에 맞춰 옮겼습니다"
+      ]
+    },
+    "21번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Cockfighting is an organized fight between two roosters.",
+        "② The sport had already been banned in forty-nine states.",
+        "③ Louisiana was the only state where cockfighting remained legal.",
+        "④ Louisiana chickens were not defined as animals according to state law.",
+        "⑤ The victory represents a minor achievement for the animal rights movement."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 Louisiana의 금지는 \"historic achievement\"로 평가되므로, 이를 \"minor achievement\"로 둔 ⑤는 내용과 일치하지 않는다. ①은 첫 문장의 \"organized fight between two roosters\"와 일치하며, ②는 \"banned in forty-nine states\"와, ③은 \"Louisiana was the only state where cockfighting remained legal\"와 각각 부합한다. ④도 \"chickens were not defined as animals according to state law\"라는 지문 내용을 정확히 반영한다. 따라서 ⑤가 정답이다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The writer completed a part-time degree course in History and Sociology.",
+        "② The writer enjoyed learning for learning's sake.",
+        "③ The writer's friends were genuinely interested in the writer's studies.",
+        "④ The writer's friends insisted the degree must be used to advance job prospects.",
+        "⑤ The writer believes education for its own sake is never wasted."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 저자는 친구들이 자신의 학문에 대해 \"nobody seemed to understand that\"라고 말하며 이해하려 하지 않았다고 명시했다. 친구들은 학문의 가치를 인정하기보다 \"must use it somehow to advance my job prospects\"라며 직업 전망 향상을 위해 활용해야 한다고 고집했다. 이는 진지한 관심이라기보다 실용적 목적을 강요하는 태도로, ③의 \"genuinely interested\"와 일치하지 않는다. 반면 ①은 \"completed a part-time degree course in History and Sociology\"로 사실과 일치하며, ②는 \"learning for learning's sake\"로 저자의 학습 동기를 정확히 반영한다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① She treated him without any prejudice.",
+        "② She valued him for his good qualities.",
+        "③ She did not pity him for being what he was.",
+        "④ She did not try to change him.",
+        "⑤ She said she would be happy when he was not an animal anymore."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 Beauty는 \"I'll be happy when he's not an animal anymore\"라고 말하지 않았다고 명시하여 ⑤의 내용과 정면으로 배치된다. 반면 ①은 \"treated him without any prejudice\", ②는 \"valued him for his good qualities\", ③은 \"did not pity him for being what he was\"라는 지문의 직접적인 인용으로 모두 사실과 일치한다. ④ 역시 \"did not try to change him\"이라는 문장과 동일하므로 옳은 설명이다. 따라서 지문의 부정적 서술과 모순되는 ⑤가 정답이다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The nineteenth-century European railway carriage seated passengers facing one another.",
+        "② The seating arrangement in the nineteenth-century European carriage was similar to that of earlier horse-drawn coaches.",
+        "③ The European seating style was copied from American forward-facing designs.",
+        "④ The absence of noise cover led to discomfort in European train compartments.",
+        "⑤ The American railroad carriage of the 1840s allowed passengers to be left alone in silence."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 유럽 철도 좌석 배치가 \"derived from the large horse-drawn coaches of earlier times\"라고 명시하여 이전의 마차에서 유래했음을 밝히나, ③은 이를 미국 전방 시계열 디자인에서 복사했다고 잘못 서술하여 내용과 일치하지 않는다. ①은 \"placed its six to eight passengers in a compartment where they faced one another\"와 일치하고, ②는 \"derived from the large horse-drawn coaches\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "25번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The man seemed to be in great danger while climbing the tree.",
+        "② The expert let the man cut the top branches without warning.",
+        "③ The expert spoke up immediately when the man reached the dizzying height.",
+        "④ The expert emphasized caution during descent because people feel safe.",
+        "⑤ The expert believed that people make mistakes when they feel safe."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 전문가가 경고한 시기는 \"when the man was coming down and had reached the height of the eaves\"일 뿐, \"dizzying height\"에 도달했을 때는 \"said nothing\"이라고 명시되어 있어 ③의 \"immediately\"는 사실과 다르다. ①은 \"the man seemed to be in great danger\"와 일치한다. ②는 \"the expert said nothing\"으로 전문가가 경고 없이 내려가게 둔 사실과 일치한다. ④는 \"he was so careful I said nothing\"으로 하강 시 주의가 필요함을 강조한 전문가의 태도와 일치한다. ⑤는 \"Mistakes are always made when you feel you are safe\"라는 전문가의 말과 일치한다.",
+      "error": null,
+      "warnings": [
+        "초안 정답 ① → 사실 확인상 ⑤ — 정답 번호를 사실 확인에 맞춰 옮겼습니다"
+      ]
+    },
+    "26번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Many discarded items still possess significant potential for future use.",
+        "② The new automobile can reach speeds of a hundred miles an hour.",
+        "③ The new automobile is usually driven at a high speed.",
+        "④ Consumers are more motivated by anticipation than by operation.",
+        "⑤ Being able so easily to dispose of things makes us insensitive to the actual objects we possess."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 \"even though the driver is usually stuck in traffic\"라고 명시하여 자동차가 시속 100마일까지 낼 수 있음은 맞지만, 실제로는 주로 교통 체증에 갇혀 있다는 점을 강조합니다. 따라서 \"보통 고속으로 운전된다\"는 ③번은 지문의 내용과 일치하지 않습니다. ①번은 \"92 percent of used cars... had a serviceable future life\"와 일치하고, ④번은 \"Consumers are more motivated by anticipation than by operation\"과 일치합니다. ⑤번 또한 \"Being able so easily to dispose of things makes us insensitive...\"와 일치하므로 정답은 ③입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "27번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Psychologists suggest that repeating experiences frequently enhances their pleasure.",
+        "② Repeating experiences without breaks makes them less enjoyable over time.",
+        "③ Psychologists name the process of adapting to repeated experiences.",
+        "④ The experience of clinking champagne glasses becomes dull if it happens every evening.",
+        "⑤ A year is long enough for the effects of habituation to disappear."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문은 반복될수록 \"the experience produces less pleasure each time\"라고 명시하여 즐거움이 줄어든다고 설명하므로, 빈번한 반복이 즐거움을 증대시킨다는 ①은 내용과 일치하지 않는다. 반면 ②는 같은 근거로 반복 시 즐거움이 줄어든다는 내용과 일치한다. ③는 지문의 \"Psychologists call this habituation\" 부분과 일치하며, ④는 \"Clinking champagne glasses would be a relatively dull exercise if it happened every evening\"라는 문장과 일치한다. 마지막으로 ⑤는 \"A year is long enough for the effects of habituation to disappear\"라는 마지막 문장과 일치하므로, 내용과 일치하지 않는 것은 ①이다.",
+      "error": null,
+      "warnings": []
+    },
+    "28번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Actors always completely transform into the characters they portray.",
+        "② The writer believes that actors can't be anyone other than themselves.",
+        "③ The writer thinks both of us understand revenge in our own ways.",
+        "④ The writer says our performances would be similar in that we both say Shakespeare's lines.",
+        "⑤ The writer explains that the fun in acting is to play characters that are different from yourself."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문은 \"Actors do not become the characters they play\"라고 명시하여 배우가 배역이 되지 않는다고 주장하므로, ①의 '완전히 변신한다'는 내용과 정면으로 모순된다. ②는 \"You can't... be anybody other than yourself\"와 일치하며, ③은 \"both of us understand revenge in our own ways\"를 반영한다. 또한 ④는 \"performances would be similar in that we both say Shakespeare's lines\"와 같고, ⑤는 \"fun in acting is to play characters that are different from yourself\"를 정확히 전달한다.",
+      "error": null,
+      "warnings": []
+    },
+    "30번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The writer says classical music was once very popular.",
+        "② The writer says audiences used to openly approve or disapprove of performances.",
+        "③ The writer says audiences now respond to performances while they are being played.",
+        "④ The writer says Beethoven would be surprised by the silence today.",
+        "⑤ The writer says conductors now speak from the podium."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 과거 청중이 공연 중 반응을 openly 표현했지만, 현재는 청중이 침묵을 지키고 있다고 명시합니다. 따라서 \"audiences now respond\"는 지문의 \"audience keeping silent\"와 모순되어 일치하지 않습니다. ①은 \"classical music was pop music\"와 일치합니다. ②는 \"audiences openly approved (or disapproved)\"와 일치합니다. ④는 \"Beethoven... would be surprised to see the audience keeping silent\"와 일치합니다. ⑤는 \"conductors... now speak from the podium\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Most individuals find it difficult to say no",
+        "② People generally prefer a quick response to delivering bad news",
+        "③ Leaving the door open is always the best way to respond",
+        "④ An absolute \"There's just no way\" is a greater favor than a \"Maybe\"",
+        "⑤ Both parties feel better when the rejection process ends quickly."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 \"Leaving the door open doesn't help, either\"라고 명시하여 선지의 'always the best way'와 정면으로 배치된다. ①은 \"it's saying 'no' that's really hard\"와 일치하고, ②는 \"a quick response is almost always appreciated\"와 부합한다. ④는 \"is a greater favor than answering with a 'Maybe'\"라는 표현과 일치하며, ⑤는 \"the sooner you can finish it, the better both parties feel\"와 내용상 동일하다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Neanderthals ate grains and plants.",
+        "② American researchers studied preserved Neanderthal specimens.",
+        "③ Previous beliefs suggested that Neanderthals primarily consumed meat.",
+        "④ Neanderthals were believed to have gone extinct because of the Ice Age.",
+        "⑤ The new evidence shows that Neanderthals ate the food as they found it."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 \"food was actually being consumed as it was found in the mouth of a Neanderthal\"라고 명시하여, Neanderthal의 입안에서 발견된 그대로의 상태로 섭취되었음을 강조합니다. 반면 ⑤번은 \"ate the food as they found it\"로, Neanderthal이 스스로 발견한 그대로의 상태로 먹었다는 뉘앙을 주어 지문의 의미와 다릅니다. ①번은 \"cooked and ate grains and plants\"와 일치하며, ②번은 \"preserved Neanderthal specimens\" 연구 사실과 일치합니다. 또한 ③번은 \"great meat eaters\"라는 이전 믿음과, ④번은 \"gone extinct when the Ice Age began\"이라는 설이 지문 내용과 일치합니다.",
+      "error": null,
+      "warnings": [
+        "초안 정답 ④ → 사실 확인상 ⑤ — 정답 번호를 사실 확인에 맞춰 옮겼습니다",
+        "선지 모양 확인 필요: option 1 shape"
+      ]
+    },
+    "33번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Abstraction involves storing the general meaning of a message, not the exact words.",
+        "② Abstraction can cause errors in recalling the original words or sentence structure.",
+        "③ Abstraction helps distinguish thoughts from actual experiences.",
+        "④ Abstraction can make it hard to recall the original agreement.",
+        "⑤ Abstraction is important when claiming a verbal agreement with someone."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 \"you cannot distinguish your thoughts from what you actually experienced\"라고 명시하여 추상화가 생각과 실제 경험의 구분을 불가능하게 만든다고 설명하므로, ③의 '구분을 돕는다'는 내용과 정반대이다. ①은 \"store what a message means but not the exact words\"와 일치한다. ②는 정확한 단어나 문장 구조를 저장하지 않아 오류의 원인이 된다는 지문 내용과 맞다. ④는 \"can't recall the original exactly\"라는 표현으로 원문 협상 기억이 어려울 수 있음을 지지한다. ⑤는 \"This phenomenon is particularly important when you are claiming you had a verbal agreement\"라는 문장과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The course was designed for treating anxiety and depression.",
+        "② The results of the pilot program were disappointing.",
+        "③ Most participants experienced significant improvement.",
+        "④ The program lasted twelve weeks.",
+        "⑤ The program helped people lose weight."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 \"The results were astounding\"라고 명시하여 결과가 놀라웠음을 밝히고 있어, ②의 'disappointing(실망스러운)'과는 명백히 모순된다. ①은 \"created a home study course for treating anxiety and depression\"와 일치하며, ③은 \"most of the individuals experienced significant improvement\"로 대부분의 참가자가 현저한 개선을 경험했다는 내용과 맞다. 또한 ④는 \"following the twelve-week program\"에서 12주짜리 프로그램이었음을, ⑤는 \"they also lost twenty to thirty pounds\"에서 체중 감량에 도움이 되었음을 각각 지지하므로 모두 지문의 내용과 일치한다.",
+      "error": null,
+      "warnings": [
+        "선지 모양 확인 필요: option 3 shape, option 4 shape"
+      ]
+    },
+    "35번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Farmers in wealthy nations form cooperatives with government support to succeed.",
+        "② Rich country dairy farmers succeed by forming cooperatives with state assistance.",
+        "③ The dairy sectors in the Balkan countries have failed to develop despite quite a large amount of money channelled into them",
+        "④ The dairy sectors in the Balkan countries succeeded because their farmers organized themselves into cooperatives",
+        "⑤ The dairy sectors in the Balkan countries have failed to develop because all their dairy farmers tried to make it on their own"
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 발칸반도 국가들의 낙농업이 실패했다고 명시하며, 이는 농부들이 협동조합을 결성하지 않고 혼자서 성공하려 했기 때문이라고 설명합니다. 따라서 협동조합을 결성해 성공했다는 ④번은 지문의 내용과 명백히 불일치합니다. 반면 ①과 ②번은 덴마크 등 부유국 농부들이 정부의 도움으로 협동조합을 조직해 성공했다는 예시와 일치합니다. ③번과 ⑤번은 발칸반도 국가들이 막대한 자금이 투입되었음에도 실패했으며, 그 이유가 농부들이 혼자서 성공하려 했기 때문이라는 지문의 서술과 정확히 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "38번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The writer thinks that working in a quiet office is essential for creativity.",
+        "② The writer believes that creativity is closely linked to physical comfort.",
+        "③ The writer argues that physical comfort is essential for idea generation.",
+        "④ The writer states that physical comfort is necessary for generating ideas.",
+        "⑤ The writer believes that working from home or in a private space can improve creativity."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문에서 저자는 \"doorless office\"에서는 창의적이기 어렵다고 말하지만, 이는 문이 없는 소음 많은 사무실을 지칭한 것으로, 정답 선지의 \"quiet office\"는 지문의 맥락과 일치하지 않아 거짓이다. ②는 \"the generation of ideas is closely linked to physical comfort\"와 일치한다. ③과 ④도 같은 문장을 근거로 하여 아이디어 생성과 신체적 편안함의 연관성을 올바르게 서술하였다. ⑤는 \"Allowing employees to occasionally work from home or a private space will generate better ideas\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Delaying bug fixes increases effort significantly compared to immediate correction.",
+        "② Postponing bug resolution requires significantly more effort than immediate fixes.",
+        "③ Failing to learn what is taught is compared to a serious bug",
+        "④ Learning what is taught daily is considered a minor issue.",
+        "⑤ You must resolve misunderstandings immediately before advancing to new topics."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서 \"Failing to learn what you're supposedly taught each day is a serious bug\"라고 명시하여, 매일 배운 내용을 학습하지 못하는 것을 심각한 버그로 비유하고 있다. 따라서 ④의 '사소한 문제'라는 주장은 지문의 내용과 명백히 일치하지 않는다. 나머지 선지들을 살펴보면, ①과 ②는 지문의 \"Waiting to fix a bug toward the end of a project can take fifty times as much effort\" 부분과 일치하며, ⑤는 \"do whatever it takes to learn it before you continue on\"이라는 문장과 부합한다. ③ 또한 지문의 \"Failing to learn... is a serious bug\"를 정확히 반영하고 있다.",
+      "error": null,
+      "warnings": []
+    },
+    "44번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Traditional study advice has not changed for a long time",
+        "② The writer says that changing settings helps the brain make multiple associations with the same material",
+        "③ The writer advises readers to try their own way to raise the efficiency of studying",
+        "④ The writer says that studying in one place is proven to help the brain retain information",
+        "⑤ The writer says that varying the type of material studied in one setting can leave a deeper impression"
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 \"studying in multiple locations has been proven to actually help the brain retain information\"라고 명시하여 여러 장소에서 공부하는 것이 기억 유지에 도움이 된다고 주장한다. 반면 ④은 \"one place\"에서 공부하는 것이 도움이 된다고 하여 지문의 내용과 정면으로 모순된다. ①은 \"rules of good studying habits have remained consistent\"와 일치하며, ②는 \"changing settings forces the brain to make multiple associations\"라는 근거로 옳다. 또한 ③은 \"try to find your own way\"라는 조언과 일치하고, ⑤는 \"varying the type of material...",
+      "error": null,
+      "warnings": []
+    }
+  },
+  "generation_trace": {
+    "18번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "there is an even more threatening Big Brother hiding in the shadows: the search engine."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Search engines know more about our habits... than our friends, our loved ones"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Big Brother controlled every individual by keeping watch on every aspect of their life."
+          },
+          {
+            "verdict": "true",
+            "evidence": "it's a trust that has repeatedly been betrayed."
+          },
+          {
+            "verdict": "true",
+            "evidence": "But unlike Big Brother in 1984, this one is very real."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "even more threatening Big Brother hiding in the shadows"
+          },
+          {
+            "verdict": "true",
+            "evidence": "know more about our habits... than our friends"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Big Brother controlled every individual"
+          },
+          {
+            "verdict": "false",
+            "evidence": "trust that has repeatedly been betrayed"
+          },
+          {
+            "verdict": "true",
+            "evidence": "unlike Big Brother in 1984, this one is very real"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": true,
+        "out": "We share personal secrets with search engines by typing many questions.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "there is an even more threatening Big Brother hiding in the shadows: the search engine."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Search engines know more about our habits... than our friends, our loved ones"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Big Brother controlled every individual by keeping watch"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We pour our secrets into the all-powerful search engine"
+          },
+          {
+            "verdict": "true",
+            "evidence": "But unlike Big Brother in 1984, this one is very real."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "even more threatening Big Brother hiding in the shadows"
+          },
+          {
+            "verdict": "true",
+            "evidence": "know more about our habits... than our friends"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Big Brother controlled every individual"
+          },
+          {
+            "verdict": "true",
+            "evidence": "pour our secrets into the all-powerful search engine"
+          },
+          {
+            "verdict": "true",
+            "evidence": "this one is very real"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage states that Big Brother in 1984 controlled every individual, whereas the search engine is described as a 'threatening Big Brother hiding in the shadows' that knows our secrets. It does not say the search engine 'controls every aspect of our lives' in the same direct, active manner as Big Brother did; rather, it implies a passive surveillance and potential betrayal of trust. Option ① incorrectly attributes the specific action of 'controlling every aspect' to the search engine, conflating it with the fictional Big Brother's method of control."
+        }
+      }
+    ],
+    "21번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "This bloody sport had already been banned in forty-nine states."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where cockfighting remained legal"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chickens were not defined as animals according to state law."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Last week we achieved a great success. The state of Louisiana voted to outlaw cockfighting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "animal rights movement, which has fought long and hard to ban cockfighting"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "banned in forty-nine states"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chickens were not defined as animals"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Last week we achieved a great success"
+          },
+          {
+            "verdict": "true",
+            "evidence": "fought long and hard to ban cockfighting"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 0,
+        "want_true": false,
+        "out": "Cockfighting involves dogs fighting in a large arena.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "This bloody sport had already been banned in forty-nine states."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where cockfighting remained legal"
+          },
+          {
+            "verdict": "false",
+            "evidence": "fight between two roosters that are placed in a pit"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The state of Louisiana voted to outlaw cockfighting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "animal rights movement, which has fought long and hard"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "banned in forty-nine states"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state"
+          },
+          {
+            "verdict": "false",
+            "evidence": "fight between two roosters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Last week we achieved a great success"
+          },
+          {
+            "verdict": "true",
+            "evidence": "fought long and hard to ban cockfighting"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that cockfighting is a fight between 'two roosters' (chickens), whereas option ① claims it involves 'dogs'. This is a direct factual contradiction. Options ②, ③, ④, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "22번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "completed a part-time degree course in History and Sociology"
+          },
+          {
+            "verdict": "true",
+            "evidence": "I enjoyed every moment of it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "nobody seemed to understand that"
+          },
+          {
+            "verdict": "true",
+            "evidence": "must use it somehow to advance my job prospects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "education and knowledge for its own sake is never wasted"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "completed a part-time degree course in History and Sociology"
+          },
+          {
+            "verdict": "true",
+            "evidence": "I enjoyed every moment of it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "nobody seemed to understand that"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use it somehow to advance my job prospects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "education and knowledge for its own sake is never wasted"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that friends 'would invariably ask' about the practical use of the degree and 'persist' in saying it must advance job prospects, implying they did not understand or support the intrinsic value of learning. This contradicts the statement that they were 'supportive,' which implies encouragement and agreement with the writer's motivation."
+        }
+      }
+    ],
+    "23번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "valued him for his good qualities"
+          },
+          {
+            "verdict": "true",
+            "evidence": "treated him without any prejudice"
+          },
+          {
+            "verdict": "true",
+            "evidence": "did not pity him for being what he was"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "practiced acceptance"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "valued him for his good qualities."
+          },
+          {
+            "verdict": "true",
+            "evidence": "she treated him without any prejudice"
+          },
+          {
+            "verdict": "true",
+            "evidence": "She did not pity him for being what he was"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "She did not try to make a prince out of a monster."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 0,
+        "want_true": false,
+        "out": "Beauty needed the Beast to change into a handsome prince",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "valued him for his good qualities"
+          },
+          {
+            "verdict": "true",
+            "evidence": "treated him without any prejudice"
+          },
+          {
+            "verdict": "true",
+            "evidence": "did not pity him for being what he was"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Beauty did not need the Beast to change"
+          },
+          {
+            "verdict": "true",
+            "evidence": "practiced acceptance"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "valued him for his good qualities."
+          },
+          {
+            "verdict": "true",
+            "evidence": "she treated him without any prejudice"
+          },
+          {
+            "verdict": "true",
+            "evidence": "She did not pity him for being what he was"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Beauty did not need the Beast to change."
+          },
+          {
+            "verdict": "true",
+            "evidence": "She did not try to make a prince out of a monster."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states 'Beauty did not need the Beast to change' and 'She did not try to make a prince out of a monster.' Option ① claims she 'needed' him to change, which is the direct opposite of the text. Options ②, ③, ④, and ⑤ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "24번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "false",
+            "evidence": "all the passengers in the American railroad carriages looked forward"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Without compartments, all the passengers... looked forward, staring at one another's backs"
+          },
+          {
+            "verdict": "false",
+            "evidence": "made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "false",
+            "evidence": "all the passengers in the American railroad carriages looked forward"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Without compartments, all the passengers... looked forward"
+          },
+          {
+            "verdict": "false",
+            "evidence": "made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": false,
+        "out": "The American railroad carriage seated passengers facing one another.",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 1,
+        "want_true": false,
+        "out": "The European railway seating was designed to allow passengers to sit alone in silence.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "The American carriage design allowed passengers to remain silent without interaction.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This kind of seating plan was derived from the large horse-drawn coaches"
+          },
+          {
+            "verdict": "false",
+            "evidence": "this arrangement provoked a sense of 'the embarrassment of people facing each other in silence'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Without compartments, all the passengers in the American railroad carriages looked forward, staring at one another's backs"
+          },
+          {
+            "verdict": "true",
+            "evidence": "So one could cross the North American continent without having to say a word to anyone"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "passengers in a compartment where they faced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "derived from the large horse-drawn coaches"
+          },
+          {
+            "verdict": "false",
+            "evidence": "provoked a sense of 'the embarrassment"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all the passengers... looked forward"
+          },
+          {
+            "verdict": "true",
+            "evidence": "possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states that the European seating plan was derived from horse-drawn coaches and caused 'embarrassment' because the 'cover of noise' was gone, implying it did NOT allow silence. In contrast, the American carriage was specifically designed to allow passengers to be 'left alone in silence.' Therefore, statement ③ incorrectly attributes the design purpose of the American carriage to the European one."
+        }
+      }
+    ],
+    "25번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger, the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger, the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "As long as the man was up at a dizzying height... he was so careful I said nothing"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Only when the man was coming down and had reached the height of the eaves did the expert call out"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "As long as the man was up at a dizzying height"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": false,
+        "out": "The expert warned the man to be careful while he was climbing high up",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 3,
+        "want_true": true,
+        "out": "The expert remained silent until the man reached the eaves",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "The expert believed caution was unnecessary when the man was high up",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "The expert advised caution only when the man was descending near the ground",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "false",
+            "evidence": "he was so careful"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Only when the man was coming down"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "when the man seemed to be in great danger, the expert said nothing."
+          },
+          {
+            "verdict": "false",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing. Only when the man was coming down and had reached the height of the eaves"
+          },
+          {
+            "verdict": "false",
+            "evidence": "As long as the man was up at a dizzying height and the branches were threatening to break, he was so careful"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Only when the man was coming down and had reached the height of the eaves did the expert call out"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 0,
+        "want_true": true,
+        "out": "The expert guided the man as he climbed the tall tree",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "The expert thought the man could jump down safely from the high branches",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "was guiding someone in climbing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he could jump the rest of the way"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Watch your step coming down"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "As long as the man was up at a dizzying height and the branches were threatening to break, he was so careful I said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A man who was famous as a tree climber was guiding someone in climbing a tall tree"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Only when the man was coming down and had reached the height of the eaves did the expert call out"
+          },
+          {
+            "verdict": "true",
+            "evidence": "At that height he could jump the rest of the way down if he chose"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Only when the man was coming down and had reached the height of the eaves did the expert call out"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'the expert said nothing' while the man was climbing high up ('At that height... he was so careful I said nothing'). Option ② claims the expert warned him while climbing high, which directly contradicts the text. Option ④ is also factually incorrect regarding the specific location ('eaves' vs 'ground'), but ② is the primary contradiction of the expert's behavior during the dangerous phase described."
+        }
+      }
+    ],
+    "26번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers buy the potential power of new objects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers buy the potential power of new objects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 1,
+        "want_true": true,
+        "out": "Many discarded items still retain significant potential for future practical use.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "Consumers prioritize the anticipation of new items over their actual practical use.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "true",
+            "evidence": "products thrown out long before the end of their practical life"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers buy the potential power of new objects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Getting the latest thing is more important than making durable use of it"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "true",
+            "evidence": "92 percent of used cars for sale in Britain in 2005 had a serviceable future life"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers buy the potential power of new objects rather than the power they actually use."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Getting the latest thing is more important than making durable use of it."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "Consumers value the actual practical use of items more than the anticipation of new things.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "true",
+            "evidence": "products thrown out long before the end of their practical life"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers buy the potential power of new objects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Getting the latest thing is more important than making durable use of it"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour, even though the driver is usually stuck in traffic."
+          },
+          {
+            "verdict": "true",
+            "evidence": "92 percent of used cars for sale in Britain in 2005 had a serviceable future life of at least five years"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers buy the potential power of new objects rather than the power they actually use."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Getting the latest thing is more important than making durable use of it."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'Consumers buy the potential power of new objects rather than the power they actually use' and 'Getting the latest thing is more important than making durable use of it.' Option ⑤ claims the opposite—that consumers value actual practical use more than anticipation—which directly contradicts the text. Options ①, ②, ③, and ④ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "27번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "produces less pleasure each time"
+          },
+          {
+            "verdict": "true",
+            "evidence": "wonderfulness disappears with repetition"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "produces less pleasure each time."
+          },
+          {
+            "verdict": "true",
+            "evidence": "their wonderfulness disappears with repetition."
+          },
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects of habituation to disappear."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise"
+          },
+          {
+            "verdict": "false",
+            "evidence": "A year is long enough for the effects of habituation to disappear."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 2,
+        "want_true": false,
+        "out": "Psychologists claim that habituation always increases with time.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "produces less pleasure each time"
+          },
+          {
+            "verdict": "true",
+            "evidence": "wonderfulness disappears with repetition"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "relatively dull exercise if it happened"
+          },
+          {
+            "verdict": "false",
+            "evidence": "increases the amount of time that separates"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "produces less pleasure each time"
+          },
+          {
+            "verdict": "true",
+            "evidence": "wonderfulness disappears with repetition"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects of habituation to disappear"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise"
+          },
+          {
+            "verdict": "false",
+            "evidence": "effects of habituation to disappear"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage states that habituation causes the experience to produce 'less pleasure each time' and that increasing the time between repetitions helps 'beat habituation.' Option ⑤ claims habituation 'always increases with time,' which contradicts the text's assertion that time separation reduces the effects of habituation (i.e., habituation does not simply increase with time; it can be reset or diminished by time). Options ①, ②, ③, and ④ are directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "28번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "false",
+            "evidence": "both of us understand revenge in our own ways"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what you think makes Hamlet behave the way he does is not the same as what I think."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself"
+          },
+          {
+            "verdict": "false",
+            "evidence": "both of us understand revenge in our own ways"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what you think makes Hamlet behave the way he does is not the same as what I think"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "The writer argues that actors remain themselves while performing roles.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": false,
+        "out": "The writer believes actors can completely become the characters they portray.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Actors do not become the characters they play."
+          },
+          {
+            "verdict": "true",
+            "evidence": "That's why our acting is unique."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The fun in acting is to play characters that are different"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself"
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Actors do not become the characters they play"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what you think makes Hamlet behave the way he does is not the same as what I think"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states 'Actors do not become the characters they play' and 'You can't, in reality, be anybody other than yourself.' Option ① claims the writer believes actors CAN completely become the characters, which is a direct contradiction of the text. Options ②, ③, ④, and ⑤ are all supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "30번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "popularity of classical music has declined because it got too holy"
+          },
+          {
+            "verdict": "true",
+            "evidence": "this stuffy atmosphere is slowly changing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "audiences openly approved (or disapproved) of a performance"
+          },
+          {
+            "verdict": "true",
+            "evidence": "conductors, who have been mute on stage"
+          },
+          {
+            "verdict": "true",
+            "evidence": "classical music was pop music"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "it got too holy for the audience to express responses"
+          },
+          {
+            "verdict": "true",
+            "evidence": "this stuffy atmosphere is slowly changing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "audiences openly approved... of a performance"
+          },
+          {
+            "verdict": "true",
+            "evidence": "conductors, who have been mute on stage"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when classical music was pop music"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states that the popularity of classical music declined 'because it got too holy for the audience to express responses.' This implies that the 'holiness' (stuffy atmosphere) caused the silence, which in turn contributed to the decline in popularity. Option ③ incorrectly reverses the causality, claiming that the decline in popularity was caused by the fact that audiences no longer express responses. The text suggests the silence is a symptom of the 'holy' nature, not the primary cause of the popularity drop, or at least that the popularity drop is due to the barrier created by this atmosphere, not the lack of expression itself."
+        }
+      }
+    ],
+    "31번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "people don't like to hear it"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "answering with a 'Maybe' that's never going to happen"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "people don't like to hear it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Maybe that's never going to happen"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 0,
+        "want_true": true,
+        "out": "The writer states that declining requests is difficult for most people.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "The writer claims that prompt rejection benefits both parties involved.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "people don't like to hear it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "it's saying 'no' that's really hard"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The sooner you can finish it, the better both parties feel"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "people don't like to hear it."
+          },
+          {
+            "verdict": "true",
+            "evidence": "For most people, it's saying 'no' that's really hard."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help, either."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The sooner you can finish it, the better both parties feel."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'Leaving the door open doesn't help, either.' Option ③ claims that leaving the door open is a 'helpful response,' which directly contradicts the text. Options ①, ②, ④, and ⑤ are all supported by specific sentences in the passage regarding the difficulty of saying no, the appreciation of quick responses, and the benefit to both parties."
+        }
+      }
+    ],
+    "32번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants."
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals were widely believed to be great meat eaters."
+          },
+          {
+            "verdict": "true",
+            "evidence": "new evidence has challenged this theory."
+          },
+          {
+            "verdict": "true",
+            "evidence": "food was actually being consumed as it was found"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants"
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals were widely believed to be great meat eaters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "new evidence has challenged this theory"
+          },
+          {
+            "verdict": "true",
+            "evidence": "food was actually being consumed as it was found in the mouth"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "The grains were cultivated for food rather than being consumed as found.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants."
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals were widely believed to be great meat eaters."
+          },
+          {
+            "verdict": "true",
+            "evidence": "new evidence has challenged this theory."
+          },
+          {
+            "verdict": "false",
+            "evidence": "food was actually being consumed as it was found"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants"
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals were widely believed to be great meat eaters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "new evidence has challenged this theory"
+          },
+          {
+            "verdict": "false",
+            "evidence": "food was actually being consumed as it was found"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'it wasn't known whether they were cultivated for food or perhaps for some other reason' and that 'The new findings show that the food was actually being consumed'. Option ⑤ claims the grains were 'cultivated for food rather than being consumed as found', which directly contradicts the text's statement that they were consumed as found and that cultivation status was previously unknown/irrelevant to the consumption evidence."
+        }
+      }
+    ],
+    "33번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "commonly you store its general meaning"
+          },
+          {
+            "verdict": "false",
+            "evidence": "you cannot distinguish your thoughts"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you can't recall the original exactly"
+          },
+          {
+            "verdict": "true",
+            "evidence": "but not the exact words or sentence"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words or sentence structure"
+          },
+          {
+            "verdict": "false",
+            "evidence": "you cannot distinguish your thoughts from what you actually experienced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words or sentence structure"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you cannot distinguish your thoughts from what you actually experienced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words or sentence structure"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Conflicting memories of agreements can both feel equally correct despite being wrong",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "commonly you store its general meaning"
+          },
+          {
+            "verdict": "false",
+            "evidence": "you cannot distinguish your thoughts"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you can't recall the original exactly"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you each are equally certain that you are right"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "store its general meaning."
+          },
+          {
+            "verdict": "false",
+            "evidence": "you cannot distinguish your thoughts from what you actually experienced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you cannot distinguish your thoughts from what you actually experienced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you each are equally certain that you are right."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'Once you do this, you cannot distinguish your thoughts from what you actually experienced.' Option ③ claims that you CAN distinguish them, which directly contradicts the text. Options ①, ②, ④, and ⑤ are all supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "34번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "they also lost twenty to thirty pounds"
+          },
+          {
+            "verdict": "false",
+            "evidence": "as I expected, most of the individuals"
+          },
+          {
+            "verdict": "true",
+            "evidence": "ninety people to take part in a pilot"
+          },
+          {
+            "verdict": "true",
+            "evidence": "as I expected, most of the individuals"
+          },
+          {
+            "verdict": "true",
+            "evidence": "course for treating anxiety and depression"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "by following the twelve-week program, they also lost twenty to thirty pounds"
+          },
+          {
+            "verdict": "false",
+            "evidence": "as I expected, most of the individuals experienced significant improvement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "enlisted the help of ninety people to take part in a pilot program"
+          },
+          {
+            "verdict": "true",
+            "evidence": "as I expected, most of the individuals experienced significant improvement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "created a home study course for treating anxiety and depression"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states 'The results were astounding: as I expected, most of the individuals experienced significant improvement'. Option ③ claims the results were 'not as expected', which directly contradicts the text. Options ①, ②, ④, and ⑤ are all explicitly supported by the text."
+        }
+      }
+    ],
+    "35번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "enterprises cooperate with each other a lot more than their counterparts in poor countries"
+          },
+          {
+            "verdict": "false",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "organized themselves, with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "jointly invested in processing facilities and overseas marketing"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "enterprises cooperate with each other a lot more"
+          },
+          {
+            "verdict": "false",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves... into cooperatives and jointly invested"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "Balkan dairy farmers failed because they tried to succeed individually without cooperation.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "enterprises cooperate with each other a lot more than their counterparts in poor countries"
+          },
+          {
+            "verdict": "false",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "organized themselves, with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all their dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves, with state help, into cooperatives"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "enterprises cooperate with each other a lot more"
+          },
+          {
+            "verdict": "false",
+            "evidence": "have failed to develop despite quite a large amount of money"
+          },
+          {
+            "verdict": "true",
+            "evidence": "with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves... into cooperatives and jointly invested"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the dairy sectors in the Balkan countries 'have failed to develop,' whereas option ④ claims they 'have developed well.' This is a direct contradiction. Options ①, ②, ③, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "38번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "the generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "coming up with an idea behind closed doors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "work from home or a private space will generate better ideas"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "work from home or a private space will generate better ideas"
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Allowing employees to occasionally work from home"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": true,
+        "out": "People cannot pace the floor in a doorless office.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "coming up with an idea behind closed doors"
+          },
+          {
+            "verdict": "true",
+            "evidence": "we cannot stare into space for a long time, pace the floor"
+          },
+          {
+            "verdict": "true",
+            "evidence": "work from home or a private space will generate better ideas"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "working from home or a private space will generate better ideas"
+          },
+          {
+            "verdict": "true",
+            "evidence": "we cannot stare into space for a long time, pace the floor"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Allowing employees to occasionally work from home"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'I have always found it hard to be creative in a doorless office.' Option ① claims the writer finds it 'easy' to be creative, which is a direct contradiction. Options ②, ③, ④, and ⑤ are all supported by specific sentences in the text regarding physical constraints, the link between comfort and ideas, and the benefits of private spaces or working from home."
+        }
+      }
+    ],
+    "39번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Waiting to fix a bug toward the end of a project can take fifty times as much effort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "drop everything and do whatever it takes to learn it before you continue on."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Do not pile new material on top of it."
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Waiting to fix a bug toward the end of a project"
+          },
+          {
+            "verdict": "true",
+            "evidence": "drop everything and do whatever it takes to learn it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Do not pile new material on top of it."
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 1,
+        "want_true": true,
+        "out": "Fixing a bug immediately requires significantly less effort than delaying the fix.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "The author urges students to resolve misunderstandings immediately rather than delaying.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Waiting to fix a bug toward the end of a project can take fifty times as much effort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "drop everything and do whatever it takes to learn it before you continue on."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Do not pile new material on top of it."
+          },
+          {
+            "verdict": "true",
+            "evidence": "treat it as a bug that must be fixed as soon as possible."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn... is a serious bug"
+          },
+          {
+            "verdict": "true",
+            "evidence": "fifty times as much effort as it would take to fix"
+          },
+          {
+            "verdict": "true",
+            "evidence": "drop everything and do whatever it takes to learn it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Do not pile new material on top of it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "treat it as a bug that must be fixed as soon as possible"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states 'Do not pile new material on top of it,' whereas option ④ claims the writer says to pile new material on top. This is a direct contradiction. Options ①, ②, ③, and ⑤ all accurately reflect the passage's advice on fixing bugs immediately, treating learning failures as bugs, and dropping everything to resolve misunderstandings."
+        }
+      }
+    ],
+    "44번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "Now, however, many scientists are finding that the results of actual school exams are contradicting some of these well-known approaches to learning."
+          },
+          {
+            "verdict": "true",
+            "evidence": "studying in multiple locations has been proven to actually help the brain retain information"
+          },
+          {
+            "verdict": "false",
+            "evidence": "contradicting some of these well-known approaches to learning."
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations with the same material."
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting can leave a deeper impression."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "rules of good studying habits have remained consistent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "studying in multiple locations has been proven to actually help"
+          },
+          {
+            "verdict": "false",
+            "evidence": "contradicting some of these well-known approaches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations"
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting can leave a deeper impression"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": false,
+        "out": "The writer claims that the rules of good studying habits have changed over time.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 0,
+        "want_true": true,
+        "out": "The writer states that traditional study advice has remained unchanged for a long time.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "rules of good studying habits have remained consistent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "studying in multiple locations has been proven to actually help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "rules of good studying habits have remained consistent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations"
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting can leave a deeper impression"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "rules of good studying habits have remained consistent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "studying in multiple locations has been proven to actually help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "rules of good studying habits have remained consistent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations"
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting can leave a deeper impression"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'the rules of good studying habits have remained consistent' for years, whereas option ① claims they 'have changed over time,' which is a direct contradiction. Options ②, ③, ④, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "18번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "unlike Big Brother in 1984, this one is very real"
+          },
+          {
+            "verdict": "true",
+            "evidence": "know more about our habits... than our friends, our loved ones"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Big Brother controlled every individual... Today, there is an even more threatening Big Brother"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We have to trust that it will not spill our secrets"
+          },
+          {
+            "verdict": "true",
+            "evidence": "trust that has repeatedly been betrayed"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "unlike Big Brother in 1984"
+          },
+          {
+            "verdict": "true",
+            "evidence": "know more about our habits... than our friends"
+          },
+          {
+            "verdict": "true",
+            "evidence": "But unlike Big Brother in 1984"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We have to trust that it will not spill"
+          },
+          {
+            "verdict": "true",
+            "evidence": "trust that has repeatedly been betrayed"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 2,
+        "want_true": true,
+        "out": "Daily questions entered reveal our secrets to the powerful search engine.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "this one is very real"
+          },
+          {
+            "verdict": "true",
+            "evidence": "know more about our habits... than our friends, our loved ones"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Big Brother in 1984, this one is very real"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We have to trust that it will not spill our secrets"
+          },
+          {
+            "verdict": "true",
+            "evidence": "pour our secrets into the all-powerful search engine"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "But unlike Big Brother in 1984, this one is very real."
+          },
+          {
+            "verdict": "true",
+            "evidence": "know more about our habits... than our friends, our loved ones"
+          },
+          {
+            "verdict": "true",
+            "evidence": "there is an even more threatening Big Brother hiding in the shadows: the search engine"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We have to trust that it will not spill our secrets"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We pour our secrets into the all-powerful search engine"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'But unlike Big Brother in 1984, this one is very real.' This means the search engine is NOT the Big Brother from the novel, but rather a real-world entity that is compared to Big Brother. Option ④ claims the search engine is compared to the 'real Big Brother in 1984,' which contradicts the text's distinction that the Big Brother in 1984 was fictional/control-based, whereas the current threat is 'very real' and distinct from the novel's character."
+        }
+      }
+    ],
+    "21번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Cockfighting is an organized fight between two roosters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where cockfighting remained legal"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This bloody sport had already been banned in forty-nine states"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chickens were not defined as animals according to state law"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Last week we achieved a great success. The state of Louisiana voted"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Cockfighting is an organized fight between two roosters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where cockfighting remained legal"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This bloody sport had already been banned in forty-nine states"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chickens were not defined as animals according to state law"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The state of Louisiana voted to outlaw cockfighting"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "The victory represents a minor achievement for the animal rights movement.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Cockfighting is an organized fight between two roosters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where cockfighting remained legal"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This bloody sport had already been banned in forty-nine states"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chickens were not defined as animals according to state law"
+          },
+          {
+            "verdict": "false",
+            "evidence": "This victory represents a historic achievement"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "organized fight between two roosters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Louisiana was the only state where cockfighting remained legal"
+          },
+          {
+            "verdict": "true",
+            "evidence": "banned in forty-nine states"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chickens were not defined as animals according to state law"
+          },
+          {
+            "verdict": "false",
+            "evidence": "historic achievement for the animal rights movement"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the victory represents a 'historic achievement' for the animal rights movement. Option ⑤ claims it is a 'minor achievement,' which directly contradicts the text's description of the event's significance. Options ①, ②, ③, and ④ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "22번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "completed a part-time degree course in History and Sociology"
+          },
+          {
+            "verdict": "false",
+            "evidence": "nobody seemed to understand that"
+          },
+          {
+            "verdict": "true",
+            "evidence": "learning for learning's sake"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use it somehow to advance my job prospects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "education and knowledge for its own sake is never wasted"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "completed a part-time degree course in History and Sociology"
+          },
+          {
+            "verdict": "false",
+            "evidence": "nobody seemed to understand that"
+          },
+          {
+            "verdict": "true",
+            "evidence": "learning for learning's sake"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use it somehow to advance my job prospects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "education and knowledge for its own sake is never wasted"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states that friends 'invariably ask' and 'persist' in asking about the utility of the degree, implying a pragmatic, utilitarian focus rather than genuine interest in the studies themselves. The writer explicitly notes that 'nobody seemed to understand' the value of learning for its own sake, contradicting the idea of genuine interest."
+        }
+      }
+    ],
+    "23번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "she treated him without any prejudice"
+          },
+          {
+            "verdict": "true",
+            "evidence": "valued him for his good qualities"
+          },
+          {
+            "verdict": "true",
+            "evidence": "did not pity him for being what he was"
+          },
+          {
+            "verdict": "true",
+            "evidence": "try to change him"
+          },
+          {
+            "verdict": "false",
+            "evidence": "did not say, 'I'll be happy when he's not an animal anymore.'"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "she treated him without any prejudice"
+          },
+          {
+            "verdict": "true",
+            "evidence": "valued him for his good qualities."
+          },
+          {
+            "verdict": "true",
+            "evidence": "She did not pity him for being what he was"
+          },
+          {
+            "verdict": "true",
+            "evidence": "She did not try to make a prince out of a monster."
+          },
+          {
+            "verdict": "false",
+            "evidence": "She did not say, 'I'll be happy when he's not an animal anymore.'"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'She did not say, \"I'll be happy when he's not an animal anymore.\"' Option ⑤ claims she DID say this, which is a direct contradiction of the text. Options ①, ②, ③, and ④ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "24번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This kind of seating plan was derived from the large horse-drawn coaches"
+          },
+          {
+            "verdict": "false",
+            "evidence": "all the passengers in the American railroad carriages looked forward"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all the passengers in the American railroad carriages looked forward"
+          },
+          {
+            "verdict": "true",
+            "evidence": "put its passengers in a position which made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This kind of seating plan was derived from the large horse-drawn coaches"
+          },
+          {
+            "verdict": "false",
+            "evidence": "staring at one another's backs rather than faces"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all the passengers in the American railroad carriages looked forward"
+          },
+          {
+            "verdict": "true",
+            "evidence": "put its passengers in a position which made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": false,
+        "out": "The American railroad carriage of the 1840s seated passengers facing one another.",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 1,
+        "want_true": false,
+        "out": "The European seating style was copied from American forward-facing designs.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": true,
+        "out": "The European seating style was copied from American forward-facing designs.",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "The design allowed passengers to see the backs of others rather than faces.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "false",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "false",
+            "evidence": "staring at one another's backs rather than faces"
+          },
+          {
+            "verdict": "true",
+            "evidence": "put its passengers in a position which made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This kind of seating plan was derived from the large horse-drawn coaches"
+          },
+          {
+            "verdict": "false",
+            "evidence": "This kind of seating plan was derived from the large horse-drawn coaches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "staring at one another's backs rather than faces"
+          },
+          {
+            "verdict": "true",
+            "evidence": "put its passengers in a position which made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": true,
+        "out": "The absence of noise cover led to discomfort in European train compartments.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "false",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "true",
+            "evidence": "provoked a sense of 'the embarrassment of people facing each other in silence'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "put its passengers in a position which made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "placed its six to eight passengers in a compartment where they faced one another"
+          },
+          {
+            "verdict": "true",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "false",
+            "evidence": "derived from the large horse-drawn coaches of earlier times"
+          },
+          {
+            "verdict": "true",
+            "evidence": "provoked a sense of 'the embarrassment of people facing each other in silence'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "put its passengers in a position which made it possible to be left alone in silence"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the European seating plan was derived from 'earlier times' horse-drawn coaches, not from American designs. In fact, the American design is presented as a later development (1840s) that offered a different solution (forward-facing) to the problem of silence. Therefore, statement ③ contradicts the chronological and causal relationship described in the text."
+        }
+      }
+    ],
+    "25번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "reached the height of the eaves"
+          },
+          {
+            "verdict": "false",
+            "evidence": "he was so careful I said nothing"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "reached the height of the eaves"
+          },
+          {
+            "verdict": "false",
+            "evidence": "he was so careful I said nothing"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "The expert remained silent because the man was always careful at high altitudes.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "false",
+            "evidence": "reached the height of the eaves"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he was so careful I said nothing"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "He ordered the man to cut the top branches"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when the man seemed to be in great danger"
+          },
+          {
+            "verdict": "false",
+            "evidence": "when the man seemed to be in great danger, the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "reached the height of the eaves did the expert call out"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he was so careful I said nothing"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 3,
+        "want_true": true,
+        "out": "The expert emphasized caution during descent because people feel safe.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "The expert believed that people make mistakes when they feel safe.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "The expert spoke up immediately when the man reached the dizzying height.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he was so careful I said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Mistakes are always made when you feel you are safe"
+          },
+          {
+            "verdict": "false",
+            "evidence": "the expert said nothing"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "the expert said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the man seemed to be in great danger"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he was so careful I said nothing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Mistakes are always made when you feel you are safe"
+          },
+          {
+            "verdict": "false",
+            "evidence": "the expert said nothing"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the expert remained silent while the man was at the dizzying height ('he was so careful I said nothing') and only spoke when the man was coming down and had reached the height of the eaves. Option ③ claims the expert spoke up immediately upon reaching the dizzying height, which directly contradicts the text."
+        }
+      }
+    ],
+    "26번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "false",
+            "evidence": "driver is usually stuck in traffic"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Being able so easily to dispose of things makes us insensitive"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "false",
+            "evidence": "driver is usually stuck in traffic."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Being able so easily to dispose of things makes us insensitive to the actual objects we possess."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 1,
+        "want_true": true,
+        "out": "Many discarded items still possess significant potential for future use.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "false",
+            "evidence": "driver is usually stuck in traffic"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation"
+          },
+          {
+            "verdict": "true",
+            "evidence": "92 percent of used cars for sale in Britain in 2005 had a serviceable future life of at least five years"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Being able so easily to dispose of things makes us insensitive to the actual objects we possess"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The new automobile can reach speeds of a hundred miles an hour"
+          },
+          {
+            "verdict": "false",
+            "evidence": "driver is usually stuck in traffic"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Consumers are more motivated by anticipation than by operation."
+          },
+          {
+            "verdict": "true",
+            "evidence": "products thrown out long before the end of their practical life"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Being able so easily to dispose of things makes us insensitive to the actual objects we possess."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'the driver is usually stuck in traffic,' which contradicts the statement that the automobile is 'usually driven at a high speed.' While the car *can* reach 100 mph (Option ②), it is not *usually* driven at that speed. Options ①, ④, and ⑤ are directly supported by the text's arguments about future life, motivation by anticipation, and insensitivity to disposal."
+        }
+      }
+    ],
+    "27번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects of habituation to disappear."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise if it happened every evening."
+          },
+          {
+            "verdict": "false",
+            "evidence": "if one does it on New Year's Eve and then allows a full year to pass"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise if it happened every evening."
+          },
+          {
+            "verdict": "false",
+            "evidence": "if one does it on New Year's Eve and then allows a full year to pass"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects of habituation to disappear."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise if it happened every evening."
+          },
+          {
+            "verdict": "false",
+            "evidence": "if one does it on New Year's Eve and then allows a full year to pass"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise if it happened every evening."
+          },
+          {
+            "verdict": "false",
+            "evidence": "if one does it on New Year's Eve and then allows a full year to pass"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "Psychologists name the process of adapting to repeated experiences.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": false,
+        "out": "Psychologists suggest that repeating experiences frequently enhances their pleasure.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 2,
+        "want_true": true,
+        "out": "Psychologists identify the process of adapting to repeated experiences as habituation.",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 1,
+        "want_true": true,
+        "out": "Repeating experiences without breaks makes them less enjoyable over time.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects of habituation to disappear."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise if it happened every evening."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Psychologists call this habituation."
+          },
+          {
+            "verdict": "false",
+            "evidence": "the experience produces less pleasure each time."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the experience produces less pleasure each time."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "A year is long enough for the effects of habituation to disappear"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Clinking champagne glasses would be a relatively dull exercise"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Psychologists call this habituation"
+          },
+          {
+            "verdict": "false",
+            "evidence": "One way to beat habituation is to increase the amount of time"
+          },
+          {
+            "verdict": "true",
+            "evidence": "experience produces less pleasure each time"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that repeating experiences causes them to produce 'less pleasure each time' due to habituation. Option ① claims that frequent repetition 'enhances their pleasure,' which is the direct opposite of the text's argument. Options ②, ③, ④, and ⑤ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "28번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Actors do not become the characters they play."
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "true",
+            "evidence": "both of us understand revenge in our own ways"
+          },
+          {
+            "verdict": "true",
+            "evidence": "performances would be similar in that we both say Shakespeare's lines"
+          },
+          {
+            "verdict": "true",
+            "evidence": "fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Actors do not become the characters they play."
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "true",
+            "evidence": "both of us understand revenge in our own ways"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Our performances would be similar in that we both say Shakespeare's lines"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": false,
+        "out": "Actors always completely transform into the characters they portray.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "Actors do not become the characters they play."
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "true",
+            "evidence": "both of us understand revenge in our own ways"
+          },
+          {
+            "verdict": "true",
+            "evidence": "performances would be similar in that we both say Shakespeare's lines"
+          },
+          {
+            "verdict": "true",
+            "evidence": "fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "Actors do not become the characters they play."
+          },
+          {
+            "verdict": "true",
+            "evidence": "You can't, in reality, be anybody other than yourself."
+          },
+          {
+            "verdict": "true",
+            "evidence": "both of us understand revenge in our own ways"
+          },
+          {
+            "verdict": "true",
+            "evidence": "performances would be similar in that we both say Shakespeare's lines"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The fun in acting is to play characters that are different from yourself"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states 'Actors do not become the characters they play' and 'You can't, in reality, be anybody other than yourself.' Option ① claims actors 'always completely transform,' which directly contradicts the author's core argument. Options ②, ③, ④, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "30번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "classical music was pop music"
+          },
+          {
+            "verdict": "true",
+            "evidence": "audiences openly approved (or disapproved)"
+          },
+          {
+            "verdict": "false",
+            "evidence": "audience keeping silent while his works"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he would be surprised to see the audience keeping silent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "conductors... now speak from the podium sometimes"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "when classical music was pop music"
+          },
+          {
+            "verdict": "true",
+            "evidence": "audiences openly approved (or disapproved) of a performance"
+          },
+          {
+            "verdict": "false",
+            "evidence": "audience keeping silent while his works were being played"
+          },
+          {
+            "verdict": "true",
+            "evidence": "he would be surprised to see the audience keeping silent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "conductors, who have been mute on stage, now speak from the podium sometimes."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that audiences currently keep silent ('audience keeping silent') and that the 'stuffy atmosphere is slowly changing.' Option ③ claims audiences 'now respond... while they are being played,' which contradicts the description of the current state of silence and the ongoing, slow nature of the change. Options ①, ②, ④, and ⑤ are directly supported by the text."
+        }
+      }
+    ],
+    "31번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "it's saying 'no' that's really hard"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help, either"
+          },
+          {
+            "verdict": "true",
+            "evidence": "is a greater favor than answering with a 'Maybe'"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "it's saying \"no\" that's really hard"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help, either"
+          },
+          {
+            "verdict": "true",
+            "evidence": "absolute \"There's just no way...\" is a greater favor"
+          },
+          {
+            "verdict": "true",
+            "evidence": "\"Maybe\" that's never going to happen"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "Most individuals find it difficult to say no",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "Both parties feel better when the rejection process ends quickly.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "it's saying 'no' that's really hard"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help, either"
+          },
+          {
+            "verdict": "true",
+            "evidence": "is a greater favor than answering with a 'Maybe'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the sooner you can finish it, the better both parties feel"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "For most people, it's saying 'no' that's really hard."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a quick response is almost always appreciated."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Leaving the door open doesn't help, either."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Responding... with an absolute 'There's just no way... is a greater favor"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The sooner you can finish it, the better both parties feel."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'Leaving the door open doesn't help, either,' whereas option ③ claims it is 'always the best way,' which is a direct contradiction."
+        }
+      }
+    ],
+    "32번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants."
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth of preserved Neanderthal specimens."
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "Some had believed that they had gone extinct when the Ice Age began"
+          },
+          {
+            "verdict": "false",
+            "evidence": "food was actually being consumed as it was found in the mouth"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants"
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "they had gone extinct when the Ice Age began"
+          },
+          {
+            "verdict": "false",
+            "evidence": "food was actually being consumed as it was found"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "Previous beliefs suggested that Neanderthals primarily consumed meat.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants."
+          },
+          {
+            "verdict": "true",
+            "evidence": "found cooked grains and plants in the teeth of preserved Neanderthal specimens."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals were widely believed to be great meat eaters."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Some had believed that they had gone extinct when the Ice Age began"
+          },
+          {
+            "verdict": "false",
+            "evidence": "food was actually being consumed as it was found in the mouth"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals cooked and ate grains and plants"
+          },
+          {
+            "verdict": "true",
+            "evidence": "American researchers came to that conclusion after they had found"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Neanderthals were widely believed to be great meat eaters"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Some had believed that they had gone extinct when the Ice Age began"
+          },
+          {
+            "verdict": "false",
+            "evidence": "food was actually being consumed as it was found in the mouth"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage states that the new findings show the food was 'actually being consumed as it was found in the mouth of a Neanderthal,' referring to the physical state of the food (cooked grains/plants found in teeth). Option ⑤ claims the evidence shows they ate the food 'as they found it,' which implies eating raw or unprocessed food directly from nature. This contradicts the passage's emphasis that the grains were 'cooked' and that this cooking was the key discovery challenging previous beliefs. Therefore, ⑤ does not agree with the passage."
+        }
+      }
+    ],
+    "33번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words"
+          },
+          {
+            "verdict": "false",
+            "evidence": "you cannot distinguish your thoughts from what you actually experienced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This phenomenon is particularly important when you are claiming"
+          },
+          {
+            "verdict": "true",
+            "evidence": "you can't recall the original exactly"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words or sentence structure"
+          },
+          {
+            "verdict": "false",
+            "evidence": "you cannot distinguish your thoughts from what you actually experienced"
+          },
+          {
+            "verdict": "true",
+            "evidence": "store what a message means but not the exact words or sentence structure"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This phenomenon is particularly important when you are claiming you had a verbal agreement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This phenomenon is particularly important when you are claiming you had a verbal agreement"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that when you combine facts in memory, 'you cannot distinguish your thoughts from what you actually experienced.' Option ③ claims that abstraction 'helps distinguish' them, which is the direct opposite of the text's assertion. Therefore, ③ is the statement that does not agree with the passage."
+        }
+      }
+    ],
+    "34번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "created a home study course for treating anxiety and depression"
+          },
+          {
+            "verdict": "false",
+            "evidence": "The results were astounding"
+          },
+          {
+            "verdict": "true",
+            "evidence": "following the twelve-week program"
+          },
+          {
+            "verdict": "true",
+            "evidence": "most of the individuals experienced significant improvement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "they also lost twenty to thirty pounds"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "created a home study course for treating anxiety and depression"
+          },
+          {
+            "verdict": "false",
+            "evidence": "The results were astounding"
+          },
+          {
+            "verdict": "true",
+            "evidence": "following the twelve-week program"
+          },
+          {
+            "verdict": "true",
+            "evidence": "most of the individuals experienced significant improvement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "they also lost twenty to thirty pounds"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states the results were 'astounding' and that 'most of the individuals experienced significant improvement,' which directly contradicts option ②'s claim that the results were 'disappointing.' Options ①, ③, ④, and ⑤ are all directly supported by specific details in the text."
+        }
+      }
+    ],
+    "35번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all their dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "false",
+            "evidence": "farmers organized themselves, with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all their dairy farmers tried to make it on their own"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "despite quite a large amount of money channelled into them"
+          },
+          {
+            "verdict": "true",
+            "evidence": "because all their dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "false",
+            "evidence": "because all their dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "true",
+            "evidence": "despite quite a large amount of money channelled into them"
+          },
+          {
+            "verdict": "true",
+            "evidence": "because all their dairy farmers tried to make it on their own"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": false,
+        "out": "The dairy sectors in the Balkan countries succeeded because their farmers organized themselves into cooperatives",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "Farmers in wealthy nations form cooperatives with government support to succeed.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "Rich country dairy farmers succeed by forming cooperatives with state assistance.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "because all their dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "false",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves, with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves, with state help, into cooperatives"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "failed to develop despite quite a large amount of money"
+          },
+          {
+            "verdict": "true",
+            "evidence": "all their dairy farmers tried to make it on their own"
+          },
+          {
+            "verdict": "false",
+            "evidence": "dairy sectors in the Balkan countries have failed to develop"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves, with state help, into cooperatives"
+          },
+          {
+            "verdict": "true",
+            "evidence": "farmers organized themselves, with state help, into cooperatives"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that Balkan dairy sectors 'have failed to develop' because farmers 'tried to make it on their own.' Option ④ claims they 'succeeded' and 'organized themselves into cooperatives,' which directly contradicts both the outcome (failure vs. success) and the method (individual effort vs. cooperatives) described in the text. Options ①, ②, ③, and ⑤ are all supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "38번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "the generation of ideas is closely linked to physical comfort."
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the generation of ideas is closely linked to physical comfort."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Allowing employees to occasionally work from home or a private space will generate better ideas and results."
+          },
+          {
+            "verdict": "false",
+            "evidence": "In most offices, the phone is constantly ringing, people are stopping by, and it is impossible to focus on one problem."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "false",
+            "evidence": "hard to be creative in a doorless office"
+          },
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "work from home or a private space will generate better ideas"
+          },
+          {
+            "verdict": "false",
+            "evidence": "impossible to focus on one problem"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "The writer states that physical comfort is necessary for generating ideas.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "the generation of ideas is closely linked to physical comfort."
+          },
+          {
+            "verdict": "false",
+            "evidence": "I have always found it hard to be creative in a doorless office."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the generation of ideas is closely linked to physical comfort."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Allowing employees to occasionally work from home or a private space will generate better ideas and results."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the generation of ideas is closely linked to physical comfort."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "false",
+            "evidence": "impossible to focus on one problem"
+          },
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Allowing employees to occasionally work from home or a private space will generate better ideas"
+          },
+          {
+            "verdict": "true",
+            "evidence": "generation of ideas is closely linked to physical comfort"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the writer finds it 'hard to be creative in a doorless office' (noisy, open environment) and argues that 'allowing employees to occasionally work from home or a private space will generate better ideas.' Option ① claims the writer thinks working in a 'quiet office' is essential. This contradicts the text, which suggests that a 'doorless office' (implied to be noisy and distracting) hinders creativity, and that privacy (not necessarily just 'quietness' of a standard office, but specifically 'closed doors' or 'private space') is the key factor. More importantly, the text contrasts the 'doorless office' with 'behind closed doors,' implying that the standard 'office' environment (even if quiet, it's open/doorless) is not the ideal; the ideal is a private/closed space."
+        }
+      }
+    ],
+    "39번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 1,
+        "want_true": true,
+        "out": "Delaying bug fixes increases effort significantly compared to immediate correction.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 1,
+        "want_true": true,
+        "out": "Postponing bug resolution requires significantly more effort than immediate fixes.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "You must resolve misunderstandings immediately before advancing to new topics.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "Learning what is taught daily is considered a minor issue.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Waiting to fix a bug toward the end of a project can take fifty times as much effort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Waiting to fix a bug toward the end of a project can take fifty times as much effort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "do whatever it takes to learn it before you continue on."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Waiting to fix a bug toward the end of a project can take fifty times as much effort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Waiting to fix a bug toward the end of a project can take fifty times as much effort"
+          },
+          {
+            "verdict": "true",
+            "evidence": "treat it as a bug that must be fixed as soon as possible"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Failing to learn what you're supposedly taught each day is a serious bug."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'Failing to learn what you're supposedly taught each day is a serious bug.' Option ④ claims that learning what is taught daily is a 'minor issue,' which directly contradicts the text's assertion that failing to learn is a 'serious' problem. Options ①, ②, ③, and ⑤ are all supported by the text: ① and ② reflect the 'fifty times as much effort' statement; ③ reflects the comparison of failing to learn to a 'serious bug'; and ⑤ reflects the instruction to 'drop everything and do whatever it takes to learn it before you continue on.'"
+        }
+      }
+    ],
+    "44번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "stay focused"
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations"
+          },
+          {
+            "verdict": "true",
+            "evidence": "try to find your own way to raise the efficiency"
+          },
+          {
+            "verdict": "false",
+            "evidence": "studying in multiple locations has been proven"
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "stay focused, and stick to a schedule"
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations"
+          },
+          {
+            "verdict": "true",
+            "evidence": "try to find your own way to raise the efficiency of your studying"
+          },
+          {
+            "verdict": "false",
+            "evidence": "studying in multiple locations has been proven to actually help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting can leave a deeper impression"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "Traditional study advice has not changed for a long time",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": ""
+          },
+          {
+            "verdict": "false",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "rules of good studying habits have remained consistent"
+          },
+          {
+            "verdict": "true",
+            "evidence": "changing settings forces the brain to make multiple associations"
+          },
+          {
+            "verdict": "true",
+            "evidence": "try to find your own way to raise the efficiency of your studying"
+          },
+          {
+            "verdict": "false",
+            "evidence": "studying in multiple locations has been proven to actually help"
+          },
+          {
+            "verdict": "true",
+            "evidence": "varying the type of material studied in one setting can leave a deeper impression"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'studying in multiple locations has been proven to actually help the brain retain information because changing settings forces the brain to make multiple associations.' Option ④ claims that 'studying in one place' is proven to help retain information, which directly contradicts the text's argument that varying locations (multiple settings) is beneficial. Options ①, ②, ③, and ⑤ are all supported by specific sentences in the passage."
+        }
+      }
+    ]
+  },
+  "by_type": {
+    "mismatch": {
+      "n": 36,
+      "O": 14,
+      "P": 21,
+      "X": 1,
+      "F": 0,
+      "O_pct": 38.9,
+      "F_pct": 0.0
+    }
+  },
+  "cycle_result": {
+    "completed_at": "2026-09-27T06:02:05.418789+09:00",
+    "decision": "reverted",
+    "reason": "sep26-go1 +5.3pp is same within ±7pp; jun11-go2 +13.9pp improves but does not establish improvement on both sets",
+    "restored_sha256": "4c1ec244e908681432659e87ce80ca0e3476e43aba673fa4eab92dfaf3a5dfe7",
+    "sets": {
+      "sep26-go1": {
+        "before": {
+          "n": 38,
+          "O": 17,
+          "P": 16,
+          "X": 5,
+          "F": 0,
+          "O_pct": 44.7,
+          "F_pct": 0.0
+        },
+        "after": {
+          "n": 38,
+          "O": 19,
+          "P": 16,
+          "X": 3,
+          "F": 0,
+          "O_pct": 50.0,
+          "F_pct": 0.0
+        }
+      },
+      "jun11-go2": {
+        "before": {
+          "n": 36,
+          "O": 14,
+          "P": 21,
+          "X": 1,
+          "F": 0,
+          "O_pct": 38.9,
+          "F_pct": 0.0
+        },
+        "after": {
+          "n": 36,
+          "O": 19,
+          "P": 12,
+          "X": 5,
+          "F": 0,
+          "O_pct": 52.8,
+          "F_pct": 0.0
+        }
+      }
+    }
+  }
+}

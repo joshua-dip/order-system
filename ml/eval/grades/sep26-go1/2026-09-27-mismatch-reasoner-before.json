@@ -1,0 +1,5303 @@
+{
+  "grader": "Codex AI — 원문·유일성·해설·변별력 직접 검토; 독립 사람/블라인드 검수 아님",
+  "grading_version": "product-content-discrimination-v1",
+  "rubric": "O: 내용·유일성·해설·형식·정성 변별력 통과. P: 복수정답/미언급·범위 모호성/해설 오류·잘림/동일 의미 선지 반복·선지만으로 정답 노출. X: 정답 불성립 또는 틀린 교정. F: 생성 실패. 새 지문 상품 검수와 별개.",
+  "source_run_label": "2026-09-27-mismatch-reasoner-before",
+  "run_sha256": "bbf1e3127c283916065762a821720c5933e139fc6e759427ee7c881535ef5b74",
+  "source_material_sha256": "d436c52919ddcc1ee7c45a3b5750a8634c8857b763fa3d527024d81253cc3144",
+  "experiment": {
+    "name": "mismatch-reasoner-model",
+    "phase": "before",
+    "date": "2026-09-27",
+    "commit_at_review": "4a68c6e74daf1adf07fcf0983e8fe273dc9fec3f",
+    "hypothesis": "시간 상태 통합, 서술 주체 및 직접 추론의 참·거짓 오류가 검사 지시 수정 후에도 남았다. 초안 7B+fact LoRA와 코드·프롬프트를 고정하고 판정·교정·해설 모델만 35B-A3B에서 27B로 바꿔 독해 오류가 줄어드는지 비교한다.",
+    "settings": {
+      "base": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+      "reasoner": {
+        "repo": "mlx-community/Qwen3.6-35B-A3B-4bit",
+        "revision": "38740b847e4cb78f352aba30aa41c76e08e6eb46",
+        "snapshot": "/Users/goshua/.cache/huggingface/hub/models--mlx-community--Qwen3.6-35B-A3B-4bit/snapshots/38740b847e4cb78f352aba30aa41c76e08e6eb46"
+      },
+      "adapter": "fact-lora; SHA-256 in code_sha256",
+      "temp": 0.3,
+      "fact_check_temp": 0.0,
+      "repeat": 2,
+      "keep_trace": true,
+      "seed": "not fixed",
+      "max_retries_argument": 2
+    },
+    "code_sha256": {
+      "ml/fact/windows/pipeline_fact.py": "4c1ec244e908681432659e87ce80ca0e3476e43aba673fa4eab92dfaf3a5dfe7",
+      "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+      "ml/common/distractor_check.py": "133dbf249b6a7626d8b555f513fe2907692a347c91378835075a53707b04aa65",
+      "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+      "ml/fact/adapters/fact-lora/adapters.safetensors": "f8714bca6eaabd0fbd36ff9087cd1585755a44996ee0eda72c3b272e69341db9"
+    },
+    "runner": {
+      "status": "baseline_complete_needs_grading",
+      "runner_pid": 95428,
+      "started_at": "2026-09-27T06:03:01.862588+09:00",
+      "deadline": "2026-09-27T09:45:00+09:00",
+      "label": "2026-09-27-mismatch-reasoner-before",
+      "type": "mismatch",
+      "repeat": 2,
+      "keep_trace": true,
+      "expected_rows_per_set": {
+        "sep26-go1": 38,
+        "jun11-go2": 36
+      },
+      "code_sha256": {
+        "ml/fact/windows/pipeline_fact.py": "4c1ec244e908681432659e87ce80ca0e3476e43aba673fa4eab92dfaf3a5dfe7",
+        "ml/common/mlx_runtime.py": "0770f9a486ab8be04f1080521abad0a19e9289f08fb3dac55f4323ec37e6193c",
+        "ml/common/distractor_check.py": "133dbf249b6a7626d8b555f513fe2907692a347c91378835075a53707b04aa65",
+        "ml/eval/run_eval.py": "cf3ebb7734735ac9d0db30270f31edab8d8b2a5a1df49dd6adc19c9a3d19c376",
+        "ml/fact/adapters/fact-lora/adapters.safetensors": "f8714bca6eaabd0fbd36ff9087cd1585755a44996ee0eda72c3b272e69341db9"
+      },
+      "candidate_applied": false,
+      "runs": [
+        {
+          "set": "sep26-go1",
+          "pid": 95632,
+          "started_at": "2026-09-27T06:16:15.007232+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "sep26-go1",
+            "--label",
+            "2026-09-27-mismatch-reasoner-before",
+            "--types",
+            "mismatch",
+            "--repeat",
+            "2",
+            "--keep-trace",
+            "--reasoner",
+            "/Users/goshua/.cache/huggingface/hub/models--mlx-community--Qwen3.6-35B-A3B-4bit/snapshots/38740b847e4cb78f352aba30aa41c76e08e6eb46"
+          ],
+          "log": "/private/tmp/lora-mismatch-reasoner-cycle/sep26-go1-before.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T06:24:18.877129+09:00",
+          "rows": 38,
+          "unique_rows": 38,
+          "code_unchanged": true
+        },
+        {
+          "set": "jun11-go2",
+          "pid": 95744,
+          "started_at": "2026-09-27T06:24:18.898137+09:00",
+          "command": [
+            "/usr/bin/caffeinate",
+            "-i",
+            "/Users/goshua/next-order/ml/topic/.venv/bin/python",
+            "-u",
+            "ml/eval/run_eval.py",
+            "--set",
+            "jun11-go2",
+            "--label",
+            "2026-09-27-mismatch-reasoner-before",
+            "--types",
+            "mismatch",
+            "--repeat",
+            "2",
+            "--keep-trace",
+            "--reasoner",
+            "/Users/goshua/.cache/huggingface/hub/models--mlx-community--Qwen3.6-35B-A3B-4bit/snapshots/38740b847e4cb78f352aba30aa41c76e08e6eb46"
+          ],
+          "log": "/private/tmp/lora-mismatch-reasoner-cycle/jun11-go2-before.log",
+          "returncode": 0,
+          "ended_at": "2026-09-27T06:32:33.615347+09:00",
+          "rows": 36,
+          "unique_rows": 36,
+          "code_unchanged": true
+        }
+      ],
+      "updated_at": "2026-09-27T06:32:33.629658+09:00",
+      "preparation_pid": 95629,
+      "candidate_model": {
+        "repo": "mlx-community/Qwen3.8-27B-4bit",
+        "revision": "10c35caafbb80f7dc6a7a432cdd11af10a6d4818",
+        "snapshot": "/Users/goshua/.cache/huggingface/hub/models--mlx-community--Qwen3.8-27B-4bit/snapshots/10c35caafbb80f7dc6a7a432cdd11af10a6d4818"
+      },
+      "baseline_model": {
+        "repo": "mlx-community/Qwen3.6-35B-A3B-4bit",
+        "revision": "38740b847e4cb78f352aba30aa41c76e08e6eb46",
+        "snapshot": "/Users/goshua/.cache/huggingface/hub/models--mlx-community--Qwen3.6-35B-A3B-4bit/snapshots/38740b847e4cb78f352aba30aa41c76e08e6eb46"
+      },
+      "smoke": {
+        "seconds": 3.2576221660128795,
+        "raw": "{\"ok\": true}",
+        "parsed": {
+          "ok": true
+        },
+        "model": "/Users/goshua/.cache/huggingface/hub/models--mlx-community--Qwen3.8-27B-4bit/snapshots/10c35caafbb80f7dc6a7a432cdd11af10a6d4818"
+      }
+    },
+    "runtime_versions": {
+      "mlx": "0.32.2",
+      "mlx-lm": "0.31.3",
+      "transformers": "5.17.0",
+      "huggingface-hub": "1.32.0"
+    },
+    "set_sha256": "28ed113807906eaf1cf8d49f49e5a85d55c4d0d32fb45b85129e15014d9f1e21",
+    "decision_rule": "각 세트 O 변화 ±7%p 이내=같음. 같음/악화면 후보 복원. F도 함께 비교. 반복 문항은 독립 새 지문 아님."
+  },
+  "grades": {
+    "20번|mismatch": "P",
+    "21번|mismatch": "O",
+    "22번|mismatch": "O",
+    "23번|mismatch": "P",
+    "24번|mismatch": "P",
+    "26번|mismatch": "P",
+    "29번|mismatch": "X",
+    "30번|mismatch": "P",
+    "31번|mismatch": "X",
+    "32번|mismatch": "P",
+    "33번|mismatch": "O",
+    "34번|mismatch": "P",
+    "35번|mismatch": "P",
+    "36번|mismatch": "O",
+    "37번|mismatch": "O",
+    "38번|mismatch": "O",
+    "39번|mismatch": "P",
+    "40번|mismatch": "O",
+    "41~42번|mismatch": "O",
+    "20번|mismatch|2": "P",
+    "21번|mismatch|2": "P",
+    "22번|mismatch|2": "O",
+    "23번|mismatch|2": "O",
+    "24번|mismatch|2": "P",
+    "26번|mismatch|2": "P",
+    "29번|mismatch|2": "O",
+    "30번|mismatch|2": "P",
+    "31번|mismatch|2": "P",
+    "32번|mismatch|2": "P",
+    "33번|mismatch|2": "O",
+    "34번|mismatch|2": "O",
+    "35번|mismatch|2": "P",
+    "36번|mismatch|2": "P",
+    "37번|mismatch|2": "P",
+    "38번|mismatch|2": "O",
+    "39번|mismatch|2": "O",
+    "40번|mismatch|2": "O",
+    "41~42번|mismatch|2": "P"
+  },
+  "notes": {
+    "20번|mismatch": "② 오락 정도로 성공 측정은 틀리지만 ④⑤가 interactivity/engagement라는 동일 기준을 반복해 선지 다양성이 부족하다.",
+    "21번|mismatch": "⑤ ordinary가 원문의 extraordinary와 반대. 스마트 기기·사회성·운동 기술·움직임 필요성은 각각 근거가 있다.",
+    "22번|mismatch": "④ 생각·말이 최강이라는 주장만 신념 체계가 최강이라는 원문과 모순. ①②③⑤는 정의·영향·기준·권고와 일치한다.",
+    "23번|mismatch": "④ might를 would have로 강화한 점은 부적절하지만 해설이 가정법 과거완료를 실제 과거 멸종의 단정이라고 가르친다. 반사실 조건문의 문법 설명이 틀렸다.",
+    "24번|mismatch": "③은 저자가 긍정적으로 인용한 plans are worthless와 계획 보유 긍정을 결합했다. 인용자의 말이므로 저자 견해가 아니라는 해설만으로 배제하기 어렵고, plans와 planning 구분도 흐려 유일성이 불안하다.",
+    "26번|mismatch": "의학 인류학 학위 취득은 의학을 전혀 공부하지 않았다는 배타적 진술이 아니다. ③ medicine의 넓은 범위와 미언급을 단정적인 불일치로 취급했다.",
+    "29번|mismatch": "④는 after warming up이라는 시점을 붙여 유산소 호흡 전환 원인과 일치한다. 해설은 운동 초기 산소 부족을 가져와 이후 상태를 반박하고 인용 중간에서 잘렸다.",
+    "30번|mismatch": "③ 뉴요커의 빈번한 단락 집착은 틀리지만 ②는 can discourage를 will not start로 과도하게 단정하여 다른 불일치 가능성이 생겼다.",
+    "31번|mismatch": "마을 밖에서 좋아하지 않는다는 서술과 일반적인 취향 전파는 특정 파이 레시피가 마을 밖으로 반드시 퍼졌다는 증거가 아니다. ③의 never spreads를 원문과 명백한 모순으로 설명하지 못하며 해설은 nobody outside를 아무도 좋아하지 않는다고 바꿨다.",
+    "32번|mismatch": "③ 해석에 영향받지 않는다는 정답은 맞지만 ② not automatic은 not just automatic보다 강해 원문 의미를 훼손한다. ①③은 반대쌍이라 이 모호성이 정답 유일성에 영향을 준다.",
+    "33번|mismatch": "⑤ 인지 가능한 사물 복제는 Pollock did not copy anything과 반대. 그리스의 목표·그림 소실·품질 추정 근거·폴록의 비모방은 일치한다.",
+    "34번|mismatch": "① 신체가 달리기에 서툴다는 정답은 맞지만 ②③이 의식적 통제를 벗어난 무의식적 달리기라는 동일 주장을 반복한다.",
+    "35번|mismatch": "원문은 냄새가 걱정되면 목욕을 주 1~2회 이하로 제한하도록 허용한다. ① weekly 권장을 명확한 반대로 만들기 어렵고 해설은 여러 회 금지를 주 1회 금지로 적용했다. ④ 상한과 필요성 구분도 흐리다.",
+    "36번|mismatch": "② 항상 문자·도형 사용은 숫자를 대신할 수 있다는 가능성과 다르다. 수치 무관·광고 표현·추론 논리·미술 비유 모두 근거가 있다.",
+    "37번|mismatch": "⑤ Saturn은 Jupiter를 바꾼 명확한 불일치. 고대 관측·코페르니쿠스·당시 우주관·망원경 시기는 일치한다.",
+    "38번|mismatch": "② closeness rather than distance만 Porter의 명칭과 다르다. 명칭·차이 연결·정보 교환·초기 단위 한계의 근거가 서로 구분된다.",
+    "39번|mismatch": "① 개미가 잎을 직접 먹는다는 정답은 맞지만 해설이 ④ feed the fungus 인용 도중 잘려 문장을 끝내지 못했다.",
+    "40번|mismatch": "② consciously만 nonconsciously와 반대. 타인 반응 관찰·관계 위협 의식화·일상적 탐색·사회적 가치 확인은 일치한다.",
+    "41~42번|mismatch": "⑤ 크리에이터 영향이 전통 매체에 제한된다는 내용은 인터넷의 장벽 해체와 반대. 나머지는 역할 변화·장벽·접근성·공적 인물 확대의 근거가 있다.",
+    "20번|mismatch|2": "② 오락 목적을 정답으로 삼았지만 primary가 없어 fun enough와 명확히 구분되지 않고 ①④도 적당한 재미를 반복한다.",
+    "21번|mismatch|2": "①~④는 모두 현대 아이들의 활동 제한·기술 부족인데 ⑤만 같은 운동 기술을 매일 습득한다는 반대 방향이다. 특히 ④⑤가 같은 run/skip/climb를 반복하여 선지만으로 정답이 드러난다.",
+    "22번|mismatch|2": "④ 포스터만으로 충분함이 진정한 믿음 필요성과 모순. 끌어당김 정의·통념 오류·신념 우선·신념 수정은 근거가 있다.",
+    "23번|mismatch|2": "④ 단일한 마음이 재난 생존을 높인다는 주장만 다양성의 생존 이점과 모순. 환경 재난·생존자·관찰·진화 가능성은 일치한다.",
+    "24번|mismatch|2": "⑤ planning worthless는 반대이나 ③④가 계획 보유는 아름답되 생각하는 방식이 중요하다는 동일 뜻을 반복한다. 해설도 plans/planning을 모두 계획으로 표현해 핵심 구분이 약하다.",
+    "26번|mismatch|2": "의학 인류학 학위를 근거로 의학 공부를 배타적으로 부정한다. 본문에 다른 공부를 하지 않았다는 근거가 없어 ②의 불일치가 충분히 확정되지 않는다.",
+    "29번|mismatch|2": "④ 산소 공급을 따라잡은 뒤에도 무산소가 필요하다는 조건이 틀리다. 에너지원·백업 기능·과부하·준비운동 뒤 유산소 전환은 일치한다.",
+    "30번|mismatch|2": "⑤ easier는 harder와 반대이나 ① make writing look inviting and inviting readers는 병렬 구조가 깨진 비문이다.",
+    "31번|mismatch|2": "③ 음식 고유 특성만으로 취향 결정은 틀리지만 해설이 qualities를 질량으로 잘못 설명하고 ④ 인용 중간에서 잘렸다.",
+    "32번|mismatch|2": "④ 판단 변경이 감정에 영향 없다는 정답은 맞지만 ①③이 판단/해석이 감정을 형성한다는 동일 내용을 반복한다.",
+    "33번|mismatch|2": "⑤ 사물 모방은 폴록의 의도적 비모방과 반대. ② 시간·날씨로 소실도 실제 원문에 있고 다른 선지는 그리스 목표·도기 근거·폴록 특징과 일치한다.",
+    "34번|mismatch|2": "④ fully conscious/easily explained는 부분 무의식·설명 불가와 모순. 부상 의문·숙련 신체·생물학 과정·신체 지식은 일치한다.",
+    "35번|mismatch|2": "⑤ 특정 두꺼운 털 개의 일반적 필요를 모든 개의 의무로 넓힌 것은 부적절하나 ①②가 빈번한 목욕은 피부에 해롭다는 동일 뜻을 그대로 반복한다.",
+    "36번|mismatch|2": "④ is described는 저자 판단인지 신문 광고 묘사인지 불명확하다. 신문은 실제로 no maths라고 묘사하므로 해설의 저자 논지 반박만으로 보고 문장을 배제할 수 없다. artistic involvement도 원문에 없는 범위를 섞었다.",
+    "37번|mismatch|2": "③ 18세기는 17세기와 달라 정답이나 해설이 ④⑤ 근거 Using a telescope 인용 중간에서 잘렸다.",
+    "38번|mismatch|2": "③ 초기 단위가 복잡하고 널리 공유됐다는 것은 단일 정착지·신체 기준과 모순. 일관성·Porter·신체 단위·공동체 확대는 근거 있다.",
+    "39번|mismatch|2": "② 잎 직접 섭취만 원문과 반대. 재배 전략·균류 영양 공급·균류 섭취·지하 둥지는 일치하고 해설도 완결됐다.",
+    "40번|mismatch|2": "② 의식적 작동만 무의식적 작동과 반대. 관찰·위협 의식화·몸과 뇌 연결·정상적 탐색은 일치한다.",
+    "41~42번|mismatch|2": "④ 크리에이터 슬랭 사용이 어려워졌다는 정답은 맞지만 ①②가 인터넷이 슬랭 역할을 바꿨다는 완전히 같은 뜻을 반복한다."
+  },
+  "review_material": {
+    "20번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① New developers often mistakenly prioritize entertainment over educational value.",
+        "② Success in learning games is measured by how entertained the learners are.",
+        "③ The game should be engaging with a mild level of fun.",
+        "④ The goal of the game play should be interactivity and engagement.",
+        "⑤ Research shows that what makes games instructional is the level of interactivity and engagement."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 \"success will be measured by the achievement of learning outcomes\"라고 명시하여 학습 목표 달성이 성공 기준임을 밝히므로, 학습자가 얼마나 즐겁게 놀았는지(measured by how entertained)로 성공을 측정한다는 ②번은 내용과 일치하지 않는다. ①번은 \"that often makes learning harder rather than easier\"로 교육적 가치보다 오락을 우선시하는 실수를 지적한 부분과 일치한다. ③번은 \"engaging with a mild level of fun\"이라는 표현 그대로를 인용하여 일치함을 알 수 있다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Many kids today are being held captive by 'smart' devices like phones and tablets.",
+        "② Kids are not learning how to socialize and read physical cues from others.",
+        "③ Kids are not even learning how to run, how to skip, or how to climb.",
+        "④ Our design requires movement to enable extraordinary living.",
+        "⑤ We are meant to live ordinary lives through movement."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서는 \"we are meant to live extraordinary lives\"라고 명시하여 운동이 특별한 삶을 살게 한다고 언급하므로, ⑤의 'ordinary lives'는 내용과 일치하지 않습니다. ①은 \"held captive by 'smart' devices\"와 일치하고, ②는 \"not learning how to socialize\"와 일치하며, ③은 \"not even learning how to run\"과 일치합니다. 또한 ④는 \"away from our design\"과 \"extraordinary lives\"를 연결한 것으로 지문의 맥락과 맞습니다. 따라서 ⑤가 유일한 불일치 선지입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The Law of Attraction states that like attracts like.",
+        "② The writer believes that thoughts and words are extremely magnetic.",
+        "③ The writer says that the most powerful attractor is our belief system.",
+        "④ The writer says that our thoughts and words are the most powerful attractors.",
+        "⑤ Limiting beliefs that contradict desires should be upgraded to align with goals."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 \"the most powerful attractor is our belief system\"이라고 명시하여 가장 강력한 끌어당김은 신념 체계임을 강조합니다. 반면 ④는 생각과 말이 가장 강력한 끌어당김이라고 주장하여 지문의 내용과 모순됩니다. ①은 지문의 \"states that 'like attracts like'\"와 일치하며, ②는 \"thoughts and words are extremely magnetic\"이라는 진술을 정확히 반영합니다. 또한 ⑤는 \"upgrade them to beliefs that are in line with what you want to attract\"이라는 조언과 부합합니다. 결국 ④만이 지문의 핵심 논지와 어긋나는 오답입니다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① A catastrophic drop in the food supply or a big increase in temperature is given as an example.",
+        "② A species with great variation will more likely have some survivors after any catastrophe.",
+        "③ Darwin observed variation in the bodies of animals.",
+        "④ If there were only one human nature, our species would have been wiped out.",
+        "⑤ Our species has many kinds of minds, both within a single culture and across cultures."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 \"If we all had the same kind of mind... we might become extinct\"라고 하여 가설적 상황에서의 가능성을 나타냈지만, ④는 \"would have been wiped out\"로 실제 과거에 멸종되었음을 단정하므로 내용과 일치하지 않는다. ①은 \"like a catastrophic drop...\" 부분과 일치하며, ②는 \"A species with great variation will more likely have some survivors\"와 일치한다. ③은 \"Darwin observed variation in the bodies of animals\"를 그대로 반영하고, ⑤는 \"our species has many kinds of minds... across cultures\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer argues that being aware of uncertainty is about gathering the courage to face it.",
+        "② The writer says that human beings want to know and when things are uncertain, we often feel frightened.",
+        "③ The writer claims that plans are worthless and there is nothing wrong with having them.",
+        "④ The writer says that Eisenhower said plans are worthless but planning is everything.",
+        "⑤ The writer advises accepting that planned events may not occur as expected."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 작가는 \"plans are worthless\"라는 아이젠하워 대통령의 인용구를 소개하지만, 그 전 문장에서 \"there's nothing wrong with having plans\"라고 긍정하며, 계획과 계획이 반드시 현실화되어야 한다는 생각의 차이를 강조합니다. 따라서 \"plans are worthless\"는 아이젠하워의 말이지 작자의 주장은 아니며, 작자는 계획을 가진 것 자체를 \"beautiful thing\"으로 평가합니다. ①은 첫 문장의 \"being aware, is a lot about gathering the courage to face uncertainty\"와 일치합니다. ②는 \"Human beings want to know... uncertain, we often feel frightened\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "26번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① He was born in 1959 in Massachusetts.",
+        "② He worked at a hospital in Cange, Haiti.",
+        "③ He studied medicine at Harvard University.",
+        "④ He co-founded Partners In Health in 1987.",
+        "⑤ He was honored with the WHO Director-General's Global Health Leaders Award."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 그는 하버드 대학에서 의학이 아닌 '의학 인류학(medical anthropology)'으로 석사 및 박사 학위를 받았다고 명시하고 있어, 의학을 공부했다는 내용과 일치하지 않는다. 나머지 선지는 지문과 일치한다. ①은 \"born in 1959 in Massachusetts\"와 일치하며, ②는 \"volunteer work at a hospital in Cange, Haiti\"로 맞다. ④는 \"In 1987, he co-founded Partners In Health\"와 일치하고, ⑤는 \"honored with the WHO Director-General's Global Health Leaders Award\"로 정답이다.",
+      "error": null,
+      "warnings": []
+    },
+    "29번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Anaerobic energy is generated only with glucose, and it is quicker and easier for our bodies to access.",
+        "② Anaerobic energy is inefficient and can be toxic, creating too much lactic acid.",
+        "③ The sickness, muscle weakness, and sweating after pushing hard at the gym are the feeling of anaerobic overload.",
+        "④ Our lungs and respiratory system have caught up to supply the oxygen our bodies need after warming up.",
+        "⑤ The body switches from anaerobic to aerobic respiration after warming up."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서 \"Our lungs and respiratory system haven't caught up to supply the oxygen\"라고 명시하여, 운동 초기에는 호흡계가 필요한 산소를 충분히 공급하지 못해 무산소 호흡을 한다고 설명합니다. 따라서 ④의 \"caught up\"은 지문의 \"haven't caught up\"과 정반대이므로 일치하지 않습니다. ①은 \"Anaerobic energy is generated only with glucose\"와, ②는 \"anaerobic energy is inefficient and can be toxic\"와, ③은 \"sickness, muscle weakness, and sweating...",
+      "error": null,
+      "warnings": []
+    },
+    "30번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Short paragraphs make written content look inviting to readers",
+        "② The writer of the passage thinks that readers will not start reading if the text is too long",
+        "③ The passage claims The New Yorker is obsessed with frequent paragraphing.",
+        "④ Frequent paragraphing benefits readers more than it harms the argument's development.",
+        "⑤ Excessive tiny paragraphs disrupt the natural flow of ideas."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 \"Obviously The New Yorker is obsessed by this fear\"라고 명시했으므로, 뉴요커가 빈번한 단락 나누기 자체에 집착하는 것이 아니라, 그것이 논점 발전을 해칠까 봐 두려워하는 '공포'에 집착한다는 의미입니다. 따라서 빈번한 단락 나누기를 옹호하는 것이 아니라 이를 경계하는 관점을 가진 것으로 해석해야 합니다. ①은 \"Short paragraphs... make it look inviting\"와 일치합니다. ②는 \"a long chunk of type can discourage a reader\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Our food preferences are shaped by social interactions and relationships.",
+        "② We learn to eat from our families, friends, at school, and in work.",
+        "③ A village's apple pie recipe is unique and never spreads beyond the village.",
+        "④ People often judge others based on their food choices.",
+        "⑤ The writer avoided the viral chopped salad moment of 2024."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 마을의 사과 파이 레시피는 \"아무도 좋아하지 않지만\"(\"nobody outside the village likes\")라고 명시하며, 맛은 사람 간에 바이러스처럼 퍼진다고(\"Tastes spread like this, person to person\") 설명합니다. 따라서 \"전파되지 않는다\"는 ③의 서술은 지문의 내용과 모순됩니다. ①은 \"Our tastes are social\"과 일치하며, ②는 \"We learn to eat from our families and friends, at school and in work\"를 그대로 반영합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "32번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Stoic philosophy suggests that emotional responses are determined by our interpretations.",
+        "② The Stoics taught that emotions are not automatic reactions.",
+        "③ The Stoics taught that emotions are not shaped by how we interpret events.",
+        "④ Anger stems from perceiving criticism as unfair rather than the words themselves.",
+        "⑤ Emotion management involves selecting helpful self-narratives rather than suppressing feelings."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 \"They're shaped by how we interpret events\"라고 명시하여 감정 해석에 의해 형성된다고 했으므로, 해석과 무관하다는 ③은 내용과 일치하지 않는다. ①은 \"emotions are not random; they arise from our judgments\"와 일치한다. ②는 \"emotions aren't just automatic reactions\"와 일치한다. ④는 \"feel angry not due to the words themselves but because you perceive the comment as unfair\"와 일치한다. ⑤는 \"choosing one that serves you better\"를 통해 감정 관리가 감정 억제가 아닌 유용한 서사 선택임을 나타내므로 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "33번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The ancient Greeks felt that the visual artist's goal was to copy visual experience.",
+        "② The writer sadly notes that no paintings from ancient Greek artists exist today.",
+        "③ We can only surmise their quality based on tales, skill in sculpture, and drawings.",
+        "④ Jackson Pollock, a leader in the New York School of the 1950's, intentionally did not copy existing objects in his art.",
+        "⑤ Pollock's art successfully copied recognizable objects to define art."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 폴록이 \"did not copy existing objects\"라고 명시하며, 그의 작품이 \"did not copy anything\"라고 강조합니다. 따라서 \"successfully copied recognizable objects\"라는 ⑤번 선지는 지문 내용과 정반대입니다. ①번은 \"The ancient Greeks felt that the visual artist's goal was to copy visual experience\"와 일치합니다. ②번은 \"no paintings from ancient Greek artists exist today\"와 일치하며, ③번은 \"surmise their quality based on tales... skill in ancient Greek sculpture, and... drawings\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The writer argues that our bodies are easily injured when we run because they are not good at it.",
+        "② The writer states that running requires complex unconscious computations beyond conscious control.",
+        "③ The writer implies that running involves unconscious processes beyond conscious control.",
+        "④ The writer claims that we cannot fully explain the complexities of running.",
+        "⑤ The writer suggests that our bodies know more about running than we ever will."
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문은 달리기가 seemingly natural해 보이지만 실제로는 \"our bodies are so very good at it\"라고 명시하여, 신체가 달리기에 매우 능숙하다는 점을 강조합니다. 따라서 ①의 \"they are not good at it\"는 지문의 내용과 정반대이므로 일치하지 않습니다. ②는 \"enormous number of computations\"라는 표현으로 복잡한 무의식적 계산을 요구함을, ③은 \"running is not all conscious to us\"라는 구절로 의식적 통제를 넘어선 무의식적 과정을 암시함을 각각 정확히 반영합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Bathing dogs weekly is recommended to avoid the 'doggy' smell",
+        "② Veterinary dermatologists warn against frequent bathing of dogs",
+        "③ Brushing dogs daily is recommended for those really concerned about smell",
+        "④ Most dogs don't need baths more than once or twice a week",
+        "⑤ Thick, heavy-coated dogs generally only need baths every 6 to 8 weeks"
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문은 개를 일주일에 여러 번 목욕시키는 것은 피부에 해로워 수의 피부과 전문의들이 경고한다고 명시하므로, 냄새를 피하기 위해 주 1회 목욕을 권장한다는 ①은 내용과 일치하지 않는다. 반면 ②는 'warn against such practices'와 일치하고, ③은 'thoroughly brush their dog every day'라는 권장과 부합하며, ④는 'most dogs don't need to be bathed on a regular basis'라는 내용과 맞다. 또한 ⑤는 두꺼운 털을 가진 개도 6~8주에 한 번 목욕하면 된다는 지문의 'generally only need baths every 6 to 8 weeks'와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "36번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The numerical values of the digits are irrelevant, but the distinct symbols matter.",
+        "② Sudoku puzzles in newspapers always use letters or shapes instead of numbers",
+        "③ The Sudoku puzzle is described as having no mathematics involved",
+        "④ The Sudoku puzzle requires reasoning and logic to solve",
+        "⑤ The author compares promoting an art exhibition without mentioning art to promoting math without mentioning math."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문은 \"They could be nine letters or nine shapes\"라고 하여 숫자 대신 문자나 도형을 사용할 수 있음을 나타내지만, ②는 \"always use letters or shapes\"라고 하여 항상 사용한다고 잘못 설명하여 내용과 일치하지 않는다. ①은 \"numerical values of the digits are irrelevant\"와 일치한다. ③은 신문 광고 문구 \"There's no maths involved\"와 일치한다. ④는 \"simply use reasoning and logic\"와 일치한다. ⑤는 미술관 전시에 \"No art involved\"라는 슬로건을 비유한 내용과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "37번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars.",
+        "② A 16th-century Polish mathematician named Nicolaus Copernicus put forth a revolutionary idea.",
+        "③ The view of the universe accepted at the time was that the Sun traveled around Earth.",
+        "④ Technological progress resulted in the creation of the telescope during the early 1600s.",
+        "⑤ Galileo Galilei used a telescope to find the largest moons of Saturn."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 갈릴레오는 망원경을 사용하여 목성의 가장 큰 위성 4개를 발견했다고 명시되어 있습니다. 그러나 ⑤번 선지는 토성의 가장 큰 위성을 찾았다고 잘못 서술하여 지문의 내용과 일치하지 않습니다. 나머지 선지들은 지문과 일치합니다. ①번은 이집트인, 바빌로니아인, 그리스인, 마야인이 별의 움직임을 지도로 그린 최초의 민족 중 하나였다는 내용과 일치합니다. ②번은 16세기 폴란드 수학자 코페르니쿠스가 혁명적인 아이디어를 제시했다는 사실과 일치합니다. ③번은 당시 받아들여진 우주관은 태양이 지구를 돌았다는 것이었으며, 이는 코페르니쿠스가 틀렸다고 결론 내린 관점과 일치합니다. ④번은 기술적 발전이 17세기 초 망원경의 개발로 이어졌다는 내용과 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "38번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① Theodore M. Porter describes measurement as a 'technology of distance'",
+        "② Porter characterizes measurement as a technology of closeness rather than distance",
+        "③ Porter views measurement as a tool that bridges cultural and geographical differences.",
+        "④ Consistency in measurement allows for the exchange of information across cultures.",
+        "⑤ Large communities eventually found early measurement systems inadequate."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 Theodore M. Porter는 측정을 'technology of distance'라고 묘사하며, 이는 문화와 지리적 차이를 넘어 정보를 교환할 수 있게 하는 도구임을 강조한다. 따라서 ①과 ③, ④는 지문의 'technology of distance', 'bridge differences', 'exchange of information'와 일치한다. 반면 ②는 측정을 'closeness'이 아닌 'distance'의 기술로 본다는 지문 내용과 정반대되므로 일치하지 않는다. ⑤ 또한 지문의 'As these communities grew in size, though, the inadequacies of this system would become evident'와 부합한다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The ants chew the leaves into smaller pieces for their own consumption",
+        "② The ants cultivate their own food using a unique farming strategy",
+        "③ The ants' underground gardens are used for growing fungus",
+        "④ The ants feed the fungus, which then produces fruiting bodies for the ants to eat",
+        "⑤ The ants' nests can span hundreds of square meters underground"
+      ],
+      "answer": "①",
+      "explanation": "정답은 ①. 지문에서 \"the ants don't eat these leaves\"라고 명시하여 잎을 직접 먹지 않음을 밝히고, 대신 \"use these as fertilizer to grow fungus\"라고 하여 잎을 버섯 재배용 비료로 사용한다고 설명합니다. 따라서 잎을 자신의 섭취를 위해 작게 씹어 먹한다는 ①번은 지문 내용과 일치하지 않습니다. ②번은 \"cultivate their own food\" 및 \"successful farming strategy\"와 일치하고, ③번은 \"grow fungus in large underground 'gardens'\"과 일치합니다. ④번은 \"feed the fungus...",
+      "error": null,
+      "warnings": []
+    },
+    "40번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The system monitors other people's reactions to our behaviors.",
+        "② The system generally operates consciously until it detects that our relational value is falling.",
+        "③ Conscious awareness arises when the alarm signals a threat to social bonds.",
+        "④ The continuous scanning is normal, a part of being human.",
+        "⑤ We all have an interpersonal process of searching for cues from the environment to assess our value in the social structure."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 시스템은 \"generally operates nonconsciously until it detects that our relational value is falling or low\"라고 명시하여, 관계적 가치가 떨어지기 전까지는 무의식적으로 작동함을 밝힙니다. 따라서 ②의 \"consciously\"는 지문의 \"nonconsciously\"와 정반대되어 일치하지 않습니다. ①은 \"monitors other people's reactions to our behaviors\"와 일치합니다. ③는 \"threat to our social bonds is pushed into conscious awareness\"와 일치합니다. ④는 \"The continuous scanning is normal, a part of being human\"과 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "41~42번|mismatch": {
+      "blanked": null,
+      "options": [
+        "① The role of slang in popular culture has fundamentally changed because of the internet.",
+        "② Social media removed the barriers that previously restricted public voice.",
+        "③ The internet has made public access to communication channels more democratic.",
+        "④ The internet has made it easier for anyone to become a public figure.",
+        "⑤ The influence of content creators on slang is limited to traditional media."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 TV 진행자나 기자는 슬랭을 사용하지 못했지만 콘텐츠 크리에이터는 사용할 수 있다고 명시하며, 크리에이터의 영향력이 슬랭을 정당화하고 더 빠르게 확산시킨다고 설명합니다. 따라서 크리에이터의 영향력이 전통 미디어에 국한된다는 ⑤번은 지문의 내용과 명백히 불일치합니다. ①번은 \"The role of 'slang' in popular culture has fundamentally changed because of the internet\"와 일치합니다. ②번은 \"Social media completely broke that barrier\"와 일치하며, ③번은 \"public access is democratized\"와 일치합니다. ④번은 \"Anybody and everybody can become a public figure\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "20번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The game should be designed to be fun enough.",
+        "② The game should be designed to entertain the learners.",
+        "③ The game should focus on the achievement of learning outcomes.",
+        "④ The game should be engaging with a mild level of fun.",
+        "⑤ The primary goal of the game is to engage the learners."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 \"you are not creating the next great commercial game to entertain your learners\"라고 명시하여 학습자를 즐겁게 하는 것이 주목적임을 부정한다. ①은 \"Learning games need to be what we call 'fun enough.'\"와 일치하며, ③은 \"success will be measured by the achievement of learning outcomes\"와 일치한다. ④는 \"engaging with a mild level of fun\"이라는 표현과 일치하고, ⑤는 \"Focus on engagement rather than entertainment\"라는 문장과 부합한다. 따라서 학습자를 즐겁게 하는 것을 목표로 한다는 ②만이 지문의 내용과 일치하지 않는다.",
+      "error": null,
+      "warnings": []
+    },
+    "21번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Kids today are being held captive by 'smart' devices like phones and tablets.",
+        "② Kids today are not going outside to play.",
+        "③ Kids today are not learning how to socialize and read physical cues from others.",
+        "④ Kids today are not learning how to run, how to skip, or how to climb.",
+        "⑤ Children acquire skills for running, skipping, and climbing daily."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 현대 아이들은 \"not learning how to run, how to skip, or how to climb\"이라고 명시하여 이러한 기본 운동 기술을 습득하지 못하고 있음을 밝히고 있다. 따라서 매일 이러한 기술을 습득한다는 ⑤번은 지문 내용과 명백히 모순된다. 반면 ①번의 'smart' devices에 갇혀 있다는 점, ②번의 야외 놀이 부재, ③번의 사회적 기술 및 신체 신호 읽기 학습 부재는 모두 지문에서 직접적으로 언급된 사실과 일치한다. ④번 역시 지문의 부정을 그대로 반영하여 일치하므로 오답이다.",
+      "error": null,
+      "warnings": []
+    },
+    "22번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The Law of Attraction states that like attracts like.",
+        "② The common flaw in our understanding is that we believe all we have to do is think about or visualize something to manifest it.",
+        "③ The most powerful attractor is our belief system.",
+        "④ The writer says that creating beautiful poster boards full of images of what you want is enough to attract a great career or relationship.",
+        "⑤ The writer advises us to upgrade our limiting beliefs."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 \"creating beautiful poster boards... but if you don't truly believe... attracting... may be more challenging\"라고 명시하여, 단순히 포스터 보드를 만드는 것만으로는 충분하지 않으며 진정한 신념이 필요함을 강조한다. 따라서 ④는 지문의 내용과 일치하지 않는다. ①은 'like attracts like'라는 정의와 일치한다. ②는 'common flaw... is that we believe all we have to do is think about or visualize'라는 표현과 일치한다. ③은 'most powerful attractor is our belief system'이라는 문장과 일치하며, ⑤는 'upgrade them to beliefs'라는 조언과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "23번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① A catastrophic drop in the food supply or a big increase in temperature can cause a species to be completely wiped out.",
+        "② A species with great variation will more likely have some survivors after any catastrophe.",
+        "③ Darwin observed variation in the bodies of animals.",
+        "④ A species with only one human nature would be more likely to survive disasters.",
+        "⑤ Variation preserves the evolvability of our species."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서 \"If we all had the same kind of mind ─ if there were only one human nature ─ then when disaster struck, we might become extinct\"라고 명시하여, 인간 본성이 하나뿐인 종은 재해 시 멸종할 수 있다고 설명합니다. 따라서 ④의 '재해에 더 잘 생존할 것'이라는 주장은 지문의 내용과 정반대입니다. ①은 \"a species without much variation might be completely wiped out\"와 일치하고, ②는 \"A species with great variation will more likely have some survivors\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "24번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The writer says that being aware is about gathering the courage to face uncertainty.",
+        "② The writer says that we often feel frightened when things are uncertain.",
+        "③ The writer says that having plans is beautiful as long as we do not insist they must succeed.",
+        "④ The writer says that plans are beautiful but the difference lies in how we think about them.",
+        "⑤ The writer claims that Eisenhower stated planning is completely worthless."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 아이젠하워는 \"Plans are worthless, but planning is everything\"라고 말해 계획 자체는 무의미할 수 있지만 '계획을 세우는 과정'이 중요하다고 강조했습니다. 따라서 계획이 완전히 무의미하다는 ⑤의 주장은 지문의 내용과 일치하지 않습니다. ①은 첫 문장의 \"being aware, is a lot about gathering the courage to face uncertainty\"와 일치합니다. ②는 \"when things are uncertain, we often feel frightened\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "26번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Paul Farmer was born in 1959 in Massachusetts.",
+        "② He studied medicine at Harvard University.",
+        "③ He earned a master's degree and a PhD in medical anthropology.",
+        "④ He co-founded Partners In Health in 1987.",
+        "⑤ He was honored with the WHO Director-General's Global Health Leaders Award for his work."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 Paul Farmer는 하버드 대학에서 의학을 공부한 것이 아니라 \"earned both a master's degree and a PhD in medical anthropology\"라고 명시되어 있어, 의학과가 아닌 의인류학 전공임이 드러납니다. 반면 ①은 \"born in 1959 in Massachusetts\"와 일치하고, ③은 석사 및 박사 학위 취득 내용을 정확히 반영하며, ④는 \"In 1987, he co-founded Partners In Health\"와 일치합니다. 또한 ⑤는 사후 \"honored with the WHO Director-General's Global Health Leaders Award\"를 받았다는 내용과 부합하므로, 학문 분야를 오기한 ②만이 내용과 일치하지 않습니다.",
+      "error": null,
+      "warnings": []
+    },
+    "29번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Anaerobic energy is generated only with glucose, and it is quicker and easier for our bodies to access.",
+        "② Anaerobic energy is a backup system and turbo boost when the body doesn't have enough oxygen.",
+        "③ The sickness, muscle weakness, and sweating you experience after you've pushed it too hard at the gym is the feeling of anaerobic overload.",
+        "④ The body has to use anaerobic respiration when our lungs and respiratory system have caught up to supply the oxygen our bodies need.",
+        "⑤ The body has switched from anaerobic to aerobic respiration after we're warmed up."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 따라서 ④의 \"caught up\"은 지문의 \"haven't caught up\"와 정반대이므로 일치하지 않습니다. ①은 \"generated only with glucose... quicker and easier\"와 일치합니다. ②는 \"backup system and turbo boost\"라는 표현과 일치하며, ③은 \"sickness, muscle weakness, and sweating... feeling of anaerobic overload\"라는 내용과 일치합니다. ⑤는 \"switched from anaerobic to aerobic respiration\"라는 문장과 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "30번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Short paragraphs make writing look inviting and inviting readers to keep reading",
+        "② Short paragraphs are recommended for newspapers, typically two or three sentences long",
+        "③ The author argues that frequent paragraphing benefits the reader despite potential concerns.",
+        "④ The writer suggests that a succession of tiny paragraphs is as annoying as a paragraph that's too long",
+        "⑤ The writer thinks that modern journalists trying to make their articles quick 'n' easy actually make the reader's job easier"
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 현대 기자들이 기사를 간결하게 만들려 짧은 단락을 사용하는 것이 오히려 \"make the reader's job harder\"라고 명시하여 ⑤의 'easier'와 모순된다. ①은 \"Short paragraphs put air around what you write and make it look inviting\"와 일치한다. ②는 \"Newspaper paragraphs should be only two or three sentences long\"와 일치한다. ④는 \"A succession of tiny paragraphs is as annoying as a paragraph that's too long\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "31번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Our tastes are influenced by the people around us.",
+        "② The village's apple pie recipe is unique and not liked by anyone else.",
+        "③ Our tastes are determined solely by the inherent qualities of the food itself.",
+        "④ Tastes spread like viruses, almost irrespective of the qualities of the food involved.",
+        "⑤ The writer avoided the viral chopped salad moment of 2024."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 \"We want these things not just because of what they are, but who we are\"라고 명시하여 취향이 음식 자체의 고유한 질량뿐만 아니라 사회적 정체성에 의해 형성됨을 밝히므로, ③의 'solely by the inherent qualities'는 내용과 일치하지 않는다. ①은 \"We learn to eat from our families and friends\"와 일치한다. ②는 \"nobody outside the village likes\"라는 표현으로 타 village 외에는 선호되지 않는다는 내용과 일치한다. ④는 \"Tastes spread like this...",
+      "error": null,
+      "warnings": []
+    },
+    "32번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The Stoics taught that emotions arise from our judgments.",
+        "② The Stoics taught that emotions aren't just automatic reactions.",
+        "③ The Stoics taught that emotions are shaped by how we interpret events.",
+        "④ Stoics claim that changing judgments has no effect on emotional responses.",
+        "⑤ Examining your internal narrative allows you to select a more beneficial perspective."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서 \"Change the judgment, and you change the emotion\"이라고 명시하여 판단의 변화가 감정 변화로 이어진다고 설명하므로, ④의 'no effect'는 내용과 일치하지 않는다. ①은 \"emotions are not random; they arise from our judgments\"와 일치한다. ②는 \"emotions aren't just automatic reactions\"와 일치한다. ③은 \"They're shaped by how we interpret events\"와 일치한다. ⑤는 \"examining the story you tell yourself and choosing one that serves you better\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "33번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The ancient Greeks felt that the visual artist's goal was to copy visual experience.",
+        "② No ancient Greek paintings survive today because of time and weather.",
+        "③ Surviving pottery drawings help us guess the quality of lost Greek paintings.",
+        "④ Pollock's art intentionally avoided copying existing objects.",
+        "⑤ Pollock's artwork intentionally copied recognizable objects."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문에서 Jackson Pollock은 \"intentionally did not copy existing objects\"라고 명시하여 기존 사물을 의도적으로 모방하지 않았다고 밝혔습니다. 따라서 ⑤의 \"intentionally copied recognizable objects\"는 지문의 내용과 정반대되어 일치하지 않습니다. 반면 ①은 지문의 첫 문장 \"The ancient Greeks felt that the visual artist's goal was to copy visual experience\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "34번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The writer questions why bodies get injured despite running being natural.",
+        "② The writer suggests running appears easy because our bodies are highly skilled at it.",
+        "③ The writer states that running involves complex biological processes beyond conscious control.",
+        "④ The writer claims that running is fully conscious and easily explained by science.",
+        "⑤ The writer argues that our bodies know how to run better than we ever will."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문에서 \"running is not all conscious to us\"라고 명시하여 달리기 의식이 전부가 아님을 밝히므로, ④의 \"fully conscious\" 주장은 지문과 모순됩니다. 또한 \"we cannot fully explain its complexities\"라고 하여 과학적으로 완전히 설명할 수 없다고 했으므로 ④의 \"easily explained by science\"도 틀립니다. ①은 \"why are they easily injured when we do something so seemingly natural as running\"과 일치합니다. ②는 \"running seems very easy, but that is only because our bodies are so very good at it\"와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "35번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Veterinary experts advise against frequent bathing because it harms canine skin health.",
+        "② Veterinary specialists caution that frequent bathing is detrimental to a dog's skin.",
+        "③ Daily brushing and waterless shampoo help manage odor without frequent bathing.",
+        "④ The writer says that dogs with skin conditions may need medicated baths.",
+        "⑤ The writer says that dogs should be bathed every 6 to 8 weeks."
+      ],
+      "answer": "⑤",
+      "explanation": "정답은 ⑤. 지문은 두꺼운 털을 가진 개도 일반적으로 6~8주에 한 번 목욕만 필요하다고 명시하므로, 모든 개가 6~8주마다 목욕해야 한다는 ⑤의 주장은 지문의 내용과 일치하지 않습니다. 반면 ①과 ②는 수의사들이 빈번한 목욕이 피부에 해로울 수 있다고 경고한다는 내용과 일치하며, ③는 냄새 관리를 위해 물 없는 샴푸와 매일 빗질하는 방법을 제시한다는 부분과 일치합니다. 또한 ④는 피부 질환이 있는 경우 수의사가 처방한 약용 목욕이 필요할 수 있다는 지문의 전제와 일치합니다.",
+      "error": null,
+      "warnings": []
+    },
+    "36번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Mathematics focuses on patterns and structures rather than numerical values.",
+        "② The Sudoku puzzle grid is 9 x 9 in size",
+        "③ Sudoku requires nine unique symbols, regardless of whether they are numbers or shapes.",
+        "④ The Sudoku puzzle is described as a simple puzzle with no mathematical or artistic involvement",
+        "⑤ Some people might avoid Sudoku puzzles because they fear they involve mathematics."
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 수두쿠가 '패턴'을 다루며 수학의 핵심은 숫자가 아닌 구조와 연결임을 강조하지만, ④는 수두쿠를 '수학이나 예술 개입 없는 단순 퍼즐'로 묘사하여 지문의 주장과 배치된다. 지문은 \"It's the pattern that matters\"라고 명시하며 수두쿠가 수학의 일종임을 역설한다. ①은 \"central concerns... are not numbers, but patterns\"와 일치한다. ②는 \"complete a 9 x 9 grid\"와 일치한다. ③은 \"nine distinct symbols\"와 일치한다. ⑤는 \"scare off potential solvers\"와 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "37번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The Egyptians were among the first peoples to map the movements of the stars.",
+        "② The Sun was thought to travel around Earth at the time of Copernicus.",
+        "③ The telescope was invented in the early 18th century.",
+        "④ The telescope was used to observe craters on Earth's Moon.",
+        "⑤ Galileo Galilei discovered the four largest moons of Jupiter."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문에서 망원경이 개발된 시기는 \"early 17th century\"(17세기 초)라고 명시되어 있으나, ③은 \"early 18th century\"(18세기 초)로 잘못 기술하여 내용과 일치하지 않습니다. ①은 \"The Egyptians... were among the first peoples to map the movements of the stars\"와 일치합니다. ②는 \"the view of the universe accepted at the time that the Sun traveled around Earth\"라는 당시의 관념을 올바르게 반영합니다. ④와 ⑤는 갈릴레오가 망원경을 사용하여 목성의 위성 4개를 발견하고 달의 크레이터를 관측했다는 \"Using a telescope...",
+      "error": null,
+      "warnings": []
+    },
+    "38번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① Consistency is required to fully utilize units of measurement.",
+        "② The historian of science describes measurement as a technology of distance",
+        "③ The earliest units of measurement were complex and widely shared",
+        "④ The earliest units of measurement were based on body parts",
+        "⑤ Growing communities faced conflicts that required more consistent measurement standards."
+      ],
+      "answer": "③",
+      "explanation": "정답은 ③. 지문은 초기 사회의 정의가 \"단일 정착지에만 공유\"되었으며 복잡도가 \"신체 부위와 같음을 아는 것\"을 넘지 않았다고 명시하여, ③의 '복잡하고 광범위하게 공유되었다'는 내용과 모순된다. ①은 \"full potential... consistency\"와 일치하며, ②는 \"technology of distance\" 인용과 일치한다. ④는 \"certain body part\" 언급으로 타당하고, ⑤는 \"demands greater consistency\"와 부합한다.",
+      "error": null,
+      "warnings": []
+    },
+    "39번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The ants cultivate their own food using a unique farming strategy",
+        "② The ants chew the leaves into smaller pieces for their own consumption",
+        "③ The ants feed the fungus with nutrients from the chewed leaves",
+        "④ The ants use the fungus as a source of food",
+        "⑤ The ants build large underground nests for their colonies"
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 \"the ants don't eat these leaves\"라고 명시하여 잎을 직접 먹지 않음을 밝히므로, 이를 자신의 소비를 위해 씹는다는 ②는 내용과 일치하지 않는다. 반면 ①은 \"cultivate their own food\" 및 \"successful farming strategy\"와 일치한다. ③은 \"use these as fertilizer to grow fungus\"와 일치하며, ④는 \"the ants later eat\"하는 균류와 일치한다. 마지막으로 ⑤는 \"build enormous nests underground\"라는 내용과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "40번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The system monitors other people's reactions to our behaviors.",
+        "② The monitoring system generally operates consciously until it detects that our relational value is falling.",
+        "③ The threat to our social bonds is pushed into conscious awareness when the alarm bell rings.",
+        "④ The way we mobilize our internal resources around relationships is highly networked in our brain and body.",
+        "⑤ The continuous scanning is normal, a part of being human."
+      ],
+      "answer": "②",
+      "explanation": "정답은 ②. 지문에서 모니터링 시스템은 \"generally operates nonconsciously\"라고 명시하여 무의식적으로 작동함을 밝히고 있으나, ②번은 \"consciously\"라고 잘못 서술하여 내용과 일치하지 않는다. ①번은 \"monitors other people's reactions to our behaviors\"와 일치한다. ③번은 \"threat to our social bonds is pushed into conscious awareness\"와 일치한다. ④번은 \"highly networked in our brain and body\"와 일치한다. ⑤번은 \"continuous scanning is normal\"과 일치한다.",
+      "error": null,
+      "warnings": []
+    },
+    "41~42번|mismatch|2": {
+      "blanked": null,
+      "options": [
+        "① The internet has changed the role of slang in popular culture",
+        "② The role of slang has fundamentally changed because of the internet",
+        "③ The internet has made the playing field level for public figures",
+        "④ The internet has made it harder for content creators to use slang",
+        "⑤ Content creators can use slang on new communicative platforms"
+      ],
+      "answer": "④",
+      "explanation": "정답은 ④. 지문은 \"TV presenters and journalists might not have been able to use slang, but content creators can\"라고 명시하여 콘텐츠 제작자가 슬랭을 사용할 수 있다고 밝히므로, ④의 'harder'는 내용과 일치하지 않는다. ①과 ②는 첫 문장의 \"The role of 'slang' in popular culture has fundamentally changed because of the internet\"와 일치한다. ③은 \"The playing field is now level\"이라는 표현과 부합하며, ⑤도 \"content creators can\"라는 근거와 일치한다.",
+      "error": null,
+      "warnings": []
+    }
+  },
+  "generation_trace": {
+    "20번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Yes, the game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The goals of the game play should be interactivity and engagement."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Focus on engagement rather than entertainment."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Resist the temptation to... incorporate multiple dynamics to keep player interest high."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Research shows that what makes games instructional is the level of interactivity and engagement"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "goals of the game play should be interactivity and engagement"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Focus on engagement rather than entertainment"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Resist the temptation to... incorporate multiple dynamics to keep player interest high"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what makes games instructional is the level of interactivity and engagement"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 1,
+        "want_true": false,
+        "out": "Success is measured by the achievement of learning outcomes.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 1,
+        "want_true": true,
+        "out": "Success in learning games depends on achieving specific learning outcomes.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Yes, the game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The goals of the game play should be interactivity and engagement."
+          },
+          {
+            "verdict": "true",
+            "evidence": "success will be measured by the achievement of learning outcomes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "success will be measured by the achievement of learning outcomes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "what makes games instructional is the level of interactivity and engagement"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "goals of the game play should be interactivity and engagement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "success will be measured by the achievement of learning outcomes"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "what makes games instructional is the level of interactivity and engagement"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 0,
+        "want_true": false,
+        "out": "Success in learning games is measured by how entertained the learners are.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 0,
+        "want_true": true,
+        "out": "New developers often mistakenly prioritize entertainment over educational value.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Yes, the game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The goals of the game play should be interactivity and engagement."
+          },
+          {
+            "verdict": "false",
+            "evidence": "success will be measured by the achievement of learning outcomes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "that often makes learning harder rather than easier."
+          },
+          {
+            "verdict": "true",
+            "evidence": "what makes games instructional is the level of interactivity and engagement"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "goals of the game play should be interactivity and engagement"
+          },
+          {
+            "verdict": "false",
+            "evidence": "success will be measured by the achievement of learning outcomes"
+          },
+          {
+            "verdict": "true",
+            "evidence": "that often makes learning harder rather than easier"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what makes games instructional is the level of interactivity and engagement"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'success will be measured by the achievement of learning outcomes' and contrasts this with entertainment. Option ② claims success is measured by how entertained learners are, which directly contradicts the text's emphasis on learning outcomes over entertainment."
+        }
+      }
+    ],
+    "21번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize and read physical cues"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Many kids today are being held captive by 'smart' devices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "They are not even learning how to run, how to skip, or how to climb."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Instead, they are learning how to live with anxiety"
+          },
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize and read physical cues"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize and read physical cues"
+          },
+          {
+            "verdict": "true",
+            "evidence": "held captive by 'smart' devices like phones and tablets"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not even learning how to run, how to skip, or how to climb"
+          },
+          {
+            "verdict": "true",
+            "evidence": "learning how to live with anxiety, depression, and even diseases"
+          },
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize and read physical cues"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 4,
+        "want_true": false,
+        "out": "We are meant to live ordinary lives through movement.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Our design requires movement to enable extraordinary living.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize and read physical cues"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Many kids today are being held captive by 'smart' devices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "They are not even learning how to run, how to skip, or how to climb."
+          },
+          {
+            "verdict": "false",
+            "evidence": "we are meant to live extraordinary lives."
+          },
+          {
+            "verdict": "true",
+            "evidence": "we are getting further and further away from our design."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize and read physical cues from others."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Many kids today are being held captive by 'smart' devices like phones and tablets."
+          },
+          {
+            "verdict": "true",
+            "evidence": "They are not even learning how to run, how to skip, or how to climb."
+          },
+          {
+            "verdict": "false",
+            "evidence": "we are meant to live extraordinary lives."
+          },
+          {
+            "verdict": "true",
+            "evidence": "we were made to move ─ and through movement, we are meant to live extraordinary lives."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'we are meant to live extraordinary lives,' whereas option ⑤ claims we are meant to live 'ordinary' lives. This is a direct contradiction. Options ①, ②, ③, and ④ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "22번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "states that 'like attracts like'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "thoughts and words are extremely magnetic"
+          },
+          {
+            "verdict": "true",
+            "evidence": "most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "false",
+            "evidence": "most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "states that 'like attracts like'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our thoughts and words are extremely magnetic"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "false",
+            "evidence": "But the most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the most powerful attractor is our belief system"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Limiting beliefs that contradict desires should be upgraded to align with goals.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "states that 'like attracts like'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "thoughts and words are extremely magnetic"
+          },
+          {
+            "verdict": "true",
+            "evidence": "most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "false",
+            "evidence": "most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "true",
+            "evidence": "upgrade them to beliefs that are in line with what you want"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "states that 'like attracts like'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our thoughts and words are extremely magnetic."
+          },
+          {
+            "verdict": "true",
+            "evidence": "But the most powerful attractor is our belief system."
+          },
+          {
+            "verdict": "false",
+            "evidence": "But the most powerful attractor is our belief system."
+          },
+          {
+            "verdict": "true",
+            "evidence": "upgrade them to beliefs that are in line with what you want"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'But the most powerful attractor is our belief system,' directly contradicting option ④ which claims thoughts and words are the most powerful. Options ①, ②, ③, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "23번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "like a catastrophic drop in the food supply or a big increase in temperature"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A species with great variation will more likely have some survivors"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Darwin observed variation in the bodies of animals"
+          },
+          {
+            "verdict": "false",
+            "evidence": "we might become extinct"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our species has many kinds of minds, both within a single culture and across cultures"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "like a catastrophic drop in the food supply or a big increase in temperature"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A species with great variation will more likely have some survivors"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Darwin observed variation in the bodies of animals"
+          },
+          {
+            "verdict": "false",
+            "evidence": "we might become extinct"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our species has many kinds of minds, both within a single culture and across cultures"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage states that if there were only one human nature, 'we might become extinct' (a possibility). Option ④ claims that 'our species would have been wiped out' (a definite past event or certainty), which contradicts the conditional and probabilistic nature of the text. The other options are directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "24번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Human beings want to know. When we don't know, when things are uncertain, we often feel frightened"
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty."
+          },
+          {
+            "verdict": "false",
+            "evidence": "there's nothing wrong with having plans."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Eisenhower once said: 'Plans are worthless, but planning is everything.'"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Human beings want to know. When we don't know, when things are uncertain, we often feel frightened"
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Plans are worthless, but planning is everything."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Eisenhower once said: 'Plans are worthless, but planning is everything.'"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Imagine if we all used pencil instead of ink"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "The writer advises accepting that planned events may not occur as expected.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Human beings want to know. When we don't know, when things are uncertain, we often feel frightened"
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty."
+          },
+          {
+            "verdict": "false",
+            "evidence": "I think it's a beautiful thing. But there's a difference between planning and thinking all your plans have to come to fruition."
+          },
+          {
+            "verdict": "true",
+            "evidence": "American president Eisenhower once said: 'Plans are worthless, but planning is everything.'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Imagine if we could bear in mind that what we write down, what we think is going to happen, might not be what actually happens."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Human beings want to know. When we don't know... we often feel frightened"
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty"
+          },
+          {
+            "verdict": "false",
+            "evidence": "there's nothing wrong with having plans"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Eisenhower once said: 'Plans are worthless, but planning is everything.'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what we write down... might not be what actually happens"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states 'there's nothing wrong with having plans' and quotes Eisenhower saying 'Plans are worthless, but planning is everything.' Option ③ incorrectly combines these two distinct ideas into a single claim that 'plans are worthless,' ignoring the crucial distinction the author makes between 'plans' (which can be worthless if rigid) and 'planning' (which is valuable). The author argues that plans themselves are not worthless, but rather that treating them as absolute is the problem. Therefore, stating 'plans are worthless' as the writer's claim contradicts the nuance of the text."
+        }
+      }
+    ],
+    "26번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "He was born in 1959 in Massachusetts"
+          },
+          {
+            "verdict": "false",
+            "evidence": "earned both a master's degree and a PhD in medical anthropology"
+          },
+          {
+            "verdict": "true",
+            "evidence": "began volunteer work at a hospital in Cange, Haiti"
+          },
+          {
+            "verdict": "true",
+            "evidence": "In 1987, he co-founded Partners In Health"
+          },
+          {
+            "verdict": "true",
+            "evidence": "honored with the WHO Director-General's Global Health Leaders Award"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "born in 1959 in Massachusetts"
+          },
+          {
+            "verdict": "false",
+            "evidence": "PhD in medical anthropology at Harvard University"
+          },
+          {
+            "verdict": "true",
+            "evidence": "volunteer work at a hospital in Cange, Haiti"
+          },
+          {
+            "verdict": "true",
+            "evidence": "In 1987, he co-founded Partners In Health"
+          },
+          {
+            "verdict": "true",
+            "evidence": "honored with the WHO Director-General's Global Health Leaders Award"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states Paul Farmer earned a 'master's degree and a PhD in medical anthropology' at Harvard University, not 'medicine'. While he was a physician, his specific academic degrees from Harvard were in anthropology, making statement ③ factually inconsistent with the text."
+        }
+      }
+    ],
+    "29번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Anaerobic energy is generated only with glucose"
+          },
+          {
+            "verdict": "true",
+            "evidence": "sickness, muscle weakness, and sweating... is the feeling of anaerobic overload"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Our lungs and respiratory system haven't caught up"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The body has switched from anaerobic to aerobic respiration"
+          },
+          {
+            "verdict": "true",
+            "evidence": "anaerobic energy is inefficient and can be toxic"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generated only with glucose... quicker and easier"
+          },
+          {
+            "verdict": "true",
+            "evidence": "feeling of anaerobic overload"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Our lungs and respiratory system haven't caught up"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The body has switched from anaerobic to aerobic respiration"
+          },
+          {
+            "verdict": "true",
+            "evidence": "anaerobic energy is inefficient and can be toxic"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage states that during the first few minutes of intense workout, 'Our lungs and respiratory system haven't caught up to supply the oxygen our bodies need.' Option ④ claims they 'have caught up... after warming up,' which directly contradicts the text's explanation that the mismatch causes the initial misery and anaerobic usage. The other options are direct paraphrases of the text."
+        }
+      }
+    ],
+    "30번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Short paragraphs put air around what you write and make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting to read"
+          },
+          {
+            "verdict": "false",
+            "evidence": "A succession of tiny paragraphs is as annoying as a paragraph that's too long"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting to read"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting to read"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Short paragraphs put air around what you write and make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Short paragraphs put air around what you write and make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": false,
+        "out": "The passage claims The New Yorker is obsessed with frequent paragraphing.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "Frequent paragraphing benefits readers more than it harms the argument's development.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "Excessive tiny paragraphs disrupt the natural flow of ideas.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Short paragraphs put air around what you write and make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a long chunk of type can discourage a reader from even starting to read"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Obviously The New Yorker is obsessed by this fear"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the gains far outweigh the hazards"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chopping up a natural train of thought"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "discourage a reader from even starting to read"
+          },
+          {
+            "verdict": "false",
+            "evidence": "The New Yorker is obsessed by this fear"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the gains far outweigh the hazards"
+          },
+          {
+            "verdict": "true",
+            "evidence": "chopping up a natural train of thought"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states that 'The New Yorker is obsessed by this fear' (the fear that frequent paragraphing will damage the development of the point), not that The New Yorker is obsessed with frequent paragraphing itself. In fact, the author criticizes The New Yorker for going 'miles without relief,' implying they use long paragraphs, which is the opposite of frequent/short paragraphing. Therefore, statement ③ misrepresents the text."
+        }
+      }
+    ],
+    "31번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "who will have presumably either made or messed up your relationship"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends, at school and in work."
+          },
+          {
+            "verdict": "false",
+            "evidence": "one that nobody outside the village likes, but who cares?"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We observe other people in their food lives, often judgmentally."
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "there was also the person behind the milk"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends, at school and in work."
+          },
+          {
+            "verdict": "false",
+            "evidence": "nobody outside the village likes, but who cares?"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We observe other people in their food lives, often judgmentally."
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "Our food preferences are shaped by social interactions and relationships.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Our tastes are social."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends, at school and in work."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Tastes spread like this, person to person"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We observe other people in their food lives, often judgmentally."
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Our tastes are social."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends, at school and in work."
+          },
+          {
+            "verdict": "false",
+            "evidence": "nobody outside the village likes, but who cares?"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We observe other people in their food lives, often judgmentally."
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage states that tastes spread 'like viruses, almost irrespective of the qualities of the food involved,' implying that food trends and preferences do spread beyond their origin. Option ③ claims the recipe 'never spreads beyond the village,' which directly contradicts the text's emphasis on the viral nature of taste transmission. Options ①, ②, ④, and ⑤ are directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "32번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions."
+          },
+          {
+            "verdict": "true",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions are not random"
+          },
+          {
+            "verdict": "true",
+            "evidence": "they arise from our judgments."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions"
+          },
+          {
+            "verdict": "true",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions are not random; they arise from our judgments"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions are not random; they arise from our judgments"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 3,
+        "want_true": true,
+        "out": "Anger stems from perceiving criticism as unfair rather than the words themselves.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "Job loss causes devastation because it defines your worth, not the event itself.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Emotion management involves selecting helpful self-narratives rather than suppressing feelings.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions."
+          },
+          {
+            "verdict": "true",
+            "evidence": "feel angry not due to the words themselves but because you perceive the comment as unfair"
+          },
+          {
+            "verdict": "false",
+            "evidence": "not simply because of the job loss but because you believe it defines your worth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This doesn't mean suppressing how you feel; it means examining the story you tell yourself and choosing one that serves you better."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions"
+          },
+          {
+            "verdict": "true",
+            "evidence": "perceive the comment as unfair or threatening"
+          },
+          {
+            "verdict": "true",
+            "evidence": "because you believe it defines your worth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "choosing one that serves you better"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 0,
+        "want_true": true,
+        "out": "Stoic philosophy suggests that emotional responses are determined by our interpretations.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions."
+          },
+          {
+            "verdict": "true",
+            "evidence": "feel angry not due to the words themselves but because you perceive the comment as unfair"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions are not random; they arise from our judgments."
+          },
+          {
+            "verdict": "true",
+            "evidence": "choosing one that serves you better."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions"
+          },
+          {
+            "verdict": "true",
+            "evidence": "feel angry not due to the words themselves but because you perceive the comment as unfair"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions are not random; they arise from our judgments"
+          },
+          {
+            "verdict": "true",
+            "evidence": "choosing one that serves you better"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that emotions 'are shaped by how we interpret events.' Option ③ claims the opposite—that they are 'not shaped' by interpretation—making it the only statement that directly contradicts the text. Options ①, ②, ④, and ⑤ are all supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "33번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We must sadly note that, due to the action of time and weather, no paintings from ancient Greek artists exist today."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We can only surmise their quality based on tales such as that of Zeuxis and Parrhasios, the obvious skill in ancient Greek sculpture, and in drawings that survive on ancient Greek pottery."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Jackson Pollock, a leader in the New York School of the 1950's, intentionally did not copy existing objects in his art."
+          },
+          {
+            "verdict": "true",
+            "evidence": "thus demonstrating that the ancient Greek view of art as mimesis ─ simple copying ─ does not sufficiently define art."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "felt that the visual artist's goal was"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We must sadly note that... no paintings"
+          },
+          {
+            "verdict": "true",
+            "evidence": "surmise their quality based on tales"
+          },
+          {
+            "verdict": "true",
+            "evidence": "intentionally did not copy existing objects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "does not sufficiently define art."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "Pollock's art successfully copied recognizable objects to define art.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We must sadly note that, due to the action of time and weather, no paintings from ancient Greek artists exist today."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We can only surmise their quality based on tales such as that of Zeuxis and Parrhasios, the obvious skill in ancient Greek sculpture, and in drawings that survive on ancient Greek pottery."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Jackson Pollock, a leader in the New York School of the 1950's, intentionally did not copy existing objects in his art."
+          },
+          {
+            "verdict": "false",
+            "evidence": "They succeeded at making artwork that did not copy anything"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We must sadly note that, due to the action of time and weather, no paintings from ancient Greek artists exist today."
+          },
+          {
+            "verdict": "true",
+            "evidence": "surmise their quality based on tales such as that of Zeuxis and Parrhasios"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Jackson Pollock, a leader in the New York School of the 1950's, intentionally did not copy existing objects in his art."
+          },
+          {
+            "verdict": "false",
+            "evidence": "intentionally did not copy existing objects"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that Pollock 'intentionally did not copy existing objects' and 'succeeded at making artwork that did not copy anything.' Option ⑤ claims his art 'successfully copied recognizable objects,' which is the direct opposite of the text's assertion. Options ①, ②, ③, and ④ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "34번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The most powerful supercomputer on the planet cannot administer the enormous number of computations it takes to run"
+          },
+          {
+            "verdict": "true",
+            "evidence": "we have to accept that we cannot fully explain its complexities"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running seems very easy, but that is only because our bodies are so very good at it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running seems very easy, but that is only because our bodies are so very good at it"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "cannot administer the enormous number of computations it takes to run"
+          },
+          {
+            "verdict": "true",
+            "evidence": "we cannot fully explain its complexities"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running seems very easy, but that is only because"
+          },
+          {
+            "verdict": "false",
+            "evidence": "that is only because our bodies are so very good at it"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "The writer implies that running involves unconscious processes beyond conscious control.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 0,
+        "want_true": true,
+        "out": "The writer states that running requires complex unconscious computations beyond conscious control.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "we cannot fully explain its complexities"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          },
+          {
+            "verdict": "true",
+            "evidence": "enormous number of computations it takes to run"
+          },
+          {
+            "verdict": "false",
+            "evidence": "that is only because our bodies are so very good at it"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "we cannot fully explain its complexities."
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will."
+          },
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us and is so complicated"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running seems very easy, but that is only because our bodies are so very good at it."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that running seems easy 'because our bodies are so very good at it.' Option ① claims the writer argues bodies are injured 'because they are not good at it,' which directly contradicts the text's explanation that injury occurs despite the body's high proficiency and complex unconscious control."
+        }
+      }
+    ],
+    "35번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "veterinary dermatologists warn against such practices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "veterinary dermatologists warn against such practices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "thoroughly brush their dog every day"
+          },
+          {
+            "verdict": "true",
+            "evidence": "most dogs don't need to be bathed on a regular basis"
+          },
+          {
+            "verdict": "true",
+            "evidence": "generally only need baths every 6 to 8 weeks"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "veterinary dermatologists warn against such practices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "veterinary dermatologists warn against such practices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "thoroughly brush their dog every day"
+          },
+          {
+            "verdict": "true",
+            "evidence": "most dogs don't need to be bathed on a regular basis"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dogs with thick, heavy coats generally only need baths every 6 to 8 weeks"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that bathing multiple times a week is not good for a dog's skin and recommends keeping baths to 'once or twice a week at most' unless medically necessary. Option ① claims that weekly bathing is 'recommended to avoid the doggy smell,' which contradicts the text's warning against frequent bathing for this purpose and the specific advice to limit baths to 1-2 times a week (not necessarily weekly, and not for the reason of smell avoidance via frequent washing). Options ②, ③, ④, and ⑤ are directly supported by the text."
+        }
+      }
+    ],
+    "36번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "simply use reasoning and logic!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "digits from 1 to 9 once and only once"
+          },
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved"
+          },
+          {
+            "verdict": "true",
+            "evidence": "simply use reasoning and logic!"
+          },
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "They could be nine letters or nine shapes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          },
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          },
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": true,
+        "out": "The numerical values of the digits are irrelevant, but the distinct symbols matter.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "The author compares promoting an art exhibition without mentioning art to promoting math without mentioning math.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "simply use reasoning and logic!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "They could be nine letters or nine shapes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "'There's no maths involved, simply use reasoning and logic!'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "numerical values of the digits are irrelevant"
+          },
+          {
+            "verdict": "true",
+            "evidence": "slogan 'No art involved, just painting and sculpture'?"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "simply use reasoning and logic!"
+          },
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning"
+          },
+          {
+            "verdict": "true",
+            "evidence": "numerical values of the digits are irrelevant"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Could you imagine the promotion of an exhibition"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 1,
+        "want_true": false,
+        "out": "Sudoku puzzles in newspapers always use letters or shapes instead of numbers",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "simply use reasoning and logic!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "They could be nine letters or nine shapes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "'There's no maths involved, simply use reasoning and logic!'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "numerical values of the digits are irrelevant"
+          },
+          {
+            "verdict": "true",
+            "evidence": "slogan 'No art involved, just painting and sculpture'?"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "They could be nine letters or nine shapes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "One Irish daily paper publishes these puzzles with the statement 'There's no maths involved, simply use reasoning and logic!'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "But the numerical values of the digits are irrelevant; what is important is that there are nine distinct symbols."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Could you imagine the promotion of an exhibition in the National Gallery with the slogan 'No art involved, just painting and sculpture'?"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage states that the digits 'could be' nine letters or shapes, implying this is a hypothetical possibility to illustrate that the numerical value is irrelevant. It does not state that newspapers 'always' use letters or shapes. In fact, it mentions 'given numbers or clues' and 'digits from 1 to 9', suggesting numbers are commonly used. Therefore, statement ② contradicts the text by turning a hypothetical example into a universal fact."
+        }
+      }
+    ],
+    "37번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a 16th-century Polish mathematician named Nicolaus Copernicus put forth a revolutionary idea."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the view of the universe accepted at the time that the Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter and observed craters on Earth's Moon."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Technological improvements led to the development of the telescope in the early 17th century."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a 16th-century Polish mathematician named Nicolaus Copernicus put forth a revolutionary idea."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the view of the universe accepted at the time that the Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter and observed craters on Earth's Moon."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Technological improvements led to the development of the telescope in the early 17th century."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 4,
+        "want_true": false,
+        "out": "Galileo Galilei used a telescope to find the largest moons of Saturn.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a 16th-century Polish mathematician named Nicolaus Copernicus put forth a revolutionary idea."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the view of the universe accepted at the time that the Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "false",
+            "evidence": "discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Technological improvements led to the development of the telescope"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The Egyptians, Babylonians, Greeks, and Maya were among the first peoples"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a 16th-century Polish mathematician named Nicolaus Copernicus put forth a revolutionary idea."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "false",
+            "evidence": "discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Technological improvements led to the development of the telescope in the early 17th century."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 3,
+        "want_true": true,
+        "out": "Technological progress resulted in the creation of the telescope during the early 1600s.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a 16th-century Polish mathematician named Nicolaus Copernicus put forth a revolutionary idea."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the view of the universe accepted at the time that the Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "false",
+            "evidence": "discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "true",
+            "evidence": "development of the telescope in the early 17th century."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Egyptians, Babylonians, Greeks, and Maya were among"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Polish mathematician named Nicolaus Copernicus put forth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "false",
+            "evidence": "discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "true",
+            "evidence": "development of the telescope in the early 17th century"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that Galileo discovered the four largest moons of Jupiter, not Saturn. Option ⑤ incorrectly substitutes 'Saturn' for 'Jupiter', making it the statement that does not agree with the text. Options ①, ②, ③, and ④ are directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "38번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The historian of science Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The historian of science Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The historian of science Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The historian of science Theodore M. Porter describes measurement as a 'technology of distance'"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 0,
+        "want_true": true,
+        "out": "Consistency in measurement allows for the exchange of information across cultures.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "Porter views measurement as a tool that bridges cultural and geographical differences.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": false,
+        "out": "Porter characterizes measurement as a technology of closeness rather than distance",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Large communities eventually found early measurement systems inadequate.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "allowing for the exchange of information"
+          },
+          {
+            "verdict": "true",
+            "evidence": "a tool that uses shared rules to bridge differences"
+          },
+          {
+            "verdict": "false",
+            "evidence": "describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "As these communities grew in size, though, the inadequacies"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "allowing for the exchange of information."
+          },
+          {
+            "verdict": "true",
+            "evidence": "a tool that uses shared rules to bridge differences of culture and geography"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "As these communities grew in size, though, the inadequacies of this system would become evident."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that Theodore M. Porter describes measurement as a 'technology of distance'. Option ② claims he characterizes it as a 'technology of closeness', which directly contradicts the text. All other options (①, ③, ④, ⑤) are supported by specific sentences in the passage regarding Porter's definition, the function of measurement, and the evolution of measurement systems in growing communities."
+        }
+      }
+    ],
+    "39번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "the ants don't eat these leaves"
+          },
+          {
+            "verdict": "true",
+            "evidence": "leaf-cutter ants cultivate their own food"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use these as fertilizer to grow fungus"
+          },
+          {
+            "verdict": "true",
+            "evidence": "ants feed the fungus... fruiting bodies which the ants later eat"
+          },
+          {
+            "verdict": "true",
+            "evidence": "nests underground, something spanning hundreds of square meters"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "ants don't eat these leaves"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Using this successful farming strategy"
+          },
+          {
+            "verdict": "true",
+            "evidence": "grow fungus in large underground 'gardens.'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "ants later eat"
+          },
+          {
+            "verdict": "true",
+            "evidence": "spanning hundreds of square meters"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "①",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'the ants don't eat these leaves' and that they use the chewed leaves as fertilizer to grow fungus, which is what they eventually eat. Option ① claims they chew leaves for their own consumption, which directly contradicts the text."
+        }
+      }
+    ],
+    "40번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The system monitors other people's reactions to our behaviors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "operates nonconsciously until it detects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "operates nonconsciously until it detects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The continuous scanning is normal, a part of being human."
+          },
+          {
+            "verdict": "true",
+            "evidence": "searching for cues from the environment to assess our value"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "monitors other people's reactions to our behaviors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "operates nonconsciously until it detects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "operates nonconsciously until it detects that our relational value"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The continuous scanning is normal, a part of being human."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We all have an interpersonal process of searching for cues"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "Conscious awareness arises when the alarm signals a threat to social bonds.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The system monitors other people's reactions to our behaviors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "operates nonconsciously until it detects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the threat to our social bonds is pushed into conscious awareness"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The continuous scanning is normal, a part of being human."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We all have an interpersonal process of searching for cues"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The system monitors other people's reactions to our behaviors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "operates nonconsciously until it detects that our relational value"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the threat to our social bonds is pushed into conscious awareness"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The continuous scanning is normal, a part of being human."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We all have an interpersonal process of searching for cues"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the monitoring system 'generally operates nonconsciously until it detects that our relational value is falling or low.' Option ② claims it operates 'consciously' until detection, which directly contradicts the text's assertion of nonconscious operation."
+        }
+      }
+    ],
+    "41~42번|mismatch": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The role of 'slang' in popular culture has fundamentally changed because of the internet."
+          },
+          {
+            "verdict": "false",
+            "evidence": "content creators can. We regularly use words"
+          },
+          {
+            "verdict": "false",
+            "evidence": "loose social networks that previously connected us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "public access is democratized."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Anybody and everybody can become a public figure"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "role of 'slang' in popular culture has fundamentally changed"
+          },
+          {
+            "verdict": "false",
+            "evidence": "gives them a large platform to spread quicker"
+          },
+          {
+            "verdict": "false",
+            "evidence": "loose social networks... are simply stronger online"
+          },
+          {
+            "verdict": "true",
+            "evidence": "public access is democratized"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Anybody and everybody can become a public figure"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 1,
+        "want_true": true,
+        "out": "Social media removed the barriers that previously restricted public voice.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The role of 'slang' in popular culture has fundamentally changed because of the internet."
+          },
+          {
+            "verdict": "false",
+            "evidence": "TV presenters and journalists might not have been able to use slang, but content creators can."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Social media completely broke that barrier."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The playing field is now level, and public access is democratized."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Anybody and everybody can become a public figure on the new communicative platforms"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "role of 'slang' in popular culture has fundamentally changed"
+          },
+          {
+            "verdict": "false",
+            "evidence": "gives them a large platform to spread quicker"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Social media completely broke that barrier"
+          },
+          {
+            "verdict": "true",
+            "evidence": "public access is democratized"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Anybody and everybody can become a public figure"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that content creators use slang on 'new communicative platforms' and that their influence 'legitimizes these terms and gives them a large platform to spread quicker than they could have before.' It contrasts this with TV presenters and journalists who 'might not have been able to use slang.' Therefore, claiming their influence is limited to traditional media directly contradicts the text, which argues the opposite: that they bypass traditional media constraints."
+        }
+      }
+    ],
+    "20번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Yes, the game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Focus on engagement rather than entertainment."
+          },
+          {
+            "verdict": "false",
+            "evidence": "you are not creating the next great commercial game to entertain"
+          },
+          {
+            "verdict": "true",
+            "evidence": "success will be measured by the achievement of learning outcomes"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Learning games need to be what we call 'fun enough.'"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "the game should be engaging with a mild level of fun"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Focus on engagement rather than entertainment."
+          },
+          {
+            "verdict": "false",
+            "evidence": "you are not creating the next great commercial game to entertain"
+          },
+          {
+            "verdict": "true",
+            "evidence": "success will be measured by the achievement of learning outcomes."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Learning games need to be what we call 'fun enough.'"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'you are not creating the next great commercial game to entertain your learners' and contrasts 'engagement' with 'entertainment,' arguing that learning should be the goal, not entertainment. Therefore, option ② directly contradicts the text."
+        }
+      }
+    ],
+    "21번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "held captive by 'smart' devices like phones and tablets"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not learning how to socialize and read physical cues"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not learning how to run, how to skip, or how to climb"
+          },
+          {
+            "verdict": "true",
+            "evidence": "learning how to live with anxiety, depression, and even diseases"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not going outside to play"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "held captive by 'smart' devices like phones"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not learning how to socialize and read"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not learning how to run, how to skip"
+          },
+          {
+            "verdict": "true",
+            "evidence": "learning how to live with anxiety, depression"
+          },
+          {
+            "verdict": "true",
+            "evidence": "They are not going outside to play"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": false,
+        "out": "Children acquire skills for running, skipping, and climbing daily.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "held captive by 'smart' devices like phones and tablets"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not learning how to socialize and read physical cues"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not learning how to run, how to skip, or how to climb"
+          },
+          {
+            "verdict": "false",
+            "evidence": "not learning how to run, how to skip, or how to climb"
+          },
+          {
+            "verdict": "true",
+            "evidence": "not going outside to play"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "held captive by 'smart' devices like phones"
+          },
+          {
+            "verdict": "true",
+            "evidence": "they are not learning how to socialize"
+          },
+          {
+            "verdict": "true",
+            "evidence": "They are not even learning how to run"
+          },
+          {
+            "verdict": "false",
+            "evidence": "They are not even learning how to run"
+          },
+          {
+            "verdict": "true",
+            "evidence": "They are not going outside to play"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that children 'are not even learning how to run, how to skip, or how to climb.' Option ⑤ claims that children acquire these skills daily, which directly contradicts the text. Options ①, ②, ③, and ④ are all directly supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "22번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "states that 'like attracts like'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "common flaw... is that we believe all we have to do is think about or visualize something to manifest it."
+          },
+          {
+            "verdict": "true",
+            "evidence": "most powerful attractor is our belief system."
+          },
+          {
+            "verdict": "false",
+            "evidence": "if you don't truly believe you are enough... attracting a great career or relationship into your life may be more challenging."
+          },
+          {
+            "verdict": "true",
+            "evidence": "upgrade them to beliefs that are in line with what you want to attract."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "states that 'like attracts like'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The common flaw in our understanding of this law is"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the most powerful attractor is our belief system"
+          },
+          {
+            "verdict": "false",
+            "evidence": "if you don't truly believe you are enough... attracting... may be more challenging"
+          },
+          {
+            "verdict": "true",
+            "evidence": "upgrade them to beliefs that are in line with what you want"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that creating poster boards and affirming desires is NOT enough if one does not truly believe they are worthy. It argues that belief systems are the most powerful attractor and that without upgrading limiting beliefs, attracting desired outcomes is challenging. Option ④ claims the writer says creating poster boards is 'enough', which directly contradicts the text's argument that belief is the crucial factor."
+        }
+      }
+    ],
+    "23번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "a species without much variation might be completely wiped out"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A species with great variation will more likely have some survivors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "then when disaster struck, we might become extinct"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Darwin observed variation in the bodies of animals"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This variation preserves the evolvability of our species"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "a species without much variation might be completely wiped out."
+          },
+          {
+            "verdict": "true",
+            "evidence": "A species with great variation will more likely have some survivors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "we might become extinct."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Darwin observed variation in the bodies of animals"
+          },
+          {
+            "verdict": "true",
+            "evidence": "This variation preserves the evolvability of our species."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that if there were only one human nature (no variation), 'we might become extinct' when disaster struck. Option ④ claims such a species would be 'more likely to survive,' which directly contradicts the text's argument that variation is necessary for survival and that uniformity leads to extinction."
+        }
+      }
+    ],
+    "24번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Human beings want to know."
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty."
+          },
+          {
+            "verdict": "true",
+            "evidence": "when things are uncertain, we often feel frightened"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Plans are worthless, but planning is everything."
+          },
+          {
+            "verdict": "true",
+            "evidence": "difference between planning and thinking all your plans have to come to fruition."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "Human beings want to know."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Letting go of our need for control, being aware, is a lot about gathering the courage to face uncertainty."
+          },
+          {
+            "verdict": "true",
+            "evidence": "When we don't know, when things are uncertain, we often feel frightened and become inflexible."
+          },
+          {
+            "verdict": "true",
+            "evidence": "American president Eisenhower once said: 'Plans are worthless, but planning is everything.'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "But there's a difference between planning and thinking all your plans have to come to fruition."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 2,
+        "want_true": true,
+        "out": "The writer says that having plans is beautiful as long as we do not insist they must succeed.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": false,
+        "out": "The writer claims that Eisenhower stated planning is completely worthless.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "difference between planning and thinking all your plans have to come to fruition"
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty"
+          },
+          {
+            "verdict": "true",
+            "evidence": "when things are uncertain, we often feel frightened"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Plans are worthless, but planning is everything"
+          },
+          {
+            "verdict": "true",
+            "evidence": "difference between planning and thinking all your plans have to come to fruition"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "But there's a difference between planning and thinking all your plans have to come to fruition."
+          },
+          {
+            "verdict": "true",
+            "evidence": "being aware, is a lot about gathering the courage to face uncertainty."
+          },
+          {
+            "verdict": "true",
+            "evidence": "when things are uncertain, we often feel frightened"
+          },
+          {
+            "verdict": "false",
+            "evidence": "'Plans are worthless, but planning is everything.'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "But there's a difference between planning and thinking all your plans have to come to fruition."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly quotes Eisenhower saying 'Plans are worthless, but planning is everything.' Option ⑤ claims Eisenhower stated 'planning is completely worthless,' which directly contradicts the quote where 'planning' is described as 'everything' (valuable) and 'plans' (the static result) are 'worthless'. Options ①, ②, ③, and ④ are all supported by specific sentences in the text regarding courage, fear of uncertainty, the beauty of plans vs. rigidity, and the distinction between planning and fixed outcomes."
+        }
+      }
+    ],
+    "26번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "He was born in 1959 in Massachusetts"
+          },
+          {
+            "verdict": "false",
+            "evidence": "earned both a master's degree and a PhD in medical anthropology"
+          },
+          {
+            "verdict": "true",
+            "evidence": "earned both a master's degree and a PhD in medical anthropology"
+          },
+          {
+            "verdict": "true",
+            "evidence": "In 1987, he co-founded Partners In Health"
+          },
+          {
+            "verdict": "true",
+            "evidence": "honored with the WHO Director-General's Global Health Leaders Award"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "born in 1959 in Massachusetts"
+          },
+          {
+            "verdict": "false",
+            "evidence": "PhD in medical anthropology at Harvard University"
+          },
+          {
+            "verdict": "true",
+            "evidence": "earned both a master's degree and a PhD in medical anthropology"
+          },
+          {
+            "verdict": "true",
+            "evidence": "In 1987, he co-founded Partners In Health"
+          },
+          {
+            "verdict": "true",
+            "evidence": "honored with the WHO Director-General's Global Health Leaders Award"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that Paul Farmer earned a master's degree and a PhD in 'medical anthropology' at Harvard University. Option ② claims he 'studied medicine' at Harvard, which contradicts the specific field of study mentioned (anthropology vs. medicine) and ignores the fact that his medical training is implied to have occurred elsewhere or prior to his graduate studies, as he was already a physician when he co-founded Partners In Health. Therefore, ② is the statement that does not agree with the passage."
+        }
+      }
+    ],
+    "29번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Anaerobic energy is generated only with glucose"
+          },
+          {
+            "verdict": "true",
+            "evidence": "It's a kind of backup system and turbo boost"
+          },
+          {
+            "verdict": "true",
+            "evidence": "sickness, muscle weakness, and sweating... is the feeling of anaerobic overload"
+          },
+          {
+            "verdict": "false",
+            "evidence": "haven't caught up to supply the oxygen"
+          },
+          {
+            "verdict": "true",
+            "evidence": "body has switched from anaerobic to aerobic respiration"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "generated only with glucose"
+          },
+          {
+            "verdict": "true",
+            "evidence": "backup system and turbo boost when"
+          },
+          {
+            "verdict": "true",
+            "evidence": "feeling of anaerobic overload."
+          },
+          {
+            "verdict": "false",
+            "evidence": "haven't caught up to supply the oxygen"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The body has switched from anaerobic to aerobic respiration."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the body uses anaerobic respiration because the lungs 'haven't caught up to supply the oxygen.' Option ④ claims the body uses anaerobic respiration when the lungs 'have caught up,' which directly contradicts the text."
+        }
+      }
+    ],
+    "30번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Newspaper paragraphs should be only two or three sentences long"
+          },
+          {
+            "verdict": "false",
+            "evidence": "The New Yorker is obsessed by this fear"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A succession of tiny paragraphs is as annoying as a paragraph that's too long"
+          },
+          {
+            "verdict": "false",
+            "evidence": "make the reader's job harder"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "make it look inviting, whereas a long chunk"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Newspaper paragraphs should be only two or three sentences"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Obviously The New Yorker is obsessed by this fear"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A succession of tiny paragraphs is as annoying as"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Actually they make the reader's job harder"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "The author argues that frequent paragraphing benefits the reader despite potential concerns.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Short paragraphs put air around what you write and make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Newspaper paragraphs should be only two or three sentences long"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Don't worry; the gains far outweigh the hazards"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A succession of tiny paragraphs is as annoying as a paragraph that's too long"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Actually they make the reader's job harder"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "make it look inviting"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Newspaper paragraphs should be only two or three sentences"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the gains far outweigh the hazards"
+          },
+          {
+            "verdict": "true",
+            "evidence": "A succession of tiny paragraphs is as annoying"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Actually they make the reader's job harder"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that tiny paragraphs 'make the reader's job harder by chopping up a natural train of thought.' Option ⑤ claims they make the job 'easier,' which directly contradicts the text. Options ①, ②, ③, and ④ are all supported by specific sentences in the passage."
+        }
+      }
+    ],
+    "31번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "presumably either made or messed up"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends"
+          },
+          {
+            "verdict": "true",
+            "evidence": "nobody outside the village likes"
+          },
+          {
+            "verdict": "true",
+            "evidence": "irrespective of the qualities of the food involved"
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "not_given",
+            "evidence": ""
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends"
+          },
+          {
+            "verdict": "true",
+            "evidence": "one that nobody outside the village likes"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Tastes spread like this, person to person, like viruses"
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": false,
+        "out": "Our tastes are determined solely by the inherent qualities of the food itself.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "We want these things not just because of what they are"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends"
+          },
+          {
+            "verdict": "true",
+            "evidence": "one that nobody outside the village likes"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Tastes spread like this, person to person, like viruses"
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "We want these things not just because of what they are"
+          },
+          {
+            "verdict": "true",
+            "evidence": "We learn to eat from our families and friends"
+          },
+          {
+            "verdict": "true",
+            "evidence": "one that nobody outside the village likes"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Tastes spread like this, person to person, like viruses"
+          },
+          {
+            "verdict": "true",
+            "evidence": "I avoided the viral chopped salad moment of 2024"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'We want these things not just because of what they are, but who we are,' and emphasizes that tastes spread 'irrespective of the qualities of the food involved.' Option ③ claims tastes are determined 'solely' by inherent qualities, which directly contradicts the text's argument that social factors and identity are primary drivers."
+        }
+      }
+    ],
+    "32번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "true",
+            "evidence": "they arise from our judgments."
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions."
+          },
+          {
+            "verdict": "true",
+            "evidence": "our emotions are not random"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "false",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions arise from our judgments"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions"
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions are not random"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 3,
+        "want_true": false,
+        "out": "The Stoics taught that emotions are shaped by how we interpret events.",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 4,
+        "want_true": false,
+        "out": "Stoics claim that changing judgments has no effect on emotional responses.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Examining your internal narrative allows you to select a more beneficial perspective.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "They're shaped by how we interpret events."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Change the judgment, and you change the emotion."
+          },
+          {
+            "verdict": "true",
+            "evidence": "they arise from our judgments."
+          },
+          {
+            "verdict": "true",
+            "evidence": "emotions aren't just automatic reactions."
+          },
+          {
+            "verdict": "true",
+            "evidence": "choosing one that serves you better."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "They're shaped by how we interpret events"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Change the judgment, and you change the emotion"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our emotions are not random; they arise from our judgments"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the Stoics taught that emotions aren't just automatic reactions"
+          },
+          {
+            "verdict": "true",
+            "evidence": "examining the story you tell yourself and choosing one that serves you better"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'Change the judgment, and you change the emotion,' which directly contradicts option ④'s claim that changing judgments has 'no effect' on emotional responses. Options ①, ②, ③, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "33번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "They succeeded at making artwork that did not copy anything"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "They succeeded at making artwork that did not copy anything"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 1,
+        "want_true": true,
+        "out": "No ancient Greek paintings survive today because of time and weather.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "Surviving pottery drawings help us guess the quality of lost Greek paintings.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "Pollock's art intentionally avoided copying existing objects.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": false,
+        "out": "Pollock's artwork intentionally copied recognizable objects.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The ancient Greeks felt that the visual artist's goal was to copy visual experience."
+          },
+          {
+            "verdict": "true",
+            "evidence": "due to the action of time and weather, no paintings from ancient Greek artists exist today."
+          },
+          {
+            "verdict": "true",
+            "evidence": "We can only surmise their quality based on tales such as that of Zeuxis and Parrhasios"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Jackson Pollock, a leader in the New York School of the 1950's, intentionally did not copy existing objects in his art."
+          },
+          {
+            "verdict": "false",
+            "evidence": "intentionally did not copy existing objects in his art."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "goal was to copy visual experience"
+          },
+          {
+            "verdict": "true",
+            "evidence": "due to the action of time and weather"
+          },
+          {
+            "verdict": "true",
+            "evidence": "survive on ancient Greek pottery"
+          },
+          {
+            "verdict": "true",
+            "evidence": "intentionally did not copy existing objects"
+          },
+          {
+            "verdict": "false",
+            "evidence": "intentionally did not copy existing objects"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that Jackson Pollock 'intentionally did not copy existing objects' and 'consciously avoid[ed] making marks or passages that resembled recognizable objects.' Option ⑤ claims his artwork 'intentionally copied recognizable objects,' which is the direct opposite of the text's statement. Therefore, ⑤ is the only option that does not agree with the passage."
+        }
+      }
+    ],
+    "34번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "If our bodies know best"
+          },
+          {
+            "verdict": "true",
+            "evidence": "only the T-1000 Terminators of our imagination are able to do it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies are so very good at it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "only the T-1000 Terminators of our imagination are able to do it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "If our bodies know best, why are they easily injured"
+          },
+          {
+            "verdict": "true",
+            "evidence": "only the T-1000 Terminators of our imagination are able to do it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies are so very good at it"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 3,
+        "want_true": true,
+        "out": "The writer states that running involves complex biological processes beyond conscious control.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 0,
+        "want_true": true,
+        "out": "The writer questions why bodies get injured despite running being natural.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": false,
+        "out": "The writer claims that running is fully conscious and easily explained by science.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us and is so complicated"
+          },
+          {
+            "verdict": "true",
+            "evidence": "why are they easily injured when we do something so seemingly natural as running"
+          },
+          {
+            "verdict": "false",
+            "evidence": "only the T-1000 Terminators of our imagination are able to do it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us and is so complicated"
+          },
+          {
+            "verdict": "true",
+            "evidence": "why are they easily injured when we do something so seemingly natural as running"
+          },
+          {
+            "verdict": "true",
+            "evidence": "only the T-1000 Terminators of our imagination are able to do it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 1,
+        "want_true": true,
+        "out": "The writer suggests running appears easy because our bodies are highly skilled at it.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us and is so complicated"
+          },
+          {
+            "verdict": "true",
+            "evidence": "why are they easily injured when we do something so seemingly natural as running"
+          },
+          {
+            "verdict": "true",
+            "evidence": "running seems very easy, but that is only because our bodies are so very good at it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "running is not all conscious to us and is so complicated"
+          },
+          {
+            "verdict": "true",
+            "evidence": "why are they easily injured when we do something so seemingly natural as running"
+          },
+          {
+            "verdict": "true",
+            "evidence": "running seems very easy, but that is only because our bodies are so very good at it"
+          },
+          {
+            "verdict": "false",
+            "evidence": "running is not all conscious to us"
+          },
+          {
+            "verdict": "true",
+            "evidence": "our bodies know more about running than we ever will"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that running is 'not all conscious to us' and is 'so complicated that only the T-1000 Terminators... are able to do it,' directly contradicting option ④'s claim that it is 'fully conscious and easily explained by science.'"
+        }
+      }
+    ],
+    "35번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "most dogs don't need to be bathed on a regular basis"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dogs with thick, heavy coats generally only need baths every 6 to 8 weeks"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Unless they have a skin condition for which a vet has prescribed medicated baths"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dogs with thick, heavy coats generally only need baths every 6 to 8 weeks"
+          },
+          {
+            "verdict": "true",
+            "evidence": "dogs with thick, heavy coats generally only need baths every 6 to 8 weeks"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "most dogs don't need to be bathed on a regular basis"
+          },
+          {
+            "verdict": "true",
+            "evidence": "doubts generally only need baths every 6 to 8 weeks"
+          },
+          {
+            "verdict": "true",
+            "evidence": "vet has prescribed medicated baths"
+          },
+          {
+            "verdict": "true",
+            "evidence": "doubts generally only need baths every 6 to 8 weeks"
+          },
+          {
+            "verdict": "true",
+            "evidence": "doubts generally only need baths every 6 to 8 weeks"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 1,
+        "part": 1,
+        "want_true": true,
+        "out": "Veterinary experts advise against frequent bathing because it harms canine skin health.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 2,
+        "want_true": true,
+        "out": "Daily brushing and waterless shampoo help manage odor without frequent bathing.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 2,
+        "want_true": true,
+        "out": "Daily brushing and waterless shampoo are suggested as alternatives to frequent bathing.",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 1,
+        "want_true": true,
+        "out": "Veterinary specialists caution that frequent bathing is detrimental to a dog's skin.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "generally only need baths every 6 to 8 weeks"
+          },
+          {
+            "verdict": "true",
+            "evidence": "warn against such practices, as they are not good"
+          },
+          {
+            "verdict": "true",
+            "evidence": "prescribed medicated baths"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use waterless shampoo and thoroughly brush their dog"
+          },
+          {
+            "verdict": "true",
+            "evidence": "warn against such practices, as they are not good"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "most dogs don't need to be bathed on a regular basis"
+          },
+          {
+            "verdict": "true",
+            "evidence": "veterinary dermatologists warn against such practices"
+          },
+          {
+            "verdict": "true",
+            "evidence": "prescribed medicated baths"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use waterless shampoo and thoroughly brush their dog"
+          },
+          {
+            "verdict": "true",
+            "evidence": "veterinary dermatologists warn against such practices"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "⑤",
+          "also_defensible": [],
+          "reason": "The passage states that dogs with thick, heavy coats 'generally only need baths every 6 to 8 weeks.' Option ⑤ generalizes this to 'dogs should be bathed every 6 to 8 weeks,' ignoring the specific condition (thick/heavy coats) and the earlier statement that most dogs don't need regular bathing. This makes it the statement that does NOT agree with the passage."
+        }
+      }
+    ],
+    "36번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "It's the pattern that matters."
+          },
+          {
+            "verdict": "true",
+            "evidence": "complete a 9 x 9 grid"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what is important is that there are nine distinct symbols."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Could you imagine the promotion of an exhibition"
+          },
+          {
+            "verdict": "false",
+            "evidence": "No art involved, just painting and sculpture"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "There's no maths involved, simply use reasoning and logic!"
+          },
+          {
+            "verdict": "true",
+            "evidence": "complete a 9 x 9 grid"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what is important is that there are nine distinct symbols."
+          },
+          {
+            "verdict": "false",
+            "evidence": "Could you imagine the promotion of an exhibition"
+          },
+          {
+            "verdict": "false",
+            "evidence": "It's the pattern that matters."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "Mathematics focuses on patterns and structures rather than numerical values.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 0,
+        "want_true": true,
+        "out": "Mathematics prioritizes patterns and structures over numerical values",
+        "ok": false
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": true,
+        "out": "Some people might avoid Sudoku puzzles because they fear they involve mathematics.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "central concerns of mathematics are not numbers, but patterns, structures"
+          },
+          {
+            "verdict": "true",
+            "evidence": "complete a 9 x 9 grid"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what is important is that there are nine distinct symbols"
+          },
+          {
+            "verdict": "true",
+            "evidence": "idea that something might be spoiled by mathematics is enough to scare off potential solvers"
+          },
+          {
+            "verdict": "false",
+            "evidence": "It's the pattern that matters"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "concerns... are not numbers, but patterns"
+          },
+          {
+            "verdict": "true",
+            "evidence": "complete a 9 x 9 grid"
+          },
+          {
+            "verdict": "false",
+            "evidence": "contains all the digits from 1 to 9"
+          },
+          {
+            "verdict": "true",
+            "evidence": "scare off potential solvers!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "It's the pattern that matters."
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 2,
+        "part": 2,
+        "want_true": true,
+        "out": "Sudoku requires nine unique symbols, regardless of whether they are numbers or shapes.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "central concerns of mathematics are not numbers, but patterns, structures"
+          },
+          {
+            "verdict": "true",
+            "evidence": "complete a 9 x 9 grid"
+          },
+          {
+            "verdict": "true",
+            "evidence": "what is important is that there are nine distinct symbols"
+          },
+          {
+            "verdict": "true",
+            "evidence": "idea that something might be spoiled by mathematics is enough to scare off potential solvers"
+          },
+          {
+            "verdict": "false",
+            "evidence": "It's the pattern that matters"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "concerns of mathematics are not numbers, but patterns"
+          },
+          {
+            "verdict": "true",
+            "evidence": "complete a 9 x 9 grid"
+          },
+          {
+            "verdict": "true",
+            "evidence": "nine distinct symbols."
+          },
+          {
+            "verdict": "true",
+            "evidence": "scare off potential solvers!"
+          },
+          {
+            "verdict": "false",
+            "evidence": "It's the pattern that matters."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the numerical values are irrelevant and that 'it's the pattern that matters,' implying that Sudoku IS a form of mathematics (logic/patterns). Option ④ claims the puzzle is described as having 'no mathematical... involvement,' which directly contradicts the author's argument that Sudoku involves math (patterns/structures) and that the newspaper's slogan ('no maths involved') is a misleading marketing tactic to scare off solvers, not an objective description of the puzzle's nature. The author argues against the idea that there is 'no maths involved.'"
+        }
+      }
+    ],
+    "37번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the view of the universe accepted at the time that the Sun traveled around Earth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Technological improvements led to the development of the telescope in the early 17th century."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Using a telescope, the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter and observed craters on Earth's Moon."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Egyptians... were among the first peoples to map"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "true",
+            "evidence": "discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "true",
+            "evidence": "development of the telescope in the early 17th century"
+          },
+          {
+            "verdict": "true",
+            "evidence": "observed craters on Earth's Moon"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 3,
+        "part": 3,
+        "want_true": false,
+        "out": "The telescope was invented in the early 18th century.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The Egyptians, Babylonians, Greeks, and Maya were among the first peoples to map the movements of the stars."
+          },
+          {
+            "verdict": "true",
+            "evidence": "the view of the universe accepted at the time that the Sun traveled around Earth"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "false",
+            "evidence": "development of the telescope in the early 17th century"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Using a telescope, the Italian scientist Galileo Galilei discovered the four largest moons of Jupiter and observed craters on Earth's Moon."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Egyptians... among the first peoples to map"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Sun traveled around Earth was wrong"
+          },
+          {
+            "verdict": "true",
+            "evidence": "discovered the four largest moons of Jupiter"
+          },
+          {
+            "verdict": "false",
+            "evidence": "telescope in the early 17th century"
+          },
+          {
+            "verdict": "true",
+            "evidence": "observed craters on Earth's Moon"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that the telescope was developed in the 'early 17th century,' whereas option ③ claims it was invented in the 'early 18th century.' This is a direct factual contradiction. Options ①, ②, ④, and ⑤ are all directly supported by specific sentences in the text."
+        }
+      }
+    ],
+    "38번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "unit was equal to a certain body part"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "false",
+            "evidence": "definition can be no more complex than knowing"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Porter describes measurement as a 'technology of distance'"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "true",
+            "evidence": "unit was equal to a certain body part"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "false",
+            "evidence": "definition can be no more complex"
+          },
+          {
+            "verdict": "false",
+            "evidence": "Theodore M. Porter describes measurement"
+          }
+        ]
+      },
+      {
+        "stage": "rewrite",
+        "i": 0,
+        "part": 0,
+        "want_true": true,
+        "out": "Consistency is required to fully utilize units of measurement.",
+        "ok": true
+      },
+      {
+        "stage": "rewrite",
+        "i": 4,
+        "part": 4,
+        "want_true": true,
+        "out": "Growing communities faced conflicts that required more consistent measurement standards.",
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "To harness the full potential of units of measurement, we need some degree of consistency."
+          },
+          {
+            "verdict": "true",
+            "evidence": "knowing that a unit was equal to a certain body part."
+          },
+          {
+            "verdict": "true",
+            "evidence": "Theodore M. Porter describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "false",
+            "evidence": "definition can be no more complex than knowing that a unit"
+          },
+          {
+            "verdict": "true",
+            "evidence": "demands greater consistency in measurement."
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "harness the full potential of units of measurement"
+          },
+          {
+            "verdict": "true",
+            "evidence": "equal to a certain body part"
+          },
+          {
+            "verdict": "true",
+            "evidence": "describes measurement as a 'technology of distance'"
+          },
+          {
+            "verdict": "false",
+            "evidence": "no more complex than knowing that a unit"
+          },
+          {
+            "verdict": "true",
+            "evidence": "demands greater consistency in measurement"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "③",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that in the earliest societies, definitions 'can be no more complex than knowing that a unit was equal to a certain body part' and might need to be shared 'no more widely than a single settlement.' Option ③ claims they were 'complex and widely shared,' which directly contradicts the text's description of them being simple and locally restricted."
+        }
+      }
+    ],
+    "39번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "the ants don't eat these leaves"
+          },
+          {
+            "verdict": "true",
+            "evidence": "leaf-cutter ants cultivate their own food"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the ants later eat"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use these as fertilizer to grow fungus"
+          },
+          {
+            "verdict": "true",
+            "evidence": "build enormous nests underground"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "false",
+            "evidence": "the ants don't eat these leaves"
+          },
+          {
+            "verdict": "true",
+            "evidence": "Using this successful farming strategy"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the ants later eat"
+          },
+          {
+            "verdict": "true",
+            "evidence": "use these as fertilizer to grow fungus"
+          },
+          {
+            "verdict": "true",
+            "evidence": "the ants build enormous nests underground"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states, 'the ants don't eat these leaves. Instead, smaller worker ants take the pieces of leaves, chew them into smaller pieces, and use these as fertilizer to grow fungus.' Option ② claims they chew leaves for their own consumption, which directly contradicts the text."
+        }
+      }
+    ],
+    "40번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The system monitors other people's reactions to our behaviors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "operates nonconsciously until it detects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "threat to our social bonds is pushed into conscious awareness"
+          },
+          {
+            "verdict": "true",
+            "evidence": "highly networked in our brain and body"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The continuous scanning is normal, a part of being human"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "monitors other people's reactions to our behaviors"
+          },
+          {
+            "verdict": "false",
+            "evidence": "operates nonconsciously until it detects"
+          },
+          {
+            "verdict": "true",
+            "evidence": "threat to our social bonds is pushed into conscious awareness"
+          },
+          {
+            "verdict": "true",
+            "evidence": "highly networked in our brain and body."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The continuous scanning is normal, a part of being human."
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "②",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'The monitoring system generally operates nonconsciously until it detects that our relational value is falling or low.' Option ② claims it operates 'consciously' until detection, which directly contradicts the text."
+        }
+      }
+    ],
+    "41~42번|mismatch|2": [
+      {
+        "stage": "draft",
+        "lora": true,
+        "ok": true
+      },
+      {
+        "stage": "check",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "The role of 'slang' in popular culture has fundamentally changed"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The role of 'slang' in popular culture has fundamentally changed because of the internet."
+          },
+          {
+            "verdict": "true",
+            "evidence": "The playing field is now level, and public access is democratized."
+          },
+          {
+            "verdict": "false",
+            "evidence": "content creators can use slang"
+          },
+          {
+            "verdict": "true",
+            "evidence": "content creators can use slang"
+          }
+        ]
+      },
+      {
+        "stage": "check_reversed",
+        "out": [
+          {
+            "verdict": "true",
+            "evidence": "role of 'slang' in popular culture has fundamentally changed"
+          },
+          {
+            "verdict": "true",
+            "evidence": "role of 'slang' in popular culture has fundamentally changed"
+          },
+          {
+            "verdict": "true",
+            "evidence": "The playing field is now level"
+          },
+          {
+            "verdict": "false",
+            "evidence": "spread quicker than they could have before"
+          },
+          {
+            "verdict": "true",
+            "evidence": "content creators can use slang"
+          }
+        ]
+      },
+      {
+        "stage": "solve",
+        "out": {
+          "answer": "④",
+          "also_defensible": [],
+          "reason": "The passage explicitly states that 'content creators can' use slang and that social media 'broke that barrier,' allowing them to use slang unlike TV presenters. Option ④ claims it is 'harder' for them to use slang, which directly contradicts the text's assertion that the internet democratized access and removed the strict expectations that previously limited slang usage."
+        }
+      }
+    ]
+  },
+  "by_type": {
+    "mismatch": {
+      "n": 38,
+      "O": 16,
+      "P": 20,
+      "X": 2,
+      "F": 0,
+      "O_pct": 42.1,
+      "F_pct": 0.0
+    }
+  },
+  "cycle_result": {
+    "completed_at": "2026-09-27T07:47:27.106673+09:00",
+    "decision": "not_adopted",
+    "reason": "sep26-go1 improves +18.4pp but jun11-go2 -5.6pp is same under ±7pp; retain original 35B default",
+    "source_code_changed": false,
+    "production_reasoner_changed": false,
+    "sets": {
+      "sep26-go1": {
+        "before": {
+          "n": 38,
+          "O": 16,
+          "P": 20,
+          "X": 2,
+          "F": 0,
+          "O_pct": 42.1,
+          "F_pct": 0.0,
+          "generation_seconds": 474.4
+        },
+        "after": {
+          "n": 38,
+          "O": 23,
+          "P": 12,
+          "X": 3,
+          "F": 0,
+          "O_pct": 60.5,
+          "F_pct": 0.0,
+          "generation_seconds": 1437.2
+        }
+      },
+      "jun11-go2": {
+        "before": {
+          "n": 36,
+          "O": 22,
+          "P": 11,
+          "X": 3,
+          "F": 0,
+          "O_pct": 61.1,
+          "F_pct": 0.0,
+          "generation_seconds": 485.6
+        },
+        "after": {
+          "n": 36,
+          "O": 20,
+          "P": 12,
+          "X": 4,
+          "F": 0,
+          "O_pct": 55.6,
+          "F_pct": 0.0,
+          "generation_seconds": 1473.9
+        }
+      }
+    }
+  }
+}
