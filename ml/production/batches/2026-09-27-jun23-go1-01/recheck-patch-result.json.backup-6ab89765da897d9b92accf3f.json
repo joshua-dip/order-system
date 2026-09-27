@@ -1,0 +1,14 @@
+{
+  "id": "6ab89765da897d9b92accf3f",
+  "question_data": {
+    "Question": "이 글에서 글쓴이가 주장하는 바로 가장 적절한 것은?",
+    "Paragraph": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions. To check if something is missing, you will find yourself checking your to-do lists multiple times. Instead, organize all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your professional and personal tasks in one place. This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most important.",
+    "Options": "① We should maintain separate calendars to avoid mixing work and personal responsibilities. ### ② We should replace paper calendars with digital tools to manage all our tasks. ### ③ We should give work tasks priority whenever they conflict with personal activities. ### ④ We should review our task lists only once each day to prevent distractions. ### ⑤ We should consolidate work and personal tasks into a single calendar.",
+    "CorrectAnswer": "⑤",
+    "Explanation": "⑤가 정답입니다. 필자는 두 개의 일정표를 따로 쓰면 빠진 일이 없는지 반복해서 확인하게 되어 주의가 분산될 수 있다고 설명한다. 그래서 업무와 개인 용무를 한곳에 모아 시간 배분과 우선순위를 파악하라고 권한다. ②은 디지털 매체를 우선하지만 글은 매체의 종류가 중요하지 않다고 했다. ①는 분리를 권해 주장과 반대이고, ③의 업무 우선 원칙과 ④의 하루 한 번 확인 규칙은 제시되지 않았다.",
+    "OptionType": "English",
+    "NumQuestion": 3,
+    "Source": "",
+    "Category": ""
+  }
+}

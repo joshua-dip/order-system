@@ -1,0 +1,12 @@
+{
+  "train": {
+    "rows": 632,
+    "max_tokens": 1056,
+    "over_2048": 0
+  },
+  "valid": {
+    "rows": 64,
+    "max_tokens": 1093,
+    "over_2048": 0
+  }
+}

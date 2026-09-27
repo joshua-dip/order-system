@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf40",
+  "question_data": {
+    "Question": "다음 글의 내용과 일치하는 것은?",
+    "Paragraph": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions. To check if something is missing, you will find yourself checking your to-do lists multiple times. Instead, organize all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your professional and personal tasks in one place. This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most important.",
+    "Options": "① People who use one calendar for work and another for personal life are less distracted ### ② Checking to-do lists multiple times is a sensible way to manage tasks ### ③ Separating work and personal tasks is always the best approach ### ④ Keeping all tasks in one place helps understand how time is divided ### ⑤ Digital calendars are the only way to organize tasks effectively",
+    "CorrectAnswer": "④",
+    "Explanation": "정답은 ④. 지문은 \"This will give you a good idea of how time is divided between work and home\"이라고 명시하여, 모든 업무를 한 곳에 모으면 업무와 가정 간 시간 분배를 잘 파악할 수 있다고 설명하므로 ④가 정확히 일치한다. ②은 두 캘린더 사용이 \"seem sensible\"할 뿐 실제로는 \"distractions\"을 초래한다고 하여 거짓이다. ① 역시 두 캘린더가 \"distractions\"을 유발한다고 하여 일치하지 않는다. ③은 업무와 개인 업무를 분리하는 것이 아니라 \"organize all of your tasks in one place\"하라고 권고하므로 거짓이다. ⑤는 디지털이나 종이 매체 중 \"doesn't matter\"라고 하여 디지털만이 효과적이라는 주장은 배제된다.",
+    "OptionType": "English",
+    "NumQuestion": 4,
+    "Source": "",
+    "Category": ""
+  }
+}

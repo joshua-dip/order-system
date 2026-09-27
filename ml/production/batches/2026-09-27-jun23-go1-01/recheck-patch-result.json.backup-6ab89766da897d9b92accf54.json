@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf54",
+  "question_data": {
+    "Question": "다음 글의 내용과 일치하지 않는 것은?",
+    "Paragraph": "We tend to believe that we possess a host of socially desirable characteristics, and that we are free of most of those that are socially undesirable. For example, a large majority of the general public thinks that they are more intelligent, more fair-minded, less prejudiced, and more skilled behind the wheel of an automobile than the average person. This phenomenon is so reliable and ubiquitous that it has come to be known as the \"Lake Wobegon effect,\" after Garrison Keillor's fictional community where \"the women are strong, the men are good-looking, and all the children are above average.\" A survey of one million high school seniors found that 70% thought they were above average in leadership ability, and only 2% thought they were below average. In terms of ability to get along with others, all students thought they were above average, 60% thought they were in the top 10%, and 25% thought they were in the top 1%!",
+    "Options": "① Seventy percent of the surveyed seniors rated their leadership ability above average. ### ② The Lake Wobegon effect describes a widespread tendency for people to view themselves favorably. ### ③ The Lake Wobegon effect is named after a real community where everyone excels. ### ④ Many people consider themselves better drivers than the average person. ### ⑤ All students in the survey rated their ability to get along with others above average.",
+    "CorrectAnswer": "③",
+    "Explanation": "③이 정답이다. Lake Wobegon은 Garrison Keillor가 만든 fictional community, 즉 가상 공동체다. ④은 일반 대중 다수가 자신을 평균보다 능숙한 운전자라고 여긴다는 내용, ②는 반복적으로 널리 나타나는 호의적 자기평가 경향, ①는 조사 응답자의 리더십 자기평가 70%, ⑤는 같은 조사 응답자 전원의 대인관계 자기평가와 일치한다. 설문 결과는 실제 능력 측정이나 모든 고등학생에 대한 단정이 아니다.",
+    "OptionType": "English",
+    "NumQuestion": 24,
+    "Source": "",
+    "Category": ""
+  }
+}

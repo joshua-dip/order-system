@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf48",
+  "question_data": {
+    "Question": "다음 글의 주제로 가장 적절한 것은?",
+    "Paragraph": "The promise of a computerized society, we were told, was that it would pass to machines all of the repetitive drudgery of work, allowing us humans to pursue higher purposes and to have more leisure time. It didn't work out this way. Instead of more time, most of us have less. Companies large and small have off-loaded work onto the backs of consumers. Things that used to be done for us, as part of the value-added service of working with a company, we are now expected to do ourselves. With air travel, we're now expected to complete our own reservations and check-in, jobs that used to be done by airline employees or travel agents. At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own purchases.",
+    "Options": "① the decline of leisure time in modern society ### ② the benefit of increased leisure time promised by computerized society ### ③ the specific examples of air travel and grocery store self-service tasks ### ④ the shift of work from companies to consumers ### ⑤ the history of computerized society and its promise",
+    "CorrectAnswer": "④",
+    "Explanation": "지문은 컴퓨터화 사회가 여가 시간을 제공한다는 약속이 실현되지 않았으며, 오히려 기업들이 항공 예약이나 쇼핑 같은 업무를 소비자에게 전가하고 있다고 설명합니다. 따라서 글의 핵심 주제는 기업의 업무가 소비자에게 이전되는 현상입니다. 보기 ①은 부수적인 결과일 뿐 핵심 원인이 아니며, ③는 예시에 불과합니다. ⑤과 ②는 지문의 주장과 반대되거나 부분적인 내용입니다. 정답 ④은 지문의 핵심 논지를 정확히 반영합니다.",
+    "OptionType": "English",
+    "NumQuestion": 12,
+    "Source": "",
+    "Category": ""
+  }
+}

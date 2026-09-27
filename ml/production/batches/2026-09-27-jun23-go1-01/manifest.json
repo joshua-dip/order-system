@@ -1,0 +1,83 @@
+{
+  "batch_id": "2026-09-27-jun23-go1-01",
+  "purpose": "production pilot, not independent evaluation",
+  "created_at": "2026-09-27T12:58:28.351989+09:00",
+  "commit": "d41ce96f16f0e445189838298bce6160c850ec03",
+  "types": [
+    "topic",
+    "title",
+    "claim",
+    "match",
+    "mismatch",
+    "blank",
+    "summary",
+    "order",
+    "insert",
+    "irrelevant",
+    "vocab",
+    "grammar"
+  ],
+  "passages": [
+    {
+      "passage_id": "69c4ffc346f58f933b6dce16",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source_key": "23년 6월 고1 영어모의고사 20번",
+      "number": "20번",
+      "original": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions. To check if something is missing, you will find yourself checking your to-do lists multiple times. Instead, organize all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your professional and personal tasks in one place. This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most important.",
+      "sentences": [
+        "Research shows that people who work have two calendars: one for work and one for their personal lives.",
+        "Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions.",
+        "To check if something is missing, you will find yourself checking your to-do lists multiple times.",
+        "Instead, organize all of your tasks in one place.",
+        "It doesn't matter if you use digital or paper media.",
+        "It's okay to keep your professional and personal tasks in one place.",
+        "This will give you a good idea of how time is divided between work and home.",
+        "This will allow you to make informed decisions about which tasks are most important."
+      ]
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce18",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source_key": "23년 6월 고1 영어모의고사 22번",
+      "number": "22번",
+      "original": "The promise of a computerized society, we were told, was that it would pass to machines all of the repetitive drudgery of work, allowing us humans to pursue higher purposes and to have more leisure time. It didn't work out this way. Instead of more time, most of us have less. Companies large and small have off-loaded work onto the backs of consumers. Things that used to be done for us, as part of the value-added service of working with a company, we are now expected to do ourselves. With air travel, we're now expected to complete our own reservations and check-in, jobs that used to be done by airline employees or travel agents. At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own purchases.",
+      "sentences": [
+        "The promise of a computerized society, we were told, was that it would pass to machines all of the repetitive drudgery of work, allowing us humans to pursue higher purposes and to have more leisure time.",
+        "It didn't work out this way.",
+        "Instead of more time, most of us have less.",
+        "Companies large and small have off-loaded work onto the backs of consumers.",
+        "Things that used to be done for us, as part of the value-added service of working with a company, we are now expected to do ourselves.",
+        "With air travel, we're now expected to complete our own reservations and check-in, jobs that used to be done by airline employees or travel agents.",
+        "At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own purchases."
+      ]
+    },
+    {
+      "passage_id": "69c4ffc346f58f933b6dce19",
+      "textbook": "23년 6월 고1 영어모의고사",
+      "source_key": "23년 6월 고1 영어모의고사 23번",
+      "number": "23번",
+      "original": "We tend to believe that we possess a host of socially desirable characteristics, and that we are free of most of those that are socially undesirable. For example, a large majority of the general public thinks that they are more intelligent, more fair-minded, less prejudiced, and more skilled behind the wheel of an automobile than the average person. This phenomenon is so reliable and ubiquitous that it has come to be known as the \"Lake Wobegon effect,\" after Garrison Keillor's fictional community where \"the women are strong, the men are good-looking, and all the children are above average.\" A survey of one million high school seniors found that 70% thought they were above average in leadership ability, and only 2% thought they were below average. In terms of ability to get along with others, all students thought they were above average, 60% thought they were in the top 10%, and 25% thought they were in the top 1%!",
+      "sentences": [
+        "We tend to believe that we possess a host of socially desirable characteristics, and that we are free of most of those that are socially undesirable.",
+        "For example, a large majority of the general public thinks that they are more intelligent, more fair-minded, less prejudiced, and more skilled behind the wheel of an automobile than the average person.",
+        "This phenomenon is so reliable and ubiquitous that it has come to be known as the \"Lake Wobegon effect,\" after Garrison Keillor's fictional community where \"the women are strong, the men are good-looking, and all the children are above average.\"",
+        "A survey of one million high school seniors found that 70% thought they were above average in leadership ability, and only 2% thought they were below average.",
+        "In terms of ability to get along with others, all students thought they were above average, 60% thought they were in the top 10%, and 25% thought they were in the top 1%!"
+      ]
+    }
+  ],
+  "settings": {
+    "base": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+    "reasoner": "mlx-community/Qwen3.6-35B-A3B-4bit",
+    "temp": 0.3,
+    "max_retries": 2,
+    "repeat": 1
+  },
+  "source_hashes": {
+    "ml/common/json_extract.py": "a577a7eb16cdd0170d831f857fe5085d1b6c414c0c862fd27f9fb39845bdfe27",
+    "ml/common/edit_pipeline.py": "5b4c1dc343dc16b80fcb4b9dda3c6848a09441d1ef4119a876e22e30436feee9",
+    "ml/fact/windows/pipeline_fact.py": "4c1ec244e908681432659e87ce80ca0e3476e43aba673fa4eab92dfaf3a5dfe7"
+  },
+  "human_review_status": "not_started",
+  "timing_note": "generation seconds measured; AI review wall intervals include tool/model wait and are not human labor time; no retrospective human time estimate"
+}

@@ -1,0 +1,155 @@
+{
+  "lora_rows": 18,
+  "rule_cases": 9,
+  "links": [
+    {
+      "id": "6ab89765da897d9b92accf3d",
+      "type": "topic",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "ba512f9977ec604c71522cf4146fbb3a2e0ab17aae03d73d7ee6426bdc3638ca",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89765da897d9b92accf3e",
+      "type": "title",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "4dfb8489896bccf937a01d8b7a19acdb93c5c82c649a1c06a9da0d17f723da1d",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89765da897d9b92accf3f",
+      "type": "claim",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "fce4ec6ea74492a1e1922b8fe263bf65ecca60e37b39f9adf2c8fc9ceea4ac6c",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf40",
+      "type": "fact",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "3c921ecb98e5f112e192ef24141fa920c159c10e95aac73e7e4c9370b41f6ecd",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf41",
+      "type": "fact",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "f107b01b5b0e50025a8813dbbf6df3d5be6c4a52054787b4b7b18431bbbaa444",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf42",
+      "type": "blank",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "cb13eb798f48827d4e0c4aa990ec819c616dfe7a26b4fccede227cc2161f9e1e",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf43",
+      "type": "summary",
+      "source": "23년 6월 고1 영어모의고사 20번",
+      "row_sha256": "2869847e12e576dc5fa5adbd71a6a8fbe0d1e7171faa4c024418751ff502209f",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf48",
+      "type": "topic",
+      "source": "23년 6월 고1 영어모의고사 22번",
+      "row_sha256": "b00e48b123134fe4afc4b0033f0f1b1fed3d09c1cbf03ed03871d038372a80ab",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf49",
+      "type": "title",
+      "source": "23년 6월 고1 영어모의고사 22번",
+      "row_sha256": "c97354e3656dfcbfadf9f315cedaebc30bac6c06382bfccf8363e6fcca0654af",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf4a",
+      "type": "claim",
+      "source": "23년 6월 고1 영어모의고사 22번",
+      "row_sha256": "3f89c03472a85d94499fb11f8b1f9a83e79dba8b84a6f8cdf91740e7ca9e3887",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf4b",
+      "type": "fact",
+      "source": "23년 6월 고1 영어모의고사 22번",
+      "row_sha256": "b4781509b1f6d48579b8d98c968057a4d1989f1202f050d28bea30069c89882e",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf4c",
+      "type": "fact",
+      "source": "23년 6월 고1 영어모의고사 22번",
+      "row_sha256": "430429c50b428a48d2fb0ce75decb512c6ddbcfc22e6851eafc56ba0512c8ea5",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf4d",
+      "type": "blank",
+      "source": "23년 6월 고1 영어모의고사 22번",
+      "row_sha256": "41bb068779a44f23592eb24bf9d415896e9ef84f26b63e0222e8813da1ceefc5",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf51",
+      "type": "topic",
+      "source": "23년 6월 고1 영어모의고사 23번",
+      "row_sha256": "1eac67b6838d47faa1ba3bbe533751a81ffa540d8e2ea53a41d69400f422d3da",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf52",
+      "type": "title",
+      "source": "23년 6월 고1 영어모의고사 23번",
+      "row_sha256": "6154c5c9de13266fb2fe841d0164758b5099096b7dc56324fb441e562d7e8d73",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf53",
+      "type": "fact",
+      "source": "23년 6월 고1 영어모의고사 23번",
+      "row_sha256": "f0cf793d5102a35b240dff5c275e94fe3e1e2e5a0c9be2d1951b6ef46d28bfe9",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89766da897d9b92accf54",
+      "type": "fact",
+      "source": "23년 6월 고1 영어모의고사 23번",
+      "row_sha256": "5c278992f9ab1c6b469d0cb1afc6aa29a6c2f49c9ab1b0715924bc95273fc0a7",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    },
+    {
+      "id": "6ab89767da897d9b92accf55",
+      "type": "summary",
+      "source": "23년 6월 고1 영어모의고사 23번",
+      "row_sha256": "8f6b2eece9c97c3a4c231b072e45ce906c5df810803d24fbfdb388f338b6340b",
+      "reviewer": "Codex AI",
+      "human_reviewed": false
+    }
+  ],
+  "excluded_independent_eval_passage_ids": [
+    "69c4ffc346f58f933b6dce16",
+    "69c4ffc346f58f933b6dce18",
+    "69c4ffc346f58f933b6dce19"
+  ]
+}

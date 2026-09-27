@@ -147,3 +147,6 @@ scripts/.backups/
 /ml/blank/adapters/
 /data/summary-finetune/
 /ml/summary/adapters/
+
+# Local production feedback exports and replay datasets (metadata lives in ml/production).
+/data/production-2026-09-27/

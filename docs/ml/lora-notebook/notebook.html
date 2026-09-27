@@ -69,7 +69,7 @@
   }
   @media (max-width: 860px) {
     .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-    nav.toc { position: static !important; }
+    nav.toc { position: static !important; max-height: none !important; }
   }
 
   header.top { grid-column: 1 / -1; display: grid; gap: 10px; padding-bottom: 8px; }
@@ -90,7 +90,7 @@
   }
   .lede { color: var(--muted); max-width: 62ch; margin: 0; }
 
-  nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; }
+  nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; max-height: calc(100dvh - 48px); overflow-y: auto; scrollbar-width: thin; }
   nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
   nav.toc a {
     display: grid;
@@ -112,6 +112,14 @@
   nav.toc .tag { font-size: 11px; font-weight: 600; color: var(--accent); }
   nav.toc .soon a { color: var(--faint); }
   .toc-label { font-size: 12px; color: var(--faint); margin: 0 0 8px 10px; letter-spacing: 0.04em; }
+
+  .toc-group { border-top: 1px solid var(--line); padding: 7px 0; }
+  .toc-group summary { cursor: pointer; padding: 8px 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .toc-group summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .toc-count { float: right; font-family: var(--mono); color: var(--faint); font-size: 11px; padding-right: 4px; }
+  nav.toc a[aria-current="location"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .toc-log { margin-top: 8px; border-top: 1px solid var(--line); }
+  @media print { nav.toc { position: static; max-height: none; overflow: visible; } }
 
   main { display: grid; gap: 64px; min-width: 0; }
   section { display: grid; gap: 16px; scroll-margin-top: 24px; }
@@ -245,46 +253,68 @@
 
 <div class="wrap">
   <header class="top">
-    <span class="eyebrow">next-order · 로컬 변형문제 AI 8유형 · 맥 실습</span>
+    <span class="eyebrow">next-order · 로컬 변형문제 AI 12유형 · 맥 실습</span>
     <h1>변형문제 LoRA 실습 노트</h1>
-    <p class="lede">윈도우 PC 에서 돌던 주제 문제 AI 를 이 맥북으로 옮기고, 제목·주장·내용일치·빈칸까지 여섯 유형으로 넓혀 다듬어 온 과정을 순서대로 따라가며 강의에 나오는 LLM 용어를 우리 숫자로 하나씩 풉니다. 개선할 때마다 한 과씩, 그리고 맨 끝 「개선 기록」에 한 줄씩 더해집니다.</p>
+    <p class="lede">모델과 LoRA의 기초부터 12유형 출제, 품질 검증, 실제 제작까지의 기록입니다. 왼쪽에서 주제별 묶음을 펼쳐 읽으세요. 현재 작업은 「현재 제작·상품 목표」에 모았으며, 기존 과 번호와 링크는 그대로 사용할 수 있습니다.</p>
   </header>
 
-  <nav class="toc" aria-label="과 목록">
-    <p class="toc-label">과 목록</p>
-    <ol>
-      <li><a href="#l1"><span class="n">1</span>모델 고르기</a></li>
-      <li><a href="#l2"><span class="n">2</span>4bit 양자화</a></li>
-      <li><a href="#l3"><span class="n">3</span>학습 데이터</a></li>
-      <li><a href="#l4"><span class="n">4</span>LoRA<span class="tag">보강</span></a></li>
-      <li><a href="#l5"><span class="n">5</span>손실 곡선</a></li>
-      <li><a href="#l6"><span class="n">6</span>사람이 채점하기</a></li>
-      <li><a href="#l7"><span class="n">7</span>어댑터 켜고 끄기</a></li>
-      <li><a href="#l8"><span class="n">8</span>워커로 서비스하기</a></li>
-      <li><a href="#l9"><span class="n">9</span>역할 나누기와 큰 모델</a></li>
-      <li><a href="#l10"><span class="n">10</span>제목·주장도 가르치기</a></li>
-      <li><a href="#l11"><span class="n">11</span>오답을 하나씩 심사하기</a></li>
-      <li><a href="#l12"><span class="n">12</span>셀 수 있는 건 코드로</a></li>
-      <li><a href="#l13"><span class="n">13</span>시험지 한 회분으로 고치기</a></li>
-      <li><a href="#l14"><span class="n">14</span>퍼센트 성적표</a></li>
-      <li><a href="#l15"><span class="n">15</span>새 유형 붙이기 — 내용일치</a></li>
-      <li><a href="#l16"><span class="n">16</span>빈칸 — 그리고 재는 자의 버릇</a></li>
-      <li><a href="#l17"><span class="n">17</span>실사용 지표</a></li>
-      <li><a href="#l18"><span class="n">18</span>요지 필터와 멈춘 문항</a></li>
-      <li><a href="#l19"><span class="n">19</span>순서·삽입 — LoRA 없이</a></li>
-      <li><a href="#l20"><span class="n">20</span>무관·어휘·어법</a></li>
-      <li><a href="#l21"><span class="n">21</span>요약</a></li>
-      <li><a href="#l22"><span class="n">22</span>시험지 누수</a></li>
-      <li><a href="#l23"><span class="n">23</span>요약 검증의 한계</a></li>
-      <li><a href="#l24"><span class="n">24</span>상품 수준의 목표<span class="tag">새로</span></a></li>
-      <li><a href="#l25"><span class="n">25</span>한 오류와 전체 품질<span class="tag">새로</span></a></li>
-      <li><a href="#l26"><span class="n">26</span>정답과 문제의 품질<span class="tag">새로</span></a></li>
-      <li><a href="#l27"><span class="n">27</span>잘 거르는 것과 잘 만드는 것</a></li>
-      <li><a href="#l28"><span class="n">28</span>판정 지시 한 줄의 한계</a></li>
-      <li><a href="#l29"><span class="n">29</span>새 모델도 같은 시험으로 확인</a></li>
-      <li class="here"><a href="#l30"><span class="n">30</span>부분 수선과 전체 품질<span class="tag">새로</span></a></li>
-      <li><a href="#log"><span class="n">+</span>개선 기록</a></li>
-    </ol>
+  <nav class="toc" aria-label="주제별 과 목록">
+    <p class="toc-label">주제별 과 목록 · 34과</p>
+    <details class="toc-group" open><summary>현재 제작·상품 목표<span class="toc-count">6</span></summary>
+      <ol>
+        <li><a href="#l34"><span class="n">34</span>로컬 제작의 토큰 효율 측정</a></li>
+        <li><a href="#l33"><span class="n">33</span>완료 검수와 첫 재학습</a></li>
+        <li><a href="#l32"><span class="n">32</span>첫 제작: 초안과 수정본 분리</a></li>
+        <li><a href="#l31"><span class="n">31</span>2023년 재고와 실전 제작 계획</a></li>
+        <li><a href="#l24"><span class="n">24</span>상품 수준의 목표</a></li>
+        <li><a href="#l17"><span class="n">17</span>실사용 지표</a></li>
+      </ol>
+    </details>
+    <details class="toc-group"><summary>LLM·LoRA 기초<span class="toc-count">7</span></summary>
+      <ol>
+        <li><a href="#l1"><span class="n">1</span>모델 고르기</a></li>
+        <li><a href="#l2"><span class="n">2</span>4bit 양자화</a></li>
+        <li><a href="#l3"><span class="n">3</span>학습 데이터</a></li>
+        <li><a href="#l4"><span class="n">4</span>LoRA</a></li>
+        <li><a href="#l5"><span class="n">5</span>손실 곡선</a></li>
+        <li><a href="#l6"><span class="n">6</span>사람이 채점하기</a></li>
+        <li><a href="#l7"><span class="n">7</span>어댑터 켜고 끄기</a></li>
+      </ol>
+    </details>
+    <details class="toc-group"><summary>실행 구조·유형 확장<span class="toc-count">7</span></summary>
+      <ol>
+        <li><a href="#l8"><span class="n">8</span>워커로 서비스하기</a></li>
+        <li><a href="#l9"><span class="n">9</span>역할 나누기와 큰 모델</a></li>
+        <li><a href="#l10"><span class="n">10</span>제목·주장도 가르치기</a></li>
+        <li><a href="#l15"><span class="n">15</span>새 유형 붙이기 — 내용일치</a></li>
+        <li><a href="#l19"><span class="n">19</span>순서·삽입 — LoRA 없이</a></li>
+        <li><a href="#l20"><span class="n">20</span>무관·어휘·어법</a></li>
+        <li><a href="#l21"><span class="n">21</span>요약</a></li>
+      </ol>
+    </details>
+    <details class="toc-group"><summary>출제·검수 방법<span class="toc-count">6</span></summary>
+      <ol>
+        <li><a href="#l11"><span class="n">11</span>오답을 하나씩 심사하기</a></li>
+        <li><a href="#l12"><span class="n">12</span>셀 수 있는 건 코드로</a></li>
+        <li><a href="#l13"><span class="n">13</span>시험지 한 회분으로 고치기</a></li>
+        <li><a href="#l14"><span class="n">14</span>퍼센트 성적표</a></li>
+        <li><a href="#l16"><span class="n">16</span>빈칸 — 그리고 재는 자의 버릇</a></li>
+        <li><a href="#l18"><span class="n">18</span>요지 필터와 멈춘 문항</a></li>
+      </ol>
+    </details>
+    <details class="toc-group"><summary>평가 원칙·실험 기록<span class="toc-count">8</span></summary>
+      <ol>
+        <li><a href="#l22"><span class="n">22</span>시험지 누수</a></li>
+        <li><a href="#l23"><span class="n">23</span>요약 검증의 한계</a></li>
+        <li><a href="#l25"><span class="n">25</span>한 오류와 전체 품질</a></li>
+        <li><a href="#l26"><span class="n">26</span>정답과 문제의 품질</a></li>
+        <li><a href="#l27"><span class="n">27</span>잘 거르는 것과 잘 만드는 것</a></li>
+        <li><a href="#l28"><span class="n">28</span>판정 지시 한 줄의 한계</a></li>
+        <li><a href="#l29"><span class="n">29</span>새 모델도 같은 시험으로 확인</a></li>
+        <li><a href="#l30"><span class="n">30</span>부분 수선과 전체 품질</a></li>
+      </ol>
+    </details>
+    <a class="toc-log" href="#log"><span class="n">+</span>개선 기록</a>
   </nav>
 
   <main>
@@ -1343,6 +1373,119 @@
       <p><b>재현·보관:</b> <code>grades/{세트}/2026-09-27-mismatch-trim-{before,after}.json</code> 네 파일에 채점·근거·문항·trace·설정·코드 SHA·후보 diff·복원 결과를 보관했습니다. after에는 8개 재현 검사 소스와 통과 로그도 있습니다. <code>json_extract.py</code>는 SHA <code>a577a7eb…</code>로 복원했습니다. 독립 사람 검수·새 지문 100문항·실작업 시간 단축은 미검증입니다. 커밋·푸시·배포·PDF 생성 없음. 09:45 이후 새 실험 없이 정리했고, 10:00 종료 확인을 마쳤습니다. 평가 프로세스와 미완료 후보는 없고 세 파일의 원본 SHA가 일치합니다. 09:55 복원 장치는 already_restored로 종료했으며, lora-10과 lora-10-2는 모두 PAUSED입니다.</p>
     </section>
 
+    <section id="l31">
+      <span class="num">31과</span>
+      <h2>2023년 재고와 실전 제작 계획</h2>
+      <p class="one">실제 필요한 문제를 만들고 검수하면서 개선합니다. 초안의 품질과 사람이 고쳐 완성한 품질을 따로 기록하고, 제작 시간을 줄이는지 확인합니다.</p>
+      <p><b>2026-09-27 재고 조회·계획 기록.</b> 사용자가 지문·유형별 목표를 <b>3문항</b>으로 정했습니다. 신규 유형 확장보다 현재 로컬 생성 12유형(주제·제목·주장·일치·불일치·빈칸·요약·순서·삽입·무관한문장·어휘·어법)의 부족분을 우선합니다. 아래 수치는 제작 전 조회 기록입니다. 첫 제작 묶음의 실행 결과는 <a href="#l32">32과</a>에 이어 기록했습니다. 운영 워커는 중지 상태를 유지합니다.</p>
+      <h3>14개 시험지의 재고</h3>
+      <p>등록된 2023년 영어모의고사는 고1·고2 각 4회, 고3 6회, 총 14회·348지문입니다. 수능은 이 범위에 포함하지 않았습니다. 표는 DB <b>완료 상태의 영어 선지 재고</b>(선지 언어 미설정 레거시 포함)를 기준으로 한 <b>확보분 / 부족분</b>입니다. 확보분은 지문·유형별 최대 3개까지만 인정하므로 전체 저장 문항 수와는 다릅니다. 완료 상태가 현재 상품 검수 기준의 합격을 뜻하지는 않습니다.</p>
+      <div class="tbl"><table><thead><tr><th>시행 월</th><th>고1 확보 / 부족</th><th>고2 확보 / 부족</th><th>고3 확보 / 부족</th></tr></thead><tbody>
+        <tr><td>3월</td><td>11 / 889</td><td>117 / 783</td><td>0 / 864</td></tr>
+        <tr><td>5월</td><td>—</td><td>—</td><td>0 / 900</td></tr>
+        <tr><td>6월</td><td>0 / 900</td><td>0 / 900</td><td>0 / 864</td></tr>
+        <tr><td>7월</td><td>—</td><td>—</td><td>0 / 900</td></tr>
+        <tr><td>9월</td><td>11 / 889</td><td>0 / 900</td><td>322 / 578</td></tr>
+        <tr><td>10월</td><td>—</td><td>—</td><td>22 / 878</td></tr>
+        <tr><td>11월</td><td>27 / 873</td><td>11 / 889</td><td>—</td></tr>
+        <tr><td><b>합계</b></td><td><b>49 / 3,551</b></td><td><b>128 / 3,472</b></td><td><b>344 / 4,984</b></td></tr>
+      </tbody></table></div>
+      <p>12유형의 목표 12,528문항 중 확보분 521·부족분 12,007입니다. <b>검수 대기는 14개 시험지 모두 0건</b>이며, 전체 상태와 완료 상태의 목표 부족량이 같았습니다. 고난도·워크북 등 다른 유형의 재고는 위 표에 넣지 않았습니다. 예를 들어 9월 고2에는 다른 유형 재고가 있지만, 기본 12유형 확보분은 0입니다.</p>
+      <p class="note"><b>재고 시점:</b> 위 표와 아래8,515개 추정치는 첫 제작 이전 조회 기록입니다. 이후27문항의 검수·완료 처리는33과에 기록했습니다. 다음 대량 제작 전에 최신 완료·대기·부족 슬롯을 다시 조회합니다.</p>
+      <h3>부족량을 그대로 제작량으로 삼지 않는다</h3>
+      <p>기본 부족 조회는 고난도·워크북 등을 포함한 27유형으로 계산하므로, 12유형만 따로 합산했습니다. 그래도 도표·안내문·심경·이야기 지문에 모든 유형을 일괄 적용한 수량이어서 12,007개를 그대로 만들지는 않습니다.</p>
+      <p>1차 제작 범위는 일반 독해인 <b>20~24번, 29~40번, 41~42번</b>을 제안합니다. 18·19·25~28·43~45번은 우선 보류하고, 추후 지문에 맞는 유형을 별도로 정합니다. 1차 범위도 원문을 읽고 유형별 적합성을 확인해야 합니다.</p>
+      <div class="tbl"><table><thead><tr><th>1차 범위의 제작 전 계산</th><th>수량</th></tr></thead><tbody>
+        <tr><td>등록된 대상 지문</td><td>251</td></tr>
+        <tr><td>목표: 251 × 12유형 × 3문항</td><td>9,036</td></tr>
+        <tr><td>완료 재고 확보분: 유형별 최대 3개 인정</td><td>521</td></tr>
+        <tr><td>추가 제작 예상</td><td><b>8,515</b></td></tr>
+      </tbody></table></div>
+      <p><b>지문 누락 확인:</b> 고3 3월 27번과 고3 6월 33번이 등록 목록에 없습니다. 특히 6월 33번은 1차 범위에 해당합니다. 누락 원인을 확인하고 원문을 확보한 뒤 수량을 다시 계산합니다. 8,515는 누락 원문 확보 전·출제 적합성 검토 전의 계획 수량입니다.</p>
+      <h3>다음 계획: 워커 대량 생성 → 묶음 검수 → 완료</h3>
+      <p><b>09-27 사용자 지시로 계획 수정.</b> 현재 제작분 27건의 완료 검수와 첫 fact 재학습·전후 평가를 끝내고, 채택·복원 결과를 기록한 뒤 이번 작업을 종료합니다. 아래 대량 제작은 다음 작업이며 지금 워커를 재개하거나 자동으로 시작하지 않습니다.</p>
+      <ol>
+        <li><b>부족 슬롯 재조회.</b> 2023년 고1·2·3, 지문·유형별 완료 3문항 목표를 유지합니다. 완료와 검수 대기를 분리하고 기존 대기를 중복 생성하지 않습니다. 누락 원문·유형 적합성·기존 출제 포인트를 먼저 확인합니다.</li>
+        <li><b>로컬 워커로 대량 초안 생성.</b> 23년 6월 고1의 남은 일반 독해 빈 슬롯부터 이어서, 완료 0개인 슬롯에 1개씩 확보한 다음 2·3개로 확대합니다. 실제 주문 범위가 생기면 먼저 처리합니다. 첫 대량 묶음은 최대 100회로 잡고 검수 적체·실패 비율을 확인해 이후 크기를 조정합니다. 이는 초안 수량이며 완료 수량이 아닙니다.</li>
+        <li><b>20~30건씩 검수·수정.</b> 원문, 유일 정답, 해설, 변별력과 중복을 직접 확인합니다. 통과한 것만 개별 풀이 기록을 남겨 완료로 전환하고 다시 조회합니다. 부적합·미해결 문항은 보류 또는 검수불일치로 남깁니다. 자동으로 정답키를 복사해 일괄 완료하지 않습니다.</li>
+        <li><b>원본과 수정본을 연결.</b> 생성 시점 모델·코드, 초안 O/P/X/F, 수정 근거, 최종 상태를 보존합니다. 검수 대기가 쌓이면 새 생성보다 기존 검수를 먼저 처리합니다. 대량 생성 중 모델을 임의로 교체하거나 자동 재학습하지 않습니다.</li>
+        <li><b>묶음 종료 후 다음 개선 후보 선정.</b> 반복 오류와 수정 부담을 집계하여 다음 한 가지 개선을 정합니다. 문제 생성 토큰·처리시간은 검수·수정 및 도구·노트 비용과 분리합니다. 모델 변경은 두 개발 세트 repeat 2 전후 평가로 검증하고, 같거나 나빠지면 복원합니다.</li>
+      </ol>
+      <h3>초안과 납품본을 별도로 평가</h3>
+      <p>로컬 모델 초안 → Codex의 원문 대조·풀이와 수정 → 선생님의 최종 확인 순으로 진행하는 계획입니다. AI가 고친 완성본을 로컬 모델의 원래 정답률에 합산하지 않습니다. 저장 후 형식·정답·해설 정합성과 배치 검증을 거치며, 상품 최종 승인은 별도로 둡니다.</p>
+      <p>문항별로 초안 원본·모델/코드 버전·O/P/X/F·오류 이유·수정본·수정 주체·실제 작업시간·최종 판정을 남깁니다. 폐기·재작성 시간도 포함합니다. 무수정 통과율, 검수·수정시간, 반복 오류, 최종 검수에서 새로 발견된 치명 오류를 봅니다. 기록하지 않은 시간을 사후 추정해 성과로 보고하지 않습니다.</p>
+      <p>기존 <code>cc:local-usage</code>는 초안과 저장본을 연결하지만, 2시간 미저장을 버림으로 추정하고 해설만 고치면 조금 수정으로 분류합니다. 시간 측정도 없고 작업 원본은 30일 후 삭제됩니다. 첫 묶음부터 실제 폐기 여부·수정 이유·시간을 별도로 기록하고, 개선에 필요한 원본과 수정본을 보존해야 합니다.</p>
+      <p>유형별 O ≥90%·F ≤5%, 별도 새 지문 100문항 검수, 알려진 치명 오류 없는 최종본, 사람 작업시간 50% 단축 목표는 유지합니다. 수정·학습에 쓴 지문은 독립 검증용 새 지문으로 다시 세지 않습니다. 생산 데이터는 검수 후 선별하며 자동 재학습하지 않습니다.</p>
+      <p class="note"><b>조회 재현:</b> <code>npm run cc:variant -- textbooks --limit 500</code>에서 23년 영어모의고사 14개를 선택하고, 각 교재에 <code>shortage --textbook "교재명" --required 3 --status all</code> 및 <code>--status 완료 --max-rows 2000</code>를 실행했습니다. 지문 번호는 <code>passages --textbook "교재명" --limit 100</code>으로 확인했습니다. 부족 행·변형 0건 지문에서 12유형과 제안한 번호 범위를 따로 합산했습니다. 이번 단계는 조회·계획 기록이며 신규 생성·DB 저장·워커 재개·자동화 재개는 하지 않았습니다.</p>
+    </section>
+
+    <section id="l32">
+      <span class="num">32과</span><h2>첫 제작: 초안과 수정본 분리</h2>
+      <p class="one">문제를 만들며 개선하되, AI가 고친 문항 수를 로컬 모델의 정답률로 바꾸어 보고하지 않습니다. 만들기 어려운 지문·유형은 보류합니다.</p>
+      <p><b>2026-09-27 실제 제작.</b> 23년 6월 고1의 20·22·23번 원문을 조회하고 기존 재고 0을 확인했습니다. 3지문 × 12유형에서 슬롯당 1회, 총 36회 생성했습니다. 기존 7B+유형 LoRA·35B 추론기, 온도 0.3·내부 재시도 최대 2 설정입니다. 생성 로직 변경 없이 일회성 로컬 실행기를 사용했습니다. 개발 평가의 repeat 2 전후 실험과는 별개의 생산 표본입니다.</p>
+      <div class="tbl"><table><thead><tr><th>단계</th><th>결과</th><th>해석</th></tr></thead><tbody>
+        <tr><td>초안 AI 채점</td><td>O 9 · P 21 · X 3 · F 3</td><td>맞음 25.0% · 생성 실패 8.3% (36회 기준)</td></tr>
+        <tr><td>검수 원고</td><td>내용 무수정 8 · 내용 수정 19</td><td>O 1건도 해설 표현 정리. 저장 형식 정리는 무수정 수에서 제외하지 않음</td></tr>
+        <tr><td>DB 저장</td><td>27문항 모두 대기</td><td>완료·상품 승인으로 올리지 않음</td></tr>
+        <tr><td>보류·실패</td><td>생성본 보류 6 · 생성 실패 3</td><td>실패를 수작업 새 문항으로 덮어 정답률을 높이지 않음</td></tr>
+        <tr><td>저장 후 검사</td><td>본문·발문·선지 집합 27건 일치 · 자동 오류 0</td><td>순서 1건은 정답 편중 100% 표시. 납품 묶음의 정답열은 별도 점검</td></tr>
+      </tbody></table></div>
+      <p><a href="production-2023-jun-go1-01.html"><b>27문항 검수본 열기 →</b></a> 문제를 먼저 풀고 정답·해설을 펼칠 수 있습니다. 보류한 9건과 근거도 같은 페이지에 있습니다. 정답·해설은 검수 원고를 저장된 선지 순서에 맞춰 표시합니다.</p>
+      <h3>실제 오류에서 배운 것</h3>
+      <ul>
+        <li><b>복수정답:</b> 20번 주장의 ‘모든 일을 한 곳에’와 ‘단일 캘린더로 통합’이 둘 다 맞았습니다. 23번 일치는 ③의 상위 1% 응답 25%와 ④의 긍정적 자기평가가 모두 사실이었습니다. 오답을 다른 논리로 교체했습니다.</li>
+        <li><b>어휘는 원문과 다르다고 오답이 아닙니다.</b> 20번 unimportant도 우선순위 판단과 양립하고, 22번 cancellations도 소비자가 직접 할 수 있는 업무입니다. 바뀐 지문 전체에서 실제 모순이 생기도록 다른 위치를 골라 수정했습니다.</li>
+        <li><b>원래 순서가 유일한 순서는 아닙니다.</b> 삽입 20·22번, 순서 22·23번은 대안 배치도 자연스러워 보류했습니다. 23번 주장도 설명문에서 여러 당위적 조언이 가능해 보류했고, 무관 문장은 여전히 주제에 관련되어 제외했습니다.</li>
+        <li><b>출제 가능성을 먼저 확인해야 합니다.</b> 23번은 5문장이라 현재 삽입기의 최소 6문장 조건을 충족하지 않습니다. 해당 시도는 F에 포함하되 모델 생성 오류와 구분했습니다. 나머지 F는 22번 요약 유일성·문법 검사 실패, 23번 빈칸 오답 수정 실패입니다.</li>
+      </ul>
+      <h3>다음 제작으로 넘길 기준</h3>
+      <p>선생님이 27문항을 확인하면서 수정 시간·새로 발견한 치명 오류를 기록합니다. 고3 3월 27번·6월 33번 누락 원문 확인은 아직 남아 있습니다. 다음 묶음은 같은 시험지의 일반 독해 중 출제 가능한 0개 슬롯부터 1개씩 채웁니다. 문장 수·설명문 여부를 먼저 보고 부적합한 유형은 억지로 채우지 않습니다. 2개·3개 변형은 출제 포인트를 달리합니다.</p>
+      <p>생성 호출 실측 합계는 582.36초(약 9분 42초)이며 모델 로딩·AI 편집·DB 점검 시간은 포함하지 않습니다. 사람 검수시간은 아직 기록이 없어 시간 단축률을 계산하지 않았습니다. 이 3지문은 생산·수정에 사용했으므로 독립 평가용 새 지문에서 제외합니다. 초안은 상품 합격선에 미달하며, 27건 저장 역시 상품 승인이 아닙니다.</p>
+      <p class="note"><b>보관:</b> <code>ml/production/batches/2026-09-27-jun23-go1-01/</code>에 원문·모델 설정·코드 SHA, 수정 전 raw.jsonl, 문항별 O/P/X/F·수정 필드, 대기 저장 원고·ID, 저장 후 읽기 전용 조회·검증, 전후 재고를 보관했습니다. 생성 코드 후보를 바꾸지 않았으므로 채택·복원 대상 없음. 운영 워커·자동화는 중지 유지, 커밋·푸시·배포·PDF 생성 없음.</p>
+    </section>
+
+    <section id="l33">
+      <span class="num">33과</span><h2>완료 검수와 첫 재학습</h2>
+      <p class="one">문항의 완료 처리와 모델의 개선 채택은 별개입니다. 사용자가 AI 검수 후 완료 전환과 실제 재학습·전후 평가를 요청했습니다.</p>
+      <p><b>27문항 모두 완료 전환 확인.</b> 원문·유일성·해설·정성적 변별력을 재검수하고 제목·빈칸·해설 5건을 보강했습니다. 셔플 후 조사 오류까지 합쳐 기존 문항 17건을 패치했으며 중복 저장하지 않았습니다. 문항별 풀이를 기록한 뒤 DB에서 27건 모두 완료임을 재조회했습니다. 이는 Codex AI 검수이며 독립 사람 검수나 모델의 상품 합격을 뜻하지 않습니다.</p>
+      <p><a href="production-2023-jun-go1-01.html">완료된 27문항 검수본 열기 →</a> 정답·해설도 완료 후 DB 저장본입니다. 원래 생성본의 O/P/X/F 9/21/3/3과 보류·실패 9건은 그대로 보존합니다.</p>
+      <h3>학습 자료와 검수 사례 연결</h3>
+      <p>완료된 문항 중 LoRA가 있는 유형 18건(주제 3·제목 3·주장 2·일치/불일치 6·빈칸 2·요약 2)을 실제 export 결과와 대조해 유형별 JSONL로 연결했습니다. 규칙 유형 9건(순서 1·무관 2·어휘 3·어법 3)은 별도 검수 사례로 보관합니다. 데이터 등록만으로 모델 가중치가 바뀌지는 않습니다.</p>
+      <h3>첫 재학습: fact LoRA 하나만</h3>
+      <p>가설은 ‘복수정답과 조사 범위 과장을 수정한 예시를 배우면 일치·불일치의 사실 오류가 줄어든다’입니다. 23번 일치의 정답 2개, 23번 불일치의 응답자 범위 과장, 22번 일치의 중복 오답을 실제 근거로 삼았습니다. 기존 학습 예시 512건과 검수한 6건 × 20회, 총 632행으로 기존 fact 어댑터에서 300단계 추가 학습했습니다. 검증 64행은 정규화 지문이 훈련과 겹치지 않으며 두 개발 시험지와 생산 3지문도 검증에서 제외했습니다.</p>
+      <p id="production-training-status"><b>종료: 후보 미채택, 원본 복원 확인.</b> 두 시험지의 모든 지문 × 일치·불일치 × repeat 2를 수정 전후 같은 설정으로 평가해 총 296문항을 직접 AI 채점했습니다. 변경은 fact 어댑터 가중치 하나이며 기본 모델·검사 모델·프롬프트·재시도 설정은 그대로입니다.</p>
+      <table><thead><tr><th>시험지</th><th>전 O/P/X/F</th><th>후 O/P/X/F</th><th>맞음 O% 전→후</th><th>생성 실패 F% 전→후</th><th>판정</th></tr></thead><tbody>
+      <tr><td>sep26-go1 (각76)</td><td>28/44/4/0</td><td>30/42/4/0</td><td>36.84→39.47%</td><td>0→0%</td><td>+2.63%p, 같다</td></tr>
+      <tr><td>jun11-go2 (각72)</td><td>32/38/2/0</td><td>39/33/0/0</td><td>44.44→54.17%</td><td>0→0%</td><td>+9.72%p, 개선</td></tr></tbody></table>
+      <p>±7%p 이내는 ‘같다’입니다. 고2는 개선했으나 두 세트 모두 7%p 초과 개선해야 한다는 사전 조건을 충족하지 못해 후보를 채택하지 않았습니다. 기존 어댑터의 모든 파일 SHA-256이 학습 전 백업과 일치함을 확인했습니다. 후보는 별도 보관하고 운영에는 반영하지 않았습니다.</p>
+      <h3>대표 실패 3건</h3>
+      <ul><li><b>고1 37번 일치·1회차 P:</b> ③ 코페르니쿠스와 ④ 갈릴레이가 모두 참인데 ‘④도 사실이나 정답은③’이라는 해설로 복수정답을 덮었습니다.</li>
+      <li><b>고1 35번 불일치·2회차 X:</b> 두꺼운 털의 목욕 주기 6~8주는 원문과 일치하는데 불일치 정답⑤로 표시했습니다.</li>
+      <li><b>고2 24번 불일치·1회차 P:</b> 해설에서 ‘말썽꾸러기’를 반복해 정답 근거를 설명하지 못했습니다.</li></ul>
+      <h3>이번 교훈과 정지 상태</h3>
+      <p>검증 손실은 0.993→0.958로 낮아졌지만 상품 품질 합격을 뜻하지 않습니다. 검수 예시 6건을 반복 학습한 한 번의 결과로 다른 지문에서 안정적인 개선을 보장할 수 없습니다. 문항 27건의 수정·완료는 유지하고, 재학습 후보의 채택은 별도로 거절합니다. 나머지 유형의 학습 예시는 등록만 했으며 추가 학습하지 않았습니다.</p>
+      <p><b>요청한 범위 완료 후 정지.</b> 추가 실험과 대량 생성은 시작하지 않았습니다. 다음에는 <a href="#l31">31과 계획</a>대로 워커로 초안을 묶음 생성하고 20~30건씩 검수·수정한 뒤 통과 문항을 완료 처리합니다. 이번 AI 평가는 독립 사람·블라인드 검수나 상품 승인이 아닙니다.</p>
+      <p class="note">보관: <code>ml/production/batches/2026-09-27-jun23-go1-01/</code>의 재검수 전후·패치 백업·완료 풀이·DB 결과·training-feedback, <code>ml/production/cycles/2026-09-27-fact-production/</code>의 실험 계획·데이터 SHA·실행 기록. 사람 검수시간은 미측정. 커밋·푸시·배포·PDF 생성 없음.</p>
+    </section>
+
+    <section id="l34">
+      <span class="num">34과</span><h2>로컬 제작의 토큰 효율 측정</h2>
+      <p class="one">사용자가 요청한 비교 범위는 문제 초안 생성만입니다. 지문을 읽고 발문·선지·정답·해설을 만드는 로컬 모델 호출은 Codex 토큰을 사용하지 않습니다.</p>
+      <div class="tbl"><table><thead><tr><th>문제 생성만 집계</th><th>이번 실측</th></tr></thead><tbody>
+        <tr><td>생성 시도 / 초안 출력</td><td>36건 / 33건</td></tr>
+        <tr><td>로컬 생성 처리 시간 (실패 포함)</td><td>582.36초 (9분 42초)</td></tr>
+        <tr><td>초안 출력 1건당 시간 (실패 시간 포함)</td><td>17.65초</td></tr>
+        <tr><td>로컬 생성 모델의 Codex 토큰 소비</td><td>0</td></tr>
+      </tbody></table></div>
+      <p>워커 실행 지시·결과 조회·검수·수정·저장·도구 개발·노트·재학습·평가는 위 범위에서 제외합니다. 직접 Codex 작성의 입력·출력 토큰을 로컬 모델이 대신 처리하므로 생성 단계의 Codex 사용량을 없앨 수 있습니다. 다만 직접 작성 대조군의 생성 전용 사용량을 아직 재지 않아 <b>문항당 절약한 토큰 수는 미측정</b>입니다. 전체 Pro 사용량이 100% 줄었다는 뜻은 아닙니다.</p>
+      <p>참고로 33개 결과물의 발문·선지·정답·해설 길이는 Qwen 토크나이저 기준 9,557토큰(건당 약 290)입니다. 이는 최종 결과물 길이이며, Codex 토큰 수나 실제 로컬 총 생성량(추론·재시도 포함)으로 환산하지 않습니다.</p>
+      <details><summary>이전 전체 작업 집계 — 생성 효율 계산에서 제외</summary><p>첫 작업 전체 새 입력 236,266·캐시 입력 8,372,224·출력 30,101(추론 5,327 포함). 목차·도구 개발·검수·문서 등이 섞여 있어 생성 단독 비용으로 사용할 수 없습니다. 원자료는 efficiency.json에 보존합니다.</p></details>
+      <h3>별도 지표: 검수·수정까지 포함한 제작 효율</h3>
+      <p>완료된 문항 1개당 새 입력·캐시 입력·출력(추론 포함)을 따로 기록합니다. 같은 모델·문맥 범위·유형·난도·검수 기준으로 ‘로컬 초안 + Codex 검수·수정’과 ‘Codex 직접 작성 + 동일 검수’를 비교하고, 처음 만든 도구·노트·재학습·평가 비용은 생산과 별도로 계산합니다. 미사용 지문을 대응 묶음에 배정하고 순서 효과를 줄입니다.</p>
+      <p>비교 기준이 마련된 뒤에만 <code>절감률 = 1 − (로컬 방식의 완료당 사용량 ÷ 직접 방식의 완료당 사용량)</code>을 같은 항목끼리 계산합니다. 품질 미달·폐기·재수정도 분모와 비용에 포함합니다. 현재 직접 제작 대조군이 없어 <b>실측 절감률은 아직 없음</b>입니다. 무수정 통과율이 높아지는 것이 절감의 핵심이며, 로컬이 만든 모든 초안을 여러 번 통째로 읽으면 이점이 줄어듭니다.</p>
+      <p class="note">근거: <code>efficiency.json</code>과 <code>ml/production/measure_efficiency.py</code>. 사용량 기록 전체나 다른 대화 내용은 내보내지 않았습니다. <a href="https://learn.chatgpt.com/docs/pricing">OpenAI 사용량 안내</a>는 문맥·추론·도구·캐시가 사용량에 영향을 준다고 설명합니다. <a href="https://developers.openai.com/api/docs/guides/agents-api/observability">토큰 범주 설명</a>에서 캐시는 입력에, 추론은 출력에 포함되므로 중복 합산하지 않습니다.</p>
+    </section>
+
     <section id="log">
       <span class="num">개선 기록</span>
       <h2>한 줄씩 쌓는 개선 일지</h2>
@@ -1402,6 +1545,13 @@
                       <tr id="mismatch-reasoner-log"><td>09-27</td><td>불일치</td><td>시간·주체·직접 추론의 참·거짓 판정 오류</td><td>판정·교정·해설 모델만 35B-A3B → 27B, 두 세트 전후 repeat 2 · 148회</td><td>O 고1 42.1→60.5%(개선), 고2 61.1→55.6%(같음). F 모두 0%. 약 3배 느려짐. 비채택·35B 유지.</td><td><a href="#l29">29</a></td></tr>
                       <tr id="mismatch-trim-log"><td>09-27</td><td>불일치</td><td>인용·생략 부호 중간에서 해설 잘림</td><td>인용 내부를 문장 경계 후보에서 제외, 재현 8건·두 세트 전후 148회</td><td>O 고1 55.3→63.2%(개선), 고2 47.2→50.0%(같음). F 모두 0%. 잘림 2→2건. 후보 복원.</td><td><a href="#l30">30</a></td></tr>
             <tr id="lora-deadline-log"><td>09-27 10:00</td><td>종료 점검</td><td>자율 작업 마감</td><td>평가 종료·원본 SHA·복원 장치 확인, 두 자동화 일시중지</td><td>네 사이클 모두 비채택·복원. 미완료 평가 없음. 추가 모델 호출·커밋·푸시 없음.</td><td><a href="#l30">30</a></td></tr>
+            <tr id="stock-2023-plan-log"><td>09-27</td><td>제작 계획</td><td>2023년 고1·2·3 실제 재고 부족</td><td>14회 재고 조회, 12유형·각 3문항 목표와 단계별 제작 계획</td><td>확보 521·전체 부족 12,007. 1차 범위 추가 예상 8,515. 첫 묶음 36문항 제안, 제작 미실행.</td><td><a href="#l31">31</a></td></tr>
+            <tr id="toc-group-log"><td>09-27</td><td>노트 구성</td><td>31개 과의 긴 단일 목차</td><td>5개 주제별 접이식 목록·현재 작업 우선·선택한 과 자동 펼침</td><td>기존 과 번호·링크 유지. 32과를 현재 작업 묶음에 추가.</td><td><a href="#l31">31</a></td></tr>
+            <tr id="production-jun23-go1-log"><td>09-27</td><td>실제 제작 12유형</td><td>23년 6월 고1 부족 재고·초안 오류</td><td>3지문 36회 생성, 원문 대조·풀이·수정, 초안과 수정본 분리</td><td>O/P/X/F 9/21/3/3. 27문항 대기 저장(무수정 8·수정 19), 보류·실패 9. 사람 승인 전.</td><td><a href="#l32">32</a></td></tr>
+            <tr id="production-completion-log"><td>09-27</td><td>재검수·학습</td><td>대기 27건의 최종 점검·생산 피드백 반영</td><td>17건 패치·개별 풀이 기록·학습 예시 18건 및 규칙 사례 9건 연결</td><td>27건 완료. fact 전후296문항: 고1+2.63%p 같음·고2+9.72%p 개선. 후보 미채택·원본 복원·작업 종료.</td><td><a href="#l33">33</a></td></tr>
+            <tr id="production-efficiency-log"><td>09-27</td><td>효율 측정</td><td>로컬 초안이 전체 Codex 사용량을 얼마나 줄이는지 불명</td><td>실제 입력·캐시·출력과 로컬 결과물 길이를 분리 집계</td><td>첫 작업 새 입력 23.6만·출력 3.0만(도구·노트 포함). 직접 제작 대조군 없어 절감률 미확정.</td><td><a href="#l34">34</a></td></tr>
+            <tr><td>09-27</td><td>후속 제작 계획</td><td>소량 실험 이후 대량 재고 확보 흐름 필요</td><td>이번 개선 종료 후 정지, 다음 작업을 워커 대량 생성·묶음 검수로 변경</td><td>목표 지문·유형별 완료3건. 대량 초안 첫100회·20~30건씩 검수 계획만 기록, 워커 재개 없음.</td><td><a href="#l31">31</a></td></tr>
+            <tr><td>09-27</td><td>효율 범위 정정</td><td>전체 작업 토큰이 문제 생성 비용과 혼동됨</td><td>생성만 본표로 분리, 검수·개발·노트 제외</td><td>36회→초안33건·582초, 로컬 생성 Codex 토큰0. 직접 작성 대비 문항당 절약량은 미측정.</td><td><a href="#l34">34</a></td></tr>
           </tbody>
         </table>
       </div>
@@ -1474,5 +1624,23 @@
   strip("s-win", "oooooo" + "xxxxxxxxxx");
   strip("s-3000", "oooooooo" + "ppp" + "xxxxx");
   strip("s-2400", "ooooooo" + "ppp" + "xxxxxx");
+})();
+</script>
+
+<script>
+(function () {
+  function revealLesson() {
+    var hash = location.hash || '#l31';
+    document.querySelectorAll('nav.toc a[href^="#"]').forEach(function (link) {
+      var current = link.getAttribute('href') === hash;
+      if (current) {
+        link.setAttribute('aria-current', 'location');
+        var group = link.closest('details');
+        if (group) group.open = true;
+      } else link.removeAttribute('aria-current');
+    });
+  }
+  window.addEventListener('hashchange', revealLesson);
+  revealLesson();
 })();
 </script>

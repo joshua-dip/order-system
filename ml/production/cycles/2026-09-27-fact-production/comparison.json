@@ -1,0 +1,166 @@
+{
+  "status": "complete",
+  "decision": "not_adopted",
+  "reason": "고1 +2.63%p는 ±7%p 이내 같음. 고2 +9.72%p 개선이나 두 세트 동시 개선 조건 미충족.",
+  "canonical_restored": true,
+  "canonical_hash_verified": true,
+  "product_approved": false,
+  "reviewer": "Codex AI; not independent human or blind review",
+  "finished_at": "2026-09-27T06:00:06.230899+00:00",
+  "evaluated_questions": 296,
+  "production_completed_questions": 27,
+  "next_bulk_started": false,
+  "sets": {
+    "sep26-go1": {
+      "before": {
+        "n": 76,
+        "O": 28,
+        "P": 44,
+        "X": 4,
+        "F": 0,
+        "O_percent": 36.84,
+        "F_percent": 0.0
+      },
+      "after": {
+        "n": 76,
+        "O": 30,
+        "P": 42,
+        "X": 4,
+        "F": 0,
+        "O_percent": 39.47,
+        "F_percent": 0.0
+      },
+      "delta_O_pp": 2.63,
+      "judgment": "같다",
+      "by_type": {
+        "before": {
+          "match": {
+            "n": 38,
+            "O": 8,
+            "P": 30,
+            "X": 0,
+            "F": 0,
+            "O_percent": 21.05,
+            "F_percent": 0.0
+          },
+          "mismatch": {
+            "n": 38,
+            "O": 20,
+            "P": 14,
+            "X": 4,
+            "F": 0,
+            "O_percent": 52.63,
+            "F_percent": 0.0
+          }
+        },
+        "after": {
+          "match": {
+            "n": 38,
+            "O": 11,
+            "P": 27,
+            "X": 0,
+            "F": 0,
+            "O_percent": 28.95,
+            "F_percent": 0.0
+          },
+          "mismatch": {
+            "n": 38,
+            "O": 19,
+            "P": 15,
+            "X": 4,
+            "F": 0,
+            "O_percent": 50.0,
+            "F_percent": 0.0
+          }
+        }
+      }
+    },
+    "jun11-go2": {
+      "before": {
+        "n": 72,
+        "O": 32,
+        "P": 38,
+        "X": 2,
+        "F": 0,
+        "O_percent": 44.44,
+        "F_percent": 0.0
+      },
+      "after": {
+        "n": 72,
+        "O": 39,
+        "P": 33,
+        "X": 0,
+        "F": 0,
+        "O_percent": 54.17,
+        "F_percent": 0.0
+      },
+      "delta_O_pp": 9.72,
+      "judgment": "개선",
+      "by_type": {
+        "before": {
+          "match": {
+            "n": 36,
+            "O": 9,
+            "P": 26,
+            "X": 1,
+            "F": 0,
+            "O_percent": 25.0,
+            "F_percent": 0.0
+          },
+          "mismatch": {
+            "n": 36,
+            "O": 23,
+            "P": 12,
+            "X": 1,
+            "F": 0,
+            "O_percent": 63.89,
+            "F_percent": 0.0
+          }
+        },
+        "after": {
+          "match": {
+            "n": 36,
+            "O": 14,
+            "P": 22,
+            "X": 0,
+            "F": 0,
+            "O_percent": 38.89,
+            "F_percent": 0.0
+          },
+          "mismatch": {
+            "n": 36,
+            "O": 25,
+            "P": 11,
+            "X": 0,
+            "F": 0,
+            "O_percent": 69.44,
+            "F_percent": 0.0
+          }
+        }
+      }
+    }
+  },
+  "representative_failures": [
+    {
+      "set": "sep26-go1",
+      "phase": "after",
+      "key": "37번|match|1",
+      "grade": "P",
+      "reason": "코페르니쿠스③와 갈릴레이④ 모두 참인데 해설은④도 사실이나 정답이③이므로 제외한다고 함."
+    },
+    {
+      "set": "sep26-go1",
+      "phase": "after",
+      "key": "35번|mismatch|2",
+      "grade": "X",
+      "reason": "두꺼운 털의 목욕 주기6~8주는 원문과 일치하는데 불일치 정답⑤로 지정."
+    },
+    {
+      "set": "jun11-go2",
+      "phase": "after",
+      "key": "24번|mismatch|1",
+      "grade": "P",
+      "reason": "해설에서 말썽꾸러기 반복이 발생하여 정답 근거를 제대로 설명하지 못함."
+    }
+  ]
+}

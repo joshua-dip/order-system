@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf53",
+  "question_data": {
+    "Question": "다음 글의 내용과 일치하는 것은?",
+    "Paragraph": "We tend to believe that we possess a host of socially desirable characteristics, and that we are free of most of those that are socially undesirable. For example, a large majority of the general public thinks that they are more intelligent, more fair-minded, less prejudiced, and more skilled behind the wheel of an automobile than the average person. This phenomenon is so reliable and ubiquitous that it has come to be known as the \"Lake Wobegon effect,\" after Garrison Keillor's fictional community where \"the women are strong, the men are good-looking, and all the children are above average.\" A survey of one million high school seniors found that 70% thought they were above average in leadership ability, and only 2% thought they were below average. In terms of ability to get along with others, all students thought they were above average, 60% thought they were in the top 10%, and 25% thought they were in the top 1%!",
+    "Options": "① Lake Wobegon was the real town where the survey took place. ### ② Seventy percent rated their leadership ability below average. ### ③ The survey measured actual driving performance. ### ④ Twenty-five percent placed their interpersonal skills in the bottom one percent. ### ⑤ Many people believe they possess positive traits and lack negative ones.",
+    "CorrectAnswer": "⑤",
+    "Explanation": "⑤가 정답이다. 첫 문장에서 사람들은 바람직한 특성은 많이 갖고 바람직하지 않은 특성은 대부분 없다고 믿는다고 한다. ③은 실제 운전 수행 측정이 아니라 자기평가다. ②의 70%는 below가 아니라 above average라고 응답했다. ④의 25%는 bottom이 아니라 top 1%라고 답했다. ①는 설문 장소가 아니라 효과의 이름을 빌린 가상 공동체다.",
+    "OptionType": "English",
+    "NumQuestion": 23,
+    "Source": "",
+    "Category": ""
+  }
+}

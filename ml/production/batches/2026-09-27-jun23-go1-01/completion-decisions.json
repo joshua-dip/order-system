@@ -1,0 +1,191 @@
+[
+  {
+    "id": "6ab89765da897d9b92accf3d",
+    "before_hash": "b03ebbec717a1efa52a3603dee194f568ee15a1bba2347dc8fd02d09bc718fc9",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 업무·개인 일정을 한곳에 조직하는 방법이 글 전체를 포괄한다. 분리 옹호는 반대, 건강은 무관, 디지털과 문제점만 다룬 선지는 부분 내용이다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89765da897d9b92accf3e",
+    "before_hash": "1e23f1ea6897b743104ad242166375959f67e917bb61a1318e3a65ea1c3a96a0",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 통합 일정을 권하는 제목만 맞다. 종이 우위·분리·균등 배분·반복 확인은 각각 매체 무관성·통합·우선순위·문제 행동의 설명과 어긋난다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89765da897d9b92accf3f",
+    "before_hash": "43b5c61ad01374ed6dfd15d2709c915b7efbc8c3d71b49aefce2b5ec1e7e59d3",
+    "answer": "⑤",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] Instead organize all tasks in one place가 주장이다. 나머지는 분리, 디지털 우선, 업무 절대 우선, 하루1회 규칙이라 원문의 제안과 다르다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf40",
+    "before_hash": "b71ed023a10477fd1a59e4b97f5a822fc52a310a65e987bfa699869d6607a7a7",
+    "answer": "④",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 한곳에 두면 how time is divided를 알 수 있다는 사실만 일치. 주의 감소·반복 확인 권장·분리 최선·디지털 유일은 원문과 반대다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf41",
+    "before_hash": "d16e2569bf51b8946ad4f4647874fe440af3ea549eb12c76440fb553a1a39ae2",
+    "answer": "④",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 반복 확인은 누락 걱정의 결과로 제시된 문제이지 권장 방식이 아니다. 다른 네 선지는 두 일정표 사용·주의 분산·통합의 시간 파악 및 판단 효과다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf42",
+    "before_hash": "a654ef636891ee2ffd1fc51b83bdab930e32e52ca6ac8c70f6e0df8390f80e70",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] Instead는 분리와 반복 확인을 대신할 통합 행동을 요구한다. 균등 배분·매체 선택·업무 우선·반복 확인은 글의 해결책이 아니다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf43",
+    "before_hash": "62f1ba74065a1a726b66429a9f6fa0e7c16c9d3d1f3071b52ea0671c341ab1a2",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 한곳 통합은 unified, 중요한 일 판단은 determine. specialized와 postpone/equalize/rearrange 조합은 제시된 통합·우선순위 판단을 충족하지 않는다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf44",
+    "before_hash": "8cd594e5b24b52b2a044bf0b162add94f7af3bf2c2dc685ad5c2eb803d7e04ab",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] B 반복 확인이 주어진 글의 주의 분산을 구체화하고 A Instead가 대안을, C This가 통합의 효과를 잇는다. C가 B를 받으면 반복 확인의 장점을 말하게 되어 모순된다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf45",
+    "before_hash": "97b6168620ae91930e77cfcd23f4f0ec3e5ffe1ed32e0fd42fe27db53c50f7fa",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] ②의 분리된 일정표 장점은 통합 관리 권고 도중 반대 방향으로 논점을 바꾼다. 제거 시 매체 무관성→통합→시간 파악→우선순위가 이어진다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf46",
+    "before_hash": "2a9712e998f42b28813d04f1cba80daf40b55ff3445467b2359014680e84fdfb",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] Although sensible 뒤에는 문제점이 와야 하며 반복 확인·Instead와 연결된다. concentration은 이 대조와 충돌해 distractions로 고친다. 다른 네 단어는 원문 맥락 유지. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf47",
+    "before_hash": "9e5d75702bb2ea4f0fd901319bed0d1da1213b72d06d7f28b17bdab22983b7c9",
+    "answer": "④",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] allow you making은 목적격보어 형식에 맞지 않아 to make로 고친다. who work, 동명사 주어 having, 수동태 is divided, about 뒤 간접의문절은 적절하다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf48",
+    "before_hash": "6e96ee082924581c5edca1e5cd148f6513bb71aae1436d2523d6e60ac60c059f",
+    "answer": "④",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 중심은 기업이 하던 업무의 소비자 이전. 여가 감소는 결과, 항공·마트는 사례, 약속과 역사는 전체 요지를 대체하지 못한다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf49",
+    "before_hash": "bd71379153c63b4f4cea74ae9e0f4102cd268da595b273e1db760d6fd733794e",
+    "answer": "④",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 과거 기업이 하던 일을 소비자가 한다는 제목이 약속과 현실의 대비를 포괄한다. 기계의 노동 대체·여가 증가는 약속만, 여행사 이익·소비자 선호는 없는 내용이다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf4a",
+    "before_hash": "e1638649ffa43ff73901f54dde4244d256d46f8f35362ce1c565baf9e1147497",
+    "answer": "①",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 필자의 비판적 취지는 컴퓨터화가 소비자를 반복 업무에서 해방하지 못한 현실을 인식하자는 것이다. 다른 선지의 수고 감소·기업 효율만 고려·여가 증가·서비스 개선은 비판과 어긋난다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf4b",
+    "before_hash": "9ae1282f56d9854712ab932739ad535db525dda9b7c710e73ea3d6a22339519e",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 과거 직원 업무를 소비자가 담당한다는 사실만 일치. 원래 약속의 여가 방향, 마트 사례, 기업 규모, 현재 체크인 주체를 다른 선지가 뒤집었다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf4c",
+    "before_hash": "9616f9f0b1555a6f33085563d50cb29d95d3267d066f120d2291ab116899f463",
+    "answer": "①",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 직원이 여전히 예약·체크인을 맡는다는 선지만 현재 소비자 수행 요구와 어긋난다. 다른 선지는 최초 약속·업무 이전·일부 마트의 직접 계산을 정확히 한정한다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf4d",
+    "before_hash": "0119d7659d8ff4ecc7547649b0c64d7e665a9ffa54113dd8259f96142a1a8630",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 컴퓨터화의 약속은 반복 노동을 기계로 옮겨 높은 목적과 여가를 가능하게 하는 것. 소비자 전가는 실패한 현실이며 창의 노동과 반복 노동을 뒤집거나 직원 서비스를 늘린다는 내용은 없다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf4e",
+    "before_hash": "6a3df5ded0741944ff0e205959d9e6c3da59cafae97e69c250438c57279dc54e",
+    "answer": "①",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 셀프서비스의 편의를 강조한 ①은 시간 감소·기업의 부담 전가라는 비판 흐름을 끊는다. 제거하면 시간 감소→전가→항공·마트 사례가 연결된다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf4f",
+    "before_hash": "33610f7d81601c313c1fb957b7ed72dd54a338825e1ff6ed4604a19083ea1a07",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 떠맡은 주체는 employees가 아니라 consumers. 직원·여행사가 하던 일을 이제 소비자가 한다는 뒤의 구체 사례와 대상이 맞지 않는다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf50",
+    "before_hash": "ac71ccac63794eb48bf4e7b67653216d9776522febe8aad6e39657d99f05e7cc",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 쉼표 뒤 allows는 접속 없는 유한동사이므로 allowing 분사구문으로 고친다. was that, have less, Things를 수식하는 that used, are expected는 어법상 적절하다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf51",
+    "before_hash": "134b0ea6f165c95da3e48bbb9438633448be7b60039303a86d6ed43cfa2fde5d",
+    "answer": "①",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 평균 이상이라는 자기 과대평가가 대중·학생 사례를 관통한다. 부정적 특성 부재·리더십·명칭 유래는 일부, 집단 간 비교는 핵심이 아니다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf52",
+    "before_hash": "17318bd2f805b19437f523a7df025cdd9bb3b52d31943c12f30a5b929bbed496",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 평균 이상이라는 자기평가의 착각이 글 전체 내용. 실제 능력 측정·가상 마을의 실재·자기평가의 정확성·가혹한 자기평가는 지문을 왜곡한다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf53",
+    "before_hash": "250a195c86c8cfe7832e6147063c651052a35a70157709d5604155d221ea4dcc",
+    "answer": "⑤",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 좋은 특성을 갖고 나쁜 특성은 없다고 믿는 경향만 일치. 가상 마을, above 70%, 자기평가, top1% 응답25%가 각 오답을 반박한다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89766da897d9b92accf54",
+    "before_hash": "da2e524ff7248ee12ee90435737f3a3b5229f2bd3f0e09075ba023161a05fe43",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 이름은 fictional community에서 왔으므로 real community만 불일치. 조사 대상과 비율을 한정한 나머지 선지는 자기평가 내용과 일치한다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89767da897d9b92accf55",
+    "before_hash": "0fe41a81daf29d0bb12c4edaa91eec3006edf60e97de3349c0411279d923b235",
+    "answer": "④",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 긍정적 특성을 overestimate하고 부정적 특성을 underestimating한다. to 동사원형과 while 분사구문은 문법상 성립하며 다른 조합은 평가 방향·행동이 다르다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89767da897d9b92accf56",
+    "before_hash": "f15f9ea257c13659f7093c3412362344e89d67463cd41232281e63e3e508a895",
+    "answer": "③",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] large majority, 70%, all students가 널리 나타나는 경향을 보여 rare와 모순된다. reliable은 현상의 반복 관찰이며 자기평가의 정확성을 뜻하지 않는다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  },
+  {
+    "id": "6ab89767da897d9b92accf57",
+    "before_hash": "522d2c5a99ef21555a3dedd529113f62267d6185a64f75c148c0cd59e32d988e",
+    "answer": "②",
+    "verdict": "pass",
+    "reason": "[Codex AI 재검수; 독립 사람 검수 아님] 관계대명사 선행사 those가 characteristics를 받아 복수이므로 is→are. are free, 장소 관계부사 where, children are, thought 뒤 that 생략은 적절하다. 원문·정답 유일성·해설·정성적 변별력을 함께 확인. 사용자 요청에 따라 DB 완료 전환. 상품 모델 성능 승인과는 별개."
+  }
+]

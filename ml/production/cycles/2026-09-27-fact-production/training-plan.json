@@ -1,0 +1,18 @@
+{
+  "seed": 20260927,
+  "replay_rows": 512,
+  "production_unique_rows": 6,
+  "production_passages": 3,
+  "production_copies_each": 20,
+  "train_rows": 632,
+  "valid_rows": 64,
+  "steps": 300,
+  "learning_rate": 1e-05,
+  "resume": "existing fact-lora/adapters.safetensors",
+  "human_reviewed": false,
+  "training_data": "/Users/goshua/next-order/data/production-2026-09-27/fact-cycle",
+  "train_sha256": "fb78d9792ecc94067cfb35bbdb52cbfb490c9873111c529ed6f85b4bcd8a06ba",
+  "valid_sha256": "fdb086c2f93c14ba6448ba642cf5153730543f4e7983f252180bad3e5039ef2a",
+  "eval_and_production_excluded_from_holdout": true,
+  "input_overlap_train_valid": 0
+}

@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf4d",
+  "question_data": {
+    "Question": "다음 빈칸에 들어갈 말로 가장 적절한 것은?",
+    "Paragraph": "The promise of a computerized society, we were told, was that <u>_____</u>, allowing us humans to pursue higher purposes and to have more leisure time. It didn't work out this way. Instead of more time, most of us have less. Companies large and small have off-loaded work onto the backs of consumers. Things that used to be done for us, as part of the value-added service of working with a company, we are now expected to do ourselves. With air travel, we're now expected to complete our own reservations and check-in, jobs that used to be done by airline employees or travel agents. At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own purchases.",
+    "Options": "① it would shift the burden of routine tasks onto consumers instead of machines ### ② it would free humans from all chores, requiring no interaction with technology ### ③ it would pass to machines all of the repetitive drudgery of work ### ④ it would eliminate all human labor entirely, leaving us with no work at all ### ⑤ it would allow machines to perform all complex tasks while humans handle only trivial duties",
+    "CorrectAnswer": "③",
+    "Explanation": "③가 정답입니다. 빈칸은 컴퓨터화된 사회가 처음에 제시한 약속의 내용이며, 뒤에는 인간이 더 높은 목적을 추구하고 여가를 누린다는 결과가 온다. 따라서 반복적이고 고된 업무를 기계에 맡긴다는 ③이 적절하다. ②의 기술과 상호작용 불필요나 ④의 모든 인간 노동 제거는 글의 범위를 넘는다. ⑤는 인간에게 단순 업무를 남겨 약속과 어긋나고, ①는 약속이 실현되지 않은 뒤 소비자가 일을 떠맡게 된 현실을 설명한다.",
+    "OptionType": "English",
+    "NumQuestion": 17,
+    "Source": "",
+    "Category": ""
+  }
+}

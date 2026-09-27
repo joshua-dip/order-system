@@ -1,0 +1,42 @@
+{
+  "observed_pilot_usage": {
+    "input_tokens": 8608490,
+    "cached_input_tokens": 8372224,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 30101,
+    "reasoning_output_tokens": 5327,
+    "total_tokens": 8638591,
+    "uncached_input_tokens": 236266
+  },
+  "scope": "목차 정리+제작 도구 작성+36회 로컬 생성 지휘+검수/수정+27건 대기 저장+기록/UI 확인을 모두 포함. 순수 제작만 분리 불가.",
+  "usage_window": {
+    "start": "2026-09-27T03:56:33.900Z",
+    "end": "2026-09-27T04:29:04.783Z"
+  },
+  "completed_after_recheck": 27,
+  "attempts": 36,
+  "generated_payloads": 33,
+  "payload_Qwen_tokens_excluding_Paragraph": 9557,
+  "edited_field_payload_Qwen_tokens": 4727,
+  "proxy_warning": "Qwen 토크나이저로 결과물 길이를 잰 값. 실제 로컬 엔진 총 생성량(추론·재시도 포함)이나 절약된 Codex 토큰이 아님. 수정 필드에는 기존 지문도 포함될 수 있음.",
+  "direct_codex_baseline": null,
+  "measured_token_savings_percent": null,
+  "subscription_allowance_saved_percent": null,
+  "initial_content_unchanged": 8,
+  "local_generation_seconds": 582.36,
+  "sources": [
+    "https://learn.chatgpt.com/docs/pricing",
+    "https://developers.openai.com/api/docs/guides/agents-api/observability"
+  ],
+  "next_comparison": "유사한 미사용 지문을 두 방식에 배정: 로컬초안+Codex검수 대 Codex직접작성+동일검수. 유형·난도·완료수·모델·문맥을 맞추고 제작/개발 시간을 분리. 완료당 신규입력·캐시입력·출력(추론포함), 수정시간, 치명오류를 비교.",
+  "generation_only": {
+    "scope": "Local model calls producing draft questions only; excludes orchestration, review, editing, storage, development, notes, training and evaluation.",
+    "attempts": 36,
+    "outputs": 33,
+    "elapsed_seconds": 582.36,
+    "seconds_per_output_including_failed_attempts": 17.65,
+    "codex_tokens_consumed_by_local_model_calls": 0,
+    "direct_codex_generation_tokens": null,
+    "saved_codex_tokens_per_question": null
+  }
+}

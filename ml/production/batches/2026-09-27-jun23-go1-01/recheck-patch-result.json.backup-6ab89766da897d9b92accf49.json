@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf49",
+  "question_data": {
+    "Question": "이 글의 제목으로 가장 적절한 것은?",
+    "Paragraph": "The promise of a computerized society, we were told, was that it would pass to machines all of the repetitive drudgery of work, allowing us humans to pursue higher purposes and to have more leisure time. It didn't work out this way. Instead of more time, most of us have less. Companies large and small have off-loaded work onto the backs of consumers. Things that used to be done for us, as part of the value-added service of working with a company, we are now expected to do ourselves. With air travel, we're now expected to complete our own reservations and check-in, jobs that used to be done by airline employees or travel agents. At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own purchases.",
+    "Options": "① Machines Take Over the Routine Work of Consumers ### ② How Travel Agents Benefit from Online Reservations ### ③ Why Consumers Prefer Company Employees to Automated Services ### ④ Consumers Do Work Once Done by Companies ### ⑤ Self-Service Technology Gives Consumers More Leisure Time",
+    "CorrectAnswer": "④",
+    "Explanation": "④가 정답입니다. 컴퓨터화가 반복 노동을 줄이고 여가를 늘릴 것이라는 기대와 달리, 기업이 하던 일을 소비자가 직접 하게 되었다는 것이 글의 핵심이다. 항공 예약과 체크인, 식료품 포장과 계산이 그 사례이므로 과거 기업의 업무를 소비자가 맡는다는 ④가 적절하다. ①⑤는 글이 설명하는 현실과 반대이다. ②은 여행사의 이익을, ③는 소비자의 선호를 다루지만 글은 이를 논하지 않는다.",
+    "OptionType": "English",
+    "NumQuestion": 13,
+    "Source": "",
+    "Category": ""
+  }
+}

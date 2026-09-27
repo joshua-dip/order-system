@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf52",
+  "question_data": {
+    "Question": "이 글의 제목으로 가장 적절한 것은?",
+    "Paragraph": "We tend to believe that we possess a host of socially desirable characteristics, and that we are free of most of those that are socially undesirable. For example, a large majority of the general public thinks that they are more intelligent, more fair-minded, less prejudiced, and more skilled behind the wheel of an automobile than the average person. This phenomenon is so reliable and ubiquitous that it has come to be known as the \"Lake Wobegon effect,\" after Garrison Keillor's fictional community where \"the women are strong, the men are good-looking, and all the children are above average.\" A survey of one million high school seniors found that 70% thought they were above average in leadership ability, and only 2% thought they were below average. In terms of ability to get along with others, all students thought they were above average, 60% thought they were in the top 10%, and 25% thought they were in the top 1%!",
+    "Options": "① Leadership Training for High School Seniors ### ② The Above-Average Illusion: How People See Themselves ### ③ The History of a Community Named Lake Wobegon ### ④ Survey Data Proves High School Seniors Are Superior ### ⑤ How Driving Practice Improves Social Skills",
+    "CorrectAnswer": "②",
+    "Explanation": "②가 정답이다. 지문은 사람들이 자신의 능력과 특성을 평균 이상이라고 보는 경향을 소개하고 이를 레이크 워비곤 효과라 부른다. 운전·지능·리더십·대인관계에 관한 자기평가 사례가 이를 뒷받침한다. 이 현상이 반복적으로 관찰된다는 것이지 평가 대상들이 실제로 우월하다는 뜻은 아니므로 ④은 틀리다. ⑤의 운전 연습 효과와 ①의 리더십 훈련은 다루지 않는다. ③은 명칭의 유래에 등장하는 가상 공동체를 글의 중심으로 잘못 삼았다.",
+    "OptionType": "English",
+    "NumQuestion": 22,
+    "Source": "",
+    "Category": ""
+  }
+}

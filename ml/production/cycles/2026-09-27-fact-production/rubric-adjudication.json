@@ -1,0 +1,27 @@
+{
+  "reason": "README: mere opposites or subjective ease alone do not warrant P; require concrete duplicate or elimination cue. Applied before candidate results.",
+  "changes": [
+    {
+      "key": "23번|match|1",
+      "old": [
+        "P",
+        "①만 수용·긍정이고②③④⑤는 변화 조건·동정·가혹함·불행으로 모두 반대 방향이라 지문 없이 가치 방향으로 제거하기 쉽다."
+      ],
+      "new": [
+        "O",
+        "①은 좋은 점의 인정과 편견 없는 수용에 일치. 나머지는 행복 조건·동정과 변화 시도·결말 인과·보상으로 서로 다른 사실을 바꾼다. 같은 긍부정 인상만으로 감점하지 않음."
+      ]
+    },
+    {
+      "key": "38번|match|1",
+      "old": [
+        "P",
+        "③만 편안함의 이점을 인정하고 나머지는 모두 사적 공간·편안함의 이점을 부정하는 방향이라 정답 방향이 쉽게 드러난다."
+      ],
+      "new": [
+        "O",
+        "③은 편안함과 아이디어 생성의 관계에 일치. 나머지는 집중 가능성·신체 행동·편안함의 관련성·사적 공간의 효용으로 서로 다른 세부 사실을 묻는다. 단순 방향 인상만으로 감점하지 않음."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "ok": true,
+  "textbook": "23년 6월 고1 영어모의고사",
+  "totalQuestions": 27,
+  "perQuestion": {
+    "errorTotal": 0,
+    "errorRuleCounts": {},
+    "errorItems": [],
+    "errorItemsTruncated": false,
+    "warningCounts": {},
+    "warningSamples": {}
+  },
+  "contentIntegrity": {
+    "issueTotal": 0,
+    "ruleCounts": {},
+    "items": [],
+    "answerDistributionSkewed": []
+  },
+  "optionsFormat": {
+    "missingCount": 0,
+    "storedAsArrayCount": 0,
+    "noCircledPrefixCount": 0,
+    "partialCircledPrefixCount": 0,
+    "badSegmentCountCount": 0,
+    "missing": [],
+    "storedAsArray": [],
+    "noCircledPrefix": [],
+    "partialCircledPrefix": [],
+    "badSegmentCount": []
+  },
+  "duplicateOptions": {
+    "excludedTypes": [
+      "순서",
+      "순서-고난도",
+      "삽입",
+      "삽입-고난도",
+      "무관한문장",
+      "무관한문장-고난도",
+      "어법",
+      "어법-고난도",
+      "워크북어법"
+    ],
+    "duplicateGroupCount": 0,
+    "groups": []
+  },
+  "summaryStructure": {
+    "scanned": 2,
+    "matched": 0,
+    "items": []
+  },
+  "orderUnified": {
+    "scanned": 1,
+    "nonStandardOptions": [],
+    "badCorrectAnswer": [],
+    "answerVerify": {
+      "verified": 1,
+      "mismatch": [],
+      "unshuffled": [],
+      "unverifiable": 0
+    },
+    "distribution": {
+      "①": 0,
+      "②": 1,
+      "③": 0,
+      "④": 0,
+      "⑤": 0
+    },
+    "skewed": true,
+    "skewedAnswer": "②",
+    "skewedPct": 100
+  }
+}

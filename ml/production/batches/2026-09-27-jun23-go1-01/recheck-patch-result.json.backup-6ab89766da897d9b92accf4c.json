@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf4c",
+  "question_data": {
+    "Question": "다음 글의 내용과 일치하지 않는 것은?",
+    "Paragraph": "The promise of a computerized society, we were told, was that it would pass to machines all of the repetitive drudgery of work, allowing us humans to pursue higher purposes and to have more leisure time. It didn't work out this way. Instead of more time, most of us have less. Companies large and small have off-loaded work onto the backs of consumers. Things that used to be done for us, as part of the value-added service of working with a company, we are now expected to do ourselves. With air travel, we're now expected to complete our own reservations and check-in, jobs that used to be done by airline employees or travel agents. At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own purchases.",
+    "Options": "① Airline employees still perform the reservation and check-in tasks described in the passage. ### ② The computerized society was expected to free up more leisure time for humans. ### ③ Companies have shifted some tasks to consumers, reducing their own workload. ### ④ Consumers bag their own groceries and scan their purchases in some supermarkets. ### ⑤ The promise of a computerized society was that machines would take over repetitive work.",
+    "CorrectAnswer": "①",
+    "Explanation": "①가 정답입니다. 글에 따르면 항공 예약과 체크인은 과거 항공사 직원이나 여행사 직원이 하던 일이지만 이제 소비자가 직접 처리하도록 요구된다. ①는 이 업무를 직원이 여전히 맡는다고 하여 현재 상황을 반대로 설명한다. ⑤②는 반복 노동을 기계에 맡겨 여가를 늘린다는 당초 약속과 일치한다. ③은 기업 업무의 소비자 이전을, ④는 식료품 포장과 일부 슈퍼마켓의 직접 스캔 사례를 정확히 반영한다.",
+    "OptionType": "English",
+    "NumQuestion": 16,
+    "Source": "",
+    "Category": ""
+  }
+}

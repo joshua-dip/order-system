@@ -1,0 +1,23 @@
+{
+  "attempted": 36,
+  "raw_grades": {
+    "O": 9,
+    "P": 21,
+    "X": 3,
+    "F": 3
+  },
+  "raw_O_percent": 25.0,
+  "raw_F_percent": 8.3,
+  "content_unchanged": 8,
+  "content_edited": 19,
+  "saved_pending": 27,
+  "held_or_failed": 9,
+  "human_approved": 0,
+  "generation_seconds_sum": 582.36,
+  "generation_time_note": "각 생성 호출 실측의 합계. 모델 로딩·AI 편집·DB 검증·사람 작업시간은 제외.",
+  "human_work_seconds": null,
+  "raw_sha256": "512d00c2e0c99503e5580be514d0c50cf5ba776c86b3bcd4a7978e221e686cb6",
+  "pipeline_code_changed": false,
+  "generated_once_per_slot": true,
+  "stock_pending_after": 27
+}

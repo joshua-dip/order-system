@@ -1,0 +1,23 @@
+{
+  "hypothesis": "생산 문항에서 복수정답과 조사 대상 범위 과장이 반복되었다. 검수로 수정한 일치·불일치 예시를 기존 학습 데이터와 섞어 fact LoRA만 추가 학습하면 사실·유일성 오류가 줄어들 수 있다.",
+  "evidence": [
+    "23번 일치 초안: 상위1%라고 응답한25%와 긍정적 자기평가 두 선지가 모두 사실",
+    "23번 불일치 초안: 응답자를 전체 고등학생으로 확장",
+    "22번 일치 초안: 중복 오답과 이중부정 해설"
+  ],
+  "single_change": "fact adapter weights; existing base, reasoner, prompts and pipelines unchanged",
+  "sets": [
+    "sep26-go1",
+    "jun11-go2"
+  ],
+  "types": [
+    "match",
+    "mismatch"
+  ],
+  "repeat": 2,
+  "decision": "both sets must improve O by >7 percentage points; no F regression; otherwise restore old adapter",
+  "reviewer": "Codex AI, not independent human review",
+  "status": "complete_rejected_same",
+  "stop_after_cycle": true,
+  "next_work": "Worker bulk draft generation followed by batch review and completion; planned only, do not start in this cycle."
+}

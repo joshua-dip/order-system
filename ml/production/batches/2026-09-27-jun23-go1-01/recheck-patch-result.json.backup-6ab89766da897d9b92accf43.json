@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf43",
+  "question_data": {
+    "Question": "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?",
+    "Paragraph": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions. To check if something is missing, you will find yourself checking your to-do lists multiple times. Instead, organize all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your professional and personal tasks in one place. This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most important.\n\n→ Combining work and personal tasks in a (A) ________ schedule helps people (B) ________ their priorities with a clearer view of time allocation.",
+    "Options": "① (A) specialized – (B) determine ### ② (A) flexible – (B) postpone ### ③ (A) unified – (B) determine ### ④ (A) unified – (B) equalize ### ⑤ (A) specialized – (B) rearrange",
+    "CorrectAnswer": "③",
+    "Explanation": "③가 정답입니다. 필자는 업무와 개인 용무를 분리해 관리하는 대신 한곳에 통합하라고 권하므로 (A)에는 unified가 들어간다. 통합하면 시간 배분을 파악하고 어떤 일이 중요한지 판단할 수 있으므로 (B)는 determine이 적절하다. ①⑤의 specialized는 용도별로 나누는 관리에 가깝다. ②의 우선순위 결정을 미루는 태도와 ④의 우선순위를 똑같게 만드는 것은 중요한 일을 가려내라는 글의 결론과 다르다.",
+    "OptionType": "English",
+    "NumQuestion": 7,
+    "Source": "",
+    "Category": ""
+  }
+}

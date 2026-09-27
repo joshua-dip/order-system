@@ -1,0 +1,14 @@
+{
+  "id": "6ab89766da897d9b92accf51",
+  "question_data": {
+    "Question": "다음 글의 주제로 가장 적절한 것은?",
+    "Paragraph": "We tend to believe that we possess a host of socially desirable characteristics, and that we are free of most of those that are socially undesirable. For example, a large majority of the general public thinks that they are more intelligent, more fair-minded, less prejudiced, and more skilled behind the wheel of an automobile than the average person. This phenomenon is so reliable and ubiquitous that it has come to be known as the \"Lake Wobegon effect,\" after Garrison Keillor's fictional community where \"the women are strong, the men are good-looking, and all the children are above average.\" A survey of one million high school seniors found that 70% thought they were above average in leadership ability, and only 2% thought they were below average. In terms of ability to get along with others, all students thought they were above average, 60% thought they were in the top 10%, and 25% thought they were in the top 1%!",
+    "Options": "① the Lake Wobegon effect of overestimating one's abilities ### ② the widespread belief that people are free from socially undesirable traits ### ③ the comparison between the general public's views and high school seniors' opinions ### ④ the survey results showing high school seniors' self-assessed leadership abilities ### ⑤ the history of the term 'Lake Wobegon effect'",
+    "CorrectAnswer": "①",
+    "Explanation": "①가 정답이다. 글은 사람들이 바람직한 특성은 많고 바람직하지 않은 특성은 적다고 믿으며 자신을 평균 이상으로 평가하는 경향을 설명한다. 일반 대중의 자기평가와 고등학생 설문이 이 레이크 워비곤 효과의 사례다. reliable and ubiquitous는 이 현상이 일관되게 관찰되고 널리 나타난다는 뜻이며, 자기평가가 정확하다는 뜻이 아니다. ⑤ 용어의 유래, ④ 리더십 설문, ② 부정적 특성이 없다는 믿음은 일부 내용이다. ③는 두 집단의 차이를 비교한다는 내용으로 전체 주제와 다르다.",
+    "OptionType": "English",
+    "NumQuestion": 21,
+    "Source": "",
+    "Category": ""
+  }
+}

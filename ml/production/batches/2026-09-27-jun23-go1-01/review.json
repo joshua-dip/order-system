@@ -1,0 +1,260 @@
+{
+  "reviewer": "Codex AI; not independent human review",
+  "human_review_status": "pending",
+  "human_work_seconds": null,
+  "review_record_started_at": "2026-09-27T13:00:43.692370+09:00",
+  "grades": {
+    "20번|topic": {
+      "grade": "O",
+      "reason": "①는 업무·개인 일정을 한곳에 통합하는 전체 제안을 포괄. ⑤는 문제점만 다룬 부분 주제, ②는 반대, ③은 무관, ④는 매체 우월성을 추가. 해설 근거와 유일성 타당. 정성 변별력 통과."
+    },
+    "20번|title": {
+      "grade": "O",
+      "reason": "④가 업무·개인 일정 통합이라는 제안과 일치. ①③은 분리 권장, ②는 종이 우월성, ⑤는 반복 확인의 효과를 반대로 설명. 해설 정합."
+    },
+    "20번|claim": {
+      "grade": "P",
+      "reason": "① keep both work and personal tasks in one place와 ④ consolidate ... into a single calendar 모두 원문 주장. ②③도 같은 분리 권장의 반복. 해설이 ①을 구체성 부족으로 배제한 것은 부당.",
+      "critical_error": "multiple_correct_answers",
+      "edits": {
+        "Options": "① We should replace paper calendars with digital tools to manage all our tasks. ### ② We should maintain separate calendars to avoid mixing work and personal responsibilities. ### ③ We should give work tasks priority whenever they conflict with personal activities. ### ④ We should consolidate work and personal tasks into a single calendar. ### ⑤ We should review our task lists only once each day to prevent distractions.",
+        "Explanation": "④가 정답입니다. 필자는 두 개의 일정표를 따로 쓰면 빠진 일이 없는지 반복해서 확인하게 되어 주의가 분산될 수 있다고 설명한다. 그래서 업무와 개인 용무를 한곳에 모아 시간 배분과 우선순위를 파악하라고 권한다. ①은 디지털 매체를 우선하지만 글은 매체의 종류가 중요하지 않다고 했다. ②는 분리를 권해 주장과 반대이고, ③의 업무 우선 원칙과 ⑤의 하루 한 번 확인 규칙은 제시되지 않았다."
+      }
+    },
+    "20번|match": {
+      "grade": "O",
+      "reason": "⑤는 일정 통합으로 시간 배분 파악 가능. ①②③은 분리와 반복 확인의 단점을 장점으로 바꿨고 ④는 매체 무관 진술과 모순. 참 선지 1개."
+    },
+    "20번|mismatch": {
+      "grade": "O",
+      "reason": "②는 반복 확인을 합리적 방법으로 제시해 글의 비판과 반대. ①③④⑤는 각 문장에 근거가 있으며 서로 다른 사실을 확인. 해설 시작의 따라서가 다소 어색하나 근거·정답은 성립."
+    },
+    "20번|blank": {
+      "grade": "P",
+      "reason": "정답②는 원문과 일치하지만 ③④가 일정 분리라는 같은 오답을 반복해 선택지 다양성 부족.",
+      "edits": {
+        "Options": "① review your schedules repeatedly to ensure that nothing has been overlooked ### ② organize all of your tasks in one place ### ③ choose a planning medium according to the nature of each task ### ④ assign equal amounts of time to work and personal activities ### ⑤ separate urgent work tasks from less important personal tasks",
+        "Explanation": "②가 정답입니다. 앞에서는 두 일정표를 따로 관리하면 빠진 일이 없는지 목록을 반복해서 확인하게 된다고 지적한다. Instead 뒤에는 이 문제를 해결할 대안이 와야 하므로 모든 일을 한곳에 정리하라는 ②가 적절하다. 뒤의 시간 배분 파악과 우선순위 결정도 통합 관리의 효과다. ①은 앞의 문제 행동을 반복하고, ③은 중요하지 않다고 한 매체에 초점을 둔다. ④의 균등 배분과 ⑤의 업무 우선 분리는 글의 제안이 아니다."
+      }
+    },
+    "20번|summary": {
+      "grade": "P",
+      "reason": "B의 오답 uncertain/confused/hesitant/uncertain이 모두 부정적이라 긍정 결과인 요약문만 읽어도 confident를 고를 수 있음. informed를 confident로 바꾼 요약도 정확성이 낮음.",
+      "edits": {
+        "Paragraph": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions. To check if something is missing, you will find yourself checking your to-do lists multiple times. Instead, organize all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your professional and personal tasks in one place. This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most important.\n\n→ Combining work and personal tasks in a (A) ________ schedule helps people (B) ________ their priorities with a clearer view of time allocation.",
+        "Options": "① (A) specialized – (B) determine ### ② (A) unified – (B) determine ### ③ (A) flexible – (B) postpone ### ④ (A) unified – (B) equalize ### ⑤ (A) specialized – (B) rearrange",
+        "CorrectAnswer": "②",
+        "Explanation": "②가 정답입니다. 필자는 업무와 개인 용무를 분리해 관리하는 대신 한곳에 통합하라고 권하므로 (A)에는 unified가 들어간다. 통합하면 시간 배분을 파악하고 어떤 일이 중요한지 판단할 수 있으므로 (B)는 determine이 적절하다. ①⑤의 specialized는 용도별로 나누는 관리에 가깝다. ③의 우선순위 결정을 미루는 태도와 ④의 우선순위를 똑같게 만드는 것은 중요한 일을 가려내라는 글의 결론과 다르다."
+      }
+    },
+    "20번|order": {
+      "grade": "P",
+      "reason": "정답 B-A-C는 원문 순서이나 B-C-A도 This가 B의 통합 제안을 받아 자연스러움. 해설도 B만 설명하고 A-C 연결 근거 누락. 블록 경계 재설정 필요.",
+      "critical_error": "alternative_order_plausible",
+      "edits": {
+        "Paragraph": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two separate calendars for work and personal life can lead to distractions.\n\n(A) Instead, organize all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your professional and personal tasks in one place.\n\n(B) To check if something is missing, you will find yourself checking your to-do lists multiple times.\n\n(C) This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most important.",
+        "Options": "① (A)-(C)-(B) ### ② (B)-(A)-(C) ### ③ (B)-(C)-(A) ### ④ (C)-(A)-(B) ### ⑤ (C)-(B)-(A)",
+        "Explanation": "②가 정답입니다. 주어진 글은 두 일정표가 주의를 분산시킬 수 있다고 말한다. (B)는 누락 여부를 확인하려고 목록을 반복해서 살피는 행동으로 그 문제를 구체화한다. (A)의 Instead는 이 행동에 대한 대안으로 모든 일을 한곳에 모으라고 권한다. (C)의 This는 바로 그 통합 관리를 가리키며 시간 배분 파악과 우선순위 결정이라는 효과를 제시한다. 논리 흐름 요약: 일정 분리의 문제 → 반복 확인 → 통합 관리 → 기대 효과."
+      }
+    },
+    "20번|insert": {
+      "grade": "P",
+      "reason": "매체는 중요하지 않다는 문장은 ④뿐 아니라 ⑤도 일정 통합 제안 뒤의 보충으로 자연스러워 유일성이 약함. 이 첫 묶음에서는 저장 보류.",
+      "critical_error": "alternative_insertion_plausible",
+      "disposition": "hold"
+    },
+    "20번|irrelevant": {
+      "grade": "O",
+      "reason": "②는 일정 분리의 이점을 연결 없이 주장하여 통합 관리 권고와 충돌. 제거하면 매체 선택 무관→통합 가능→효과의 연결이 회복. 다른 번호는 모두 원문 요지에 기여."
+    },
+    "20번|vocab": {
+      "grade": "X",
+      "reason": "중요하지 않은 업무를 파악하는 것도 informed decisions와 양립 가능. 원문 important와 다르다는 사실만으로 unimportant를 유일한 문맥 오류로 단정하기 어려움.",
+      "critical_error": "invalid_contextual_antonym",
+      "edits": {
+        "Paragraph": "Research shows that people who work have two calendars: one for work and one for their personal lives. Although it may seem sensible, having two ① <u>separate</u> calendars for work and personal life can lead to ② <u>concentration</u>. To check if something is missing, you will find yourself checking your to-do lists multiple times. Instead, ③ <u>organize</u> all of your tasks in one place. It doesn't matter if you use digital or paper media. It's okay to keep your ④ <u>professional</u> and personal tasks in one place. This will give you a good idea of how time is divided between work and home. This will allow you to make informed decisions about which tasks are most ⑤ <u>important</u>.",
+        "Options": "① separate ### ② concentration ### ③ organize ### ④ professional ### ⑤ important",
+        "CorrectAnswer": "②",
+        "Explanation": "②가 정답입니다. Although it may seem sensible 뒤에서는 두 일정표를 분리해 쓰는 방식의 문제점이 나와야 한다. 이어 할 일 목록을 반복해서 확인하게 된다고 설명하고 Instead로 통합 관리를 제안하므로, concentration(집중)보다는 distractions(주의 분산)이 적절하다. ①은 두 일정표가 별개임을, ③은 일을 정리하는 행동을, ④는 업무 영역을 나타낸다. ⑤는 마지막의 우선순위 판단과 연결되어 문맥에 맞는다."
+      }
+    },
+    "20번|grammar": {
+      "grade": "P",
+      "reason": "④ making→to make는 정확. 다만 ⑤ which tasks 전체를 중요도를 지정하는 수식어라고 설명한 것은 부정확. 간접의문절의 주어와 which의 한정사 기능으로 수정.",
+      "edits": {
+        "Explanation": "④가 정답입니다. allow는 이 문장에서 목적어 you 다음에 to부정사를 취하므로 making을 to make로 고쳐야 한다. ①의 who는 people을 선행사로 하는 주격 관계대명사이고, ②의 having은 주어 역할을 하는 동명사구의 시작이다. ③은 time이 나뉜다는 수동 의미의 is divided이다. ⑤의 which는 tasks를 한정하며, which tasks are most important라는 간접의문절 전체가 전치사 about의 목적어로 쓰인다."
+      }
+    },
+    "22번|topic": {
+      "grade": "O",
+      "reason": "⑤ 기업에서 소비자로의 업무 이전이 전체 사례를 포괄. ①은 원인 없는 결과에 한정, ②는 사례 나열, ③은 역사 초점, ④는 실현되지 않은 약속을 긍정. 해설 타당."
+    },
+    "22번|title": {
+      "grade": "P",
+      "reason": "①과④가 모두 기업 업무의 소비자 이전이라는 핵심을 표현. repetitive tasks가 지나치게 좁다는 해설로 ①을 배제할 수 없음. once done의 번역도 한 번에가 아니라 과거에가 맞음.",
+      "critical_error": "multiple_correct_answers",
+      "edits": {
+        "Options": "① Machines Take Over the Routine Work of Consumers ### ② Self-Service Technology Gives Consumers More Leisure Time ### ③ How Travel Agents Benefit from Online Reservations ### ④ Consumers Do Work Once Done by Companies ### ⑤ Why Consumers Prefer Company Employees to Automated Services",
+        "Explanation": "④가 정답입니다. 컴퓨터화가 반복 노동을 줄이고 여가를 늘릴 것이라는 기대와 달리, 기업이 하던 일을 소비자가 직접 하게 되었다는 것이 글의 핵심이다. 항공 예약과 체크인, 식료품 포장과 계산이 그 사례이므로 과거 기업의 업무를 소비자가 맡는다는 ④가 적절하다. ①②는 글이 설명하는 현실과 반대이다. ③은 여행사의 이익을, ⑤는 소비자의 선호를 다루지만 글은 이를 논하지 않는다."
+      }
+    },
+    "22번|claim": {
+      "grade": "P",
+      "reason": "정답①은 취지에 가깝지만 ③④가 소비자에게 업무를 더 맡긴다는 같은 오답을 반복. ②의 서비스 제공 권고는 비판에서 도출 가능한 대안이라 정답 경쟁 여지도 있음.",
+      "edits": {
+        "Options": "① We should recognize that computerization has not freed consumers from routine work. ### ② We should judge technological progress chiefly by the efficiency gains of companies. ### ③ We should expect self-service systems to increase the leisure time of consumers. ### ④ We should replace travel agents because online reservations require less consumer effort. ### ⑤ We should treat extra consumer tasks as evidence of improved company service.",
+        "Explanation": "①가 정답입니다. 필자는 컴퓨터화가 반복 노동을 줄여 여가를 늘릴 것이라는 약속과 달리, 기업의 일이 소비자에게 넘어와 오히려 시간이 줄었다고 지적한다. 따라서 소비자가 반복 업무에서 해방되지 못한 현실을 인식하라는 ①이 취지에 맞는다. ②는 소비자의 부담을 빼고 기업 효율만 보며, ③은 지문의 현실과 반대이다. ④의 수고 감소와 ⑤의 서비스 개선도 예약·포장·계산을 소비자가 맡게 된다는 비판을 왜곡한다."
+      }
+    },
+    "22번|match": {
+      "grade": "P",
+      "reason": "③ 정답 성립. ①②가 반복 업무 완전 제거라는 같은 오답을 반복하고 all/completely 단서가 몰림. 해설의 ① 설명도 이중 부정으로 반대로 읽힘.",
+      "edits": {
+        "Options": "① Computerization was originally intended to give people less leisure time. ### ② Consumers now leave their airline check-in to company staff. ### ③ Consumers are now responsible for tasks previously handled by company staff. ### ④ The transfer of work to consumers has been limited to large companies. ### ⑤ Grocery shopping is presented as an exception to the growth of self-service.",
+        "Explanation": "③가 정답입니다. 글은 과거 기업의 부가 서비스로 제공되던 일을 이제 소비자가 직접 처리한다고 설명하며 항공 예약·체크인과 식료품 포장·스캔을 예로 든다. ①은 여가를 늘리겠다는 당초 약속과 반대이고, ②는 현재와 과거의 업무 주체를 뒤바꿨다. ④는 크고 작은 기업 모두가 일을 전가했다는 내용과 다르다. ⑤ 역시 식료품 구매가 셀프서비스 확대의 사례라는 점과 모순된다."
+      }
+    },
+    "22번|mismatch": {
+      "grade": "P",
+      "reason": "④는 명백히 거짓이지만 해설이 groceries 포장을 수하물 포장으로 오역. ⑤는 some supermarkets라는 범위 제한도 누락.",
+      "edits": {
+        "Options": "① The promise of a computerized society was that machines would take over repetitive work. ### ② The computerized society was expected to free up more leisure time for humans. ### ③ Companies have shifted some tasks to consumers, reducing their own workload. ### ④ Airline employees still perform the reservation and check-in tasks described in the passage. ### ⑤ Consumers bag their own groceries and scan their purchases in some supermarkets.",
+        "Explanation": "④가 정답입니다. 글에 따르면 항공 예약과 체크인은 과거 항공사 직원이나 여행사 직원이 하던 일이지만 이제 소비자가 직접 처리하도록 요구된다. ④는 이 업무를 직원이 여전히 맡는다고 하여 현재 상황을 반대로 설명한다. ①②는 반복 노동을 기계에 맡겨 여가를 늘린다는 당초 약속과 일치한다. ③은 기업 업무의 소비자 이전을, ⑤는 식료품 포장과 일부 슈퍼마켓의 직접 스캔 사례를 정확히 반영한다."
+      }
+    },
+    "22번|blank": {
+      "grade": "O",
+      "reason": "③은 반복 노동의 기계 이전이라는 당초 약속을 채우고, 뒤의 여가·높은 목적과 연결. ①②는 노동 전면 제거로 과장, ④는 복잡/단순 업무를 뒤집고 ⑤는 약속이 아니라 반대 현실. 해설 drudgery 철자 오기만 교정.",
+      "edits": {
+        "Explanation": "③가 정답입니다. 빈칸은 컴퓨터화된 사회가 처음에 제시한 약속의 내용이며, 뒤에는 인간이 더 높은 목적을 추구하고 여가를 누린다는 결과가 온다. 따라서 반복적이고 고된 업무를 기계에 맡긴다는 ③이 적절하다. ①의 기술과 상호작용 불필요나 ②의 모든 인간 노동 제거는 글의 범위를 넘는다. ④는 인간에게 단순 업무를 남겨 약속과 어긋나고, ⑤는 약속이 실현되지 않은 뒤 소비자가 일을 떠맡게 된 현실을 설명한다."
+      }
+    },
+    "22번|summary": {
+      "grade": "F",
+      "reason": "선지의 정답 유일성·문법 검증을 완료하지 못했습니다",
+      "disposition": "hold"
+    },
+    "22번|order": {
+      "grade": "P",
+      "reason": "C-B-A가 일반 설명→사례의 원래 순서이나 C-A-B의 사례→일반화도 배제하기 어렵다. 해설도 A 연결을 누락했다.",
+      "disposition": "hold",
+      "critical_error": "alternative_order_plausible"
+    },
+    "22번|insert": {
+      "grade": "P",
+      "reason": "③ 외에 ②에도 기업의 부담 전가→시간 감소라는 원인·결과로 연결 가능하다. 원래 위치만으로 유일성 보장 불가.",
+      "disposition": "hold",
+      "critical_error": "alternative_insertion_plausible"
+    },
+    "22번|irrelevant": {
+      "grade": "O",
+      "reason": "①만 셀프서비스의 편의를 강조한다. 이를 제거하면 시간 감소→기업의 업무 전가→항공·마트 사례가 연결된다."
+    },
+    "22번|vocab": {
+      "grade": "X",
+      "reason": "항공 예약 취소도 소비자가 직접 할 수 있는 업무이므로 cancellations를 문맥 오류라고 단정할 수 없다. 긍정·부정 행위를 병렬로 쓸 수 없다는 해설도 잘못됐다.",
+      "edits": {
+        "Paragraph": "The promise of a computerized society, we were told, was that it would pass to machines all of the ① <u>repetitive</u> drudgery of work, allowing us humans to pursue higher purposes and to have more leisure time. It didn't work out this way. Instead of more time, most of us have less. Companies large and small have off-loaded work onto the backs of ② <u>employees</u>. Things that used to be done for us, as part of the value-added service of working with a company, we are now ③ <u>expected</u> to do ourselves. With air travel, we're now expected to complete our own ④ <u>reservations</u> and check-in, jobs that used to be done by airline employees or travel agents. At the grocery store, we're expected to bag our own groceries and, in some supermarkets, to scan our own ⑤ <u>purchases</u>.",
+        "Options": "① repetitive ### ② employees ### ③ expected ### ④ reservations ### ⑤ purchases",
+        "CorrectAnswer": "②",
+        "Explanation": "② employees를 consumers로 고쳐야 한다. 이 글은 기업이 하던 일을 소비자가 떠맡게 되어 여가가 줄었다는 내용이다. 뒤에서 항공사 직원이나 여행사가 하던 예약·체크인을 이제 우리가 직접 하고, 마트에서도 자신의 물건을 포장·계산한다고 설명한다. 따라서 업무를 떠맡은 대상을 직원으로 바꾸면 소비자에게 일이 이전되었다는 문맥과 충돌한다. ① 반복적인 노동은 컴퓨터화가 줄여 주리라던 대상, ③ expected는 이제 소비자가 수행하도록 요구받는다는 의미, ④ 예약과 ⑤ 구매 물품은 각각 항공·마트 사례에 맞다."
+      },
+      "critical_error": "wrong_word_not_contextually_wrong"
+    },
+    "22번|grammar": {
+      "grade": "P",
+      "reason": "② 정답은 맞지만 that used 전체를 동사라고 설명하며 접속 없는 유한동사의 문제를 충분히 밝히지 않는다.",
+      "edits": {
+        "Explanation": "② allows us를 allowing us로 고쳐야 한다. 이미 The promise ... was that ...이라는 문장이 완성되어 있으므로, 접속사 없이 쉼표 뒤에 유한동사 allows를 이어 쓸 수 없다. allowing은 앞 내용의 결과를 덧붙이는 분사구문이다. ① 단수 주어 The promise와 was가 일치하며 that절이 보어다. ③ most of us에 have를 쓰며 less는 앞의 time을 받는다. ④ that은 Things를 받는 주격 관계대명사이고 used to be done은 과거에 제공되던 일을 나타낸다. ⑤ we are expected to do는 수동태 구문이며, 문두 Things ...는 do의 목적어를 앞으로 옮긴 것이다."
+      }
+    },
+    "23번|topic": {
+      "grade": "P",
+      "reason": "정답②는 맞지만 reliable을 자기평가의 신뢰성처럼 읽힐 수 있게 번역하고 한영 혼용이 남았다.",
+      "edits": {
+        "Explanation": "②가 정답이다. 글은 사람들이 바람직한 특성은 많고 바람직하지 않은 특성은 적다고 믿으며 자신을 평균 이상으로 평가하는 경향을 설명한다. 일반 대중의 자기평가와 고등학생 설문이 이 레이크 워비곤 효과의 사례다. reliable and ubiquitous는 이 현상이 일관되게 관찰되고 널리 나타난다는 뜻이며, 자기평가가 정확하다는 뜻이 아니다. ① 용어의 유래, ③ 리더십 설문, ④ 부정적 특성이 없다는 믿음은 일부 내용이다. ⑤는 두 집단의 차이를 비교한다는 내용으로 전체 주제와 다르다."
+      }
+    },
+    "23번|title": {
+      "grade": "P",
+      "reason": "⑤ Why는 원인을 기대하게 하나 지문은 현상과 사례를 설명한다. reliable 번역도 수정 필요.",
+      "edits": {
+        "Options": "① Survey Data Proves High School Seniors Are Superior ### ② How Driving Practice Improves Social Skills ### ③ The History of a Community Named Lake Wobegon ### ④ Leadership Training for High School Seniors ### ⑤ The Above-Average Illusion: How People See Themselves",
+        "Explanation": "⑤가 정답이다. 지문은 사람들이 자신의 능력과 특성을 평균 이상이라고 보는 경향을 소개하고 이를 레이크 워비곤 효과라 부른다. 운전·지능·리더십·대인관계에 관한 자기평가 사례가 이를 뒷받침한다. 이 현상이 반복적으로 관찰된다는 것이지 평가 대상들이 실제로 우월하다는 뜻은 아니므로 ①은 틀리다. ②의 운전 연습 효과와 ④의 리더십 훈련은 다루지 않는다. ③은 명칭의 유래에 등장하는 가상 공동체를 글의 중심으로 잘못 삼았다."
+      }
+    },
+    "23번|claim": {
+      "grade": "P",
+      "reason": "③④의 근거 없는 우월성 가정을 경계하자는 내용도 ⑤와 양립한다. 설명문에 강제한 당위 주장으로 정답 유일성이 약하다.",
+      "disposition": "hold",
+      "critical_error": "multiple_reasonable_claims"
+    },
+    "23번|match": {
+      "grade": "P",
+      "reason": "③의 대인관계 상위1%라고 응답한25%와 ④가 모두 사실이다. ①⑤도 동일한 오답이다.",
+      "edits": {
+        "Options": "① The survey measured actual driving performance. ### ② Seventy percent rated their leadership ability below average. ### ③ Twenty-five percent placed their interpersonal skills in the bottom one percent. ### ④ Many people believe they possess positive traits and lack negative ones. ### ⑤ Lake Wobegon was the real town where the survey took place.",
+        "Explanation": "④가 정답이다. 첫 문장에서 사람들은 바람직한 특성은 많이 갖고 바람직하지 않은 특성은 대부분 없다고 믿는다고 한다. ①은 실제 운전 수행 측정이 아니라 자기평가다. ②의 70%는 below가 아니라 above average라고 응답했다. ③의 25%는 bottom이 아니라 top 1%라고 답했다. ⑤는 설문 장소가 아니라 효과의 이름을 빌린 가상 공동체다."
+      },
+      "critical_error": "multiple_correct_answers"
+    },
+    "23번|mismatch": {
+      "grade": "P",
+      "reason": "③은 틀리지만 ⑤와 해설이 조사 응답자의 결과를 전체 고등학생으로 넓혀 기술한다.",
+      "edits": {
+        "Options": "① Many people consider themselves better drivers than the average person. ### ② The Lake Wobegon effect describes a widespread tendency for people to view themselves favorably. ### ③ The Lake Wobegon effect is named after a real community where everyone excels. ### ④ Seventy percent of the surveyed seniors rated their leadership ability above average. ### ⑤ All students in the survey rated their ability to get along with others above average.",
+        "Explanation": "③이 정답이다. Lake Wobegon은 Garrison Keillor가 만든 fictional community, 즉 가상 공동체다. ①은 일반 대중 다수가 자신을 평균보다 능숙한 운전자라고 여긴다는 내용, ②는 반복적으로 널리 나타나는 호의적 자기평가 경향, ④는 조사 응답자의 리더십 자기평가 70%, ⑤는 같은 조사 응답자 전원의 대인관계 자기평가와 일치한다. 설문 결과는 실제 능력 측정이나 모든 고등학생에 대한 단정이 아니다."
+      }
+    },
+    "23번|blank": {
+      "grade": "F",
+      "reason": "같은 선지·원문 그대로인 오답을 고치지 못했습니다 — 다시 생성해 주세요",
+      "disposition": "hold"
+    },
+    "23번|summary": {
+      "grade": "O",
+      "reason": "② overestimate/underestimating은 긍정적 특성 과대평가·부정적 특성 과소평가를 요약한다. while 분사구문과 to 동사원형 모두 성립하며 다른 조합은 내용 불일치다."
+    },
+    "23번|order": {
+      "grade": "P",
+      "reason": "C-B-A가 원래 순서지만 B-A-C도 설문→일반 대중의 추가 예→명명으로 읽을 수 있다. 해설의 또 다른 학생들은 같은 조사 응답자를 잘못 구분한다.",
+      "disposition": "hold",
+      "critical_error": "alternative_order_plausible"
+    },
+    "23번|insert": {
+      "grade": "F",
+      "reason": "지문이 짧아 삽입 문항을 만들 수 없습니다(문장 5개, 6개 이상 필요)",
+      "disposition": "hold"
+    },
+    "23번|irrelevant": {
+      "grade": "X",
+      "reason": "추가문장의 과대평가→사회적 자신감은 주제와 직접 관련되어 자연스러운 부연이다. 추상적이라는 이유만으로 무관하다고 할 수 없다.",
+      "disposition": "hold",
+      "critical_error": "inserted_sentence_still_relevant"
+    },
+    "23번|vocab": {
+      "grade": "P",
+      "reason": "③ rare의 문맥 오류는 분명하나 reliable을 매우 신뢰할 수 있다고 직역해 자기평가의 정확성과 혼동할 수 있다.",
+      "edits": {
+        "Explanation": "③ rare를 ubiquitous 등 널리 퍼져 있다는 말로 고쳐야 한다. a large majority, 리더십에서 70%, 대인관계에서 all students라는 근거는 자기 과대평가가 드물다는 주장과 충돌한다. reliable은 이 현상이 일관되게 관찰된다는 뜻이며 자기평가가 정확하다는 뜻이 아니다. ① desirable은 자신이 갖췄다고 믿는 좋은 특성, ② prejudiced는 자신에게 적다고 여기는 편견, ④ fictional은 이름의 유래인 가상 공동체, ⑤ leadership은 설문의 평가 영역이므로 각각 문맥에 맞다."
+      }
+    },
+    "23번|grammar": {
+      "grade": "P",
+      "reason": "② 정답은 맞지만 직접 선행사는 characteristics가 아닌 이를 받는 those다. ⑤ 설명도 주술 관계가 아니라 that 생략을 밝혀야 한다.",
+      "edits": {
+        "Explanation": "② that is를 that are로 고쳐야 한다. 관계대명사 that의 직접 선행사는 those이며, those는 앞의 복수 명사 characteristics를 받으므로 복수 동사 are가 필요하다. ① we에 are가 일치하고 be free of는 ~이 없다는 뜻이다. ③ where는 community를 받는 관계부사로 뒤에 완전한 절이 온다. ④ 복수 주어 the children과 are가 일치한다. ⑤ thought 뒤에는 목적어 역할을 하는 명사절 they were ...가 오며 접속사 that이 생략되어 있다."
+      }
+    }
+  },
+  "review_completed_at": "2026-09-27T04:14:59.082905+00:00",
+  "final_ai_review": {
+    "ready_pending": 27,
+    "content_unchanged": 8,
+    "content_edited": 19,
+    "held_or_failed": 9,
+    "human_approved": 0,
+    "scope": "원문·정답 유일성·해설·변별력 직접 AI 검토. 사람 승인과 별개.",
+    "post_save_check": "27개 모두 대기; 조회한 본문·발문·선지 집합이 검수본과 일치. cc:audit 오류0, 순서1건의 100% 편중 표시는 표본1개 때문."
+  }
+}
