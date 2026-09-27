@@ -56,7 +56,11 @@ export async function GET(request: NextRequest) {
     const pulledSources: Record<string, string> = {};
     for (const o of pulled) {
       if (!o.viaSourceKey) continue;
-      pulledSources[o.viaSourceKey] = [o.originTextbook, o.originSourceKey].filter(Boolean).join(' · ') || o.originSourceKey;
+      // 모의고사 source_key 는 교재명을 이미 담고 있다("25년 9월 고1 영어모의고사 18번") — 겹치면 한 번만
+      pulledSources[o.viaSourceKey] =
+        o.originSourceKey.startsWith(o.originTextbook) || !o.originTextbook
+          ? o.originSourceKey
+          : [o.originTextbook, o.originSourceKey].filter(Boolean).join(' · ');
       sourceSet.add(o.viaSourceKey);
     }
 
