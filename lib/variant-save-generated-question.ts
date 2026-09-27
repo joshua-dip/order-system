@@ -10,6 +10,7 @@ import { isAdvancedVariantType } from '@/lib/variant-pricing';
 import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-normalize';
 import { enrichQuestionDataWithExplanationIfEmpty } from '@/lib/generated-question-explanation-fallback';
 import { nextGeneratedSerial } from '@/lib/generated-question-serial';
+import { resolveExamOrigins, pulledViaLabel } from '@/lib/exam-origin';
 
 /** 삽입·삽입-고난도 유형: Options는 위치 번호만 */
 const INSERTION_OPTIONS_FIXED = '①\n②\n③\n④\n⑤';
@@ -143,6 +144,8 @@ export type SaveGeneratedQuestionResult =
       type: string;
       status: string;
       ai_source: string | null;
+      /** 기출 지문으로 요청했으면 원출처에 저장됨 — 끌어온 곳 */
+      pulled_via?: string;
     }
   | { ok: false; error: string };
 
@@ -152,9 +155,9 @@ export type SaveGeneratedQuestionResult =
 export async function saveGeneratedQuestionToDb(
   input: SaveGeneratedQuestionInput
 ): Promise<SaveGeneratedQuestionResult> {
-  const passageIdStr = input.passage_id.trim();
-  const textbook = input.textbook.trim();
-  const source = normalizeMockVariantSourceLabel(textbook, input.source.trim());
+  let passageIdStr = input.passage_id.trim();
+  let textbook = input.textbook.trim();
+  let source = normalizeMockVariantSourceLabel(textbook, input.source.trim());
   const type = input.type.trim();
   const option_type = (input.option_type ?? 'English').trim() || 'English';
   const docStatus = (input.status ?? '대기').trim() || '대기';
@@ -164,6 +167,18 @@ export async function saveGeneratedQuestionToDb(
   }
   if (!source || !type) {
     return { ok: false, error: 'source와 type은 필수입니다.' };
+  }
+
+  /* 기출 지문이면 원출처 지문에 저장한다(끌어오기 — lib/exam-origin). 기출 교재 자체는 문항을 갖지 않는다. */
+  let pulledVia: string | null = null;
+  {
+    const origin = (await resolveExamOrigins(await getDb('gomijoshua'), [passageIdStr])).get(passageIdStr);
+    if (origin) {
+      pulledVia = pulledViaLabel(origin);
+      passageIdStr = String(origin.originId);
+      textbook = origin.originTextbook;
+      source = normalizeMockVariantSourceLabel(textbook, origin.originSourceKey);
+    }
   }
 
   let question_data = { ...input.question_data };
@@ -209,7 +224,9 @@ export async function saveGeneratedQuestionToDb(
     }
   }
 
-  if (typeof question_data.Source === 'string' && question_data.Source.trim()) {
+  if (pulledVia) {
+    question_data = { ...question_data, Source: source };
+  } else if (typeof question_data.Source === 'string' && question_data.Source.trim()) {
     question_data = {
       ...question_data,
       Source: normalizeMockVariantSourceLabel(textbook, question_data.Source.trim()),
@@ -260,5 +277,6 @@ export async function saveGeneratedQuestionToDb(
     type,
     status: docStatus,
     ai_source: aiSource,
+    ...(pulledVia ? { pulled_via: pulledVia } : {}),
   };
 }

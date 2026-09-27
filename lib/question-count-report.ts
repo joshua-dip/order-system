@@ -6,6 +6,8 @@ export type PassageLean = {
   chapter?: unknown;
   number?: unknown;
   source_key?: unknown;
+  /** 기출 지문을 원출처로 바꿔 넣은 경우 끌어온 곳(기출 교재 · 지문) */
+  pulledVia?: string;
 };
 
 export type NoQuestionRow = {
@@ -15,6 +17,8 @@ export type NoQuestionRow = {
   number: unknown;
   source_key: unknown;
   label: string;
+  /** 원출처에서 끌어온 지문이면 끌어온 곳(기출 교재 · 지문) */
+  pulledVia?: string;
 };
 
 export type UnderfilledStatusBreakdown = {
@@ -32,6 +36,8 @@ export type UnderfilledRow = {
   count: number;
   required: number;
   shortBy: number;
+  /** 원출처에서 끌어온 지문이면 끌어온 곳(기출 교재 · 지문) */
+  pulledVia?: string;
   /** questionStatusScope가 all일 때만: 해당 지문×유형 변형문의 status별 건수(합=count) */
   statusBreakdown?: UnderfilledStatusBreakdown;
 };
@@ -72,6 +78,7 @@ export function buildQuestionCountReport(
         number: p.number,
         source_key: p.source_key,
         label,
+        ...(p.pulledVia ? { pulledVia: p.pulledVia } : {}),
       });
       continue;
     }
@@ -86,6 +93,7 @@ export function buildQuestionCountReport(
           count: c,
           required: requiredPerType,
           shortBy: requiredPerType - c,
+          ...(p.pulledVia ? { pulledVia: p.pulledVia } : {}),
         });
       }
     }

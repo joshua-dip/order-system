@@ -12,6 +12,8 @@ import { normalizeMockVariantSourceLabel } from '@/lib/mock-variant-source-norma
 import { nextGeneratedSerial } from '@/lib/generated-question-serial';
 import { acceptedLocalAiSource } from '@/lib/local-variant-types';
 import { markLocalJobSaved } from '@/lib/local-variant-jobs';
+import { loadPulledPassages, passageIdInFilter } from '@/lib/exam-origin-stats';
+import { pulledViaLabel } from '@/lib/exam-origin';
 
 function serialize(doc: Record<string, unknown>, variation_pct?: number | null) {
   const { _id, passage_id, ...rest } = doc;
@@ -145,33 +147,6 @@ async function loadPassageSourceMap(
  * 기출기반 교재명 → 해당 교재의 passage ObjectId 목록
  * generated_questions 필터를 passage_id 기반으로 전환할 때 사용
  */
-async function loadExamTextbookPassageIds(
-  db: Awaited<ReturnType<typeof getDb>>,
-  examTextbook: string
-): Promise<ObjectId[]> {
-  if (!examTextbook) return [];
-  const passagesCol = db.collection('passages');
-  const docs = await passagesCol
-    .find({ textbook: examTextbook })
-    .project({ _id: 1, original_passage_id: 1 })
-    .toArray();
-
-  const ids = new Set<string>();
-  for (const d of docs) {
-    // original_passage_id가 있으면 원본 passage 기준으로 문제 조회
-    if (d.original_passage_id instanceof ObjectId) {
-      ids.add(d.original_passage_id.toHexString());
-    } else if (d.original_passage_id) {
-      try { ids.add(new ObjectId(String(d.original_passage_id)).toHexString()); } catch { /* skip */ }
-    }
-    // original_passage_id 미설정분: 해당 passage 자체 ID로 fallback
-    if (!d.original_passage_id) {
-      ids.add((d._id as ObjectId).toHexString());
-    }
-  }
-  return [...ids].map((hex) => new ObjectId(hex));
-}
-
 /** 기출기반 교재 목록 (textbook_links.isExamBased=true) */
 async function loadExamBasedTextbooks(
   db: Awaited<ReturnType<typeof getDb>>
@@ -193,9 +168,8 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const { searchParams } = request.nextUrl;
-  const textbook = searchParams.get('textbook')?.trim() || '';
-  /** 기출기반 교재명 — 설정 시 passage_id 기반으로 조회 (textbook 필터 대신) */
-  const examTextbook = searchParams.get('exam_textbook')?.trim() || '';
+  /** exam_textbook 은 예전 기출기반 전용 파라미터 — 이제 textbook 과 같은 뜻 */
+  const textbook = (searchParams.get('textbook') || searchParams.get('exam_textbook') || '').trim();
   const type = searchParams.get('type')?.trim() || '';
   const status = searchParams.get('status')?.trim() || '';
   const difficulty = searchParams.get('difficulty')?.trim() || '';
@@ -215,15 +189,20 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb('gomijoshua');
 
-    /** 기출기반 교재 선택 시: passage_id 기반 필터로 전환 */
-    let examPassageIds: ObjectId[] = [];
-    if (examTextbook) {
-      examPassageIds = await loadExamTextbookPassageIds(db, examTextbook);
+    /**
+     * 끌어오기: 교재에 기출 지문이 있으면 원출처 지문의 문항도 함께 보여 준다(자체 문항 + 끌어온 문항).
+     * 끌어온 문항 행에는 pulled_via(끌어온 기출 지문)를 붙인다.
+     */
+    const pulled = textbook ? await loadPulledPassages(db, textbook) : [];
+    const pulledViaByOrigin = new Map<string, string>();
+    for (const o of pulled) {
+      const hex = o.originId.toHexString();
+      if (!pulledViaByOrigin.has(hex)) pulledViaByOrigin.set(hex, pulledViaLabel(o));
     }
+    const originIds = [...pulledViaByOrigin.keys()].map((h) => new ObjectId(h));
 
-    const effectiveTextbook = examTextbook ? '' : textbook;
     const variantFilter = buildVariantFilter({
-      textbook: effectiveTextbook,
+      textbook: originIds.length ? '' : textbook,
       type,
       status,
       difficulty,
@@ -232,21 +211,25 @@ export async function GET(request: NextRequest) {
       free,
     });
     const narrFilter = buildNarrativeQuestionsFilter({
-      textbook: effectiveTextbook,
+      textbook: originIds.length ? '' : textbook,
       type,
       passageIdHex: passageId,
       q,
     });
-
-    /** exam_textbook 있으면 passage_id $in 조건 추가 */
-    if (examPassageIds.length > 0) {
-      variantFilter.passage_id = { $in: examPassageIds };
-      (narrFilter as Record<string, unknown>).passage_id = { $in: examPassageIds };
-    } else if (examTextbook) {
-      // 교재명은 있지만 passage가 없는 경우 — 결과 없음 처리
-      variantFilter.passage_id = { $in: [] as ObjectId[] };
-      (narrFilter as Record<string, unknown>).passage_id = { $in: [] as ObjectId[] };
+    if (originIds.length) {
+      const scope = { $or: [{ textbook }, ...(passageIdInFilter(originIds).$or as Record<string, unknown>[])] };
+      for (const f of [variantFilter, narrFilter as Record<string, unknown>]) {
+        const prev = f.$and;
+        f.$and = [...(Array.isArray(prev) ? prev : []), scope];
+      }
     }
+    const markPulled = <T extends Record<string, unknown>>(rows: T[]): T[] =>
+      pulledViaByOrigin.size === 0
+        ? rows
+        : rows.map((r) => {
+            const via = pulledViaByOrigin.get(passageIdToValidHex(r.passage_id) ?? '');
+            return via ? { ...r, pulled_via: via } : r;
+          });
 
     const sortSpec =
       sortMode === 'newest'
@@ -274,7 +257,7 @@ export async function GET(request: NextRequest) {
         return { ...row, passage_source };
       });
       return NextResponse.json({
-        items,
+        items: markPulled(items),
         total,
         page,
         limit,
@@ -381,7 +364,7 @@ export async function GET(request: NextRequest) {
         loadPassageMapForRows(db, items),
         loadPassageSourceMap(db, items),
       ]);
-      const serialized = serializeListRows(items, passageMap, sourceKeyMap);
+      const serialized = markPulled(serializeListRows(items, passageMap, sourceKeyMap));
 
       return NextResponse.json({
         items: serialized,
@@ -426,7 +409,7 @@ export async function GET(request: NextRequest) {
       loadPassageMapForRows(db, withKind),
       loadPassageSourceMap(db, withKind),
     ]);
-    const serialized = serializeListRows(withKind, passageMap, sourceKeyMap);
+    const serialized = markPulled(serializeListRows(withKind, passageMap, sourceKeyMap));
 
     return NextResponse.json({
       items: serialized,

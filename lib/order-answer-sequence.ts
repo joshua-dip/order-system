@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Db } from 'mongodb';
+import type { Db, ObjectId } from 'mongodb';
+import { resolveExamOrigins } from '@/lib/exam-origin';
 import { normalizeOrderScope } from '@/lib/order-scope';
 import {
   computeReadingOrderKey,
@@ -107,6 +108,30 @@ export interface OrderQuestionRow {
  * 주문 범위 문항을 인쇄 순서(출처 순)로. (출처, 유형)당 serialNo 가 앞선 것부터 perSource 개.
  * 인쇄(cc:order-pdf)와 교정(cc:answer-seq)이 같은 순서를 봐야 이웃 판정이 맞는다.
  */
+/**
+ * 주문 지문 라벨 → 원출처(교재·source). 기출 지문은 원출처 문항을 끌어온다(lib/exam-origin).
+ * 결과 행의 source 는 주문 쪽 라벨(「UNIT 01 01번」)로 되돌려, 출고 PDF 번호·순서는 주문 교재 기준을 유지한다.
+ */
+const originPairCache = new Map<string, Map<string, { textbook: string; source: string }>>();
+async function orderOriginPairs(db: Db, target: OrderScopeTarget): Promise<Map<string, { textbook: string; source: string }>> {
+  const key = `${target.textbook}\u0000${target.sources.join('\u0001')}`;
+  const hit = originPairCache.get(key);
+  if (hit) return hit;
+  const out = new Map<string, { textbook: string; source: string }>();
+  const ps = await db
+    .collection('passages')
+    .find({ textbook: target.textbook, source_key: { $in: target.sources } })
+    .project<{ _id: ObjectId; source_key?: string }>({ _id: 1, source_key: 1 })
+    .toArray();
+  const origins = await resolveExamOrigins(db, ps.map((p) => p._id));
+  for (const p of ps) {
+    const o = origins.get(String(p._id));
+    if (o && p.source_key) out.set(p.source_key, { textbook: o.originTextbook, source: o.originSourceKey });
+  }
+  originPairCache.set(key, out);
+  return out;
+}
+
 export async function fetchOrderQuestions(
   db: Db,
   target: OrderScopeTarget,
@@ -114,28 +139,36 @@ export async function fetchOrderQuestions(
   opts: { statuses?: string[]; perSource?: number } = {},
 ): Promise<OrderQuestionRow[]> {
   const perSource = opts.perSource ?? 1;
+  const pairs = await orderOriginPairs(db, target);
+  const back = new Map<string, string>(); // 원출처 교재·source → 주문 라벨
+  for (const [label, o] of pairs) back.set(`${o.textbook}\u0000${o.source}`, label);
+  const status = { $in: opts.statuses ?? REVIEWABLE_STATUSES };
   const docs = (await db
     .collection('generated_questions')
     .find({
-      textbook: target.textbook,
-      source: { $in: target.sources },
       type,
-      status: { $in: opts.statuses ?? REVIEWABLE_STATUSES },
+      status,
+      $or: [
+        { textbook: target.textbook, source: { $in: target.sources } },
+        ...[...pairs.values()].map((o) => ({ textbook: o.textbook, source: o.source })),
+      ],
     })
     .sort({ serialNo: 1, _id: 1 })
     .toArray()) as Doc[];
+  /* 문서의 source 는 건드리지 않는다(정답열 교정이 문서를 되써도 원출처 라벨이 유지되게) — 라벨은 따로 든다 */
   const bySource = new Map<string, Doc[]>();
   for (const d of docs) {
-    const list = bySource.get(str(d.source)) ?? [];
+    const label = back.get(`${str(d.textbook)}\u0000${str(d.source)}`) ?? str(d.source);
+    const list = bySource.get(label) ?? [];
     if (list.length < perSource) list.push(d);
-    bySource.set(str(d.source), list);
+    bySource.set(label, list);
   }
   return [...bySource.entries()]
     .sort((a, b) => compareSourceLabel(a[0], b[0]))
-    .flatMap(([, list]) => list)
-    .map((d) => {
+    .flatMap(([label, list]) => list.map((d) => ({ d, label })))
+    .map(({ d, label }) => {
       const qd = (d.question_data && typeof d.question_data === 'object' ? d.question_data : {}) as Doc;
-      return { doc: d, qd, source: str(d.source), answer: str(qd.CorrectAnswer).trim() };
+      return { doc: d, qd, source: label, answer: str(qd.CorrectAnswer).trim() };
     });
 }
 

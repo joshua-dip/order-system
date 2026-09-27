@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { countQuestionsByPassageType, emptyStatusCounts, loadPulledPassages, type StatusCounts } from '@/lib/exam-origin-stats';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,9 @@ export const dynamic = 'force-dynamic';
  * 교재 × 유형 × 상태 집계.
  * 응답: { textbooks: string[], types: string[], rows: StatsRow[] }
  * StatsRow: { textbook, type, total, 완료, 대기, 검수불일치 }
+ *
+ * 끌어오기: 기출 지문이 있는 교재는 원출처 지문의 문항 수를 pulledRows 로 따로 준다.
+ * rows·textbookTotals 는 자체 문항만 — 끌어온 문항은 원출처 교재에 이미 세어져 있으니 합계에 넣지 않는다.
  */
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
@@ -91,15 +95,44 @@ export async function GET(request: NextRequest) {
     for (const d of data) {
       textbookTotals[d.textbook] = (textbookTotals[d.textbook] ?? 0) + d.total;
     }
-    const sortedTextbooks = [...textbookSet].sort(
-      (a, b) => (textbookTotals[b] ?? 0) - (textbookTotals[a] ?? 0)
-    );
+
+    /* 끌어온 문항 — 기출 지문(교재별)마다 원출처 지문의 문항을 센다. 같은 원출처를 두 번 끌어와도 한 번만. */
+    const pulled = await loadPulledPassages(db);
+    const perPassage = await countQuestionsByPassageType(db, pulled.map((o) => o.originId));
+    const pulledByTbType = new Map<string, StatusCounts>();
+    const pulledPassageCounts: Record<string, number> = {};
+    const seenOrigin = new Set<string>();
+    for (const o of pulled) {
+      pulledPassageCounts[o.viaTextbook] = (pulledPassageCounts[o.viaTextbook] ?? 0) + 1;
+      const key = `${o.viaTextbook}|${o.originId.toHexString()}`;
+      if (seenOrigin.has(key)) continue;
+      seenOrigin.add(key);
+      for (const [type, c] of perPassage.get(o.originId.toHexString()) ?? []) {
+        const k = `${o.viaTextbook}|${type}`;
+        const acc = pulledByTbType.get(k) ?? pulledByTbType.set(k, emptyStatusCounts()).get(k)!;
+        acc.total += c.total; acc.완료 += c.완료; acc.대기 += c.대기; acc.검수불일치 += c.검수불일치; acc.기타 += c.기타;
+      }
+    }
+    const pulledRows = [...pulledByTbType].map(([k, c]) => {
+      const [textbook, type] = k.split('|');
+      return { textbook, type, ...c };
+    });
+    const pulledTotals: Record<string, number> = {};
+    for (const r of pulledRows) pulledTotals[r.textbook] = (pulledTotals[r.textbook] ?? 0) + r.total;
+    for (const tb of Object.keys(pulledPassageCounts)) textbookSet.add(tb);
+
+    /* 정렬은 자체+끌어옴 기준 — 기출 교재가 맨 아래로 가라앉지 않게. 합계에는 넣지 않는다. */
+    const sortWeight = (tb: string) => (textbookTotals[tb] ?? 0) + (pulledTotals[tb] ?? 0);
+    const sortedTextbooks = [...textbookSet].sort((a, b) => sortWeight(b) - sortWeight(a));
 
     return NextResponse.json({
       textbooks: sortedTextbooks,
       types: sortedTypes,
       rows: data,
       textbookTotals,
+      pulledRows,
+      pulledTotals,
+      pulledPassageCounts,
     });
   } catch (e) {
     console.error('generated-questions stats GET:', e);

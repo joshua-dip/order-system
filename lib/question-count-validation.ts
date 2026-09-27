@@ -12,6 +12,7 @@ import {
 } from '@/lib/question-count-report';
 import { passagesForMockVariantOrder } from '@/lib/mock-variant-order';
 import { GENERATED_WORKBOOKS_COLLECTION } from '@/lib/generated-workbooks-types';
+import { swapToExamOrigins } from '@/lib/exam-origin';
 import {
   resolveTextbookCandidates,
   buildPassageKeyIndex,
@@ -101,6 +102,8 @@ export type QuestionCountValidationPayload = {
    * 파이프라인 자동 검수가 이 집합으로 대기 문항을 스코프한다(기출기반은 original_passage_id 매핑 반영).
    */
   scopePassageIds?: string[];
+  /** 원출처에서 끌어온 기출 지문 수(행의 passageId 는 원출처 지문, pulledVia 에 끌어온 곳) */
+  pulledPassageCount?: number;
   order: QuestionCountOrderInfo;
   orderLessonsRequested?: number;
   orderLessonsMatched?: number;
@@ -651,131 +654,6 @@ export async function runQuestionCountValidation(
       }
       textbook = textbookParam;
 
-      // 기출기반 교재 여부 확인
-      const examLink = await db
-        .collection('textbook_links')
-        .findOne({ textbookKey: textbook, isExamBased: true }, { projection: { _id: 1 } });
-      const isExamBased = Boolean(examLink);
-
-      if (isExamBased) {
-        // 기출기반 교재: original_passage_id로 generated_questions 조회
-        const rawDocs = await passagesCol
-          .find({ textbook })
-          .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1, original_passage_id: 1 })
-          .toArray();
-
-        // queryIds: original_passage_id 우선, 없으면 self
-        const examToOrigMap = new Map<string, string>(); // examId hex → origId hex
-        const queryIdMap = new Map<string, ObjectId>(); // hex → ObjectId (dedup)
-        for (const p of rawDocs) {
-          const examHex = (p._id as ObjectId).toHexString();
-          if (p.original_passage_id) {
-            let origId: ObjectId;
-            try {
-              origId = p.original_passage_id instanceof ObjectId
-                ? p.original_passage_id
-                : new ObjectId(String(p.original_passage_id));
-            } catch { origId = p._id as ObjectId; }
-            const origHex = origId.toHexString();
-            examToOrigMap.set(examHex, origHex);
-            queryIdMap.set(origHex, origId);
-          } else {
-            queryIdMap.set(examHex, p._id as ObjectId);
-          }
-        }
-        const queryIds = [...queryIdMap.values()];
-
-        // 기출기반 textbook scope 분기 — 주문이 아니므로 isFree 포함(전체 교재 현황).
-        const [rawCountMap, rawAnyCount] = await Promise.all([
-          aggregateCountsByPassageAndType(gqCol, queryIds, questionStatusScope, db, false),
-          aggregatePassageAnyDocCount(gqCol, queryIds, db, false),
-        ]);
-
-        // countMap/anyCount 키를 exam passage ID로 리맵
-        const countMap = new Map<string, Map<string, number>>();
-        const passageAnyDocCount = new Map<string, number>();
-        for (const p of rawDocs) {
-          const examHex = (p._id as ObjectId).toHexString();
-          const lookupHex = examToOrigMap.get(examHex) ?? examHex;
-          const typeCounts = rawCountMap.get(lookupHex);
-          if (typeCounts) countMap.set(examHex, typeCounts);
-          const anyCount = rawAnyCount.get(lookupHex) ?? 0;
-          if (anyCount > 0) passageAnyDocCount.set(examHex, anyCount);
-        }
-
-        passageDocs = rawDocs as PDoc[];
-
-        const { noQuestionsFull, underfilledFull: underfilledRaw } = buildQuestionCountReport(
-          passageDocs,
-          countMap,
-          typesToCheck,
-          requiredPerType,
-          textbook,
-          passageAnyDocCount
-        );
-
-        const queryIdsArr = queryIds;
-        const queryIdStrings = queryIdsArr.map((id) => id.toString());
-        const passagePendingMatch: Document = {
-          $and: [
-            { $or: [{ passage_id: { $in: queryIdsArr } }, { passage_id: { $in: queryIdStrings } }] },
-            { status: '대기' },
-            matchGeneratedQuestionOptionTypeEnglish(),
-          ],
-        };
-
-        let underfilledFull = underfilledRaw;
-        const [pendingReviewTotal, breakdownMap] = await Promise.all([
-          gqCol.countDocuments(passagePendingMatch),
-          questionStatusScope === 'all'
-            ? aggregateStatusBreakdownByPassageAndType(gqCol, queryIdsArr)
-            : Promise.resolve(null as Map<string, Map<string, UnderfilledStatusBreakdown>> | null),
-        ]);
-
-        if (questionStatusScope === 'all' && breakdownMap) {
-          // breakdownMap keys are origId hex — remap to exam passage IDs for underfilled rows
-          const origToExamMap = new Map<string, string>();
-          for (const [examHex, origHex] of examToOrigMap) origToExamMap.set(origHex, examHex);
-          underfilledFull = underfilledRaw.map((row) => {
-            const lookupId = origToExamMap.get(row.passageId) ?? row.passageId;
-            const b = breakdownMap.get(lookupId)?.get(row.type)
-              ?? breakdownMap.get(row.passageId)?.get(row.type);
-            const statusBreakdown: UnderfilledStatusBreakdown = b ?? {
-              완료: 0, 대기: 0, 검수불일치: 0, 기타: row.count,
-            };
-            return { ...row, statusBreakdown };
-          });
-        }
-
-        const needCreateShortBySum = underfilledFull.reduce((s, r) => s + r.shortBy, 0);
-        const needCreateFromEmptyPassagesTotal = noQuestionsFull.length * typesToCheck.length * requiredPerType;
-        const needCreateGrandTotal = needCreateShortBySum + needCreateFromEmptyPassagesTotal;
-
-        return {
-          ok: true,
-          scope,
-          textbook,
-          questionStatusScope,
-          requiredPerType,
-          typesChecked: typesToCheck,
-          passageCount: passageDocs.length,
-          standardTypes: [...BOOK_VARIANT_QUESTION_TYPES],
-          noQuestionsTotal: noQuestionsFull.length,
-          underfilledTotal: underfilledFull.length,
-          noQuestionsTruncated: noQuestionsFull.length > QUESTION_COUNT_DEFAULT_LIST_ROWS,
-          underfilledTruncated: underfilledFull.length > QUESTION_COUNT_DEFAULT_LIST_ROWS,
-          noQuestions: noQuestionsFull,
-          underfilled: underfilledFull,
-          pendingReviewTotal,
-          needCreateShortBySum,
-          needCreateFromEmptyPassagesTotal,
-          needCreateGrandTotal,
-          pendingInScopeTotal: pendingReviewTotal,
-          scopePassageIds: queryIdStrings,
-          order: null,
-        };
-      }
-
       passageDocs = (await passagesCol
         .find({ textbook })
         .project({ _id: 1, textbook: 1, chapter: 1, number: 1, source_key: 1 })
@@ -783,6 +661,12 @@ export async function runQuestionCountValidation(
       typesToCheck = [...BOOK_VARIANT_QUESTION_TYPES];
       requiredPerType = requiredPerTypeDefault;
     }
+
+    /* 기출 지문은 원출처 지문으로 바꿔 본다(끌어오기 — lib/exam-origin).
+       기출문제집 전체든 부교재에 섞인 기출 지문이든 같은 규칙: 문항 집계·부족분·검수 범위·새 문항 저장 위치가 모두 원출처. */
+    const swapped = await swapToExamOrigins(db, passageDocs);
+    passageDocs = swapped.docs;
+    const pulledPassageCount = swapped.pulledCount;
 
     if (passageDocs.length === 0) {
       const message =
@@ -896,6 +780,7 @@ export async function runQuestionCountValidation(
       needCreateGrandTotal,
       pendingInScopeTotal: pendingReviewTotal,
       scopePassageIds: idStrings,
+      pulledPassageCount,
       order: orderInfo,
       orderLessonsRequested: scope === 'order' ? orderLessonsRequested : undefined,
       orderLessonsMatched: scope === 'order' ? passageDocs.length : undefined,

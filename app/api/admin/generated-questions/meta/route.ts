@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { loadPullingTextbooks } from '@/lib/exam-origin-stats';
 
 export async function GET(request: NextRequest) {
   const { error } = await requireAdmin(request);
@@ -47,8 +48,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    /** 원출처 문항을 끌어오는 교재 → 연결된 기출 지문 수 (기출문제집 + 기출이 섞인 부교재) */
+    const pullingTextbooks = await loadPullingTextbooks(db);
+
     return NextResponse.json({
       textbooks,
+      pullingTextbooks,
       types: mergedTypes,
       statuses: (statuses as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko')),
       examBasedTextbooks,

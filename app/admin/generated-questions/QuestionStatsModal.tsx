@@ -18,7 +18,13 @@ interface StatsData {
   textbooks: string[];
   types: string[];
   rows: StatsRow[];
+  /** 자체 문항만 — 끌어온 문항은 원출처 교재 쪽에 이미 세어져 있어 합계에 넣지 않는다 */
   textbookTotals: Record<string, number>;
+  /** 원출처에서 끌어온 문항 (교재 × 유형) */
+  pulledRows?: StatsRow[];
+  pulledTotals?: Record<string, number>;
+  /** 교재 → 원출처를 끌어오는 기출 지문 수 */
+  pulledPassageCounts?: Record<string, number>;
 }
 
 interface SourceRow {
@@ -39,6 +45,13 @@ interface SourceData {
   sourceTotals: Record<string, number>;
   /** source_key → 원문출처(passage_source). 기출기반 교재에서만 제공 */
   sourcePassageSource?: Record<string, string>;
+  /** 원출처에서 문항을 끌어오는 소스 → 원출처 표기 */
+  pulledSources?: Record<string, string>;
+  /** 자체 문항 / 끌어온 문항 건수 */
+  ownTotal?: number;
+  pulledTotal?: number;
+  /** 끌어오는 소스에 아직 남은 자체 문항(원출처로 옮기기 전) — 집계 제외 */
+  unmovedOnPulled?: Record<string, number>;
 }
 
 /**
@@ -109,6 +122,9 @@ function groupSourceDataByChapter(data: SourceData): SourceData {
     sourceTotals,
     // 원문출처는 강 단위로 합칠 수 없다(소스마다 다름) — 강별 보기에서는 뺀다
     sourcePassageSource: undefined,
+    pulledSources: undefined,
+    ownTotal: data.ownTotal,
+    pulledTotal: data.pulledTotal,
   };
 }
 
@@ -855,18 +871,26 @@ function SourceHeatmap({
                       {shortageItems.length > 0 && (
                         <CopyShortageButton
                           textbook={data.textbook}
-                          source={src}
+                          source={data.pulledSources?.[src] ? `${src} (끌어옴 — 원출처 ${data.pulledSources[src]} 에 저장)` : src}
                           items={shortageItems}
                           target={rowTarget}
                         />
                       )}
                       <div className="flex flex-col leading-tight">
                         <span>{src}</span>
-                        {data.sourcePassageSource?.[src] && (
+                        {data.pulledSources?.[src] ? (
+                          <span
+                            className="flex items-center gap-1 text-[10px] text-sky-300 font-normal"
+                            title="이 지문은 문항을 원출처 지문에서 끌어옵니다(자체 문항 0이 정상)"
+                          >
+                            <span className="rounded border border-sky-600/60 bg-sky-900/40 px-1 text-[9px] font-bold text-sky-200">끌어옴</span>
+                            {data.pulledSources[src]}
+                          </span>
+                        ) : data.sourcePassageSource?.[src] ? (
                           <span className="text-[10px] text-slate-400 font-normal">
                             · {data.sourcePassageSource[src]}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       <input
                         type="number"
@@ -1031,12 +1055,10 @@ function SourceBarChart({ data, statusFilter }: { data: SourceData; statusFilter
 
 function DrilldownPanel({
   textbook,
-  isExamBased,
   statusFilter,
   onBack,
 }: {
   textbook: string;
-  isExamBased?: boolean;
   statusFilter: StatusFilter;
   onBack: () => void;
 }) {
@@ -1165,11 +1187,9 @@ function DrilldownPanel({
   useEffect(() => {
     setLoading(true);
     setError(null);
-    const sourceParam = isExamBased
-      ? `exam_textbook=${encodeURIComponent(textbook)}`
-      : `textbook=${encodeURIComponent(textbook)}`;
+    // 기출 지문이 있는 교재면 서버가 그 소스를 원출처 문항으로 채우고 pulledSources 로 표시한다
     fetch(
-      `/api/admin/generated-questions/stats/source?${sourceParam}`,
+      `/api/admin/generated-questions/stats/source?textbook=${encodeURIComponent(textbook)}`,
       { credentials: 'include' }
     )
       .then((r) => r.json())
@@ -1230,7 +1250,20 @@ function DrilldownPanel({
           <p className="text-xs text-slate-400">
             총 <span className="text-indigo-300 font-bold">{totalCount.toLocaleString()}</span>문항
             · {data?.sources.length ?? 0}개 소스
+            {!!data?.pulledTotal && (
+              <>
+                {' '}· 자체 <span className="text-slate-200 font-bold">{(data.ownTotal ?? 0).toLocaleString()}</span>
+                {' '}+ <span className="text-sky-300 font-bold">끌어옴 {data.pulledTotal.toLocaleString()}</span>
+                <span className="text-slate-500"> (기출 지문 {Object.keys(data.pulledSources ?? {}).length}개 → 원출처)</span>
+              </>
+            )}
           </p>
+          {data?.unmovedOnPulled && Object.keys(data.unmovedOnPulled).length > 0 && (
+            <p className="text-[11px] text-amber-300">
+              끌어오는 지문에 원출처로 옮기지 않은 자체 문항{' '}
+              {Object.values(data.unmovedOnPulled).reduce((a, b) => a + b, 0).toLocaleString()}건이 남아 있습니다(집계 제외).
+            </p>
+          )}
         </div>
         {/* 교재 기본 목표 문항수 */}
         <div className="ml-auto flex items-center gap-2 rounded-lg bg-slate-800 border border-slate-600 px-3 py-1.5">
@@ -1398,14 +1431,11 @@ export function QuestionStatsModal({
   open,
   onClose,
   filterTextbook,
-  examBasedTextbooks,
 }: {
   open: boolean;
   onClose: () => void;
   /** 현재 선택된 교재 (있으면 자동 드릴다운) */
   filterTextbook?: string;
-  /** 기출기반 교재 Set */
-  examBasedTextbooks?: Set<string>;
 }) {
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1459,6 +1489,16 @@ export function QuestionStatsModal({
     if (!r) return 0;
     return statusFilter === 'all' ? r.total : (r[statusFilter] ?? 0);
   };
+
+  /* 끌어온 문항 — 셀에는 따로(하늘색) 적고 합계에는 넣지 않는다 */
+  const pulledMap = new Map<string, StatsRow>();
+  if (data?.pulledRows) for (const r of data.pulledRows) pulledMap.set(`${r.textbook}|${r.type}`, r);
+  const getPulled = (textbook: string, type: string): number => {
+    const r = pulledMap.get(`${textbook}|${type}`);
+    if (!r) return 0;
+    return statusFilter === 'all' ? r.total : (r[statusFilter] ?? 0);
+  };
+  const pulledPassages = (tb: string) => data?.pulledPassageCounts?.[tb] ?? 0;
 
   const filteredTextbooks = data
     ? (selectedTextbook ? data.textbooks.filter((t) => t === selectedTextbook) : data.textbooks)
@@ -1565,7 +1605,6 @@ export function QuestionStatsModal({
               <div className="px-6 py-5">
                 <DrilldownPanel
                   textbook={drillTextbook}
-                  isExamBased={examBasedTextbooks?.has(drillTextbook) ?? false}
                   statusFilter={statusFilter}
                   onBack={() => { if (filterTextbook) onClose(); else setDrillTextbook(null); }}
                 />
@@ -1637,6 +1676,11 @@ export function QuestionStatsModal({
                     <div>
                       <p className="text-xs text-slate-500 mb-3">
                         진할수록 많음 · 빨간 셀 = 거의 없음 · 교재명 클릭 → 소스별 상세
+                        {data.pulledPassageCounts && Object.keys(data.pulledPassageCounts).length > 0 && (
+                          <>
+                            {' '}· <span className="text-sky-300">↙ 하늘색 = 원출처에서 끌어온 문항</span>(기출 지문 · 합계 제외)
+                          </>
+                        )}
                       </p>
                       <div className="overflow-x-auto max-h-[55vh] overflow-y-auto">
                         <table className="text-xs border-collapse">
@@ -1652,6 +1696,8 @@ export function QuestionStatsModal({
                           <tbody>
                             {filteredTextbooks.map((tb) => {
                               const rowTotal = filteredTypes.reduce((s, tp) => s + getValue(tb, tp), 0);
+                              const rowPulled = filteredTypes.reduce((s, tp) => s + getPulled(tb, tp), 0);
+                              const pulling = pulledPassages(tb) > 0;
                               return (
                                 <tr key={tb} className="border-t border-slate-800 hover:bg-slate-800/40">
                                   <td className="sticky left-0 bg-slate-900 px-2 py-1 max-w-[200px]">
@@ -1660,18 +1706,37 @@ export function QuestionStatsModal({
                                       className="text-left text-indigo-300 hover:text-indigo-100 hover:underline text-xs leading-tight line-clamp-1 w-full"
                                       title={`${tb} — 소스별 분석`}
                                     >
+                                      {pulling && (
+                                        <span
+                                          className="mr-1 rounded border border-sky-600/60 bg-sky-900/40 px-1 text-[9px] font-bold text-sky-200 no-underline"
+                                          title={`기출 지문 ${pulledPassages(tb)}개가 원출처 문항을 끌어옵니다`}
+                                        >
+                                          끌어옴
+                                        </span>
+                                      )}
                                       {tb}
                                     </button>
                                   </td>
                                   {filteredTypes.map((tp) => {
                                     const v = getValue(tb, tp);
+                                    const pv = getPulled(tb, tp);
                                     return (
                                       <td key={tp} className={`px-0.5 py-0.5 text-center font-mono rounded ${heatColor(v, heatMax)}`}>
                                         {v > 0 ? fmt(v) : ''}
+                                        {pv > 0 && (
+                                          <span className={`text-sky-300 text-[10px] ${v > 0 ? 'block leading-none' : ''}`} title={`원출처에서 끌어옴 ${pv}문항`}>
+                                            ↙{fmt(pv)}
+                                          </span>
+                                        )}
                                       </td>
                                     );
                                   })}
-                                  <td className="px-2 py-1 text-right text-slate-300 font-bold">{rowTotal.toLocaleString()}</td>
+                                  <td className="px-2 py-1 text-right text-slate-300 font-bold whitespace-nowrap">
+                                    {rowTotal.toLocaleString()}
+                                    {rowPulled > 0 && (
+                                      <span className="block text-[10px] font-medium text-sky-300">끌어옴 {rowPulled.toLocaleString()}</span>
+                                    )}
+                                  </td>
                                 </tr>
                               );
                             })}

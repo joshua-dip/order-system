@@ -456,6 +456,8 @@ type Row = {
   variation_pct?: number | null;
   /** 기출기반 교재의 원문출처 (passages.source_key) */
   passage_source?: string | null;
+  /** 원출처 지문의 문항을 끌어와 보여 주는 경우 끌어온 기출 지문 (교재 · 지문) */
+  pulled_via?: string;
   question_data?: {
     Question?: string;
     Paragraph?: string;
@@ -479,6 +481,8 @@ export default function AdminGeneratedQuestionsPage() {
   const [examBasedTextbooks, setExamBasedTextbooks] = useState<Set<string>>(new Set());
   /** 기출기반 교재 → 원문출처 교재명 맵 (meta API에서 로드) */
   const [originalSourceByTextbook, setOriginalSourceByTextbook] = useState<Record<string, string>>({});
+  /** 원출처 문항을 끌어오는 교재 → 연결된 기출 지문 수 (meta API) */
+  const [pullingTextbooks, setPullingTextbooks] = useState<Record<string, number>>({});
 
   const [filterTextbook, setFilterTextbook] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -1272,6 +1276,9 @@ export default function AdminGeneratedQuestionsPage() {
         if (d.originalSourceByTextbook && typeof d.originalSourceByTextbook === 'object') {
           setOriginalSourceByTextbook(d.originalSourceByTextbook as Record<string, string>);
         }
+        if (d.pullingTextbooks && typeof d.pullingTextbooks === 'object') {
+          setPullingTextbooks(d.pullingTextbooks as Record<string, number>);
+        }
       })
       .catch(() => {});
   }, []);
@@ -1309,14 +1316,8 @@ export default function AdminGeneratedQuestionsPage() {
   const fetchList = useCallback(() => {
     setListLoading(true);
     const params = new URLSearchParams();
-    if (filterTextbook) {
-      if (examBasedTextbooks.has(filterTextbook)) {
-        // 기출기반 교재: passage_id 기반으로 조회 (exam_textbook 파라미터)
-        params.set('exam_textbook', filterTextbook);
-      } else {
-        params.set('textbook', filterTextbook);
-      }
-    }
+    // 기출 지문이 있는 교재면 서버가 원출처 문항까지 끌어와 함께 준다(pulled_via 표시)
+    if (filterTextbook) params.set('textbook', filterTextbook);
     if (filterType) params.set('type', filterType);
     if (filterDifficulty) params.set('difficulty', filterDifficulty);
     if (filterStatus) params.set('status', filterStatus);
@@ -1338,7 +1339,7 @@ export default function AdminGeneratedQuestionsPage() {
         setTotal(0);
       })
       .finally(() => setListLoading(false));
-  }, [filterTextbook, filterType, filterDifficulty, filterStatus, filterFree, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit, examBasedTextbooks]);
+  }, [filterTextbook, filterType, filterDifficulty, filterStatus, filterFree, filterPassageId, filterQ, filterSortOrder, listDataScope, page, limit]);
 
   useEffect(() => {
     if (!user) return;
@@ -4116,7 +4117,6 @@ export default function AdminGeneratedQuestionsPage() {
           open={statsOpen}
           onClose={() => setStatsOpen(false)}
           filterTextbook={filterTextbook || undefined}
-          examBasedTextbooks={examBasedTextbooks}
         />
       </Suspense>
       <header className="border-b border-slate-700 bg-slate-800/80 backdrop-blur sticky top-0 z-10">
@@ -4317,18 +4317,18 @@ export default function AdminGeneratedQuestionsPage() {
               <option value="">전체</option>
               {textbooks.map((t) => (
                 <option key={t} value={t}>
-                  {examBasedTextbooks.has(t) ? `[기출] ${t}` : t}
+                  {pullingTextbooks[t] ? `[끌어옴] ${t}` : examBasedTextbooks.has(t) ? `[기출] ${t}` : t}
                 </option>
               ))}
             </select>
-            {/* 기출기반 교재 선택 시 배너 */}
-            {filterTextbook && examBasedTextbooks.has(filterTextbook) && (
-              <div className="mt-1.5 text-xs rounded-md px-2.5 py-1.5 border border-amber-700/50 bg-amber-900/30 text-amber-300 max-w-[360px]">
-                <span className="font-semibold text-amber-200">기출기반 교재</span> —{' '}
-                지문별 원문출처(passage_source) 기반으로 조회합니다.{' '}
-                각 지문의 원문출처는 출처 컬럼에 표시됩니다.
+            {/* 끌어오는 교재 선택 시 배너 */}
+            {filterTextbook && pullingTextbooks[filterTextbook] ? (
+              <div className="mt-1.5 text-xs rounded-md px-2.5 py-1.5 border border-sky-700/50 bg-sky-900/30 text-sky-200 max-w-[360px]">
+                <span className="font-semibold text-sky-100">원출처에서 끌어옴</span> — 기출 지문{' '}
+                {pullingTextbooks[filterTextbook]}개는 문항을 원출처(모의고사) 지문에서 끌어옵니다.{' '}
+                끌어온 문항은 출처 칸에 <span className="font-semibold">끌어옴</span>으로 표시됩니다.
               </div>
-            )}
+            ) : null}
           </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">유형</label>
@@ -5037,6 +5037,15 @@ export default function AdminGeneratedQuestionsPage() {
                           return (
                             <div className="flex flex-col gap-0.5">
                               <span className="truncate" title={row.source}>{row.source || '—'}</span>
+                              {row.pulled_via && (
+                                <span
+                                  className="flex items-center gap-1 text-[10px] text-sky-300/90 font-medium"
+                                  title={`원출처 문항을 끌어옴 — ${row.pulled_via}`}
+                                >
+                                  <span className="inline-block bg-sky-800/40 border border-sky-600/50 text-sky-200 rounded px-1 py-px text-[9px] font-bold shrink-0">끌어옴</span>
+                                  <span className="truncate">{row.pulled_via}</span>
+                                </span>
+                              )}
                               {ps && (
                                 <span
                                   className="flex items-center gap-1 text-[10px] text-amber-300/90 font-medium"

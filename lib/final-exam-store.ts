@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { ObjectId, type Db } from 'mongodb';
 import { matchGeneratedQuestionOptionTypeEnglish } from '@/lib/question-count-validation';
 import type { FinalExamQuestion } from '@/lib/final-exam-html';
+import { resolveExamOrigins } from '@/lib/exam-origin';
 
 /**
  * 파이널 예비 모의고사 — 즉시 발급 잡(final_exam_jobs).
@@ -419,6 +420,12 @@ export async function selectQuestionsForScope(
   for (const p of passages) {
     const sk = typeof p.source_key === 'string' ? p.source_key.trim() : '';
     if (sk && !bySource.has(sk)) bySource.set(sk, p._id);
+  }
+  /* 기출 지문은 원출처 지문의 문항을 끌어온다(lib/exam-origin) — 기출 교재 자체엔 문항이 없다 */
+  const origins = await resolveExamOrigins(db, [...bySource.values()]);
+  for (const [sk, pid] of bySource) {
+    const o = origins.get(String(pid));
+    if (o) bySource.set(sk, o.originId);
   }
   const missingSources = sourceKeys.filter((sk) => !bySource.has(sk));
 
