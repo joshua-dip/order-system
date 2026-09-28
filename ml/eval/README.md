@@ -56,27 +56,27 @@ O는 원문·정답·유일성·문법·해설이 맞고, 지문 없이 답이 �
 차이는 한 문항으로 확실한 우열은 아니다. 코드 변경·재학습은 하지 않았다.
 18개 원문을 반복한 36회는 독립 새 지문 36개가 아니다. 예전 시험지 점수와 직접 비교하지 않는다.
 내용어 다섯 개 등 유형별 작성 형식도 확인한다. 정답이 맞아도 수치·기능어로 어휘 선지를 채우면 P다.
-다음 원인 가설과 대표 실패, 전체 표는 [노트 26과](../../docs/ml/lora-notebook/notebook.html#l26)에 있다.
+다음 원인 가설과 대표 실패, 전체 표는 노트 26과(비공개 `powerup-private-tracker/notes/notebook.html#l26`)에 있다.
 
 2026-09-27 어휘 입력 변경 비교는 두 세트 각각 `2026-09-27-vocab-context-{before,after}`,
 총 144회다. O 고1 61.1→66.7%(같음), 고2 63.9→50.0%(악화); F 2.8→8.3%, 2.8→13.9%로 후보를 복원했다.
-후보 diff·코드 지문·문항별 채점·복원 결과는 네 grades 파일, 상세는 [노트 27과](../../docs/ml/lora-notebook/notebook.html#l27).
+후보 diff·코드 지문·문항별 채점·복원 결과는 네 grades 파일, 상세는 노트 27과(비공개 `powerup-private-tracker/notes/notebook.html#l27`).
 2026-09-27 불일치 시간 변화 지시 비교는 `2026-09-27-mismatch-temporal-{before,after}`,
 고1 각 38회·고2 각 36회로 총 148회다. O 고1 44.7→50.0%(같음), 고2 38.9→52.8%(개선), F 모두 0%.
 고1에서 개선이 확인되지 않아 후보를 복원했다. 네 grades 파일에 전후 근거·trace·후보 diff·복원 SHA를 보관했다.
-상세는 [노트 28과](../../docs/ml/lora-notebook/notebook.html#l28). 다음은 판정 모델만 Qwen3.8-27B로 교체하는 비교 준비다.
+상세는 노트 28과(비공개 `powerup-private-tracker/notes/notebook.html#l28`). 다음은 판정 모델만 Qwen3.8-27B로 교체하는 비교 준비다.
 상품 검수와 운영 재개는 계속 보류한다.
 
 2026-09-27 판정 모델 비교 `2026-09-27-mismatch-reasoner-{before,after}`는 총 148회다.
 O 고1 42.1→60.5%(개선), 고2 61.1→55.6%(같음), F 모두 0%. 실행 약 16→49분.
 27B 비채택, 기존 35B 유지. 코드·LoRA·프롬프트는 그대로 두고 `--reasoner`만 비교했다.
 네 grades 파일에 근거·trace·모델 revision·환경 버전·시간·비채택 결과를 저장했다.
-상세는 [노트 29과](../../docs/ml/lora-notebook/notebook.html#l29). 다음은 인용문 중간 해설 잘림 처리 하나를 시험한다.
+상세는 노트 29과(비공개 `powerup-private-tracker/notes/notebook.html#l29`). 다음은 인용문 중간 해설 잘림 처리 하나를 시험한다.
 
 해설 잘림 비교 `2026-09-27-mismatch-trim-{before,after}` 총 148회는 O 고1 55.3→63.2%(개선),
 고2 47.2→50.0%(같음), F 모두 0%. 해설 잘림은 2→2건으로 남았고 후보를 복원했다.
 네 grades에 문항·근거·trace·후보 diff·복원 SHA, after에는 합성 재현 검사 8건의 소스·로그를 보관했다.
-상세는 [노트 30과](../../docs/ml/lora-notebook/notebook.html#l30). 오늘 네 전후 실험 모두 비채택·복원, 기존 35B 유지.
+상세는 노트 30과(비공개 `powerup-private-tracker/notes/notebook.html#l30`). 오늘 네 전후 실험 모두 비채택·복원, 기존 35B 유지.
 
 ## 학습 데이터 뽑기 → 재학습
 
@@ -128,7 +128,7 @@ python3 ml/eval/view.py --set jun11-go2 --report <새-라벨>
 
 최근 전체 요약 비교는 두 세트의 `2026-09-26-core-index-before` / `2026-09-26-core-index-after`다.
 각 파일에 36건의 점수·이유·생성 요약문·선지와 실험 설정·코드 지문·되돌린 후보 차이를 보관했다.
-현재 실행 코드는 `before`로 복원했다. 상세 결과는 [노트 25과](../../docs/ml/lora-notebook/notebook.html#l25),
+현재 실행 코드는 `before`로 복원했다. 상세 결과는 노트 25과(비공개 `powerup-private-tracker/notes/notebook.html#l25`),
 상품 수준의 초기 목표안은 같은 노트 24과를 본다. 기존 두 세트는 개발용이고 상품 판단에는 별도 새 지문 평가가 필요하다.
 
 ## 요약 대안 초안의 실모델 진단
