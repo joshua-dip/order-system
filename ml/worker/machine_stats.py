@@ -195,8 +195,8 @@ def record_reboots(ev, host: str) -> None:
         clean = any(0 <= (t - x).total_seconds() < 600 for x in shutdowns)
         if clean or ev.find_one({"host": host, "kind": "reboot", "start": t}):
             continue
-        ev.insert_one({"host": host, "kind": "reboot", "start": t, "end": t, "level": "위험", "min_free_pct": None, "max_swap_gb": None,
-                       "roles": [], "top_at_worst": [], "actions": [{"at": t, "text": "맥이 정상 종료 기록 없이 다시 켜졌습니다"}]})
+        ev.insert_one({"host": host, "kind": "reboot", "start": t, "end": t, "level": "주의", "min_free_pct": None, "max_swap_gb": None,
+                       "roles": [], "top_at_worst": [], "actions": [{"at": t, "text": "맥이 정상 종료 기록 없이 다시 켜졌습니다(원인 미상)"}]})
 
 
 def main() -> int:
