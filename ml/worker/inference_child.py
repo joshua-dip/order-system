@@ -14,6 +14,8 @@ import importlib.util
 import inspect
 import json
 import sys
+import os
+import threading
 import time
 import traceback
 from pathlib import Path
@@ -33,14 +35,24 @@ from win_qos import opt_out_power_throttling  # noqa: E402
 
 MARK = "@@RESULT@@ "
 _PIPELINES: dict[str, Any] = {}
+_EMIT_LOCK = threading.Lock()
+_LOAD_LOCK = threading.Lock()
+# 동시에 만들 문항 수(부모 워커와 같은 환경변수) — 1 이면 예전처럼 한 줄씩 차례로
+CONCURRENCY = max(1, int(os.environ.get("LOCAL_VARIANT_CONCURRENCY", "1") or 1))
 
 
 def emit(obj: dict) -> None:
-    sys.stdout.write(MARK + json.dumps(obj, ensure_ascii=False) + "\n")
-    sys.stdout.flush()
+    with _EMIT_LOCK:
+        sys.stdout.write(MARK + json.dumps(obj, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
 
 
 def pipeline(en: str) -> Any:
+    with _LOAD_LOCK:
+        return _pipeline(en)
+
+
+def _pipeline(en: str) -> Any:
     if en not in _PIPELINES:
         path = _ML / en / "windows" / f"pipeline_{en}.py"
         spec = importlib.util.spec_from_file_location(f"pipeline_{en}", path)
@@ -86,16 +98,13 @@ def main() -> int:
         return 3
     emit({"ready": True, "adapters": [name for name, _ in spec["adapters"]]})
 
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-        req = json.loads(line)
+    def handle(req: dict) -> None:
+        rid = req.get("rid")
         en = req["en"]
         t0 = time.time()
         log = getattr(rt, "CALL_LOG", None)
         if log is not None:
-            log.clear()
+            log.clear()  # 스레드마다 따로인 기록
         try:
             mod = pipeline(en)
             # 일치·불일치처럼 한 어댑터를 나눠 쓰는 파이프라인은 kind(한글 유형명)로 어느 쪽인지 받는다
@@ -120,6 +129,7 @@ def main() -> int:
                     result["pipeline"]["explanation"] = "skipped"
             emit(
                 {
+                    "rid": rid,
                     "ok": bool(result.get("ok")),
                     "question_data": result.get("question_data"),
                     "error": result.get("error"),
@@ -130,11 +140,32 @@ def main() -> int:
                 }
             )
         except Exception as e:  # noqa: BLE001
-            oom = rt.is_cuda_oom(e)
             traceback.print_exc(file=sys.stderr)
-            emit({"ok": False, "error": f"{type(e).__name__}: {e}"[:1000], "oom": oom})
-            if oom:
-                return 3  # 메모리 상태를 믿을 수 없다 — 부모가 필요할 때 새로 띄운다
+            emit({"rid": rid, "ok": False, "error": f"{type(e).__name__}: {e}"[:1000], "oom": rt.is_cuda_oom(e)})
+
+    slots = threading.Semaphore(CONCURRENCY)
+    threads: list[threading.Thread] = []
+
+    def run_one(req: dict) -> None:
+        try:
+            handle(req)
+        finally:
+            slots.release()
+
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        req = json.loads(line)
+        if CONCURRENCY <= 1:
+            handle(req)
+            continue
+        slots.acquire()  # 부모가 CONCURRENCY 보다 많이 보내지 않지만, 넘치면 여기서 기다린다
+        t = threading.Thread(target=run_one, args=(req,), daemon=True)
+        t.start()
+        threads = [x for x in threads if x.is_alive()] + [t]
+    for t in threads:
+        t.join()
     return 0
 
 

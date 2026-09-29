@@ -236,6 +236,10 @@ class InferenceChild:
     def __init__(self, spec: dict, load_timeout: float) -> None:
         self.spec = spec
         self.results: queue.Queue[str] = queue.Queue()
+        # 동시 처리 — 요청마다 rid 를 붙이고 결과를 rid 별 대기열로 나눈다(준비 신호 등 rid 없는 줄은 results 로)
+        self.waiters: dict[str, queue.Queue[str]] = {}
+        self.waiters_lock = threading.Lock()
+        self.write_lock = threading.Lock()
         payload = {k: spec[k] for k in ("base_model", "use_4bit", "adapters", "backend", "reasoner")}
         env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
         self.proc = subprocess.Popen(
@@ -264,8 +268,19 @@ class InferenceChild:
         assert self.proc.stdout is not None
         for line in self.proc.stdout:
             if line.startswith(MARK):
-                self.results.put(line[len(MARK) :])
+                raw = line[len(MARK) :]
+                rid = None
+                try:
+                    rid = json.loads(raw).get("rid")
+                except Exception:  # noqa: BLE001
+                    pass
+                with self.waiters_lock:
+                    w = self.waiters.get(rid) if rid else None
+                (w or self.results).put(raw)
         self.results.put("")  # 끝 표시
+        with self.waiters_lock:
+            for w in self.waiters.values():
+                w.put("")
 
     def _pump_stderr(self) -> None:
         assert self.proc.stderr is not None
@@ -274,12 +289,13 @@ class InferenceChild:
             if line:
                 log(f"  | {line[:300]}")
 
-    def _read(self, timeout: float) -> dict:
+    def _read(self, timeout: float, q: "queue.Queue[str] | None" = None) -> dict:
         # 1초씩 나눠 기다린다 — Windows 에서 긴 timeout 한 번이면 그동안 Ctrl+C 가 먹지 않는다
         deadline = time.time() + timeout
+        q = q or self.results
         while True:
             try:
-                raw = self.results.get(timeout=1.0)
+                raw = q.get(timeout=1.0)
                 break
             except queue.Empty:
                 if time.time() > deadline:
@@ -294,10 +310,19 @@ class InferenceChild:
 
     def generate(self, en: str, paragraph: str, explain: bool, timeout: float, ko: str = "") -> dict:
         assert self.proc.stdin is not None
-        req = {"en": en, "paragraph": paragraph, "explain": explain, "ko": ko}
-        self.proc.stdin.write(json.dumps(req, ensure_ascii=False) + "\n")
-        self.proc.stdin.flush()
-        res = self._read(timeout)
+        rid = f"{time.time_ns()}-{threading.get_ident()}"
+        w: queue.Queue[str] = queue.Queue()
+        with self.waiters_lock:
+            self.waiters[rid] = w
+        try:
+            req = {"rid": rid, "en": en, "paragraph": paragraph, "explain": explain, "ko": ko}
+            with self.write_lock:
+                self.proc.stdin.write(json.dumps(req, ensure_ascii=False) + "\n")
+                self.proc.stdin.flush()
+            res = self._read(timeout, w)
+        finally:
+            with self.waiters_lock:
+                self.waiters.pop(rid, None)
         self.last_used = time.time()
         return res
 
@@ -320,6 +345,9 @@ class Worker:
         self.workers = db[WORKERS]
         # 웹 「작업 끝나면 끄기」 — 새 작업을 집기 전에 본다(맥의 worker_control.py 가 켜고 끈다)
         self.control = db["production_worker_control"]
+        self.child_lock = threading.Lock()
+        self.inflight = 0
+        self.inflight_lock = threading.Lock()
         self.return_after = return_after
         self.id = socket.gethostname()
         self.only = {t.strip() for t in args.types.split(",") if t.strip()} if args.types else set()
@@ -486,6 +514,10 @@ class Worker:
             self.child = None
 
     def ensure_child(self, info: dict) -> InferenceChild:
+        with self.child_lock:
+            return self._ensure_child(info)
+
+    def _ensure_child(self, info: dict) -> InferenceChild:
         spec = child_spec(self.types_info, info["base_model"], info["use_4bit"])
         c = self.child
         if c is not None and c.alive() and c.spec["stamp"] == spec["stamp"] and c.spec["base_model"] == spec["base_model"]:
@@ -571,6 +603,58 @@ class Worker:
             if self.state in ("loading", "running"):
                 self.state = "idle"
 
+    def slot_loop(self, i: int) -> None:
+        """동시 처리 슬롯 — 작업 하나를 집어 끝낼 때까지 처리, 다시 집는다. 모델 계산은 자식의 엔진이 한데 모아 한다."""
+        errors = 0
+        while not self.stop_event.is_set():
+            try:
+                if self.stop_after_job_requested():
+                    log(f"슬롯 {i}: 「작업 끝나면 끄기」 — 새 작업을 집지 않습니다")
+                    return
+                job = self.claim()
+                if job is None:
+                    time.sleep(self.args.poll_sec)
+                    continue
+                with self.inflight_lock:
+                    self.inflight += 1
+                try:
+                    self.process(job)
+                finally:
+                    with self.inflight_lock:
+                        self.inflight -= 1
+                errors = 0
+            except Exception as e:  # noqa: BLE001
+                errors += 1
+                log(f"슬롯 {i} 오류 {errors}회째 — 잠시 뒤 다시: {brief(e)}")
+                time.sleep(min(60, 5 * errors))
+
+    def run_concurrent(self) -> None:
+        log(f"동시 처리 {self.args.concurrency}개로 작업을 받습니다")
+        slots = [threading.Thread(target=self.slot_loop, args=(i + 1,), name=f"slot-{i + 1}", daemon=True)
+                 for i in range(self.args.concurrency)]
+        for t in slots:
+            t.start()
+        try:
+            while any(t.is_alive() for t in slots):
+                try:
+                    self.types_info = discover_types(self.only)
+                    self.sweep_stale()
+                    self.state = "running" if self.inflight else "idle"
+                    with self.child_lock:
+                        if (self.child is not None and not self.inflight
+                                and time.time() - self.child.last_used > self.args.idle_unload_min * 60):
+                            log("작업이 없어 모델을 내려놓습니다(메모리 반환)")
+                            self.drop_child()
+                except Exception as e:  # noqa: BLE001
+                    log(f"감독 오류: {brief(e)}")
+                time.sleep(5)
+            log("모든 슬롯이 끝났습니다 — 워커를 마칩니다")
+        except KeyboardInterrupt:
+            log("중지합니다")
+        finally:
+            self.stop_event.set()
+            self.drop_child()
+
     def run(self) -> None:
         try:
             self.heartbeat()
@@ -583,6 +667,8 @@ class Worker:
             f"워커 시작 id={self.id} backend={BACKEND} fake={self.args.fake} 학습된 유형={trained or '없음'} "
             + (f"(GPU 여유 {self.args.min_free_mb}MB 이상일 때만 모델을 올림)" if self.args.min_free_mb else "(메모리 대기 없음)")
         )
+        if getattr(self.args, "concurrency", 1) > 1 and not self.args.fake and not self.args.once:
+            return self.run_concurrent()
         last_busy_log = 0.0
         errors = 0
         try:
@@ -684,6 +770,8 @@ def main() -> int:
     ap.add_argument("--once", action="store_true", help="한 건만 처리하고 끝")
     ap.add_argument("--types", default="", help="이 워커가 맡을 유형(쉼표) 예: 주제,제목 — 기본은 전부")
     ap.add_argument("--poll-sec", type=float, default=3.0)
+    ap.add_argument("--concurrency", type=int, default=int(os.environ.get("LOCAL_VARIANT_CONCURRENCY", "1") or 1),
+                    help="동시에 만들 문항 수(맥 MLX) — 2 이상이면 자식이 같은 모델 요청을 한꺼번에 생성(연속 배치)")
     ap.add_argument("--idle-unload-min", type=float, default=10.0, help="작업이 없으면 이만큼 뒤 모델을 내려놓음")
     ap.add_argument("--lease-min", type=float, default=15.0)
     ap.add_argument(
@@ -701,6 +789,8 @@ def main() -> int:
         help='[맥] 주장·검증·해설을 맡길 큰 모델(기본 Qwen3.6-35B-A3B-4bit, "" 이면 끔)',
     )
     args = ap.parse_args()
+    args.concurrency = max(1, args.concurrency) if BACKEND == "mlx" else 1  # 연속 배치는 MLX 런타임에만 있다
+    os.environ["LOCAL_VARIANT_CONCURRENCY"] = str(args.concurrency)  # 자식(inference_child)도 같은 값으로
     global REASONER
     REASONER = args.reasoner.strip() if BACKEND == "mlx" else ""
     if args.log_file:

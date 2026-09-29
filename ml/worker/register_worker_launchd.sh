@@ -47,6 +47,7 @@ cat > "${PLIST}" <<PLIST
     <key>PYTHONUTF8</key><string>1</string>
     <key>PYTHONIOENCODING</key><string>utf-8</string>
     <key>LOCAL_VARIANT_SKIP_EXPLAIN</key><string>${LOCAL_VARIANT_SKIP_EXPLAIN:-1}</string>
+    <key>LOCAL_VARIANT_CONCURRENCY</key><string>${LOCAL_VARIANT_CONCURRENCY:-8}</string>
     <key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin</string>
   </dict>
   <key>RunAtLoad</key><true/>
