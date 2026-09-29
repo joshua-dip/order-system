@@ -6,6 +6,7 @@ import AppBar from './AppBar';
 import HomeNoticeModal from './HomeNoticeModal';
 import HomeNoticeBar from './HomeNoticeBar';
 import { ServiceCard, buttonClass } from './ServiceCard';
+import { PinButton, QuickMenuBar, QuickMenuProvider } from './QuickMenu';
 import { membershipPricingOneLiner } from '@/lib/membership-pricing';
 import { fetchAuthMe } from '@/lib/auth-me-cache';
 import {
@@ -134,7 +135,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
     <ul className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${cols}`}>
       {servicesInGroup(group).map((s) => (
         <li key={s.id}>
-          <ServiceCard service={s} {...cardProps(s)} />
+          <ServiceCard service={s} {...cardProps(s)} corner={<PinButton id={`svc:${s.id}`} title={s.title} />} />
         </li>
       ))}
     </ul>
@@ -143,7 +144,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
   const groupMeta = (id: ServiceGroup) => SERVICE_GROUPS.find((g) => g.id === id)!;
 
   return (
-    <>
+    <QuickMenuProvider>
       <AppBar />
       <HomeNoticeModal showApplyCta={auth.status === 'guest'} />
       {/* 문의 버튼 아래 여백은 KakaoFab 이 페이지 끝에 둔다 */}
@@ -151,6 +152,9 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
           {/* 관리자 공지 한 줄 — 누르면 상세 */}
           <HomeNoticeBar />
+
+          {/* 자주 쓰는 메뉴 — 사용자가 고른 바로가기 */}
+          <QuickMenuBar className="mb-4" />
 
           {/* 머리말 — 목적별 바로가기 */}
           <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
@@ -368,7 +372,7 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
           )}
         </div>
       </div>
-    </>
+    </QuickMenuProvider>
   );
 };
 

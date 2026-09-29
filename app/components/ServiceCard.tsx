@@ -41,9 +41,11 @@ type ServiceCardProps = {
   action?: ReactNode;
   /** 조건 줄 옆에 덧붙일 현재 사용자 기준 상태 (예: 「로그인하면 이용 가능」) */
   statusNote?: string;
+  /** 오른쪽 위 모서리(자주 쓰는 메뉴 ☆ 등) */
+  corner?: ReactNode;
 };
 
-export function ServiceCard({ service, action, statusNote }: ServiceCardProps) {
+export function ServiceCard({ service, action, statusNote, corner }: ServiceCardProps) {
   const { title, summary, facts, badges, note, links, href, cta } = service;
   const titleId = `svc-${service.id}-title`;
 
@@ -59,10 +61,13 @@ export function ServiceCard({ service, action, statusNote }: ServiceCardProps) {
       aria-labelledby={titleId}
       className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
     >
-      <div className="flex flex-wrap items-center gap-1.5">
-        {badges.map((b) => (
-          <ServiceBadgeChip key={b} badge={b} />
-        ))}
+      <div className="flex items-start gap-1.5">
+        <div className="flex flex-1 flex-wrap items-center gap-1.5">
+          {badges.map((b) => (
+            <ServiceBadgeChip key={b} badge={b} />
+          ))}
+        </div>
+        {corner ? <div className="-mr-2 -mt-2">{corner}</div> : null}
       </div>
       <h3 id={titleId} className="mt-2.5 text-lg font-bold tracking-tight text-slate-900 break-keep">
         {title}

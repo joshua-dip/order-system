@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { QuickMenuBar, QuickMenuProvider } from '@/app/components/QuickMenu';
 import AppBar from '../components/AppBar';
 import PointChargeModal from '../components/PointChargeModal';
 import StudentManagement from '../components/StudentManagement';
@@ -293,7 +294,7 @@ export default function MyPage() {
   // URL ?tab=… 으로 진입 시 해당 탭 열기 (홈 공지 「내 정보에서 포인트 받기」 등)
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab');
-    if (t === 'settings' || t === 'exam' || t === 'orders' || t === 'points' || t === 'practice') setActiveTab(t as TabKey);
+    if (t === 'settings' || t === 'exam' || t === 'orders' || t === 'points' || t === 'practice' || t === 'schools' || t === 'students') setActiveTab(t as TabKey);
   }, []);
 
   useEffect(() => {
@@ -949,7 +950,7 @@ export default function MyPage() {
   };
 
   return (
-    <>
+    <QuickMenuProvider>
       <AppBar title="마이페이지" />
       <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] font-['Noto_Sans_KR',sans-serif]">
         {/* 상단 헤더 */}
@@ -1102,6 +1103,7 @@ export default function MyPage() {
 
         {/* 탭 컨텐츠 */}
         <div className="max-w-3xl mx-auto px-5 py-6">
+          <QuickMenuBar className="mb-5" />
 
           {/* ━━ 주문 내역 탭 ━━ */}
           {activeTab === 'orders' && (
@@ -2352,7 +2354,7 @@ export default function MyPage() {
         customerName={user.name || user.loginId}
         customerEmail={user.email || ''}
       />
-    </>
+    </QuickMenuProvider>
   );
 }
 
