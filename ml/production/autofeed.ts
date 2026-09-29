@@ -118,11 +118,16 @@ async function main() {
       const input: any[] = [], map: any[] = [], held: any[] = [];
       for (const j of done) {
         const doc = { type: j.type, passage_id: String(j.passage_id), question_data: j.result.question_data };
-        const issues = [...checkContentIntegrity(doc), ...await runPerQuestionValidations(db, doc)].filter((x: any) => x.severity === 'error');
+        // 해설 건너뛰기로 만든 초안(Explanation 빈칸)은 해설 규칙만 빼고 본다 — 해설은 검수 때 Claude 가 쓰고, 그 전엔 완료가 될 수 없다
+        const noExpl = !String(j.result.question_data?.Explanation ?? '').trim();
+        const issues = [...checkContentIntegrity(doc), ...await runPerQuestionValidations(db, doc)]
+          .filter((x: any) => x.severity === 'error' && !(noExpl && String(x.rule ?? '').startsWith('explanation_')));
         const key = `${j.source}|${j.type}`;
         if (issues.length) { held.push({ job_id: String(j._id), key, errors: issues.map((x: any) => `${x.rule}: ${x.message}`) }); continue; }
         map.push({ index: input.length, job_id: String(j._id), key });
-        input.push({ passage_id: String(j.passage_id), textbook: j.textbook, source: j.source, type: j.type, question_data: j.result.question_data,
+        // 해설 건너뛰기 초안 — 저장 CLI 가 빈 해설을 예비 문구로 채우지 않도록 표식을 넣는다. 검수(record.ts)가 Claude 해설로 바꾼 뒤에만 완료
+        const qdSave = noExpl ? { ...j.result.question_data, Explanation: EXPL_PENDING } : j.result.question_data;
+        input.push({ passage_id: String(j.passage_id), textbook: j.textbook, source: j.source, type: j.type, question_data: qdSave,
           status: '대기', option_type: 'English', ai_source: 'local-qwen-worker-unreviewed' });
       }
       fs.writeFileSync(path.join(dir, 'pending-save-held.json'), JSON.stringify(held, null, 1));
@@ -191,7 +196,7 @@ async function main() {
         actions.push(`다음 교재 시작: ${current}`);
         await topUp();
       }
-      const batch = await prepareNext(db, current);
+      const batch = await prepareNext(db, current, (planDoc?.topup as Record<string, Topup> | undefined)?.[current]);
       if (batch) {
         if (!DRY) {
           tsx(['ml/production/queue_worker_batch.ts', 'check', path.join(BATCHES, batch.rel)]);
@@ -211,11 +216,37 @@ async function main() {
   } finally { fs.closeSync(fd); fs.unlinkSync(lockFile); }
 }
 
-/** 지금 교재의 다음 회에서 빈 칸(저장 0·작업 이력 없음)을 최대 8지문 묶음으로 만든다 */
-async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: string) {
+/** 부족분 제작 예약 — 칸(지문×유형)마다 perSlot 문항까지. 시작 때 남은 부족분(baseNeed)은 웹 진행 바 기준 */
+type Topup = { perSlot: number; baseNeed?: number; startedAt?: Date };
+const TOPUP_MAX_FAILS = 2;
+/** 해설 건너뛰기 표식 — record.ts 가 이 문구가 남아 있으면 완료로 올리지 않는다 */
+const EXPL_PENDING = '[해설 작성 전 — 검수 때 Claude 가 씁니다]';
+
+/** 지금 교재의 다음 회에서 빈 칸(저장 0·작업 이력 없음)을 최대 8지문 묶음으로 만든다.
+ *  부족분 예약(topup)이 있으면: 저장이 perSlot 보다 적고, 진행 중·저장 전 작업이 없고, 예약 뒤 실패가 2번 미만인 칸 — 한 묶음에 칸당 1작업(다음 차례에 또 채운다).
+ *  queue_worker_batch check 와 같은 조건이어야 묶음이 통째로 거절되지 않는다. */
+async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: string, topup?: Topup) {
   const ps = await db.collection('passages').find({ textbook }, { projection: { chapter: 1, number: 1, 'content.original': 1 } }).toArray();
-  const tried = new Set((await db.collection('local_variant_jobs').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray()).map((j) => `${j.passage_id}|${j.type}`));
-  const stored = new Set((await db.collection('generated_questions').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray()).map((q) => `${q.passage_id}|${q.type}`));
+  const jobRows = await db.collection('local_variant_jobs').find({ textbook }, { projection: { passage_id: 1, type: 1, status: 1, saved_question_id: 1, created_at: 1, error: 1 } }).toArray();
+  const tried = new Set(jobRows.map((j) => `${j.passage_id}|${j.type}`));
+  const busy = new Set(jobRows.filter((j) => ['queued', 'running', 'done'].includes(String(j.status)) && !j.saved_question_id).map((j) => `${j.passage_id}|${j.type}`));
+  const fails = new Map<string, number>();
+  if (topup?.startedAt) for (const j of jobRows) if (j.status === 'failed' && j.created_at >= topup.startedAt) { const k = `${j.passage_id}|${j.type}`; fails.set(k, (fails.get(k) ?? 0) + 1); }
+  // 「지문이 짧아」(문장 수 부족)는 다시 돌려도 똑같이 실패한다 — 워커 불가 칸은 부족분에서 빼고 Claude 가 직접 쓴다
+  const tooShort = new Set(jobRows.filter((j) => j.status === 'failed' && /지문이 짧아/.test(String(j.error ?? ''))).map((j) => `${j.passage_id}|${j.type}`));
+  const qRows = await db.collection('generated_questions').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray();
+  const stored = new Set(qRows.map((q) => `${q.passage_id}|${q.type}`));
+  const storedN = new Map<string, number>();
+  for (const q of qRows) { const k = `${q.passage_id}|${q.type}`; storedN.set(k, (storedN.get(k) ?? 0) + 1); }
+  const canFill = (k: string) => !!topup && (storedN.get(k) ?? 0) < topup.perSlot && !busy.has(k) && !tooShort.has(k) && (fails.get(k) ?? 0) < TOPUP_MAX_FAILS;
+  // 세트 순서 — 채울 수 있는 칸 중 문항이 가장 적은 층부터(1세트 → 2세트 → 3세트). 웹의 세트별 바와 같은 순서
+  let level = Infinity;
+  if (topup) for (const p of ps) for (const type of LOCAL_VARIANT_TYPE_NAMES) { const k = `${p._id}|${type}`; if (canFill(k)) level = Math.min(level, storedN.get(k) ?? 0); }
+  const openSlot = (pid: string, type: string) => {
+    const k = `${pid}|${type}`;
+    if (!topup) return !tried.has(k) && !stored.has(k);
+    return canFill(k) && (storedN.get(k) ?? 0) === level;
+  };
   const chapters = [...new Set(ps.map((p: any) => String(p.chapter ?? '')))].sort((a, b) => { const [x, xs] = chapterKey(a), [y, ys] = chapterKey(b); return x - y || xs.localeCompare(ys, 'ko'); });
   for (const chapter of chapters) {
     const inChapter = ps.filter((p: any) => String(p.chapter ?? '') === chapter && String(p.content?.original ?? '').trim())
@@ -224,7 +255,7 @@ async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: stri
     for (const p of inChapter) {
       if (used.size >= MAX_PASSAGES) break;
       const paragraph = String((p as any).content.original).trim();
-      const open = LOCAL_VARIANT_TYPE_NAMES.filter((type) => !tried.has(`${p._id}|${type}`) && !stored.has(`${p._id}|${type}`) && !stored.has(`${String(p._id)}|${type}`));
+      const open = LOCAL_VARIANT_TYPE_NAMES.filter((type) => openSlot(String(p._id), type));
       if (!open.length) continue;
       used.add(String(p._id));
       const source = `${p.chapter} ${p.number}`;
@@ -236,8 +267,9 @@ async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: stri
     if (!DRY) {
       fs.mkdirSync(path.join(BATCHES, rel), { recursive: true });
       fs.writeFileSync(path.join(BATCHES, rel, 'manifest.json'), JSON.stringify({ batch_id: rel.replace('/', '-'), created_at: new Date().toISOString(), textbook, chapter,
-        target_completed_per_type: 1, first_pass_per_empty_slot: 1, max_jobs: slots.length, allow_existing_under_target: false, notebook_anchor: 'l40',
-        selection_policy: '자동 공급기: 예약 교재의 다음 회, 원문 있는 지문 최대 8개 × 12유형 중 저장 0·작업 이력 없는 칸. 적합성 사전 선별 없음', slots }, null, 2) + '\n');
+        target_completed_per_type: topup ? topup.perSlot : 1, first_pass_per_empty_slot: 1, max_jobs: slots.length, allow_existing_under_target: !!topup, notebook_anchor: 'l40',
+        selection_policy: topup ? `자동 공급기(부족분): 칸당 ${topup.perSlot}문항까지 세트 순서(문항 ${level}개인 칸), 진행 중·저장 전 작업 없고 예약 뒤 실패 ${TOPUP_MAX_FAILS}번 미만 — 칸당 1작업`
+          : '자동 공급기: 예약 교재의 다음 회, 원문 있는 지문 최대 8개 × 12유형 중 저장 0·작업 이력 없는 칸. 적합성 사전 선별 없음', slots }, null, 2) + '\n');
     }
     return { rel, chapter, passages: used.size, slots: slots.length };
   }

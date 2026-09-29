@@ -64,7 +64,8 @@ function onlyPerOptionSentences(explanation: string, re: RegExp): boolean {
   const sentences = explanation.split(/(?<=[.。!?])\s+|\n+/).filter((x) => re.test(x));
   return sentences.length > 0 && sentences.every((x) => {
     const marks = new Set(x.match(CIRCLED) ?? []);
-    return marks.size === 1 && !/[~∼]|모두|전부|다섯/.test(x);
+    // 범위는 「①~⑤」「1~5」처럼 번호 사이 물결만 — 「'~할 때'」 같은 뜻풀이 물결은 범위가 아니다
+    return marks.size === 1 && !/[①-⑤1-5]\s*[~∼]\s*[①-⑤1-5]|모두|전부|다섯/.test(x);
   });
 }
 

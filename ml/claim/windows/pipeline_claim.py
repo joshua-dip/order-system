@@ -46,7 +46,7 @@ from _cuda_runtime import (  # noqa: E402
     set_adapter,
 )
 
-from json_extract import explanation_text, trim_to_sentence  # noqa: E402
+from json_extract import explanation_text, trim_to_sentence, unify_end_period  # noqa: E402
 
 from distractor_check import distinct_options, fix_distractors, flagged_warnings, settle_answer  # noqa: E402
 
@@ -194,8 +194,8 @@ def _dup_option_errors(opts: list[str]) -> list[str]:
 
 def _format_options(phrases: list[str]) -> str:
     parts = []
-    for i, p in enumerate(phrases[:5]):
-        parts.append(f"{CIRCLED[i]} {_strip_circled(p)}")
+    for i, p in enumerate(unify_end_period([_strip_circled(x) for x in phrases[:5]])):
+        parts.append(f"{CIRCLED[i]} {p}")
     return " ### ".join(parts)
 
 
@@ -539,7 +539,7 @@ def run_pipeline(
                 f"정답은 {CIRCLED[correct_index]}. 글의 논지는 「{thesis_ko or thesis_en}」이며, "
                 f"필자는 이를 실천으로 옮겨 「{practical_en}」을 주장한다. 다른 선지는 반대 방향이거나 "
                 f"이 글이 요구하지 않는 실천이다."
-            )[:450]
+            )
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
         # 형식에 안 맞거나 겹치는 오답(짧음·You 로 시작·조동사/핵심 형용사 없음)은 지어내 채우지 않는다 —

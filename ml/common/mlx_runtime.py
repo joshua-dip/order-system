@@ -11,6 +11,8 @@ mlx 는 함수 안에서만 import 한다 — 모듈 import 만으로 GPU 를 �
 from __future__ import annotations
 
 import contextlib
+import os
+import time
 import json
 import sys
 from pathlib import Path
@@ -23,6 +25,10 @@ if str(_COMMON) not in sys.path:
 from json_extract import extract_json_object  # noqa: E402
 
 BACKEND = "mlx"
+# 호출별 시간 기록 — 워커·평가가 문항 하나 만들기 전에 비우고 끝나면 읽는다(어느 단계가 느린지 재기, 동작에는 영향 없음)
+CALL_LOG: list[dict] = []
+# 해설 건너뛰기(2026-09-29) — 해설은 검수 때 Claude 가 쓴다. 해설 프롬프트(「…해설만 …」)는 모델을 부르지 않고 빈 해설을 돌려준다
+SKIP_EXPLAIN = os.environ.get("LOCAL_VARIANT_SKIP_EXPLAIN") == "1"
 _BASE = "__base__"
 _REASONER = "__reasoner__"
 
@@ -178,7 +184,11 @@ def chat_text(
     from mlx_lm import generate
     from mlx_lm.sample_utils import make_sampler
 
+    if SKIP_EXPLAIN and "해설만" in system:
+        CALL_LOG.append({"step": "해설(건너뜀)", "model": "-", "sec": 0.0, "in": len(user), "out": 0, "max": max_tokens})
+        return '{"Explanation": ""}'
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    t0 = time.time()
     ctx = contextlib.nullcontext() if use_adapter else adapter_off(model)
     with ctx:
         if isinstance(model, MlxModel):
@@ -197,6 +207,12 @@ def chat_text(
         )
     if "</think>" in out:
         out = out.split("</think>", 1)[1]
+    try:
+        who = model._current_name() if isinstance(model, MlxModel) else "model"
+    except Exception:  # noqa: BLE001
+        who = "?"
+    CALL_LOG.append({"step": " ".join(system.split())[:48], "model": who, "sec": round(time.time() - t0, 2),
+                     "in": len(user), "out": len(out), "max": max_tokens})
     return out
 
 

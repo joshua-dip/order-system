@@ -44,7 +44,9 @@ The sentence will be placed between [Before] and [After] in the passage. Real CS
 IRR_CHECK_SYS = """You check the inserted sentence of a Korean CSAT 「irrelevant sentence」 question.
 Output ONLY one JSON object. No markdown.
 Keys: fits (true if [Sentence] placed between [Before] and [After] continues, supports, or restates the passage's point there,
-so that a careful reader could accept it as part of the passage; false if it clearly drifts away from the line of argument), reason (short English)."""
+so that a careful reader could accept it as part of the passage; false if it clearly drifts away from the line of argument),
+restates (true if [Sentence] says essentially the same thing as ANY single sentence of the passage, even in other words),
+reason (short English)."""
 
 PICK_VOCAB_SYS = """You build a Korean CSAT 「vocabulary in context」 question.
 Output ONLY one JSON object. No markdown.
@@ -149,6 +151,21 @@ def _overlap(a: str, b: str) -> float:
     """두 문장의 낱말 겹침 — 짧은 쪽 기준."""
     wa, wb = ({w.lower() for w in _WORD.findall(t)} for t in (a, b))
     return len(wa & wb) / max(1, min(len(wa), len(wb)))
+
+
+def _restates(sentence: str, sentences: list[str]) -> tuple[float, str]:
+    """끼운 문장의 내용어(앞 5글자)가 원문 한 문장에 절반 이상 들어 있으면 그 문장의 재진술이다.
+    파워업 검수: 무관한문장 X 46건 중 14건이 여기 걸리고, 통과(O) 156건 중 3건만 걸린다(0.5·3개)."""
+    def stems(t: str) -> set[str]:
+        return {w.lower()[:5] for w in _WORD.findall(t) if len(w) >= 4 and w.lower() not in _STOP}
+    mine = stems(sentence)
+    best, hit = 0.0, ""
+    for x in sentences:
+        shared = mine & stems(x)
+        r = len(shared) / max(1, len(mine))
+        if len(shared) >= 3 and r > best:
+            best, hit = r, x
+    return best, hit
 
 
 _PARTICLE = {"against", "up", "off", "out", "from", "into", "with", "to", "on", "for", "about", "down", "away", "over"}
@@ -267,7 +284,7 @@ def run(kind: str, chat_text, model: Any, tokenizer: Any, passage: str, *, temp:
         if len(explanation) >= 40:
             break
     if len(explanation) < 40:
-        explanation = f"{answer}{_SUBJ[answer]} 정답입니다. {chosen['note']}"[:450]
+        explanation = f"{answer}{_SUBJ[answer]} 정답입니다. {chosen['note']}"
     return {
         "ok": True,
         "question_data": {
@@ -323,13 +340,18 @@ def _make(kind: str, k: int, passage: str, sentences: list[str], call, rnd: rand
         if re.match(r"(Many|Some|Most)\b", irr):
             _skip(trace, f"「Many …」 시작(늘 같은 모양이라 티가 난다) — {irr[:80]}")
             return None
+        ratio, same = _restates(irr, sentences)
+        if ratio >= 0.5:
+            # 앞뒤 문장을 말만 바꿔 되풀이하면 흐름에 맞는 문장이라 정답이 없다(파워업 검수 X 46건의 주된 원인)
+            _skip(trace, f"원문 문장 재진술({ratio:.2f}) — {irr[:60]} ≈ {same[:60]}")
+            return None
         if _key_overlap(irr, passage) < 2:
             _skip(trace, f"지문 핵심어를 다시 쓰지 않음(너무 튄다) — {irr[:80]}")
             return None
         chk = call(IRR_CHECK_SYS, f"[Passage]\n{passage}\n\n[Before]\n{before}\n\n[Sentence]\n{irr}\n\n[After]\n"
                                   f"{after or '(end of passage)'}\n\nReturn JSON.", max_tokens=160, t=0.0) or {}
-        trace.append({"stage": "irr_check", "fits": chk.get("fits")})
-        if chk.get("fits") is True:
+        trace.append({"stage": "irr_check", "fits": chk.get("fits"), "restates": chk.get("restates")})
+        if chk.get("fits") is True or chk.get("restates") is True:
             # 앞 문장을 그대로 잇거나 요지를 되풀이하면 무관하지 않다(29·30·37번) — 풀이는 「튀는 문장」으로 맞혀도 문항은 틀린다
             _skip(trace, f"흐름에 맞음(무관하지 않다) — {irr[:80]}")
             return None

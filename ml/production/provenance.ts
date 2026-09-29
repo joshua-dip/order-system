@@ -72,6 +72,8 @@ export interface ReviewProvenance {
   at: Date;
   shard?: string;
   outcome?: string;
+  /** 검수 토큰 — 에이전트는 묶음 단위로 풀어 문항별 정확값은 없다: 묶음 합계 ÷ 문항 수 */
+  usage?: { shard_tokens: number | null; shard_questions: number; tokens_per_question: number | null; duration_ms: number | null; model?: string };
 }
 export async function setReviewProvenance(db: Db, questionId: string | ObjectId, review: ReviewProvenance) {
   return db.collection('generated_questions').updateOne({ _id: new ObjectId(String(questionId)) }, { $set: { 'provenance.review': review } });
