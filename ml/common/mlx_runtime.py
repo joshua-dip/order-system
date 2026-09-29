@@ -162,7 +162,7 @@ class _Engine:
         self.mm = mm
         self.q: queue.Queue = queue.Queue()
         self.gens: dict[str, Any] = {}
-        self.live: dict[tuple[str, int], tuple[Any, list, Any]] = {}
+        self.live: dict[tuple[str, int], tuple] = {}  # (fut, 토큰, tok, stop, 원래 요청)
         threading.Thread(target=self._loop, name="mlx-engine", daemon=True).start()
 
     def submit(self, key: str, tok: Any, prompt_tokens: list[int], max_tokens: int, temp: float, stop: str | None = None):
@@ -186,12 +186,12 @@ class _Engine:
     def _take(self, item: tuple) -> None:
         from mlx_lm.sample_utils import make_sampler
 
-        key, tok, ptoks, max_tokens, temp, fut, stop = item
+        key, tok, ptoks, max_tokens, temp, fut, stop = item[:7]
         try:
             # insert 는 줄만 세운다 — 프롬프트 읽기(prefill)는 _step 에서 그 어댑터를 끼운 뒤에 한다
             uid = self._gen(key, tok).insert([ptoks], [max_tokens],
                                              samplers=[make_sampler(temp=temp, top_p=0.9 if temp > 0 else 0.0)])[0]
-            self.live[(key, uid)] = (fut, [], tok, stop)
+            self.live[(key, uid)] = (fut, [], tok, stop, item)
         except Exception as e:  # noqa: BLE001
             fut.set_exception(e)
 
@@ -202,7 +202,7 @@ class _Engine:
             ent = self.live.get((key, r.uid))
             if ent is None:
                 continue
-            fut, toks, tok, stop = ent
+            fut, toks, tok, stop, _ = ent
             if r.finish_reason != "stop":
                 toks.append(r.token)
             if stop and r.finish_reason is None and stop in tok.decode(toks[-12:]):
@@ -227,20 +227,34 @@ class _Engine:
         mx.set_default_stream(mx.new_stream(mx.cpu))
         self.stream = mx.new_stream(mx.default_device())
         mx.set_default_stream(self.stream)
+        steps = 0
         while True:
             if not self.live:
+                mx.clear_cache()  # 쉬는 틈에 캐시를 비운다(아래 Resource limit 참고)
                 self._take(self.q.get())
             while True:
                 try:
                     self._take(self.q.get_nowait())
                 except queue.Empty:
                     break
+            steps += 1
+            if steps % 1000 == 0:
+                mx.clear_cache()
             for key in self._keys_to_step():
                 try:
                     self._step(key)
                 except Exception as e:  # noqa: BLE001 — 이 모델의 요청만 실패로 돌려주고 생성기를 새로
+                    # 09-30 01:45 동시 8개로 돌던 중 35B 프롬프트 읽기에서 「[metal::malloc] Resource limit (499000)
+                    # exceeded」 — 그 모델에 걸려 있던 문항 7개가 한꺼번에 실패했다. 캐시를 비우고 한 번은 처음부터 다시 넣는다
+                    retry = "Resource limit" in str(e)
+                    if retry:
+                        mx.clear_cache()
                     for lk in [lk for lk in self.live if lk[0] == key]:
-                        self.live.pop(lk)[0].set_exception(e)
+                        fut, _, _, _, item = self.live.pop(lk)
+                        if retry and len(item) == 7:
+                            self.q.put(item + (True,))
+                        else:
+                            fut.set_exception(e)
                     self.gens.pop(key, None)
 
 
