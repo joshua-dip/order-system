@@ -196,11 +196,15 @@ def _one_change(orig: str, wrong: str) -> bool:
 
 
 def _locate_any(passage: str, spans: list[str]) -> list[tuple[int, int]] | None:
-    """spans 를 순서와 상관없이(같은 말이 둘이면 다른 자리로) 찾아 위치순으로 돌려준다."""
+    """spans 를 순서와 상관없이(같은 말이 둘이면 다른 자리로) 찾아 위치순으로 돌려준다.
+    대소문자·곧은/굽은 따옴표는 가리지 않는다 — 문장 첫머리 「Which」를 「which」로 적었다고 버린 게
+    「지문에서 못 찾음」의 17%(동시 처리 전 로그 568건 중 98건)였다. 위치는 원문 그대로라 밑줄 글자는 원문 꼴이다."""
+    text = passage.replace("’", "'").replace("‘", "'")  # 한 글자씩 바꿔 위치가 그대로다
     used: list[tuple[int, int]] = []
     for sp in spans:
-        pat = re.compile(r"(?<![A-Za-z])" + r"\s+".join(re.escape(w) for w in sp.split()) + r"(?![A-Za-z]|['’][a-z])")
-        hit = next((m.span() for m in pat.finditer(passage)
+        sp = sp.replace("’", "'").replace("‘", "'")
+        pat = re.compile(r"(?<![A-Za-z])" + r"\s+".join(re.escape(w) for w in sp.split()) + r"(?![A-Za-z]|'[a-z])", re.I)
+        hit = next((m.span() for m in pat.finditer(text)
                     if all(m.end() <= u0 or m.start() >= u1 for u0, u1 in used)), None)
         if hit is None:
             return None
