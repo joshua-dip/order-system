@@ -297,7 +297,11 @@ def run_pipeline(
             continue
         # 같은 선지도 놓인 순서에 따라 판정이 달라졌다(재확인에서 걸린 일치형의 절반 — 오답이 사실은 참).
         # 순서를 뒤집어 한 번 더 묻고, 두 판정 중 하나라도 규칙에 어긋나면 고친다(정답이 둘인 문항을 막는 쪽으로).
-        rev = _verdicts(call(
+        # 역순은 정순이 깔끔할 때(확인)·정답을 옮기려 할 때만 — 판정이 이 유형 시간의 65% 였다(속도 개선 09-30)
+        key0 = "true" if kind == "일치" else "false"
+        c0 = [i for i, c in enumerate(checks) if c["verdict"] == key0]
+        need_rev = not _problems(kind, checks, answer) or (len(c0) == 1 and c0[0] != answer)
+        rev = None if not need_rev else _verdicts(call(
             CHECK_SYS,
             f"[Passage]\n{passage}\n\n[Options]\n" + "\n".join(f"{k + 1}. {o}" for k, o in enumerate(options[::-1]))
             + "\n\nReturn checks JSON.",

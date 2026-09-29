@@ -70,7 +70,7 @@ CHECK_SYS = """You check the five options of a Korean CSAT 「summary completion
 Each numbered candidate is already a COMPLETE sentence. Compare each sentence with the passage independently.
 Do not choose the best sentence: every defensible sentence must be marked fits.
 Output ONLY one JSON object. No markdown.
-Keys: checks (array of exactly 5 objects, same order as given: {"i": 1-5, "verdict": "fits"|"wrong"|"ungrammatical", "reason": short English}).
+Keys: checks (array of exactly 5 objects, same order as given: {"i": 1-5, "verdict": "fits"|"wrong"|"ungrammatical", "why": at most 6 English words}).
 - fits: grammatical AND the completed summary states the passage correctly (both words right).
   Synonyms and near-synonyms of the right words ALSO count as fits (copying = imitation = representation, grew = raised).
 - wrong: grammatical, but the completed summary misstates the passage — one or both words point the wrong way,
@@ -314,7 +314,7 @@ def run_pipeline(
             f"[Passage]\n{passage}\n\n[Complete candidates]\n"
             + "\n".join(f"{k + 1}. {fill(summary, pairs[j])}" for k, j in enumerate(order))
             + "\n\nReturn checks JSON.",
-            max_tokens=600, t=0.0,
+            max_tokens=300, t=0.0,
         ))
         if got is None:
             return None
@@ -333,9 +333,14 @@ def run_pipeline(
         if time.time() - started > TIME_BUDGET_SEC:
             print(f"[pipeline] time budget {TIME_BUDGET_SEC}s reached — stop rewriting", file=sys.stderr)
             break
-        # 2) 넣어 보기 — 순서를 바꿔 두 번(16과), 하나라도 어긋나면 고친다
+        # 2) 넣어 보기 — 순서를 바꿔 두 번(16과), 하나라도 어긋나면 고친다.
+        #    역순 판정은 정순이 깔끔할 때(확인)·정답을 옮기려 할 때만 — 판정이 이 유형 시간의 47% 였다(속도 개선 09-30)
         verdicts = check([0, 1, 2, 3, 4])
-        rev = check([4, 3, 2, 1, 0])
+        rev = None
+        if verdicts is not None:
+            f0 = [i for i, v in enumerate(verdicts) if v == "fits"]
+            if not _problems(verdicts, answer) or (len(f0) == 1 and f0[0] != answer):
+                rev = check([4, 3, 2, 1, 0])
         trace.append({"stage": "check", "out": verdicts, "reversed": rev})
         checked_pairs = tuple(pairs) if verdicts is not None and rev is not None else None
         if verdicts is None:
