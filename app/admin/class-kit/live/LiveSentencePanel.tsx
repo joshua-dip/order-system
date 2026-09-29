@@ -141,7 +141,7 @@ export function LiveSentencePanelBody({
                   return (
                     <span key={i} className={`relative rounded px-0.5 ${st?.cls ?? ''}`}>
                       {r?.start && st ? (
-                        <span className="absolute -top-3.5 left-0 text-[10px] font-bold leading-none">{st.label}</span>
+                        <span className="absolute -top-4 left-0 text-[11px] font-extrabold leading-none tracking-wide">{st.label}</span>
                       ) : null}
                       {w}
                     </span>

@@ -330,6 +330,16 @@ export function ClassKitLiveView({
             </div>
           </div>
         ) : null}
+        {/* 좁은 화면에서는 오른쪽 도구 막대 대신 여기서 글자 크기 */}
+        <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/80 p-0.5 md:hidden">
+          <button type="button" onClick={() => zoomBy(-1)} className={seg(false)} aria-label="작게">
+            －
+          </button>
+          <span className="px-1 text-[11px] tabular-nums text-zinc-400">{prefs.zoom}%</span>
+          <button type="button" onClick={() => zoomBy(1)} className={seg(false)} aria-label="크게">
+            ＋
+          </button>
+        </div>
         <div className="flex-1" />
         {data && !data.hasAnalysis ? (
           <span className="text-[11px] text-zinc-500">이 지문은 분석 전 — 문장·해석·듣기만 보여요</span>
@@ -446,7 +456,7 @@ export function ClassKitLiveView({
 
         {/* 오른쪽 도구 막대 — 판서·확대·전체 화면 */}
         {data ? (
-          <div className="absolute right-3 top-3 z-30 flex flex-col items-center gap-1 rounded-xl border border-zinc-300 bg-white/95 p-1 text-slate-700 shadow">
+          <div className="absolute right-3 top-3 z-30 hidden flex-col items-center gap-1 rounded-xl border border-zinc-300 bg-white/95 p-1 text-slate-700 shadow md:flex">
             <button type="button" onClick={() => setInkOn((v) => !v)} className={`flex h-10 w-10 flex-col items-center justify-center rounded-lg text-[10px] ${inkOn ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100'}`} title="판서">
               <IconPen />
               판서
