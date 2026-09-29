@@ -48,6 +48,9 @@ class MlxModel:
         self.tokenizers: dict[str, Any] = {_BASE: tokenizer}
         self.active = _BASE
         self._off = 0
+        # 7B 한 벌 + LoRA 층 한 번 — 어댑터는 가중치(23MB)만 들고 있다가 바꿔 끼운다(예전: 어댑터마다 7B 를 통째로 한 벌씩, 고정 메모리 51GB)
+        self.adapter_weights: dict[str, list] = {}
+        self._loaded: str | None = None
 
     def set_adapter(self, name: str) -> None:
         if name not in self.models:
@@ -69,7 +72,12 @@ class MlxModel:
         return self.active
 
     def current(self) -> Any:
-        return self.models[self._current_name()]
+        name = self._current_name()
+        if self.adapter_weights and name != _REASONER and name != self._loaded:
+            # 같은 7B 에 이 어댑터 가중치를 끼운다(_BASE 는 LoRA B 를 0 으로 — 베이스와 같은 출력)
+            self.models[_BASE].load_weights(self.adapter_weights[name], strict=False)
+            self._loaded = name
+        return self.models[name]
 
     def current_tokenizer(self) -> Any:
         name = self._current_name()
@@ -109,15 +117,39 @@ def load_base(model_name: str, use_4bit: bool = True) -> tuple[MlxModel, Any]:
 
 
 def attach_adapters(model: MlxModel, adapters: list[tuple[str, Path]]) -> MlxModel:
-    """어댑터마다 베이스+LoRA 모델을 따로 올린다. 첫 어댑터를 켠 상태로 돌려준다(peft 와 같음)."""
-    from mlx_lm import load
+    """베이스 7B 에 LoRA 층을 한 번만 붙이고 어댑터별 가중치만 메모리에 둔다. 첫 어댑터를 켠 상태로 돌려준다(peft 와 같음).
+    어댑터 설정(층 수·rank·scale·keys)이 모두 같아야 한다 — 다르면 예전처럼 어댑터마다 모델을 따로 올린다."""
+    if not adapters:
+        return model
+    import mlx.core as mx
+    from mlx_lm.tuner.utils import linear_to_lora_layers
 
-    for name, path in adapters:
-        adapted, tok = load(model.base_name, adapter_path=str(path))
-        model.models[name] = adapted
-        model.tokenizers[name] = tok
-    if adapters:
+    def cfg(path: Path) -> tuple:
+        c = json.loads((path / "adapter_config.json").read_text(encoding="utf-8"))
+        return (c.get("fine_tune_type", "lora"), c.get("num_layers"), json.dumps(c.get("lora_parameters"), sort_keys=True))
+
+    if len({cfg(p) for _, p in adapters}) != 1 or cfg(adapters[0][1])[0] != "lora":
+        from mlx_lm import load
+        for name, path in adapters:
+            adapted, tok = load(model.base_name, adapter_path=str(path))
+            model.models[name] = adapted
+            model.tokenizers[name] = tok
         model.active = adapters[0][0]
+        return model
+
+    base = model.models[_BASE]
+    c = json.loads((adapters[0][1] / "adapter_config.json").read_text(encoding="utf-8"))
+    linear_to_lora_layers(base, c["num_layers"], c["lora_parameters"])
+    base.eval()
+    for name, path in adapters:
+        w = mx.load(str(path / "adapters.safetensors"))
+        model.adapter_weights[name] = list(w.items())
+        model.models[name] = base
+        model.tokenizers[name] = model.tokenizers[_BASE]
+    # 어댑터 없음 = LoRA B 를 0 으로(A 는 아무 값이어도 기여 0)
+    first = dict(model.adapter_weights[adapters[0][0]])
+    model.adapter_weights[_BASE] = [(k, mx.zeros_like(v) if k.endswith("lora_b") else v) for k, v in first.items()]
+    model.active = adapters[0][0]
     return model
 
 
