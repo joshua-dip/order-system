@@ -19,6 +19,8 @@ interface ListUser {
   signupPremiumTrialUntil: string | null;
   isVip: boolean;
   createdAt: string;
+  /** 회원 구분 student|parent|teacher, 비면 미분류 */
+  memberType?: string;
   /** 멤버십 회원의 이번 달 기본난도 무료 한도. 일반 회원은 null. */
   baseFreeQuota: { limit: number; used: number; remaining: number; trial: boolean } | null;
 }
@@ -97,6 +99,14 @@ function membershipLabel(
   return null;
 }
 
+const MEMBER_TYPES = [
+  { value: 'teacher', label: '선생님' },
+  { value: 'parent', label: '학부모' },
+  { value: 'student', label: '학생' },
+] as const;
+type TypeFilter = 'all' | 'unknown' | (typeof MEMBER_TYPES)[number]['value'];
+const typeOf = (u: ListUser) => (MEMBER_TYPES.some((t) => t.value === u.memberType) ? (u.memberType as string) : 'unknown');
+
 export default function AdminUsersPage() {
   const router = useRouter();
   const [adminLoginId, setAdminLoginId] = useState('');
@@ -104,6 +114,37 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  /** 구분 필터 — 대시보드 「미분류 N」에서 ?type=unknown 으로 들어온다 */
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState('');
+
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('type');
+    if (t === 'unknown' || MEMBER_TYPES.some((x) => x.value === t)) setTypeFilter(t as TypeFilter);
+  }, []);
+
+  /** 구분 바로 저장 — 목록에서 한 줄씩 분류 */
+  const saveMemberType = async (u: ListUser, value: string) => {
+    setSavingId(u.id);
+    setSaveError('');
+    const prev = u.memberType ?? '';
+    setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, memberType: value } : x)));
+    try {
+      const r = await fetch(`/api/admin/users/${u.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberType: value }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error || '저장 실패');
+    } catch (e) {
+      setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, memberType: prev } : x)));
+      setSaveError(`${u.name}: ${(e as Error).message}`);
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -126,17 +167,24 @@ export default function AdminUsersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const typeCounts = useMemo(() => {
+    const c: Record<string, number> = { all: users.length, unknown: 0, teacher: 0, parent: 0, student: 0 };
+    for (const u of users) c[typeOf(u)] += 1;
+    return c;
+  }, [users]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter(
+    const byType = typeFilter === 'all' ? users : users.filter((u) => typeOf(u) === typeFilter);
+    if (!q) return byType;
+    return byType.filter(
       (u) =>
         u.name.toLowerCase().includes(q) ||
         u.loginId.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
         u.phone.includes(q)
     );
-  }, [users, search]);
+  }, [users, search, typeFilter]);
 
   return (
     <div className="min-h-screen bg-slate-900 flex text-white">
@@ -174,6 +222,26 @@ export default function AdminUsersPage() {
             )}
           </div>
 
+          {/* 구분 필터 */}
+          <div className="mb-4 flex flex-wrap items-center gap-1.5">
+            {([['all', '전체'], ['unknown', '미분류'], ...MEMBER_TYPES.map((t) => [t.value, t.label])] as [TypeFilter, string][]).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setTypeFilter(k)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                  typeFilter === k ? 'bg-slate-100 text-slate-900' : 'bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                {label} <span className="opacity-60">{typeCounts[k] ?? 0}</span>
+              </button>
+            ))}
+            {typeFilter === 'unknown' ? (
+              <span className="text-xs text-slate-500">오른쪽 「구분」에서 고르면 바로 저장돼요.</span>
+            ) : null}
+            {saveError ? <span className="text-xs text-red-300">{saveError}</span> : null}
+          </div>
+
           {/* 로딩/에러 */}
           {loading && (
             <div className="text-center py-16 text-slate-500">불러오는 중...</div>
@@ -191,6 +259,7 @@ export default function AdminUsersPage() {
                 <thead>
                   <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
                     <th className="text-left px-5 py-3 font-medium">이름 / 아이디</th>
+                    <th className="text-left px-3 py-3 font-medium">구분</th>
                     <th className="text-left px-5 py-3 font-medium">이메일</th>
                     <th className="text-left px-5 py-3 font-medium hidden md:table-cell">전화</th>
                     <th className="text-left px-5 py-3 font-medium hidden lg:table-cell">멤버십</th>
@@ -202,7 +271,7 @@ export default function AdminUsersPage() {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-10 text-slate-500">
+                      <td colSpan={8} className="text-center py-10 text-slate-500">
                         {search ? '검색 결과가 없습니다.' : '회원이 없습니다.'}
                       </td>
                     </tr>
@@ -226,6 +295,24 @@ export default function AdminUsersPage() {
                               {u.name}
                             </p>
                             <p className="text-slate-400 text-xs font-mono">{u.loginId}</p>
+                          </td>
+                          <td className="px-3 py-3.5" onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={typeOf(u) === 'unknown' ? '' : (u.memberType as string)}
+                              disabled={savingId === u.id}
+                              onChange={(e) => saveMemberType(u, e.target.value)}
+                              aria-label={`${u.name} 회원 구분`}
+                              className={`rounded-lg border px-2 py-1 text-xs ${
+                                typeOf(u) === 'unknown' ? 'border-amber-500/50 bg-amber-500/10 text-amber-200' : 'border-slate-600 bg-slate-900 text-slate-200'
+                              }`}
+                            >
+                              <option value="">미분류</option>
+                              {MEMBER_TYPES.map((t) => (
+                                <option key={t.value} value={t.value}>
+                                  {t.label}
+                                </option>
+                              ))}
+                            </select>
                           </td>
                           <td className="px-5 py-3.5 text-slate-300 truncate max-w-[180px]">
                             {u.email || <span className="text-slate-600">—</span>}

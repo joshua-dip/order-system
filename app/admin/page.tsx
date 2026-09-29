@@ -3589,9 +3589,13 @@ export default function AdminDashboardPage() {
                     </span>
                   ))}
                 {memberTypeCounts.unknown > 0 && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-600/40 text-slate-300 ring-1 ring-slate-500/40">
-                    미분류 {memberTypeCounts.unknown}
-                  </span>
+                  <Link
+                    href="/admin/users?type=unknown"
+                    title="회원 목록에서 구분을 골라 분류하기"
+                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-600/40 text-slate-300 ring-1 ring-slate-500/40 hover:bg-slate-500/50 hover:text-white"
+                  >
+                    미분류 {memberTypeCounts.unknown} →
+                  </Link>
                 )}
               </div>
             </div>

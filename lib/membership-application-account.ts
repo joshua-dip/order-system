@@ -101,6 +101,8 @@ export async function createAccountFromApplication(
     createdAt: now,
     signupPremiumTrialUntil,
     createdFromApplicationId: opts.applicationId,
+    /* 신청서에서 고른 구분(학생·학부모·선생님)을 회원 구분으로 — 예전엔 버려져 대시보드에 「미분류」로 쌓였다 */
+    ...(['student', 'parent', 'teacher'].includes(app.applicantType) ? { memberType: app.applicantType } : {}),
   });
 
   await updateApplicationStatus(opts.applicationId, 'completed').catch(() => {});
