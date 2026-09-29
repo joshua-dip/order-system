@@ -116,6 +116,9 @@ function compOf(st: Record<string, any>): { koreanTopic: string; implicitMeaning
   };
 }
 
+/** 종합분석 행 — 클래스키트 수업 화면도 같은 라벨 규칙을 쓴다 */
+export const comprehensiveRows = compOf;
+
 /** 어휘 성격의 태그인가 — 리체움은 tagName "#어휘", 이쪽은 category '어휘'. */
 const isVocabTag = (t: Record<string, any>) =>
   String(t?.category ?? '').includes('어휘') || String(t?.tagName ?? '').includes('어휘');

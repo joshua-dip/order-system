@@ -3,7 +3,7 @@
 /**
  * 클래스키트 유형 탭 — 강의용자료 + 수업용자료 4모드를 한 줄로.
  *
- * - 강의용자료(lecture): 항상 라우트 이동(Link, /admin/class-kit/lecture)
+ * - 수업 화면(live)·강의용자료(lecture): 항상 라우트 이동(Link)
  * - 수업용 모드(영한대조/한줄해석/영작하기/해석쓰기):
  *     · onSelectLessonMode 가 있으면(= 수업용 페이지 안) 버튼으로 즉시 전환
  *     · 없으면(= 강의용 페이지) 해당 라우트로 이동(Link)
@@ -12,9 +12,10 @@
 import Link from 'next/link';
 import type { LessonMode } from '@/lib/lesson-material-html';
 
-export type ClassKitTabKey = 'lecture' | LessonMode;
+export type ClassKitTabKey = 'live' | 'lecture' | LessonMode;
 
 const TAB_DEFS: { key: ClassKitTabKey; label: string; path: string }[] = [
+  { key: 'live', label: '수업 화면', path: '/live' },
   { key: 'lecture', label: '강의용자료', path: '/lecture' },
   { key: 'parallel', label: '수업용자료', path: '/lesson' },
   { key: 'lineByLine', label: '한줄해석', path: '/lesson/line' },
@@ -42,7 +43,7 @@ export default function ClassKitTabs({
             : 'text-zinc-500 hover:bg-zinc-800/80 hover:text-zinc-200'
         }`;
         const href = `${routeBase}${t.path}`;
-        if (t.key !== 'lecture' && onSelectLessonMode) {
+        if (t.key !== 'lecture' && t.key !== 'live' && onSelectLessonMode) {
           return (
             <button key={t.key} type="button" onClick={() => onSelectLessonMode(t.key as LessonMode)} className={cls}>
               {t.label}
