@@ -193,6 +193,32 @@ def _verdicts(obj: dict | None) -> list[dict] | None:
     return out
 
 
+def _norm_words(text: str) -> str:
+    return " ".join(re.sub(r"[^a-z0-9' ]+", " ", text.lower().replace("\u2019", "'")).split())
+
+
+def verbatim_in_passage(option: str, passage: str, min_words: int = 6) -> bool:
+    """선지가 지문에 글자 그대로(문장부호·대소문자 무시) 들어 있나 — 그렇다면 참 진술이다.
+    검수 파일럿에서 불일치 정답이 원문 문장을 그대로 옮긴 것이라 다섯 선지가 모두 참인 문항이 나왔다.
+    사실 확인(35B)은 뒤 문장의 「few …」와 헷갈려 거짓으로 봤다.
+    한 낱말만 바꾼 거짓 선지(예: more → less)는 걸리지 않게 글자 그대로 들어 있을 때만 참으로 본다."""
+    o = _norm_words(option).rstrip(" .")
+    if len(o.split()) < min_words:
+        return False
+    text = _norm_words(passage)
+    start = text.find(o)
+    while start >= 0:
+        # 바로 앞이 부정어면 원문은 그 반대를 말한다 — 「not everyone always agrees …」 속의 「everyone always agrees …」는 거짓
+        before = text[:start].split()[-2:]
+        if not any(w in _NEGATIONS or w.endswith("n't") for w in before):
+            return True
+        start = text.find(o, start + 1)
+    return False
+
+
+_NEGATIONS = {"not", "no", "never", "hardly", "rarely", "seldom", "nobody", "none", "neither", "nor", "without"}
+
+
 def _problems(kind: str, checks: list[dict], answer: int) -> dict[int, bool]:
     """역할과 판정이 어긋난 선지 → {위치: 되어야 할 참/거짓}."""
     bad: dict[int, bool] = {}
@@ -294,6 +320,12 @@ def run_pipeline(
         if checks_rev:
             for i, want in _problems(kind, checks_rev, answer).items():
                 bad.setdefault(i, want)
+        # 거짓이어야 할 선지(일치 오답·불일치 정답)가 원문 그대로면 참이다 — 판정과 상관없이 다시 쓴다(사이클 #2)
+        for i in range(5):
+            must_be_false = (i != answer) if kind == "일치" else (i == answer)
+            if must_be_false and verbatim_in_passage(options[i], passage):
+                print(f"[pipeline] {CIRCLED[i]} is copied verbatim from the passage — true, must be rewritten", file=sys.stderr)
+                bad[i] = False
         # 선지끼리 거의 같은 말이면 뒤의 것을 다시 쓴다(오답 품질 14과와 같은 기준)
         for i in range(5):
             for j in range(i):

@@ -259,6 +259,11 @@ def run(kind: str, chat_text, model: Any, tokenizer: Any, passage: str, *, temp:
                                        + f"[정답]\n{answer}\n\n[정답 근거]\n{chosen['note']}\n\nExplanation JSON 만 출력.",
                     max_tokens=500, t=t_)
         explanation = fix_particles(trim_to_sentence(explanation_text(expl, raw_out[0], answer), 450))
+        if kind == "vocab" and endorses_wrong_word(explanation, chosen.get("wrong", "")):
+            # 틀린 낱말을 적절하다고 쓴 해설은 정답과 반대다 — 버리고 한 번 더, 그래도면 근거 문구로(사이클 #2)
+            print("[pipeline] explanation endorses the wrong word — regenerate", file=sys.stderr)
+            explanation = ""
+            continue
         if len(explanation) >= 40:
             break
     if len(explanation) < 40:
@@ -277,6 +282,18 @@ def run(kind: str, chat_text, model: Any, tokenizer: Any, passage: str, *, temp:
         "pipeline": {"kind": kind, "tries": tried},
         "trace": trace,
     }
+
+
+def endorses_wrong_word(explanation: str, wrong: str) -> bool:
+    """어휘 해설이 틀린 낱말 자체를 「(문맥상) 적절하다」고 쓰나 — 정답과 정반대 해설이다.
+    파일럿 #1 어휘: 「…①ignore가 문맥상 적절해 보입니다」. 「ignore가 아니라 appreciate가 적절합니다」는 걸리지 않는다."""
+    if not wrong:
+        return False
+    for m in re.finditer(rf"(?<![A-Za-z]){re.escape(wrong)}(?![A-Za-z])", explanation, re.I):
+        tail = explanation[m.end(): m.end() + 30]
+        if re.match(r"\s*[)）」』]?\s*(?:[은는이가]\s*)?(?:문맥상\s*|이\s*문맥에서\s*)?(?:매우\s*)?적절(?:해\s*보|합니다|하다|한\s*표현)", tail):
+            return True
+    return False
 
 
 def _make(kind: str, k: int, passage: str, sentences: list[str], call, rnd: random.Random,
@@ -424,4 +441,5 @@ def _make(kind: str, k: int, passage: str, sentences: list[str], call, rnd: rand
     else:
         options = "###".join(CIRCLED)
         note = f"{CIRCLED[k]} {wrong} → 바른 형태 {passage[locs[k][0]:locs[k][1]]} ({(got or {}).get('point', '')})"
-    return {"paragraph": para, "options": options, "answer": CIRCLED[k], "note": note}
+    return {"paragraph": para, "options": options, "answer": CIRCLED[k], "note": note,
+            "wrong": wrong if kind == "vocab" else ""}

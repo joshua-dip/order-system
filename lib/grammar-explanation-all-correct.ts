@@ -14,7 +14,7 @@ export type AllCorrectMatch = {
   strong: boolean;
 };
 
-const RULES: { label: string; re: RegExp; strong: boolean }[] = [
+const RULES: { label: string; re: RegExp; strong: boolean; perOptionOk?: boolean }[] = [
   {
     label: '모든 밑줄/보기 맞다',
     re: /모든\s*(밑줄|선택지|보기)[^。\.\n]{0,15}(맞|옳)/,
@@ -39,6 +39,8 @@ const RULES: { label: string; re: RegExp; strong: boolean }[] = [
     label: '오류/틀린 곳 없다',
     re: /(오류|틀린\s*(곳|것|부분))\s*(는|이|가)?\s*없/,
     strong: true,
+    // 「⑤는 … 문법적 오류가 없습니다」처럼 보기 하나를 두고 한 말은 정상 해설 — 그 문장만 있으면 hit 아님
+    perOptionOk: true,
   },
   { label: '정답이 없다', re: /정답\s*(이|은)?\s*없/, strong: true },
   // 약한 시그널: "모두 옳다" 만 있음. 잔여 한정어가 동반되면 정상 해설로 보고 제외.
@@ -56,6 +58,16 @@ const RULES: { label: string; re: RegExp; strong: boolean }[] = [
 
 const NORMAL_REMAINDER_RE = /(나머지|그\s*외|이외|이 외|기타|다른)[^。\.\n]{0,15}(은|는|이|가|모두)/;
 
+const CIRCLED = /[①②③④⑤]/g;
+/** 규칙에 걸린 문장이 모두 「보기 하나(①~⑤ 중 하나만 언급, 범위·모두 없음)」에 대한 말인가 */
+function onlyPerOptionSentences(explanation: string, re: RegExp): boolean {
+  const sentences = explanation.split(/(?<=[.。!?])\s+|\n+/).filter((x) => re.test(x));
+  return sentences.length > 0 && sentences.every((x) => {
+    const marks = new Set(x.match(CIRCLED) ?? []);
+    return marks.size === 1 && !/[~∼]|모두|전부|다섯/.test(x);
+  });
+}
+
 /** 해설을 검사하고 hit한 레이블 목록을 돌려준다. 빈 배열이면 문제 없음. */
 export function detectAllCorrectClaim(explanation: string): AllCorrectMatch[] {
   if (!explanation || typeof explanation !== 'string') return [];
@@ -64,6 +76,7 @@ export function detectAllCorrectClaim(explanation: string): AllCorrectMatch[] {
   const seen = new Set<string>();
   for (const r of RULES) {
     if (!r.re.test(explanation)) continue;
+    if (r.perOptionOk && onlyPerOptionSentences(explanation, r.re)) continue;
     if (!r.strong && hasRemainderQualifier) continue;
     if (seen.has(r.label)) continue;
     seen.add(r.label);
