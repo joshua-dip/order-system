@@ -191,7 +191,7 @@ async function main() {
         actions.push(`다음 교재 시작: ${current}`);
         await topUp();
       }
-      const batch = await prepareNext(db, current);
+      const batch = await prepareNext(db, current, (planDoc?.topup as Record<string, Topup> | undefined)?.[current]);
       if (batch) {
         if (!DRY) {
           tsx(['ml/production/queue_worker_batch.ts', 'check', path.join(BATCHES, batch.rel)]);
@@ -211,11 +211,29 @@ async function main() {
   } finally { fs.closeSync(fd); fs.unlinkSync(lockFile); }
 }
 
-/** 지금 교재의 다음 회에서 빈 칸(저장 0·작업 이력 없음)을 최대 8지문 묶음으로 만든다 */
-async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: string) {
+/** 부족분 제작 예약 — 칸(지문×유형)마다 perSlot 문항까지. 시작 때 남은 부족분(baseNeed)은 웹 진행 바 기준 */
+type Topup = { perSlot: number; baseNeed?: number; startedAt?: Date };
+const TOPUP_MAX_FAILS = 2;
+
+/** 지금 교재의 다음 회에서 빈 칸(저장 0·작업 이력 없음)을 최대 8지문 묶음으로 만든다.
+ *  부족분 예약(topup)이 있으면: 저장이 perSlot 보다 적고, 진행 중·저장 전 작업이 없고, 예약 뒤 실패가 2번 미만인 칸 — 한 묶음에 칸당 1작업(다음 차례에 또 채운다).
+ *  queue_worker_batch check 와 같은 조건이어야 묶음이 통째로 거절되지 않는다. */
+async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: string, topup?: Topup) {
   const ps = await db.collection('passages').find({ textbook }, { projection: { chapter: 1, number: 1, 'content.original': 1 } }).toArray();
-  const tried = new Set((await db.collection('local_variant_jobs').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray()).map((j) => `${j.passage_id}|${j.type}`));
-  const stored = new Set((await db.collection('generated_questions').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray()).map((q) => `${q.passage_id}|${q.type}`));
+  const jobRows = await db.collection('local_variant_jobs').find({ textbook }, { projection: { passage_id: 1, type: 1, status: 1, saved_question_id: 1, created_at: 1 } }).toArray();
+  const tried = new Set(jobRows.map((j) => `${j.passage_id}|${j.type}`));
+  const busy = new Set(jobRows.filter((j) => ['queued', 'running', 'done'].includes(String(j.status)) && !j.saved_question_id).map((j) => `${j.passage_id}|${j.type}`));
+  const fails = new Map<string, number>();
+  if (topup?.startedAt) for (const j of jobRows) if (j.status === 'failed' && j.created_at >= topup.startedAt) { const k = `${j.passage_id}|${j.type}`; fails.set(k, (fails.get(k) ?? 0) + 1); }
+  const qRows = await db.collection('generated_questions').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray();
+  const stored = new Set(qRows.map((q) => `${q.passage_id}|${q.type}`));
+  const storedN = new Map<string, number>();
+  for (const q of qRows) { const k = `${q.passage_id}|${q.type}`; storedN.set(k, (storedN.get(k) ?? 0) + 1); }
+  const openSlot = (pid: string, type: string) => {
+    const k = `${pid}|${type}`;
+    if (!topup) return !tried.has(k) && !stored.has(k);
+    return (storedN.get(k) ?? 0) < topup.perSlot && !busy.has(k) && (fails.get(k) ?? 0) < TOPUP_MAX_FAILS;
+  };
   const chapters = [...new Set(ps.map((p: any) => String(p.chapter ?? '')))].sort((a, b) => { const [x, xs] = chapterKey(a), [y, ys] = chapterKey(b); return x - y || xs.localeCompare(ys, 'ko'); });
   for (const chapter of chapters) {
     const inChapter = ps.filter((p: any) => String(p.chapter ?? '') === chapter && String(p.content?.original ?? '').trim())
@@ -224,7 +242,7 @@ async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: stri
     for (const p of inChapter) {
       if (used.size >= MAX_PASSAGES) break;
       const paragraph = String((p as any).content.original).trim();
-      const open = LOCAL_VARIANT_TYPE_NAMES.filter((type) => !tried.has(`${p._id}|${type}`) && !stored.has(`${p._id}|${type}`) && !stored.has(`${String(p._id)}|${type}`));
+      const open = LOCAL_VARIANT_TYPE_NAMES.filter((type) => openSlot(String(p._id), type));
       if (!open.length) continue;
       used.add(String(p._id));
       const source = `${p.chapter} ${p.number}`;
@@ -236,8 +254,9 @@ async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: stri
     if (!DRY) {
       fs.mkdirSync(path.join(BATCHES, rel), { recursive: true });
       fs.writeFileSync(path.join(BATCHES, rel, 'manifest.json'), JSON.stringify({ batch_id: rel.replace('/', '-'), created_at: new Date().toISOString(), textbook, chapter,
-        target_completed_per_type: 1, first_pass_per_empty_slot: 1, max_jobs: slots.length, allow_existing_under_target: false, notebook_anchor: 'l40',
-        selection_policy: '자동 공급기: 예약 교재의 다음 회, 원문 있는 지문 최대 8개 × 12유형 중 저장 0·작업 이력 없는 칸. 적합성 사전 선별 없음', slots }, null, 2) + '\n');
+        target_completed_per_type: topup ? topup.perSlot : 1, first_pass_per_empty_slot: 1, max_jobs: slots.length, allow_existing_under_target: !!topup, notebook_anchor: 'l40',
+        selection_policy: topup ? `자동 공급기(부족분): 칸당 ${topup.perSlot}문항까지, 진행 중·저장 전 작업 없고 예약 뒤 실패 ${TOPUP_MAX_FAILS}번 미만인 칸 — 칸당 1작업`
+          : '자동 공급기: 예약 교재의 다음 회, 원문 있는 지문 최대 8개 × 12유형 중 저장 0·작업 이력 없는 칸. 적합성 사전 선별 없음', slots }, null, 2) + '\n');
     }
     return { rel, chapter, passages: used.size, slots: slots.length };
   }
