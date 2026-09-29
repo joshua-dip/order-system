@@ -96,6 +96,8 @@ export function ClassKitLiveView({
   const [inkByPassage, setInkByPassage] = useState<Record<string, InkStroke[]>>({});
   const [fullscreen, setFullscreen] = useState(false);
   const [reportTarget, setReportTarget] = useState<ErrorReportTarget | null>(null);
+  /** ?qtype= (학습 플랜에서 특정 유형 문항으로 바로) */
+  const [initialQType, setInitialQType] = useState('');
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   /** 로그인 회원 표시(자료 유출 방지 워터마크) — 관리자·비회원은 비움 */
@@ -116,7 +118,13 @@ export function ClassKitLiveView({
       const bm = localStorage.getItem(BOOKMARKS_KEY);
       if (bm) setBookmarks((JSON.parse(bm) as Bookmark[]).slice(0, BOOKMARK_MAX));
       // ?passage=<id> (오류 신고 관리 화면에서 바로 열기) 가 마지막 지문보다 우선
-      const pid = new URLSearchParams(window.location.search).get('passage') || localStorage.getItem(LAST_PASSAGE_KEY);
+      const sp = new URLSearchParams(window.location.search);
+      const qt = sp.get('qtype');
+      if (qt) {
+        setInitialQType(qt);
+        setPrefs((p) => ({ ...p, questions: true }));
+      }
+      const pid = sp.get('passage') || localStorage.getItem(LAST_PASSAGE_KEY);
       if (pid) {
         fetch(`${passagesApiBase}/${encodeURIComponent(pid)}`, { credentials: 'include' })
           .then((r) => (r.ok ? r.json() : null))
@@ -420,6 +428,11 @@ export function ClassKitLiveView({
           </button>
         </div>
         <div className="flex-1" />
+        {isUserClassKit ? (
+          <a href="/my/study-plan" className="rounded-md border border-zinc-700 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 no-underline hover:border-zinc-500 hover:text-white" title="시험범위 지문별 학습 순서·진도">
+            학습 플랜 →
+          </a>
+        ) : null}
         {data && !data.hasAnalysis ? (
           <span className="text-[11px] text-zinc-500">이 지문은 분석 전 — 문장·해석·듣기만 보여요</span>
         ) : null}
@@ -546,6 +559,7 @@ export function ClassKitLiveView({
                   <LiveQuestionsSection
                     apiUrl={`${passagesApiBase}/${encodeURIComponent(data.passage.id)}/live/questions`}
                     onReport={(qid, label) => setReportTarget({ sentenceIndex: -1, questionId: qid, label })}
+                    initialType={initialQType}
                   />
                 </section>
               ) : null}

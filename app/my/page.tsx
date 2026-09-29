@@ -1211,7 +1211,21 @@ export default function MyPage() {
           )}
 
           {/* ━━ 학교 관리 탭 ━━ */}
-          {activeTab === 'schools' && <SchoolScopeManagement />}
+          {activeTab === 'schools' && (
+            <>
+              <Link
+                href="/my/study-plan"
+                className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 no-underline hover:bg-[#dbeafe]"
+              >
+                <span>
+                  <span className="block text-sm font-bold text-[#1d4ed8]">학습 플랜 · 지문별 진도</span>
+                  <span className="block text-xs text-[#475569]">시험범위 지문마다 구조화 → 문장분석 → 어휘 → … 순서를 정하고 진도를 체크해요.</span>
+                </span>
+                <span className="shrink-0 text-sm font-semibold text-[#2563eb]">열기 →</span>
+              </Link>
+              <SchoolScopeManagement />
+            </>
+          )}
 
           {/* ━━ 학생 관리 탭 ━━ */}
           {activeTab === 'students' && (

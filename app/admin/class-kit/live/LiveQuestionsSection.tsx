@@ -5,7 +5,7 @@
  * 관리자는 판매 재고, 회원은 공개 무료 세트(서버가 정한다).
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LiveQuestionsPayload } from '@/lib/passage-live-questions';
 
 const CIRCLED = ['①', '②', '③', '④', '⑤'];
@@ -38,16 +38,20 @@ export function LiveQuestionsSection({
   apiUrl,
   showAnswerDefault = false,
   onReport,
+  initialType,
 }: {
   apiUrl: string;
   showAnswerDefault?: boolean;
   onReport?: (questionId: string, label: string) => void;
+  /** 처음 고를 유형 — 있으면 그 유형으로 열고 이 칸으로 스크롤 */
+  initialType?: string;
 }) {
   const [data, setData] = useState<LiveQuestionsPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState('');
   const [pos, setPos] = useState(0);
   const [showAnswer, setShowAnswer] = useState(showAnswerDefault);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +62,9 @@ export function LiveQuestionsSection({
       .then((d: LiveQuestionsPayload | null) => {
         if (cancelled) return;
         setData(d);
-        setType(d?.types[0] ?? '');
+        const want = initialType && d?.types.includes(initialType) ? initialType : '';
+        setType(want || d?.types[0] || '');
+        if (want) setTimeout(() => rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
         setPos(0);
         setShowAnswer(showAnswerDefault);
       })
@@ -67,7 +73,7 @@ export function LiveQuestionsSection({
     return () => {
       cancelled = true;
     };
-  }, [apiUrl, showAnswerDefault]);
+  }, [apiUrl, showAnswerDefault, initialType]);
 
   const list = useMemo(() => (data?.items ?? []).filter((q) => q.type === type), [data, type]);
   const q = list[Math.min(pos, Math.max(list.length - 1, 0))];
@@ -83,7 +89,7 @@ export function LiveQuestionsSection({
   }
 
   return (
-    <div>
+    <div ref={rootRef} className="scroll-mt-4">
       <div className="mb-4 flex flex-wrap items-center gap-1.5">
         {data.types.map((t) => {
           const n = data.items.filter((x) => x.type === t).length;

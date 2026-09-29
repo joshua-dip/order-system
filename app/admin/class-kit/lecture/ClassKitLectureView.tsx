@@ -120,7 +120,8 @@ export function ClassKitLectureView({
         setDefaultLineHeight(v);
         setLineHeight(v);
       }
-      const pid = localStorage.getItem(LAST_PASSAGE_KEY);
+      // ?passage=<id> (학습 플랜에서 바로 열기) 가 마지막 지문보다 우선
+      const pid = new URLSearchParams(window.location.search).get('passage') || localStorage.getItem(LAST_PASSAGE_KEY);
       if (pid) {
         fetch(`${passagesApiBase}/${encodeURIComponent(pid)}`, { credentials: 'include' })
           .then(r => (r.ok ? r.json() : null))
