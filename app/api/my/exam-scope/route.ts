@@ -97,6 +97,43 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** 시험범위 프리셋 고치기 — { id, name?, dbEntries? } */
+export async function PATCH(request: NextRequest) {
+  const loginId = await getLoginId(request);
+  if (!loginId) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
+  let body: { id?: string; name?: string; dbEntries?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
+  if (!body.id || !ObjectId.isValid(body.id)) {
+    return NextResponse.json({ error: 'id가 필요합니다.' }, { status: 400 });
+  }
+  const set: Record<string, unknown> = { savedAt: new Date() };
+  if (body.name !== undefined) {
+    const name = String(body.name).trim().slice(0, 60);
+    if (!name) return NextResponse.json({ error: '시험범위 이름을 입력해주세요.' }, { status: 400 });
+    set.name = name;
+  }
+  if (body.dbEntries !== undefined) {
+    const scopeErr = validateExamScopeDbEntries(body.dbEntries);
+    if (scopeErr) return NextResponse.json({ error: scopeErr }, { status: 400 });
+    set.dbEntries = body.dbEntries;
+  }
+  try {
+    const db = await getDb('gomijoshua');
+    const r = await db.collection(COLLECTION).updateOne({ _id: new ObjectId(body.id), loginId }, { $set: set });
+    if (r.matchedCount === 0) return NextResponse.json({ error: '항목을 찾을 수 없습니다.' }, { status: 404 });
+    return NextResponse.json({ ok: true, id: body.id });
+  } catch (e) {
+    console.error('exam-scope PATCH:', e);
+    return NextResponse.json({ error: '저장에 실패했습니다.' }, { status: 500 });
+  }
+}
+
 /** 시험범위 프리셋 삭제 */
 export async function DELETE(request: NextRequest) {
   const loginId = await getLoginId(request);

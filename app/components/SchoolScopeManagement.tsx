@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import ExamScopeBuilder from '@/app/components/ExamScopeBuilder';
 
 type School = { id: string; name: string; createdAt: string };
 
@@ -38,6 +39,7 @@ export default function SchoolScopeManagement() {
   const [slotSem, setSlotSem] = useState<(typeof SEMESTERS)[number]>('1학기');
   const [slotPresetId, setSlotPresetId] = useState('');
   const [savingSlot, setSavingSlot] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -205,7 +207,22 @@ export default function SchoolScopeManagement() {
           </Link>
           에서 한 번에 불러올 수 있습니다. 학생 관리에서는 등록된 학교만 선택할 수 있습니다.
         </p>
+        <button
+          type="button"
+          onClick={() => setBuilderOpen(true)}
+          className="mt-3 rounded-xl bg-[#2563eb] px-4 py-2 text-sm font-bold text-white hover:bg-[#1d4ed8]"
+        >
+          + 시험범위 만들기 · 고치기
+        </button>
       </div>
+      <ExamScopeBuilder
+        open={builderOpen}
+        onClose={() => setBuilderOpen(false)}
+        onSaved={({ id }) => {
+          setSlotPresetId(id);
+          void refresh();
+        }}
+      />
 
       {message && (
         <p className={`text-sm font-medium ${message.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>{message.text}</p>
@@ -318,10 +335,10 @@ export default function SchoolScopeManagement() {
               {presets.length === 0 && (
                 <p className="text-xs text-amber-700">
                   저장된 시험범위가 없습니다.{' '}
-                  <Link href="/unified" className="underline font-semibold">
-                    내신 예비시험지
-                  </Link>
-                  에서 범위를 만든 뒤 「시험범위로 저장」해 주세요.
+                  <button type="button" onClick={() => setBuilderOpen(true)} className="underline font-semibold">
+                    시험범위 만들기
+                  </button>
+                  를 먼저 눌러 주세요.
                 </p>
               )}
             </>

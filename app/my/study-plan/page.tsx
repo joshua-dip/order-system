@@ -9,6 +9,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AppBar from '@/app/components/AppBar';
+import ExamScopeBuilder from '@/app/components/ExamScopeBuilder';
 import type { ScopePassage, StudyActivity, StudyPlan, StudyStep } from '@/lib/study-plan';
 import { FREE_VARIANT_TYPES } from '@/lib/variant-pricing';
 
@@ -154,6 +155,8 @@ export default function StudyPlanPage() {
   const [board, setBoard] = useState<Board | null>(null);
   const [boardLoading, setBoardLoading] = useState(false);
   const [openRow, setOpenRow] = useState<string | null>(null);
+  const [builder, setBuilder] = useState<{ open: boolean; editId?: string }>({ open: false });
+  const [scopesVersion, setScopesVersion] = useState(0);
 
   const flash = (t: string) => {
     setMsg(t);
@@ -202,10 +205,10 @@ export default function StudyPlanPage() {
         } catch {
           /* ignore */
         }
-        setScopeKey(opts.some((o) => o.key === last) ? last : (opts[0]?.key ?? ''));
+        setScopeKey((cur) => (opts.some((o) => o.key === cur) ? cur : opts.some((o) => o.key === last) ? last : (opts[0]?.key ?? '')));
       })
       .catch(() => {});
-  }, [authState]);
+  }, [authState, scopesVersion]);
 
   const loadBoard = useCallback((key: string) => {
     if (!key) return;
@@ -285,6 +288,17 @@ export default function StudyPlanPage() {
   return (
     <>
       <AppBar title="학습 플랜" />
+      <ExamScopeBuilder
+        open={builder.open}
+        editPresetId={builder.editId}
+        onClose={() => setBuilder({ open: false })}
+        onSaved={({ id }) => {
+          const key = `preset:${id}`;
+          setScopeKey(key);
+          setScopesVersion((v) => v + 1);
+          loadBoard(key);
+        }}
+      />
       <div className="min-h-screen bg-[#f8fafc] pb-28">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5">
           {authState === 'loading' ? (
@@ -368,6 +382,16 @@ export default function StudyPlanPage() {
                       ))}
                     </select>
                   ) : null}
+                  {scopeKey.startsWith('preset:') ? (
+                    <button type="button" onClick={() => setBuilder({ open: true, editId: scopeKey.slice(7) })} className="rounded-lg px-2.5 py-1.5 text-sm text-[#475569] hover:bg-[#f1f5f9]">
+                      범위 고치기
+                    </button>
+                  ) : null}
+                  {scopes.length > 0 ? (
+                    <button type="button" onClick={() => setBuilder({ open: true })} className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-1.5 text-sm font-semibold text-[#2563eb] hover:bg-[#dbeafe]">
+                      + 시험범위
+                    </button>
+                  ) : null}
                   <div className="flex-1" />
                   {board ? <span className="text-sm font-semibold text-[#2563eb]">전체 {totalPct}%</span> : null}
                 </div>
@@ -376,9 +400,9 @@ export default function StudyPlanPage() {
                   <div className="rounded-xl border border-dashed border-[#cbd5e1] px-5 py-10 text-center">
                     <p className="font-semibold text-[#0f172a]">아직 시험범위가 없어요</p>
                     <p className="mt-1 text-sm text-[#64748b]">이번 시험에 나올 지문을 묶어 시험범위로 저장하면 여기서 지문별 진도를 관리할 수 있어요.</p>
-                    <Link href="/unified" className="mt-4 inline-flex rounded-xl bg-[#2563eb] px-4 py-2 text-sm font-bold text-white no-underline">
+                    <button type="button" onClick={() => setBuilder({ open: true })} className="mt-4 inline-flex rounded-xl bg-[#2563eb] px-4 py-2 text-sm font-bold text-white">
                       + 시험범위 만들기
-                    </Link>
+                    </button>
                   </div>
                 ) : boardLoading && !board ? (
                   <p className="py-10 text-center text-sm text-[#94a3b8]">불러오는 중…</p>
