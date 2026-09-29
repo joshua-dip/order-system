@@ -61,6 +61,14 @@ CALL_LOG = _ThreadLog()
 CONCURRENCY = max(1, int(os.environ.get("LOCAL_VARIANT_CONCURRENCY", "1") or 1))
 # 해설 건너뛰기(2026-09-29) — 해설은 검수 때 Claude 가 쓴다. 해설 프롬프트(「…해설만 …」)는 모델을 부르지 않고 빈 해설을 돌려준다
 SKIP_EXPLAIN = os.environ.get("LOCAL_VARIANT_SKIP_EXPLAIN") == "1"
+# 초안 줄이기(2026-09-30) — LoRA 초안은 「Question → Paragraph(지문 통째로 복사) → Options → CorrectAnswer → Explanation」 순서로 쓴다.
+# 켜면 ① Question·Paragraph 를 코드가 미리 써 주고(모델은 Options 부터) ② 해설 건너뛰기면 "Explanation" 이 나오는 순간 멈춘다
+# "stop" = 해설에서 멈추기만(앞 내용은 그대로라 품질 위험 없음), "1" = 발문·지문 미리 쓰기까지
+DRAFT_TRIM_MODE = os.environ.get("LOCAL_VARIANT_DRAFT_TRIM", "")
+DRAFT_TRIM = DRAFT_TRIM_MODE in ("1", "stop")
+_DRAFT_Q = {"「주제」": "다음 글의 주제로 가장 적절한 것은?", "「제목」": "다음 글의 제목으로 가장 적절한 것은?",
+            "「주장」": "다음 글에서 필자가 주장하는 바로 가장 적절한 것은?"}
+_EXPL_STOP = '"Explanation"'
 _BASE = "__base__"
 _REASONER = "__reasoner__"
 
@@ -157,11 +165,11 @@ class _Engine:
         self.live: dict[tuple[str, int], tuple[Any, list, Any]] = {}
         threading.Thread(target=self._loop, name="mlx-engine", daemon=True).start()
 
-    def submit(self, key: str, tok: Any, prompt_tokens: list[int], max_tokens: int, temp: float):
+    def submit(self, key: str, tok: Any, prompt_tokens: list[int], max_tokens: int, temp: float, stop: str | None = None):
         from concurrent.futures import Future
 
         fut: Future = Future()
-        self.q.put((key, tok, prompt_tokens, max_tokens, temp, fut))
+        self.q.put((key, tok, prompt_tokens, max_tokens, temp, fut, stop))
         return fut
 
     def _gen(self, key: str, tok: Any) -> Any:
@@ -178,12 +186,12 @@ class _Engine:
     def _take(self, item: tuple) -> None:
         from mlx_lm.sample_utils import make_sampler
 
-        key, tok, ptoks, max_tokens, temp, fut = item
+        key, tok, ptoks, max_tokens, temp, fut, stop = item
         try:
             # insert 는 줄만 세운다 — 프롬프트 읽기(prefill)는 _step 에서 그 어댑터를 끼운 뒤에 한다
             uid = self._gen(key, tok).insert([ptoks], [max_tokens],
                                              samplers=[make_sampler(temp=temp, top_p=0.9 if temp > 0 else 0.0)])[0]
-            self.live[(key, uid)] = (fut, [], tok)
+            self.live[(key, uid)] = (fut, [], tok, stop)
         except Exception as e:  # noqa: BLE001
             fut.set_exception(e)
 
@@ -194,9 +202,15 @@ class _Engine:
             ent = self.live.get((key, r.uid))
             if ent is None:
                 continue
-            fut, toks, tok = ent
+            fut, toks, tok, stop = ent
             if r.finish_reason != "stop":
                 toks.append(r.token)
+            if stop and r.finish_reason is None and stop in tok.decode(toks[-12:]):
+                # 멈출 표식(해설 시작) — 이 줄만 생성기에서 빼고 여기까지 돌려준다
+                self.gens[key].remove([r.uid])
+                del self.live[(key, r.uid)]
+                fut.set_result(tok.decode(toks))
+                continue
             if r.finish_reason is not None:
                 del self.live[(key, r.uid)]
                 fut.set_result(tok.decode(toks))
@@ -377,9 +391,11 @@ def chat_text(
             name = model._current_name()
             tok = model.tokenizers.get(name) or model.tokenizers.get(_BASE) or tokenizer
         prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+        prefix, stop = _draft_trim(system, user, use_adapter)
+        prompt += prefix
         bos = getattr(tok, "bos_token", None)
         ptoks = tok.encode(prompt, add_special_tokens=bos is None or not prompt.startswith(bos))
-        out = model.engine().submit(name, tok, ptoks, max_tokens, temp).result()
+        out = _finish_draft(prefix, model.engine().submit(name, tok, ptoks, max_tokens, temp, stop).result(), stop)
         if "</think>" in out:
             out = out.split("</think>", 1)[1]
         CALL_LOG.append({"step": " ".join(system.split())[:48], "model": name, "sec": round(time.time() - t0, 2),
@@ -392,14 +408,19 @@ def chat_text(
             m, tok = model, tokenizer
         # Qwen3 계열은 기본으로 <think> 추론을 길게 쓴다 — JSON 한 개만 받는 단계라 끈다(다른 템플릿은 이 값을 무시)
         prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
-        out = generate(
-            m,
-            tok,
-            prompt,
-            max_tokens=max_tokens,
-            sampler=make_sampler(temp=temp, top_p=0.9 if temp > 0 else 0.0),
-            verbose=False,
-        )
+        prefix, stop = _draft_trim(system, user, use_adapter)
+        sampler = make_sampler(temp=temp, top_p=0.9 if temp > 0 else 0.0)
+        if prefix or stop:
+            from mlx_lm import stream_generate
+
+            out = ""
+            for resp in stream_generate(m, tok, prompt + prefix, max_tokens=max_tokens, sampler=sampler):
+                out += resp.text
+                if stop and stop in out[-40:]:
+                    break
+            out = _finish_draft(prefix, out, stop)
+        else:
+            out = generate(m, tok, prompt, max_tokens=max_tokens, sampler=sampler, verbose=False)
     if "</think>" in out:
         out = out.split("</think>", 1)[1]
     try:
@@ -409,6 +430,28 @@ def chat_text(
     CALL_LOG.append({"step": " ".join(system.split())[:48], "model": who, "sec": round(time.time() - t0, 2),
                      "in": len(user), "out": len(out), "max": max_tokens})
     return out
+
+
+def _draft_trim(system: str, user: str, use_adapter: bool) -> tuple[str, str | None]:
+    """LoRA 초안이면 (미리 써 줄 앞부분, 멈출 표식). 아니면 ("", None)."""
+    if not DRAFT_TRIM or not use_adapter or "키:" not in system:
+        return "", None
+    stop = _EXPL_STOP if SKIP_EXPLAIN and "Explanation" in system else None
+    prefix = ""
+    head = "[지문 Paragraph]\n"
+    if DRAFT_TRIM_MODE == "1" and "키: Question, Paragraph, Options" in system and user.startswith(head):
+        q = next((v for k, v in _DRAFT_Q.items() if k in system), None)
+        if q:  # 학습 때 모양 그대로(공백 없는 JSON) — 지문은 모델이 어차피 글자 그대로 옮긴다
+            prefix = ('{"Question":' + json.dumps(q, ensure_ascii=False) + ',"Paragraph":'
+                      + json.dumps(user[len(head):], ensure_ascii=False) + ',"Options":"')
+    return prefix, stop
+
+
+def _finish_draft(prefix: str, out: str, stop: str | None) -> str:
+    text = prefix + out
+    if stop and stop in text:
+        text = text[: text.index(stop)].rstrip().rstrip(",") + ',"Explanation":""}'
+    return text
 
 
 def chat_json(

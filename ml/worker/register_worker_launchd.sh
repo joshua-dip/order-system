@@ -48,6 +48,7 @@ cat > "${PLIST}" <<PLIST
     <key>PYTHONIOENCODING</key><string>utf-8</string>
     <key>LOCAL_VARIANT_SKIP_EXPLAIN</key><string>${LOCAL_VARIANT_SKIP_EXPLAIN:-1}</string>
     <key>LOCAL_VARIANT_CONCURRENCY</key><string>${LOCAL_VARIANT_CONCURRENCY:-8}</string>
+    <key>LOCAL_VARIANT_DRAFT_TRIM</key><string>${LOCAL_VARIANT_DRAFT_TRIM:-stop}</string>
     <key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin</string>
   </dict>
   <key>RunAtLoad</key><true/>
