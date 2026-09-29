@@ -318,6 +318,8 @@ class Worker:
         self.args = args
         self.jobs = db[JOBS]
         self.workers = db[WORKERS]
+        # 웹 「작업 끝나면 끄기」 — 새 작업을 집기 전에 본다(맥의 worker_control.py 가 켜고 끈다)
+        self.control = db["production_worker_control"]
         self.return_after = return_after
         self.id = socket.gethostname()
         self.only = {t.strip() for t in args.types.split(",") if t.strip()} if args.types else set()
@@ -381,6 +383,14 @@ class Worker:
                     log(f"하트비트 실패 — 계속 다시 시도합니다: {brief(e)}")
                     last_log = time.time()
                 failing = True
+
+    def stop_after_job_requested(self) -> bool:
+        try:
+            d = self.control.find_one({"_id": "main"}, {"request": 1, "mode": 1, "handled": 1, "requested_at": 1}) or {}
+        except Exception:  # noqa: BLE001 — 확인을 못 하면 그냥 계속 일한다
+            return False
+        pending = d.get("requested_at") and (d.get("handled") or {}).get("request_at") != d.get("requested_at")
+        return bool(pending and d.get("request") == "stop" and d.get("mode") == "after-job")
 
     # ---- 큐 ----
     def _claimable(self) -> dict[str, Any]:
@@ -598,6 +608,9 @@ class Worker:
                         self.state = "gpu_busy"
                         time.sleep(15)
                         continue
+                    if self.stop_after_job_requested():
+                        log("웹에서 「작업 끝나면 끄기」 요청 — 새 작업을 집지 않고 끝냅니다")
+                        break
                     job = self.claim()
                     if job is None:
                         self.state = "idle"
