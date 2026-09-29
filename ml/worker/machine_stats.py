@@ -10,7 +10,7 @@ import socket
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from pymongo import MongoClient
@@ -18,6 +18,7 @@ from pymongo import MongoClient
 ROOT = Path(__file__).resolve().parents[2]
 INTERVAL = 20
 HISTORY = 180  # 20초 × 180 = 최근 1시간
+KST = timezone(timedelta(hours=9))
 
 
 def load_env() -> dict[str, str]:
@@ -109,14 +110,109 @@ def sample() -> dict:
     }
 
 
+# 위험 기록 — 여유 메모리(memory_pressure)·스왑으로 단계를 나눈다. 위험 기준은 memguard(워커 강제 종료)와 같다.
+DANGER_FREE, DANGER_SWAP = 10, 6.0
+WARN_FREE, WARN_SWAP = 20, 4.5
+MEMGUARD_LOG = ROOT / "ml/production/batches/autofeed/memguard.log"
+
+
+def level_of(s: dict) -> str:
+    free = s["mem"]["pressure_free_pct"]
+    swap = s["swap"]["used_gb"]
+    if (free is not None and free < DANGER_FREE) or swap > DANGER_SWAP:
+        return "위험"
+    if (free is not None and free < WARN_FREE) or swap > WARN_SWAP:
+        return "주의"
+    return "정상"
+
+
+_RANK = {"정상": 0, "주의": 1, "위험": 2}
+
+
+def record_episode(ev, host: str, now: datetime, s: dict) -> None:
+    """주의·위험이 이어지는 동안을 한 건(episode)으로 — 시작·끝·가장 나빴던 값·그때 돌던 역할·메모리 상위 프로세스."""
+    lv = level_of(s)
+    open_ep = ev.find_one({"host": host, "kind": "memory", "end": None})
+    free, swap, used = s["mem"]["pressure_free_pct"], s["swap"]["used_gb"], s["mem"]["used_gb"]
+    roles = [r["name"] for r in s["roles"]]
+    top = [{"name": p["name"], "mem_gb": p["mem_gb"]} for p in s["procs"][:3]]
+    if lv == "정상":
+        if open_ep:
+            ev.update_one({"_id": open_ep["_id"]}, {"$set": {"end": now}})
+        return
+    if not open_ep:
+        ev.insert_one({"host": host, "kind": "memory", "start": now, "end": None, "level": lv, "min_free_pct": free, "max_swap_gb": swap,
+                       "max_used_gb": used, "roles": roles, "top_at_worst": top, "actions": []})
+        return
+    upd: dict = {"$addToSet": {"roles": {"$each": roles}}, "$max": {"max_swap_gb": swap, "max_used_gb": used}}
+    worse = free is not None and (open_ep.get("min_free_pct") is None or free < open_ep["min_free_pct"])
+    sets: dict = {}
+    if worse:
+        sets.update({"min_free_pct": free, "top_at_worst": top})
+    if _RANK[lv] > _RANK.get(open_ep.get("level", "정상"), 0):
+        sets["level"] = lv
+    if sets:
+        upd["$set"] = sets
+    ev.update_one({"_id": open_ep["_id"]}, upd)
+
+
+def record_memguard(ev, host: str, seen: set[str]) -> None:
+    """memguard 가 워커를 끈 줄 → 위험 기록(그때 열린 기록에 덧붙이거나 따로 한 건)."""
+    if not MEMGUARD_LOG.is_file():
+        return
+    for line in MEMGUARD_LOG.read_text(encoding="utf-8", errors="replace").splitlines():
+        if "워커 끔" not in line or line in seen:
+            continue
+        seen.add(line)
+        try:
+            at = datetime.strptime(line[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST).astimezone(timezone.utc)
+        except ValueError:
+            continue
+        if ev.find_one({"host": host, "kind": "memguard", "start": at}):
+            continue
+        m = re.search(r"여유 (\d+)% · 스왑 (\d+)MB", line)
+        ev.insert_one({"host": host, "kind": "memguard", "start": at, "end": at, "level": "위험",
+                       "min_free_pct": int(m.group(1)) if m else None, "max_swap_gb": round(int(m.group(2)) / 1024, 2) if m else None,
+                       "roles": [], "top_at_worst": [], "actions": [{"at": at, "text": "메모리 감시가 워커를 강제로 껐습니다"}]})
+
+
+def record_reboots(ev, host: str) -> None:
+    """정상 종료 기록 없이 다시 켜진 재시동 — 메모리 초과 등으로 맥이 멈췄을 수 있다(원인은 기록만으로 단정하지 않는다)."""
+    out = run(["last", "reboot"]) + run(["last", "shutdown"])
+    reboots, shutdowns = [], []
+    year = datetime.now(KST).year
+    for line in out.splitlines():
+        m = re.match(r"(reboot|shutdown) time\s+\w{3} (\w{3}\s+\d+ \d+:\d+)", line)
+        if m:
+            try:
+                t = datetime.strptime(f"{year} {m.group(2)}", "%Y %b %d %H:%M").replace(tzinfo=KST).astimezone(timezone.utc)
+            except ValueError:
+                continue
+            (reboots if m.group(1) == "reboot" else shutdowns).append(t)
+    for t in reboots:
+        if (datetime.now(timezone.utc) - t).days > 14:
+            continue
+        clean = any(0 <= (t - x).total_seconds() < 600 for x in shutdowns)
+        if clean or ev.find_one({"host": host, "kind": "reboot", "start": t}):
+            continue
+        ev.insert_one({"host": host, "kind": "reboot", "start": t, "end": t, "level": "위험", "min_free_pct": None, "max_swap_gb": None,
+                       "roles": [], "top_at_worst": [], "actions": [{"at": t, "text": "맥이 정상 종료 기록 없이 다시 켜졌습니다"}]})
+
+
 def main() -> int:
     uri = load_env().get("MONGODB_URI")
     if not uri:
         print("MONGODB_URI 없음", file=sys.stderr)
         return 1
-    col = MongoClient(uri, serverSelectionTimeoutMS=20000)["gomijoshua"]["production_machine_stats"]
+    db = MongoClient(uri, serverSelectionTimeoutMS=20000)["gomijoshua"]
+    col, ev = db["production_machine_stats"], db["production_machine_events"]
     host = socket.gethostname()
     once = "--once" in sys.argv
+    seen: set[str] = set()
+    try:
+        record_reboots(ev, host)
+    except Exception as e:
+        print(f"[machine_stats] reboots {type(e).__name__}", file=sys.stderr)
     while True:
         try:
             s = sample()
@@ -125,6 +221,8 @@ def main() -> int:
                 "$set": {"at": now, **s},
                 "$push": {"history": {"$each": [{"at": now, "cpu": s["cpu"]["pct"], "used": s["mem"]["used_gb"], "wired": s["mem"]["wired_gb"], "swap": s["swap"]["used_gb"]}], "$slice": -HISTORY}},
             }, upsert=True)
+            record_episode(ev, host, now, s)
+            record_memguard(ev, host, seen)
         except Exception as e:  # 네트워크가 잠깐 끊겨도 계속 돈다
             print(f"[machine_stats] {type(e).__name__}", file=sys.stderr)
         if once:
