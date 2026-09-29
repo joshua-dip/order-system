@@ -95,6 +95,7 @@ export function ClassKitLiveView({
   const [inkColor, setInkColor] = useState<string>(INK_COLORS[1]);
   const [inkByPassage, setInkByPassage] = useState<Record<string, InkStroke[]>>({});
   const [fullscreen, setFullscreen] = useState(false);
+  const [sheetBusy, setSheetBusy] = useState(false);
   const [reportTarget, setReportTarget] = useState<ErrorReportTarget | null>(null);
   /** ?qtype= (학습 플랜에서 특정 유형 문항으로 바로) */
   const [initialQType, setInitialQType] = useState('');
@@ -295,6 +296,30 @@ export function ClassKitLiveView({
     speak(sentences, prefs.rate, { onIndex: (i) => setReadingIdx(i), onEnd: () => setReadingIdx(null) });
   };
 
+  /** 종합분석지 PDF — 분석기 데이터로 조판(작업 공간과 같은 API) */
+  const downloadSheet = async () => {
+    if (!data || sheetBusy) return;
+    setSheetBusy(true);
+    try {
+      const res = await fetch(`${isUserClassKit ? '/api/class-kit' : '/api/admin/class-kit'}/analysis-sheet`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passageIds: [data.passage.id], format: 'pdf' }),
+      });
+      if (res.status === 401) return onGuestGate?.();
+      if (!res.ok) return;
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(data.passage.sourceKey || data.passage.number).replace(/[\\/:*?"<>|]/g, '_')} 종합분석지.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } finally {
+      setSheetBusy(false);
+    }
+  };
+
   const zoomBy = (dir: -1 | 1) => {
     const i = ZOOM_STEPS.findIndex((z) => z >= prefs.zoom);
     const ni = Math.min(Math.max((i < 0 ? 2 : i) + dir, 0), ZOOM_STEPS.length - 1);
@@ -428,6 +453,11 @@ export function ClassKitLiveView({
           </button>
         </div>
         <div className="flex-1" />
+        {data?.hasAnalysis ? (
+          <button type="button" onClick={downloadSheet} disabled={sheetBusy} className={toggle(false)} title="끊어읽기·성분·구문·어법 설명·단어장을 한 장으로">
+            {sheetBusy ? '만드는 중…' : '종합분석지 PDF'}
+          </button>
+        ) : null}
         {isUserClassKit ? (
           <a href="/my/study-plan" className="rounded-md border border-zinc-700 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 no-underline hover:border-zinc-500 hover:text-white" title="시험범위 지문별 학습 순서·진도">
             학습 플랜 →

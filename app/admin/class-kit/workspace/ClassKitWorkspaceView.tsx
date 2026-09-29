@@ -15,9 +15,10 @@ import { tokenizePassageFromContent } from '@/lib/block-workbook-tokenize';
 import { buildLectureMaterialHtml } from '@/lib/lecture-material-html';
 import { buildLessonMaterialHtml, LESSON_MODE_LABELS, type LessonMode } from '@/lib/lesson-material-html';
 
-type Kind = 'live' | 'lecture' | LessonMode;
+type Kind = 'live' | 'analysis' | 'lecture' | LessonMode;
 const KINDS: { key: Kind; label: string; hint: string }[] = [
   { key: 'live', label: '수업 화면', hint: '교실 화면에 띄워 수업 — 문장 분석·듣기·판서' },
+  { key: 'analysis', label: '종합분석지', hint: '끊어읽기·성분·구문·어법 설명·단어장·종합분석 — 분석된 지문만 담겨요' },
   { key: 'lecture', label: '강의용자료', hint: '판서 공간이 넓은 한 지문 한 장' },
   { key: 'parallel', label: LESSON_MODE_LABELS.parallel, hint: '영어·해석 좌우 대조' },
   { key: 'lineByLine', label: LESSON_MODE_LABELS.lineByLine, hint: '문장마다 해석 줄' },
@@ -125,8 +126,30 @@ export function ClassKitWorkspaceView({
     };
   }, [focus, passagesApiBase]);
 
+  /* 종합분석지 미리보기는 서버 조판(분석기 데이터)이라 따로 받아 온다 */
+  const [sheetHtml, setSheetHtml] = useState<{ id: string; html: string; error: string } | null>(null);
+  useEffect(() => {
+    if (kind !== 'analysis' || !focus) return;
+    let cancelled = false;
+    setSheetHtml(null);
+    fetch(`${classKitApiBase}/analysis-sheet`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passageIds: [focus], format: 'html' }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!cancelled) setSheetHtml({ id: focus, html: r.ok ? String(d.html ?? '') : '', error: r.ok ? '' : String(d.error ?? '미리보기를 만들지 못했어요.') });
+      })
+      .catch(() => !cancelled && setSheetHtml({ id: focus, html: '', error: '미리보기를 만들지 못했어요.' }));
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, focus, classKitApiBase]);
+
   const previewHtml = useMemo(() => {
-    if (!focusDoc || kind === 'live') return '';
+    if (!focusDoc || kind === 'live' || kind === 'analysis') return '';
     const toks = tokenizePassageFromContent(focusDoc.content);
     const title = focusDoc.textbook;
     const number = deriveNumber(focusDoc.number);
@@ -149,18 +172,26 @@ export function ClassKitWorkspaceView({
     setMsg('');
     try {
       const isLecture = kind === 'lecture';
-      const res = await fetch(`${classKitApiBase}/${isLecture ? 'lecture' : 'lesson'}-pdf-bulk`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          textbook: picks[0].textbook,
-          passageIds: picks.map((p) => p.id),
-          format,
-          folderByChapter: true,
-          ...(isLecture ? {} : { mode: kind, kicker: LESSON_MODE_LABELS[kind] }),
-        }),
-      });
+      const res =
+        kind === 'analysis'
+          ? await fetch(`${classKitApiBase}/analysis-sheet`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ passageIds: picks.map((p) => p.id), format: 'pdf' }),
+            })
+          : await fetch(`${classKitApiBase}/${isLecture ? 'lecture' : 'lesson'}-pdf-bulk`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                textbook: picks[0].textbook,
+                passageIds: picks.map((p) => p.id),
+                format,
+                folderByChapter: true,
+                ...(isLecture ? {} : { mode: kind, kicker: LESSON_MODE_LABELS[kind as LessonMode] }),
+              }),
+            });
       if (res.status === 401 && onGuestGate) {
         onGuestGate();
         throw new Error('PDF 받기는 회원가입 후 이용할 수 있어요.');
@@ -333,6 +364,7 @@ export function ClassKitWorkspaceView({
                 >
                   {busy ? '만드는 중…' : `PDF 받기 (${picks.length})`}
                 </button>
+                {kind === 'analysis' ? null : (
                 <button
                   type="button"
                   onClick={() => download('zip')}
@@ -342,6 +374,7 @@ export function ClassKitWorkspaceView({
                 >
                   ZIP
                 </button>
+                )}
               </div>
             )}
           </div>
@@ -370,6 +403,19 @@ export function ClassKitWorkspaceView({
                 이 지문 수업 화면으로 띄우기 ↗
               </Link>
             </div>
+          ) : kind === 'analysis' ? (
+            !sheetHtml || sheetHtml.id !== focus ? (
+              <div className="flex h-full items-center justify-center text-zinc-500">
+                <IconSpinner />
+              </div>
+            ) : sheetHtml.error ? (
+              <div className="mx-auto max-w-lg rounded-xl bg-white p-6 text-center text-sm text-slate-600 shadow-sm">
+                <p className="font-semibold text-slate-800">{sheetHtml.error}</p>
+                <p className="mt-2 text-xs text-slate-500">종합분석지는 지문분석기로 분석된 지문만 만들어져요. 다른 지문을 골라 보세요.</p>
+              </div>
+            ) : (
+              <iframe title="종합분석지 미리보기" srcDoc={sheetHtml.html} className="mx-auto block w-full max-w-[900px] rounded-lg bg-white shadow-sm" style={{ height: '82vh', border: 'none' }} />
+            )
           ) : (
             <iframe title="미리보기" srcDoc={previewHtml} className="mx-auto block w-full max-w-[900px] rounded-lg bg-white shadow-sm" style={{ height: '82vh', border: 'none' }} />
           )}
