@@ -26,3 +26,9 @@ test('vocabularyBySentence: positions 우선, 없으면 문장에서 찾는다',
   ]);
   assert.deepEqual(v.map((x) => [x.word, x.sentences]), [['reopen', [0]], ['center', [0, 1]]]);
 });
+
+test('parseLiveOptions: ### 구분과 줄 구분', async () => {
+  const { parseLiveOptions } = await import('./passage-live-questions');
+  assert.deepEqual(parseLiveOptions('① a ### ② b ###③ c'), ['① a', '② b', '③ c']);
+  assert.deepEqual(parseLiveOptions('① a\n② b\n\n'), ['① a', '② b']);
+});

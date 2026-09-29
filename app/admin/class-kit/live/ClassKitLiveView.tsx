@@ -25,6 +25,7 @@ import { chunkSentence } from '@/lib/passage-live-chunks';
 import { speak, stopSpeaking, ttsSupported, type TtsRate } from './live-tts';
 import { LiveFloatingPanel } from './LiveFloatingPanel';
 import { LiveSentencePanelBody } from './LiveSentencePanel';
+import { LiveQuestionsSection } from './LiveQuestionsSection';
 import { INK_COLORS, LiveInkLayer, type InkStroke, type InkTool } from './LiveInkLayer';
 
 const LAST_PASSAGE_KEY = 'class_kit_live_last_passage_id';
@@ -32,8 +33,8 @@ const PREFS_KEY = 'class_kit_live_prefs';
 const ZOOM_STEPS = [80, 90, 100, 115, 130, 150, 175, 200] as const;
 
 type ViewMode = 'both' | 'en' | 'hideKo';
-type Prefs = { view: ViewMode; breaks: boolean; topic: boolean; zoom: number; rate: TtsRate; svoc: boolean };
-const DEFAULT_PREFS: Prefs = { view: 'both', breaks: false, topic: true, zoom: 115, rate: 'normal', svoc: true };
+type Prefs = { view: ViewMode; breaks: boolean; topic: boolean; zoom: number; rate: TtsRate; svoc: boolean; questions: boolean };
+const DEFAULT_PREFS: Prefs = { view: 'both', breaks: false, topic: true, zoom: 115, rate: 'normal', svoc: true, questions: true };
 
 export interface ClassKitLiveViewProps {
   passagesApiBase?: string;
@@ -313,6 +314,9 @@ export function ClassKitLiveView({
         <button type="button" onClick={() => updPrefs({ topic: !prefs.topic })} className={toggle(prefs.topic)} title="주제문 강조">
           주제문
         </button>
+        <button type="button" onClick={() => updPrefs({ questions: !prefs.questions })} className={toggle(prefs.questions)} title="지문 아래 실전 문항">
+          실전 문항
+        </button>
         {canSpeak ? (
           <div className="flex items-center gap-1">
             <button type="button" onClick={readAll} disabled={!sentences.length} className={toggle(readingIdx !== null)}>
@@ -450,6 +454,15 @@ export function ClassKitLiveView({
                   <LiveInkLayer active={inkOn} tool={inkTool} color={inkColor} strokes={strokes} onChange={setStrokes} />
                 </div>
               </article>
+              {prefs.questions ? (
+                <section
+                  className="mt-4 rounded-xl bg-white px-5 py-6 text-slate-900 shadow-sm sm:px-10 sm:py-8"
+                  style={{ fontSize: `${prefs.zoom}%` }}
+                >
+                  <h3 className="mb-4 border-b-2 border-slate-900 pb-2 text-[1.1em] font-bold">실전 문항</h3>
+                  <LiveQuestionsSection apiUrl={`${passagesApiBase}/${encodeURIComponent(data.passage.id)}/live/questions`} />
+                </section>
+              ) : null}
             </div>
           ) : null}
         </div>

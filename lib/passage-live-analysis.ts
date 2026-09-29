@@ -15,6 +15,7 @@ import {
 } from '@/lib/passage-analyzer-types';
 import { alignSvocDataToSentences, normalizeSvocDataToWordIndices } from '@/lib/svoc-index-normalize';
 import { comprehensiveRows } from '@/lib/analysis-sheet-html';
+import { resolveExamOrigins } from '@/lib/exam-origin';
 import { vocabularyBySentence, type LiveVocab } from '@/lib/passage-live-chunks';
 
 export { chunkSentence, vocabularyBySentence, type LiveVocab } from '@/lib/passage-live-chunks';
@@ -71,8 +72,16 @@ function numKeyed<T>(raw: unknown, keep: (v: unknown) => v is T): Record<number,
 export async function loadPassageLive(db: Db, doc: PassageDoc): Promise<LivePassagePayload> {
   const id = String(doc._id);
   const derived = deriveSentencesFromPassageContent(doc.content);
-  const analysis = (await db.collection('passage_analyses').findOne(
-    { fileName: passageAnalysisFileNameForPassageId(id) },
+  // 기출 지문은 분석도 원출처 지문 것을 쓴다(본문이 같다)
+  const origin = (await resolveExamOrigins(db, [id])).get(id);
+  const fileNames = [id, ...(origin ? [origin.originId.toHexString()] : [])].map(passageAnalysisFileNameForPassageId);
+  const found = await db
+    .collection('passage_analyses')
+    .find({ fileName: { $in: fileNames } }, { projection: { fileName: 1 } })
+    .toArray();
+  const pick = fileNames.find((f) => found.some((d) => d.fileName === f));
+  const analysis = !pick ? null : (await db.collection('passage_analyses').findOne(
+    { fileName: pick },
     {
       projection: {
         'passageStates.main.sentences': 1,
