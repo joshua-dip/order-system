@@ -220,19 +220,25 @@ const TOPUP_MAX_FAILS = 2;
  *  queue_worker_batch check 와 같은 조건이어야 묶음이 통째로 거절되지 않는다. */
 async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: string, topup?: Topup) {
   const ps = await db.collection('passages').find({ textbook }, { projection: { chapter: 1, number: 1, 'content.original': 1 } }).toArray();
-  const jobRows = await db.collection('local_variant_jobs').find({ textbook }, { projection: { passage_id: 1, type: 1, status: 1, saved_question_id: 1, created_at: 1 } }).toArray();
+  const jobRows = await db.collection('local_variant_jobs').find({ textbook }, { projection: { passage_id: 1, type: 1, status: 1, saved_question_id: 1, created_at: 1, error: 1 } }).toArray();
   const tried = new Set(jobRows.map((j) => `${j.passage_id}|${j.type}`));
   const busy = new Set(jobRows.filter((j) => ['queued', 'running', 'done'].includes(String(j.status)) && !j.saved_question_id).map((j) => `${j.passage_id}|${j.type}`));
   const fails = new Map<string, number>();
   if (topup?.startedAt) for (const j of jobRows) if (j.status === 'failed' && j.created_at >= topup.startedAt) { const k = `${j.passage_id}|${j.type}`; fails.set(k, (fails.get(k) ?? 0) + 1); }
+  // 「지문이 짧아」(문장 수 부족)는 다시 돌려도 똑같이 실패한다 — 워커 불가 칸은 부족분에서 빼고 Claude 가 직접 쓴다
+  const tooShort = new Set(jobRows.filter((j) => j.status === 'failed' && /지문이 짧아/.test(String(j.error ?? ''))).map((j) => `${j.passage_id}|${j.type}`));
   const qRows = await db.collection('generated_questions').find({ textbook }, { projection: { passage_id: 1, type: 1 } }).toArray();
   const stored = new Set(qRows.map((q) => `${q.passage_id}|${q.type}`));
   const storedN = new Map<string, number>();
   for (const q of qRows) { const k = `${q.passage_id}|${q.type}`; storedN.set(k, (storedN.get(k) ?? 0) + 1); }
+  const canFill = (k: string) => !!topup && (storedN.get(k) ?? 0) < topup.perSlot && !busy.has(k) && !tooShort.has(k) && (fails.get(k) ?? 0) < TOPUP_MAX_FAILS;
+  // 세트 순서 — 채울 수 있는 칸 중 문항이 가장 적은 층부터(1세트 → 2세트 → 3세트). 웹의 세트별 바와 같은 순서
+  let level = Infinity;
+  if (topup) for (const p of ps) for (const type of LOCAL_VARIANT_TYPE_NAMES) { const k = `${p._id}|${type}`; if (canFill(k)) level = Math.min(level, storedN.get(k) ?? 0); }
   const openSlot = (pid: string, type: string) => {
     const k = `${pid}|${type}`;
     if (!topup) return !tried.has(k) && !stored.has(k);
-    return (storedN.get(k) ?? 0) < topup.perSlot && !busy.has(k) && (fails.get(k) ?? 0) < TOPUP_MAX_FAILS;
+    return canFill(k) && (storedN.get(k) ?? 0) === level;
   };
   const chapters = [...new Set(ps.map((p: any) => String(p.chapter ?? '')))].sort((a, b) => { const [x, xs] = chapterKey(a), [y, ys] = chapterKey(b); return x - y || xs.localeCompare(ys, 'ko'); });
   for (const chapter of chapters) {
@@ -255,7 +261,7 @@ async function prepareNext(db: Awaited<ReturnType<typeof getDb>>, textbook: stri
       fs.mkdirSync(path.join(BATCHES, rel), { recursive: true });
       fs.writeFileSync(path.join(BATCHES, rel, 'manifest.json'), JSON.stringify({ batch_id: rel.replace('/', '-'), created_at: new Date().toISOString(), textbook, chapter,
         target_completed_per_type: topup ? topup.perSlot : 1, first_pass_per_empty_slot: 1, max_jobs: slots.length, allow_existing_under_target: !!topup, notebook_anchor: 'l40',
-        selection_policy: topup ? `자동 공급기(부족분): 칸당 ${topup.perSlot}문항까지, 진행 중·저장 전 작업 없고 예약 뒤 실패 ${TOPUP_MAX_FAILS}번 미만인 칸 — 칸당 1작업`
+        selection_policy: topup ? `자동 공급기(부족분): 칸당 ${topup.perSlot}문항까지 세트 순서(문항 ${level}개인 칸), 진행 중·저장 전 작업 없고 예약 뒤 실패 ${TOPUP_MAX_FAILS}번 미만 — 칸당 1작업`
           : '자동 공급기: 예약 교재의 다음 회, 원문 있는 지문 최대 8개 × 12유형 중 저장 0·작업 이력 없는 칸. 적합성 사전 선별 없음', slots }, null, 2) + '\n');
     }
     return { rel, chapter, passages: used.size, slots: slots.length };
