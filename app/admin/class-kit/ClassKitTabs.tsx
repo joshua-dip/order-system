@@ -12,9 +12,10 @@
 import Link from 'next/link';
 import type { LessonMode } from '@/lib/lesson-material-html';
 
-export type ClassKitTabKey = 'live' | 'lecture' | LessonMode;
+export type ClassKitTabKey = 'workspace' | 'live' | 'lecture' | LessonMode;
 
 const TAB_DEFS: { key: ClassKitTabKey; label: string; path: string }[] = [
+  { key: 'workspace', label: '작업 공간', path: '/workspace' },
   { key: 'live', label: '수업 화면', path: '/live' },
   { key: 'lecture', label: '강의용자료', path: '/lecture' },
   { key: 'parallel', label: '수업용자료', path: '/lesson' },
@@ -43,7 +44,7 @@ export default function ClassKitTabs({
             : 'text-zinc-500 hover:bg-zinc-800/80 hover:text-zinc-200'
         }`;
         const href = `${routeBase}${t.path}`;
-        if (t.key !== 'lecture' && t.key !== 'live' && onSelectLessonMode) {
+        if (t.key !== 'lecture' && t.key !== 'live' && t.key !== 'workspace' && onSelectLessonMode) {
           return (
             <button key={t.key} type="button" onClick={() => onSelectLessonMode(t.key as LessonMode)} className={cls}>
               {t.label}
