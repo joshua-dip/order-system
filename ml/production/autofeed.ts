@@ -118,11 +118,16 @@ async function main() {
       const input: any[] = [], map: any[] = [], held: any[] = [];
       for (const j of done) {
         const doc = { type: j.type, passage_id: String(j.passage_id), question_data: j.result.question_data };
-        const issues = [...checkContentIntegrity(doc), ...await runPerQuestionValidations(db, doc)].filter((x: any) => x.severity === 'error');
+        // 해설 건너뛰기로 만든 초안(Explanation 빈칸)은 해설 규칙만 빼고 본다 — 해설은 검수 때 Claude 가 쓰고, 그 전엔 완료가 될 수 없다
+        const noExpl = !String(j.result.question_data?.Explanation ?? '').trim();
+        const issues = [...checkContentIntegrity(doc), ...await runPerQuestionValidations(db, doc)]
+          .filter((x: any) => x.severity === 'error' && !(noExpl && String(x.rule ?? '').startsWith('explanation_')));
         const key = `${j.source}|${j.type}`;
         if (issues.length) { held.push({ job_id: String(j._id), key, errors: issues.map((x: any) => `${x.rule}: ${x.message}`) }); continue; }
         map.push({ index: input.length, job_id: String(j._id), key });
-        input.push({ passage_id: String(j.passage_id), textbook: j.textbook, source: j.source, type: j.type, question_data: j.result.question_data,
+        // 해설 건너뛰기 초안 — 저장 CLI 가 빈 해설을 예비 문구로 채우지 않도록 표식을 넣는다. 검수(record.ts)가 Claude 해설로 바꾼 뒤에만 완료
+        const qdSave = noExpl ? { ...j.result.question_data, Explanation: EXPL_PENDING } : j.result.question_data;
+        input.push({ passage_id: String(j.passage_id), textbook: j.textbook, source: j.source, type: j.type, question_data: qdSave,
           status: '대기', option_type: 'English', ai_source: 'local-qwen-worker-unreviewed' });
       }
       fs.writeFileSync(path.join(dir, 'pending-save-held.json'), JSON.stringify(held, null, 1));
@@ -214,6 +219,8 @@ async function main() {
 /** 부족분 제작 예약 — 칸(지문×유형)마다 perSlot 문항까지. 시작 때 남은 부족분(baseNeed)은 웹 진행 바 기준 */
 type Topup = { perSlot: number; baseNeed?: number; startedAt?: Date };
 const TOPUP_MAX_FAILS = 2;
+/** 해설 건너뛰기 표식 — record.ts 가 이 문구가 남아 있으면 완료로 올리지 않는다 */
+const EXPL_PENDING = '[해설 작성 전 — 검수 때 Claude 가 씁니다]';
 
 /** 지금 교재의 다음 회에서 빈 칸(저장 0·작업 이력 없음)을 최대 8지문 묶음으로 만든다.
  *  부족분 예약(topup)이 있으면: 저장이 perSlot 보다 적고, 진행 중·저장 전 작업이 없고, 예약 뒤 실패가 2번 미만인 칸 — 한 묶음에 칸당 1작업(다음 차례에 또 채운다).

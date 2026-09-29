@@ -52,6 +52,19 @@ def pipeline(en: str) -> Any:
     return _PIPELINES[en]
 
 
+def calls_summary(log: list | None) -> list[dict] | None:
+    """단계(시스템 프롬프트 앞머리)별 호출 수·초·출력 글자 — 어느 단계가 느린지 모아 보기용"""
+    if not log:
+        return None
+    agg: dict[str, dict] = {}
+    for c in log:
+        a = agg.setdefault(c["step"], {"step": c["step"], "model": c["model"], "n": 0, "sec": 0.0, "out": 0})
+        a["n"] += 1
+        a["sec"] = round(a["sec"] + c["sec"], 2)
+        a["out"] += c["out"]
+    return sorted(agg.values(), key=lambda a: -a["sec"])
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -80,6 +93,9 @@ def main() -> int:
         req = json.loads(line)
         en = req["en"]
         t0 = time.time()
+        log = getattr(rt, "CALL_LOG", None)
+        if log is not None:
+            log.clear()
         try:
             mod = pipeline(en)
             # 일치·불일치처럼 한 어댑터를 나눠 쓰는 파이프라인은 kind(한글 유형명)로 어느 쪽인지 받는다
@@ -95,6 +111,13 @@ def main() -> int:
                 explain_adapter=f"{en}_explain",
                 **extra,
             )
+            qd = result.get("question_data")
+            if getattr(rt, "SKIP_EXPLAIN", False) and isinstance(qd, dict):
+                # 파이프라인의 예비 문구(「③이 정답입니다. …」)까지 비운다 — 해설은 검수 때 Claude 가 쓴다
+                qd["Explanation"] = ""
+                result.setdefault("pipeline", {})
+                if isinstance(result["pipeline"], dict):
+                    result["pipeline"]["explanation"] = "skipped"
             emit(
                 {
                     "ok": bool(result.get("ok")),
@@ -103,6 +126,7 @@ def main() -> int:
                     "warnings": result.get("warnings") or [],
                     "pipeline": result.get("pipeline"),
                     "elapsed_ms": int((time.time() - t0) * 1000),
+                    "calls": calls_summary(log),
                 }
             )
         except Exception as e:  # noqa: BLE001

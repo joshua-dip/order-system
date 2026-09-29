@@ -534,10 +534,12 @@ class Worker:
                         "pipeline": res.get("pipeline"),
                         # 파이프라인이 끝까지 못 고친 것(정답으로도 읽히는 오답 등) — 관리자 화면 「검증 경고」에 뜬다
                         "warnings": res.get("warnings") or [],
+                        "calls": res.get("calls"),
                     },
                 )
             else:
-                self.finish(job_id, error=f"생성 실패: {res.get('error') or '원인 미상'}")
+                self.finish(job_id, result={"elapsed_ms": res.get("elapsed_ms"), "calls": res.get("calls")} if res.get("calls") else None,
+                            error=f"생성 실패: {res.get('error') or '원인 미상'}")
         except GpuBusy as e:
             key = str(job_id)
             self.busy_strikes[key] = self.busy_strikes.get(key, 0) + 1
