@@ -99,9 +99,10 @@ SOLVE_SYS = {
     "vocab": "a CSAT question asking which numbered word is NOT appropriate in context",
     "grammar": "a CSAT question asking which underlined part is grammatically WRONG",
 }
+# 이유는 받지 않는다 — 번호·「다른 답 가능」만 쓰는데 이유를 약 500자 쓰고 있었다(속도 개선 09-30)
 SOLVE_TMPL = """You are a top Korean high-school student solving {what}. You are NOT given the answer.
 Output ONLY one JSON object. No markdown.
-Keys: answer (one of ①②③④⑤), also_defensible (array of other circled numbers a careful student could ALSO pick; [] if none), reason (short English)."""
+Keys: answer (one of ①②③④⑤), also_defensible (array of other circled numbers a careful student could ALSO pick; [] if none)."""
 
 EXPLAIN_SYS = {
     "irrelevant": """당신은 한국 수능 영어 「무관한 문장」 문항의 한국어 해설만 씁니다.
@@ -246,7 +247,7 @@ def run(kind: str, chat_text, model: Any, tokenizer: Any, passage: str, *, temp:
         got = call(SOLVE_TMPL.format(what=SOLVE_SYS[kind]),
                    f"[Question]\n{QUESTION[kind]}\n\n[Passage]\n{cand['paragraph']}\n\n"
                    + (f"[Options]\n{cand['options']}\n\n" if kind == "vocab" else "") + "Return JSON.",
-                   max_tokens=250, t=0.0)
+                   max_tokens=60, t=0.0)
         picked = str((got or {}).get("answer") or "").strip()[:1]
         others = {str(x).strip()[:1] for x in ((got or {}).get("also_defensible") or []) if isinstance(x, (str, int))}
         key = CIRCLED[k]

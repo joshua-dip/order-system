@@ -23,17 +23,18 @@ MAX_SEEDS = 8
 TIME_BUDGET_SEC = 120
 MIN_GIVEN_WORDS = 6  # 「Both figuratively and literally.」 같은 조각 문장은 주어진 문장으로 쓰지 않는다
 
+# 모의 풀이는 번호·「다른 답 가능」만 쓴다 — 예전엔 버리는 이유를 400~700자 써서 순서·삽입 시간의 전부였다(속도 개선 09-30)
 SOLVE_SYS = {
     "order": """You are a top Korean high-school student solving a CSAT sentence-order question. You are NOT given the answer.
 Read the given text, then the three parts (A), (B), (C), and decide the order in which they follow the given text.
 Use the linking clues: pronouns (this, they, such), connectives (however, for example, as a result), and repeated or newly introduced ideas.
 Output ONLY one JSON object. No markdown.
-Keys: answer (one of ①②③④⑤ — the best option), also_defensible (array of other circled numbers that a careful student could ALSO defend; [] if none), reason (short English).""",
+Keys: answer (one of ①②③④⑤ — the best option), also_defensible (array of other circled numbers that a careful student could ALSO defend; [] if none).""",
     "insert": """You are a top Korean high-school student solving a CSAT sentence-insertion question. You are NOT given the answer.
 Decide where the given sentence fits best among the marked places ①–⑤ in the passage.
 Use the linking clues: pronouns (this, they, such), connectives (however, for example, as a result), and the logical gap the sentence fills.
 Output ONLY one JSON object. No markdown.
-Keys: answer (one of ①②③④⑤ — the best place), also_defensible (array of other circled numbers that a careful student could ALSO defend; [] if none), reason (short English).""",
+Keys: answer (one of ①②③④⑤ — the best place), also_defensible (array of other circled numbers that a careful student could ALSO defend; [] if none).""",
 }
 
 EXPLAIN_SYS = {
@@ -110,7 +111,7 @@ def run(kind: str, chat_text, model: Any, tokenizer: Any, passage: str, *, temp:
         if kind == "insert" and len(q["given"].split()) < MIN_GIVEN_WORDS:
             continue
         tried += 1
-        got = call(SOLVE_SYS[kind], _solve_text(kind, q), max_tokens=250, t=0.0)
+        got = call(SOLVE_SYS[kind], _solve_text(kind, q), max_tokens=60, t=0.0)
         picked = str((got or {}).get("answer") or "").strip()[:1]
         others = {str(x).strip()[:1] for x in ((got or {}).get("also_defensible") or []) if isinstance(x, (str, int))}
         key = CIRCLED[q["answer"]]
