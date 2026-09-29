@@ -190,6 +190,9 @@ export default function AdminSidebar({ loginId }: AdminSidebarProps) {
         <Link href="/admin/qna" className={linkCls('/admin/qna')}>
           Q&amp;A 분석지 모더레이션
         </Link>
+        <Link href="/admin/error-reports" className={linkCls('/admin/error-reports')}>
+          콘텐츠 오류 신고
+        </Link>
 
         <p className="px-3 py-1 text-slate-500 uppercase tracking-wider text-xs mt-2.5">SETTINGS</p>
         <Link href="/admin?section=settings" className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors">

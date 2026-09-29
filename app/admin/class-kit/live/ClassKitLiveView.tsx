@@ -26,10 +26,14 @@ import { speak, stopSpeaking, ttsSupported, type TtsRate } from './live-tts';
 import { LiveFloatingPanel } from './LiveFloatingPanel';
 import { LiveSentencePanelBody } from './LiveSentencePanel';
 import { LiveQuestionsSection } from './LiveQuestionsSection';
+import { LiveErrorReportDialog, type ErrorReportTarget } from './LiveErrorReportDialog';
 import { INK_COLORS, LiveInkLayer, type InkStroke, type InkTool } from './LiveInkLayer';
 
 const LAST_PASSAGE_KEY = 'class_kit_live_last_passage_id';
 const PREFS_KEY = 'class_kit_live_prefs';
+const BOOKMARKS_KEY = 'class_kit_live_bookmarks';
+const BOOKMARK_MAX = 30;
+type Bookmark = { id: string; label: string; textbook: string };
 const ZOOM_STEPS = [80, 90, 100, 115, 130, 150, 175, 200] as const;
 
 type ViewMode = 'both' | 'en' | 'hideKo';
@@ -91,6 +95,11 @@ export function ClassKitLiveView({
   const [inkColor, setInkColor] = useState<string>(INK_COLORS[1]);
   const [inkByPassage, setInkByPassage] = useState<Record<string, InkStroke[]>>({});
   const [fullscreen, setFullscreen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ErrorReportTarget | null>(null);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  /** 로그인 회원 표시(자료 유출 방지 워터마크) — 관리자·비회원은 비움 */
+  const [watermark, setWatermark] = useState('');
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -104,7 +113,10 @@ export function ClassKitLiveView({
     try {
       const raw = localStorage.getItem(PREFS_KEY);
       if (raw) setPrefs({ ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<Prefs>) });
-      const pid = localStorage.getItem(LAST_PASSAGE_KEY);
+      const bm = localStorage.getItem(BOOKMARKS_KEY);
+      if (bm) setBookmarks((JSON.parse(bm) as Bookmark[]).slice(0, BOOKMARK_MAX));
+      // ?passage=<id> (오류 신고 관리 화면에서 바로 열기) 가 마지막 지문보다 우선
+      const pid = new URLSearchParams(window.location.search).get('passage') || localStorage.getItem(LAST_PASSAGE_KEY);
       if (pid) {
         fetch(`${passagesApiBase}/${encodeURIComponent(pid)}`, { credentials: 'include' })
           .then((r) => (r.ok ? r.json() : null))
@@ -115,6 +127,40 @@ export function ClassKitLiveView({
       /* ignore */
     }
   }, [passagesApiBase]);
+
+  useEffect(() => {
+    if (!isUserClassKit) return;
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const u = d?.user;
+        if (u && u.role !== 'admin') setWatermark(String(u.email || u.loginId || ''));
+      })
+      .catch(() => {});
+  }, [isUserClassKit]);
+
+  const saveBookmarks = (next: Bookmark[]) => {
+    setBookmarks(next);
+    try {
+      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+  const isBookmarked = !!passage && bookmarks.some((b) => b.id === passage._id);
+  const toggleBookmark = () => {
+    if (!passage) return;
+    if (isBookmarked) return saveBookmarks(bookmarks.filter((b) => b.id !== passage._id));
+    const label = passage.source_key || `${passage.chapter} ${passage.number}`;
+    saveBookmarks([{ id: passage._id, label, textbook: passage.textbook }, ...bookmarks].slice(0, BOOKMARK_MAX));
+  };
+  const openBookmark = (b: Bookmark) => {
+    setBookmarksOpen(false);
+    fetch(`${passagesApiBase}/${encodeURIComponent(b.id)}`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.item && handlePick(d.item as PassageItem))
+      .catch(() => {});
+  };
 
   const updPrefs = (patch: Partial<Prefs>) =>
     setPrefs((p) => {
@@ -284,6 +330,9 @@ export function ClassKitLiveView({
         }
         actions={
           <>
+            <ClassKitIconButton onClick={toggleBookmark} disabled={!passage} title={isBookmarked ? '책갈피 빼기' : '책갈피 (최대 30개)'} label="책갈피">
+              <span className={`text-base leading-none ${isBookmarked ? 'text-amber-400' : ''}`}>{isBookmarked ? '★' : '☆'}</span>
+            </ClassKitIconButton>
             <ClassKitIconButton onClick={() => setInkOn((v) => !v)} disabled={!data} title="판서 (펜·형광펜·지우개)" label="판서">
               <IconPen />
             </ClassKitIconButton>
@@ -317,6 +366,32 @@ export function ClassKitLiveView({
         <button type="button" onClick={() => updPrefs({ questions: !prefs.questions })} className={toggle(prefs.questions)} title="지문 아래 실전 문항">
           실전 문항
         </button>
+        <div className="relative">
+          <button type="button" onClick={() => setBookmarksOpen((v) => !v)} className={toggle(bookmarksOpen)} title="책갈피한 지문으로 바로 이동">
+            책갈피 {bookmarks.length}
+          </button>
+          {bookmarksOpen ? (
+            <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-xl border border-zinc-700 bg-zinc-900 p-1.5 shadow-2xl">
+              {bookmarks.length === 0 ? (
+                <p className="px-3 py-4 text-center text-xs text-zinc-500">지문을 연 뒤 위쪽 ☆ 를 누르면 여기에 모여요(최대 {BOOKMARK_MAX}개).</p>
+              ) : (
+                <ul className="max-h-80 overflow-y-auto">
+                  {bookmarks.map((b) => (
+                    <li key={b.id} className="flex items-center gap-1">
+                      <button type="button" onClick={() => openBookmark(b)} className="min-w-0 flex-1 rounded-lg px-2.5 py-2 text-left hover:bg-zinc-800">
+                        <span className="block truncate text-xs font-semibold text-zinc-100">{b.label}</span>
+                        <span className="block truncate text-[11px] text-zinc-500">{b.textbook}</span>
+                      </button>
+                      <button type="button" onClick={() => saveBookmarks(bookmarks.filter((x) => x.id !== b.id))} className="h-7 w-7 shrink-0 rounded-md text-zinc-500 hover:bg-zinc-800 hover:text-rose-300" aria-label="책갈피 빼기">
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : null}
+        </div>
         {canSpeak ? (
           <div className="flex items-center gap-1">
             <button type="button" onClick={readAll} disabled={!sentences.length} className={toggle(readingIdx !== null)}>
@@ -381,7 +456,15 @@ export function ClassKitLiveView({
                     {data.passage.sourceKey || `${data.passage.chapter} ${data.passage.number}`}
                   </h2>
                   <span className="text-[0.8em] text-slate-400">{data.passage.textbook}</span>
+                  <button
+                    type="button"
+                    onClick={() => setReportTarget({ sentenceIndex: -1, label: '지문 전체' })}
+                    className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[0.7em] font-semibold text-amber-700 hover:bg-amber-100"
+                  >
+                    ⚠ 오류 신고
+                  </button>
                   <div className="flex-1" />
+                  {watermark ? <span className="select-none text-[0.7em] text-slate-300">{watermark}</span> : null}
                   {overviewTabs.length ? (
                     <div className="flex flex-wrap gap-1.5">
                       {overviewTabs.map((t) => (
@@ -460,7 +543,10 @@ export function ClassKitLiveView({
                   style={{ fontSize: `${prefs.zoom}%` }}
                 >
                   <h3 className="mb-4 border-b-2 border-slate-900 pb-2 text-[1.1em] font-bold">실전 문항</h3>
-                  <LiveQuestionsSection apiUrl={`${passagesApiBase}/${encodeURIComponent(data.passage.id)}/live/questions`} />
+                  <LiveQuestionsSection
+                    apiUrl={`${passagesApiBase}/${encodeURIComponent(data.passage.id)}/live/questions`}
+                    onReport={(qid, label) => setReportTarget({ sentenceIndex: -1, questionId: qid, label })}
+                  />
                 </section>
               ) : null}
             </div>
@@ -559,6 +645,14 @@ export function ClassKitLiveView({
             }
             headerExtra={
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setReportTarget({ sentenceIndex: selected, label: `${selected + 1}번 문장` })}
+                  className="mr-1 rounded-lg px-2 py-1.5 text-xs text-amber-700 hover:bg-amber-50"
+                  title="이 문장 오류 신고"
+                >
+                  ⚠ 신고
+                </button>
                 <button type="button" onClick={() => setSelected(Math.max(selected - 1, 0))} disabled={selected === 0} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30" title="이전 문장 (←)">
                   ‹
                 </button>
@@ -632,6 +726,10 @@ export function ClassKitLiveView({
           </LiveFloatingPanel>
         ) : null}
       </div>
+
+      {reportTarget && data ? (
+        <LiveErrorReportDialog passageId={data.passage.id} target={reportTarget} onClose={() => setReportTarget(null)} />
+      ) : null}
 
       {showPicker && (
         <PassagePickerModal

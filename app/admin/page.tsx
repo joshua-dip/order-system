@@ -3356,6 +3356,12 @@ export default function AdminDashboardPage() {
             )}
           </Link>
           <Link
+            href="/admin/error-reports"
+            className="w-full text-left px-4 py-1.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700/50 transition-colors block"
+          >
+            콘텐츠 오류 신고
+          </Link>
+          <Link
             href="/admin/solbook-lesson-links"
             className="block w-full text-left px-4 py-1.5 rounded-lg font-medium text-violet-200/90 hover:bg-violet-950/40 transition-colors border border-violet-800/40 mt-1"
           >

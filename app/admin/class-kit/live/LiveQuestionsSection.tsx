@@ -34,7 +34,15 @@ function Paragraph({ text }: { text: string }) {
   );
 }
 
-export function LiveQuestionsSection({ apiUrl, showAnswerDefault = false }: { apiUrl: string; showAnswerDefault?: boolean }) {
+export function LiveQuestionsSection({
+  apiUrl,
+  showAnswerDefault = false,
+  onReport,
+}: {
+  apiUrl: string;
+  showAnswerDefault?: boolean;
+  onReport?: (questionId: string, label: string) => void;
+}) {
   const [data, setData] = useState<LiveQuestionsPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState('');
@@ -141,6 +149,13 @@ export function LiveQuestionsSection({ apiUrl, showAnswerDefault = false }: { ap
                 );
               })}
             </ol>
+          ) : null}
+          {onReport ? (
+            <div className="text-right">
+              <button type="button" onClick={() => onReport(q.id, `${q.type} 문항`)} className="text-[0.75em] text-amber-700 hover:underline">
+                ⚠ 이 문항 오류 신고
+              </button>
+            </div>
           ) : null}
           {showAnswer ? (
             <div className="rounded-lg bg-slate-50 px-4 py-3 text-[0.9em] leading-relaxed">
