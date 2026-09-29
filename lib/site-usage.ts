@@ -56,6 +56,7 @@ const MENU_RULES: [RegExp, string, string, string][] = [
   [/^\/essay/, 'essay', '서술형문제 주문제작', '주문'],
   [/^\/analysis/, 'analysis', '분석지', '주문'],
   [/^\/vocabulary-order/, 'vocabulary-order', '단어장', '주문'],
+  [/^\/guide/, 'guide', '이용안내', '기타'],
   [/^\/my\/study-plan/, 'study-plan', '학습 플랜', '내정보'],
   [/^\/class-kit/, 'class-kit', '클래스키트', '주문'],
   [/^\/order\/done/, 'order-done', '주문 완료', '주문'],

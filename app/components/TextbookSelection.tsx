@@ -179,6 +179,9 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               <a href="#all-services" className={buttonClass.secondary}>
                 전체 서비스 목록
               </a>
+              <Link href="/guide" prefetch={false} className={buttonClass.secondary}>
+                이용안내
+              </Link>
             </div>
           </header>
 
@@ -279,7 +282,11 @@ const TextbookSelection = (_props: TextbookSelectionProps) => {
               </ul>
             </div>
             <p className="mt-3 text-sm text-slate-600">
-              서비스 수: {SERVICES.length + 1}개 · 문의는 오른쪽 아래 카카오톡 버튼으로 해 주세요.
+              서비스 수: {SERVICES.length + 1}개 · 사용법은{' '}
+              <Link href="/guide" prefetch={false} className="font-semibold text-slate-800 underline underline-offset-2">
+                이용안내
+              </Link>
+              , 문의는 오른쪽 아래 카카오톡 버튼으로 해 주세요.
             </p>
           </section>
 

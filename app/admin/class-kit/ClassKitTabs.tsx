@@ -57,6 +57,13 @@ export default function ClassKitTabs({
           </Link>
         );
       })}
+      <a
+        href="/guide#workspace"
+        className="ml-auto rounded-lg px-3 py-2 text-xs text-zinc-500 no-underline hover:bg-zinc-800/80 hover:text-zinc-200"
+        title="클래스키트 사용법"
+      >
+        ? 이용안내
+      </a>
     </div>
   );
 }
