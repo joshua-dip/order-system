@@ -38,7 +38,7 @@ from _cuda_runtime import (  # noqa: E402
 )
 
 from distractor_check import solve_check, word_overlap  # noqa: E402
-from json_extract import explanation_text, extract_json_object, trim_to_sentence  # noqa: E402
+from json_extract import explanation_text, extract_json_object, trim_to_sentence, unify_end_period  # noqa: E402
 
 CIRCLED = "①②③④⑤"
 # 빈칸 선지는 같은 문장 틀에 들어가야 해서 짧고 단어를 원래 많이 나눠 쓴다(「was the only true/acceptable
@@ -145,7 +145,7 @@ def _normalize_options(raw: Any) -> list[str]:
 
 
 def _format_options(opts: list[str]) -> str:
-    return " ### ".join(f"{CIRCLED[i]} {o}" for i, o in enumerate(opts))
+    return " ### ".join(f"{CIRCLED[i]} {o}" for i, o in enumerate(unify_end_period(opts)))
 
 
 def _has_hangul(s: str) -> bool:
@@ -192,6 +192,22 @@ def _pin_answer_to_span(call, blanked: str, span: str, options: list[str], answe
         options[answer] = span
         return True
     return False
+
+
+def _synonym_distractors(call, blanked: str, span: str, options: list[str], answer: int,
+                         trace: list[dict[str, Any]]) -> list[int]:
+    """원문 구절과 뜻이 같은 오답 위치. 다섯 개를 한꺼번에 넣어 보는 판정은 정답의 말바꿈을 「wrong」으로 넘겼다 —
+    파워업 검수 빈칸 X 44건의 주된 원인(정답이 둘). 오답 하나씩 원문 구절과 일대일로 묻는다."""
+    out: list[int] = []
+    for i, o in enumerate(options):
+        if i == answer:
+            continue
+        got = call(SAME_SYS, f"[Passage with the blank]\n{blanked}\n\n[Original phrase]\n{span}\n\n"
+                             f"[Option]\n{o}\n\nReturn JSON.", max_tokens=120, t=0.0)
+        trace.append({"stage": "synonym", "i": i, "out": got})
+        if isinstance(got, dict) and got.get("same") is True:
+            out.append(i)
+    return out
 
 
 def _valid_option(s: str, lo: int, hi: int) -> bool:
@@ -340,6 +356,7 @@ def run_pipeline(
         return back
 
     moved_note = ""
+    syn_left: list[int] = []
     remaining: dict[int, bool] = {}
     rejected: dict[int, list[str]] = {}
     verdicts: list[str] | None = None
@@ -382,6 +399,13 @@ def run_pipeline(
             if (_same(options[i], options[answer]) or _same(options[i], span)
                     or any(j != answer and word_overlap(options[i], options[j]) >= DUP for j in range(i))):
                 bad[i] = False
+        syn_left = []
+        if not bad:
+            # 판정이 모두 맞을 때만(라운드마다 네 번 더 부르지 않게) — 정답과 뜻이 같은 오답은 다시 쓴다
+            syn_left = _synonym_distractors(call, blanked, span, options, answer, trace)
+            for i in syn_left:
+                print(f"[pipeline] distractor {CIRCLED[i]} means the same as the answer: {options[i][:60]}", file=sys.stderr)
+                bad[i] = False
         remaining = bad
         if not bad or c_try >= max_retries + 1:
             break
@@ -419,6 +443,8 @@ def run_pipeline(
 
     # 정답 위치 섞기 — 초안은 정답을 ①에 두는 버릇이 있다(36문항 중 25개). 빈칸은 선지 순서에 뜻이 없으니 섞는다
     # (경고의 선지 번호가 섞은 뒤 번호가 되게 경고보다 먼저)
+    # 마지막 확인에서 정답과 같은 뜻이던 오답을 끝내 못 고쳤으면 정답이 둘이다 — 경고로 넘기지 않는다
+    syn_unfixed = [i for i in syn_left if remaining.get(i) is False]
     order = list(range(5))
     random.shuffle(order)
     options = [options[k] for k in order]
@@ -428,7 +454,8 @@ def run_pipeline(
     # 끝까지 못 고친 치명적 결함(같은 선지 둘, 원문 구절 그대로인 오답)은 내보내지 않고 처음부터 한 번 더 만든다
     # (37번: 「the Sun traveled around Earth」 셋이 남았다). 경고로 넘기면 정답이 둘인 문항이 저장될 수 있다.
     keys = [" ".join(re.sub(r"[^\w\s']", " ", o.lower()).split()) for o in options]
-    fatal = len(set(keys)) < 5 or any(_same(o, span) for k, o in enumerate(options) if k != answer)
+    fatal = (len(set(keys)) < 5 or any(_same(o, span) for k, o in enumerate(options) if k != answer)
+             or bool(syn_unfixed))
     if fatal:
         print("[pipeline] duplicate / verbatim distractor left — " + ("giving up" if _second_try else "drafting again"),
               file=sys.stderr)
@@ -436,7 +463,7 @@ def run_pipeline(
             return run_pipeline(model, tokenizer, passage, max_retries=max_retries, temp=temp,
                                 has_explain_adapter=has_explain_adapter, main_adapter=main_adapter,
                                 explain_adapter=explain_adapter, _second_try=True)
-        return {"ok": False, "error": "같은 선지·원문 그대로인 오답을 고치지 못했습니다 — 다시 생성해 주세요", "trace": trace}
+        return {"ok": False, "error": "같은 선지·원문 그대로이거나 정답과 뜻이 같은 오답을 고치지 못했습니다 — 다시 생성해 주세요", "trace": trace}
     warnings: list[str] = []
     if verdicts is None:
         warnings.append("넣어 보기 판정을 읽지 못했습니다 — 선지를 직접 확인 필요")
@@ -461,7 +488,7 @@ def run_pipeline(
     )
     explanation = trim_to_sentence(explanation_text(expl, raw_out[0], CIRCLED[answer]), 450)
     if len(explanation) < 40:
-        explanation = f"정답은 {CIRCLED[answer]}. 빈칸에는 원래 「{span}」이 들어가 앞뒤 문맥과 이어진다."[:450]
+        explanation = f"정답은 {CIRCLED[answer]}. 빈칸에는 원래 「{span}」이 들어가 앞뒤 문맥과 이어진다."
 
     qd = {
         "Question": QUESTION,

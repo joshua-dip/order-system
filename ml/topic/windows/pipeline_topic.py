@@ -41,7 +41,7 @@ from _cuda_runtime import (  # noqa: E402
     set_adapter,
 )
 
-from json_extract import explanation_text, trim_to_sentence  # noqa: E402
+from json_extract import explanation_text, trim_to_sentence, unify_end_period  # noqa: E402
 from option_form import topic_form_issue  # noqa: E402
 
 from distractor_check import distinct_options, fix_distractors, flagged_warnings, settle_answer  # noqa: E402
@@ -184,8 +184,8 @@ def _distinct_distractors(correct: str, revised: list[str], original: list[str])
 
 def _format_options(phrases: list[str]) -> str:
     parts = []
-    for i, p in enumerate(phrases[:5]):
-        parts.append(f"{CIRCLED[i]} {_strip_circled(p)}")
+    for i, p in enumerate(unify_end_period([_strip_circled(x) for x in phrases[:5]])):
+        parts.append(f"{CIRCLED[i]} {p}")
     return " ### ".join(parts)
 
 
@@ -534,7 +534,7 @@ def run_pipeline(
             explanation = (
                 f"정답은 {CIRCLED[correct_index]}. 글의 핵심은 「{claim_ko or claim_en}」이므로 "
                 f"이를 담은 선지가 주제이다. 다른 선지는 글의 일부 소재만 다루거나 지문에 없는 내용이다."
-            )[:450]
+            )
         trace.append({"stage": "explain", "out": expl, "used_explain_adapter": has_explain_adapter})
 
         # 정답 선지가 너무 짧게 망가졌으면 핵심 주장으로 바꾼다. 오답은 지어내지 않는다 —

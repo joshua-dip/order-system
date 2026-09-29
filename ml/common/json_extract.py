@@ -124,12 +124,56 @@ def explanation_text(obj: dict | None, raw: str, answer: str) -> str:
     return text
 
 
+_QUOTE_PAIRS = (("「", "」"), ("『", "』"), ("“", "”"), ("‘", "’"), ("(", ")"))
+
+
+def quotes_balanced(text: str) -> bool:
+    """「」·“”·괄호가 짝이 맞고 곧은따옴표(")가 짝수인가 — 해설이 인용 도중에 잘렸는지 가린다."""
+    return all(text.count(a) == text.count(b) for a, b in _QUOTE_PAIRS) and text.count('"') % 2 == 0
+
+
+_END_OK = re.compile(r"(다|요|[.!?」』”)])\s*$")
+_SENT_END = re.compile(r"(다\.|요\.|[.!?])(?=\s|$)")
+
+
+def looks_truncated(text: str) -> bool:
+    """해설이 중간에 끊긴 모양인가 — 인용이 안 닫혔거나, 「…」·「...」로 끝나거나, 문장 끝이 아니다."""
+    t = text.strip()
+    return (not t) or (not quotes_balanced(t)) or t.endswith(("…", "...")) or not _END_OK.search(t)
+
+
 def trim_to_sentence(text: str, limit: int = 450) -> str:
-    """limit 자 안에서 마지막 문장 끝(다. 요. . ! ?)까지만 남긴다 — 글자 수로 자르면 문장 중간에서 「…」로 끝났다."""
-    if len(text) <= limit:
-        return text
-    head = text[:limit]
-    cut = max(head.rfind(m) + len(m) for m in ("다.", "요.", ". ", "! ", "? "))
-    if cut >= limit // 2:
-        return head[:cut].rstrip()
-    return head.rstrip() + "…"
+    """limit 자 안에서 **인용 밖의** 마지막 문장 끝까지만 남긴다.
+    예전엔 글자 수로 자르거나 영어 인용 속 마침표에서 잘라 「…making 」처럼 인용이 열린 채 끝났다(파워업 검수 P 다수).
+    안전하게 자를 곳이 없으면 빈 문자열 — 호출한 쪽이 대체 해설을 쓴다."""
+    t = text.strip()
+    if len(t) <= limit and not looks_truncated(t):
+        return t
+    head = t[:limit]
+    best = -1
+    for m in _SENT_END.finditer(head):
+        cand = head[:m.end()]
+        # 「...」 말줄임은 문장 끝이 아니다. 안전한 끝이면서 인용 밖일 때만
+        if m.end() >= 8 and not cand.rstrip().endswith(("..", "…")) and quotes_balanced(cand):
+            best = m.end()
+    if best > 0 and (best >= len(head) // 3 or len(t) <= limit):
+        return head[:best].rstrip()
+    return ""
+
+
+def unify_end_period(options: list[str]) -> list[str]:
+    """선택지 끝 마침표를 한 문항 안에서 맞춘다 — 정답만 마침표가 있으면(또는 없으면) 모양으로 답이 보인다
+    (파워업 검수). 물음표·느낌표로 끝나는 선택지는 그대로 두고, 나머지를 많은 쪽에 맞춘다(같으면 뺀다)."""
+    plain = [o.rstrip() for o in options]
+    judged = [o for o in plain if o and not o.endswith(("?", "!"))]
+    with_dot = sum(1 for o in judged if o.endswith("."))
+    add = with_dot * 2 > len(judged)
+    out = []
+    for o in plain:
+        if not o or o.endswith(("?", "!")):
+            out.append(o)
+        elif add:
+            out.append(o if o.endswith(".") else o + ".")
+        else:
+            out.append(o.rstrip(".").rstrip() if o.endswith(".") and not o.endswith("...") else o)
+    return out

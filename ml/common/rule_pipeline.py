@@ -143,7 +143,7 @@ def run(kind: str, chat_text, model: Any, tokenizer: Any, passage: str, *, temp:
     explanation = fix_particles(trim_to_sentence(explanation_text(expl, raw_out[0], answer), 450))
     if len(explanation) < 40:
         explanation = (f"{answer}{_SUBJ[answer]} 정답입니다. " + (f"주어진 글 다음에 {ORDER_OPTIONS[chosen['answer']]}의 순서로 이어진다."
-                       if kind == "order" else f"주어진 문장은 「{chosen['before'][:60]}」 뒤에 들어가 앞뒤 문장을 잇는다."))[:450]
+                       if kind == "order" else f"주어진 문장은 「{chosen['before']}」 뒤에 들어가 앞뒤 문장을 잇는다."))  # 앞 문장을 자르지 않는다 — 잘린 인용은 해설 결함
 
     return {
         "ok": True,

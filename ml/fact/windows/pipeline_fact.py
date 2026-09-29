@@ -41,7 +41,7 @@ from _cuda_runtime import (  # noqa: E402
 )
 
 from distractor_check import NEAR_DUP, solve_check, word_overlap  # noqa: E402
-from json_extract import explanation_text, extract_json_object, trim_to_sentence  # noqa: E402
+from json_extract import explanation_text, extract_json_object, trim_to_sentence, unify_end_period  # noqa: E402
 
 CIRCLED = "①②③④⑤"
 TIME_BUDGET_SEC = 150  # 문항 하나에 쓸 시간 — 넘으면 다시 쓰기를 멈추고 경고를 붙여 마무리
@@ -122,7 +122,7 @@ def _normalize_options(raw: Any) -> list[str]:
 
 
 def _format_options(opts: list[str]) -> str:
-    return " ### ".join(f"{CIRCLED[i]} {o}" for i, o in enumerate(opts))
+    return " ### ".join(f"{CIRCLED[i]} {o}" for i, o in enumerate(unify_end_period(opts)))
 
 
 def _has_hangul(s: str) -> bool:
@@ -405,7 +405,7 @@ def run_pipeline(
     if len(explanation) < 40:
         c = (checks or [{}] * 5)[answer]
         explanation = (f"정답은 {CIRCLED[answer]}. 지문의 「{c.get('evidence', '')}」 부분과 "
-                       f"{'일치한다' if kind == '일치' else '어긋난다'}.")[:450]
+                       f"{'일치한다' if kind == '일치' else '어긋난다'}.")
 
     qd = {
         "Question": QUESTION[kind],
