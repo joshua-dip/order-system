@@ -44,6 +44,7 @@ from summary_review import MAIN_SYS, read_core, review_main, review_candidate  #
 
 CIRCLED = "①②③④⑤"
 TIME_BUDGET_SEC = 150
+LOOSE_BAD = 3  # 첫 판정에서 이만큼 오답이 참·비문이면 요약문을 새로 쓴다
 QUESTION = "다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은?"
 MAX_WORDS_PER_BLANK = 3
 
@@ -99,6 +100,15 @@ Output ONLY one JSON object. No markdown.
 Keys: A (one word or a short phrase of 1-3 words for blank (A)), B (the same for blank (B)).
 {goal}
 Both words must fit their blanks in [Summary] grammatically, and the pair must differ from the other options listed."""
+
+REWRITE_MANY_SYS = """You write replacement WRONG options for a Korean CSAT 「summary completion」 question.
+Output ONLY one JSON object. No markdown.
+Keys: options (array of exactly 4 objects {"A": 1-3 words for blank (A), "B": 1-3 words for blank (B)}).
+Each pair must make the completed summary clearly FALSE according to the passage, yet stay tempting.
+- At most two of the four may keep ONE word of the correct pair; then the other word must point the OPPOSITE way.
+- The others must change BOTH words (opposite direction, or something the passage does not say).
+- NEVER use a synonym or near-synonym of a correct word. Every pair must differ from each other, from the options listed,
+  and from the rejected pairs. Both words must fit their blanks in [Summary] grammatically."""
 
 GOAL_RIGHT = ("It must be the CORRECT pair: the completed summary states the passage's main point exactly. "
               "Prefer paraphrases over copying passage words.")
@@ -246,168 +256,235 @@ def run_pipeline(
 
     # 1) 초안 — 요약문(빈칸 둘)과 다섯 쌍이 읽혀야 쓴다. LoRA 세 번, 안 되면 35B 대안 두 번.
     #    요지가 아닌 요약문(한 사례·한 단락만)은 버리고 다시 받는다
-    summary, pairs, answer = "", [], -1
-    # LoRA는 두 번째부터 온도 0.7. 35B 대안은 완성 문장과 A/B 표현을 받아 코드로 가린다.
-    # 모델이 빈칸 표시를 빠뜨려 좋은 내용도 형식 실패로 버리던 문제를 막는다.
-    for d_try, (use_lora, t_d) in enumerate(((True, None), (True, 0.7), (True, 0.7), (False, None), (False, 0.7))):
-        if time.time() - started > TIME_BUDGET_SEC:
-            break
-        if use_lora:
-            draft = call(SYSTEM_PROMPT, user_message(passage), max_tokens=600, adapter=True, t=t_d)
-            s = norm_summary((draft or {}).get("Summary") or "")
-            ps = parse_options((draft or {}).get("Options"))
-            ans = str((draft or {}).get("CorrectAnswer") or "").strip()[:1]
-            a_i = CIRCLED.index(ans) if ans and ans in CIRCLED else -1
-        else:
-            draft = draft_from_spans(call(DRAFT35_SYS, f"[Passage]\n{passage}\n\n[Independent main point]\n{core['claim']}\n{core['qualification']}"
-                                         + ("\n\n[Avoid these rejected summaries]\n" + "\n".join(rejected_drafts[-3:]) if rejected_drafts else "")
-                                         + "\n\nReturn JSON.", max_tokens=500, t=t_d))
-            s = norm_summary((draft or {}).get("summary") or "")
-            raw_pairs = (draft or {}).get("pairs") or []
-            ps = [parse_pair(f"(A) {x[0]} – (B) {x[1]}") if isinstance(x, list) and len(x) == 2 else None for x in raw_pairs][:5]
-            ps = ps if len(ps) == 5 and all(ps) else None
-            try:
-                a_i = int((draft or {}).get("answer")) - 1
-            except (TypeError, ValueError):
-                a_i = -1
-        # 같은 쌍·(A)(B) 같은 낱말은 초안을 버리지 않고 아래 다시 쓰기에서 고친다 — 정답 쌍만 멀쩡하면 된다
-        ok = bool(s) and ps is not None and 0 <= a_i < 5 and not _same_word(ps[a_i])
-        why = "" if ok else ("summary" if not s else "options" if ps is None else "answer")
-        if ok and _gives_away(s, ps[a_i]):
-            # 요약문 나머지에 정답 낱말(어간)이 그대로 — v2 20·29번(engagement … engaging, anaerobic)
-            ok, why = False, f"gives away (word in summary) — {ps[a_i]}"
-        if ok:
-            main = review_main(call, passage, fill(s, ps[a_i]), core)
-            trace.append({"stage": "main", "out": main})
-            if main is None:
-                ok, why = False, "main review unreadable"
-            elif not all(main[k] for k in ("main_point", "supported", "grammatical")):
-                ok, why = False, f"invalid summary — {str(main.get('reason') or '')[:140]}"
-        trace.append({"stage": "draft", "lora": use_lora, "ok": ok, "why": why, "summary": s,
-                      "raw": None if ok else raw_out[0][:400]})
-        if ok:
-            summary, pairs, answer = s, list(ps), a_i
-            break
-        if s:
-            rejected_drafts.append(f"{s} — {why}")
-        print(f"[pipeline] draft try={d_try} {'lora' if use_lora else '35b'} unusable ({why})", file=sys.stderr)
-    if not summary:
-        return {"ok": False, "error": "요약문 초안을 만들지 못했습니다 — 다시 생성해 주세요", "trace": trace}
-    print(f"[pipeline] summary: {summary[:100]} · answer={CIRCLED[answer]}", file=sys.stderr)
+    loose: set[str] = set()
+    fallback: tuple | None = None
+    for s_round in range(2):  # 요약문 두 벌까지 — 첫 벌의 빈칸이 느슨하면 새로 쓴다
+        abandon = False
+        summary, pairs, answer = "", [], -1
+        # LoRA는 두 번째부터 온도 0.7. 35B 대안은 완성 문장과 A/B 표현을 받아 코드로 가린다.
+        # 모델이 빈칸 표시를 빠뜨려 좋은 내용도 형식 실패로 버리던 문제를 막는다.
+        # 두 번째 요약문은 LoRA 한 번(온도 0.7) 뒤 35B — 35B 는 버린 요약문과 그 이유를 본다
+        schedule = (((True, None), (True, 0.7), (True, 0.7), (False, None), (False, 0.7)) if s_round == 0
+                    else ((True, 0.7), (False, None), (False, 0.7)))
+        for d_try, (use_lora, t_d) in enumerate(schedule):
+            if time.time() - started > TIME_BUDGET_SEC:
+                break
+            if use_lora:
+                draft = call(SYSTEM_PROMPT, user_message(passage), max_tokens=600, adapter=True, t=t_d)
+                s = norm_summary((draft or {}).get("Summary") or "")
+                ps = parse_options((draft or {}).get("Options"))
+                ans = str((draft or {}).get("CorrectAnswer") or "").strip()[:1]
+                a_i = CIRCLED.index(ans) if ans and ans in CIRCLED else -1
+            else:
+                draft = draft_from_spans(call(DRAFT35_SYS, f"[Passage]\n{passage}\n\n[Independent main point]\n{core['claim']}\n{core['qualification']}"
+                                             + ("\n\n[Avoid these rejected summaries]\n" + "\n".join(rejected_drafts[-3:]) if rejected_drafts else "")
+                                             + "\n\nReturn JSON.", max_tokens=500, t=t_d))
+                s = norm_summary((draft or {}).get("summary") or "")
+                raw_pairs = (draft or {}).get("pairs") or []
+                ps = [parse_pair(f"(A) {x[0]} – (B) {x[1]}") if isinstance(x, list) and len(x) == 2 else None for x in raw_pairs][:5]
+                ps = ps if len(ps) == 5 and all(ps) else None
+                try:
+                    a_i = int((draft or {}).get("answer")) - 1
+                except (TypeError, ValueError):
+                    a_i = -1
+            # 같은 쌍·(A)(B) 같은 낱말은 초안을 버리지 않고 아래 다시 쓰기에서 고친다 — 정답 쌍만 멀쩡하면 된다
+            ok = bool(s) and ps is not None and 0 <= a_i < 5 and not _same_word(ps[a_i]) and s not in loose
+            why = "" if ok else ("summary" if not s else "loose (rejected before)" if s in loose
+                                 else "options" if ps is None else "answer")
+            if ok and _gives_away(s, ps[a_i]):
+                # 요약문 나머지에 정답 낱말(어간)이 그대로 — v2 20·29번(engagement … engaging, anaerobic)
+                ok, why = False, f"gives away (word in summary) — {ps[a_i]}"
+            if ok:
+                main = review_main(call, passage, fill(s, ps[a_i]), core)
+                trace.append({"stage": "main", "out": main})
+                if main is None:
+                    ok, why = False, "main review unreadable"
+                elif not all(main[k] for k in ("main_point", "supported", "grammatical")):
+                    ok, why = False, f"invalid summary — {str(main.get('reason') or '')[:140]}"
+            trace.append({"stage": "draft", "lora": use_lora, "ok": ok, "why": why, "summary": s,
+                          "raw": None if ok else raw_out[0][:400]})
+            if ok:
+                summary, pairs, answer = s, list(ps), a_i
+                break
+            if s:
+                rejected_drafts.append(f"{s} — {why}")
+            print(f"[pipeline] draft try={d_try} {'lora' if use_lora else '35b'} unusable ({why})", file=sys.stderr)
+        if not summary and fallback:
+            # 새 요약문을 못 쓰면 첫 요약문으로 돌아가 예전처럼 오답을 고친다(느슨해도 고쳐지는 경우가 있다)
+            summary, pairs, answer = fallback[0], list(fallback[1]), fallback[2]
+            trace.append({"stage": "loose_fallback"})
+        if not summary:
+            return {"ok": False, "error": "요약문 초안을 만들지 못했습니다 — 다시 생성해 주세요", "trace": trace}
+        print(f"[pipeline] summary: {summary[:100]} · answer={CIRCLED[answer]}", file=sys.stderr)
 
-    candidate_cache: dict[str, dict | None] = {}
+        candidate_cache: dict[str, dict | None] = {}
 
-    def _candidate(pair: tuple[str, str]) -> dict | None:
-        sentence = fill(summary, pair)
-        if sentence not in candidate_cache:
-            candidate_cache[sentence] = review_candidate(call, passage, sentence)
-            trace.append({"stage": "candidate", "pair": pair, "out": candidate_cache[sentence]})
-        return candidate_cache[sentence]
+        def _candidate(pair: tuple[str, str]) -> dict | None:
+            sentence = fill(summary, pair)
+            if sentence not in candidate_cache:
+                candidate_cache[sentence] = review_candidate(call, passage, sentence)
+                trace.append({"stage": "candidate", "pair": pair, "out": candidate_cache[sentence]})
+            return candidate_cache[sentence]
 
-    def _usable_wrong(pair: tuple[str, str]) -> bool:
-        verdict = _candidate(pair)
-        return verdict is not None and verdict["grammatical"] and not verdict["supported"]
+        def _usable_wrong(pair: tuple[str, str]) -> bool:
+            verdict = _candidate(pair)
+            return verdict is not None and verdict["grammatical"] and not verdict["supported"]
 
-    def check(order: list[int]) -> list[str] | None:
-        got = _verdicts(call(
-            CHECK_SYS,
-            f"[Passage]\n{passage}\n\n[Complete candidates]\n"
-            + "\n".join(f"{k + 1}. {fill(summary, pairs[j])}" for k, j in enumerate(order))
-            + "\n\nReturn checks JSON.",
-            max_tokens=300, t=0.0,
-        ))
-        if got is None:
+        def _rewrite_wrong(i: int, others: list[tuple[str, str]], tried: list[str]) -> tuple[str, str] | None:
+            got = call(
+                REWRITE_MANY_SYS,
+                f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n"
+                f"[Correct pair]\n(A) {pairs[answer][0]} – (B) {pairs[answer][1]}\n\n"
+                + "[Other options]\n" + "\n".join(f"- (A) {a} – (B) {b}" for a, b in others)
+                + ("\n\n[Already rejected]\n" + "\n".join(f"- {x}" for x in tried[-8:]) if tried else "")
+                + "\n\nReturn JSON.",
+                max_tokens=220, t=0.8,
+            )
+            seen = {x.lower() for x in tried}
+            audits = 0
+            for raw in ((got or {}).get("options") or [])[:4]:
+                if not isinstance(raw, dict):
+                    continue
+                cand = parse_pair(f"(A) {raw.get('A', '')} – (B) {raw.get('B', '')}")
+                if cand is None:
+                    continue
+                label = f"(A) {cand[0]} – (B) {cand[1]}"
+                if (label.lower() in seen or _same_word(cand) or _key(cand) == _key(pairs[i])
+                        or any(_key(cand) == _key(o) for o in others)):
+                    continue
+                seen.add(label.lower())
+                if audits >= 3 or time.time() - started > TIME_BUDGET_SEC:
+                    break
+                audits += 1
+                if _usable_wrong(cand):
+                    return cand
+                rejected.setdefault(i, []).append(label)
             return None
-        back = [""] * 5
-        for k, j in enumerate(order):
-            back[j] = got[k]
-        return back
 
-    moved_note = ""
-    unreadable = False
-    remaining: dict[int, bool] = {}
-    rejected: dict[int, list[str]] = {}
-    verdicts: list[str] | None = None
-    checked_pairs = None
-    for c_try in range(max_retries + 2):
-        if time.time() - started > TIME_BUDGET_SEC:
-            print(f"[pipeline] time budget {TIME_BUDGET_SEC}s reached — stop rewriting", file=sys.stderr)
-            break
-        # 2) 넣어 보기 — 순서를 바꿔 두 번(16과), 하나라도 어긋나면 고친다.
-        #    역순 판정은 정순이 깔끔할 때(확인)·정답을 옮기려 할 때만 — 판정이 이 유형 시간의 47% 였다(속도 개선 09-30)
-        verdicts = check([0, 1, 2, 3, 4])
-        rev = None
-        if verdicts is not None:
-            f0 = [i for i, v in enumerate(verdicts) if v == "fits"]
-            if not _problems(verdicts, answer) or (len(f0) == 1 and f0[0] != answer):
-                rev = check([4, 3, 2, 1, 0])
-        trace.append({"stage": "check", "out": verdicts, "reversed": rev})
-        checked_pairs = tuple(pairs) if verdicts is not None and rev is not None else None
-        if verdicts is None:
-            # 판정을 못 읽어도 아래 중복·같은 낱말·유의어 검사는 한다 — v2 39번: 이 회차를 건너뛰어 정답과 같은 쌍이 오답으로 나갔다
-            print("[pipeline] check unreadable", file=sys.stderr)
-            verdicts = ["wrong" if i != answer else "fits" for i in range(5)]
+        def check(order: list[int]) -> list[str] | None:
+            got = _verdicts(call(
+                CHECK_SYS,
+                f"[Passage]\n{passage}\n\n[Complete candidates]\n"
+                + "\n".join(f"{k + 1}. {fill(summary, pairs[j])}" for k, j in enumerate(order))
+                + "\n\nReturn checks JSON.",
+                max_tokens=300, t=0.0,
+            ))
+            if got is None:
+                return None
+            back = [""] * 5
+            for k, j in enumerate(order):
+                back[j] = got[k]
+            return back
+
+        moved_note = ""
+        unreadable = False
+        remaining: dict[int, bool] = {}
+        rejected: dict[int, list[str]] = {}
+        verdicts: list[str] | None = None
+        checked_pairs = None
+        for c_try in range(max_retries + 2):
+            if time.time() - started > TIME_BUDGET_SEC:
+                print(f"[pipeline] time budget {TIME_BUDGET_SEC}s reached — stop rewriting", file=sys.stderr)
+                break
+            # 2) 넣어 보기 — 순서를 바꿔 두 번(16과), 하나라도 어긋나면 고친다.
+            #    역순 판정은 정순이 깔끔할 때(확인)·정답을 옮기려 할 때만 — 판정이 이 유형 시간의 47% 였다(속도 개선 09-30)
+            verdicts = check([0, 1, 2, 3, 4])
             rev = None
-            unreadable = True
-        print(f"[pipeline] check: {' '.join(v[0].upper() for v in verdicts)}"
-              + (f" / reversed: {' '.join(v[0].upper() for v in rev)}" if rev else "")
-              + f" answer={CIRCLED[answer]}", file=sys.stderr)
-        fits = [i for i, v in enumerate(verdicts) if v == "fits"]
-        fits_rev = [i for i, v in enumerate(rev) if v == "fits"] if rev else fits
-        if len(fits) == 1 and fits == fits_rev and fits[0] != answer:
-            moved_note = f"초안 정답 {CIRCLED[answer]} → 넣어 보기상 {CIRCLED[fits[0]]}"
-            print(f"[pipeline] answer re-pointed {CIRCLED[answer]} -> {CIRCLED[fits[0]]}", file=sys.stderr)
-            answer = fits[0]
-        bad = _problems(verdicts, answer)
-        if rev:
-            for i, want in _problems(rev, answer).items():
-                bad.setdefault(i, want)
-        for i in range(5):  # 같은 쌍·(A)(B) 같은 낱말은 판정과 상관없이 다시 쓴다
-            if i != answer and (_same_word(pairs[i]) or any(
-                    _key(pairs[i]) == _key(pairs[j]) for j in range(5) if j != i and (j < i or j == answer))):
-                bad[i] = False
-        # 정답 쌍을 보여 주지 않고 완성 문장 자체의 사실성·문법을 따로 확인한다.
-        for i in range(5):
-            if i != answer and i not in bad and not _usable_wrong(pairs[i]):
-                bad[i] = False
-        remaining = bad
-        if not bad and checked_pairs is None and c_try < max_retries + 1:
-            continue  # 판독 실패를 통과로 취급하지 말고 두 순서 판정을 다시 받는다.
-        if not bad or c_try >= max_retries + 1:
+            if verdicts is not None:
+                f0 = [i for i, v in enumerate(verdicts) if v == "fits"]
+                if not _problems(verdicts, answer) or (len(f0) == 1 and f0[0] != answer):
+                    rev = check([4, 3, 2, 1, 0])
+            trace.append({"stage": "check", "out": verdicts, "reversed": rev})
+            checked_pairs = tuple(pairs) if verdicts is not None and rev is not None else None
+            if verdicts is None:
+                # 판정을 못 읽어도 아래 중복·같은 낱말·유의어 검사는 한다 — v2 39번: 이 회차를 건너뛰어 정답과 같은 쌍이 오답으로 나갔다
+                print("[pipeline] check unreadable", file=sys.stderr)
+                verdicts = ["wrong" if i != answer else "fits" for i in range(5)]
+                rev = None
+                unreadable = True
+            print(f"[pipeline] check: {' '.join(v[0].upper() for v in verdicts)}"
+                  + (f" / reversed: {' '.join(v[0].upper() for v in rev)}" if rev else "")
+                  + f" answer={CIRCLED[answer]}", file=sys.stderr)
+            fits = [i for i, v in enumerate(verdicts) if v == "fits"]
+            fits_rev = [i for i, v in enumerate(rev) if v == "fits"] if rev else fits
+            if len(fits) == 1 and fits == fits_rev and fits[0] != answer:
+                moved_note = f"초안 정답 {CIRCLED[answer]} → 넣어 보기상 {CIRCLED[fits[0]]}"
+                print(f"[pipeline] answer re-pointed {CIRCLED[answer]} -> {CIRCLED[fits[0]]}", file=sys.stderr)
+                answer = fits[0]
+            bad = _problems(verdicts, answer)
+            if rev:
+                for i, want in _problems(rev, answer).items():
+                    bad.setdefault(i, want)
+            for i in range(5):  # 같은 쌍·(A)(B) 같은 낱말은 판정과 상관없이 다시 쓴다
+                if i != answer and (_same_word(pairs[i]) or any(
+                        _key(pairs[i]) == _key(pairs[j]) for j in range(5) if j != i and (j < i or j == answer))):
+                    bad[i] = False
+            # 정답 쌍을 보여 주지 않고 완성 문장 자체의 사실성·문법을 따로 확인한다.
+            for i in range(5):
+                if i != answer and i not in bad and not _usable_wrong(pairs[i]):
+                    bad[i] = False
+            remaining = bad
+            n_bad = sum(1 for i in bad if i != answer)
+            if c_try == 0 and s_round == 0 and n_bad >= LOOSE_BAD and time.time() - started < TIME_BUDGET_SEC - 40:
+                # 첫 판정에서 오답 넷 중 셋 이상이 참·비문이면 빈칸이 느슨한 요약문이다(「may seem to (A)」·
+                # 「Scientific (A) and telescope (B) have advanced …」) — 오답을 네 번 다시 써도 못 고쳤다.
+                # 09-30 두 시험지 72문항: 「선지 검증 미완료」 14건 중 10건, 성공 50건 중 3건이 여기 해당
+                loose.add(summary)
+                fallback = (summary, list(pairs), answer)
+                rejected_drafts.append(f"{summary} — blanks too loose: wrong pairs still made a true sentence")
+                trace.append({"stage": "loose_summary", "summary": summary, "n_bad": n_bad})
+                print(f"[pipeline] loose summary ({n_bad} bad distractors) — redraft", file=sys.stderr)
+                abandon = True
+                break
+            if not bad and checked_pairs is None and c_try < max_retries + 1:
+                continue  # 판독 실패를 통과로 취급하지 말고 두 순서 판정을 다시 받는다.
+            if not bad or c_try >= max_retries + 1:
+                break
+            # 3) 다시 쓰기 — 거절된 시도를 보여 주고 두 번째부터 온도를 올린다(16과)
+            for i, want_right in sorted(bad.items()):
+                for attempt in range(3 if c_try == 0 else 1):
+                    if time.time() - started > TIME_BUDGET_SEC:
+                        break
+                    others = [p for k, p in enumerate(pairs) if k != i]
+                    current = f"(A) {pairs[i][0]} – (B) {pairs[i][1]}"
+                    if current not in rejected.setdefault(i, []):
+                        rejected[i].append(current)
+                    tried = rejected[i]
+                    if not want_right:
+                        # 오답은 후보 넷을 한 번에 받아 거절된 적 있는 쌍은 코드로 거르고, 사실 확인을 통과한 첫 쌍을 쓴다
+                        # — 한 쌍씩 받을 땐 거절된 쌍(face-to-face – facing backward)을 여섯 번까지 되풀이했다(09-30)
+                        new = _rewrite_wrong(i, others, tried)
+                        trace.append({"stage": "rewrite", "i": i, "right": False, "out": new, "ok": new is not None})
+                        if new is not None:
+                            pairs[i] = new
+                            break
+                        print(f"[pipeline] rewrite {CIRCLED[i]}: no usable wrong pair among candidates", file=sys.stderr)
+                        continue
+                    rew = call(
+                        REWRITE_SYS.format(goal=GOAL_RIGHT if want_right else GOAL_WRONG),
+                        f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n"
+                        + (f"[Correct pair]\n(A) {pairs[answer][0]} – (B) {pairs[answer][1]}\n\n" if not want_right else "")
+                        + "[Other options]\n" + "\n".join(f"- (A) {a} – (B) {b}" for a, b in others)
+                        + (("\n\n[Already rejected — write something clearly different]\n"
+                            + "\n".join(f"- {x}" for x in tried[-3:])) if tried else "")
+                        + f"\n\n[Option to replace]\n(A) {pairs[i][0]} – (B) {pairs[i][1]}\n\nReturn JSON.",
+                        max_tokens=120,
+                        t=temp if attempt == 0 and not tried else 0.8,
+                    )
+                    new = parse_pair(f"(A) {(rew or {}).get('A', '')} – (B) {(rew or {}).get('B', '')}")
+                    ok = (new is not None and _key(new) != _key(pairs[i])
+                          and all(_key(new) != _key(o) for o in others) and not _same_word(new))
+                    if ok and not want_right and not _usable_wrong(new):
+                        ok = False  # 다시 쓴 쌍도 사실이면 복수정답, 비문이면 부적절한 오답이다.
+                    trace.append({"stage": "rewrite", "i": i, "right": want_right, "out": new, "ok": ok})
+                    if ok:
+                        pairs[i] = new  # type: ignore[assignment]
+                        break
+                    if new:
+                        rejected.setdefault(i, []).append(f"(A) {new[0]} – (B) {new[1]}")
+                    print(f"[pipeline] rewrite {CIRCLED[i]} rejected: {new}", file=sys.stderr)
+        if not abandon:
             break
-        # 3) 다시 쓰기 — 거절된 시도를 보여 주고 두 번째부터 온도를 올린다(16과)
-        for i, want_right in sorted(bad.items()):
-            for attempt in range(3 if c_try == 0 else 1):
-                if time.time() - started > TIME_BUDGET_SEC:
-                    break
-                others = [p for k, p in enumerate(pairs) if k != i]
-                current = f"(A) {pairs[i][0]} – (B) {pairs[i][1]}"
-                if current not in rejected.setdefault(i, []):
-                    rejected[i].append(current)
-                tried = rejected[i]
-                rew = call(
-                    REWRITE_SYS.format(goal=GOAL_RIGHT if want_right else GOAL_WRONG),
-                    f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n"
-                    + (f"[Correct pair]\n(A) {pairs[answer][0]} – (B) {pairs[answer][1]}\n\n" if not want_right else "")
-                    + "[Other options]\n" + "\n".join(f"- (A) {a} – (B) {b}" for a, b in others)
-                    + (("\n\n[Already rejected — write something clearly different]\n"
-                        + "\n".join(f"- {x}" for x in tried[-3:])) if tried else "")
-                    + f"\n\n[Option to replace]\n(A) {pairs[i][0]} – (B) {pairs[i][1]}\n\nReturn JSON.",
-                    max_tokens=120,
-                    t=temp if attempt == 0 and not tried else 0.8,
-                )
-                new = parse_pair(f"(A) {(rew or {}).get('A', '')} – (B) {(rew or {}).get('B', '')}")
-                ok = (new is not None and _key(new) != _key(pairs[i])
-                      and all(_key(new) != _key(o) for o in others) and not _same_word(new))
-                if ok and not want_right and not _usable_wrong(new):
-                    ok = False  # 다시 쓴 쌍도 사실이면 복수정답, 비문이면 부적절한 오답이다.
-                trace.append({"stage": "rewrite", "i": i, "right": want_right, "out": new, "ok": ok})
-                if ok:
-                    pairs[i] = new  # type: ignore[assignment]
-                    break
-                if new:
-                    rejected.setdefault(i, []).append(f"(A) {new[0]} – (B) {new[1]}")
-                print(f"[pipeline] rewrite {CIRCLED[i]} rejected: {new}", file=sys.stderr)
 
     # 미해결 복수정답·문법 오류 또는 교정 뒤 재검증하지 않은 선지는 성공으로 내보내지 않는다.
     if remaining or checked_pairs != tuple(pairs):
