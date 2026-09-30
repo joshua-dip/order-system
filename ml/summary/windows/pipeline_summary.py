@@ -40,7 +40,7 @@ from distractor_check import solve_check  # noqa: E402
 from json_extract import explanation_text, extract_json_object, trim_to_sentence  # noqa: E402
 from rule_pipeline import fix_particles  # noqa: E402
 from summary_draft import draft_from_spans  # noqa: E402
-from summary_review import MAIN_SYS, read_core, review_main, review_candidate  # noqa: E402
+from summary_review import MAIN_SYS, key_warning, read_core, review_main, review_candidate  # noqa: E402
 
 CIRCLED = "①②③④⑤"
 TIME_BUDGET_SEC = 150
@@ -513,6 +513,11 @@ def run_pipeline(
         warnings.append(f"선지 {CIRCLED[i]} 확인 필요 — 오답인데 요약문이 맞거나 문법이 어긋난다는 판정")
     if moved_note:
         warnings.append(f"{moved_note} — 정답 번호를 넣어 보기 판정에 맞춰 옮겼습니다")
+    # 정답 쌍 낱말이 지문과 분명히 어긋나는지(가리고 채워 견주기) — 버리지 않고 고칠 낱말을 경고로 남긴다
+    kw, kw_trace = key_warning(call, passage, summary, pairs[answer])
+    trace.append({"stage": "key_check", "out": kw_trace, "warning": kw})
+    if kw:
+        warnings.append(kw)
 
     paragraph = f"{passage.strip()}\n\n→ {summary}"
     options_text = format_options(pairs)
