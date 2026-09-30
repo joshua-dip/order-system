@@ -65,3 +65,39 @@ def review_candidate(call, passage: str, sentence: str) -> dict | None:
         if boolean_fields(obj, ("supported", "grammatical")):
             return obj
     return None
+
+
+KEY_FILL_SYS = """You complete a one-sentence summary of the passage. Output ONLY one JSON object. No markdown.
+Keys: A (1-3 words for blank (A)), B (1-3 words for blank (B)), can_be_true (true|false), reason (short English).
+Fill (A) and (B) so the completed sentence states the passage accurately: same direction, same strength and the same
+cause-effect as the passage. If the words OUTSIDE the blanks already misstate the passage (wrong cause, reversed
+relation, a claim the passage does not make), so that no filling can make the sentence true, set can_be_true false."""
+
+KEY_CMP_SYS = """You check the answer key of a summary-completion question against the passage. Output ONLY one JSON object. No markdown.
+Keys: A_ok (true|false), B_ok (true|false), reason (short English).
+[Reference] is one careful reader's filling, given only for comparison — the key does NOT need to match it.
+Default X_ok = true. Set X_ok = false ONLY when the key's word makes the sentence clearly FALSE to the passage:
+- it points the opposite way or reverses the relation (complicated → effortless, buy → exploit, ignore → exaggerate);
+- it clearly overstates or understates the passage (failed to develop → collapsed; great → exclusive);
+- it names a different thing than the passage says (physical improvement → emotional).
+A near-synonym, a broader or narrower but fair word, a different part of speech, or a slightly different nuance is OK."""
+
+
+def key_warning(call, passage: str, summary: str, key: tuple[str, str]) -> tuple[str | None, dict]:
+    """정답 쌍을 가리고 먼저 채우게 한 뒤, 정답 낱말이 지문과 분명히 어긋나는 칸만 경고(고칠 낱말 포함)로 돌려준다.
+    완성 문장 요지 검사는 「exploit the potential」(지문은 buy)·「so effortless」(지문은 complicated)도 통과시켰다.
+    채점된 170문항: X 7건 중 6건을 잡고, 나머지 163건 중 15건에 걸린다(절반 넘게는 실제 흠) — 그래서 버리지 않고
+    검수 때 고치도록 경고만 단다(09-30)."""
+    fill = call(KEY_FILL_SYS, f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\nReturn JSON.", max_tokens=160, t=0.0) or {}
+    if fill.get("can_be_true") is False:
+        return f"요약문 자체가 지문과 어긋날 수 있음 — {str(fill.get('reason') or '')[:120]}", {"fill": fill}
+    ref = (str(fill.get("A") or "").strip(), str(fill.get("B") or "").strip())
+    if not all(ref):
+        return None, {"fill": fill}
+    cmp_ = call(KEY_CMP_SYS, f"[Passage]\n{passage}\n\n[Summary]\n{summary}\n\n[Reference]\n(A) {ref[0]} – (B) {ref[1]}\n\n"
+                f"[Key]\n(A) {key[0]} – (B) {key[1]}\n\nReturn JSON.", max_tokens=160, t=0.0) or {}
+    bad = [f"({x}) {k} → {r}?" for x, k, r, ok in (("A", key[0], ref[0], cmp_.get("A_ok")), ("B", key[1], ref[1], cmp_.get("B_ok")))
+           if ok is False]
+    if not bad:
+        return None, {"fill": fill, "cmp": cmp_}
+    return f"정답 쌍 확인 필요 {' '.join(bad)} — {str(cmp_.get('reason') or '')[:140]}", {"fill": fill, "cmp": cmp_}

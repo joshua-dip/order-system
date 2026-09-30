@@ -181,7 +181,23 @@ async function main() {
     const feeder = (state: string) => ({ feeder: { at: new Date(), state, action: actions.join(' / ') || '할 일 없음' } });
 
     await topUp();
-    if (plan.paused) { await savePlan(feeder('paused')); log(`멈춤 ${actions.join(' / ')}`); return; }
+    // 「이 교재까지 하고 멈춤」 — 그 교재 칸을 다 넣으면 멈춤(stopping)으로 두고, 큐가 비면 워커도 「작업 끝나면 끄기」
+    const stopAfter = typeof planDoc?.stopAfter === 'string' ? planDoc.stopAfter : null;
+    const stopping = planDoc?.stopping as { book?: string } | null | undefined;
+    if (plan.paused) {
+      const extra: Record<string, unknown> = {};
+      if (stopping?.book) {
+        const left = await db.collection('local_variant_jobs').countDocuments({ status: { $in: ['queued', 'running'] } });
+        if (left) actions.push(`${stopping.book} 마무리 중 — 남은 작업 ${left}`);
+        else {
+          if (!DRY) await db.collection<{ _id: string }>('production_worker_control').updateOne({ _id: 'main' },
+            { $set: { request: 'stop', mode: 'after-job', requested_at: new Date(), requested_by: 'autofeed-stop-after' } }, { upsert: true });
+          actions.push(`${stopping.book} 끝 — 예약대로 워커 끔`);
+          extra.stopping = null;
+        }
+      }
+      await savePlan({ ...feeder('paused'), ...extra }); log(`멈춤 ${actions.join(' / ')}`); return;
+    }
     const worker = await getLocalWorkerStatus(db);
     if (!worker.workers.some((w) => w.online && !w.fake)) { actions.push('워커가 꺼져 있어 공급하지 않음'); await savePlan(feeder('no-worker')); log(actions.join(' / ')); return; }
     const queued = await db.collection('local_variant_jobs').countDocuments({ status: 'queued' });
@@ -209,6 +225,14 @@ async function main() {
       }
       actions.push(`${current}: 남은 칸 없음 — 끝`);
       lastDone = current;
+      if (stopAfter && current === stopAfter) {
+        actions.push('여기까지 하고 멈춤(예약) — 다음 교재로 넘어가지 않음');
+        const book = current;
+        current = null;  // savePlan 이 current 를 적으므로 먼저 비운다
+        await savePlan({ ...feeder('paused'), paused: true, stopAfter: null, stopping: { book, since: new Date() } });
+        log(actions.join(' / '));
+        return;
+      }
       current = null;
     }
     await savePlan(feeder(current ? 'feeding' : 'idle'));
