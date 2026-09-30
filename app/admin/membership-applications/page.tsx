@@ -494,7 +494,7 @@ export default function AdminMembershipApplicationsPage() {
                     href={`tel:${phoneOf(app).replace(/-/g, '')}`}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-sm font-mono text-slate-200 transition"
                   >
-                    📞 {app.phone}
+                    📞 {phoneOf(app)}
                   </a>
                   <button
                     type="button"
