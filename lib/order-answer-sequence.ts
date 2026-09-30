@@ -38,6 +38,11 @@ export interface OrderScopeTarget {
   sources: string[];
   /** 제목·파일명에 쓰는 범위 표기 — 회차가 있으면 「07회·08회」, 없으면 교재명 */
   label: string;
+  /**
+   * 이 주문에 내지 않을 문항 _id — 같은 고객의 이전 주문으로 이미 보낸 문항 등.
+   * orders.excludeQuestionIds 에서 온다(같은 범위를 다시 주문하면 「새 문항」을 주기 위해).
+   */
+  excludeIds?: string[];
 }
 
 export interface OrderQuestionScope {
@@ -76,9 +81,10 @@ export function resolveOrderQuestionScope(order: Doc): OrderQuestionScope {
     const sources = listAfterHeading(text, /1\.\s*필요하신 강과 번호[\s\S]*?\n:\s*([^\n]+)/);
     if (textbook && sources.length) targets = [{ textbook, sources, label: '' }];
   }
+  const excludeIds = Array.isArray(order.excludeQuestionIds) ? (order.excludeQuestionIds as unknown[]).map(String) : [];
   targets = targets
     .filter((t) => t.textbook && t.sources.length)
-    .map((t) => ({ ...t, label: scopeLabel(t.textbook, t.sources) }));
+    .map((t) => ({ ...t, label: scopeLabel(t.textbook, t.sources), ...(excludeIds.length ? { excludeIds } : {}) }));
   const types = scope?.selectedTypes.length
     ? scope.selectedTypes
     : listAfterHeading(text, /2\.\s*문제 유형[\s\S]*?\n:\s*([^\n]+)/);
@@ -157,7 +163,9 @@ export async function fetchOrderQuestions(
     .toArray()) as Doc[];
   /* 문서의 source 는 건드리지 않는다(정답열 교정이 문서를 되써도 원출처 라벨이 유지되게) — 라벨은 따로 든다 */
   const bySource = new Map<string, Doc[]>();
+  const excluded = new Set(target.excludeIds ?? []);
   for (const d of docs) {
+    if (excluded.has(String(d._id))) continue;
     const label = back.get(`${str(d.textbook)}\u0000${str(d.source)}`) ?? str(d.source);
     const list = bySource.get(label) ?? [];
     if (list.length < perSource) list.push(d);
