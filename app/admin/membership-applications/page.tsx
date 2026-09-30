@@ -49,7 +49,18 @@ interface Application {
   contactedAt?: string;
   completedAt?: string;
   rejectedAt?: string;
+  /** 이 신청서로 만든 계정 — 처리된 신청서는 이름·전화가 마스킹돼 있어 계정 쪽 값을 보여 준다 */
+  account?: { id: string; name: string; loginId: string; couponPct: number };
 }
+
+/** 표시용 이름 — 계정이 있으면 계정 이름(마스킹 전 원본) */
+const nameOf = (a: Application) => (a.account?.name || a.name).trim();
+/** 연락용 번호 — 신청서 번호가 마스킹됐으면 계정 로그인 ID(=휴대폰 번호) */
+const phoneOf = (a: Application) => {
+  if (!a.phone.includes('*')) return a.phone;
+  const d = a.account?.loginId?.replace(/\D/g, '') ?? '';
+  return d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : a.phone;
+};
 
 interface Stats {
   pending: number;
@@ -116,6 +127,8 @@ export default function AdminMembershipApplicationsPage() {
 
   const [tab, setTab] = useState<AppStatus | 'all'>('pending');
   const [applications, setApplications] = useState<Application[]>([]);
+  /** 가입 인사 문구에 넣을 초기 비밀번호 — 서버 상수(DEFAULT_MEMBER_INITIAL_PASSWORD)를 목록 응답으로 받는다 */
+  const [initialPassword, setInitialPassword] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -153,6 +166,7 @@ export default function AdminMembershipApplicationsPage() {
     const res = await fetch(`/api/admin/membership-applications?${sp}`, { credentials: 'include' });
     const d = await res.json();
     setApplications(d.applications ?? []);
+    if (typeof d.initialPassword === 'string') setInitialPassword(d.initialPassword);
     setStats(d.stats ?? null);
     setLastUpdated(new Date());
     setLoading(false);
@@ -452,10 +466,10 @@ export default function AdminMembershipApplicationsPage() {
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border ${TYPE_BADGE[app.applicantType]}`}>
                     {TYPE_LABELS[app.applicantType]}
                   </span>
-                  <span className="text-base font-bold text-white">{app.name}</span>
+                  <span className="text-base font-bold text-white">{nameOf(app)}</span>
                   <button
                     type="button"
-                    onClick={() => copyText(app.name, '이름 복사')}
+                    onClick={() => copyText(nameOf(app), '이름 복사')}
                     className="text-[10px] text-slate-500 hover:text-slate-300"
                     title="이름 복사"
                   >
@@ -477,21 +491,21 @@ export default function AdminMembershipApplicationsPage() {
                 {/* 연락 행 */}
                 <div className="flex flex-wrap gap-2 mb-3">
                   <a
-                    href={`tel:${app.phone.replace(/-/g, '')}`}
+                    href={`tel:${phoneOf(app).replace(/-/g, '')}`}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-sm font-mono text-slate-200 transition"
                   >
                     📞 {app.phone}
                   </a>
                   <button
                     type="button"
-                    onClick={() => copyText(app.phone, '전화번호 복사')}
+                    onClick={() => copyText(phoneOf(app), '전화번호 복사')}
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-xs text-slate-400"
                     title="전화번호 클립보드 복사"
                   >
                     📋
                   </button>
                   <a
-                    href={`sms:${app.phone.replace(/-/g, '')}?body=${encodeURIComponent(`안녕하세요, ${app.name}님. 가입 신청 확인했습니다.`)}`}
+                    href={`sms:${phoneOf(app).replace(/-/g, '')}?body=${encodeURIComponent(`안녕하세요, ${nameOf(app)}님. 가입 신청 확인했습니다.`)}`}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-sm text-amber-200 transition"
                   >
                     💬 문자
@@ -598,11 +612,31 @@ export default function AdminMembershipApplicationsPage() {
                       거절
                     </button>
                   )}
+                  {app.account ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        copyText(
+                          buildAccountNoticeText({
+                            name: nameOf(app),
+                            loginId: app.account!.loginId,
+                            initialPassword,
+                            couponGrantedPct: app.account!.couponPct || null,
+                          }),
+                          '가입 인사 복사 완료 (SMS·카톡 그대로 붙여넣기)',
+                        )
+                      }
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 transition"
+                      title="이름·로그인 ID·초기 비밀번호·쿠폰 안내가 담긴 가입 인사 문구"
+                    >
+                      📋 가입 인사 복사
+                    </button>
+                  ) : null}
                   {app.status === 'completed' && (
                     <button
                       type="button"
                       disabled={actionId === app.id}
-                      onClick={() => grantCoupon(app.id, app.name)}
+                      onClick={() => grantCoupon(app.id, nameOf(app))}
                       className="px-3 py-1.5 rounded-lg border border-amber-500/50 text-amber-300 text-sm font-medium hover:bg-amber-900/20 disabled:opacity-60 transition"
                       title={`이미 만들어진 계정에 포인트 구매 ${WELCOME_COUPON_PCT}% 할인 쿠폰을 지급합니다.`}
                     >

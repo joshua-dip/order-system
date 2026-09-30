@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import { requireAdmin } from '@/lib/admin-auth';
+import { getDb } from '@/lib/mongodb';
+import { DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
+import { COUPONS_COLLECTION } from '@/lib/coupons';
 import {
   listApplications,
   type MembershipApplicationStatus,
@@ -30,5 +34,34 @@ export async function GET(request: NextRequest) {
     limit,
   });
 
-  return NextResponse.json(result);
+  /* 처리된 신청서는 이름·전화가 마스킹돼 있다 — 이 신청서로 만든 계정(users.createdFromApplicationId)의
+     이름·로그인 ID(=전화번호)를 붙여 관리자 화면에서 온전히 보이고, 가입 인사 문구를 만들 수 있게 한다. */
+  const items = result.applications as unknown as ({ id: string } & Record<string, unknown>)[];
+  if (items.length) {
+    const db = await getDb('gomijoshua');
+    const users = await db
+      .collection('users')
+      .find({ createdFromApplicationId: { $in: items.map((a) => a.id) } })
+      .project({ name: 1, loginId: 1, createdFromApplicationId: 1 })
+      .toArray();
+    const coupons = users.length
+      ? await db
+          .collection(COUPONS_COLLECTION)
+          .find({ userId: { $in: users.map((u) => u._id as ObjectId) }, note: '가입 환영 쿠폰' })
+          .project({ userId: 1, discountPct: 1 })
+          .toArray()
+      : [];
+    const couponBy = new Map(coupons.map((c) => [String(c.userId), Number(c.discountPct) || 0]));
+    const byApp = new Map(
+      users.map((u) => [
+        String(u.createdFromApplicationId),
+        { id: String(u._id), name: String(u.name ?? ''), loginId: String(u.loginId ?? ''), couponPct: couponBy.get(String(u._id)) ?? 0 },
+      ]),
+    );
+    for (const a of items as ({ id: string } & Record<string, unknown>)[]) {
+      const acc = byApp.get(a.id);
+      if (acc) a.account = acc;
+    }
+  }
+  return NextResponse.json({ ...result, initialPassword: DEFAULT_MEMBER_INITIAL_PASSWORD });
 }
