@@ -468,6 +468,8 @@ export default function AdminDashboardPage() {
     revenueThisMonth?: number;
     pointRevenueTotal?: number;
     pointRevenueThisMonth?: number;
+    pointBalanceTotal?: number;
+    pointBalanceHolders?: number;
     membershipRevenueTotal?: number;
     membershipRevenueThisMonth?: number;
     membershipCountThisMonth?: number;
@@ -1060,6 +1062,8 @@ export default function AdminDashboardPage() {
     revenueThisMonth: number;
     pointRevenueTotal: number;
     pointRevenueThisMonth: number;
+    pointBalanceTotal: number;
+    pointBalanceHolders: number;
     membershipRevenueTotal: number;
     membershipRevenueThisMonth: number;
     membershipCountThisMonth: number;
@@ -1084,6 +1088,8 @@ export default function AdminDashboardPage() {
             revenueThisMonth: typeof d.revenueThisMonth === 'number' ? d.revenueThisMonth : 0,
             pointRevenueTotal: typeof d.pointRevenueTotal === 'number' ? d.pointRevenueTotal : 0,
             pointRevenueThisMonth: typeof d.pointRevenueThisMonth === 'number' ? d.pointRevenueThisMonth : 0,
+            pointBalanceTotal: typeof d.pointBalanceTotal === 'number' ? d.pointBalanceTotal : 0,
+            pointBalanceHolders: typeof d.pointBalanceHolders === 'number' ? d.pointBalanceHolders : 0,
             membershipRevenueTotal: typeof d.membershipRevenueTotal === 'number' ? d.membershipRevenueTotal : 0,
             membershipRevenueThisMonth: typeof d.membershipRevenueThisMonth === 'number' ? d.membershipRevenueThisMonth : 0,
             membershipCountThisMonth: typeof d.membershipCountThisMonth === 'number' ? d.membershipCountThisMonth : 0,
@@ -3649,6 +3655,13 @@ export default function AdminDashboardPage() {
               </p>
               <p className="text-slate-500 text-xs mt-1">
                 누적(충전) <span className="text-slate-400 tabular-nums">{typeof stats?.pointRevenueTotal === 'number' ? `${stats.pointRevenueTotal.toLocaleString()}원` : '—'}</span>
+                <span className="block mt-0.5">
+                  회원 남은 포인트 <span className="text-slate-600">(지급분 포함)</span>{' '}
+                  <span className="text-slate-300 tabular-nums">
+                    {typeof stats?.pointBalanceTotal === 'number' ? `${stats.pointBalanceTotal.toLocaleString()}P` : '—'}
+                  </span>
+                  {stats?.pointBalanceHolders ? <span className="text-slate-500"> · {stats.pointBalanceHolders}명</span> : null}
+                </span>
                 <span className="block text-slate-600 mt-0.5">
                   토스 결제 포인트 충전 합계 · 이번 달은 충전일(한국) 기준
                 </span>

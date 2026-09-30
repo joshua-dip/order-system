@@ -107,6 +107,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    /** 회원들이 아직 쓰지 않은 포인트(부채 성격) — 일반 회원 users.points 합 */
+    const [pointBalance] = await db
+      .collection('users')
+      .aggregate<{ total: number; holders: number }>([
+        { $match: { role: 'user', points: { $gt: 0 } } },
+        { $group: { _id: null, total: { $sum: '$points' }, holders: { $sum: 1 } } },
+      ])
+      .toArray();
+    const pointBalanceTotal = Math.round(pointBalance?.total ?? 0);
+    const pointBalanceHolders = pointBalance?.holders ?? 0;
+
     /** 멤버십(월·연회원) 결제 매출 — 포인트 원장에 남지 않는 현금 결제라 따로 센다. */
     let membershipRevenueTotal = 0;
     let membershipRevenueThisMonth = 0;
@@ -149,6 +160,9 @@ export async function GET(request: NextRequest) {
       pointRevenueTotal,
       /** 이번 달(한국 createdAt 기준) 포인트 충전 매출(원) */
       pointRevenueThisMonth,
+      /** 회원 보유 포인트 합계(P)·보유 회원 수 — 아직 쓰지 않은 선불 잔액 */
+      pointBalanceTotal,
+      pointBalanceHolders,
       membershipRevenueTotal,
       membershipRevenueThisMonth,
       membershipCountThisMonth,
