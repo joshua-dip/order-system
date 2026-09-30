@@ -137,6 +137,8 @@ def main() -> int:
                     "pipeline": result.get("pipeline"),
                     "elapsed_ms": int((time.time() - t0) * 1000),
                     "calls": calls_summary(log),
+                    # 평가에서 실패 원인을 보려고 — 운영 워커는 켜지 않는다(결과가 커진다)
+                    **({"trace": result.get("trace")} if os.environ.get("LOCAL_VARIANT_EMIT_TRACE") else {}),
                 }
             )
         except Exception as e:  # noqa: BLE001
