@@ -43,6 +43,12 @@ interface Props {
   onClose: () => void;
 }
 
+/** 한국 시간 23시~9시 — 담당자 처리가 늦어지는 시간대(최근 신청 지연 기록 기준) */
+function isOffHours(now: Date = new Date()): boolean {
+  const h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }).format(now));
+  return h >= 23 || h < 10;
+}
+
 export default function MembershipApplyModal({ open, onClose }: Props) {
   const [step, setStep] = useState<Step>('form');
   const [applicantType, setApplicantType] = useState<ApplicantType | null>(null);
@@ -324,6 +330,11 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
             <div className="space-y-3">
               <p className="text-lg font-bold text-slate-800 leading-snug">가입 신청이 완료되었습니다</p>
               <p className="text-sm text-slate-600 leading-relaxed">담당 매니저가 확인 후 연락드립니다.</p>
+              <p className="text-[13px] leading-relaxed text-slate-500">
+                {isOffHours()
+                  ? '지금은 야간·이른 아침이라 처리가 오전으로 넘어갈 수 있어요. 남겨주신 번호로 로그인 방법을 안내드릴게요.'
+                  : '보통 10~20분 안에 처리돼요. 남겨주신 번호로 로그인 방법을 안내드릴게요.'}
+              </p>
             </div>
 
             {/* 카톡으로 알리면 승인이 훨씬 빨라진다 — 신청자가 직접 알리도록 유도 */}
