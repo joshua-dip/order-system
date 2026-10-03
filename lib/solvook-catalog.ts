@@ -54,7 +54,7 @@ export interface SolvookCategory {
 }
 
 /** 목록 모양이 바뀌면 올린다 — 옛 스냅샷은 6시간을 기다리지 않고 새로 받는다 */
-export const SOLVOOK_CATALOG_VERSION = 4;
+export const SOLVOOK_CATALOG_VERSION = 5;
 
 export interface SolvookCatalog {
   version?: number;
@@ -215,7 +215,18 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
       cat.count += b.count;
     }
   }
-  const rest = [...books.values()].filter((b) => !placed.has(b.source));
+  /* 쏠북 브랜드 카테고리에 아직 안 넣은 교재(새로 올린 책) — EBS 교재는 이름으로 EBS 에 넣는다.
+     「하루 6개 1등급」 고1·고2 가 「기타」에 따로 떨어져 고3(EBS)과 갈라져 보였다(10/4) */
+  const EBS_BOOK = /하루\s*6개|올림포스|수능특강|수능완성|기출의\s*미래|EBS/;
+  const ebs = categories.find((c) => c.title === 'EBS');
+  const rest: SolvookBook[] = [];
+  for (const b of books.values()) {
+    if (placed.has(b.source)) continue;
+    if (ebs && EBS_BOOK.test(b.source)) {
+      ebs.books.push(b);
+      ebs.count += b.count;
+    } else rest.push(b);
+  }
   if (rest.length) categories.push({ title: '기타', emoji: '📦', count: rest.reduce((s, b) => s + b.count, 0), books: rest });
   for (const c of categories) c.books.sort(compareBooks);
 

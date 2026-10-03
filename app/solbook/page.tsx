@@ -325,10 +325,18 @@ function SolbookInner() {
     if (q) setQuery(q);
   }, [params]);
 
-  /* 처음엔 첫 카테고리의 첫 항목(보통 모의고사 1학년)을 연다 */
+  /* ?cat=서술형/고2 (블로그·카페에서 특정 칸으로 바로 오는 링크) — 없으면 첫 카테고리의 첫 항목(보통 모의고사 1학년) */
   useEffect(() => {
-    if (model && !node) setNode(model.tree[0]?.children?.[0]?.key ?? model.tree[0]?.key ?? '');
-  }, [model, node]);
+    if (!model || node) return;
+    const want = params.get('cat');
+    const keys = new Set(model.tree.flatMap((t) => [t.key, ...(t.children ?? []).map((c) => c.key)]));
+    if (want && keys.has(`cat:${want}`)) {
+      const top = model.tree.find((t) => t.key === `cat:${want}`);
+      setNode(top?.children?.[0]?.key ?? `cat:${want}`);   // 상위 칸이면 첫 하위(예: 서술형 → 모의고사 1학년)
+      return;
+    }
+    setNode(model.tree[0]?.children?.[0]?.key ?? model.tree[0]?.key ?? '');
+  }, [model, node, params]);
 
   useEffect(() => setShown(PAGE_CARDS), [node, query, tag, sort]);
 
@@ -367,6 +375,12 @@ function SolbookInner() {
   const selectNode = (key: string) => {
     setNode(key);
     setQuery('');
+    /* 고른 칸을 주소에 남긴다 — 새로고침·공유해도 같은 칸이 열리게 */
+    try {
+      window.history.replaceState(null, '', `${window.location.pathname}?cat=${encodeURIComponent(key.replace(/^cat:/, ''))}`);
+    } catch {
+      /* 주소 바꾸기가 막힌 환경은 무시 */
+    }
   };
 
   return (
@@ -381,7 +395,8 @@ function SolbookInner() {
       }}
     >
       <AppBar title="쏠북 바로구매" />
-      <div className="mx-auto max-w-6xl px-4 py-8">
+      {/* 아래 여백 — 오른쪽 아래 상담 버튼이 마지막 줄의 구매 버튼을 가리지 않게(모바일) */}
+      <div className="mx-auto max-w-6xl px-4 pb-28 pt-8 lg:pb-12">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">쏠북 바로구매</h1>
@@ -583,7 +598,10 @@ function TreeButton({
         on ? 'border-sky-600 bg-sky-50 font-semibold text-slate-900' : 'border-transparent text-slate-700 hover:bg-slate-50'
       } ${strong ? 'font-bold' : ''}`}
     >
-      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {/* 긴 교재명은 잘리니 마우스를 올리면 전체 이름 */}
+      <span className="min-w-0 flex-1 truncate" title={typeof children === 'string' ? children : undefined}>
+        {children}
+      </span>
       <span className="shrink-0 text-[11px] tabular-nums text-slate-400">{count.toLocaleString()}</span>
     </button>
   );
@@ -699,7 +717,7 @@ function ExpandRow({ title, desc, price, children }: { title: string; desc: stri
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center gap-2.5 text-left">
         <span className="min-w-0 flex-1">
           <span className="text-sm font-semibold text-slate-900">{title}</span>
-          <span className="ml-2 text-xs text-slate-500">{desc}</span>
+          <span className="block text-xs text-slate-500 sm:ml-2 sm:inline">{desc}</span>
         </span>
         <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-800">{price}</span>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700">
@@ -750,8 +768,11 @@ function MockLineup({ items }: { items: SolvookItem[] }) {
     else if (p.kind === 'bundle') bundles.push({ label: p.label, it });
     else others.push(it);
   }
+  /* 합본 차례: 기본 → 고난도 → 전 유형 → 일반 → 워크북(제목 순으로 두면 「고난도」가 「기본」보다 먼저 나왔다) */
+  const bundleRank = (l: string) => ['기본', '고난도', '전 유형', '전체 합본 · 일반'].findIndex((k) => l.startsWith(k));
+  bundles.sort((a, b) => (bundleRank(a.label) + 100) % 100 - (bundleRank(b.label) + 100) % 100 || a.label.localeCompare(b.label, 'ko'));
   const rowList = [...rows.entries()].sort((a, b) => a[1].order - b[1].order);
-  const numCols = (['기본', '고난도', '전 유형'] as MockVariant[]).filter((v) => rowList.some(([, r]) => r.cells[v]));
+  const numCols =(['기본', '고난도', '전 유형'] as MockVariant[]).filter((v) => rowList.some(([, r]) => r.cells[v]));
   const numItems = rowList.flatMap(([, r]) => numCols.map((c) => r.cells[c]).filter((x): x is SolvookItem => !!x));
   const wbItems = rowList.map(([, r]) => r.cells['워크북']).filter((x): x is SolvookItem => !!x);
   const typeOrder = MOCK_TYPES.split('|');
@@ -770,7 +791,7 @@ function MockLineup({ items }: { items: SolvookItem[] }) {
         <li key={it.id} className="flex items-center gap-2.5 py-2">
           <span className="min-w-0 flex-1">
             <span className="text-sm font-semibold text-slate-900">{label}</span>
-            <span className="ml-2 text-xs text-slate-500">
+            <span className="block text-xs text-slate-500 sm:ml-2 sm:inline">
               전 지문을 한 파일로{it.questions != null ? ` · ${it.questions.toLocaleString()}문항` : ''}
             </span>
           </span>
@@ -914,7 +935,7 @@ function EssayLineup({
         <li key={it.id} className="flex items-center gap-2.5 py-2">
           <span className="min-w-0 flex-1">
             <span className="text-sm font-semibold text-slate-900">서술형 전체 합본</span>
-            <span className="ml-2 text-xs text-slate-500">
+            <span className="block text-xs text-slate-500 sm:ml-2 sm:inline">
               전 지문 · 전 유형{it.questions != null ? ` · ${it.questions.toLocaleString()}문항` : ''}
             </span>
           </span>
