@@ -18,6 +18,13 @@ const PAGE_CARDS = 8;
 
 const TAG_ORDER = ['변형문제', '워크북', '직보/파이널'];
 const tagLabel = (t: string) => (t === '직보/파이널' ? '직보·파이널' : t);
+/** 쏠북 태그가 아닌 화면용 필터 — 제목에 「서술형」이 든 자료. 「변형문제」 필터에선 뺀다(객관식만) */
+const ESSAY_TAG = '서술형';
+function matchesTag(it: SolvookItem, tag: string): boolean {
+  if (tag === '전체') return true;
+  if (tag === ESSAY_TAG) return isEssay(it);
+  return it.tag === tag && !(tag === '변형문제' && isEssay(it));
+}
 
 function won(n: number): string {
   return `${n.toLocaleString()}원`;
@@ -100,10 +107,34 @@ type MockPart =
   | { kind: 'num'; num: string; order: number; variant: MockVariant }
   | { kind: 'type'; type: string; round: number | null }
   | { kind: 'bundle'; label: string }
+  | { kind: 'essay'; part: EssayPart }
   | { kind: 'other' };
+
+/* ── 서술형: 쏠북 태그는 「변형문제」라 제목으로 가른다 ── */
+
+/** 서술형 자료(모의고사 서술형 세트 · 교재 서술형 연습 · 서술형 특강) — 「유형」 필터의 「서술형」 */
+function isEssay(it: SolvookItem): boolean {
+  return /서술형/.test(it.title);
+}
+
+/** 모의고사 서술형 세트 — 「…_서술형 21번_[9문항]」 · 「…_서술형 조건영작_[66문항]」 · 「…_서술형 전체_[198문항]」 */
+type EssayPart = { sub: 'num'; num: string; order: number } | { sub: 'type'; type: string } | { sub: 'full' };
+const ESSAY_TYPE_ORDER = ['조건영작', '빈칸완성', '어법전환', '요약완성', '지칭추론', '어휘풀이', '내용서술'];
+
+function parseEssay(t: string): EssayPart | null {
+  const m = t.match(/[_\s]서술형\s+([^_\[]+?)[\s_]*\[/);
+  if (!m) return null;
+  const body = m[1].trim();
+  if (/^전체/.test(body)) return { sub: 'full' };
+  const n = body.match(/^(\d{1,2}(?:~\d{1,2})?)번$/);
+  if (n) return { sub: 'num', num: `${n[1]}번`, order: Number(n[1].split('~')[0]) };
+  return { sub: 'type', type: body };
+}
 
 function parseMock(it: SolvookItem): MockPart {
   const t = it.title;
+  const essay = parseEssay(t);
+  if (essay) return { kind: 'essay', part: essay };
   const num = (m: RegExpMatchArray) => ({ num: `${m[1]}번`, order: Number(m[1].split('~')[0]) });
   let m = t.match(/(\d{1,2}(?:~\d{1,2})?)번\s*통합\s*워크북/);
   if (m) return { kind: 'num', ...num(m), variant: '워크북' };
@@ -140,11 +171,14 @@ interface Card {
   title: string;
   sub: string;
   image?: string;
+  essayImage?: string;
   mock: boolean;
   items: SolvookItem[];
   /** 최신순 정렬 키 — 클수록 최신 */
   recency: number;
   newestId: string;
+  /** 「서술형」 트리용 사본(서술형 자료만) — 검색 땐 원래 카드와 겹치므로 뺀다 */
+  essayView?: boolean;
 }
 
 function gradeOf(source: string): string {
@@ -171,6 +205,7 @@ function buildModel(catalog: SolvookCatalog): { tree: TreeNode[]; cards: Card[] 
         title: month === '수능' ? `${year}년 수능 ${subject}` : `${year}년 ${month} ${grade === '국어' ? '고1' : grade} ${subject} 모의고사`,
         sub: `${grade === '국어' ? '국어' : grade} · ${year}년 · ${month}`,
         image: u.image,
+        essayImage: u.essayImage,
         mock: true,
         items: u.items,
         recency: year * 100 + mockMonthOrder(u.unit),
@@ -183,6 +218,7 @@ function buildModel(catalog: SolvookCatalog): { tree: TreeNode[]; cards: Card[] 
       title: u.unit === '전체' ? `${book.title} · 전체` : `${book.title} · ${u.unit}`,
       sub: book.title,
       image: u.image,
+      essayImage: u.essayImage,
       mock: false,
       items: u.items,
       recency: 0,
@@ -216,6 +252,27 @@ function buildModel(catalog: SolvookCatalog): { tree: TreeNode[]; cards: Card[] 
   }
   /* 모의고사가 주력이라 맨 앞(처음 열리는 곳)으로 */
   tree.sort((a, b) => Number(/모의고사/.test(b.label)) - Number(/모의고사/.test(a.label)));
+
+  /* 서술형 — 카테고리마다 흩어진 서술형 자료를 모의고사 학년별 · 교재로 한데 모은다(모의고사 바로 다음) */
+  const essayKey = 'cat:서술형';
+  const essayCards: Card[] = [];
+  for (const c of cards) {
+    const items = c.items.filter(isEssay);
+    if (!items.length) continue;
+    const g = c.mock ? gradeOf(c.key) : '';
+    const node = `${essayKey}/${c.mock && g.startsWith('고') ? g : '교재'}`;
+    essayCards.push({ ...c, key: `essay::${c.key}`, node, items, image: c.essayImage ?? c.image, essayView: true });
+  }
+  if (essayCards.length) {
+    const order = ['고1', '고2', '고3', '교재'];
+    const children: TreeNode[] = order
+      .map((g) => ({ g, n: essayCards.filter((c) => c.node === `${essayKey}/${g}`).reduce((s, c) => s + c.items.length, 0) }))
+      .filter(({ n }) => n > 0)
+      .map(({ g, n }) => ({ key: `${essayKey}/${g}`, label: g === '교재' ? 'EBS · 교재' : `모의고사 ${g.replace('고', '')}학년`, count: n }));
+    const at = tree.findIndex((t) => /모의고사/.test(t.label));
+    tree.splice(at + 1, 0, { key: essayKey, label: '서술형', count: children.reduce((s, c) => s + c.count, 0), children });
+    cards.push(...essayCards);
+  }
   return { tree, cards };
 }
 
@@ -279,8 +336,9 @@ function SolbookInner() {
     const list: Card[] = [];
     for (const c of model.cards) {
       if (!searching && !(c.node === node || c.node.startsWith(`${node}/`))) continue;
+      if (searching && c.essayView) continue;
       const items = c.items
-        .filter((it) => tag === '전체' || it.tag === tag)
+        .filter((it) => matchesTag(it, tag))
         .filter((it) => !searching || tokens.every((t) => normalize(`${c.title} ${c.sub} ${it.title}`).includes(t)))
         .sort(compareItems);
       if (items.length) list.push({ ...c, items });
@@ -394,7 +452,7 @@ function SolbookInner() {
               <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="mr-1 text-xs font-bold text-slate-500">유형</span>
-                  {['전체', ...TAG_ORDER.filter((t) => catalog.tags[t]), ...Object.keys(catalog.tags).filter((t) => !TAG_ORDER.includes(t))].map((t) => (
+                  {['전체', ...TAG_ORDER.filter((t) => catalog.tags[t]), ESSAY_TAG, ...Object.keys(catalog.tags).filter((t) => !TAG_ORDER.includes(t))].map((t) => (
                     <Chip key={t} on={tag === t} onClick={() => setTag(t)}>
                       {t === '전체' ? '모두' : tagLabel(t)}
                     </Chip>
@@ -449,6 +507,12 @@ function SolbookInner() {
                 <p className="mb-3 text-xs text-slate-500">
                   모의고사는 <b className="text-slate-700">전체 합본 · 번호별 종합 · 유형별</b>로 나뉘어 있어 필요한 만큼만 골라 살 수 있어요. 세 구성은 같은 문항을 다르게 묶은 것이라{' '}
                   <b className="text-slate-700">중복 구매에 유의</b>해 주세요.
+                </p>
+              )}
+              {/^cat:서술형/.test(node) && !searching && (
+                <p className="mb-3 text-xs text-slate-500">
+                  모의고사 서술형은 지문 하나에 <b className="text-slate-700">9문항(40점)</b> — 조건영작 · 빈칸 · 어법 · 요약 · 지칭 · 어휘 · 내용 서술을 섞고 모든 문항에 정답 · 허용 답 · 채점 기준 · 해설을 실었어요.{' '}
+                  <b className="text-slate-700">전체 합본 · 번호별 · 유형별</b>은 같은 문항을 다르게 묶은 것이라 중복 구매에 유의해 주세요.
                 </p>
               )}
 
@@ -552,7 +616,7 @@ function Cover({ card }: { card: Card }) {
 }
 
 function CatalogCard({ card }: { card: Card }) {
-  const tags = TAG_ORDER.map((t) => [t, card.items.filter((i) => i.tag === t).length] as const).filter(([, n]) => n > 0);
+  const tags = [...TAG_ORDER, ESSAY_TAG].map((t) => [t, card.items.filter((i) => matchesTag(i, t)).length] as const).filter(([, n]) => n > 0);
   return (
     <article className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex gap-4 p-4">
@@ -663,9 +727,17 @@ function MockLineup({ items }: { items: SolvookItem[] }) {
   const types = new Map<string, SolvookItem[]>();
   const bundles: { label: string; it: SolvookItem }[] = [];
   const others: SolvookItem[] = [];
+  const essayFull: SolvookItem[] = [];
+  const essayNums: { num: string; order: number; it: SolvookItem }[] = [];
+  const essayTypes: { type: string; it: SolvookItem }[] = [];
   for (const it of items) {
     const p = parseMock(it);
-    if (p.kind === 'num') {
+    if (p.kind === 'essay') {
+      const e = p.part;
+      if (e.sub === 'full') essayFull.push(it);
+      else if (e.sub === 'num') essayNums.push({ num: e.num, order: e.order, it });
+      else essayTypes.push({ type: e.type, it });
+    } else if (p.kind === 'num') {
       const r = rows.get(p.num) ?? { order: p.order, cells: {} };
       if (!r.cells[p.variant]) r.cells[p.variant] = it;
       else others.push(it);
@@ -793,6 +865,10 @@ function MockLineup({ items }: { items: SolvookItem[] }) {
         </ExpandRow>
       )}
 
+      {(essayFull.length > 0 || essayNums.length > 0 || essayTypes.length > 0) && (
+        <EssayLineup full={essayFull} nums={essayNums} types={essayTypes} lead={bundles.length + numItems.length + typeItems.length + wbItems.length > 0} />
+      )}
+
       {others.map((it) => (
         <li key={it.id} className="flex items-center gap-2.5 py-2">
           <span className="w-16 shrink-0 text-[10px] font-bold text-slate-500">{tagLabel(it.tag)}</span>
@@ -802,5 +878,86 @@ function MockLineup({ items }: { items: SolvookItem[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** 모의고사 서술형 — 전체 합본 · 번호별(지문 하나 9문항) · 유형별. lead 면 객관식 아래에 구분 머리줄 */
+function EssayLineup({
+  full,
+  nums,
+  types,
+  lead,
+}: {
+  full: SolvookItem[];
+  nums: { num: string; order: number; it: SolvookItem }[];
+  types: { type: string; it: SolvookItem }[];
+  lead: boolean;
+}) {
+  const numList = [...nums].sort((a, b) => a.order - b.order);
+  const typeIdx = (t: string) => {
+    const i = ESSAY_TYPE_ORDER.indexOf(t);
+    return i < 0 ? 99 : i;
+  };
+  const typeList = [...types].sort((a, b) => typeIdx(a.type) - typeIdx(b.type) || a.type.localeCompare(b.type, 'ko'));
+  return (
+    <>
+      {lead && (
+        <li className="pb-1 pt-3 text-[11px] font-bold text-slate-400">
+          서술형 <span className="font-semibold">· 지문 하나 9문항(40점) · 정답 · 허용 답 · 채점 기준 · 해설</span>
+        </li>
+      )}
+      {full.map((it) => (
+        <li key={it.id} className="flex items-center gap-2.5 py-2">
+          <span className="min-w-0 flex-1">
+            <span className="text-sm font-semibold text-slate-900">서술형 전체 합본</span>
+            <span className="ml-2 text-xs text-slate-500">
+              전 지문 · 전 유형{it.questions != null ? ` · ${it.questions.toLocaleString()}문항` : ''}
+            </span>
+          </span>
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-800">{won(it.price)}</span>
+          <BuyLink item={it} />
+        </li>
+      ))}
+      {numList.length > 0 && (
+        <ExpandRow title="서술형 번호별" desc={`${numList.length}개 번호 — 지문 하나에 9문항`} price={priceRange(numList.map((n) => n.it))}>
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+            {numList.map(({ num, it }) => (
+              <a
+                key={it.id}
+                href={productUrl(it.id)}
+                title={it.title}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center rounded-md border border-slate-200 bg-white px-1.5 py-1 leading-tight hover:border-sky-600"
+              >
+                <span className="text-xs font-semibold tabular-nums text-slate-900">{num}</span>
+                <span className="text-[11px] tabular-nums text-slate-500">{won(it.price)}</span>
+              </a>
+            ))}
+          </div>
+        </ExpandRow>
+      )}
+      {typeList.length > 0 && (
+        <ExpandRow title="서술형 유형별" desc={`${typeList.length}개 유형 — 한 유형을 전 지문으로`} price={priceRange(typeList.map((t) => t.it))}>
+          <div className="space-y-1">
+            {typeList.map(({ type, it }) => (
+              <a
+                key={it.id}
+                href={productUrl(it.id)}
+                title={it.title}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 hover:bg-sky-50"
+              >
+                <span className="min-w-0 flex-1 text-xs font-semibold text-slate-800">{type}</span>
+                {it.questions != null && <span className="shrink-0 text-[11px] tabular-nums text-slate-500">{it.questions}문항</span>}
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-slate-800">{won(it.price)}</span>
+                <span aria-hidden className="shrink-0 text-xs text-slate-400">↗</span>
+              </a>
+            ))}
+          </div>
+        </ExpandRow>
+      )}
+    </>
   );
 }

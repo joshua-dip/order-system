@@ -31,6 +31,8 @@ export interface SolvookUnit {
   unit: string;
   /** 표지 — 단원 안 첫 상품의 쏠북 썸네일(상품마다 넣으면 목록이 너무 커진다) */
   image?: string;
+  /** 서술형 자료의 표지(있으면) — 「서술형」 모아 보기 카드에 쓴다 */
+  essayImage?: string;
   items: SolvookItem[];
 }
 
@@ -52,7 +54,7 @@ export interface SolvookCategory {
 }
 
 /** 목록 모양이 바뀌면 올린다 — 옛 스냅샷은 6시간을 기다리지 않고 새로 받는다 */
-export const SOLVOOK_CATALOG_VERSION = 3;
+export const SOLVOOK_CATALOG_VERSION = 4;
 
 export interface SolvookCatalog {
   version?: number;
@@ -162,7 +164,8 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
     if (!units.has(unit)) units.set(unit, []);
     units.get(unit)!.push(item);
     /* 표지: 파일명에 「표지」가 든 이미지 > 페이지 썸네일(thumbnail)이 아닌 것 > 아무거나 */
-    const imgKey = `${source}\u0000${unit}`;
+    /* 서술형 표지는 따로 — 같은 단원 객관식 카드에 서술형 표지가 붙지 않게 */
+    const imgKey = `${source}\u0000${unit}${/서술형/.test(item.title) ? '\u0000essay' : ''}`;
     if (r.imageUrl) {
       const url = String(r.imageUrl);
       const decoded = (() => {
@@ -190,7 +193,8 @@ export async function fetchSolvookCatalog(): Promise<SolvookCatalog> {
         for (const it of items) { tags[it.tag] = (tags[it.tag] ?? 0) + 1; count++; }
         return {
           unit,
-          image: unitImage.get(`${source}\u0000${unit}`),
+          image: unitImage.get(`${source}\u0000${unit}`) ?? unitImage.get(`${source}\u0000${unit}\u0000essay`),
+          essayImage: unitImage.get(`${source}\u0000${unit}\u0000essay`),
           items: items.sort((a, b) => a.title.localeCompare(b.title, 'ko', { numeric: true })),
         };
       });
