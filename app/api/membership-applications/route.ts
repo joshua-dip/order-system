@@ -6,6 +6,8 @@ import {
   countRecentApplicationsByIp,
   type MembershipApplicantType,
 } from '@/lib/membership-applications-store';
+import { getDb } from '@/lib/mongodb';
+import { bumpRetryAttempt, findExistingForPhone } from '@/lib/membership-application-duplicates';
 
 const VALID_TYPES: MembershipApplicantType[] = ['student', 'parent', 'teacher'];
 
@@ -65,6 +67,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: '010으로 시작하는 11자리 전화번호를 입력해주세요.' },
       { status: 400 },
+    );
+  }
+
+  /* 이미 회원이거나 이미 신청해 처리 중인 번호 — 새 신청서를 만들지 않고 안내한다.
+     (예전엔 24시간 안의 중복만 막아서, 하루 넘게 기다린 신청자가 다시 신청하면 관리자 화면에 「신규」로 또 떴다.)
+     이미 회원인지 신청 중인지는 일부러 구분해 알려 주지 않는다 — 번호만으로 가입 여부를 캐낼 수 없게. */
+  const db = await getDb('gomijoshua');
+  const existing = await findExistingForPhone(db, normalizedPhone);
+  if (existing.member || existing.openApplicationId) {
+    if (existing.openApplicationId) await bumpRetryAttempt(db, existing.openApplicationId);
+    return NextResponse.json(
+      {
+        code: 'already_applied',
+        error: '이 번호로는 이미 가입 신청이 접수되었거나 가입이 되어 있어요. 카톡이나 문자로 문의해 주세요.',
+      },
+      { status: 409 },
     );
   }
 

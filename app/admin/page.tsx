@@ -322,6 +322,9 @@ interface PendingApplication {
   phone: string;
   status: string;
   appliedAt: string;
+  /** 같은 번호로 이미 회원이거나 먼저 접수된 신청서가 있다 — 신규가 아님 */
+  duplicate?: { kind: 'member' | 'repeat' };
+  retryCount?: number;
 }
 interface SignupAccountResult {
   ok: boolean;
@@ -3450,11 +3453,17 @@ export default function AdminDashboardPage() {
           )}
 
           {/* 최상단: 신규 가입 신청 — 바로 승인(계정 생성) */}
-          {section === 'dashboard' && pendingApplicationCount > 0 && (
+          {section === 'dashboard' && (pendingApplicationCount > 0 || pendingApplications.some((a) => a.duplicate)) && (
             <div className="bg-emerald-500/10 border border-emerald-500/40 rounded-xl px-4 py-4 mb-6">
               <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
                 <p className="font-bold text-emerald-100 text-base flex items-center gap-2">
-                  🙋 신규 가입 신청 <span className="tabular-nums">{pendingApplicationCount}</span>건 — 승인 대기
+                  {pendingApplicationCount > 0 ? (
+                    <>
+                      🙋 신규 가입 신청 <span className="tabular-nums">{pendingApplicationCount}</span>건 — 승인 대기
+                    </>
+                  ) : (
+                    <>🙋 새 가입 신청 없음 — 중복 신청만 남아 있어요</>
+                  )}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <label
@@ -3478,7 +3487,10 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                {pendingApplications.slice(0, 6).map((app) => (
+                {[...pendingApplications]
+                  .sort((a, b) => Number(!!a.duplicate) - Number(!!b.duplicate))
+                  .slice(0, 6)
+                  .map((app) => (
                   <div
                     key={app.id}
                     className="bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-2.5 flex items-center gap-x-3 gap-y-1.5 flex-wrap"
@@ -3491,6 +3503,22 @@ export default function AdminDashboardPage() {
                       {SIGNUP_TYPE_LABELS[app.applicantType] ?? app.applicantType}
                     </span>
                     <span className="font-semibold text-white">{app.name}</span>
+                    {app.duplicate && (
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border bg-violet-500/15 text-violet-300 border-violet-500/40"
+                        title={app.duplicate.kind === 'member' ? '이 번호로 이미 계정이 있습니다. 새 신청이 아닙니다.' : '같은 번호로 먼저 접수된 신청서가 있습니다. 새 신청이 아닙니다.'}
+                      >
+                        {app.duplicate.kind === 'member' ? '이미 회원' : '재신청'} · 중복
+                      </span>
+                    )}
+                    {!!app.retryCount && (
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border bg-rose-500/15 text-rose-300 border-rose-500/40"
+                        title="기다리다 다시 신청하려 한 횟수 — 신청 화면에서 문의 안내를 띄웠습니다."
+                      >
+                        ⏳ 다시 시도 {app.retryCount}회
+                      </span>
+                    )}
                     {app.status === 'contacted' && (
                       <span
                         className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border bg-sky-500/15 text-sky-300 border-sky-500/40"
@@ -3510,6 +3538,7 @@ export default function AdminDashboardPage() {
                       {fmtSignupRelative(app.appliedAt)}
                     </span>
                     <div className="flex items-center gap-2 ml-auto">
+                      {app.duplicate?.kind !== 'member' && (
                       <button
                         type="button"
                         disabled={signupApprovingId === app.id}
@@ -3519,13 +3548,14 @@ export default function AdminDashboardPage() {
                       >
                         {signupApprovingId === app.id ? '처리 중…' : '✨ 가입 승인 (계정 생성)'}
                       </button>
+                      )}
                       <button
                         type="button"
                         disabled={signupApprovingId === app.id}
                         onClick={() => rejectSignupApplication(app.id, app.name)}
                         className="px-2.5 py-1.5 rounded-lg border border-slate-600 text-slate-400 text-xs font-medium hover:bg-slate-700/60 disabled:opacity-60 transition"
                       >
-                        거절
+                        {app.duplicate ? '중복 정리' : '거절'}
                       </button>
                     </div>
                   </div>
@@ -3538,12 +3568,12 @@ export default function AdminDashboardPage() {
                     목록을 불러오는 중이거나 표시할 수 없습니다 — 전체 관리에서 보기 →
                   </Link>
                 )}
-                {pendingApplicationCount > Math.min(6, pendingApplications.length) && pendingApplications.length > 0 && (
+                {pendingApplicationCount > pendingApplications.filter((a) => !a.duplicate).slice(0, 6).length && pendingApplications.length > 0 && (
                   <Link
                     href="/admin/membership-applications"
                     className="text-xs text-emerald-300 hover:text-white text-center py-1"
                   >
-                    외 {pendingApplicationCount - Math.min(6, pendingApplications.length)}건 더 — 전체 관리에서 보기 →
+                    외 {pendingApplicationCount - pendingApplications.filter((a) => !a.duplicate).slice(0, 6).length}건 더 — 전체 관리에서 보기 →
                   </Link>
                 )}
               </div>

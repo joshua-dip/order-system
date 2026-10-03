@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { getDb } from '@/lib/mongodb';
 import { DEFAULT_MEMBER_INITIAL_PASSWORD } from '@/lib/auth';
 import { COUPONS_COLLECTION } from '@/lib/coupons';
+import { analyzeUnhandledDuplicates } from '@/lib/membership-application-duplicates';
 import {
   listApplications,
   type MembershipApplicationStatus,
@@ -63,5 +64,19 @@ export async function GET(request: NextRequest) {
       if (acc) a.account = acc;
     }
   }
-  return NextResponse.json({ ...result, initialPassword: DEFAULT_MEMBER_INITIAL_PASSWORD });
+  /* 같은 번호로 또 들어온 신청·이미 회원인 번호의 신청은 「신규」가 아니다 — 표시를 달고 건수에서 뺀다. */
+  const db = await getDb('gomijoshua');
+  const dup = await analyzeUnhandledDuplicates(db);
+  for (const a of items) {
+    const info = dup.byId.get(a.id);
+    if (info) a.duplicate = info;
+  }
+  return NextResponse.json({
+    ...result,
+    /* 대시보드 배지·「승인 대기」 건수는 사람이 실제로 처리할 건만 센다 */
+    unhandledCount: dup.realUnhandled,
+    duplicateUnhandled: dup.byId.size,
+    duplicatePending: dup.duplicatePending,
+    initialPassword: DEFAULT_MEMBER_INITIAL_PASSWORD,
+  });
 }

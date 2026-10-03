@@ -108,6 +108,7 @@ export const USAGE_EVENT_LABEL: Record<string, string> = {
   signup_open: '가입신청 창 열기',
   signup_submit: '가입신청 완료',
   signup_kakao_click: '가입신청 후 카톡 알림',
+  signup_duplicate: '가입신청 중복(이미 접수·가입)',
 };
 
 let indexesReady = false;

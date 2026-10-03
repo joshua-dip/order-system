@@ -51,6 +51,11 @@ interface Application {
   rejectedAt?: string;
   /** 이 신청서로 만든 계정 — 처리된 신청서는 이름·전화가 마스킹돼 있어 계정 쪽 값을 보여 준다 */
   account?: { id: string; name: string; loginId: string; couponPct: number };
+  /** 처리 중(대기·연락완료)인데 같은 번호로 이미 계정이 있거나, 먼저 접수된 신청서가 있다 — 신규가 아님 */
+  duplicate?: { kind: 'member'; account: { id: string; name: string; loginId: string } } | { kind: 'repeat'; ofId: string };
+  /** 기다리다 또 신청하려 한 횟수(신청 단계에서 막힘) */
+  retryCount?: number;
+  lastRetryAt?: string;
 }
 
 /** 표시용 이름 — 계정이 있으면 계정 이름(마스킹 전 원본) */
@@ -130,6 +135,8 @@ export default function AdminMembershipApplicationsPage() {
   /** 가입 인사 문구에 넣을 초기 비밀번호 — 서버 상수(DEFAULT_MEMBER_INITIAL_PASSWORD)를 목록 응답으로 받는다 */
   const [initialPassword, setInitialPassword] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
+  /** 대기 중 건수 중 중복(이미 회원·재신청) — 「대기 중」 카드에서 뺀다 */
+  const [duplicatePending, setDuplicatePending] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [actionId, setActionId] = useState<string | null>(null);
@@ -168,6 +175,7 @@ export default function AdminMembershipApplicationsPage() {
     setApplications(d.applications ?? []);
     if (typeof d.initialPassword === 'string') setInitialPassword(d.initialPassword);
     setStats(d.stats ?? null);
+    setDuplicatePending(typeof d.duplicatePending === 'number' ? d.duplicatePending : 0);
     setLastUpdated(new Date());
     setLoading(false);
   }, [tab, search, authChecked]);
@@ -381,7 +389,12 @@ export default function AdminMembershipApplicationsPage() {
         {/* 통계 카드 */}
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <StatCard label="대기 중" value={stats.pending} accent="amber" hint={stats.pending > 0 ? '바로 연락 필요' : '모두 처리됨'} />
+            <StatCard
+              label="대기 중"
+              value={Math.max(stats.pending - duplicatePending, 0)}
+              accent="amber"
+              hint={duplicatePending > 0 ? `중복 ${duplicatePending}건 별도` : stats.pending > 0 ? '바로 연락 필요' : '모두 처리됨'}
+            />
             <StatCard label="오늘 신청" value={stats.newToday} accent="rose" hint="자정 ~ 지금" />
             <StatCard label="이번 주 신청" value={stats.newThisWeek} accent="sky" hint="최근 7일" />
             <StatCard label="전체 누적" value={stats.total} accent="slate" hint={`완료 ${stats.completed}`} />
@@ -475,6 +488,30 @@ export default function AdminMembershipApplicationsPage() {
                   >
                     📋
                   </button>
+                  {app.duplicate?.kind === 'member' && (
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border bg-violet-500/15 text-violet-300 border-violet-500/40"
+                      title={`이 번호로 이미 계정이 있습니다(${app.duplicate.account.name || app.duplicate.account.loginId}). 새 신청이 아닙니다.`}
+                    >
+                      이미 회원 · 중복
+                    </span>
+                  )}
+                  {app.duplicate?.kind === 'repeat' && (
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border bg-violet-500/15 text-violet-300 border-violet-500/40"
+                      title="같은 번호로 먼저 접수된 신청서가 아직 처리 중입니다. 새 신청이 아닙니다."
+                    >
+                      재신청 · 중복
+                    </span>
+                  )}
+                  {!!app.retryCount && (
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border bg-rose-500/15 text-rose-300 border-rose-500/40"
+                      title={`기다리다 다시 신청하려 한 횟수${app.lastRetryAt ? ` · 마지막 ${fmtAbsolute(app.lastRetryAt)}` : ''}. 신청 화면에서 막고 문의 안내를 띄웠습니다.`}
+                    >
+                      ⏳ 다시 시도 {app.retryCount}회
+                    </span>
+                  )}
                   <div className="flex gap-2 ml-auto items-center">
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${STATUS_BADGE[app.status]}`}>
                       {STATUS_LABELS[app.status]}
@@ -569,7 +606,7 @@ export default function AdminMembershipApplicationsPage() {
 
                 {/* 액션 버튼 */}
                 <div className="flex flex-wrap gap-2">
-                  {app.status !== 'completed' && (
+                  {app.status !== 'completed' && app.duplicate?.kind !== 'member' && (
                     <button
                       type="button"
                       disabled={actionId === app.id}
@@ -580,7 +617,7 @@ export default function AdminMembershipApplicationsPage() {
                       ✨ 계정 자동 생성
                     </button>
                   )}
-                  {app.status !== 'contacted' && app.status !== 'completed' && app.status !== 'rejected' && (
+                  {app.status !== 'contacted' && app.status !== 'completed' && app.status !== 'rejected' && app.duplicate?.kind !== 'member' && (
                     <button
                       type="button"
                       disabled={actionId === app.id}
@@ -608,8 +645,9 @@ export default function AdminMembershipApplicationsPage() {
                       disabled={actionId === app.id}
                       onClick={() => doAction(app.id, 'markRejected')}
                       className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400 text-sm font-medium hover:bg-slate-700/60 disabled:opacity-60 transition"
+                      title={app.duplicate ? '중복 신청서를 닫습니다(거절 처리).' : undefined}
                     >
-                      거절
+                      {app.duplicate ? '중복 정리' : '거절'}
                     </button>
                   )}
                   {app.account ? (

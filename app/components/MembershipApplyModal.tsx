@@ -6,7 +6,9 @@ import { trackEvent } from '@/lib/track-event';
 const KAKAO_INQUIRY_URL =
   process.env.NEXT_PUBLIC_KAKAO_INQUIRY_URL || 'https://open.kakao.com/o/sHuV7wSh';
 
-type Step = 'form' | 'done';
+type Step = 'form' | 'done' | 'duplicate';
+/** 문의용 문자 번호 — 주문 화면(OrderDisplay)에 이미 공개돼 있는 번호 */
+const CONTACT_PHONE = '010-7927-0806';
 type ApplicantType = 'student' | 'parent' | 'teacher';
 
 const TYPE_OPTIONS: { value: ApplicantType; label: string }[] = [
@@ -165,6 +167,12 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === 'already_applied') {
+          // 이미 가입했거나 신청해 처리 중인 번호 — 신청서를 또 만들지 않고 문의로 안내한다
+          trackEvent('signup_duplicate');
+          setStep('duplicate');
+          return;
+        }
         setError(data.error ?? '신청 중 오류가 발생했습니다.');
         return;
       }
@@ -323,6 +331,57 @@ export default function MembershipApplyModal({ open, onClose }: Props) {
               {submitting ? '제출 중…' : '신청하기'}
             </button>
           </form>
+        )}
+
+        {step === 'duplicate' && (
+          <div className="p-8 flex flex-col items-center text-center gap-5 overflow-y-auto flex-1 min-h-0">
+            <div className="space-y-3">
+              <p className="text-lg font-bold text-slate-800 leading-snug">이미 접수되었거나 가입된 번호예요</p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                이 번호로 가입 신청이 이미 들어와 있거나, 가입이 완료되어 있어요. 다시 신청하지 않으셔도 됩니다.
+              </p>
+            </div>
+
+            <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-[13px] leading-relaxed text-slate-700">
+              <p className="font-extrabold text-slate-900">이렇게 해 보세요</p>
+              <ul className="mt-1.5 space-y-1">
+                <li>
+                  · 가입 안내를 받으셨다면 <b>로그인</b>해 주세요. 아이디는 <b>전화번호</b>입니다.
+                </li>
+                <li>· 로그인이 안 되거나 처리 상태가 궁금하시면 카톡이나 문자로 물어봐 주세요.</li>
+              </ul>
+            </div>
+
+            <div className="w-full flex flex-col gap-2">
+              <a
+                href="/login"
+                className="w-full py-3.5 rounded-xl font-bold text-white text-center no-underline transition-all hover:opacity-90"
+                style={{ backgroundColor: '#2563eb' }}
+              >
+                로그인하러 가기
+              </a>
+              <a
+                href={KAKAO_INQUIRY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('signup_kakao_click')}
+                className="w-full py-3.5 rounded-xl font-extrabold text-[#3C1E1E] text-center no-underline transition-all hover:brightness-95"
+                style={{ backgroundColor: '#FEE500' }}
+              >
+                💬 카톡으로 문의하기
+              </a>
+              <a
+                href={`sms:${CONTACT_PHONE.replace(/-/g, '')}`}
+                className="w-full py-3 rounded-xl font-bold text-slate-700 text-center no-underline bg-slate-100 transition-all hover:bg-slate-200"
+              >
+                📱 문자로 문의하기 ({CONTACT_PHONE})
+              </a>
+            </div>
+
+            <button type="button" onClick={handleClose} className="text-sm font-semibold text-slate-500 hover:text-slate-700">
+              닫기
+            </button>
+          </div>
         )}
 
         {step === 'done' && (
