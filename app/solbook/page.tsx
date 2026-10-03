@@ -112,9 +112,13 @@ type MockPart =
 
 /* ── 서술형: 쏠북 태그는 「변형문제」라 제목으로 가른다 ── */
 
-/** 서술형 자료(모의고사 서술형 세트 · 교재 서술형 연습 · 서술형 특강) — 「유형」 필터의 「서술형」 */
+/**
+ * 서술형 자료 — 「유형」 필터의 「서술형」. 모의고사 서술형 세트(「…_서술형 21번」)와 서술형 특강 교재만.
+ * 제목에 「서술형」이 들어가도 단원 이름일 뿐인 객관식은 아니다 — 올림포스 영어독해 기본의 「Unit 05 서술형 연습」은
+ * 그 단원 지문으로 만든 객관식 변형문제다(10/3 사용자 지적).
+ */
 function isEssay(it: SolvookItem): boolean {
-  return /서술형/.test(it.title);
+  return parseEssay(it.title) !== null || /서술형\s*특강/.test(it.title);
 }
 
 /** 모의고사 서술형 세트 — 「…_서술형 21번_[9문항]」 · 「…_서술형 조건영작_[66문항]」 · 「…_서술형 전체_[198문항]」 */
@@ -122,7 +126,7 @@ type EssayPart = { sub: 'num'; num: string; order: number } | { sub: 'type'; typ
 const ESSAY_TYPE_ORDER = ['조건영작', '빈칸완성', '어법전환', '요약완성', '지칭추론', '어휘풀이', '내용서술'];
 
 function parseEssay(t: string): EssayPart | null {
-  const m = t.match(/[_\s]서술형\s+([^_\[]+?)[\s_]*\[/);
+  const m = t.match(/_서술형\s+([^_\[]+?)[\s_]*\[/);   // 바로 앞이 「_」 — 「Unit 05 서술형 연습」(객관식)은 아니다
   if (!m) return null;
   const body = m[1].trim();
   if (/^전체/.test(body)) return { sub: 'full' };
